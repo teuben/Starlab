@@ -12,6 +12,13 @@
 ////          pp3 to specific nodes, under user control.  The compiled
 ////          version operates from within kira, activated by a "QT" file.
 ////
+//// Options:    -o    specify test option [0]
+////                       0: normal use
+////                       1: test QApplication
+////                       2: NULL QApplication
+////                       3: test DISPLAY
+////                       4: NULL DISPLAY
+////
 //// Steve McMillan, 6/04
 
 #include "hdyn.h"
@@ -60,18 +67,15 @@ int Qt_pp3(hdyn *b,
 
     else {
 
-	// Shouldn't happen...
-	// (We need a better way to set up a fake argv...)
-
-	char argv1[2][1024];
-	strcpy(argv1[0], "Qt_pp3");
-	strcpy(argv1[1], "");
-
-	char *argv[2];
-	argv[0] = argv1[0];
-	argv[1] = argv1[1];
+	// Shouldn't happen... Set up a fake argv.
 
 	int argc = 1;
+
+	char argv1[argc][1024];
+	strcpy(argv1[0], "Qt_pp3");
+
+	char *argv[argc];
+	argv[0] = argv1[0];
 
 	app = new QApplication(argc, argv);
 	Qtpp3 = new pp3_widget(1);
@@ -105,7 +109,9 @@ int Qt_pp3(hdyn *b,
 	strncpy(display, getenv("DISPLAY"), 1023);
     display[1023] = '\0';
 
-    // Attempt to open the display.
+    // QApplication will terminate the program if we can't open the
+    // X display.  Avoid this by attempting to open the display before
+    // launching the pp3_widget,
 
     Display *Xdisp = XOpenDisplay(display);
     if (!Xdisp) {
@@ -114,9 +120,22 @@ int Qt_pp3(hdyn *b,
     } else
 	cerr << "Using X display " << display << endl;
 
-    // Display is apparently usable.
+    // However, using this X display directly doesn't seem to work.
+    // Remove it and make up a fake command-line string to let Qt do it.
 
-    QApplication *app = new QApplication(Xdisp);
+    XCloseDisplay(Xdisp);
+    int argc = 3;
+
+    char argv1[argc][1024];
+    strcpy(argv1[0], "Qt_pp3");
+    strcpy(argv1[1], "-display");
+    strcpy(argv1[2], display);
+
+    char *argv[argc];
+    for (int k = 0; k < argc; k++)
+	argv[k] = argv1[k];
+
+    QApplication *app = new QApplication(argc, argv);
     pp3_widget *Qtpp3 = new pp3_widget(1);
     app->setMainWidget(Qtpp3);
 
@@ -127,7 +146,7 @@ int Qt_pp3(hdyn *b,
 
     delete Qtpp3;			// necessary if timers are running?
     delete app;
-    XCloseDisplay(Xdisp);		// Qt won't do this...
+
     return ret;
 }
 
@@ -143,32 +162,62 @@ int main(int argc, char **argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:";
+    char* param_string = "o:";
+
+    int option = 0;
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
+
+	    case 'o': option = atoi(poptarg);
+		      break;
 
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
                       exit(1);
 	}
 
+    hdyn *b = NULL;
     QApplication *app = NULL;
 
-    // Normal use for the toolbox version is to create the application
-    // here, rather than creating multiple applications if Qt_pp3() is
-    // called multiple times.  To see the alternative, comment out 
-    // the next three lines.
+    if (option == 0) {
 
-    app = new QApplication(argc, argv);
-    pp3_widget *Qtpp3 = new pp3_widget(0);
-    app->setMainWidget(Qtpp3);
+	// Normal use for the toolbox version is to create the application
+	// here, rather than creating multiple applications if Qt_pp3() is
+	// called multiple times.  To see the alternative, comment out 
+	// the next three lines.
 
-    hdyn *b;
+	app = new QApplication(argc, argv);
+	pp3_widget *Qtpp3 = new pp3_widget(0);
+	app->setMainWidget(Qtpp3);
 
-    while ((b = get_hdyn())) {
-	if (Qt_pp3(b, app) == 1) exit(0);
-	delete b;
+	while ((b = get_hdyn())) {
+	    if (Qt_pp3(b, app) == 1) exit(0);
+	    delete b;
+	}
+
+    } else {
+
+	// For testing the various argument options.
+
+	if (b = get_hdyn()) {
+	    if (option == 1) {
+		app = new QApplication(argc, argv);
+		pp3_widget *Qtpp3 = new pp3_widget(1);
+		app->setMainWidget(Qtpp3);
+		cerr << option << ": sending existing QApplication" << endl;
+		Qt_pp3(b, app);
+	    } else if (option == 2) {
+		cerr << option << ": sending NULL QApplication" << endl;
+		Qt_pp3(b, app);
+	    } else if (option == 3) {
+		cerr << option << ": sending X display name" << endl;
+		Qt_pp3(b, ":0.0");
+	    } else if (option == 4) {
+		cerr << option << ": sending NULL X display" << endl;
+		Qt_pp3(b, (char*)NULL);
+	    }
+	}
     }
 
 #else
