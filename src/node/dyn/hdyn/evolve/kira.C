@@ -41,11 +41,11 @@
 ////              -C    specify GRAPE release interval, in seconds [15]
 ////              -d    specify log output interval [1][*]
 ////              -D    specify snapshot interval [end of run]
-////                    special values:  xN: formatted full dump, frequency N
-////                                     XN: unformatted full dump, frequency N
-////                                     full/all: same as x1
-////                                     b: track binary changes only (formatted)
-////                                     B: track binary changes (unformatted)
+////                    special values: xN: formatted full dump, frequency N
+////                                    XN: unformatted full dump, frequency N
+////                                    full/all: same as x1
+////                                    b: track binary changes only (formatted)
+////                                    B: track binary changes (unformatted)
 ////              -e    specify softening length [0][*]
 ////              -E    use exact calculation [false]
 ////              -f    specify close-encounter distance [0.25 --> 0.25/N][*]
@@ -54,7 +54,7 @@
 ////              -g    specify hysteresis factor [2.5][*]
 ////              -G    specify initial stripping radius [none][*]
 ////              -h    specify stellar-evolution time step [0.015625 = 1/64][*]
-////              -i    ignore all internal forces (external forces only) [false]
+////              -i    ignore all internal forces (i.e. external only) [false]
 ////              -I    specify (re)initialization timescale [1][*]
 ////              -k    specify perturbation factor [1.e-7][*]
 ////              -K    specify log2(maximum slowdown factor) (integer): [0][*]
@@ -2438,6 +2438,17 @@ local void evolve_system(hdyn * b,	       // hdyn array
 // 	}
 //     }
 
+
+//  	if (b->get_system_time() >= 1.46875
+//  	    && b->get_system_time() <= 1.5) {
+//  	    for (int ii = 0; ii < n_next; ii++) {
+//  		if (next_nodes[ii] && next_nodes[ii]->is_valid()
+//  		    && node_contains(next_nodes[ii]->get_top_level_node(), "11"))
+//  		    pp3(next_nodes[ii]->get_top_level_node());
+//  	    }
+//  	}
+
+
 #ifdef CPU_COUNTERS
 	cpu_prev = cpu;
 	kc->cpu_time_integrate += (cpu = cpu_time()) - cpu_prev;
@@ -2697,6 +2708,28 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	   // print_recalculated_energies(b);
 
 	    bool tmp = evolve_stars(b, full_dump);
+
+
+
+
+//  	    if (b->get_system_time() >= 1.48437
+//  		&& b->get_system_time() <= 1.5) {
+//  		hdyn *bb = (hdyn*)node_with_name("11", b);
+//  		if (!bb) {
+//  		    cerr << "node 11 is null..." << endl;
+//  		    for_all_nodes(hdyn, b, bbb)
+//  			if (bbb->name_is("11")) {
+//  			    bb = bbb;
+//  			    break;
+//  			}
+//  		    if (!bb)
+//  			cerr << "still null..." << endl;
+//  		}
+//  		pp3(bb->get_top_level_node());
+//  	    }
+
+
+
 
 #ifdef T_DEBUG
 	    if (IN_DEBUG_RANGE(ttmp)) {
