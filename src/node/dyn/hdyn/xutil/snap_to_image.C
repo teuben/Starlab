@@ -2,9 +2,11 @@
 //// snap_to_image:  Construct images (in Sun rasterfile format) of
 ////                 a series of snapshots.
 ////
-//// Options:   -c           compress the image files using gzip [no compression]
+//// Options:   -c           compress the image files using gzip [don't compress]
 ////            -C colormap  specify a colormap file name [no]
 ////            -f filename  specify root name of image files [snap, - = stdout]
+////            -g           toggle forcing particles to grid (nicer single
+////                             frames, but jerkier movies)              [true]
 ////            -i index     specify (real) color index for all stars
 ////                                                        [use internal index]
 ////            -l scale     specify size of field of view (+/- scale) [3]
@@ -14,6 +16,7 @@
 ////            -P axis      specify projection axis [z]
 ////            -s size      specify image size, in pixels [256]
 ////            -S nskip     specify snaps to skip between images [0]
+////            -t           test the color map [don't test]
 
 //.............................................................................
 //
@@ -48,10 +51,40 @@ void make_greymap(unsigned char* red,
 // Thus, index, index-85, index-170, and 0 are the 4 color levels (including
 // black) associated with a given color.
 
-void make_local_standard_colormap(unsigned char* red,
-				  unsigned char* green,
-				  unsigned char* blue,
-				  int psize)
+#define REDUCE 1
+
+void extend_local_colormap(unsigned char* red,
+			   unsigned char* green,
+			   unsigned char* blue,
+			   int psize)
+{
+    // Fill in the remaining entries.
+
+    red[0] = green[0] = blue[0] = 0;
+
+    for (int i = 1; i <= 85; i++) {
+
+	real fac = 0.65;
+	if (psize == 2) fac = 0.7;	// a kludge!
+	fac *= REDUCE;
+
+	red[i] = (unsigned char)(fac*red[i+170]);
+	green[i] = (unsigned char)(fac*green[i+170]);
+	blue[i] = (unsigned char)(fac*blue[i+170]);
+
+	fac = 0.85;
+	fac *= REDUCE;
+
+	red[i+85] = (unsigned char)(fac*red[i+170]);
+	green[i+85] = (unsigned char)(fac*green[i+170]);
+	blue[i+85] = (unsigned char)(fac*blue[i+170]);
+    }
+}
+
+local void make_local_standard_colormap(unsigned char* red,
+					unsigned char* green,
+					unsigned char* blue,
+					int psize)
 {
     int i;
 
@@ -84,57 +117,47 @@ void make_local_standard_colormap(unsigned char* red,
     }
 
     red[255] = green[255] = blue[255] = 255;
-
-    // Now fill in the other entries.
-
-    red[0] = green[0] = blue[0] = 0;
-
-    for (i = 1; i <= 85; i++) {
-
-	real fac = 0.65;
-	if (psize == 2) fac = 0.7;	// a kludge!
-
-	red[i] = (unsigned char)(fac*red[i+170]);
-	green[i] = (unsigned char)(fac*green[i+170]);
-	blue[i] = (unsigned char)(fac*blue[i+170]);
-
-	red[i+85] = (unsigned char)(0.85*red[i+170]);
-	green[i+85] = (unsigned char)(0.85*green[i+170]);
-	blue[i+85] = (unsigned char)(0.85*blue[i+170]);
-    }
+    extend_local_colormap(red, green, blue, psize);
 }
 
-void make_local_greymap(unsigned char* red,
-			unsigned char* green,
-			unsigned char* blue,
-			int psize)
-{
-    int i;
+void make_alternate_colormap(unsigned char* red,
+			     unsigned char* green,
+			     unsigned char* blue);
 
-    for (i = 1; i <= 85; i++)
+local void make_local_alternate_colormap(unsigned char* red,
+					 unsigned char* green,
+					 unsigned char* blue,
+					 int psize)
+{
+    make_alternate_colormap(red, green, blue);
+
+    // Compress:
+
+    for (int i = 1; i < 85; i++) {
+	red[255-i] = red[255-3*i];
+	green[255-i] = green[255-3*i];
+	blue[255-i] = blue[255-3*i];
+    }
+
+    // Extend:
+
+    extend_local_colormap(red, green, blue, psize);
+}
+
+local void make_local_greymap(unsigned char* red,
+			      unsigned char* green,
+			      unsigned char* blue,
+			      int psize)
+{
+    for (int i = 1; i <= 85; i++)
         red[170+i] = green[170+i] = blue[170+i] = 3*i;
 
-    // Now fill in the other entries.
-
-    red[0] = green[0] = blue[0] = 0;
-
-    for (i = 1; i <= 85; i++) {
-
-	real fac = 0.65;
-	if (psize == 2) fac = 0.7;	// a kludge!
-
-	red[i] = (unsigned char)(fac*red[i+170]);
-	green[i] = (unsigned char)(fac*green[i+170]);
-	blue[i] = (unsigned char)(fac*blue[i+170]);
-
-	red[i+85] = (unsigned char)(0.85*red[i+170]);
-	green[i+85] = (unsigned char)(0.85*green[i+170]);
-	blue[i+85] = (unsigned char)(0.85*blue[i+170]);
-    }
+    extend_local_colormap(red, green, blue, psize);
 }
 
 local void add_point(float *a, int nx, int ny,
 		     real x, real y, int i, int j,
+		     bool grid,
 		     real r, float color,
 		     real z, float *zarray)
 {
@@ -149,10 +172,14 @@ local void add_point(float *a, int nx, int ny,
     // at the bright end of the colormap, in the range 0.667-1.0.
     // May get around to cleaning up the color specification...
 
-    real xref = i+0.5; // x;
-    real yref = j+0.5; // y;
+    real xref = x;
+    real yref = y;
+    if (grid) {
+	xref = i+0.5;
+	yref = j+0.5;
+    }
 
-    int ir = (int)(r+0.0001);
+    int ir = (int)(r+0.0001)+1;
     real r2a = pow(r-0.1,2), r2b = pow(r+0.2,2), r2c = pow(r+0.5,2);
 
     for (int ii = max(-ir, -i); ii <= min(ir, nx-i); ii++)
@@ -173,12 +200,12 @@ local void add_point(float *a, int nx, int ny,
 
 	    real c = color;
 
-	    if (dx2 <= r2a)
+	    if ((ii == 0 && jj == 0) || dx2 <= r2a)
 		; 				// "color 1" -- do nothing
 	    else if (dx2 < r2b)
-		c -= 0.333;			// "color 2" (index - 85)
+		c -= 0.3333;			// "color 2" (index - 85)
 	    else if (dx2 < r2c)
-		c -= 0.666;			// "color 3" (index - 170)
+		c -= 0.6667;			// "color 3" (index - 170)
 	    else
 		c = 0;				// black
 
@@ -217,7 +244,10 @@ main(int argc, char** argv)
     bool colormap_set = false;
 
     bool compress = false;
+    bool grid = true;
     bool mass = false;
+
+    bool testmap = false;
 
     real index_all = -1;
 
@@ -225,7 +255,7 @@ main(int argc, char** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "cf:i:l:mn:p:P:s:S:";
+    char* param_string = "cC:f:gi:l:mn:p:P:s:S:t";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
@@ -237,6 +267,8 @@ main(int argc, char** argv)
 			break;
 	    case 'f':	strncpy(file, poptarg, 63);
 			file[63] = '\0';	// just in case
+			break;
+	    case 'g':	grid = !grid;
 			break;
 	    case 'i':	index_all = atof(poptarg);
 	    		if (index_all < 0)
@@ -264,6 +296,8 @@ main(int argc, char** argv)
 		        break;
 	    case 'S':   nskip = atoi(poptarg);
 		        break;
+	    case 't':	testmap = true;
+			break;
 	    default:
 	    case '?':	params_to_usage(cerr, argv[0], param_string);
 			return false;
@@ -290,10 +324,23 @@ main(int argc, char** argv)
 	else
 	    make_local_greymap(red, green, blue, psize);
 //	    make_greymap(red, green, blue);
+
+	if (mass) make_local_alternate_colormap(red, green, blue, psize);
     }
 
     float* a = new float[nx*ny], *zarray = new float[nx*ny];
     if (!a || !zarray) exit(1);
+
+    if (testmap) {
+
+	// Draw the colormap and exit.
+
+	for (int j = 0; j < ny; j++)
+	    for (int i = 0; i < nx; i++)
+		*(a+j*nx+i) = (i%256)/256.;
+		write_image(a, nx, ny, NULL, 0, red, green, blue);
+	exit(0);
+    }
 
     int iax, jax, kax;
 
@@ -374,29 +421,30 @@ main(int argc, char** argv)
 		    y = ((l+y) * 0.5 * ny / l);
 		    int j = (int) y;
 
-		    // Color (by index):
+		    // Set color (by mass or index) and radius:
 
 		    float color = 1;		// default is white
-
-		    if (index_all < 0 && bb->get_index() > 0)
-			color = 0.3*(bb->get_index() - cmin) * color_scale
-					+ 0.7;	// !!!
-		    else if (index_all >= 0)
-			color = color_all;
-
-		    // Radius of the point representing the star:
-
 		    real r = psize;
 
 		    if (mass && bb->get_mass() > 0) {
 
-			// Star size depends on its mass.  Minimum size is
-			// 1 pixel, maximum is psize.  Scaling is logarithmic.
+			// Mass scaling is logarithmic.
 
-			r *= log10(bb->get_mass()/mmin) * logfac;
-		    }
+			real fac = log10(bb->get_mass()/mmin) * logfac;
 
-		    add_point(a, nx, ny, x, y, i, j, r, color, z, zarray);
+			color = 0.6667 + 0.3333*fac;
+
+			// Minimum radius is 1 pixel, maximum is psize.
+
+			r *= fac;
+
+		    } else if (index_all < 0 && bb->get_index() > 0)
+			color = 0.3*(bb->get_index() - cmin) * color_scale
+					+ 0.7;	// note offset !!!
+		    else if (index_all >= 0)
+			color = color_all;
+
+		    add_point(a, nx, ny, x, y, i, j, grid, r, color, z, zarray);
 		}
 	    }
 
