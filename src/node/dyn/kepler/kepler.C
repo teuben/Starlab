@@ -973,9 +973,9 @@ void  kepler::initialize_from_pos_and_vel(bool minimal, bool verbose)
         eccentricity = sqrt(rdotv * rdotv / (total_mass * semi_major_axis)
                             + temp * temp);
 
-	// Rounding error:
+	// Deal with rounding error:
 
-	if (eccentricity < 1.e-15) eccentricity = 0;
+	if (eccentricity < 1.e-14) eccentricity = 0;
 
 	if ((energy > 0 && eccentricity < 1
 	               && eccentricity > 1 - SQRT_TRIG_TOL)
@@ -994,7 +994,7 @@ void  kepler::initialize_from_pos_and_vel(bool minimal, bool verbose)
 	    // PROBLEM: this may be OK for pragmatic reasons in an
 	    // N-body simulation with real stars, but it is not OK
 	    // in a scattering experiment where we may be interested
-	    // small eccentricity changes.  There is no mathematical
+	    // insmall eccentricity changes.  There is no mathematical
 	    // reason to expect problems near eccentricity = 0.
 
 	    // Fix by introducing circular_binary_limit, which specifies
@@ -1011,7 +1011,7 @@ void  kepler::initialize_from_pos_and_vel(bool minimal, bool verbose)
 
 	    // Tidally circularized binaries pose some problem in
 	    // the transformation from hdyn to kepler.
-	    // This might solve the problem, but i am not sure.
+	    // This might solve the problem, but I am not sure.
 	    // There may be binaries that are almost circular, and
 	    // these can still give the problem.
 	    //                                            SPZ 2/98
@@ -1092,6 +1092,10 @@ void  kepler::initialize_from_pos_and_vel(bool minimal, bool verbose)
 
 	  // Note: The order of operations above is important for very
 	  //       eccentric orbits!
+
+	  // For almost circular orbits, the above expression is likely
+	  // to be very inaccurate (sep ~ peri ~ a ==> tmp = 1), so expect
+	  // check_trig_limit() to complain...
 
 	  if (fabs(cos_true_an) > 1.0) {
 	      // cerr << "  rp, rsep, ecc =  " << periastron << " " 
