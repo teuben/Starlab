@@ -22,7 +22,7 @@ pkglib_LTLIBRARIES = libdyn.la
 
 libdyn_la_LDFLAGS = ../libnode.la
 libdyn_la_LIBADD = util/libdyn-1.la kepler/libdyn-2.la init/libdyn-3.la \
-    evolve/libdyn-4.la
+    evolve/libdyn-4.la $(LTLIBOBJS)
 libdyn_la_SOURCES =
 
 .PHONY: libs clibs
