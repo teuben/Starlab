@@ -15,7 +15,7 @@
 //// Options:      -c    add comment [none]
 ////               -C    specify center [(0,0,0)]
 ////               -M    specify mass [1]
-////               -R    specify scale [1]
+////               -a/R  specify scale [1]
 
 #ifdef TOOLBOX
 
@@ -34,7 +34,7 @@ main(int argc, char *argv[])
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "c:C:::M:R:";
+    char* param_string = "a:c:C:::M:R:";
 
     dyn *b = get_dyn(cin);
     if (b == NULL) err_exit("Can't read input snapshot");
@@ -54,6 +54,7 @@ main(int argc, char *argv[])
 			break;
 	    case 'M':	mass = atof(poptarg);
 			break;
+	    case 'a':
 	    case 'R':	scale = atof(poptarg);
 			break;
 	    default:
