@@ -28,7 +28,7 @@ char *equals = "";
 
 void setprefix() {
   prefix[0] = '\0';
-  if(fullform > 0) {
+  if(fullform > 0 && nesting > 0) {
     switch(nesting) {
     case 0: break;
     case 1: prefix[0] = ' '; prefix[1] = '\0'; break;
@@ -244,6 +244,7 @@ With -a option, converts to (indented) ASCII form instead.\n", argv[0]);
 		start = -1;
 		systime = 0;
 	    }
+	    if(nesting < 0) nesting = 0;
 	    setprefix();
 
 	} else if(!memcmp(s, "(P", 2)) {
