@@ -2,8 +2,9 @@
 ////              and print out data on the interpolated tree at fixed
 ////              time intervals
 ////
-//// Options:    -d    time step [0.0625]
+//// Options:    -D    time step [0.0625]
 ////             -F    input file [run.out]
+////             -L    number of loops [infinite]
 
 #include "worldline.h"
 
@@ -40,19 +41,22 @@ main(int argc, char** argv)
     real dt = 0.0625;
     char infile[128];
     strcpy(infile, "run.out");
+    int nloop = VERY_LARGE_INTEGER;
 
     extern char *poptarg;
-    char* params = "d:F:";
+    char* params = "D:F:L:";
     int   c;
 
     while ((c = pgetopt(argc, argv, params)) != -1)
 	switch(c) {
 
-	    case 'd': dt = atof(poptarg);
+	    case 'D': dt = atof(poptarg);
 		      if (dt < 0)		// usual convention
 			  dt = pow(2.0, dt);
 		      break;
 	    case 'F': strcpy(infile, poptarg);
+	    	      break;
+	    case 'L': nloop = atoi(poptarg);
 	    	      break;
             case '?': params_to_usage(cerr, argv[0], params);
 	              get_help();
@@ -76,7 +80,8 @@ main(int argc, char** argv)
     wb = wh[ih];
     real t = wb->get_t_min();
 
-    while (1) {
+    int iloop = 0;
+    while (iloop < nloop) {
 
 	real cpu = cpu_time();
 	pdyn *root = create_interpolated_tree2(wb, t);
@@ -100,6 +105,7 @@ main(int argc, char** argv)
 #define EPS 1.e-12
 
 	if (dt > 0 && t > wb->get_t_max() + EPS) {
+	    iloop++;
 	    if (++ih >= nh) {
 		ih = 0;
 		wb = wh[ih];
@@ -111,6 +117,7 @@ main(int argc, char** argv)
 	// May be moving backwards, so check that too.
 
 	if (dt < 0 && t < wb->get_t_min() - EPS) {
+	    iloop++;
 	    if (--ih < 0) {
 		ih = nh-1;
 		wb = wh[ih];

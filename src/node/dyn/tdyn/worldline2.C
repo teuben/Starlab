@@ -133,6 +133,13 @@ local INLINE void update_interpolated_tree(worldbundle *wb,
     // of the previous power-of-two segment, or at the start of the next,
     // we must still rebuild.
 
+    // PROBLEM: This will cause an unnecessary rebuild if t_int happens
+    // to be at the start or end of the proper segment (e.g. the start
+    // or end of the worldbundle time range), which can slow the code
+    // significantly.
+    //
+    // FIX: Save snd compare the previous s rather than t_int.
+
     bool rebuild = (t_int <= s->get_t_start() || t_int >= s->get_t_end());
 
     // Rebuild/update the current subtree.  Start by finding the base
@@ -533,17 +540,19 @@ local bool trim(worldbundle *wb, real& t)
     // should be the responsibility of the calling program.  (This would not
     // be an issue if timesteps were constrained to be powers of 2...)
 
+    // TEMPORARY BUG WORKAROUND: don't allow t to be exactly t_min or t_max!!!
+
     real dt = t - wb->get_t_max();
     if (dt > EPS)
 	return false;
-    else if (dt > 0)
-	t = wb->get_t_max();
+    else if (dt > -EPS)			// kludge...
+	t = wb->get_t_max() - EPS;
 
     dt = t - wb->get_t_min();
     if (dt < -EPS)
 	return false;
-    else if (dt < 0)
-	t = wb->get_t_min();
+    else if (dt < EPS)			// kludge...
+	t = wb->get_t_min() + EPS;
 
     return true;
 }
