@@ -1,13 +1,23 @@
 #!/bin/tcsh -f
 
-set prefix = $STARLAB_PATH/usr
+# Set the prefix, or use a default.  Note that STARLAB_PATH must be set.
+
+set pre = ""
+if ($#argv > 0) then
+    if (x$1 == xx) then
+	set p = $STARLAB_PATH/usr
+    else
+	st p = $1
+    endif
+    set pre = "--prefix=$p"
+endif
 
 # Build the autotools (isn't standardization wonderful?):
 
 foreach tool (autoconf automake libtool)
     tar xzf $tool*.tar.gz
     cd $tool*[0-9]
-    ./configure --prefix=$prefix
+    ./configure $pre
     make
     make install
     cd ..

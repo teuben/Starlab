@@ -1,0 +1,21 @@
+# For developers...
+
+set install-dir = $STARLAB_PATH/usr
+
+# If we need autotools (place in install-dir):
+
+(cd src/packages; ./install-autotools $install-dir)
+
+# First time through need to do autoreconf.  Assume that install-dir
+# precedes system directories in the search path.
+
+if (! -e configure) then
+    autoreconf
+endif
+
+# The usual configuration process:
+
+./configure --prefix=$install-dir
+make make install
+
+# Then test whatever...
