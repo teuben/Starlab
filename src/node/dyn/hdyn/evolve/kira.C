@@ -1111,7 +1111,7 @@ local int integrate_list(hdyn * b,
 		     << "from integrate_list [1]"
 		     << " at time " << b->get_system_time() << endl;
 
-		initialize_system_phase2(b, 1, true);
+		initialize_system_phase2(b, 1);		// default set_dt
 		b->reconstruct_perturbed_list();
 
 		PRL(tree_changed);
@@ -1144,7 +1144,7 @@ local int integrate_list(hdyn * b,
 	cerr << "call initialize_system_phase2() from integrate_list [2]"
 	     << " at time " << b->get_system_time() << endl;
 
-	initialize_system_phase2(b, 2, true);
+	initialize_system_phase2(b, 2, 2);	// always set dt
 	b->reconstruct_perturbed_list();
 
 	tree_changed = true;
@@ -1359,7 +1359,8 @@ local int integrate_list(hdyn * b,
 
 
 
-local void full_reinitialize(hdyn* b, xreal t, bool verbose)
+local void full_reinitialize(hdyn* b, xreal t, bool verbose,
+			     bool init = false)
 {
     cerr << "\nReinitializing system at time " << t << endl;
 
@@ -1368,8 +1369,7 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose)
     b->set_system_time(t);
     // b->to_com();
     initialize_system_phase1(b, t);
-    initialize_system_phase2(b, 3,
-			     false);			// "false" here means
+    initialize_system_phase2(b, 3, 0);			// "0" here means
 							// timesteps are only
 							// set if zero
     // Reset and save d_min_sq().
@@ -1404,7 +1404,10 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose)
     // Quietly reinitialize all kepler structures.
     // (Repeats actions taken by get_hdyn() on startup.)
 
-    b->initialize_unperturbed();
+    cerr << "calling initialize_unperturbed()" << endl;
+    b->initialize_unperturbed(init);
+
+    if (init) b->recompute_unperturbed_steps();
 
     if (verbose) {
 	cerr << "CPU time for reinitialization = "
@@ -1781,20 +1784,13 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     // Initialize the system.  This is somewhat redundant, as immediate
     // reinitialization is scheduled within the while loop.  However,
-    // we need to know time steps for fast_get_nodes_to_move().
+    // we need to know time steps for fast_get_nodes_to_move().  This
+    // will also compute all perturber lists.
 
-    full_reinitialize(b, t, verbose);
+    full_reinitialize(b, t, verbose, true);
 
     bool tree_changed = true;	// used by fast_get_nodes_to_move;
     				// set by integration/evolution routines
-
-
-
-real *xxx = NULL;
-hdynptr *yyy = NULL;
-PRC(xxx); PRL(yyy);
-
-
 
     while (t <= t_end) {
 
@@ -2102,7 +2098,7 @@ if (ttmp > T_DEBUG) {
 
 	    // *** REQUIRE dt_reinit >= dt_sync. ***
 
-	    full_reinitialize(b, t, verbose);
+	    full_reinitialize(b, t, verbose, false);
 	    tree_changed = true;
 
 	    fast_get_nodes_to_move(b, next_nodes, n_next, ttmp, tree_changed);
@@ -2226,6 +2222,13 @@ if (ttmp > T_DEBUG) {
 //      delete [] xxx;
 
 }
+#endif
+
+#if 0
+	cerr << "entering integrate_list: "; PRC(t); PRC(n_next);
+	cerr << next_nodes[0]->format_label();
+	if (n_next > 1) cerr << " " << next_nodes[1]->format_label();
+	cerr << endl;
 #endif
 
 	int ds = integrate_list(b, next_nodes, n_next, exact,
@@ -2518,6 +2521,38 @@ if (ttmp > T_DEBUG) cerr << 7 << endl << flush;
 
 
 
+local void recompute_perturber_lists(hdyn *b, bool verbose = false)
+{
+    int n_nolist = 0;
+    cerr << "checking perturber lists #1" << endl << flush;
+    for_all_daughters(hdyn, b, bb)
+	if (bb->is_parent() && !bb->get_oldest_daughter()->get_kepler()
+	    && !bb->get_perturber_list()) {
+	    if (verbose)
+		cerr << bb->format_label()
+		     << " is perturbed, no perturber list"
+		     << endl;
+	    n_nolist++;
+	}
+    PRL(n_nolist);
+
+    cerr << "computing acc and jerk for binary CM nodes" << endl << flush;
+    calculate_acc_and_jerk_on_top_level_binaries(b);
+
+    n_nolist = 0;
+    cerr << "checking perturber lists #2" << endl << flush;
+    for_all_daughters(hdyn, b, bb)
+	if (bb->is_parent() && !bb->get_oldest_daughter()->get_kepler()
+	    && !bb->get_perturber_list()) {
+	    if (verbose)
+		cerr << bb->format_label()
+		     << " is perturbed, no perturber list"
+		     << endl;
+	    n_nolist++;
+	}
+    PRL(n_nolist);
+}
+
 #include <unistd.h>				// for termination below...
 #include <signal.h>
 
@@ -2565,6 +2600,10 @@ main(int argc, char **argv)
     set_kepler_tolerance(2);
     set_kepler_print_trig_warning(b->get_kira_diag()
 				   ->report_kepler_trig_error);
+
+    // It is desirable to compute perturber lists to avoid excessive
+    // computation in any initial perturbed binaries.  This will be done
+    // in evolve_system() when the system is initialized.
 
     evolve_system(b, delta_t, dt_log, long_binary_out,
 		  dt_snap, dt_sstar, dt_esc, dt_reinit, dt_fulldump,
