@@ -59,6 +59,26 @@ main(int argc, char ** argv)
         b->log_history(argc, argv);
 
         freeze(b, fac);
+
+	// Clean up total and kinetic energies.
+
+	story *sk = find_qmatch(b->get_dyn_story(), "kinetic_energy");
+	story *se = find_qmatch(b->get_dyn_story(), "total_energy");
+
+	if (sk) {
+
+	    if (se) {
+		real k = getrq(b->get_dyn_story(), "kinetic_energy");
+		real e = getrq(b->get_dyn_story(), "total_energy");
+		putrq(b->get_dyn_story(), "total_energy", e-k);
+	    }
+
+	    putrq(b->get_dyn_story(), "kinetic_energy", 0);
+	    
+	} else if (se)
+
+	    rm_daughter_story(b->get_dyn_story(), se);
+
 	put_dyn(b);
 	rmtree(b);
     }
