@@ -55,24 +55,20 @@
 
 #ifdef TOOLBOX
 
+#define AKING_F77 F77_FUNC(aking, AKING)
+#define RAN2_F77 F77_FUNC(ran2, RAN2)
+
 #define  SEED_STRING_LENGTH  256
 char  tmp_string[SEED_STRING_LENGTH];
 
-#ifdef FORTRAN_TRAILING_UNDERSCORE
-#   define AKING aking_
-#   define RAND ran2_ 
-#else
-#   define AKING aking
-#   define RAND ran2
-#endif
 
 // Should really be 'extern "F77"'...
 
-extern "C" void AKING(real*, real*, real*, real*, real*, real*, real*,
+extern "C" void AKING_F77(real*, real*, real*, real*, real*, real*, real*,
 		      real*, real*, int*, int*, real*, int*,
 		      real*, real*, real*, real*);
 
-extern "C" real RAND(int &seed)
+extern "C" real RAN2_F77(int &seed)
 {
     return randinter(0, 1);
 }
@@ -117,7 +113,7 @@ local void make_aniso_king(dyn * b, int n, real w0, real alpha1, real alpha3,
 						// note that this duplicates
 						// the x, y, and z arrays
 
-    AKING(m, x, y, z, vx, vy, vz,			// DCH's Fortran
+    AKING_F77(m, x, y, z, vx, vy, vz,			// DCH's Fortran
 	  &alpha1, &alpha3, &seed, &n, &w0, &test,	// function
 	  &potential, &kinetic, &tidal_energy, coord);
 
