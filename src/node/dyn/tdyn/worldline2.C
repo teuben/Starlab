@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //// worldline2:  New functions to manage and manipulate 4-D trees
 ////
@@ -99,10 +99,10 @@ local INLINE void clean_up_subtree(worldbundle *wb, pdyn *old, bool debug)
 		wb->get_bundle()[wi]->set_t_curr(-VERY_LARGE_NUMBER);
 	    }
 	}		
-	    
+	
 	detach_node_from_general_tree(*old);
 
-	// Function rmtree() actually deletes the old nodes.  
+	// Function rmtree() actually deletes the old nodes.
 	// May not be necessary to go that far.
 
 	rmtree(old);

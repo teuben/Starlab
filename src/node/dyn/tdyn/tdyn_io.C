@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //// tdyn_io:  Starlab pdyn and tdyn class I/O functions.
 ////
@@ -57,6 +57,7 @@ istream & pdyn::scan_star_story(istream & s, int level)
 
 	// Ignore everything else -- no stories!
     }
+    return s;
 }
 
 istream & pdyn::scan_dyn_story(istream & s)
@@ -85,7 +86,7 @@ istream & pdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    case 'L':
 
 		// Luminosity:
@@ -105,7 +106,7 @@ istream & pdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    case 'r':
 
 		// Position:
@@ -159,7 +160,7 @@ istream & pdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    case 'S':
 
 		// Stellar type:
@@ -174,14 +175,16 @@ istream & pdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    case 't':
 
 		if (!strcmp("tmpv", keyword)) {
+
 		    // Read time, mass, pos, and vel as unformatted data.
 		    // Input time will be real, independent of USE_XREAL.
 
 		    // *** Must coordinate with hdyn_io.C. ***
+
 		    real time = read_unformatted_real( s );
 		    mass = read_unformatted_real( s );
 
@@ -221,7 +224,7 @@ istream & pdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    case 'T':
 
 		if (!strcmp("TL", keyword)) {
@@ -253,7 +256,7 @@ istream & pdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    default:
 	      other:
 		// else
@@ -290,7 +293,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    case 'b':
 
 		// Alternate center tracking (root node only).  Save all
@@ -393,7 +396,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    case 'j':
 
 		// Jerk:
@@ -403,7 +406,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    case 'k':
 
 		// Kepler flag (1 = unperturbed, 2 = lightly perturbed):
@@ -435,7 +438,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    case 'r':
 
 		// Position:
@@ -489,7 +492,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    case 'S':
 
 		// Stellar type:
@@ -504,7 +507,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    case 't':
 
 		// Time:
@@ -578,7 +581,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    next = (tdyn *)t_esc;
 		}		
 		goto other;
-	    
+	
 	    case 'T':
 
 		if (!strcmp("TL", keyword)) {
@@ -610,7 +613,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 		goto other;
-	    
+	
 	    default:
 	      other:
 		// else

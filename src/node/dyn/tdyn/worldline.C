@@ -1,13 +1,13 @@
 
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //// worldline:  Functions to manage and manipulate 4-D trees
 ////             Defines worldbundle, worldline, and segment
@@ -184,7 +184,7 @@ void worldline::dump(int offset)	// default = 0
 	    real t = b->get_time();
 	    PRI(offset+8);
 	    cerr << "event " << ie << ": name = " << b->format_label() << ", ";
-	    PRL(t); 
+	    PRL(t);
 	    b = b->get_next();
 	    ie++;
 	}
@@ -196,7 +196,7 @@ void worldline::dump(int offset)	// default = 0
     }
 }
 
-local check_print_worldline_header(bool& print, int i)
+local void check_print_worldline_header(bool& print, int i)
 {
     cerr << "worldline " << i << ":" << endl;
     print = false;
@@ -640,9 +640,9 @@ worldbundle *read_bundle(istream &s,
     if (b->get_log_story())
 	physical_mass = getrq(b->get_log_story(), "physical_initial_mass");
 
-    // Create the initial list of node IDs, esc_flags, etc.  Note that 
+    // Create the initial list of node IDs, esc_flags, etc.  Note that
     // we use the prev pointer in tdyn to carry temporary information
-    // about cluster membership.  These should be new worldline(b), 
+    // about cluster membership.  These should be new worldline(b),
     // which is called by new worldbundle(b).  We do *not* check here!
 
     worldbundle *wb = new worldbundle(b);
@@ -653,7 +653,7 @@ worldbundle *read_bundle(istream &s,
 	     << wb->get_nw() << endl;
 
     // Now read in individual nodes and attach them to the 4tree.
-    // Stop when another tree is read in. 
+    // Stop when another tree is read in.
 
     while (b = get_tdyn(s, NULL, NULL, false)) {	// "stripped tdyn"
 
