@@ -82,7 +82,11 @@ local void evolve_the_stars(node* bi, const real end_time) {
     //  SPZ 20 Aug 2004: Just trying this, as it did not seem to work properly
     while (end_time>current_time+time_step) {
       //  while (end_time>current_time) {
+<<<<<<< sstar_to_dyn.C
+//      cerr << "running loop at " << time_step << " for star " << bi->get_index() << endl;
+=======
       //      cerr << "running loop at " << time_step << " for star " << bi->get_index() << endl;
+>>>>>>> 1.7
 
        bi->get_starbase()->evolve_element(current_time+time_step);
        bi->get_starbase()->evolve_element(
