@@ -2318,6 +2318,9 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	// will not overflow when CMs are expanded into components.
 	//						      (Steve, 3/03)
 
+	static int compress_count = 0;
+	static char compress_id[256];
+
 	// Hmmm.  This loop has grown far too big.  Should move out to
 	// a separate function soon...
 
@@ -2462,9 +2465,6 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 				    // new factor rpfac.
 
 #if 1
-				    static int compress_count = 0;
-				    static char compress_id[256];
-
 				    if (strncmp(compress_id, 
 						b->format_label(), 255)) {
 				        compress_count = 0;
@@ -2480,8 +2480,11 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 					cerr << "time " << b->get_system_time()
 					     << ", ";
 					cerr.precision(p);
-					PRC(n_neighbors); PRC(ntot);
-					PRL(rescale);
+					PRC(n_neighbors);
+					// PRC(ntot);
+					PR(rescale);
+					cerr << "  (" << compress_count
+					     << ")" << endl;
 				    }
 				    compress_count++;
 #endif
@@ -2591,14 +2594,16 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 		    b->set_n_perturbers_low(npl);
 
 #if 1
-		    cerr << "    " << npl << " partial perturbers";
-		    if (npl > 0) {
-			cerr << ":";
-			for (int i = 0; i < Starlab::min(npl, 5); i++)
-			    cerr << " " << pl[i]->format_label();
-			cerr << "...";
+		    if (compress_count%10 == 0) {
+			cerr << "    " << npl << " partial perturbers";
+			if (npl > 0) {
+			    cerr << ":";
+			    for (int i = 0; i < Starlab::min(npl, 5); i++)
+			        cerr << " " << pl[i]->format_label();
+			    cerr << "...";
+			}
+			cerr << endl;
 		    }
-		    cerr << endl;
 #endif
 
 		}
