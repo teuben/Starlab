@@ -184,6 +184,7 @@ static hdyn** nodes = NULL;
 static hdyn** next_top = NULL;
 static hdyn** previous_nodes = NULL;
 static int* nb_check_counter = NULL;
+static int* grape_chip = NULL;
 
 static vector * pxj = NULL;
 static vector * pvj = NULL;
@@ -207,6 +208,12 @@ local void initialize_node_lists()
 	for (int i = 0; i < grape_n_max; i++)
 	    nb_check_counter[i] = 0;
 
+	// Grape chip useful for hardware debugging...
+
+	grape_chip = new int[grape_n_max];
+        for (int i = 0; i < grape_n_max; i++)
+            grape_chip[i] = -1;
+
 	pxj = new vector[grape_n_max];
 	pvj = new vector[grape_n_max];
 	paj = new vector[grape_n_max];
@@ -216,6 +223,17 @@ local void initialize_node_lists()
 	ppj = new int[grape_n_max];
 	h3nb = new int[grape_n_max];
     }
+}
+
+// Specific accessor:
+
+int get_grape_chip(hdyn *b)
+{
+    int i = b->get_grape_index() - 1;
+    if (i >= 0 && i < grape_n_max)
+	return grape_chip[i];
+    else
+	return -1;
 }
 
 local void jpdma_nodes(int nnodes, hdyn * nodelist[], bool predicted,
@@ -1275,6 +1293,8 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 
 	    hdyn * b = next_top[i+ichip];
 	    int hindex = b->get_grape_index()-1;
+
+	    grape_chip[hindex] = real_ichip;
 
 	    // PRC(ichip); PRL(real_ichip);
 
