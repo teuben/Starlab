@@ -101,7 +101,7 @@ local void print_pos_and_vel(hdyn * b, ostream & s, bool print_abs = false)
 
     skip(MAX_INDENT, s); s << " \tx: " << b->get_pos()  << endl;
     if (!b->get_kepler()) {
-	skip(MAX_INDENT, s); s << " \t-> " << b->get_pred_pos()  << endl;
+	skip(MAX_INDENT, s); s << " \t-> " << b->get_nopred_pos()  << endl;
     }
     if (print_abs && b->is_low_level_node()) {
 	skip(MAX_INDENT, s);
@@ -112,7 +112,7 @@ local void print_pos_and_vel(hdyn * b, ostream & s, bool print_abs = false)
 
     skip(MAX_INDENT, s); s << " \tv: " << b->get_vel()  << endl;
     if (!b->get_kepler()) {
-	skip(MAX_INDENT, s); s << " \t-> " << b->get_pred_vel()  << endl;
+	skip(MAX_INDENT, s); s << " \t-> " << b->get_nopred_vel()  << endl;
     }
     if (print_abs && b->is_low_level_node()) {
 	skip(MAX_INDENT, s);
@@ -230,11 +230,12 @@ local void print_maximal(hdyn * b, ostream & s, int level)
 	for (int i = 0; i <= MAX_INDENT; i++) pre[i] = ' ';
 	pre[MAX_INDENT+1] = '\t';
 	pre[MAX_INDENT+2] = '\0';
-
+#if 1
 	if (!b->is_leaf())
 	    b->print_perturber_list(s, pre);
 	if (b->is_low_level_node() && b->get_elder_sister() == NULL)
 	    b->find_print_perturber_list(s, pre);
+#endif
     }
 
     //------------------------------------------------------------
