@@ -28,9 +28,6 @@
 
 #define  INFINITY  VERY_LARGE_NUMBER
 
-#define	 ECC_TOL   1.0e-12	// Problems with nearly linear orbits;
-				// best to treat them as linear
-
 /*----------------------------------------------------------------------------
  *
  * Kepler conventions and use of variables:
@@ -284,10 +281,11 @@ local int  keplershypeq(real mean_an,	// mean anomaly
     real  derivative;			// d function / d ecc_an
     int  i;
 
-    if (ecc < 1) {			// inconsistent
+    if (ecc < 1)			// inconsistent
+	{
 	cerr << "keplershypeq: eccentricity e = " << ecc << " < 1\n";
 	exit (1);
-    }
+	}
 
     if (mean_an == 0) 		// Special case
 
@@ -320,8 +318,6 @@ local int  keplershypeq(real mean_an,	// mean anomaly
 				    // d(function) / d(ecc_an)
 		delta_ecc_an = -function / derivative;
 				    // use Newton's method to find roots
-
-		// PRI(4); PRC(function); PRC(derivative); PRL(delta_ecc_an);
 
 		if  ( abs(derivative) < 1 ) { // avoid large jumps
 		    if ( delta_ecc_an > 1 )
@@ -577,8 +573,7 @@ void  kepler::pred_true_to_mean_anomaly()
 
     } else if (energy > 0) {		// hyperbola or unbound linear orbit
 
-	if (eccentricity > 1 + ECC_TOL) {	// avoid rounding error in the
-						// determination of ecc_anomaly
+	if (eccentricity > 1) {
 
 	    // Check that the true anomaly is legal.
 
@@ -596,16 +591,8 @@ void  kepler::pred_true_to_mean_anomaly()
 		exit (1);
 	    }
 
-	    // Outside chance of an error if the denominator in the ecc_anomaly
-	    // expression is zero (this may be a redundant check here).
-
-	    real ecc_arg,  denom = 1 + eccentricity * cos(pred_true_anomaly);
-	    if (abs(denom) < ECC_TOL)
-		ecc_arg = eccentricity - 1/eccentricity;
-	    else
-		ecc_arg = (eccentricity + cos(pred_true_anomaly)) / denom;
-
-	    ecc_anomaly = acosh(ecc_arg);
+	    ecc_anomaly = acosh((eccentricity + cos(pred_true_anomaly)) /
+				(1 + eccentricity * cos(pred_true_anomaly)));
 	    if (pred_true_anomaly < 0) ecc_anomaly = -ecc_anomaly;
 
 	} else
@@ -838,7 +825,6 @@ void  kepler::pred_mean_anomaly_to_pos_and_vel()
 
 	    } else {		 	// hyperbola or linear unbound orbit
 
-
 		keplershypeq(pred_mean_anomaly, eccentricity,
 			     pred_true_anomaly, ecc_an);
 
@@ -994,10 +980,6 @@ void  kepler::initialize_from_pos_and_vel(bool minimal, bool verbose)
     normal_unit_vector = rel_pos ^ rel_vel;
     angular_momentum = abs(normal_unit_vector);
 
-    // Attempt to take care of special cases (eccentricity = 0 or 1,
-    // energy = 1, etc.) at the time of initialization, to avoid messy
-    // checks elsewhere int the package...
-
     if (energy != 0) {
 
         semi_major_axis = -0.5 * total_mass / energy;
@@ -1007,15 +989,12 @@ void  kepler::initialize_from_pos_and_vel(bool minimal, bool verbose)
         eccentricity = sqrt(rdotv * rdotv / (total_mass * semi_major_axis)
                             + temp * temp);
 
-	// Deal with rounding error, and avoid problems with nearly
-	// circular or nearly linear orbits:
+	// Deal with rounding error:
 
-	if (eccentricity < ECC_TOL) eccentricity = 0;
+	if (eccentricity < 1.e-14) eccentricity = 0;
 
-	// Do we need an energy < 0 check here also?? (Steve, 8/02)
-
-	if ((energy > 0 && eccentricity < 1 + ECC_TOL
-	     		&& eccentricity > 1 - SQRT_TRIG_TOL)
+	if ((energy > 0 && eccentricity < 1
+	               && eccentricity > 1 - SQRT_TRIG_TOL)
 	    || (angular_momentum > 0 && eccentricity == 1)) {
 
 	    // Force a linear orbit.
@@ -1023,15 +1002,15 @@ void  kepler::initialize_from_pos_and_vel(bool minimal, bool verbose)
 	    eccentricity = 1;
 	    angular_momentum = 0;
 
-	} else if (eccentricity > 0
-		   && eccentricity < circular_binary_limit) {
+	} else if (eccentricity > 0 &&
+		   eccentricity < circular_binary_limit) {
 
 	    // Force a circular orbit (SPZ 2/98).
 
 	    // PROBLEM: this may be OK for pragmatic reasons in an
 	    // N-body simulation with real stars, but it is not OK
 	    // in a scattering experiment where we may be interested
-	    // in small eccentricity changes.  There is no mathematical
+	    // insmall eccentricity changes.  There is no mathematical
 	    // reason to expect problems near eccentricity = 0.
 
 	    // Fix by introducing circular_binary_limit, which specifies
@@ -1110,88 +1089,84 @@ void  kepler::initialize_from_pos_and_vel(bool minimal, bool verbose)
 
     // Determine the true anomaly (note conventions in special cases).
 
-    if (eccentricity > 0) {
+    if (eccentricity > 0) 
+      if (eccentricity != 1) {
 
-	if (eccentricity != 1) {
+	  // Bizarre error with g++ 2.7.2.1 on Redhat Linux 4.1:
+	  // Setting cos_true_an directly here with
+	  //
+	  //  cos_true_an = ((periastron/separation) * (1 + eccentricity) - 1)
+	  //			   / eccentricity;
+	  //
+	  // can set |cos_true_an| > 1 if eccentricity is close to zero.
+	  // However, setting a temporary variable to evaluate exactly
+	  // the same expression produces a different and correct result!
 
-	    // Bizarre error with g++ 2.7.2.1 on Redhat Linux 4.1:
-	    // Setting cos_true_an directly here with
-	    //
-	    //  cos_true_an = ((periastron/separation) * (1 + eccentricity) - 1)
-	    //			   / eccentricity;
-	    //
-	    // can set |cos_true_an| > 1 if eccentricity is close to zero.
-	    // However, setting a temporary variable to evaluate exactly
-	    // the same expression produces a different and correct result!
+	  real tmp = ((periastron/separation) * (1 + eccentricity) - 1)
+			   / eccentricity;
+	  cos_true_an = tmp;
 
-	    real tmp = ((periastron/separation) * (1 + eccentricity) - 1)
-			 / eccentricity;
-	    cos_true_an = tmp;
+	  // Note: The order of operations above is important for very
+	  //       eccentric orbits!
 
-	    // Note: The order of operations above is important for very
-	    //       eccentric orbits!
+	  // For almost circular orbits, the above expression is likely
+	  // to be very inaccurate (sep ~ peri ~ a ==> tmp = 1), so expect
+	  // check_trig_limit() to complain...
 
-	    // For almost circular orbits, the above expression is likely
-	    // to be very inaccurate (sep ~ peri ~ a ==> tmp = 1), so expect
-	    // check_trig_limit() to complain...
+	  if (fabs(cos_true_an) > 1.0) {
+	      // cerr << "  rp, rsep, ecc =  " << periastron << " " 
+	      //      << separation << " " << eccentricity << endl;
+	      // print_all();
+	  }
 
-	    if (fabs(cos_true_an) > 1.0) {
-		// cerr << "  rp, rsep, ecc =  " << periastron << " " 
-		//      << separation << " " << eccentricity << endl;
-		// print_all();
-	    }
+	  check_trig_limit(this, cos_true_an, "set_phase #1");
 
-	    check_trig_limit(this, cos_true_an, "set_phase #1");
+	  sin_true_an = cos_to_sin(cos_true_an);
+	  if (rel_pos * rel_vel < 0) sin_true_an = -sin_true_an;
 
-	    // If we get here, cos_true_an is always in the correct range.
+	  if (1 - cos_true_an < TRIG_TOL) { // More special treatment!
+	      true_anomaly = 0;
+	      cos_true_an = 1;
+	      sin_true_an = 0;
+	  } else
+	    true_anomaly = acos(cos_true_an);
 
-	    sin_true_an = cos_to_sin(cos_true_an);
-	    if (rel_pos * rel_vel < 0) sin_true_an = -sin_true_an;
+	  if (sin_true_an < 0) true_anomaly = -true_anomaly;
 
-	    if (1 - cos_true_an < TRIG_TOL) { // More special treatment!
-		true_anomaly = 0;
-		cos_true_an = 1;
-		sin_true_an = 0;
-	    } else
-		true_anomaly = acos(cos_true_an);
+      } else {
 
-	    if (sin_true_an < 0) true_anomaly = -true_anomaly;
+	  if (angular_momentum > 0) {
 
-	} else {
+	      // Special case: see McCuskey, p. 54.
 
-	    if (angular_momentum > 0) {
+	      true_anomaly = 2*acos(sqrt(periastron/separation));
+	      if (rel_pos * rel_vel < 0) true_anomaly = -true_anomaly;
 
-		// Special case: see McCuskey, p. 54.
+	      cos_true_an = cos(true_anomaly);
+	      sin_true_an = sin(true_anomaly);
 
-		true_anomaly = 2*acos(sqrt(periastron/separation));
-		if (rel_pos * rel_vel < 0) true_anomaly = -true_anomaly;
+	  } else {	// Linear orbit: "true anomaly" = eccentric anomaly.
 
-		cos_true_an = cos(true_anomaly);
-		sin_true_an = sin(true_anomaly);
+	      if (energy < 0) {
 
-	    } else {	// Linear orbit: "true anomaly" = eccentric anomaly.
+		  cos_true_an = 1 - separation / semi_major_axis;
+		  check_trig_limit(this, cos_true_an, "set_phase #2");
+		  true_anomaly = acos(cos_true_an);
 
-		if (energy < 0) {
+	      } else if (energy > 0) 
 
-		    cos_true_an = 1 - separation / semi_major_axis;
-		    check_trig_limit(this, cos_true_an, "set_phase #2");
-		    true_anomaly = acos(cos_true_an);
+		  true_anomaly = acosh(1 + separation / semi_major_axis);
 
-		} else if (energy > 0) 
+	      else	// Special case...
 
-		    true_anomaly = acosh(1 + separation / semi_major_axis);
+		  true_anomaly = pow(separation, 1.5);
 
-		else	// Special case...
+	      if (rel_pos * rel_vel < 0) true_anomaly = -true_anomaly;
 
-		    true_anomaly = pow(separation, 1.5);
-
-		if (rel_pos * rel_vel < 0) true_anomaly = -true_anomaly;
-
-		cos_true_an = -1;    // (to get the unit vectors right below)
-		sin_true_an = 0;
-	    }
-	}
-    }
+	      cos_true_an = -1;	// (To get the unit vectors right below.)
+	      sin_true_an = 0;
+	  }
+      }
 
     longitudinal_unit_vector = cos_true_an * r_unit - sin_true_an * t_unit;
     transverse_unit_vector = sin_true_an * r_unit + cos_true_an * t_unit;
@@ -1304,6 +1279,7 @@ real  kepler::pred_advance_to_periastron()     {
 
     pred_true_anomaly = 0;
     pred_mean_anomaly = 0;
+
     pred_separation = periastron;
 
     to_pred_rel_pos_vel(1, 0);
@@ -1496,10 +1472,9 @@ real  kepler::pred_transform_to_time(real t)
 {
     pred_mean_anomaly = mean_anomaly + mean_motion * (t - time);
 //    pred_mean_anomaly = mean_anomaly + mean_motion * (fmod(t - time,period));
-
     pred_time = t;
+    
     pred_mean_anomaly_to_pos_and_vel();
-
     return pred_separation;
 }
 
