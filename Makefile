@@ -314,6 +314,12 @@ tarlist:
 	@$(MAKEWALK).quiet tarlist src
 
 #..............................................................................
+#  list all files you have newer than your CVS archived
+
+cvsu:
+	cvsu | grep ^M
+
+#..............................................................................
 
 clean:
 	@-$(RM) -f .libs core *~ bin/* lib/* inc/*~
