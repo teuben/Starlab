@@ -599,6 +599,18 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 
     }
 
+
+
+//*****	TEMPORARY!!  Arbitrarily reduce low-level steps by a factor of 2,
+//***** to facilitate timing checks of low-level steps.
+//
+//    if (b->is_low_level_node()) newstep /= 2;
+//
+//*****
+//*****
+
+
+
     // The natural time step is newstep.  Force it into an appropriate
     // power-of-two block.  A halving of timestep is always OK.  To
     // preserve the synchronization, a doubling is OK only if the
@@ -3686,4 +3698,4 @@ void synchronize_tree(hdyn * b)			// update all top-level nodes
 //  +---------------+        _\|/_        +------------------------------\\ ~
 //  |  the end of:  |         /|\         |  src/dyn/evolve/hdyn_ev.C
 //  +---------------+                     +------------------------------//
-//========================= STARLAB =====================================\\ ~
+//=========================
