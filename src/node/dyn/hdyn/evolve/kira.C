@@ -185,7 +185,7 @@
 #include "star/dstar_to_kira.h"
 #include "kira_timing.h"
 
-#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
+#include "kira_debug.h"	// (a handy way to turn on blocks of debugging)
 #ifndef T_DEBUG_kira
 #   undef T_DEBUG
 #endif

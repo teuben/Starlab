@@ -1,4 +1,16 @@
 
+// Compiled-in kira debugging options (for efficiency).  Still in progress.
+// Various new options should be integrated with existing code.
+
+//-------------------------------------------------------------------------
+//
+// General switch for non-essential debugging/diagnostic checks:
+
+#define KIRA_DEBUG
+#undef  KIRA_DEBUG
+
+//-------------------------------------------------------------------------
+//
 // Track progress through the code (main integration loop and elsewhere,
 // as defined below), after time T_DEBUG, if defined.
 

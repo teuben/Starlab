@@ -28,7 +28,7 @@
 #include "hdyn.h"
 #include "grape6.h"
 
-#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
+#include "kira_debug.h"	// (a handy way to turn on blocks of debugging)
 #ifndef T_DEBUG_hdyn_grape6
 #   undef T_DEBUG
 #endif
