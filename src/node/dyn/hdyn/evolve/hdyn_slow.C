@@ -466,7 +466,7 @@ void hdyn::extend_or_end_slow_motion(real P)	// convenient to pass P (!)
 					  ->get_top_level_node();
 
 		    if (pert_top != par) {
-#if 1
+#if 0
 			cerr << "correcting slow_perturbed list of "
 			     << pert_top->format_label() << endl;
 #endif

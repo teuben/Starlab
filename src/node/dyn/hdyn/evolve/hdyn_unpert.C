@@ -2019,12 +2019,14 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 
 	    // Same treatment of slow binaries as above.
 
+#if 0
 	    // Flag this to see if it ever occurs (Steve, 9/00).
 
 	    cerr << endl
 		 << "**** binary_type == PERICENTER_REFLECTION "
 		 << "&& KEP_OUTSIDE_SEMI(*kep) ****"
 		 << endl << endl;
+#endif
 
 	    if (slow) {
 
