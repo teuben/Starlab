@@ -1,7 +1,7 @@
 
 // Place temporary post-step debugging code here, to clean up kira.C.
 
-int ppp = cerr.precision(GIGH_PRECISION);
+int ppp = cerr.precision(HIGH_PRECISION);
 PRL(ds);
 for (int ii = 0; ii < n_next; ii++)
     if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
