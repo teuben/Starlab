@@ -109,14 +109,12 @@ real zero_age_main_sequnece_radius(const real mass) {
 
     real radius = delta;
 
-    // Was in CVS version, removed by SPZ?
+    if (radius < 0.1) {
+ 
+	// assumed brown dwarf or planet.
 
-//    if (radius < 0.1) {
-// 
-//	// assumed brown dwarf or planet.
-//
-//	radius = 0.1;
-//    }
+	radius = 0.1;
+    }
 
     return radius;
 }
@@ -260,7 +258,7 @@ local void mkbinary(dyn* b, real lower, real upper,
 		if (option >= 2) {
 
 		    bool detached = false;
-		    real a_min = minimum_semi_major_axis(primary, secondary);
+		    real a_min = 5*minimum_semi_major_axis(primary, secondary);
 		    a_min = b->get_starbase()->conv_r_star_to_dyn(a_min);
 
 		    //binding energy = 0.5 * m_total / sma;
@@ -291,6 +289,8 @@ local void mkbinary(dyn* b, real lower, real upper,
 				detached = true;
 			}
 			while(!detached);
+//	PRC(b->get_starbase()->conv_r_dyn_to_star(a_min));
+//      PRC(b->get_starbase()->conv_r_dyn_to_star(semi_major_axis));PRL(ecc);
 		    }
 		    else {	// separation limited by semi-detached.
 
