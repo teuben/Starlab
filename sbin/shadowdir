@@ -1,5 +1,4 @@
-#!/bin/csh -f
-
+#
 # Create a directory shadowing a specified one.  Intended application is
 # to allow multiple Starlab trees to share a single source tree, for use
 # with different architectures.
@@ -9,17 +8,28 @@ if ($#argv < 1) then
     exit
 endif
 
-# Make sure curr is a full pathname (not relative to .).
+# Make sure curr is a full pathname (not relative to .).  Note that,
+# as usual, we have to be careful of the "pwd" functions.  On DecUNIX,
+# the command pwd prepends a /tmp_mount to all automounted directory
+# names, which causes symbolic links to fail on linux, which doesn't
+# prepend and doesn't understand.  In csh, the $cwd variable in csh
+# also has the /tmp_mount, and $PWD doesn't exist.  Hence we have to
+# use tcsh (where pwd, cwd and PWD are all fine even in DecUNIX).
+# However, we can't force this in the #magic first line, because we
+# don't know where tcsh is in general (/usr/local/bin in DecUNIX, /bin
+# in linux)!!  Thus, the best we can do is to use the # and assume
+# that we are using tcsh when we invoke this script!  What an annoying
+# operating system...
 
 set curr = $cwd
-cd $1
+chdir $1
 set dir = $cwd
-cd $curr
+chdir $curr
 
 set shadow = ~/shadow_tmp
 if ($#argv > 1) set shadow = $2
 
-set dlist = (`cd $dir; find . -type d | grep -v CVS`)	# not too many, we hope!
+set dlist = (`chdir $dir; find . -type d | grep -v CVS`) # not too many, I hope!
 
 if ($#dlist > 0) then
 
@@ -44,7 +54,7 @@ if ($#dlist > 0) then
 #	shadow directory tree, save them and restore them at the end.
 #	A somewhat half-baked way of doing this follows:
 
-	cd $shadow
+	chdir $shadow
 	set mlist = (`find . -name Makefile`)
 	if ($#mlist > 0) then
 	    @ i = 0
@@ -70,7 +80,7 @@ if ($#dlist > 0) then
 	    end
 	    end
 	endif
-	cd $curr
+	chdir $curr
 
 	/bin/rm -r -f $shadow
 	echo Directory deleted
@@ -78,7 +88,7 @@ if ($#dlist > 0) then
     endif
 
     mkdir $shadow
-    cd $shadow
+    chdir $shadow
 
 #   Make shadow into a full pathname.
 
@@ -111,12 +121,12 @@ if ($#dlist > 0) then
 	if (X$sub == X.) then
 	    set flist = (starlab_start VERSION Makefile)	# Starlab...
 	else if (X$sub == X./local) then
-	    set flist = (`cd $dir/$sub; find * -prune -type f`)
+	    set flist = (`chdir $dir/$sub; find * -prune -type f`)
 	else if (X$sub == X./sbin) then
-	    set flist = (`cd $dir/$sub; find * -prune -type f`)
+	    set flist = (`chdir $dir/$sub; find * -prune -type f`)
 	else
 	    set flist = \
-		(`cd $dir/$sub; find * -prune -name '*.[cCfFh]' -o -name '[A-Z]*' | grep -v CVS`)
+		(`chdir $dir/$sub; find * -prune -name '*.[cCfFh]' -o -name '[A-Z]*' | grep -v CVS`)
 	endif
 
 	if ($#flist > 0) then
@@ -135,7 +145,7 @@ if ($#dlist > 0) then
 
 #	Restore saved Makefiles.
 
-	cd $shadow
+	chdir $shadow
         @ i = 0
 	foreach m ($savelist)
 	    @ i++
@@ -144,7 +154,7 @@ if ($#dlist > 0) then
 	    echo Restored $shadow/$savelist[$i]
 
 	end
-	cd $curr
+	chdir $curr
     endif
 
 endif
