@@ -125,7 +125,7 @@ main(int argc, char ** argv)
             b->log_comment(comment);
         b->log_history(argc, argv);
 
-        get_std_center(b);
+        get_std_center(b, true);
 
 	// Write system to stdout and get next system (if any).
 
