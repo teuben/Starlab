@@ -201,7 +201,8 @@ AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
     src/star/sstar/evolve/Makefile src/star/dstar/Makefile \
     src/star/dstar/starclass/Makefile src/star/dstar/io/Makefile \
     src/star/dstar/init/Makefile src/star/dstar/stardyn/Makefile \
-    src/star/dstar/util/Makefile src/star/dstar/evolve/Makefile \
+    src/star/dstar/util/Makefile src/star/dstar/sdyn3/Makefile \
+    src/star/dstar/evolve/Makefile \
     src/star/util/Makefile src/star/xutil/Makefile src/hydro/Makefile \
     src/hydro/util/Makefile src/hydro/init/Makefile src/hydro/evolve/Makefile \
     src/harpsims/Makefile])

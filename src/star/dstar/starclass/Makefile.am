@@ -13,10 +13,12 @@
 ##..............................................................................
 ##	Mar 1994		Simon F. Portegies Zwart
 ##	Jul 2004		Ernest Mamikonyan
+##	Sep 2004		Annotated by Steve McMillan
 ##..............................................................................
 ##
 
-noinst_LTLIBRARIES = libdstar-1.la
+# Local library and sources (sub-libraries will be combined later):
 
-libdstar_1_la_SOURCES = double_star.C double_support.C triple_star.C \
-    cluster_support.C
+noinst_LTLIBRARIES = libdstar-starclass.la
+libdstar_starclass_la_SOURCES =	double_star.C double_support.C \
+				triple_star.C cluster_support.C

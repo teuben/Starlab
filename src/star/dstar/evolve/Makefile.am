@@ -13,13 +13,16 @@
 ##..............................................................................
 ##	Oct 1994		Simon F. Portegies Zwart
 ##	Jul 2004		Ernest Mamikonyan
+##	Sep 2004		Annotated by Steve McMillan
 ##..............................................................................
 ##
 
+# Executables to build:
+
 bin_PROGRAMS = SeBa
 
-SeBa_CPPFLAGS = -DTOOLBOX
-
-SeBa_LDADD = ../libdstar.la ../../../node/dyn/libdyn.la
+# Specific options and flags for each executable:
 
 SeBa_SOURCES = SeBa.C
+SeBa_CPPFLAGS = -DTOOLBOX
+SeBa_LDADD = ../libdstar.la ../../../node/dyn/libdyn.la

@@ -13,16 +13,22 @@
 ##..............................................................................
 ##	Oct 1994		Simon F. Portegies Zwart
 ##	Jul 2004		Ernest Mamikonyan
+##	Sep 2004		Annotated by Steve McMillan
 ##..............................................................................
 ##
 
-noinst_LTLIBRARIES = libdstar-5.la
+# Executables to build:
+
 bin_PROGRAMS = semi_to_period
 
-libdstar_5_la_SOURCES = dstar_to_node.C semi_to_period.C
+# Specific options and flags for each executable:
 
+semi_to_period_SOURCES  = semi_to_period.C
 semi_to_period_CPPFLAGS = -DTOOLBOX
+semi_to_period_LDADD =	../libdstar.la \
+			../../../node/dyn/hdyn/libhdyn.la
 
-semi_to_period_LDADD = ../libdstar.la ../../../node/dyn/hdyn/libhdyn.la
+# Local library and sources (sub-libraries will be combined later):
 
-semi_to_period_SOURCES = semi_to_period.C
+noinst_LTLIBRARIES = libdstar-util.la
+libdstar_util_la_SOURCES = dstar_to_node.C semi_to_period.C
