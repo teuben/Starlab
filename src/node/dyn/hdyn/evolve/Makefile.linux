@@ -63,6 +63,7 @@ LIBFLAGS  =	-L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
                 -ldstar -lsstar -lstd -lm 
 #		~/ccmalloc-0.2.3/src/ccmalloc.o -ldl
 
+#EXEFLAGS = -pg
 EXEFLAGS = 
 
 #..............................................................................

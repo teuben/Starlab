@@ -15,8 +15,8 @@
 ##    Apr 1999					Steve McMillan
 ##.............................................................................
 #
-# This Makefile is for linux ONLY.  See Makefile.* for versions used
-# on other systems.
+# This Makefile is for SGI systems ONLY.  See Makefile.* for versions used
+# on other systems.  Currently identical to the linux version (Steve, 2/02).
 #
 # Local (i.e. non-environment) macros used in Makefile.worker.inc:
 #
@@ -60,11 +60,11 @@ CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC)
 CPPFLAGS = 
 
 LIBFLAGS  =	-L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
-                -ldstar -lsstar -lstd -lm \
-		$(GRAPELIB)
+                -ldstar -lsstar -lstd -lm
 #		~/ccmalloc-0.2.3/src/ccmalloc.o -ldl
 
 #EXEFLAGS = -pg
+EXEFLAGS =
 
 #..............................................................................
 
