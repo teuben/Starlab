@@ -62,7 +62,150 @@ void ppn(sdyn* b, ostream & s, int level) {
 }
 
 
+void scatter(sdyn* b, scatter_input input, 
+	     scatter_exp &experiment) {
+
+  scatter(b, input.eta,
+	     input.delta_t, input.dt_out, input.cpu_time_check,
+	     input.dt_snap, input.tidal_tol_factor, input.snap_cube_size,
+	     input.debug,
+	     experiment);
+
+}
+
+local real calculate_angular_mometum_from_scratch(sdyn* b) {
+
+  vector L = 0;
+  for_all_leaves(sdyn, b, bi) {
+    L += bi->get_mass()*(bi->get_pos()^bi->get_vel());
+  }
+
+  return abs(L);
+}
+
 #define DT_CHECK	20
+
+void scatter(sdyn* b, real eta,
+	     real delta_t, real dt_out, real cpu_time_check,
+	     real dt_snap, real ttf, real snap_cube_size,
+	     int debug,
+	     scatter_exp &experiment) {
+
+  experiment.init_scatter_exp(b); 
+
+  real min_min_ssd = experiment.get_min_min_ssd();
+
+  real de_merge = 0;
+  int stop_at_cpu = 0;
+  real cpu_save = cpu_time();
+  bool terminate = false;
+
+  real t_out = b->get_time_offset();
+  real t_end = delta_t + (real)b->get_time_offset(); // get_time_off.. is xreal
+
+  char previous_form[255];
+  char current_form[255];
+  strcpy(current_form, get_normal_form(b));
+
+  real kin=0, pot=0;
+  b->flatten_node();
+  real etot_init = calculate_energy_from_scratch(b, kin, pot); 
+  real Ltot_init = calculate_angular_mometum_from_scratch(b);
+  make_tree(b, DYNAMICS, STABILITY, K_MAX, debug);
+
+  // loop continues for ever or unit termination time is reached or
+  // system is unbound (see extend_or_end.C)
+  for (real t = 0; t <= VERY_LARGE_NUMBER; t += DT_CHECK) {
+
+    terminate = tree_evolve(b,  DT_CHECK, dt_out, dt_snap, 
+			    snap_cube_size, 
+			    eta, min_min_ssd, cpu_time_check);
+
+    calculate_energy(b, kin, pot);
+    if (debug) {
+      cerr.precision(6), cerr << "\nStatus at time " << b->get_time();
+      cerr.precision(9), cerr << " (energy = " << kin + pot << "):\n";
+      cerr.precision(6);
+    }
+
+    
+    // Check to see if the scattering is over.
+    
+    if (cpu_time_check < 0
+	&& cpu_time() - cpu_save > abs(cpu_time_check)) {
+      cerr <<" tcpu>tcpu_check"<<endl;
+      return;
+    }
+    
+    if(t>=dt_out) {
+
+      real ekin, epot;
+      calculate_energy(b, ekin, epot);
+      if(debug==1) {
+	cerr << "Time = " << b->get_time() 
+	     << "  Etot = " << ekin + epot 
+	     << "  Tinf = " << ekin/epot << endl;
+      }
+      //      put_sdyn(cout, *b);
+      t_out += dt_out;
+    }
+    
+    if(t>=t_end) {
+      cerr << "Early termination"<<endl;
+
+      experiment.set_scatter_discriptor(stopped);
+      experiment.set_stop(true);
+      real ekin, epot;
+      calculate_energy(b, ekin, epot);
+      cerr << "Time = " << b->get_time() 
+	   << "  Etot = " << ekin + epot << endl;
+      break;
+    }
+    
+    int coll_flag = 2;
+    de_merge += merge_collisions(b, coll_flag);
+    
+    make_tree(b, DYNAMICS, STABILITY, K_MAX, false);
+    
+    int unbound = extend_or_end_scatter(b, ttf, false);
+    if(unbound==2) {   // two body system is bound but we stop anyway
+      experiment.set_final_bound(true);
+      unbound = 1;   // but stop anyway
+    }
+    //bool unbound = tree_is_unbound(b, ttf, false);
+    //make_tree(b, DYNAMICS, STABILITY, K_MAX, debug);
+    if (unbound || terminate) break;
+    
+    //	if(experiment.get_form_changes()>1) 
+    //	  cerr << "Resonant encounter: " << get_normal_form(b) << endl;
+    strcpy(previous_form, current_form);
+    strcpy(current_form, get_normal_form(b));
+    if(strcmp(previous_form, current_form))
+      experiment.inc_form_changes();
+    
+    //	print_normal_form(b, cerr);
+  }
+  
+  b->flatten_node();
+  real etot_error = calculate_energy_from_scratch(b, kin, pot) 
+    - etot_init - de_merge;
+  experiment.set_energy_error(etot_error);
+  real Ltot_error = (calculate_angular_mometum_from_scratch(b)
+                  - Ltot_init)/Ltot_init;
+  experiment.set_angular_momentum_error(Ltot_error);
+  //PRL(etot_error);
+
+  experiment.set_min_min_ssd(min_min_ssd);
+
+  make_tree(b, DYNAMICS, STABILITY, K_MAX, debug);
+  
+  // add final report
+  experiment.final_scatter_exp(b);
+  //PRL(experiment.get_final_form());
+
+}
+
+#if 0
 
 // scatter: Take the system with root node b and integrate it forward
 // 	    in time up to time delta_t.  Check the state of the system
@@ -178,7 +321,7 @@ void scatter(sdyn* b, scatter_input input,
   experiment.final_scatter_exp(b);
 
 }
-
+#endif
 
 #else
 

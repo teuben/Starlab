@@ -35,7 +35,6 @@ OBJECT_FILES = low_n_evolve.o sdyn_ev.o tree_evolve.o sdyn_ev.o \
 	       scatter_exp.o scatter_hist.o \
 	       multiscatter.o tree_evolve.o sig_helper.o \
 	       scatter_merge.o extend_or_end.o \
-	       scatter_MPI.o multiscatter_MPI.o MPI_sigma.o \
 	       specific_function.o scatter.o
 
 BIN = .
@@ -65,7 +64,7 @@ MPI_OBJECTS = low_n_evolve.mpio sdyn_ev.mpio \
 	       scatter_exp.mpio scatter_hist.mpio \
 	       tree_evolve.mpio \
 	       scatter_merge.mpio extend_or_end.mpio \
-	       scatter_MPI.mpio \
+	       scatter_MPI.mpio scatter.mpio \
 	       specific_function.mpio	\
 	       MPI_sigma.mpio sig_helper.mpio multiscatter_MPI.mpio  
 
@@ -80,7 +79,7 @@ mpi_lib:	$(MPI_OBJECTS)
 		if [ ! -f $$o ]; then make $$o ; fi ; \
 	    done ; \
 	    echo $(STARLAB_MPICCC) $(CFLAGS_MPI) -I $(MPI_ROOT) $(TOOLFLAGS) \
-		 $< $(MPI_OBJECTS) -o $(BIN)/$@ $(LIBFLAGS_MPI) \
+		 $< -o $(BIN)/$@ $(LIBFLAGS_MPI) \
 		 $(STARLAB_MPI_LIBS) -lm ; \
 	    $(STARLAB_MPICCC) $(CFLAGS_MPI) \
 		-I $(MPI_ROOT) $(TOOLFLAGS) \

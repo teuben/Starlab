@@ -47,6 +47,7 @@ ostream& operator<<(ostream& s, scatter_input& i) {
 
 #endif
 
+#if 0
 void ppn(sdyn* b, ostream & s, int level) {
 
   s.precision(3);
@@ -68,6 +69,7 @@ void ppn(sdyn* b, ostream & s, int level) {
        daughter = daughter->get_younger_sister())
     ppn(daughter, s, level + 1);	
 }
+#endif
 
 local real calculate_angular_mometum_from_scratch(sdyn* b) {
 
@@ -79,6 +81,10 @@ local real calculate_angular_mometum_from_scratch(sdyn* b) {
   return abs(L);
 }
 
+#else
+
+
+#if 0
 #define DT_CHECK	20
 
 // scatter: Take the system with root node b and integrate it forward
@@ -206,9 +212,7 @@ void scatter(sdyn* b, real eta,
 
 }
 
-#else
-
-local void local_scatter(sdyn* b, scatter_input input, 
+void scatter(sdyn* b, scatter_input input, 
 	     scatter_exp &experiment) {
 
   scatter(b, input.eta,
@@ -218,6 +222,8 @@ local void local_scatter(sdyn* b, scatter_input input,
 	     experiment);
 
 }
+
+#endif 
 
 void slave_part_of_experiment(scatter_input input,
 			      scatter_exp &experiment) {
@@ -267,7 +273,7 @@ void slave_part_of_experiment(scatter_input input,
   experiment.set_min_min_ssd(VERY_LARGE_NUMBER);
 
   // Integrate the system to completion:
-  local_scatter(b, input, experiment);
+  scatter(b, input, experiment);
 
   cerr.precision(6);
   if (input.debug) cerr << endl;
@@ -735,11 +741,11 @@ main(int argc, char **argv) {
     //  char* default_init  
     //    = "-M 0.879 -rm 3 -v 2 -r 1 -t -r1 0.0508 -r2 0.0348 -e 0 -q 0.567 -p -a 1 -q 1 -r1 0.0394 -r2 0.0394";        // Iota Ori Probleem 
 
-    //    char* default_init  
-    //      = "-M 0.66667 -rm 3 -S 30 -v 0 -t -r1 0 -r2 0 -e 0 -q 0.5 -p -a 1 -q 1 -r1 0 -r2 0";        // Iota Ori Probleem 
+    char* default_init  
+     = "-M 0.66667 -rm 3 -S 30 -v 0 -t -r1 0 -r2 0 -e 0 -q 0.5 -p -a 1 -q 1 -r1 0 -r2 0";        // Iota Ori Probleem 
 
-    char* default_init  =
-    "-M 0.66667 -v 0 -rm 3 -S 30 -t -r2 0 -q 0.5 -t1 -e 0 -r11 0 -r12 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
+    //char* default_init  =
+      //"-M 0.66667 -v 0 -rm 3 -S 30 -t -r2 0 -q 0.5 -t1 -e 0 -r11 0 -r12 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
 
     //  char* default_init  
     //          = "-M 1 -S 30 -rm 3.7316 -v 0.35355 -t -r1 0 -r2 0 -e 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0 -e 0";

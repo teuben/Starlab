@@ -49,10 +49,10 @@ bool tree_evolve(sdyn * b,        // sdyn array
     for_all_daughters(sdyn, b, bb) bb->begin_offset_time(t_offset);
 
     terminate = low_n_evolve(b, delta_t, dt_out, dt_snap, snap_cube_size,
-		 SOFTENING, eta, X_FLAG, TIMESTEP_CRITERION,
-		 S_FLAG, N_ITER, N_MAX,
+			     SOFTENING, eta, X_FLAG, TIMESTEP_CRITERION,
+			     S_FLAG, N_ITER, N_MAX,
 			     min_min_ssd,
-		 cpu_time_check, dt_print, p);
+			     cpu_time_check, dt_print, p);
 			     
 
     b->end_offset_time();

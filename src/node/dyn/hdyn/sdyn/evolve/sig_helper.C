@@ -699,6 +699,7 @@ local void pp(sdyn* b, ostream & s, int level = 0) {
 int single_scatter(sdyn* b, scatter_input input, 
 		   scatter_exp &experiment) {
 
+#if 0
   real eta = input.eta;
   real delta_t = input.delta_t;
   real dt_out = input.dt_out;
@@ -725,13 +726,14 @@ int single_scatter(sdyn *b,
 		   real ttf, 
 		   real snap_cube_size,
 		   int debug) {
-
+#endif
     // Perform a scattering experiment with initialized nbody b
     // result = false if the outcome is a "non-resonant preservation".
     // (terminology from scatter3
 
-    scatter(b, eta, delta_t, dt_out, cpu_time_check, dt_snap, 
-	    ttf, snap_cube_size, debug, experiment);
+  scatter(b, input, experiment);
+  //    scatter(b, eta, delta_t, dt_out, cpu_time_check, dt_snap, 
+  //	    ttf, snap_cube_size, debug, experiment);
 
     // Return a "hit" if the result was
     //
