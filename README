@@ -15,15 +15,38 @@ Copyrights:
 
 To install Starlab:
 
-- Create a new directory somewhere in your own directory tree.  We 
-  suggest the name "starlab", but that is not necessary--any name
-  will do. In this directory, create a subdirectory to identify the
-  version that you are using.  We suggest that you use as a directory
-  name the particular version you are going to copy (e.g. "1.1.1" if
-  you will copy Starlab 1.1.1), but any name will do.  You can create
-  several subdirectories, each of which can contain a complete Starlab
-  version, totally independent of the others.  For example, you can
-  have directories "starlab/1.0", "starlab/1.1", "starlab/1.1.1", etc.
+1a) A tarball from the archive:
+
+	tar zxf starlab-3.6.tar.gz
+	cd starlab-3.6
+	
+	(goto step 2)
+
+1b) CVS access (developers, but perhaps anonymous too)
+
+	setenv CVSROOT :pserver:....
+	cvs login
+	cvs checkout starlab
+	cd starlab
+	
+	(goto step 2)
+
+
+2a) Old method (pre-configure, or starlab 3.x and below)
+
+	mkdir local		(it may already exist though)
+
+	cp templates/Makefile.local.inc        local
+	cp templates/starlab_setup             local
+	cp templates/cshrc.starlab.YOUR_SYSTEM local/cshrc.starlab
+
+    the first two files probably don't need any local modifications,
+    but the cshrc.starlab not only should be selected from best matching
+    YOUR_SYSTEM (redhat62, linux, solaris, ...) but may still need
+    modifications for your local site.
+
+
+(( PJT::::  DO WE STILL WANT TO MAINTAIN THESE EXPORT LEVELS ))
 
 - Copy (or ftp) the most recent Starlab tar file, of the form 
 
@@ -33,7 +56,7 @@ To install Starlab:
     "yymmddhh.s_tar_lab_version_1    (for a version with additional user code)
     "yymmddhh.s_tar_lab_version_2    (for an even more extended version)
 
-  from the main Starlab directory to the private "starlab/version"
+  from the main Starlab directory to the private "starlab"
   directory that you have just created.
 
   The "_1" and "_2" versions of the tar file contain additional user-written
@@ -41,24 +64,20 @@ To install Starlab:
   in the Starlab environment). To find out how to use them, consult an
   experienced user.
 
-- Untar the compressed tar file (version X) by giving the command:
-
-	zcat yymmddhh.s_tar_lab_version_X.Z | tar xvf -
-
-  NOTE: The versions are now REQUIRED by some Starlab software.
 	Do NOT unbundle the tar file in the "starlab" directory itself.
 
+((PJT::OLD))
 - Make a subdirectory "starlab/version/local" and copy the files
   contained in "starlab/version/templates", currently:
 
 	"starlab/version/templates/starlab_setup"
 	"starlab/version/templates/cshrc.starlab"
-	"starlab/version/templates/cshrc.add-on"
+	"starlab/version/templates/cshrc.add-on"		** seems OLD **
 	"starlab/version/templates/Makefile.local.inc"
 
   into it.  That is, issue the command:
 
-	cd starlab/version ; mkdir local; cp templates/* local
+	cd starlab ; mkdir local; cp templates/* local
 
   These files are your local copies of the Starlab setup files that
   will never be accidentally overwritten by untarring a new new Starlab
@@ -100,15 +119,15 @@ To install Starlab:
   Starlab without having to modify the directory or make structure of 
   the package.
 
-- To set up the Starlab environment, include the following lines in
-  your .cshrc file:
+3) To set up the Starlab environment, include the following lines in
+   your .cshrc file:
 
      setenv STARLAB_PATH <starlab-directory-name>
      source $STARLAB_PATH/local/starlab_setup
 
-  For example, for starlab version 1.0, use:
+  For example, if you downloaded starlab version 3.7 as a tar ball
   
-     setenv STARLAB_PATH ~/my_starlab/1.0
+     setenv STARLAB_PATH ~/starlab-3.7
      source $STARLAB_PATH/local/starlab_setup
 
   The file starlab_setup MUST be sourced from .cshrc, not .login, in order
@@ -166,8 +185,8 @@ To install Starlab:
 	    files, NO source (*.[hcCfF]) file beginning with a digit
 	    will be saved in the standard Starlab tarfile.
 
- - A partial list of Starlab tools may be found in "starlab/version/TOOLS"
+ - A partial list of Starlab tools may be found in "starlab/TOOLS"
 
- - For further information, see "starlab/version/doc/README"
+ - For further information, see "starlab/doc/README"
 
- - For some sample programs, see "starlab/version/etc/demo"
+ - For some sample programs, see "starlab/etc/demo"
