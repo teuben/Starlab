@@ -8,22 +8,24 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makesphere: construct a simple homogeneous sphere, with
+//// makesphere: construct a simple homogeneous sphere, with (default)
 ////
 ////              M = 1, T/U = -1/2, E = -1/4.
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
 ////              -C    output data in 'col' format [no]
 ////              -i    number the particles sequentially [don't number]
+////              -l    write sphere radius to dyn story [don't write]
 ////              -n    specify number of particles [no default]
 ////              -o    echo value of random seed [don't echo]
+////              -R    specify sphere radius [1]
 ////              -s    specify random seed [random from system clock]
 ////              -u    leave unscaled [scale to E=-1/4, M = 1, R = 1]
 ////
-////  If the "-u" flag is set, the particles are left unscaled,
-////  uniformly distributed in a sphere with unit radius, with
-////  all velocity components uniformly distributed in [-1, 1]
-////  and all masses equal to 1/n.
+////  If the "-u" flag is set, the particles are left unscaled, with
+////  masses 1/n, positions uniformly distributed in a sphere of radius R,
+////  and velocities uniformly distributed in a range giving approximate
+////  virial equilibrium.
 
 #include "dyn.h"
 
@@ -31,42 +33,47 @@
 
 // Don't make local -- used elsewhere.
 
-void  makesphere(dyn * root, int n,
-	       int u_flag)			// default = false
+void makesphere(dyn *root, int n,
+		real R,				// default = 1
+		int u_flag)			// default = false
 {
     real radius, costheta, sintheta, phi;
-    dyn  * bi;
-
-    root->set_mass(1);
     real pmass = 1.0 / n;
 
-    for (bi = root->get_oldest_daughter(); bi != NULL;
-         bi = bi->get_younger_sister()) {
+    // Factor scaling the velocity places the system in approximate
+    // virial equilibrium without scaling.
+
+    real vfac = 0.77/sqrt(R);
+
+    for_all_daughters(dyn, root, bi) {
+
 	bi->set_mass(pmass);
 
-	radius = pow(randinter(0, 1), 1.0/3.0);
+	radius = R*pow(randinter(0, 1), 1.0/3.0);
 	costheta = randinter(-1.0, 1.0);
 	sintheta = 1 - costheta*costheta;
-	if (sintheta > 0) sintheta = sqrt(sintheta);
+	if (sintheta > 0)
+	    sintheta = sqrt(sintheta);
+	else
+	    sintheta = 0;
 	phi = randinter(0.0, TWO_PI);
-        bi->set_pos(vec(radius * sintheta * cos(phi),
-			   radius * sintheta * sin(phi),
-			   radius * costheta));
 
-        bi->set_vel(vec(randinter(-1,1),
-			   randinter(-1,1),
-			   randinter(-1,1)));
+        bi->set_pos(vec(radius * sintheta * cos(phi),
+			radius * sintheta * sin(phi),
+			radius * costheta));
+        bi->set_vel(vfac*vec(randinter(-1,1),randinter(-1,1),randinter(-1,1)));
     }
 
-//  Transform to center-of-mass coordinates and optionally
-//  scale to standard parameters.
+    // Transform to center-of-mass coordinates and optionally
+    // scale to standard parameters.
 
     root->to_com();
+    root->set_mass(1);
     putrq(root->get_log_story(), "initial_mass", 1.0);
 
     if (!u_flag && n > 1) {
 
-        real kinetic, potential;
+        real potential, kinetic;
 
 	// Note: scale_* operates on internal energies.
 
@@ -92,6 +99,7 @@ main(int argc, char ** argv) {
     bool C_flag = false;
     int  i_flag = FALSE;
     int  n_flag = FALSE;
+    int  l_flag = FALSE;
     int  o_flag = FALSE;
     int  s_flag = FALSE;
     int  u_flag = FALSE;
@@ -99,11 +107,13 @@ main(int argc, char ** argv) {
     char  *comment;
     char  seedlog[SEED_STRING_LENGTH];
 
+    real radius = 1;
+
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:Cin:os:u";
+    char* param_string = "c:Ciln:oR:s:u";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c)
@@ -120,6 +130,8 @@ main(int argc, char ** argv) {
 		      break;
 	    case 'o': o_flag = true;
                       break;
+	    case 'R': radius = atof(poptarg);
+		      break;
 	    case 's': s_flag = true;
 		      input_seed = atoi(poptarg);
 		      break;
@@ -147,10 +159,13 @@ main(int argc, char ** argv) {
     if (i_flag) bo->set_label(1);
     b->set_oldest_daughter(bo);
     bo->set_parent(b);
+    if (l_flag)
+	putrq(b->get_log_story(), "initial_radius", radius);
 
     for (i = 1; i < n; i++) {
         by = new dyn();
 	if (i_flag) by->set_label(i+1);
+	by->set_parent(b);
         bo->set_younger_sister(by);
         by->set_elder_sister(bo);
         bo = by;
@@ -169,7 +184,7 @@ main(int argc, char ** argv) {
     sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
-    if (n > 0) makesphere(b, n, u_flag);
+    if (n > 0) makesphere(b, n, radius, u_flag);
 
     put_dyn(b);
     rmtree(b);
