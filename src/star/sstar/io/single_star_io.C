@@ -117,7 +117,7 @@ void extract_line_text(stellar_type& type, real& t_cur, real& t_rel,
 
         strcpy(line, s.get_text());
         char keyword[MAX_INPUT_LINE_LENGTH];
-        char *val = getequals(line, keyword);
+        const char *val = getequals(line, keyword);
 
 
         real number;
