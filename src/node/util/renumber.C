@@ -14,6 +14,9 @@
 ////            -I/i      start numbering number               [1]
 ////            -M        Renumber the stars in order of mass
 ////                      (highest mass=I/lowest mass=i)       [false]
+////            -N        Name the stars                       [false]
+////            -S/s      Single fixed number for all stars    [false]
+////                      Except if a star was already numbered
 ////
 
 //// Options:
@@ -46,14 +49,17 @@ local int compare_mass(const void * pi, const void * pj)
 }
 
 void renumber(node* b, int istart, bool mass_order,
-	      bool name_nodes) {
+	      bool name_nodes, bool single_number) {
 
     int i;
     if(!mass_order) {
 
       i = istart;
-      for_all_leaves(node, b, bj)
-	bj->set_label(i++);
+      for_all_leaves(node, b, bj) {
+	bj->set_label(i);
+	if(!single_number)
+	  i++;
+      }
     }
     else {
 
@@ -99,20 +105,21 @@ void renumber(node* b, int istart, bool mass_order,
 
 #else
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     bool  c_flag = FALSE;
     char  *comment;
 
     bool M_flag = false;
     bool N_flag = false;
+    bool S_flag = false;
     int istart = 1;
 
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "MmNI:i:c:";
+    char* param_string = "MmNI:i:sSc:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -122,6 +129,9 @@ void main(int argc, char ** argv)
 		      break;
 	    case 'i':
 	    case 'I': istart = atoi(poptarg);
+		      break;
+	    case 's': 
+	    case 'S': S_flag = true;
 		      break;
 	    case 'm':
 	    case 'M': M_flag = true;
@@ -138,7 +148,7 @@ void main(int argc, char ** argv)
     b = get_node();
     b->log_history(argc, argv);
 
-    renumber(b, istart, M_flag, N_flag);
+    renumber(b, istart, M_flag, N_flag, S_flag);
 
     put_node(b);
     rmtree(b);
