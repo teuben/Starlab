@@ -14,6 +14,7 @@
 
 #include "node.h"
 #include "util_io.h"
+#include "util_math.h"
 
 #ifndef TOOLBOX
 
@@ -24,6 +25,40 @@ node * node::root           = NULL;
 void node::print_static(ostream& s)		// default = cerr
 {
     s << "root = " << root << endl;
+}
+
+bool node::check_and_correct_node(bool verbose)	// default = true
+{
+    // cerr << "node::check_and_correct_node: "; PRL(this);
+
+    bool ok = true;
+
+    if (oldest_daughter) {
+
+	real m = 0;
+	bool low = false;
+
+	for_all_daughters(node, this, bb) {
+	    if (bb->oldest_daughter)
+		ok &= bb->check_and_correct_node(verbose);
+	    m += bb->get_mass();
+	}
+	if (!ok) low = true;
+
+	if (!twiddles(m, mass)) ok = false;
+	mass = m;
+
+	if (!ok && verbose && parent == NULL) {
+	    cerr << "check_and_correct_node: applied ";
+	    if (low)
+		cerr << "low-level";
+	    else
+		cerr << "top-level";
+	    cerr << " mass correction" << endl;
+	}
+    }
+
+    return ok;
 }
 
 istream& node::scan_dyn_story(istream& s)
