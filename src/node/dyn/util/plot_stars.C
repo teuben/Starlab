@@ -171,19 +171,26 @@ void plot_stars(dyn * bi,
     PRI(off+1); cerr << "system_time = " << bi->get_system_time() << endl;
     PRI(off+1); cerr << "plot scale  = " << 2*scale << endl << endl;
 
+    PRL(n);
+
     int m = 0;
     for (int j = VBINS-1; j >= 0; j--) {
 	PRI(off);
 	for (int i = 0; i < HBINS; i++) cerr << disp[i][j];
 	if (j < VBINS-1 && m <= n) {
-	    fprintf(stderr, "   %3d: %7s %10.2e",
-		    m, list[m]->format_label(), list[m++]->get_mass()); 
-	    // cerr << "     " << m << ":  " << list[m]->format_label()
-	    //	    << list[m++]->get_mass();
+	    dyn *l = list[m];
+	    if (l && l->is_valid())
+		fprintf(stderr, "   %3d: %7s %10.2e",
+			m, l->format_label(), l->get_mass());
+	    else
+		cerr << "   invalid l = " << l << " for m = " << m << endl;
+	    m++;
 	}
-	cerr << endl;
+	cerr << endl << flush;
     }
-    cerr << endl;
+    cerr << endl << flush;
+
+#if 1
 
     // Add an array of all interparticle separations if not too large.
 
@@ -247,6 +254,7 @@ void plot_stars(dyn * bi,
 	  cerr << endl;
 	}
     }
+#endif
 }
 
 #else
