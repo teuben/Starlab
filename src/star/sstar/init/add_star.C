@@ -8,10 +8,10 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// addstar:  Add star class to existing node structure.
+//// addstar:  Add physical stellar data to existing node structure.
 ////
 //// Options:    -c    comment to put in the starbase log structure [none]
-////             -M    mass scaling (total cluster mass in solar units)
+////             -M    mass scaling (system mass unit, in solar units)
 ////             -Q    virial ratio (used if time scaling is omitted) [0.5]
 ////             -R    dynamical size scaling for stars
 ////                       (system length unit, in parsecs)
@@ -189,7 +189,8 @@ main(int argc, char ** argv)
     bool  s_flag = FALSE;
     bool  c_flag = FALSE;
     real  m_tot = -1;
-    real  r_vir = -1;
+    real  r_vir = -1;		// NB code length unit; may or may not
+				// actually be the virial radius
     real  t_vir = -1;
     real  t_rel = 0;
     real  q_vir = 0.5;
