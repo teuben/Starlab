@@ -9,12 +9,12 @@ for (int ii = 0; ii < n_next; ii++)
 	PRC(ii); PRL(n->format_label());
 	PRL(n->get_pos());
 	PRL(n->get_vel());
-	PRL(n->get_old_acc());
 	PRL(n->get_acc());
-	PRL(n->get_old_jerk());
 	PRL(n->get_jerk());
+	PRL(n->get_timestep());
     }
 cerr.precision(ppp);
+cerr << endl;
 
 #if 0
     if ((t > 1250.854692 && t < 1250.854695)
