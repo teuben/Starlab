@@ -760,7 +760,7 @@ bool kira_initialize(int argc, char** argv,
     real q_vir = 0.5;           // virial ratio (instead of time scaling)
     real T_start = 0;
 
-    real friction_beta = 0;
+    real friction_beta = 0;	// "BT" value ~ 40 pi, for log Lambda ~ 10
 
     real sec = 0, smc = 0, stc = 0;
     bool sec_flag = false;

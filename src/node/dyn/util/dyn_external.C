@@ -213,18 +213,26 @@ local inline real plummer_virial(dyn * b)
 
 //-------------------------------------------------------------------------
 // For now, handle here the bits and pieces related to dynamical friction.
-// *** To be cleaned up!!
+// Expression (Binney & Tremaine) is:
+//
+//	Afric  =  -beta Mfric Vcm rho [erf(X) - 2Xexp(-X^2)/sqrt(pi)] / Vcm^3
+//
+// (see definitions below).
+//
+// *** Details to be cleaned up!!
+//
+//-------------------------------------------------------------------------
 
-static real beta = 0;
-void set_friction_beta(real b) {beta = b;}
+static real beta = 0;				// tunable parameter; BT
+void set_friction_beta(real b) {beta = b;}	// say 4 pi log Lambda
 
-static real Mfric = 0;
+static real Mfric = 0;				// cluster effective mass
 void set_friction_mass(real m) {Mfric = m;}
 
-static vector Vfric = 0;
-void set_friction_vel(vector v) {Vfric = v;}
+static vector Vcm = 0;				// cluster CM velocity
+void set_friction_vel(vector v) {Vcm = v;}
 
-local real density(dyn *b, real r)
+local real density(dyn *b, real r)		// background density
 {
     real A = b->get_pl_coeff();
     if (A == 0) return 0;
@@ -235,7 +243,8 @@ local real density(dyn *b, real r)
     return A*x*pow(r*r+a2, 0.5*(x-1))/(4*M_PI*r*r);
 }
 
-local real potential(dyn *b, real r)		// Assume x != 1 for now...
+local real potential(dyn *b, real r)		// background potential;
+						// assume x != 1 for now...
 {
     real A = b->get_pl_coeff();
     if (A == 0) return 0;
@@ -246,12 +255,28 @@ local real potential(dyn *b, real r)		// Assume x != 1 for now...
     return -A*pow(r*r+a2, 0.5*x-1);
 }
 
-static vector Afric = 0;
+static vector Afric = 0;			// frictional acceleration
 void set_friction_acc(dyn *b, real r)
 {
-    Afric = -beta*Mfric*Vfric*density(b, r)/pow(-potential(b, r), 1.5);
-    cerr << "set_friction_acc: "; PRL(Afric);
-    PRC(beta); PRC(Mfric); PRL(Vfric);
+    real sigma2 = sqrt(-2*potential(b, r)/3);	// this is sqrt(2) * sigma;
+						// assume virial equilibrium
+    real V = abs(V);
+    real X = V/sigma2;				// scaled velocity; BT p. 425
+
+    if (X > 0.1) 
+
+	Afric = -beta * Mfric * Vcm * density(b, r) * pow(V, -3)
+		      * (erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
+    else
+
+	// Expand for small X:
+
+	Afric = -beta * Mfric * Vcm * density(b, r)
+		      * 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
+
+    cerr << endl << "set_friction_acc: "; PRL(Afric);
+    PRC(beta); PRC(Mfric); PRL(density(b, r));
+    PRL(Vcm);
 }
 
 //-------------------------------------------------------------------------
@@ -442,9 +467,10 @@ void get_external_acc(dyn * b,
 	if (GETBIT(ext, 0))
 	    add_tidal(b, pos, vel, pot, acc, jerk, pot_only);
 
-	// Add dynamical friction term:
+	// Add dynamical friction term to non-escapers only:
 
-	acc += Afric;
+	if (getiq(b->get_dyn_story(), "esc") == 0)	// slow?
+	    acc += Afric;
     }
 }
 

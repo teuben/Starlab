@@ -281,6 +281,7 @@ void refine_cluster_mass2(dyn *b,
     if (verbose == 1) {
 	PRI(2); PRC(iter); PRC(N_inside); PRL(M_inside);
 	PRI(2); PRL(cen);
+	PRI(2); PRL(vcen);
     }
 
     // Too many iterations probably means a limit cycle of some sort;
@@ -302,6 +303,7 @@ void refine_cluster_mass2(dyn *b,
 
 	if (verbose) {
 	    PRI(2); PRL(center);
+	    PRI(2); PRL(vcenter);
 	}
 
     } else {
