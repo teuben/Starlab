@@ -22,7 +22,7 @@ DEPEND_LIBS	= $(LIB)/libnode.a $(LIB)/libstd.a
 EXECUTABLES = node_io display_subtrees rmq snapprune make_single_node \
 		add_daughter_node pretty_print_tree print_normal \
 		makenode makemass makesecondary mass_dist m_bar \
-	        setmass
+	        setmass std_rename_nodes
 OBJECT_FILES = node_io.o hydrobase_io.o starbase_io.o tree_io.o node_tt.o \
 		rmtree.o print_normal.o starbase_init.o \
 		makenode.o makemass.o renumber.o 
