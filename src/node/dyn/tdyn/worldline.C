@@ -61,11 +61,9 @@
 //----------------------------------------------------------------------
 
 #include "worldline.h"
+#include "inline.h"
 
 #define NEW 0
-
-//#define INLINE 
-#define INLINE inline
 
 #ifndef TOOLBOX
 
@@ -877,9 +875,11 @@ tdyn *find_event(worldline *w, tdyn *bn, real t)
 	    } else {
 
 		// Explicitly test the most obvious possibility first.
+		// Case next = NULL probably means an error in the data,
+		// but do something reasonable anyway (return curr).
 
 		tdyn *n = curr->get_next();
-		if (n && n->get_time() >= t) return curr;
+		if (!n || n->get_time() >= t) return curr;
 
 		// Do a forward search from n.
 

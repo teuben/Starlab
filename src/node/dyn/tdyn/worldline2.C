@@ -28,11 +28,9 @@
 //----------------------------------------------------------------------
 
 #include "worldline.h"
+#include "inline.h"
 
 #define NEW 1
-
-//#define INLINE 
-#define INLINE inline
 
 #ifndef TOOLBOX
 
@@ -504,8 +502,9 @@ local void interpolate_tree(worldbundle *wb, real t, real t_int,
 		// this worldline (may speed things up in normal use).
 		// -- hard to see much improvememt in speed...
 
+		segment *s;
 #if 1
-		segment *s = w->get_current_segment();
+		s = w->get_current_segment();
 		if (!s || s->get_t_start() > t)
 #endif
 		    s = w->get_first_segment();
