@@ -1050,7 +1050,7 @@ local bool force_by_grape_on_all_e_nodes(hdyn **e_nodes,    // node list
 
 	for (int ip = 0; ip < nj; ip += n_pipes)
 	    status |= force_by_grape(sys_t,
-				     e_nodes+ip, min(n_pipes, nj-ip),
+				     e_nodes+ip,Starlab:: min(n_pipes, nj-ip),
 				     nj, n_pipes,
 				     true);	// "true" ==> compute pot only
 
@@ -1147,7 +1147,7 @@ local inline real critical_sep(hdyn *b)
 
     real d_crit = 1.e-9;
     if (b->get_d_min_sq() > 0)
-	d_crit = min(0.01*sqrt(b->get_d_min_sq()), d_crit);
+	d_crit = Starlab::min(0.01*sqrt(b->get_d_min_sq()), d_crit);
     return d_crit;
 }
 
@@ -1608,7 +1608,7 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 	    if (b->get_nn() && b->get_nn() != b
 		&& b->get_d_nn_sq() < 0.1*VERY_LARGE_NUMBER) {
 
-		rnb_sq = max(rnb_sq, b->get_d_nn_sq());
+		rnb_sq = Starlab::max(rnb_sq, b->get_d_nn_sq());
 
 	    } else {
 
@@ -1620,7 +1620,7 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 		// NB: rnn_sq ~ square of the average interparticle spacing.
 
-		rnb_sq = max(rnb_sq, rnn_sq);
+		rnb_sq = Starlab::max(rnb_sq, rnn_sq);
 	    }
 #endif
 
@@ -1647,7 +1647,7 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 	    // if (b->get_nn() && b->get_nn() != b
 	    //	&& b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
-	    //	rnb_sq = max(rnb_sq, b->get_d_nn_sq());
+	    //	rnb_sq = Starlab::max(rnb_sq, b->get_d_nn_sq());
 
 	    // b->set_grape_rnb_sq(rnb_sq);
 
@@ -1666,7 +1666,7 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 	    hdyn *nn = b->get_nn();
 	    if (nn && nn != b && b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
-		r_pert2 = max(r_pert2, b->get_d_nn_sq());
+		r_pert2 = Starlab::max(r_pert2, b->get_d_nn_sq());
 
 	    // Note that this may cause overflow...
 
@@ -2387,8 +2387,8 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     hdyn *root = next_nodes[0]->get_root(); 
     kira_options *ko = root->get_kira_options();
 
-    int coll_freq = max(1, ko->grape_coll_freq);
-    int pert_freq = max(1, ko->grape_pert_freq);
+    int coll_freq = Starlab::max(1, ko->grape_coll_freq);
+    int pert_freq = Starlab::max(1, ko->grape_pert_freq);
 
     //------------------------------------------------------------------
 
@@ -2540,7 +2540,7 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     i = 0;
     while (i < n_top) {
 
-	int ni = min(n_pipes, n_top - i);
+	int ni = Starlab::min(n_pipes, n_top - i);
 
 	need_neighbors = false;
 	for (int ip = 0; ip < ni; ip++)
@@ -2745,7 +2745,7 @@ local INLINE void set_grape_density_radius(hdyn *b, real rnn_sq)
 	//
 	// b->set_grape_rnb_sq(9 * pow(b->get_d_min_sq(), 1.0/3.0));  // (??)
 
-	rnn_sq = 4*max(rnn_sq, b->get_d_nn_sq());
+	rnn_sq = 4*Starlab::max(rnn_sq, b->get_d_nn_sq());
 
 	if (DEBUG)
 	    cerr << "no nn for " << b->format_label() << ",  ";
@@ -2846,7 +2846,7 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	if (n_neighbors < 2) fac *= 1.6;
 #endif
 
-	real fac = min(2.0, pow((N_DENS+3.0)/(1.0+n_neighbors), 1.5));
+	real fac = Starlab::min(2.0, pow((N_DENS+3.0)/(1.0+n_neighbors), 1.5));
 
 	b->set_grape_rnb_sq(fac * b->get_grape_rnb_sq());
 	return false;
@@ -2868,7 +2868,7 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    if (bb != b) {
 		vector diff = b->get_pred_pos() - bb->get_pred_pos();
 		real d2 = diff * diff;
-		d_max = max(d_max, d2);
+		d_max = Starlab::max(d_max, d2);
 	    }
 	}
     }
@@ -3103,7 +3103,7 @@ void grape_calculate_densities(hdyn* b,			// root node
     while (i < n_top) {
 
 	int inext = i;
-	int ni = min(n_pipes, n_top - i);
+	int ni = Starlab::min(n_pipes, n_top - i);
 
 #ifdef SPZ_GRAPE6
 
