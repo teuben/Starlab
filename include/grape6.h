@@ -81,6 +81,7 @@ extern "C" int g6calc_lasthalf2_(int *cluster_id,
 				 int nnbindex[]);
 
 extern "C" int g6_read_neighbour_list_(int *cluster_id);
+extern "C" int g6_read_neighbour_list_old_(int *cluster_id);
 
 extern "C" int g6_get_neighbour_list_(int *cluster_id,
 				      int *pipe,
