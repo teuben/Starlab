@@ -65,7 +65,7 @@
 #include "dyn_util.h"
 
 // Use dyn if we only want to deal with dynamical quantities.
-// Use pdyn if we want to see quantities too.
+// Use pdyn if we want to see physical quantities too.
 
 #define DYN pdyn
 #define DYNPTR pdynptr
