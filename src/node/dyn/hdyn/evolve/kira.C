@@ -216,7 +216,7 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
     initialize_system_phase1(b, t);
     initialize_system_phase2(b, 3, 0);			// "0" here means
 							// timesteps are only
-							// set if zero
+							// set if zero    
     // Reset and save d_min_sq().
 
     int n = 0;
@@ -259,7 +259,7 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
     // recompute_unperturbed_steps() is that some external agent may
     // have synchronized some unperturbed binaries, in which case
     // the step may no longer end at the correct phase of the orbit.
-    // However, this  is usually not the case, and if applied routinely,
+    // However, this is usually not the case, and if applied routinely,
     // this action will destroy reproducibility.  Could just omit it,
     // except in special cases (command-line flag? -- in which case
     // this should be done in main).  For now, we retain the call, but
@@ -1457,8 +1457,9 @@ local void evolve_system(hdyn * b,		// hdyn array
 		&& fmod(count, kd->n_check_heartbeat) == 0)) {
 
 	    PRC(count), PRC(t), PRC(t-t_prev), PRL(cpu_time());
-	    PRL(n_next);
 
+#if 0
+	    PRL(n_next);
   	    for (int i = 0; i < n_next && i < 5; i++)
   		if (next_nodes[i] && next_nodes[i]->is_valid()) {
   		    PRI(4);
@@ -1466,6 +1467,7 @@ local void evolve_system(hdyn * b,		// hdyn array
 			 << " " << next_nodes[i]->get_timestep() << endl;
 //  		    pp3_minimal(next_nodes[i]);
   		}
+#endif
 
 	    if (fmod(count, 4*kd->n_check_heartbeat) == 0)
 		print_recalculated_energies(b);

@@ -1336,7 +1336,7 @@ bool hdyn::is_unperturbed_and_approaching()
 
     if (is_multiple(this)) {
 
-//	cerr << "unp_and_app: multiple" << endl << flush;
+        // cerr << "unp_and_app: multiple" << endl << flush;
 
 	init_binary_type = binary_type = MULTIPLE_CM;
 
@@ -1401,7 +1401,7 @@ bool hdyn::is_unperturbed_and_approaching()
 
     } else {
 
-//	cerr << "unp_and_app: binary" << endl << flush;
+        // cerr << "unp_and_app: binary" << endl << flush;
 
 	// Rest of function applies only to binaries.
 
@@ -1438,7 +1438,7 @@ bool hdyn::is_unperturbed_and_approaching()
 	bool approaching = (posvel < 0);	// posvel is recomputed at the
 						// end of every perturbed step
 
-//	PRL(approaching);
+	// PRL(approaching);
 
 	if (!approaching && !get_kepler() && !slow) {
 
@@ -1453,7 +1453,7 @@ bool hdyn::is_unperturbed_and_approaching()
 	    // periastron reflection in a receding orbit may lead to
 	    // problems.
 
-	    // ***** Still do this at every outgoing step... (Steve, 7/99)
+	    // ***** Note that we do this at every outgoing step. (Steve, 7/99)
 	    // Work with squares to avoid sqrt() hidden in vector abs().
 	    // Possibly can use additional time criterion, as in slow binary
 	    // motion...  However, this doesn't seem to be a significant time
@@ -1578,10 +1578,23 @@ bool hdyn::is_unperturbed_and_approaching()
 
 	    if (!kep) {
 
-		// Use of perturbation_squared is OK here because we must
-		// be outside semi for full merger...  (Alternatively,
-		// we could always normalize the perturbation to separation
-		// equal to semi.)
+		// Use of perturbation_squared is OK here because we must be
+		// outside semi for full merger (implemented on next page)...
+	        // Alternatively, we could normalize the perturbation to
+		// separation equal to semi.
+
+		// *********************************************************
+		// *********************************************************
+		// ****                                                 ****
+	        // ****  Probably OK to allow binaries to be merged at  ****
+	        // ****  any orbital phase (time step will be chosen    ****
+	        // ****  to end near apastron in any case).  To allow   ****
+		// ****  this, scale up the perturbation here and       ****
+		// ****  suppress or modify the definition of           ****
+		// ****  KEP_OUTSIDE_SEMI below.  Not done yet...       ****
+		// ****                                                 ****
+		// *********************************************************
+		// *********************************************************
 
 		// Basic perturbation/binary check:
 
@@ -1920,10 +1933,22 @@ void hdyn::startup_unperturbed_motion()
     // Used to be an int, changed to real because integers have too
     // small a range (SPZ:02/1998):
 
-    real steps = set_unperturbed_timestep(true);    // unperturbed timestep
-						    // will be set equal to
-						    // timestep * steps, in
-						    // *all* cases
+    // *********************************************************************
+    // *********************************************************************
+    // ****                                                             ****
+    // ****  Changed the argument from true to false (Steve, 3/05).     ****
+    // ****  The effect is that partial unperturbed motion will always  ****
+    // ****  be considered for promotion to full merger, even if it is  ****
+    // ****  picked up inside the binary semi-major axis (the flag      ****
+    // ****  controls that test).                                       ****
+    // ****                                                             ****
+    // *********************************************************************
+    // *********************************************************************
+
+    real steps = set_unperturbed_timestep(false);	// unperturbed timestep
+							// will be set equal to
+							// timestep * steps, in
+							// *all* cases
 
     // Restore timestep in case of slow motion.
 

@@ -418,11 +418,28 @@ local inline real local_kepler_step(hdyn *b,
 
 	real dist, dtff2, dtv2;
 
-	dist = abs(b->get_pos() - s->get_pos());
+	// Use predicted quantities here, as sister may not have been updated yet.
+
+	dist = abs(b->get_nopred_pos() - s->get_nopred_pos());
 	dtff2 = dist*dist*dist / (2*b->get_parent()->get_mass());
-	dtv2  = square(b->get_pos()) / square(b->get_vel());
+	dtv2  = square(b->get_nopred_pos()) / square(b->get_nopred_vel());
 
 	// PRC(dist); PRC(square(b->get_vel())); PRC(dtff2); PRL(dtv2);
+
+	return 0.5 * correction_factor		// 0.5 is empirical
+	    	   * b->get_eta()
+		   * sqrt(Starlab::min(dtff2, dtv2));
+
+    } else if (false) {
+
+        // Experimental code, in case s isn't a binary sister someday.
+
+	real dist, dtff2, dtv2, mtot = b->get_mass()+s->get_mass();
+
+	dist = abs(b->get_nopred_pos() - s->get_nopred_pos());
+	dtff2 = dist*dist*dist / (2*mtot);
+	dtv2  = square(b->get_nopred_pos() - s->get_nopred_pos())
+		  / square(b->get_nopred_vel() - s->get_nopred_vel());
 
 	return 0.5 * correction_factor		// 0.5 is empirical
 	    	   * b->get_eta()
@@ -431,7 +448,6 @@ local inline real local_kepler_step(hdyn *b,
     } else
 
 	return 0;
-
 }
 
 real kepler_step(hdyn *b,
@@ -518,13 +534,19 @@ local inline real new_timestep(hdyn *b,			// this node
 			   && b->get_kira_diag()->check_diag(b));
 #endif
 
+
+
+    // keplstep = true;
+    // timestep_check = true;
+
+
+
     if (keplstep) {
 
 	// Use a simple "kepler" time step criterion if b is a binary
 	// and the perturbation is fairly small.
 
 	newstep = altstep = local_kepler_step(b, correction_factor);
-
 	if (newstep == 0) keplstep = false;
 
 
@@ -709,7 +731,6 @@ local inline real new_timestep(hdyn *b,			// this node
 	}
 
 	newstep = altstep;	// comment out to retain Aarseth step
-
     }
 
 
@@ -741,13 +762,13 @@ local inline real new_timestep(hdyn *b,			// this node
     if (dt < timestep) {
 	while (dt < timestep) timestep /= 2;
 	while (fmod(time, timestep) != 0) timestep /= 2;
-    }    
+    }
 
-    if (newstep < timestep)
+    if (newstep < timestep) {
 
 	return 0.5 * timestep;
 
-    else if (newstep < 2 * timestep)
+   }  else if (newstep < 2 * timestep)
 
 	return timestep;
 
@@ -925,8 +946,8 @@ void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
 
     } else
 
-	// Finally, store a'' for use in prediction of (top-level,
-	// for now) nodes.
+	// Finally, store a'' for possible use in prediction of
+	// (top-level, for now) nodes.
 
 	k_over_18 = bt2 / (9*dt*dt);
 
@@ -1658,6 +1679,32 @@ bool hdyn::correct_and_update()
 	}
     }
 
+#if 0
+    if (name_is("3007")) {
+      int p = cerr.precision(12);
+      cerr << endl; PRC(format_label()); PRL(time);
+      PRL(new_pos-pred_pos);
+      PRL(new_pos-pos);
+      PRL(new_vel-pred_vel);
+      PRL(new_vel-vel);
+      PRL(2*pos);
+      PRL(2*vel);
+      PRL(2*pred_pos);
+      PRL(2*pred_vel);
+      PRL(2*new_pos);
+      PRL(2*new_vel);
+      PRL(2*old_acc);
+      PRL(2*old_jerk);
+      PRL(2*acc);
+      PRL(2*jerk);
+      PRL(2*bt2*2/pow(timestep,2));
+      PRL(2*at3*6/pow(timestep,3));
+      PRL(-3 * (old_acc - acc));
+      PRL(dt * (2 * old_jerk + jerk));
+      cerr.precision(p);
+    }
+#endif
+
     pos = new_pos;
     vel = new_vel;
 
@@ -1666,6 +1713,12 @@ bool hdyn::correct_and_update()
     //--------------------------------------------------------
 
     update(bt2, at3);
+
+#if 0
+    if (name_is("3007")) {
+      PRL(timestep);
+    }
+#endif
 
     return true;		// normal return value
 }
@@ -3141,6 +3194,7 @@ void hdyn::top_level_node_prologue_for_force_calculation(bool exact)
 	nn = NULL;
 	d_nn_sq = VERY_LARGE_NUMBER;
 
+	clear_interaction();
 	calculate_partial_acc_and_jerk(root, root, this,
 				       acc, jerk, pot, d_nn_sq, nn,
 				       !USE_POINT_MASS,
@@ -3151,42 +3205,12 @@ void hdyn::top_level_node_prologue_for_force_calculation(bool exact)
 
 	// Set up computation of perturber list.
 
-// 	if (system_time > 169.2975) {
-
-// 	    cerr << "hdyn_ev: " << 41121 << endl << flush;
-// 	    pp3(this);
-
-// 	    cerr << "about to make a new tmp real array" << endl << flush;
-// 	    real *xxx = new real[MAX_PERTURBERS];
-// 	    PRL(xxx);
-// 	    xxx[0] = 42;
-// 	    delete [] xxx;
-
-// 	    cerr << "about to make a new tmp hdynptr array" << endl << flush;
-// 	    hdynptr *yyy = new hdynptr[MAX_PERTURBERS];
-// 	    PRL(yyy);
-// 	    yyy[0] = (hdynptr)42;
-// 	    delete [] yyy;
-
-// 	    cerr << "about to make real hdynptr array" << endl << flush;
-// 	}
-
         // new_perturber_list();	// don't do this here -- only when
 					// we are sure we will recompute the
 					// perturbers
 
-// 	if (system_time > 169.2975) {
-// 	    PRL(perturber_list);
-// 	    cerr << "hdyn_ev: " << 41122 << endl << flush;
-// 	}
-
 	perturbation_radius_factor
 		= define_perturbation_radius_factor(this, gamma23);
-
-// 	if (system_time > 169.2975) {
-// 	    PRL(perturbation_radius_factor);
-// 	    cerr << "hdyn_ev: " << 41123 << endl << flush;
-// 	}
 
     }
 }
@@ -3227,6 +3251,7 @@ int hdyn::top_level_node_real_force_calculation()
         valid_perturbers = true;
     }
 
+    clear_interaction();
     int n_top = flat_calculate_acc_and_jerk(root, is_parent());
 
     if (nn == NULL) {

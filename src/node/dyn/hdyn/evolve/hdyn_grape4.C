@@ -1233,6 +1233,7 @@ int grape4_calculate_acc_and_jerk(hdyn ** next_nodes,
 	// store current list
 
 	hdyn * b = previous_nodes[i] = next_top[i];
+	b->clear_interaction();
 
 	// Set some reasonable h2 value.
 

@@ -904,21 +904,6 @@ void split_top_level_node(hdyn * bi,
 	    print_binary_from_dyn_pair(bi->get_oldest_daughter(),
 				       bi->get_oldest_daughter()
 				         ->get_younger_sister());
-
-#if 0
-	    cerr << endl;
-	    PRL(bi->get_oldest_daughter()->get_perturbation_squared());
-	    hdyn *pnode = bi->get_oldest_daughter()->find_perturber_node();
-	    if (pnode && pnode->is_valid()) {
-		PRL(pnode->format_label());
-		if (pnode->get_valid_perturbers())
-		    PRL(pnode->get_n_perturbers());
-		else
-		    cerr << "perturbers unknown" << endl;
-	    } else
-		cerr << "pnode invalid" << endl;
-#endif
-
 	    cerr << endl << flush;
 
 	    if (bi->get_kira_diag()->tree_level > 1) {
@@ -937,26 +922,27 @@ void split_top_level_node(hdyn * bi,
 	    print_relative_energy_and_period(bi->get_oldest_daughter(),
 					     bi->get_oldest_daughter()
 					       ->get_younger_sister());
-
-#if 1
-	    cerr << endl << "                      ";
-	    hdyn *pnode = bi->get_oldest_daughter()->find_perturber_node();
-	    if (pnode && pnode->is_valid()) {
-		cerr << "pnode = " << pnode->format_label();
-		if (pnode->get_valid_perturbers())
-		    cerr << ", " << pnode->get_n_perturbers()
-			 << " perturber(s) ("
-			 << sqrt(bi->get_oldest_daughter()
-				   ->get_perturbation_squared())
-			 << ")";
-		else
-		    cerr << ", perturbers unknown";
-	    } else
-		cerr << "pnode invalid";
-#endif
-
 	    cerr << endl << flush;
 	}
+
+	// Info on perturbers:
+
+	cerr << "                      ";
+	hdyn *pnode = bi->get_oldest_daughter()->find_perturber_node();
+	if (pnode && pnode->is_valid()) {
+	    cerr << "pnode = " << pnode->format_label();
+	    if (pnode->get_valid_perturbers())
+	        cerr << ", " << pnode->get_n_perturbers()
+		     << " perturber(s) ("
+		     << sqrt(bi->get_oldest_daughter()
+			     ->get_perturbation_squared())
+		     << ")";
+	    else
+	        cerr << ", perturbers unknown";
+	} else
+	    cerr << "pnode invalid";
+
+	    cerr << endl << flush;
     }
 
     hdyn *od = bi->get_oldest_daughter();

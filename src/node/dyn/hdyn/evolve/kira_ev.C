@@ -123,7 +123,7 @@ int top_level_acc_and_jerk_for_list(hdyn **next_nodes,
     for (int i = 0; i < n_next; i++) {
 	hdyn *bi = next_nodes[i];
 	if (bi->is_top_level_node())
-	    n_top = bi->top_level_node_real_force_calculation();
+	    n_top = bi->top_level_node_real_force_calculation(); // in hdyn_ev.C
     }
 
     return n_top;
@@ -192,9 +192,11 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 
 	    predict_loworder_all(bi, sys_t);
 
-	    // Prologue operations:
+	    // Prologue operations.  DO NOT clear the interaction here,
+	    // as acc and jerk may be needed to update the GRAPE before
+	    // the new force calculation.
 
-	    bi->clear_interaction();
+	    // bi->clear_interaction();
 
 	    // Note that top_level_node_prologue_for_force_calculation()
 	    // does the *entire* calculation in the case exact = true.

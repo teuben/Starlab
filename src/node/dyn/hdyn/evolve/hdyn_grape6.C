@@ -229,7 +229,7 @@ local INLINE void send_j_node_to_grape(hdyn *b,
     }
 #endif
 
-    // Enabling DMA on the Athlon according to Jun's documentation (sect. 4.3)
+    // Enabling DMA on the Athlon according to Jun's documentation (sec. 4.3)
     // Ernie, 01/31/'05.
     // Added flag to enable/disable DMA use (Steve, 2/05).
 
@@ -2030,6 +2030,7 @@ local INLINE int get_force_and_neighbors(xreal xtime,
 	    PRI(strlen(func)+3);
 	    cerr << "at time " << (real)xtime << ", "; PRL(status);
 	    PRC(ni); PRC(nj_on_grape); PRL(n_pipes);
+#if 0
 	    for (int i = 0; i < ni; i++) {
 		cerr << i << " " << nodes[i] << " "; PRL(nodes[i]->is_valid());
 		if (nodes[i]->is_valid())
@@ -2038,6 +2039,7 @@ local INLINE int get_force_and_neighbors(xreal xtime,
 			<< "    " << nodes[i]->get_valid_perturbers() << " "
 			<< nodes[i]->get_grape_rnb_sq() << endl << flush;
 	    }
+#endif
 	    
 	    if (status > 0) {
 
@@ -2460,14 +2462,28 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 				    // new factor rpfac.
 
 #if 1
-				    cerr << endl << func << ": compressing"
-					 << " perturber list for "
-					 << b->format_label() << endl;
-				    int p = cerr.precision(HIGH_PRECISION);
-				    cerr << "time " << b->get_system_time()
-					 << ", ";
-				    cerr.precision(p);
-				    PRC(n_neighbors); PRC(ntot); PRL(rescale);
+				    static int compress_count = 0;
+				    static char compress_id[256];
+
+				    if (strncmp(compress_id, 
+						b->format_label(), 255)) {
+				        count = 0;
+					strncpy(compress_id, 
+						b->format_label(), 255);
+				    }
+
+				    if (count%10 == 0) {
+				        cerr << endl << func << ": compressing"
+					     << " perturber list for "
+					     << b->format_label() << endl;
+					int p = cerr.precision(HIGH_PRECISION);
+					cerr << "time " << b->get_system_time()
+					     << ", ";
+					cerr.precision(p);
+					PRC(n_neighbors); PRC(ntot);
+					PRL(rescale);
+				    }
+				    count++;
 #endif
 
 				    int count = 0;
@@ -2976,10 +2992,14 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
     int i, n_top;
 
     // Create the list of top-level nodes in the present block step.
+    // This is the place to clear the interaction, now that the GRAPE
+    // has been updated. (Steve, 3/05)
 
     for (n_top = i = 0; i < n_next; i++)
-	if (next_nodes[i]->is_top_level_node())
+	if (next_nodes[i]->is_top_level_node()) {
+	    next_nodes[i]->clear_interaction();
 	    current_nodes[n_top++] = next_nodes[i];
+	}
 
     // Now n_top is the number of top-level nodes in the current list.
 
@@ -3104,7 +3124,7 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 					   nj_on_grape, n_pipes,
 					   need_neighbors)) {
 
-	    cerr << "after get_force_and_neighbors 2: ";
+	  cerr << "after get_force_and_neighbors 2:  "; PRL(stat);
 
 #ifdef T_DEBUG
 	    if (in_debug_range) {
