@@ -647,9 +647,13 @@ local INLINE int force_by_grape(xreal xtime,
 				  iacc, ijerk, ipot, inn);
 
 //if (xtime > 0) {
-    PRC(ni); PRC(nj); PRL(nodes[0]->format_label());
-    PRL(iacc[0]);
-    PRL(ijerk[0]);
+    for (int iii = 0; iii < ni; iii++) {
+	if (streq(nodes[iii]->format_label(), "1001")) {
+	    PRC(ni); PRC(nj); PRL(nodes[iii]->format_label());
+	    PRL(iacc[iii]);
+	    PRL(ijerk[iii]);
+	}
+    }
 //}
 
 #ifdef T_DEBUG
