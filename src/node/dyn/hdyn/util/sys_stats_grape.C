@@ -100,7 +100,8 @@ local void sys_stats(hdyn* b,
     // Make densities using GRAPE (if available).
 
     vector cod_pos, cod_vel;
-//    compute_densities(b, cod_pos, cod_vel);
+    // Reinstated compute_densities by SPZ on April 2001
+    compute_densities(b, cod_pos, cod_vel);
 
     // Suppress densities for now, and write density time to prevent
     // sys_stats from doing the calculation.

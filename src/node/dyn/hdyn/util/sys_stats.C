@@ -99,14 +99,14 @@ local void sys_stats(hdyn* b,
     // Make densities using GRAPE (if available).
 
     vector cod_pos, cod_vel;
-//    compute_densities(b, cod_pos, cod_vel);
+    //compute_densities(b, cod_pos, cod_vel);
 
     // Suppress densities for now, and write density time to prevent
     // sys_stats from doing the calculation.
 
     putrq(b->get_dyn_story(), "density_time", b->get_real_system_time());
     for_all_nodes(hdyn, b, bb)
-	putrq(bb->get_dyn_story(), "density_time", b->get_real_system_time());
+      putrq(bb->get_dyn_story(), "density_time", b->get_real_system_time());
 
     // Invoke the dyn version with appropriate hdyn extensions, as in kira.
 
