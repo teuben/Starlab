@@ -309,10 +309,10 @@ void set_friction_acc(dyn *b, real r)
 						   // assume virial equilibrium
 	real V = abs(Vcm);
 	real X = sqrt(2-b->get_pl_exponent());
-//	real X = V/sigma2;			// scaled velocity; BT p. 425
+	// real X = V/sigma2;			// scaled velocity; BT p. 425
 
 	//#ifndef NEW_4OCT2001
-	//	real coeff = beta;			// discard after current runs
+	//	real coeff = beta;		// discard after current runs
 	//#else
 	real coeff = 4*M_PI*beta*logLambda(b, r);
 	//#endif
@@ -335,10 +335,26 @@ void set_friction_acc(dyn *b, real r)
 	PRC(r); PRC(sigma2); PRC(V); PRL(X);
 	PRL(erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
 #endif
+
     }
 }
 
 //-------------------------------------------------------------------------
+
+bool acx_set = false;		// kludge...
+static real acx = 0, acx1 = 0;
+
+local inline void set_acx(real A, real c2, real x)
+{
+    if (c2 > 0) {
+	acx = A*pow(c2, x/2);
+	if (x != 1)
+	    acx1 = acx*x/(sqrt(c2)*(x-1));
+	else
+	    acx1 = A*(1+0.5*log(c2));
+    }
+    acx_set = true;
+}
 
 local inline void add_power_law(dyn * b,
 				vector pos,
@@ -357,24 +373,83 @@ local inline void add_power_law(dyn * b,
     real a2 = b->get_pl_scale_sq();
     real x = b->get_pl_exponent();
 
+    real c2 = b->get_pl_cutoff_sq();
+    real M = b->get_pl_mass();
+    real eps2 = b->get_pl_softening_sq();
+
+#if 0
+    PRC(A); PRC(a2); PRL(x);
+    PRC(c2); PRC(M); PRL(eps2);
+#endif
+
+    if (!acx_set) set_acx(A, c2, x);
+
     vector dx = pos - b->get_pl_center();
-    real r2 = square(dx) + a2;
+    real dx2 = square(dx);
+    real r2 = dx2 + a2;
 
-    if (x == 1)					// special case
-	pot += 0.5*A*log(r2);
+    real dx1i;
+    if (M > 0 || c2 > 0) dx1i = 1/sqrt(dx2+eps2);
 
-    if (x != 1 || !pot_only) {			// ugly logic for efficiency
+    if (x == 1) {				// special case (acx = Ac)
+
+	real dpot;
+	if (dx2 <= c2)
+	    dpot = -M*dx1i + acx1;
+	else {
+	    dpot = 0.5*A*log(r2);
+	    if (M > 0 || c2 > 0) dpot -= (M-acx)*dx1i;
+	}
+	pot += dpot;
+    }
+
+    if (x != 1 || !pot_only) {			// ugly logic...
 
 	real r1 = pow(r2, 0.5*(1-x));		// in analogy to Plummer case
 
 	if (!pot_only) {
-	    real r3i = 1/(r1*r2);
-	    acc -= A*dx*r3i;
-	    jerk += A*((3-x)*dx*(dx*vel)/r2 - vel)*r3i;
+
+	    real dx3i;
+	    if (M > 0 || c2 > 0) dx3i = dx1i/(dx2+eps2);
+
+	    vector vr = dx*(dx*vel);
+
+	    if (dx2 > c2) {
+
+		real r3i = A/(r1*r2);
+		acc -= dx*r3i;
+		jerk += ((3-x)*vr/r2 - vel)*r3i;
+
+		if (M > 0 || c2 > 0) {
+		    dx3i *= M-acx;
+		    acc -= dx*dx3i;
+		    jerk += (3*vr/(dx2+eps2) - vel)*dx3i;
+		}
+
+	    } else if (M > 0) {
+
+		dx3i *= M;
+		acc -= dx*dx3i;
+		jerk += (3*vr/(dx2+eps2) - vel)*dx3i;
+
+	    }
 	}
 
-	if (x != 1)
-	    pot -= A/(r1*(1-x));
+	// if (b->name_is("2481")) {
+	// 	PRC(dx2); PRC(dx*vel); PRL(dx2*abs(acc));
+	// }
+
+	if (x != 1) {
+	    real dpot;
+	    if (dx2 <= c2)
+		dpot = -M*dx1i + acx1;
+	    else {
+		real r1 = pow(r2, 0.5*(1-x));
+		dpot = -A/(r1*(1-x));
+		if (M > 0 || c2 > 0) dpot -= (M-acx)*dx1i;
+	    }
+	    pot += dpot;
+	}
     }
 }
 
@@ -389,28 +464,52 @@ local inline real power_law_pot(dyn * b)
     real a2 = b->get_pl_scale_sq();
     real x = b->get_pl_exponent();
 
+    real c2 = b->get_pl_cutoff_sq();
+    real M = b->get_pl_mass();
+    real eps2 = b->get_pl_softening_sq();
+
+    if (!acx_set) set_acx(A, c2, x);	//////  *** not implemented yet ***
+
     real dpot = 0;
     for_all_daughters(dyn, b, bb) {
+
 	vector dx = bb->get_pos() - bb->get_pl_center();
-	real r2 = square(dx) + a2;
-	if (x == 1)
-	    dpot += bb->get_mass() * log(r2);
-	else
-	    dpot += bb->get_mass() * pow(r2, 0.5*(x-1));
+	real dx2 = square(dx);
+	real r2 = dx2 + a2;
+
+	real dx1i;
+	if (M > 0 || c2 > 0) dx1i = 1/sqrt(dx2+eps2);
+
+	real ddpot;
+	if (x == 1) {				// same code as in add_power_law
+	    if (dx2 <= c2)
+		ddpot = -M*dx1i + acx1;
+	    else {
+		ddpot = 0.5*A*log(r2);
+		if (M > 0 || c2 > 0) ddpot -= (M-acx)*dx1i;
+	    }
+	} else {
+	    if (dx2 <= c2)
+		ddpot = -M*dx1i + acx1;
+	    else {
+		real r1 = pow(r2, 0.5*(1-x));
+		ddpot = -A/(r1*(1-x));
+		if (M > 0 || c2 > 0) ddpot -= (M-acx)*dx1i;
+	    }
+	}
+
+	dpot += bb->get_mass()*ddpot;
     }
 
-    if (x == 1)
-	dpot *= 0.5;
-    else
-	dpot /= x-1;
-
-    return A*dpot;
+    return dpot;
 }
 
 local inline real power_law_virial(dyn * b)
 {
     // Determine the power-law-field component of the virial sum
     // of root node b.
+
+    // *** New embedded mass/cutoff not yet implemented (Steve, 12/01). ***
 
     real A = b->get_pl_coeff();
     if (A == 0) return 0;
