@@ -272,8 +272,7 @@ void hdyn::synchronize_node()
 
     if (do_diag) {
 	cerr << "synchronize_node for " << format_label()
-	     << " at time " << system_time << endl;
-	     <<" ...before integrate_node " << endl << flush;
+	     << " at time " << system_time << endl << flush;
 	if (is_low_level_node()) pp3(get_parent());
 	cerr << flush;
     }
