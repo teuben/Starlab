@@ -105,6 +105,9 @@ local bool choose_param(hdyn* b, bool verbose,
 			real& x, bool x_flag, char* x_id,
 			bool zero_OK = false)
 {
+    // Set kira parameter x, subject to the twin constraints of
+    // command-line input and input via the incoming snapshot.
+
     static bool skip_line = true;	// formatting!
 
     char kira_x[128];
@@ -116,6 +119,7 @@ local bool choose_param(hdyn* b, bool verbose,
     if (x_flag) {
 
 	// Value of parameter has been set on the command line.
+	// Command line value takes precedence.
 	// Flag the existence of a snapshot version only in verbose mode.
 
 	if (x_in_snap && verbose) {
@@ -670,6 +674,42 @@ local void check_total_mass(hdyn *b, bool reset = true)
     }
 }
 
+local void check_plummer_field(hdyn *b)
+{
+    // Check for Plummer-field data in the input snapshot, and
+    // set kira parameters accordingly.  No coordination with the
+    // command line because these parameters can *only* be set via
+    // the input snapshot.  (Steve, 7/01)
+    //
+    // Expected fields in the input file are
+    //
+    //		kira_plummer_mass = M
+    //		kira_plummer_scale = R
+    //		kira_plummer_center = x y z
+
+     if (find_qmatch(b->get_log_story(), "kira_plummer_mass")
+	 && find_qmatch(b->get_log_story(), "kira_plummer_scale")) {
+
+	 b->set_plummer();
+
+	 b->set_p_mass(getrq(b->get_log_story(), "kira_plummer_mass"));
+	 b->set_p_scale_sq(pow(getrq(b->get_log_story(),
+				     "kira_plummer_scale"), 2));
+
+	 vector center = 0;
+	 if (find_qmatch(b->get_log_story(), "kira_plummer_center"))
+	     b->set_p_center(getvq(b->get_log_story(), "kira_plummer_center"));
+     }
+}
+
+local void check_external_fields(hdyn *b)
+{
+    // Check for and set parameters for all (non-tidal) external fields.
+
+    check_plummer_field(b);
+}
+
+
 bool kira_initialize(int argc, char** argv,
 		     hdynptr& b,	// hdyn root node
 		     real& delta_t,	// time span of the integration
@@ -1199,6 +1239,13 @@ bool kira_initialize(int argc, char** argv,
     // Save information on whether or not a tidal field is used.
 
     putiq(b->get_log_story(), "kira_use_tidal_field", Q_flag);
+
+    //----------------------------------------------------------------------
+
+    // Check for external fields.  Note that there are NO command-line
+    // options -- specify only via the initial snapshot.
+
+    check_external_fields(b);
 
     //----------------------------------------------------------------------
 

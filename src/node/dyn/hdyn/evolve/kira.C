@@ -1571,7 +1571,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	bool full_dump_now = (full_dump
 			      && (t == 0 || t >= t_reinit
-				  	 || t>= t_esc));
+				  	 || t>= t_esc || t >= t_end));
 
 	// This dump ends the current worldbundle, so don't do it
 	// at time t = 0.
