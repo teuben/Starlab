@@ -2300,7 +2300,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
     // Determine number of perturbed steps in the next unperturbed step.
 
-    real steps = 0;
+    real pert_steps = 0;
 
     if (to_apo) {
 
@@ -2322,7 +2322,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	if (mean_anomaly > 0.9*M_PI
 	    && kep->get_period() < pdt2) apo_time += kep->get_period();
 
-	steps = ceil( (max(0.0, orb - 1) * kep->get_period() + apo_time)
+	pert_steps = ceil( (max(0.0, orb - 1) * kep->get_period() + apo_time)
 		     						/ timestep
 		     + 1);	// extra "1" to try to overcome
 				// possible problems with roundoff
@@ -2334,7 +2334,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
     } else {
 
-	steps = floor(orb * kep->get_period() / timestep);
+	pert_steps = floor(orb * kep->get_period() / timestep);
 
 	// Use of floor here ensures that the unperturbed step ends just
 	// before an integral number of orbits.
@@ -2348,18 +2348,19 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
     // Recheck that step will advance beyond system_time.  By construction,
     // it should fall short by at most 1 period...
 
-    if (time + steps*timestep < system_time) {
+    if (time + pert_steps*timestep < system_time) {
 	if (diag->report_continue_unperturbed)
 	    cerr << "get_unperturbed_steps: unpert step for "
 		 << format_label()
 		 << " increased to reach system_time" << endl;
-	steps += ceil(kep->get_period() / timestep);
+	pert_steps += ceil(kep->get_period() / timestep);
     }
 
     // Check that we really will pass apocenter at end of step.
 
     real d_mean_anomaly = timestep * kep->get_mean_motion();
-    real end_mean_anomaly = sym_angle(mean_anomaly + steps * d_mean_anomaly);
+    real end_mean_anomaly = sym_angle(mean_anomaly
+				       + pert_steps * d_mean_anomaly);
     int  mcount = 0;
 
     if (end_mean_anomaly > 0) {
@@ -2372,7 +2373,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
 	while (end_mean_anomaly <= M_PI && mcount > 0) {
 	    end_mean_anomaly += d_mean_anomaly;
-	    steps += 1;
+	    pert_steps += 1;
 	    mcount--;
 	}
 
@@ -2385,13 +2386,13 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
     //-----------------------------------------------------------------
 
-    // We have now determined the best unconstrained value of steps.
+    // We have now determined the best unconstrained value of pert_steps.
     // Optionally try to modify the choice to improve scheduling.
 
-    if (options->optimize_scheduling) {
+    if (pert_steps > 0 && options->optimize_scheduling) {
 
 	// Best (maximum) value for the number of perturbed steps to take
-	// is steps.  Try to force the actual step into the block scheme
+	// is pert_steps.  Try to force the actual step into the block scheme
 	// in the best possible location for scheduling purposes.
 	//
 	// ~Arbitrary criterion: step must end after apocenter, but not
@@ -2402,7 +2403,8 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
 	if (!options->optimize_block) {
 
-	    // Try to make steps a multiple of the largest possible power of 2.
+	    // Try to make pert_steps a multiple of the largest possible
+	    // power of 2.
 	    //
 	    // *** Note that the "base" (perturbed) step may be quite short,
 	    // *** so this may not actually help with overall synchronization
@@ -2415,21 +2417,20 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
 	    // Limits should be unnecessary, but...
 
-	    if (minus > steps/2) minus = (int)(steps/2);
-	    if (plus > steps/2) plus = (int)(steps/2);
+	    if (minus > pert_steps/2) minus = (int)(pert_steps/2);
+	    if (plus > pert_steps/2) plus = (int)(pert_steps/2);
 
-	    // Desired range is  (steps - minus)  to  (steps + plus).
+	    // Desired range is  (pert_steps - minus)  to  (pert_steps + plus).
 
-	    real new_steps = steps - minus;
+	    real new_steps = pert_steps - minus;
 	    real p2 = 2;
-	    while (new_steps <= steps + plus) {
+	    while (new_steps <= pert_steps + plus) {
 
 		if (fmod(new_steps, p2) != 0) new_steps += p2/2;
 
 		// Now new_steps is a multiple of p2.
 
 		p2 *= 2;
-		// PRL(p2);
 	    }
 
 	    // On exit from the loop, new_steps is too big -- reduce it here.
@@ -2439,15 +2440,15 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
 	    // PRC(new_steps); PRL(p2);
 
-	    steps = new_steps;
+	    pert_steps = new_steps;
 
 	} else {
 
 	    // NEW STRATEGY (Steve, 9/99, 6/00).  Choose the number of
 	    // perturbed steps in order to optimize the "block ranking" of
 	    // the unperturbed motion, i.e. the motion will be synchronized
-	    // with the highest block possible at the end of the next
-	    // step.  OK to take a step much smaller than the optimal steps,
+	    // with the highest block possible at the end of the next step.
+	    // OK to take a step much smaller than the optimal pert_steps,
 	    // so long as the overall synchronization is improved.  This
 	    // strategy should allow the motion to migrate to and remain in
 	    // a tolerably high block (in terms of "get_next_time") after a
@@ -2464,7 +2465,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	    //	    permitted phase window.
 	    //
 	    //   3. If such a time exists, accept it unconditionally as
-	    //	    next_time and set steps accordingly.
+	    //	    next_time and set pert_steps accordingly.
 
 	    // Define range of acceptable end-times.  Allow the step to
 	    // end up to half a parent timestep past the next parent step.
@@ -2499,35 +2500,35 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	    cerr << endl << "get_unperturbed_steps for "
 		 << format_label() << " at time " << system_time<< ":"
 		 << endl;
-	    PRI(4); PRL(steps);
+	    PRI(4); PRL(pert_steps);
 	    PRI(4); PRL(get_effective_block(time));
 	    PRI(4); PRL(get_effective_block(timestep));
-	    PRI(4); PRL(get_effective_block(steps*timestep));
-	    PRI(4); PRL(get_effective_block(time+steps*timestep));
+	    PRI(4); PRL(get_effective_block(pert_steps*timestep));
+	    PRI(4); PRL(get_effective_block(time+pert_steps*timestep));
 
 #endif
 	    if (t_next <= t_min
-		|| kb >= get_effective_block(time+steps*timestep)) {
+		|| kb >= get_effective_block(time+pert_steps*timestep)) {
 
 		// Nothing to be gained from optimizing.  Don't
-		// change steps.
+		// change pert_steps.
 
 #if 0
-		cerr << "    retaining unoptimized steps" << endl;
+		cerr << "    retaining unoptimized pert_steps" << endl;
 #endif
 
 	    } else {
 
-		real old_steps = steps;
-		steps = floor(((real)(t_next - time)) / timestep + 0.1);
+		real old_steps = pert_steps;
+		pert_steps = floor(((real)(t_next - time)) / timestep + 0.1);
 
 #if 0
 		PRI(4); PRC(kb); PRC(dtblock); PRL(dtblock/timestep);
-		PRI(4); PRC(steps); PRL(steps/old_steps);
-		PRI(4); PRL(get_effective_block(steps*timestep));
-		PRI(4); PRL(get_effective_block(time+steps*timestep));
+		PRI(4); PRC(pert_steps); PRL(pert_steps/old_steps);
+		PRI(4); PRL(get_effective_block(pert_steps*timestep));
+		PRI(4); PRL(get_effective_block(time+pert_steps*timestep));
 
-		if (get_effective_block(time+steps*timestep) != kb)
+		if (get_effective_block(time+pert_steps*timestep) != kb)
 		    cerr << "    ????" << endl;
 #endif
 
@@ -2535,7 +2536,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	}
     }
 
-    return steps;
+    return pert_steps;
 }
 
 

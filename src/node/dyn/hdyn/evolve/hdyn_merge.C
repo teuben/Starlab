@@ -563,13 +563,13 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
     
     real epot0, ekin0, etot0;
     calculate_energies(get_root(), eps2, epot0, ekin0, etot0);	// dyn function
+
     cerr << "The hard way: ";
     PRC(epot0); PRC(ekin0); PRL(etot0);
 
     cerr << "The hard-ware way: ";
     calculate_internal_energies(get_root(), epot0, ekin0, etot0);
     PRC(epot0); PRC(ekin0); PRL(etot0);
-
 
     hdyn* cm = get_parent();
     
@@ -714,12 +714,13 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
     
     cm->set_oldest_daughter(NULL);
 
-    // Do not
+    // Do not try to free memory by simply 
     //		delete bcoll;
     //		delete this;
-    // here
+    // causes a not so very strange error.
     
     real epot, ekin, etot;
+
     calculate_energies(get_root(), eps2, epot, ekin, etot);	// dyn function
     cerr << "The hard way: ";
     PRC(epot); PRC(ekin); PRL(etot);
