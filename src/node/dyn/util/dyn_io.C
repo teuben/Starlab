@@ -269,7 +269,6 @@ dyn* get_col(istream& s,
   bool first_dyn = true;
   dyn* bo;
 
-  dyn::set_col_output(true);
   bool first_data = true;
 
   while (true) {
@@ -280,6 +279,11 @@ dyn* get_col(istream& s,
       if (s.getline(line, sizeof line - 1)) strcat(line, "\n");
       else break;
     }
+
+    // Only set col output here, once we know we aren't at EOF.
+
+    if (first_data) dyn::set_col_output(true);
+
     switch (++lineno, line[0]) {
       case '\n': return root;
       case '#': continue;
