@@ -52,37 +52,12 @@ void hdyn::reinitialize_kepler_from_hdyn()
 {
     update_kepler_from_hdyn();
 
-    // This function is only called on restart -- from get_hdyn (hdyn.h)
-    // and from correct_multiples (kira_init.C).  Since the unperturbed
-    // timestep was OK when written out, and should have been picked up
-    // from the input snapshot, there should be no need to change anything
-    // here... (SLWM 3/98)  This function is now also called on system
-    // reinitialization, for compatibility with restart.
-
-#if 1
-
-    // Ordinarily, if the motion is flagged as unperturbed on restart,
-    // the unperturbed timestep should be trustworthy.  However, it is
-    // possible that the node time has been synchronized by some program,
-    // and that time + unperturbed_timestep may not take us to apastron,
-    // as is desirable (and assumed?) elsewhere in the code.  Recompute
-    // the step, using the standard criteria.  (SLWM, 4/02)
-
-    // Never advance unperturbed motion beyond parent's next step,
-    // and be sure that the step doesn't end at a bad place..
-
-    //int usteps = get_unperturbed_steps(true);
-    //unsigned long usteps = get_unperturbed_steps(true);
-    real usteps = get_unperturbed_steps(true);
-
-    if (usteps > 0) {
-	unperturbed_timestep = timestep*usteps;
-	get_binary_sister()->unperturbed_timestep = unperturbed_timestep;
-    } else {
-	// Just live with this, and assume that it will be handled
-	// properly once the step is over...
-    }
-
-#endif
+    // This function is called on restart -- from get_hdyn (hdyn.h), from
+    // correct_multiples (kira_init.C), and from initialize_unperturbed(),
+    // which is called from full_reinitialize().  (The function is called
+    // on system reinitialization for compatibility with restart.)  Since
+    // the unperturbed timestep was OK when written out, and should have
+    // been picked up from the input snapshot, there should be no need to
+    // change anything here... (SLWM 3/98)  
 
 }

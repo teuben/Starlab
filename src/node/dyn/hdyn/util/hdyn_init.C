@@ -12,13 +12,20 @@
 
 #include "hdyn.h"
 
+// Note that initialize_unperturbed is called by get_hdyn(), so be very
+// careful about introducing kira-specific functionality here...
+
 void hdyn::initialize_unperturbed()
 {
     // Unperturbed binary motion will have unperturbed_timestep > 0.
-    // Fully inperturbed motion will also have fully_unperturbed = true.
+    // Fully unperturbed motion will also have fully_unperturbed = true.
 
     // Unperturbed binary (kepler) details are not saved, so reconstruct
     // them from the hdyn.
+
+//    cerr << "in hdyn_init for " << format_label()
+//	 << "at " << time << "/" << system_time << "; ";
+//    PRL(init);
 
     for_all_nodes(hdyn, this, b)
         if (b->is_low_level_node()
@@ -31,6 +38,9 @@ void hdyn::initialize_unperturbed()
           //	    PRL(b->get_fully_unperturbed());
 
 	  set_kepler_tolerance(2);
+
+	  // cerr << " to reinitialize_kepler_from_hdyn()" << endl;
+
 	  b->reinitialize_kepler_from_hdyn();	// sister parameters will
 						// mirror those of b
       }
