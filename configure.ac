@@ -116,12 +116,28 @@ Please set QTDIR or use --with-qt-dir.])
     AC_SUBST(MOC, [$qt_dir/bin/moc])
     AC_CHECK_LIB(qt, main, [AC_DEFINE(HAVE_LIBQT, 1,
    	[Define to 1 if you have the `qt' library (-lqt).])])
-    if test "x$ac_cv_lib_qt_main" != "xyes" -a "x$qt" = "xyes"; then
-	AC_MSG_ERROR([Qt was selected but a test program failed to compile
+    if test "x$ac_cv_lib_qt_main" = "xyes"; then
+	AC_MSG_CHECKING(whether Qt is version 3 or newer)
+        AC_PREPROC_IFELSE(
+	    [AC_LANG_PROGRAM(
+[#include <qglobal.h>
+#if QT_VERSION < 0x030000
+#  error Qt is too old
+#endif])],
+	    [AC_MSG_RESULT(yes); good_qt=yes],
+	    [AC_MSG_RESULT(no);
+	        if test "x$qt" = "xyes"; then
+	            AC_MSG_ERROR([Qt was selected but it is older than version 3
+Please update Qt, or do not enable it with --with-qt.])
+	        else
+		    good_qt=no
+		fi])
+    elif test "x$qt" = "xyes"; then
+    	AC_MSG_ERROR([Qt was selected but a test program failed to compile
 See `config.log' for more details.])
     fi
 fi
-AM_CONDITIONAL(HAVE_LIBQT, [test "x$ac_cv_lib_qt_main" = "xyes"])
+AM_CONDITIONAL(HAVE_LIBQT, [test "x$good_qt" = "xyes"])
 
 # Checks for header files.
 AC_LANG_PUSH(C)
