@@ -145,7 +145,9 @@ xreal get_xreal_from_input_line(char * input_line)
 
     char *sp, *ep;
     long long i = STRTOL(val, &sp, 10);		  // signed integer part
-    unsigned long long f = STRTOUL(sp, &ep, 10);  // unsigned fractional part
+    unsigned long long f = STRTOUL(sp, &ep, 0);   // unsigned fractional part
+						  // "0" here means that we
+						  // can read hex or integer
 
     if (sp == ep) {				  // if we didn't get both
 						  // of above,
@@ -233,7 +235,21 @@ void put_story_footer(ostream & s, char * id)
 #ifdef USE_XREAL
 void put_real_number(ostream & s, char * label, xreal x)
 {
-    s << label << x.get_i() << " " << x.get_f() << endl;
+    // Simplest version:
+
+    // s << label << x.get_i() << " " << x.get_f() << endl;
+
+    // Better: Use hex for the fractional part...
+
+    xfrac_t f = x.get_f();
+    char tmp[128];
+
+    if (f == 0)
+	sprintf(tmp, "0");			// handy
+    else
+	sprintf(tmp, "%#16.16llx", f);
+
+    s << label << x.get_i() << " " << tmp << endl;
 }
 #endif
 

@@ -184,10 +184,10 @@ void xprint(xreal x,
     char tmp[128];
 //    s << x.get_i() << "+" << f;
     if (f == 0)
-	sprintf(tmp, "0");
+	sprintf(tmp, "0");		// handy
     else
 	sprintf(tmp, "%#16.16llx", f);
-    s << x.get_i() << "+" << tmp;
+    s << x.get_i() << " " << tmp;	// see also put_real_number()
 #else
     s << x;
 #endif
