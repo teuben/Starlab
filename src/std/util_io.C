@@ -21,12 +21,21 @@
 
 int get_line(istream & s, char * line)
 {
-    s.get(line,MAX_INPUT_LINE_LENGTH,'\n');
+    s.get(line, MAX_INPUT_LINE_LENGTH, '\n');	// don't read the '\n'
+
+    if (s.fail())
+
+	// Failed to read anything -- probably a blank line.
+	// Just reset and continue.
+
+	s.clear();
+
+    // Read and discard all characters up to and including the next newline.
+
     char c;
-    if(s.get(c) && c!='\n'){
-	cerr << "get_line : input line too long :'"<<line<<"'\n";
-	exit(1);
-    }
+    while (s.get(c))
+	if (c == '\n') break;
+
     return strlen(line);
 }
 
@@ -105,19 +114,24 @@ const char *getequals(const char *input_line, char *keyword)
 
     // Grab first token from line, like sscanf %s.
 
-    while(isspace(*cp)) cp++;
+    while (isspace(*cp)) cp++;
     int i;
-    for(i = 0; isalnum(*cp) || *cp == '_'; )
+    for (i = 0; isalnum(*cp) || *cp == '_'; )
 	keyword[i++] = *cp++;
     keyword[i] = '\0';
 
     cp = strchr(cp, '=');
-    if(cp == NULL) {
-	cerr << "Expected keyword = value, but got '"<< input_line <<"'\n";
-	exit(1);
+    if (cp == NULL) {
+
+	// Maybe the warning is unnecessary?
+
+//	cerr << "getequals: expected 'keyword = value', but got '"
+//	     << input_line << "'" << endl;
+
+	return cp;
     }
     cp++;
-    while(isspace(*cp)) cp++;
+    while (isspace(*cp)) cp++;
     return cp;
 }
 

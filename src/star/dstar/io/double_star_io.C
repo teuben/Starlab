@@ -13,7 +13,7 @@ istream & double_star::scan_star_story(istream& s) {
 
     while(get_line(s,input_line), strcmp(END_STAR, input_line)){
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	getequals(input_line, keyword);	// demand "="
+	getequals(input_line, keyword);		// demand "=", do nothing??
     }
 
     return s;

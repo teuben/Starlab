@@ -20,8 +20,8 @@ istream & star::scan_star_story(istream& s)
     while(get_line(s,input_line), strcmp(END_STAR, input_line)){
 //    while(get_line(s,input_line), strcmp(compare_string,input_line)){
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	getequals(input_line, keyword);		// demand "="
-    	add_story_line(star_story, input_line);
+	if (getequals(input_line, keyword))		// demand "="
+	    add_story_line(star_story, input_line);
     }
     return s;
 }

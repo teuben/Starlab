@@ -16,50 +16,52 @@ istream & single_star::scan_star_story(istream& s)
 	char keyword[MAX_INPUT_LINE_LENGTH];
 	const char *val = getequals(input_line, keyword);
 
-        real number;
-    	if(0){   // trick to keep the if() statement, for the else below
-        }else if(!strcmp("Type",keyword)){
-            char str_tpe[MAX_INPUT_LINE_LENGTH];
-            sscanf(val,"%s",str_tpe);
+	if (val) {
+	    real number;
+	    if(0){   // trick to keep the if() statement, for the else below
+	    }else if(!strcmp("Type",keyword)){
+		char str_tpe[MAX_INPUT_LINE_LENGTH];
+		sscanf(val,"%s",str_tpe);
 
-        }else if(!strcmp("Class",keyword)){
-            char str_cls[MAX_INPUT_LINE_LENGTH];
-            sscanf(val,"%s",str_cls);
+	    }else if(!strcmp("Class",keyword)){
+		char str_cls[MAX_INPUT_LINE_LENGTH];
+		sscanf(val,"%s",str_cls);
 
-        }else if(!strcmp("T_cur",keyword)){
-            set_current_time( strtod(val,NULL) );
+	    }else if(!strcmp("T_cur",keyword)){
+		set_current_time( strtod(val,NULL) );
 
-        }else if(!strcmp("T_rel",keyword)){
-            set_relative_age( strtod(val,NULL) );
+	    }else if(!strcmp("T_rel",keyword)){
+		set_relative_age( strtod(val,NULL) );
 
-        }else if(!strcmp("M_rel",keyword)){
-            set_relative_mass( strtod(val,NULL) );
+	    }else if(!strcmp("M_rel",keyword)){
+		set_relative_mass( strtod(val,NULL) );
 
-        }else if(!strcmp("M_env",keyword)){
-            set_envelope_mass( strtod(val,NULL) );
+	    }else if(!strcmp("M_env",keyword)){
+		set_envelope_mass( strtod(val,NULL) );
 
-        }else if(!strcmp("M_core",keyword)){
-            set_core_mass( strtod(val,NULL) );
+	    }else if(!strcmp("M_core",keyword)){
+		set_core_mass( strtod(val,NULL) );
 
-        }else if(!strcmp("M_COcore",keyword)){
-            set_COcore_mass( strtod(val,NULL) );
+	    }else if(!strcmp("M_COcore",keyword)){
+		set_COcore_mass( strtod(val,NULL) );
 
-        }else if(!strcmp("T_eff",keyword)){
-            number = strtod(val,NULL);
-	    /* XXX ignore value?? */
+	    }else if(!strcmp("T_eff",keyword)){
+		number = strtod(val,NULL);
+		/* XXX ignore value?? */
 
-        }else if(!strcmp("L_eff",keyword)){
-            set_luminosity( strtod(val,NULL) );
+	    }else if(!strcmp("L_eff",keyword)){
+		set_luminosity( strtod(val,NULL) );
 
-        }else if(!strcmp("P_rot",keyword)){       // Experimental extra 
-	  					  // information for 
-	  set_rotation_period( strtod(val,NULL) );// radio pulsars.
+	    }else if(!strcmp("P_rot",keyword)){           // experimental extra 
+	  					          // information for 
+		set_rotation_period( strtod(val,NULL) );  // radio pulsars.
 
-        } else if(!strcmp("B_fld",keyword)){
-	  set_magnetic_field( strtod(val,NULL) );
+	    } else if(!strcmp("B_fld",keyword)){
+		set_magnetic_field( strtod(val,NULL) );
 
-	}else{
-	    add_story_line(star_story, input_line);
+	    }else{
+		add_story_line(star_story, input_line);
+	    }
 	}
     }
 
@@ -136,36 +138,36 @@ void extract_line_text(stellar_type& type, real& t_cur, real& t_rel,
         char keyword[MAX_INPUT_LINE_LENGTH];
         const char *val = getequals(line, keyword);
 
-
-        real number;
-        if(0){   // trick to keep the if() statement, for the else below
-        }else if(!strcmp("Type",keyword)){
-            char str_tpe[MAX_INPUT_LINE_LENGTH];
-            sscanf(val,"%s",type_string); 
-	    type = extract_stellar_type_string(type_string);
-        }else if(!strcmp("T_cur",keyword)){
-            t_cur = strtod(val,NULL);
-        }else if(!strcmp("T_rel",keyword)){
-            t_rel = strtod(val,NULL);
-        }else if(!strcmp("M_rel",keyword)){
-            m_rel = strtod(val,NULL);
-        }else if(!strcmp("M_env",keyword)){
-            m_env = strtod(val,NULL);
-        }else if(!strcmp("M_core",keyword)){
-            m_core = strtod(val,NULL);
-        }else if(!strcmp("M_COcore",keyword)){
-            co_core = strtod(val,NULL);
-        }else if(!strcmp("T_eff",keyword)){
-            t_eff = strtod(val,NULL);
-        }else if(!strcmp("L_eff",keyword)){
-            l_eff = strtod(val,NULL);
-        }else if(!strcmp("P_rot",keyword)){       // Experimental extra 
-	    p_rot = strtod(val,NULL);     	  // information for 
-						  // radio pulsars
-        }else if(!strcmp("B_fld",keyword)){       // Only for neutron stars
-  	    b_fld = strtod(val,NULL);
-        }
-
+	if (val) {
+	    real number;
+	    if(0){   // trick to keep the if() statement, for the else below
+	    }else if(!strcmp("Type",keyword)){
+		char str_tpe[MAX_INPUT_LINE_LENGTH];
+		sscanf(val,"%s",type_string); 
+		type = extract_stellar_type_string(type_string);
+	    }else if(!strcmp("T_cur",keyword)){
+		t_cur = strtod(val,NULL);
+	    }else if(!strcmp("T_rel",keyword)){
+		t_rel = strtod(val,NULL);
+	    }else if(!strcmp("M_rel",keyword)){
+		m_rel = strtod(val,NULL);
+	    }else if(!strcmp("M_env",keyword)){
+		m_env = strtod(val,NULL);
+	    }else if(!strcmp("M_core",keyword)){
+		m_core = strtod(val,NULL);
+	    }else if(!strcmp("M_COcore",keyword)){
+		co_core = strtod(val,NULL);
+	    }else if(!strcmp("T_eff",keyword)){
+		t_eff = strtod(val,NULL);
+	    }else if(!strcmp("L_eff",keyword)){
+		l_eff = strtod(val,NULL);
+	    }else if(!strcmp("P_rot",keyword)){       // experimental extra 
+		p_rot = strtod(val,NULL);     	      // information for 
+						      // radio pulsars
+	    }else if(!strcmp("B_fld",keyword)){       // Only for neutron stars
+		b_fld = strtod(val,NULL);
+	    }
+	}
     }
 
 void extract_story_chapter(stellar_type& type, real& t_cur, real& t_rel, 
