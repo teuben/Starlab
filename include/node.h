@@ -433,6 +433,7 @@ node * common_ancestor(node *, node *);
 node * node_with_index(int i, node * top = NULL);
 node * node_with_name(char* s, node * top = NULL);
 int depth_of_node(node *);
+char * construct_binary_label(node * ni, node * nj);
 void label_binary_node(node*);
 void label_merger_node(node*);
 

@@ -469,6 +469,10 @@ void compute_general_mass_radii(dyn*, int,
 
 // From sys_stats.C:
 
+void search_for_binaries(dyn* b, real energy_cutoff = 0, real kT = 0,
+			 vec center = 0, bool verbose = true,
+			 bool long_binary_output = true);
+
 bool parse_sys_stats_main(int argc, char *argv[],
 			  int  &which_lagr,
 			  bool &binaries,
