@@ -1525,7 +1525,8 @@ bool hdyn::is_unperturbed_and_approaching()
 	    // of the timestep cycle.
 
 	    int it = (int) get_system_time();
-	    real tt = get_system_time() - it;	// try to avoid overflow in it
+	    real tt = get_system_time() - (xreal)it;	// try to avoid
+							// overflow in it
 	    real dtt = timestep/get_kappa();	// true timestep
 	    it =(int)(tt/dtt + 0.1);		// should be a power of 2...
 
