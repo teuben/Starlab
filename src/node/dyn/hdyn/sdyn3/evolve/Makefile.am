@@ -17,14 +17,30 @@
 ##
 
 noinst_LTLIBRARIES = libsdyn3-2.la
-#bin_PROGRAMS = bound3 low_n3_evol rate3 scatter3 sigma3 tree3_evolve pvm_bin
 
 libsdyn3_2_la_SOURCES = extend_or_end.C low_n3_evol.C scat_helper3.C \
     scat_init.C scatter3.C sdyn3_ev.C sig_helper3.C tree3_evolve.C \
     multiscatter3.C
 
-#bound3_CPPFLAGS = -DTOOLBOX
+bin_PROGRAMS = bound3 low_n3_evol rate3 scatter3 sigma3 tree3_evolve # pvm_bin
 
-#bound3_LDADD = ../libsdyn3.la
+bound3_CPPFLAGS = -DTOOLBOX
+low_n3_evol_CPPFLAGS = -DTOOLBOX
+rate3_CPPFLAGS = -DTOOLBOX
+scatter3_CPPFLAGS = -DTOOLBOX
+sigma3_CPPFLAGS = -DTOOLBOX
+tree3_evolve_CPPFLAGS = -DTOOLBOX
 
-#bound3_SOURCES = bound3.C
+bound3_LDADD = ../libsdyn3.la
+low_n3_evol_LDADD = ../libsdyn3.la
+rate3_LDADD = ../libsdyn3.la
+scatter3_LDADD = ../libsdyn3.la
+sigma3_LDADD = ../libsdyn3.la
+tree3_evolve_LDADD = ../libsdyn3.la
+
+bound3_SOURCES = bound3.C
+low_n3_evol_SOURCES = low_n3_evol.C
+rate3_SOURCES = rate3.C
+scatter3_SOURCES = scatter3.C
+sigma3_SOURCES = sigma3.C
+tree3_evolve_SOURCES = tree3_evolve.C
