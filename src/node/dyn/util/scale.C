@@ -228,7 +228,7 @@ void scale(dyn *b, real eps,
 
     // Believe initial_mass if system_time = 0.
 
-    if (b->get_system_time() == 0
+    if ((real)b->get_system_time() == 0
 	&& find_qmatch(b->get_log_story(), "initial_mass"))
 	mass = getrq(b->get_log_story(), "initial_mass");
     else
@@ -245,7 +245,7 @@ void scale(dyn *b, real eps,
     real r_virial = 0, pot_int = 0, pot_ext = 0, kin = 0;
 
     if (e_flag || r_flag || q_flag) {
-	if (b->get_system_time() == 0
+	if ((real)b->get_system_time() == 0
 	    && find_qmatch(b->get_log_story(), "initial_rvirial")) {
 
 	    // Avoid N^2 calculation if possible.
@@ -472,7 +472,7 @@ void scale(dyn *b, real eps,
     // Update the root log story -- probably best to do this only if
     // system_time = 0.
 
-    if (b->get_system_time() == 0) {
+    if ((real)b->get_system_time() == 0) {
 	putrq(b->get_log_story(), "initial_mass", mass, HIGH_PRECISION);
 	putrq(b->get_log_story(), "initial_total_energy", kin+pot_int+pot_ext);
 	putrq(b->get_log_story(), "initial_rvirial", r_virial);
