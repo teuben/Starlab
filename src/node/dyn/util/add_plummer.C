@@ -14,6 +14,7 @@
 ////
 //// Options:      -c    add comment [none]
 ////               -C    specify center [(0,0,0)]
+////               -f    turn on/off friction [false]
 ////               -m/M  specify mass [1]
 ////               -a/R  specify scale [1]
 ////               -n    force interpretation of parameters in N-body units [no]
@@ -21,19 +22,33 @@
 //   version 1:  Aug/Sep 2001   Steve McMillan
 
 // This function is just a special case of add_power_law, and is now
-// handled as such.
+// handled as such, except that the optional friction flag applies only
+// to Plummer (for now).
 
 #include "dyn.h"
 
 #ifndef TOOLBOX
 
+void toggle_plummer_friction(dyn *b)
+{
+    // Toggle the current setting of kira_plummer_friction.
+
+    if (find_qmatch(b->get_log_story(), "kira_plummer_friction")) {
+	int f = getiq(b->get_log_story(), "kira_plummer_friction");
+	f = (f == 0 ? 1 : 0);
+	putiq(b->get_log_story(), "kira_plummer_friction", f);
+    }
+}
+
 void add_plummer(dyn *b,
 		 real coeff, real scale,
 		 vec center,			// default = (0, 0, 0)
 		 bool n_flag,			// default = false
-		 bool verbose)			// default = false
+		 bool verbose,			// default = false
+		 bool fric_flag)		// default = false
 {
     add_power_law(b, coeff, 0, scale, center, n_flag, verbose, false);
+    if (fric_flag) toggle_plummer_friction(b);
 }
 
 #else
@@ -47,13 +62,14 @@ main(int argc, char *argv[])
     vec center = 0;
 
     bool n_flag = false;
+    bool fric_flag = false;
 
     check_help();
 
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "a:c:C:::m:M:nR:";
+    char* param_string = "a:c:C:::fm:M:nR:";
 
     dyn *b = get_dyn();
     if (b == NULL) err_exit("Can't read input snapshot");
@@ -70,6 +86,8 @@ main(int argc, char *argv[])
 	    case 'C':	center = vec(atof(poparr[0]),
 					atof(poparr[1]),
 					atof(poparr[2]));
+			break;
+	    case 'f':	fric_flag = true;
 			break;
 	    case 'm':
 	    case 'M':	mass = atof(poptarg);
@@ -88,7 +106,7 @@ main(int argc, char *argv[])
 	}
     }
 
-    add_plummer(b, mass, scale, center, n_flag, true);
+    add_plummer(b, mass, scale, center, n_flag, true, fric_flag);
     put_dyn(b);
 }
 

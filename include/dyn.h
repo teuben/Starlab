@@ -90,6 +90,8 @@ class  dyn : public node
 
 	static vec p_center;		// (fixed) point relative to which
 					// Plummer forces are computed
+	static bool p_friction;		// flag to include dynamical friction
+					// (currently for Plummer only)
 
 	// Confining power-law model parameters (Steve, 7/01).
 	// New implementation (Steve, 2/04) means that Plummer is
@@ -589,7 +591,10 @@ void add_plummer(dyn *b,
 		 real coeff, real scale,
 		 vec center = 0.0,
 		 bool n_flag = false,
-		 bool verbose = false);
+		 bool verbose = false,
+		 bool fric_flag = false);
+
+void toggle_plummer_friction(dyn *b);
 
 void add_power_law(dyn *b,
 		   real coeff, real exponent, real scale,

@@ -35,16 +35,17 @@ real dyn::omega	= 0;
 real dyn::omega_sq	= 0;
 real dyn::alpha1	= 0;
 real dyn::alpha3	= 0;
-vec dyn::tidal_center = vec(0,0,0);
+vec  dyn::tidal_center = vec(0,0,0);
 
 real dyn::p_mass = 0;
 real dyn::p_scale_sq = 0;
-vec dyn::p_center = vec(0,0,0);
+vec  dyn::p_center = vec(0,0,0);
+bool dyn::p_friction = false;
 
 real dyn::pl_coeff = 0;
 real dyn::pl_scale = 0;
 real dyn::pl_exponent = 0;
-vec dyn::pl_center = vec(0,0,0);
+vec  dyn::pl_center = vec(0,0,0);
 
 FILE* dyn::ifp = 0;
 FILE* dyn::ofp = 0;

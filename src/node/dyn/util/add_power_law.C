@@ -150,6 +150,7 @@ void add_power_law(dyn *b,
 	putrq(b->get_log_story(), "kira_plummer_mass", coeff);
 	putrq(b->get_log_story(), "kira_plummer_scale", scale);
 	putvq(b->get_log_story(), "kira_plummer_center", center);
+	putiq(b->get_log_story(), "kira_plummer_friction", 0);
 
 	cerr << "M = " << coeff << ", a = " << scale << endl;
     }
