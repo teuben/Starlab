@@ -1,5 +1,5 @@
 LDFLAGS = -lm
-EXECUTABLES =	check_dep earliest_time kiraformat kiraindex largest_int \
+EXECUTABLES =	check_dep earliest_time ints kiraformat kiraindex largest_int \
 		latest_time mytime sqrt strip_starlab_path
 
 # strings trn
