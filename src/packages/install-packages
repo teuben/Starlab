@@ -1,6 +1,9 @@
 #!/bin/tcsh -f
 
 # Install public-domain packages distributed with Starlab.
+# Specify the installation directory as the first argument on
+# the command line.  An argument of "x" should install in the
+# same directory as the top-level configure/make.
 
 set log = install.log
 set plist = (`cat package-list`)
