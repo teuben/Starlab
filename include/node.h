@@ -59,13 +59,6 @@ class node
 	node * elder_sister;      // oneesan   | building a tree structure;
 	node * younger_sister;    // imouto    | the names are so much simpler!
 
-	story * log_story;        // the log story is a generalized scratchpad
-
-	story * dyn_story;        // the dyn story is a placeholder for
-                                  // dynamical information not recognized by
-                                  // a program -- this allows the information
-                                  // to be preserved and passed down a pipe
-
         hydrobase * hbase;        // hydrobase is the class underlying all
 	                          // hydro classes that handle hydrodynamics.
 	                          // This is the only hydro class provided 
@@ -81,6 +74,13 @@ class node
 	                          // recompilation of the inherited classes
 				  // based on star without necessitating
 	                          // compilation of the dynamics part.
+
+	story * log_story;        // the log story is a generalized scratchpad
+
+	story * dyn_story;        // the dyn story is a placeholder for
+                                  // dynamical information not recognized by
+                                  // a program -- this allows the information
+                                  // to be preserved and passed down a pipe
 
     public:
 
