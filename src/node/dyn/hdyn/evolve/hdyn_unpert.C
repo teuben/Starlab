@@ -2619,7 +2619,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 		// (These debugging lines can be quite expensive...)
 
 //		if (name_is("15943")) {
-		if (system_time > 0.112) {
+//		if (system_time > 0.112) {
 
 		    cerr << endl << "get_unperturbed_steps for "
 			 << format_label() << " at time " << system_time << ":"
@@ -2650,7 +2650,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 			cerr << "    ????" << endl;
 
 		    cerr.precision(pp);
-		}
+//		}
 #endif
 
 	    }
