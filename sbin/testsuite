@@ -1,0 +1,177 @@
+#! /bin/csh -f
+#
+#  this script will find Testfile's and create a testsuite from it
+#  Note that it will run in a directory $STARLAB_PATH/tmp/test$$
+#
+#   22-mar-97   Orinally written for NEMO             Peter Teuben
+#   19-dec-99   -i added (doesn't seem to work?)
+#   27-feb-01   Modified to work under starlab		PJT
+#               added baseline version maintenance
+#
+
+set testdir=$STARLAB_PATH/tmp/test$$
+set basedir=$STARLAB_PATH/data/testdata
+set log=testsuite.log
+set dog=diff.log
+alias test 'make -f Testfile'
+
+set diff=0
+set test=0
+set norun=0
+set cleanup=0
+set clean=0
+set show=0
+set install=0
+set query=0
+set done=0
+set options=()
+foreach arg ($*)
+    switch ($arg)
+    case -n:  
+              if ($done) then
+                set options=($options $arg)                
+              else
+                set norun=1
+              endif
+              breaksw
+    case -r:  
+              set cleanup=1
+              breaksw
+    case -c:  
+              set clean=1
+              breaksw
+    case -s:  
+              set show=1
+              breaksw
+    case -i:
+	      set install=1
+	      breaksw
+    case -q:  
+              set query=1
+              breaksw
+    case -t:
+              set test=1
+              breaksw
+    case -d:
+              set diff=1
+	      # this would do the diffs on the fly
+#             set options=($options diff BASEDIR=$STARLAB_PATH/data/testdata)
+              breaksw
+    case -h:  
+              goto help
+              breaksw
+    case --:
+              set done=1
+              breaksw
+    default:
+              set options=($options $arg)
+              breaksw
+    endsw
+end
+
+mkdir $testdir
+pushd $testdir >& /dev/null
+
+onintr cleanup
+
+#echo OPTIONS=$options
+#echo CNRS=$clean $norun $cleanup $show
+echo "TESTSUITE started `date`"                                        > $log
+echo "STARLAB version $STARLAB_PATH `hostname`"                       >> $log
+
+foreach testfile (`find $STARLAB_PATH/src -name Testfile -print`)
+    if ($norun) then
+        echo $testfile
+        continue
+    endif
+    if ($test) then
+        (cd $testfile:h ; make -f Testfile test)
+        continue
+    endif
+    if ($clean) then
+        (cd $testfile:h ; make -f Testfile clean)
+        continue
+    endif
+    if ($show) then
+        (cd $testfile:h ; make -f Testfile need)
+        continue
+    endif
+    if ($query) then
+        foreach bin (`cd $testfile:h ; make -f Testfile need`)
+            if (! -e $STARLAB_PATH/bin/$bin) then
+                echo $STARLAB_PATH/bin/$bin does not exist
+            endif
+        end
+        continue
+    endif
+    echo -n Working on $testfile:h
+    echo "==========================================================" >>  $log
+    make -f $testfile clean all  $options                             >>& $log
+    if ($status) then
+        echo " Problems"
+    else
+        echo " OK"
+    endif
+end
+
+if ($diff) then
+    foreach testfile (`find $STARLAB_PATH/src -name Testfile -print`)
+	echo -n Diffing on $testfile:h
+	set out=(`make -f $testfile out`)
+	set n=0
+	foreach file ($out)
+	    diff $file $basedir >> $dog
+	    if ($status) @ n++
+	end
+	if ($n == 0) then
+	    echo " OK"
+	else
+	    echo " $n/$#out files differ"
+	endif
+    end
+endif
+
+echo "TESTSUITE   ended `date`"                                       >> $log
+
+cleanup:
+
+    popd >& /dev/null
+
+    if ($show || $query) then
+        set clean=1
+    else
+        echo Results in $testdir/$log
+	echo If you have any problems, this file should be sent to the starlab@sns.ias.edu
+        head -1 $testdir/$log
+        tail -1 $testdir/$log
+    endif
+
+    if ($cleanup || $clean) then
+        rm -rf $testdir
+    endif
+
+
+    exit 0
+
+help:
+    echo "Usage: $0 [options] [KEYWORD=value ...]"
+    echo ""
+    echo "This program excerizes STARLAB by running a number of core programs"
+    echo "from a diverse set of packages (xxx,yyy,zzz)"
+    echo ""
+    echo "Options:"
+    echo "    -n    dry-run, only show which directories have Testfile's"
+    echo "    -r    cleanup working directory in '$STARLAB_PATH/tmp' afterwards"
+    echo "    -t    show tests"
+    echo "    -c    clean the STARLAB directory itself of Testfile in/out files"
+    echo "    -s    show all the binaries that are needed for each test"
+    echo "    -i    install the binaries that are needed for all test"
+    echo "    -q    show all binaries that have not been installed yet"
+    echo "    -d    also show differences between files and baseline version"
+    echo "    -h    this help"
+    echo ""
+    echo "Useful keywords, and their defaults:"
+    echo "(see also Testfile.def)"
+    echo "    NBODY=10         should at least be 10; 10 makes it run fast"
+    echo 
+
