@@ -541,6 +541,7 @@ void helium_star::stellar_wind(const real dt) {
 
 //cerr<<"void helium_star::stellar_wind(dt="<<dt<<") = ";
 
+#if 0
 	    real kappa = pow(get_total_mass(),2.5);
 
 //	real kappa = wind_constant;
@@ -562,16 +563,30 @@ void helium_star::stellar_wind(const real dt) {
 
 	  real m_next = pow((pow(m,-1.5) + 1.5*constant*dt),-1/1.5);
 	  wind_mass = m - m_next;
+#endif
+	  // (GN Apr 12 2001) Helium stars wind according to
+	  // Nelemans \& van den Heuvel), PhD thesis, p. 120, 
+	  real m = get_total_mass();
+	  real alph = 2.87;
+	  real constant = 0.0138;
+
+	  real m_next = pow((pow(m, (1. - alph)) 
+                      + (alph-1.) * constant*dt),1./(1. - alph));
+	  real wind_mass = m - m_next;
+
 //	  PRC(m);PRC(m_next);PRL(wind_mass);
 //           real wind_mass = 0.0025*dt*kappa;
 // (GN+SPZ May  3 1999) low mass helium stars have no wind
 // helium_giant looses envlope
 	  if (get_total_mass() < 2.5 ) wind_mass = 0.;
 
+	  // (GN Apr 14 2004) continue to lose mass from CO core
+#if 0
            if (wind_mass>=envelope_mass) {
               wind_mass = envelope_mass;
               radius = core_radius;
            }
+#endif
 
            if (is_binary_component())
               get_binary()->adjust_binary_after_wind_loss(
@@ -579,7 +594,7 @@ void helium_star::stellar_wind(const real dt) {
            else
               reduce_mass(wind_mass);
               return;
-        }
+	      //        }
    } 
 
 
