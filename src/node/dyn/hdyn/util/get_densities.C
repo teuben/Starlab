@@ -8,10 +8,19 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\
 
-//// get_densities: compute densities of top-level nodes.
-////                Densities are saved in node dyn stories.
-////                Only actually does the computation if a GRAPE
-////                is attached.
+//// Compute densities of top-level nodes.
+//// Densities are saved in node dyn stories. The program only actually
+//// does the computation if a GRAPE is attached.
+////
+//// Usage: get_densities
+////
+//// Options:
+//// None.
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
 
 //  Steve McMillan, June 2004
 

@@ -8,10 +8,19 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// hdyn_pp3:  Starlab hdyn-specific debugging tools.  Perform pp3_tree
-////            on all nodes, descending from the root node.
+//// Starlab hdyn-specific debugging tools.  Perform pp3_tree on
+//// all nodes, descending from the root node.
 ////
-//// Steve McMillan, 11/98.
+//// Usage: hdyn_pp3 [OPTIONS]
+////
+//// Options:
+//// None.
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
+//   Steve McMillan, 11/98.
 
 // Externally visible functions:
 //

@@ -8,9 +8,16 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// reset_counters:  Clear all time/force counters in the input snapshot(s).
+//// Clear all time/force counters in the input snapshot(s).
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Usage: reset_counters [OPTIONS]
+////
+//// Options:
+////         -c    add a comment to the output snapshot [false]
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 // Externally visible function:
 //
