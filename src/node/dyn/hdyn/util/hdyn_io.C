@@ -247,6 +247,16 @@ bool get_write_unformatted()
     return write_unformatted;
 }
 
+// Another kludge -- we need to know if this print_dyn_story() use is
+// part of a complete snapshot, or just a single node or subtree.
+
+static bool complete_system_dump = false;
+
+void set_complete_system_dump(bool d)			// default = true
+{
+    complete_system_dump = d;
+}
+
 ostream & hdyn::print_dyn_story(ostream & s,
 				bool print_xreal,	// default = true
 				int short_output)	// default = 0
@@ -412,11 +422,38 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	// suppressed in short_output mode.
 
 	if (is_root()) {
+
 	    vector pos, vel;
 	    int which = get_std_center(this, pos, vel);
 	    put_real_vector(s, "  center_pos  =  ", pos);
 	    put_real_vector(s, "  center_vel  =  ", vel);
 	    put_integer(s, "  center_type  =  ", which);
+
+	    // Add extra information on other centers:
+
+	    if (get_external_field() > 0) {
+		refine_cluster_mass2(this);
+		if (find_qmatch(get_dyn_story(), "bound_center_pos")) {
+		    vector bound_pos = getvq(get_dyn_story(),
+					     "bound_center_pos");
+		    vector bound_vel = getvq(get_dyn_story(),
+					     "bound_center_vel");
+		    put_real_vector(s, "  bound_center_pos  =  ", bound_pos);
+		    put_real_vector(s, "  bound_center_vel  =  ", bound_vel);
+		}
+	    }
+	}
+
+	// Extra output for complete system dumps only.
+
+	if (complete_system_dump) {
+	    if (!is_root()) {
+		hdyn *top = get_top_level_node();
+		bool esc = false;
+		if (find_qmatch(top->get_dyn_story(), "esc"))
+		    esc = getiq(top->get_dyn_story(), "esc");
+		put_integer(s, "  esc  =  ", esc);
+	    }
 	}
     }
 
