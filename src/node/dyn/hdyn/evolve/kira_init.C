@@ -640,6 +640,29 @@ local void check_total_mass(hdyn *b, bool reset = true)
     }
 }
 
+local void check_flag_black_holes(hdyn *b)
+{
+    // Check for black holes identified as such by the log story or
+    // by their stellar properties.  Flag them by giving them negative
+    // radii.  See hdyn_inline.C for use of this information.
+
+    int n_bh_stellar = 0, n_bh_story = 0;
+
+    for_all_leaves(hdyn, b, bb)
+	if (bb->get_starbase()->get_element_type() == Black_Hole) {
+	    bb->set_radius(-bb->get_radius());
+	    n_bh_stellar++;
+	} else if (getiq(bb->get_log_story(), "black_hole") == 1) {
+	    if (bb->get_radius() == 0) bb->set_radius(VERY_SMALL_NUMBER);
+	    bb->set_radius(-bb->get_radius());
+	    n_bh_story++;
+	}
+
+    if (n_bh_stellar + n_bh_story > 0)
+	cerr << "flagged " << n_bh_stellar << " stellar black holes and "
+	     << n_bh_story << " black holes from stories" << endl;
+}
+
 
 
 // Local explicit declaration of a function carried by kira::main().
@@ -1437,6 +1460,13 @@ bool kira_initialize(int argc, char** argv,
 
     putiq(b->get_log_story(), "kira_evolve_stars", S_flag);
     putiq(b->get_log_story(), "kira_evolve_binaries", B_flag);
+
+    //----------------------------------------------------------------------
+
+    // Check for and flag black holes identified via the story or
+    // their stellar properties.
+
+    check_flag_black_holes(b);
 
     //----------------------------------------------------------------------
 
