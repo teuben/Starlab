@@ -101,7 +101,8 @@ void write_image(float* a, int m, int n, char* filename, int scale,
 //	fprintf(stderr, "%s: min = %f max = %f\n", filename, amin, amax);
 //    }
 
-    // Note: j ordering goes from top to bottom...
+    // Note: output j ordering goes from top to bottom, but it is
+    // assumed that the input array starts at the bottom left...
 
     for (j = n - 1; j >= 0; j--) write_line(a+m*j, m, file,
 					    scale, amin, amax);

@@ -248,6 +248,8 @@ local void add_point(float *a, int nx, int ny,
     int ir = (int)(r+0.0001)+1;
     real r2a = pow(r-0.1,2), r2b = pow(r+0.2,2), r2c = pow(r+0.5,2);
 
+    // PRC(x); PRC(i); PRC(y); PRL(j);
+
     for (int ii = max(-ir, -i); ii <= min(ir, nx-i-1); ii++)
 	for (int jj = max(-ir, -j); jj <= min(ir, ny-j-1); jj++) {
 
@@ -276,6 +278,10 @@ local void add_point(float *a, int nx, int ny,
 		c = 0;				// black
 
 	    if (c > 0) {
+
+//		cerr << "adding " << c << " to ("
+//		     << i+ii << "," << j+jj << ")" << endl;
+
 		real zcur = *(zarray+(j+jj)*nx+(i+ii));
 		if (z > zcur) {
 		    *(a+(j+jj)*nx+(i+ii)) = c;
@@ -302,6 +308,19 @@ local void write_image_file(float *a, int nx, int ny,
 			    unsigned char *blue)
 {
     char command[1024];
+
+    // Note that write_image will write the image left to right,
+    // top to bottom, but expects "normal" ordering (bottom to top)
+    // in the input array... 
+
+//      for (int j = ny-1; j >= 0; j--) {
+//  	for (int i = 0; i < nx; i++)
+//  	    if (a[i+nx*j] <= 0)
+//  		cerr << " ";
+//  	    else
+//  		cerr << "*";
+//  	cerr << endl;
+//      }
 
     if (colormap_set)
 	write_image(a, nx, ny, fn, 0, colormap);	// 0 ==> no scaling
@@ -353,11 +372,20 @@ main(int argc, char** argv)
     bool gif = false;
 
     real l = L;
+    real xleft = -L;
+    real xright = L;
+    real ybot = -L;
+    real ytop = L;
+
     bool HRD = false;
-    real xmin = 5;
-    real xmax = 3;
-    real ymin = -3;
-    real ymax = 3;
+    // real xleft = 5;		// suitable for HRDs only...
+    // real xright = 3;
+    // real ybot = -3;
+    // real ytop = 3;
+
+    bool xlim_set = false;
+    bool ylim_set = false;
+
     int nx = NX, ny = NY;
     int n = 0, nskip = 0;
 
@@ -411,13 +439,17 @@ main(int argc, char** argv)
 	    		else if (index_all > 1)
 			    index_all = 1;
 			break;
-	    case 'X':	xmax = atof(poptarg);
+	    case 'X':	xright = atof(poptarg);
+			xlim_set = true;
 			break;
-	    case 'x':	xmin = atof(poptarg);
+	    case 'x':	xleft = atof(poptarg);
+			xlim_set = true;
 			break;
-	    case 'Y':	ymax = atof(poptarg);
+	    case 'Y':	ytop = atof(poptarg);
+			ylim_set = true;
 			break;
-	    case 'y':	ymin = atof(poptarg);
+	    case 'y':	ybot = atof(poptarg);
+			ylim_set = true;
 			break;
 	    case 'm':	mass = true;
 			break;
@@ -463,16 +495,30 @@ main(int argc, char** argv)
 
     if (gif) compress = false;
 
-    real lx=l, ly=l;
-    if(HRD) {
-      lx = xmin-xmax;
-      ly = ymax-ymin;
+    if (HRD) {
+	if (!xlim_set) {
+	    xleft = 5;
+	    xright = 3;
+	}
+	if (!ylim_set) {
+	    ybot = -3;
+	    ytop = 3;
+	}
+    } else {
+	xleft = ybot = -l;
+	xright = ytop = l; 
     }
-    else {
-      xmax = ymin = -l;
-      xmin = ymax = l; 
-      lx = ly = 2*l;
-    }
+
+    real lx = xright - xleft;
+    real ly = ytop - ybot;
+
+    real xmin = min(xleft, xright);
+    real xmax = max(xleft, xright);
+    real ymin = min(ybot, ytop);
+    real ymax = max(ybot, ytop);
+
+    // PRC(xleft); PRC(xright); PRL(lx);
+    // PRC(ybot); PRC(ytop); PRL(ly);
 
     // Note on color maps and conventions (Steve, 8/02):
     //
@@ -497,6 +543,11 @@ main(int argc, char** argv)
     //	   - the mass, if mass is set (-m) and radius (-r) is not
     //
     //     - the radius (scaled by psize) if radius is set (-r)
+    //
+    // Adding HR diagrams raises even more options.  Color is temperature,
+    // but could also be mass.  Radius is radius if available, but should
+    // probably be log radius, and could use mass if radius is unknown.
+    // Not fully coded yet...				(Steve, 8/02)
 
     unsigned char red[256], green[256], blue[256];
 
@@ -505,7 +556,7 @@ main(int argc, char** argv)
 	// Need to clean up these options, as they can be mutually
 	// incompatible.
 
-	if (mass)
+	if (mass || HRD)
 	    make_local_alternate_colormap(red, green, blue, psize);
 	else if (ncolor > 0)
 	    make_local_small_n_colormap(red, green, blue, ncolor, psize);
@@ -574,7 +625,7 @@ main(int argc, char** argv)
 		// Determine overall scalings (and the mass range, if
 		// relevant) from *this* snapshot.
 
-		if (mass || radius || index_all < 0) {
+		if (HRD || mass || radius || index_all < 0) {
 
 		    // We are coloring by mass or index and sizing by mass
 		    // or radius.
@@ -631,23 +682,36 @@ main(int argc, char** argv)
 		    z = pos[kax];
 		}
 		else {
-		    story *st = bb->get_dyn_story();
-		    real T_eff = getrq(st, "T"); 
-		    real L_sun = getrq(st, "L");
-		    real stp = getrq(st, "S");
+
+		    // Neet to be careful where we search for star data...
+
+		    real T_eff, L_sun, stp = -1;
+		    story *st = bb->get_star_story();
+
+		    if (st) {
+			T_eff = getrq(st, "T_eff"); 
+			L_sun = getrq(st, "L_eff");
+			// stp = getrq(st, "Type");	// need to convert...
+
+			if (T_eff == -VERY_LARGE_NUMBER) st = NULL;
+		    }
+
+		    if (!st) {
+			st = bb->get_dyn_story();
+			T_eff = getrq(st, "T"); 
+			L_sun = getrq(st, "L");
+			stp = getrq(st, "S");
+		    }
+
 		    x = log10(T_eff);
 		    y = log10(L_sun);
 		    z = 0;
 		}
 
-		if (x > xmax && x < xmin && y > ymin && y < ymax) {
+		// PRC(x); PRC(xmin); PRL(xmax);
+		// PRC(y); PRC(ymin); PRL(ymax);
 
-		    // Coordinates:
-
-		    x = ((xmin-x) * 1.0 * nx / lx);
-		    int i = (int) x;
-		    y = ((y-ymin) * 1.0 * ny / ly);
-		    int j = (int) y;
+		if (x > xmin && x < xmax && y > ymin && y < ymax) {
 
 		    // Set color (by mass or index) and radius (fixed, by mass,
 		    // or by radius):
@@ -655,7 +719,12 @@ main(int argc, char** argv)
 		    float color = 1;
 		    real r = psize;
 
-		    if (mass && bb->get_mass() > 0) {
+		    if (HRD) {
+
+			real fac = max(0.0, min(1.0, x - 3.5));	// arbitrary
+			color = 0.7 + 0.3 * fac;
+
+		    } else if (mass && bb->get_mass() > 0) {
 
 			// Mass scaling is logarithmic.
 
@@ -674,12 +743,19 @@ main(int argc, char** argv)
 		    else if (index_all >= 0)
 			color = color_all;
 
-		    if (radius)
+		    if (radius || (HRD && bb->get_radius() > 0))
 			r = psize * bb->get_radius() * rfac;
 
 		    // Single pixels are too small for an animation.
 
 		    if (!combine) r = max(r, 1.0);
+
+		    // Coordinates in the frame:
+
+		    x = ((x - xleft) * 1.0 * nx / lx);
+		    int i = (int) x;
+		    y = ((y - ybot) * 1.0 * ny / ly);
+		    int j = (int) y;
 
 		    add_point(a, nx, ny, x, y, i, j, grid, r, color, z, zarray);
 		}

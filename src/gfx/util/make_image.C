@@ -1,6 +1,7 @@
 /*
  *  MAKE_IMAGE:  Convert the input stream into a Sun rasterfile color image.
- *		 Assume that the numbers are *already* in the range [0,255].
+ *		 Assume that the numbers are *already* in the range [0,255],
+ *		 and are arranged left to right, top to bottom in the frame.
  *
  *		 Use the ImageMagick "convert" program to convert the
  *		 image to other formats (e.g. gif, etc.)
