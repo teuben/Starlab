@@ -2285,7 +2285,7 @@ void hdyn::calculate_partial_acc_and_jerk(hdyn * top,
 	p *= minv;
 
 	// Special case:  It is helpful to know the perturbation on a
-	// top-level node whose neighbor list has overflowed (or which
+	// top-level node whose perturber list has overflowed (or which
 	// is being calculated exactly).  In that case, the following
 	// should all be true:
 	//
@@ -3694,7 +3694,7 @@ local inline hdyn *need_correction(hdyn * bj, hdyn * bi)
 
 	// Well, what if perturber list of btop is INVALID?  This in practice
 	// *should not* occur unless previous force calculation is exact...
-	// ...or if neighbor-list overflow has occurred (Steve 7/98).
+	// ...or if perturber-list overflow has occurred (Steve 7/98).
 
 	if (btop->get_valid_perturbers() || btop->get_valid_perturbers_low()) {
 	    int np = btop->get_n_perturbers();
@@ -3923,7 +3923,7 @@ local inline void check_and_apply_correction(hdyn * bj, hdyn * bi)
 
 		// What if perturber list of btop is INVALID?  This in
 		// practice *should not* occur unless previous force
-		// calculation was exact, or if neighbor-list overflow
+		// calculation was exact, or if perturber-list overflow
 		// has occurred (Steve 7/98).
 
 		if (!btop->get_valid_perturbers()) return;
