@@ -224,6 +224,14 @@ void update_binary_sister(hdyn * bi)
 //
 //                     No prediction here -- do in calling function.
 //
+//                     The only difference now between this function and
+//		       integrate_node() is that here we make sure explicitly
+//		       that the time step is consistent with the current
+//		       system time, that is, we don't assume that the node
+//		       was necessarily scheduled to advance to this time.
+//
+//							(Steve, 4/03)
+//
 //-----------------------------------------------------------------------------
 
 void hdyn::synchronize_node()
@@ -247,8 +255,8 @@ void hdyn::synchronize_node()
 	return;
     }
 
-    // No need to adjust timestep -- step is now determined by system_time
-    // (Steve, 4/03).
+    // No need to adjust timestep before taking the step -- step is now
+    // determined by system_time (Steve, 4/03).
 
 //     real old_timestep = timestep;
 //     timestep = system_time - time;
@@ -263,8 +271,8 @@ void hdyn::synchronize_node()
 //     }
 
     if (do_diag) {
-	cerr << "Synchronize node " << format_label()
-	     << " at time " << system_time << endl
+	cerr << "synchronize_node for " << format_label()
+	     << " at time " << system_time << endl;
 	     <<" ...before integrate_node " << endl << flush;
 	if (is_low_level_node()) pp3(get_parent());
 	cerr << flush;
@@ -282,15 +290,23 @@ void hdyn::synchronize_node()
     if (do_diag)
 	cerr <<"After integrate_node "<<endl;
 
-    // NOTE: Timestep adjustment below is not clean (and no longer necessary).
+    // Must ensure that particle time steps are consistent with system_time
+    // (which should now be identical to time).
 
-//    cerr << format_label() << " "; PRC(old_timestep);
-//
-//    while (fmod(time, old_timestep) != 0.0)
-//	  old_timestep *= 0.5;
-//    timestep = old_timestep;
-//
-//    PRL(timestep);
+    // cerr << format_label() << " "; PRC(timestep);
+
+    int iter = 0;
+    while (fmod(time, timestep) != 0) {
+	if (iter++ > 30) break;
+	timestep *= 0.5;
+    }
+
+    // PRL(timestep);
+
+    if (iter > 20) {
+	cerr << "synchronize_node: " << format_label() << " "; PRL(iter);
+	PRI(4); PRC(fmod(time, timestep)); PRL(timestep);
+    }
 
     if (is_low_level_node())
 	update_binary_sister(this);
@@ -627,14 +643,12 @@ local inline real new_timestep(hdyn *b,			// this node
     }
 
 
+    // Arbitrarily reduce low-level steps by some factor,
+    // to facilitate timing checks of low-level steps.
+    //
+    // if (b->is_low_level_node()) newstep /= 32;
+    //
 
-//*****	TEMPORARY!!  Arbitrarily reduce low-level steps by some factor,
-//***** to facilitate timing checks of low-level steps.
-//
-//    if (b->is_low_level_node()) newstep /= 32;
-//
-//*****
-//*****
 
     // The natural time step is newstep.  Force it into an appropriate
     // power-of-two block.  A halving of timestep (not dt!) is always OK.
@@ -1697,8 +1711,8 @@ inline void accumulate_acc_and_jerk(hdyn* b,
 // (Overloaded function)
 //-----------------------------------------------------------------------------
 
-void hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
-				       bool make_perturber_list)
+int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
+				      bool make_perturber_list)
 {
 #ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
@@ -1725,7 +1739,11 @@ void hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
     // ** See hdyn_grape6.C.  (Steve, 3/03)                                 **
     // ***********************************************************************
 
-    for_all_daughters(hdyn, b, bi)	
+    int n_top = 0;
+
+    for_all_daughters(hdyn, b, bi) {
+
+	n_top++;
 
 	if (bi != this) {
 
@@ -1766,6 +1784,9 @@ void hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 		n_perturbers++;
 	    }
 	}
+    }
+
+    return n_top;
 }
 
 void hdyn::perturber_acc_and_jerk_on_leaf(vector &a,
@@ -2344,7 +2365,8 @@ void hdyn::create_low_level_perturber_list(hdyn* pnode)
     else if (pnode->valid_perturbers_low)
 	np = pnode->n_perturbers_low;
 
-    if (np <= 0) return;
+    if (np <= 0) return; 		// WRONG -- FOR DEBUGGING...
+//    if (np < 0) return;		// CORRECT -- RESTORE!
 
     // Looks as if we have enough info to build the list.
 
@@ -2463,7 +2485,7 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     // list, specifically for the computation of low-level perturbations.
     // If the low-level list hasn't yet been constructed using that list,
     // use the top-level list here.  Perturber_acc_and_jerk() will do the
-    // right thing if sent a pnode with only low-lvel data available.
+    // right thing if sent a pnode with only low-level data available.
 
     // *** Flag this when it occurs? ***
 
@@ -2478,9 +2500,9 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
 	} else
 
-	    top = root;			// better to use GRAPE if possible, but at
-					// present this will force an O(N) calculation
-					// on the front end...
+	    top = root;		// better to use GRAPE if possible, but at
+				// present this will force an O(N) calculation
+				// on the front end...
     } else
 
 	np = pnode->n_perturbers;
@@ -2521,18 +2543,19 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	calculate_partial_acc_and_jerk(top, top, get_parent(),
 				       apert1, jpert1, p_dummy,
 				       d_nn_sq, nn,
-				       !USE_POINT_MASS,		// explicit loop
-				       pnode,			// with list
-				       this);			// node to charge
+				       !USE_POINT_MASS,	    // explicit loop
+				       pnode,		    // with list
+				       this);		    // node to charge
 
 	// Acceleration and jerk on other component due to rest of system:
 
-	sister->calculate_partial_acc_and_jerk(top, top, get_parent(),
-					       apert2, jpert2, p_dummy,
-					       sister->d_nn_sq, sister->nn,
-					       !USE_POINT_MASS,	// explicit loop
-					       pnode,		// with list
-					       this);		// node to charge
+	sister
+	    ->calculate_partial_acc_and_jerk(top, top, get_parent(),
+					     apert2, jpert2, p_dummy,
+					     sister->d_nn_sq, sister->nn,
+					     !USE_POINT_MASS,  // explicit loop
+					     pnode,	       // with list
+					     this);	       // node to charge
 
 	// Note:  The first two calls to calculate_partial_acc_and_jerk pass
 	// the d_nn_sq and nn from the hdyn, so the hdyn data are actually
@@ -2549,6 +2572,8 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     hdyn *p_nn_sister;
     real d_min_sister = VERY_LARGE_NUMBER;
 
+    vector d_pos, d_vel;
+
     if (!oldest_daughter && !sister->oldest_daughter) {
 
 	// Make a concession to efficiency in the most common case...
@@ -2556,8 +2581,8 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
 	a_2b = j_2b = 0;
 	p_2b = 0;
-	vector d_pos = sister->pred_pos - pred_pos;
-	vector d_vel = sister->pred_vel - pred_vel;
+	d_pos = sister->pred_pos - pred_pos;
+	d_vel = sister->pred_vel - pred_vel;
 	accumulate_acc_and_jerk(sister, d_pos, d_vel, eps2,
 				a_2b, j_2b, p_2b, d_min_sister);
 	p_nn_sister = sister;
@@ -2568,8 +2593,25 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 				       a_2b, j_2b, p_2b,
 				       d_min_sister, p_nn_sister,
 				       !USE_POINT_MASS,
-				       NULL,			// no perturbers
-				       this);			// node to charge
+				       NULL,		// no perturbers
+				       this);		// node to charge
+
+#if 0
+    if (time >= 0.952164 && time <= 0.952273) {
+	PRL(format_label());
+	PRL(a_2b);
+	PRL(apert1);
+	PRL(apert2);
+	PRL(d_pos);
+	PRL(d_vel);
+	PRL(pos);
+	PRL(sister->pos);
+	PRL(pred_pos);
+	PRL(sister->pred_pos);
+	PRL(sqrt(d_nn_sq));
+	PRL(sqrt(d_min_sister));
+    }
+#endif
 
     if (np != 0) {
 
@@ -2578,7 +2620,8 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
 	// Note that perturbation_squared does *not* contain a slowdown factor.
 
-	perturbation_squared = square(pscale * (apert1 - apert2)) / square(a_2b);
+	perturbation_squared = square(pscale * (apert1 - apert2))
+	    				/ square(a_2b);
 
 	a_2b += pscale * (apert1 - apert2) * get_kappa();
 	j_2b += pscale * (jpert1 - jpert2);
@@ -2893,7 +2936,7 @@ void hdyn::top_level_node_prologue_for_force_calculation(bool exact)
     }
 }
 
-void hdyn::top_level_node_real_force_calculation()
+int hdyn::top_level_node_real_force_calculation()
 {
     // *************************************************************
     // **** This function is NEVER called if GRAPE is available ****
@@ -2927,11 +2970,13 @@ void hdyn::top_level_node_real_force_calculation()
         valid_perturbers = true;
     }
 
-    flat_calculate_acc_and_jerk(root, is_parent());
+    int n_top = flat_calculate_acc_and_jerk(root, is_parent());
 
     if (nn == NULL) {
         pretty_print_node(cerr); cerr << " nn NULL after flat " << endl;
     }
+
+    return n_top;
 }
 
 void hdyn::top_level_node_epilogue_force_calculation()
@@ -3204,12 +3249,14 @@ void hdyn::top_level_node_epilogue_force_calculation()
     }
 
     // Recompute the force exactly if the perturber list has overflowed
-    // (shouldn't happen, now).
+    // (shouldn't happen, now, at least in GRAPE-6 code...).
 
     if (!valid_perturbers && !valid_perturbers_low) {
 
+#if 0
 	cerr << func << ": calculate_partial_acc_and_jerk for "
 	     << format_label() << " at time " << system_time << endl;
+#endif
 
 	n_perturbers = -1;
 	calculate_partial_acc_and_jerk(root, root, this,
@@ -3689,7 +3736,7 @@ local inline void check_and_apply_correction(hdyn * bj, hdyn * bi)
     // step block.  We want to check if the top-level node of bi (btop)
     // needs correction.  Criteria are:
     //
-    //	    1. btop is on the integration list (time = system time)
+    //	    1. btop is on the integration list
     //	    2. btop is not perturbed by bj
 
     hdyn *btop = bi->get_top_level_node();
@@ -3861,9 +3908,9 @@ void correct_acc_and_jerk(hdyn** next_nodes,	// NEW
 //                    Note that the resulting step may or may not be equal
 //                    to the node's timestep (new feature, Steve, 4/03).
 //
-//                    Looks like we don't predict here -- must be taken care
-//                    of by the calling function.  In that case, the only
-//                    use of system time is in correct_and_update(), in
+//                    We don't predict here -- must be taken care of by
+//                    the calling function.  In that case, the only use 
+//                    of system_time is in correct_and_update(), in
 //                    determining the actual step.
 //
 //-----------------------------------------------------------------------------
@@ -3882,6 +3929,8 @@ void hdyn::integrate_node(bool integrate_unperturbed,	// default = true
 	// pretty_print_node(cerr);
     }
 #endif
+
+    if (time == system_time) return;
 
     if (kep == NULL) {
 
@@ -3932,6 +3981,9 @@ void synchronize_tree(hdyn * b)		// update all top-level nodes
     // No prediction is performed here -- up to the calling function.
     // Also, the step will take us to system_time, which also should
     // be set on entry.
+
+    // cerr << "synchronize_tree for " << b->format_label()
+    //      << " at time " << b->get_system_time() << endl;
 
     if (!b->is_root())
 	b->synchronize_node();
