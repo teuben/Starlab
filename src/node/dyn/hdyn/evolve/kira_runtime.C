@@ -479,6 +479,13 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 {
     // Modify entries in the hdyn::kira_options class.
 
+    // ***************************************************************
+    // ****  Note that options/diag names need to be unique       ****
+    // ****  to accommodate use of combined .kira file.           ****
+    // ****  Abbreviated names are unhelpful -- reconsider?	  ****
+    // ****  Future option names should be long and descriptive.  ****
+    // ***************************************************************
+
     int count = 0;
 
     ifstream file(name);
@@ -548,7 +555,7 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 
 
 	    else if ((s = strstr(line, "min_unpert_steps"))
-		     || (s = strstr(line, "min_u")))
+		     || (s = strstr(line, "min_unpert")))
 
 		b->get_kira_options()->min_unpert_steps
 		    = get_value(s, DEFAULT_MIN_UNPERT_STEPS);
@@ -561,7 +568,7 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 		    = get_value(s, DEFAULT_FULL_MERGE_TOL_FOR_CLOSE_BINARY);
 
 	    else if ((s = strstr(line, "full_merge_tolerance"))
-		     || (s = strstr(line, "full_m")))
+		     || (s = strstr(line, "full_merge")))
 
 		b->get_kira_options()->full_merge_tolerance
 		    = get_value(s, DEFAULT_FULL_MERGE_TOLERANCE);
@@ -573,39 +580,39 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 		    = get_value(s, DEFAULT_RELAX_FACTOR);
 
 	    else if ((s = strstr(line, "partial_merge_factor"))
-		     || (s = strstr(line, "partial_m")))
+		     || (s = strstr(line, "partial_merge")))
 
 		b->get_kira_options()->partial_merge_factor
 		    = get_value(s, DEFAULT_PARTIAL_MERGE_FACTOR);
 
 	    else if ((s = strstr(line, "multiple_merge_tolerance"))
-		     || (s = strstr(line, "multiple")))
+		     || (s = strstr(line, "multiple_merge")))
 
 		b->get_kira_options()->multiple_merge_tolerance
 		    = get_value(s, DEFAULT_MULTIPLE_MERGE_TOLERANCE);
 
 	    else if ((s = strstr(line, "unconditional_stable_fac"))
-		     || (s = strstr(line, "uncond"))
+		     || (s = strstr(line, "uncond_stable"))
 		     || (s = strstr(line, "stable")))
 
 		b->get_kira_options()->unconditional_stable_fac
 		    = get_value(s, DEFAULT_UNCONDITIONAL_STABLE_FAC);
 
 	    else if ((s = strstr(line, "partial_stable_fac"))
-		     || (s = strstr(line, "partial_s")))
+		     || (s = strstr(line, "partial_stable")))
 
 		b->get_kira_options()->partial_stable_fac
 		    = get_value(s, DEFAULT_PARTIAL_STABLE_FAC);
 
 	    else if ((s = strstr(line, "aarseth_stable_fac"))
-		     || (s = strstr(line, "aarseth_s"))
-		     || (s = strstr(line, "aarseth_f")))
+		     || (s = strstr(line, "aarseth_stable"))
+		     || (s = strstr(line, "aarseth_fac")))
 
 		b->get_kira_options()->aarseth_stable_fac
 		    = get_value(s, DEFAULT_AARSETH_STABLE_FAC);
 
 	    else if ((s = strstr(line, "use_aarseth_criterion"))
-		     || (s = strstr(line, "use_a"))
+		     || (s = strstr(line, "use_aarseth"))
 		     || (s = strstr(line, "aarseth")))
 
 		b->get_kira_options()->use_aarseth_criterion
@@ -618,42 +625,42 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 		    = get_value(s, DEFAULT_CLOSE_CRITERION);
 
 	    else if ((s = strstr(line, "allow_keplstep"))
-		     || (s = strstr(line, "allow_k")))
+		     || (s = strstr(line, "allow_kepl")))
 
 		b->get_kira_options()->allow_keplstep
 		    = get_value(s, DEFAULT_ALLOW_KEPLSTEP);
 
 	    else if ((s = strstr(line, "use_old_correct_acc_and_jerk"))
-		     || (s = strstr(line, "use_old")))
+		     || (s = strstr(line, "use_old_corr")))
 
 		b->get_kira_options()->use_old_correct_acc_and_jerk
 		    = get_value(s, DEFAULT_USE_OLD_CORRECT_ACC_AND_JERK);
 
 	    else if ((s = strstr(line, "grape_check_count"))
-		     || (s = strstr(line, "grape_ch")))
+		     || (s = strstr(line, "grape_check")))
 
 		b->get_kira_options()->grape_check_count
 		    = get_value(s, DEFAULT_GRAPE_CHECK_COUNT);
 
 	    else if ((s = strstr(line, "grape_max_cpu"))
-		     || (s = strstr(line, "grape_m")))
+		     || (s = strstr(line, "grape_max")))
 
 		b->get_kira_options()->grape_max_cpu
 		    = get_value(s, DEFAULT_GRAPE_MAX_CPU);
 
 	    else if ((s = strstr(line, "use_perturbed_list"))
-		     || (s = strstr(line, "use_p")))
+		     || (s = strstr(line, "use_pert")))
 
 		b->get_kira_options()->use_perturbed_list
 		    = get_value(s, DEFAULT_USE_PERTURBED_LIST);
 
 	    else if ((s = strstr(line, "max_slow_factor"))
-		     || (s = strstr(line, "max_slow_f")))
+		     || (s = strstr(line, "max_slow_fac")))
 
 		b->set_max_slow_factor(get_value(s, DEFAULT_MAX_SLOW_FACTOR));
 
 	    else if ((s = strstr(line, "max_slow_perturbation"))
-		     || (s = strstr(line, "max_slow_p")))
+		     || (s = strstr(line, "max_slow_pert")))
 
 		b->set_max_slow_perturbation(get_value(s,
 					     DEFAULT_MAX_SLOW_PERTURBATION));
@@ -668,6 +675,13 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 local void modify_diag(hdyn * b, char * name, bool del = true)
 {
     // Modify entries in the hdyn::kira_diag class.
+
+    // *************************************************************
+    // ****  Note that options/diag names need to be unique     ****
+    // ****  to accommodate use of combined .kira file.         ****
+    // ****  Abbreviated names are unhelpful -- reconsider?	****
+    // ****  Future diag names should be long and descriptive.  ****
+    // *************************************************************
 
     int count = 0;
 
@@ -732,126 +746,114 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 
 		b->get_kira_diag()->kira_main = get_value(s, 1);
 
-	    else if ((s = strstr(line, "n_check_heartbeat"))
-		     || (s = strstr(line, "n_check_h")))
+	    else if (s = strstr(line, "n_check_heartbeat"))
 
 		b->get_kira_diag()->n_check_heartbeat
 		    = get_value(s, 50000);
 
-	    else if ((s = strstr(line, "check_heartbeat"))
-		     || (s = strstr(line, "check_h")))
+	    else if (s = strstr(line, "check_heartbeat"))
 
 		b->get_kira_diag()->check_heartbeat
 		    = get_value(s, 1);
 
-	    else if ((s = strstr(line, "n_check_runtime"))
-		     || (s = strstr(line, "n_check_r")))
+	    else if (s = strstr(line, "n_check_runtime"))
 
 		b->get_kira_diag()->n_check_runtime = get_value(s, 2500);
 
 	    else if ((s = strstr(line, "unpert_function_id"))
-		     || (s = strstr(line, "unpert_f"))
 		     || (s = strstr(line, "unpert_id")))
 
 		b->get_kira_diag()->unpert_function_id
 		    = get_value(s, 1);
 
 	    else if ((s = strstr(line, "report_start_unperturbed"))
-		     || (s = strstr(line, "report_start"))
+		     || (s = strstr(line, "report_start_unpert"))
 		     || (s = strstr(line, "unpert_start")))
 
 		b->get_kira_diag()->report_start_unperturbed
 		    = get_value(s, 1);
 
 	    else if ((s = strstr(line, "report_continue_unperturbed"))
-		     || (s = strstr(line, "report_cont"))
+		     || (s = strstr(line, "report_cont_unpert"))
 		     || (s = strstr(line, "unpert_cont")))
 
 		b->get_kira_diag()->report_continue_unperturbed
 		    = get_value(s, 1);
 
 	    else if ((s = strstr(line, "report_end_unperturbed"))
-		     || (s = strstr(line, "report_end"))
+		     || (s = strstr(line, "report_end_unpert"))
 		     || (s = strstr(line, "unpert_end")))
 
 		b->get_kira_diag()->report_end_unperturbed
 		    = get_value(s, 1);
 
 	    else if ((s = strstr(line, "report_pericenter_reflection"))
-		     || (s = strstr(line, "report_peri"))
+		     || (s = strstr(line, "report_peri_unpert"))
 		     || (s = strstr(line, "unpert_peri")))
 
 		b->get_kira_diag()->report_pericenter_reflection
 		    = get_value(s, 1);
 
 	    else if ((s = strstr(line, "report_multiple"))
-		     || (s = strstr(line, "report_mult"))
+		     || (s = strstr(line, "report_mult_unpert"))
 		     || (s = strstr(line, "unpert_mult")))
 
 		b->get_kira_diag()->report_multiple
 		    = get_value(s, 1);
 
 	    else if ((s = strstr(line, "unpert_report_level"))
-		     || (s = strstr(line, "unpert_rep"))
-		     || (s = strstr(line, "unpert_lev")))
+		     || (s = strstr(line, "unpert_level")))
 
 		b->get_kira_diag()->unpert_report_level
 		    = get_value(s, 0);
 
 	    else if ((s = strstr(line, "end_unpert_report_level"))
-		     || (s = strstr(line, "unpert_end_rep"))
-		     || (s = strstr(line, "unpert_end_lev")))
+		     || (s = strstr(line, "end_unpert_level")))
 
 		b->get_kira_diag()->end_unpert_report_level
 		    = get_value(s, 0);
 
 	    else if ((s = strstr(line, "multiple_report_level"))
-		     || (s = strstr(line, "mult_rep"))
-		     || (s = strstr(line, "mult_lev"))
-		     || (s = strstr(line, "unpert_mult_lev")))
+		     || (s = strstr(line, "mult_report_level")))
 
 		b->get_kira_diag()->multiple_report_level
 		    = get_value(s, 0);
 
-	    else if ((s = strstr(line, "tree_level"))
-		     || (s = strstr(line, "tree_l"))) {
+	    else if ((s = strstr(line, "tree_level"))) {
 
 		b->get_kira_diag()->tree_level
 		    = get_value(s, 0);
 		if (b->get_kira_diag()->tree_level < 0)
 		    b->get_kira_diag()->tree = false;
 
-	    } else if (s = strstr(line, "tree"))
+	    } else if (s = strstr(line, "diag_tree"))
 
 		b->get_kira_diag()->tree
 		    = get_value(s, 1);
 
-	    else if ((s = strstr(line, "ev_function_id"))
-		     || (s = strstr(line, "ev_")))
+	    else if ((s = strstr(line, "ev_function_id")))
 
 		b->get_kira_diag()->ev_function_id
 		    = get_value(s, 1);
 
-	    else if ((s = strstr(line, "grape_level"))
-		     || (s = strstr(line, "grape_"))) {
+	    else if ((s = strstr(line, "grape_level"))) {
 
 		b->get_kira_diag()->grape_level
 		    = get_value(s, 0);
 		if (b->get_kira_diag()->grape_level < 0)
                     b->get_kira_diag()->grape = false;
 
-	    } else if (s = strstr(line, "grape"))
+	    } else if ((s = strstr(line, "grape_ev")))
 
 		b->get_kira_diag()->grape
 		    = get_value(s, 1);
 
-	    else if ((s = strstr(line, "timestep_check"))
-		     || (s = strstr(line, "time")))
+	    else if ((s = strstr(line, "timestep_check")))
 
 		b->get_kira_diag()->timestep_check
 		    = get_value(s, 1);
 
-	    else if (s = strstr(line, "correct"))
+	    else if (s = strstr(line, "diag_correct"))
 
 		b->get_kira_diag()->correct
 		    = get_value(s, 1);
@@ -861,20 +863,19 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 		b->get_kira_diag()->kira_ev = get_value(s, 1);
 
 	    else if ((s = strstr(line, "slow_perturbed"))
-		     || (s = strstr(line, "slow_p")))
+		     || (s = strstr(line, "slow_pert")))
 
 		b->get_kira_diag()->slow_perturbed
 		    = get_value(s, 1);
 
-	    else if ((s = strstr(line, "slow_level"))
-		     || (s = strstr(line, "slow_l"))) {
+	    else if ((s = strstr(line, "slow_level"))) {
 
 		b->get_kira_diag()->slow_level
 		    = get_value(s, 0);
 		if (b->get_kira_diag()->slow_level < 0)
 		    b->get_kira_diag()->slow = false;
 
-	    } else if (s = strstr(line, "slow"))
+	    } else if (s = strstr(line, "slow_diag"))
 
 		b->get_kira_diag()->slow
 		    = get_value(s, 1);
@@ -914,7 +915,7 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 		b->get_kira_diag()->report_correct_perturber_list
 		    = get_value(s, 1);
 
-	    else if (s = strstr(line, "ev"))	// poor choice of keyword!
+	    else if (s = strstr(line, "diag_ev"))    // poor choice of keyword!
 
 		b->get_kira_diag()->ev
 		    = get_value(s, 1);
