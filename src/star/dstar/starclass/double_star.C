@@ -324,9 +324,11 @@ void double_star::dump(ostream & s, bool brief) {
     //	s << get_node()->format_label() << " ";
 
     s << identity << " "
+      << bin_type << " "
+      << current_mass_transfer_type << " "
       << binary_age << " "
       << semi << " "
-      << eccentricity << "    ";
+      << eccentricity << "     ";
 
 	s << stp->get_identity() << " "	  
 	  << stp->get_element_type() << " "
@@ -359,6 +361,7 @@ void double_star::dump(ostream & s, bool brief) {
 
       s << n_elements
         << "\n " << identity
+	<< " " << bin_type 
         << " " << binary_age
         << " " << bin_type
         << " " << eccentricity

@@ -23,7 +23,8 @@
 
 // (SPZ+GN:  1 Aug 2000) Dangerous enum names... 
 // i.e., current_time = 2 but not lvalue
-enum binary_parameter {identity=0, bin_type, current_time,
+enum binary_parameter {identity=0, bin_type, mtrtype,
+		       current_time,
 		       primary_mass, primary_radius,
 		       secondary_mass, secondary_radius,
 		       semi_major_axis, eccentricity, mass_ratio
@@ -40,6 +41,8 @@ class SeBa_hist {
     real time;
 
     binary_type bin_tpe;
+    mass_transfer_type mttype;
+
     real semi;
     real ecc;
 
@@ -71,6 +74,7 @@ class SeBa_hist {
 	   number = 0;
 	   time   = 0;
 	   bin_tpe = Detached;
+	   mass_transfer_type Unknown;
 	   strcpy(label_prim, "1a");
 	   strcpy(label_sec, "1b");
 	   tpe_prim = tpe_sec = Main_Sequence;

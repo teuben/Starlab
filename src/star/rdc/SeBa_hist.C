@@ -52,7 +52,8 @@ bool SeBa_hist::operator != (SeBa_hist& ha) const {
 
 ostream& operator<<(ostream& s, SeBa_hist& hi) {
 
-    s << hi.number << " "<< hi.time;
+  s << hi.number << " "<< hi.bin_tpe << " " << hi.mttype
+    << " " << hi.time;
     // short dump output is without bin_type
     //<< " " << (int)hi.bin_tpe; 
     s << "\t" << hi.semi << " " << hi.ecc; 
@@ -74,6 +75,7 @@ void SeBa_hist::put_history(ostream& s, bool verbose=false) {
      if (verbose) {
 	 s << "\nnumber= " << number <<"\tTime= "<< time;
 	 s << "\t" <<  type_string(bin_tpe) 
+	   << "\t" <<  type_string(mttype) 
 	   << "\t a= " << semi << " e= " << ecc << endl;
 	 s << "\t"  << type_string(tpe_prim) //<< "(" << label_prim << ")"
 	   << "\tM= " << m_prim << " R= " << r_prim << endl;
@@ -91,7 +93,7 @@ void SeBa_hist::put_history(ostream& s, bool verbose=false) {
 
 void SeBa_hist::put_single_reverse(ostream& s) {
 
-     s << number << " "<< time;
+  s << number << " "<< bin_tpe << " " << mttype << " " << time;
      s << "\t" << semi << " " << ecc; 
      s << "\t" << label_sec << " " << tpe_sec << " " 
 //     s << "\t" << tpe_sec << " " 
@@ -108,6 +110,8 @@ real SeBa_hist::get_parameter(binary_parameter param) {
      case identity:                          return number;
           break;
      case bin_type:                          return bin_tpe;
+          break;
+     case mtrtype:                           return mttype;
           break;
      case current_time:                      return time;
           break;
@@ -155,13 +159,15 @@ bool SeBa_hist::read_SeBa_hist(istream& s) {
     real lT_prim, lT_sec;
     real mc_prim, mc_sec;
 
-    s >> number >> time 
-      >> semi >> ecc 
+    int ibtp, imttp;
+    s >> number >> ibtp >> imttp >> time >> semi >> ecc 
 //      >> tpe_1 >> m_prim >> r_prim
 //      >> tpe_2 >> m_sec >> r_sec;
       >> label_prim >> tpe_1 >> m_prim >> r_prim >> lT_prim >> mc_prim
       >> label_sec >> tpe_2 >> m_sec >> r_sec >> lT_sec >> mc_sec;
 
+    bin_tpe = (binary_type)ibtp;
+    mttype = (mass_transfer_type)imttp;
     if(s.eof()) return false;
 
 
