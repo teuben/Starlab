@@ -174,7 +174,7 @@ if test x"$OLD_READ_NEIGHBOUR_LIST" = "xyes"; then
 fi
 
 #--------------------------------------------------------------------------
-# Check for png and Qt.
+# Check for png.
 
 AC_ARG_WITH(png, AS_HELP_STRING([--with-png], use PNG format [[[default=yes]]]),
     [png="$withval"])
@@ -184,30 +184,37 @@ if test -z "$png" -o "x$png" = "xyes"; then
 fi
 AM_CONDITIONAL(HAVE_LIBPNG, [test "x$ac_cv_lib_png_main" = "xyes"])
 
+#--------------------------------------------------------------------------
+# Check for Qt.
+
 AC_ARG_WITH(qt, AS_HELP_STRING([--with-qt], use Qt [[[default=yes]]]),
     [qt="$withval"])
 AC_ARG_WITH(qt-dir,
     AS_HELP_STRING([--with-qt-dir=QTDIR], directory where Qt is installed),
     [qt_dir="$withval"])
+
 if test -z "$qt" -o "x$qt" = "xyes"; then
+
     if test -z "$qt_dir"; then
         AC_MSG_CHECKING(whether QTDIR environment variable is set)
 	if test "x$QTDIR" = "x"; then
 	    AC_MSG_RESULT(no)
 	    if test "x$qt" = "xyes"; then
 	       AC_MSG_ERROR([Qt was selected with --with-qt but QTDIR isn't set.
-Please set QTDIR or use --with-qt-dir.])
+Please set environment QTDIR or use --with-qt-dir=QTDIR.])
 	    fi
 	else
 	    AC_MSG_RESULT([$QTDIR])
 	    qt_dir="$QTDIR"
         fi
     fi
+
     CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
     LDFLAGS="$LDFLAGS -L$qt_dir/lib"
     AC_SUBST(MOC, [$qt_dir/bin/moc])
     AC_CHECK_LIB(qt, main, [AC_DEFINE(HAVE_LIBQT, 1,
    	[Define to 1 if you have the `qt' library (-lqt).])])
+
     if test "x$ac_cv_lib_qt_main" = "xyes"; then
 	AC_MSG_CHECKING(whether Qt is version 3 or newer)
         AC_PREPROC_IFELSE(
@@ -228,6 +235,7 @@ Please update Qt, or do not enable it with --with-qt.])
     	AC_MSG_ERROR([Qt was selected but a test program failed to compile
 See `config.log' for more details.])
     fi
+
 fi
 AM_CONDITIONAL(HAVE_LIBQT, [test "x$good_qt" = "xyes"])
 
@@ -293,7 +301,7 @@ ln -f -s starlab_start.$shell starlab_start
 
 # Convenient to save a record of where configure was run.
 
-AC_MSG_NOTICE([savinf hostname in CONFIGURE_HOST])
+AC_MSG_NOTICE([saving hostname in CONFIGURE_HOST])
 hostname > CONFIGURE_HOST
 
 #==========================================================================
