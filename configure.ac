@@ -4,6 +4,10 @@
 AC_PREREQ(2.59)
 m4_include([version.m4])
 AC_INIT(Starlab, VERSION_NUMBER, [steve@physics.drexel.edu])
+
+all_args="$@"		# seems to pick up the proper args
+			# too soon, ignired, too late, args changed
+
 AC_CONFIG_AUX_DIR(config)
 # doesn't really matter because there is a bug in Autoconf that disregards this
 #AC_CONFIG_LIBOBJ_DIR(lib)
@@ -347,8 +351,9 @@ ln -f -s starlab_start.$shell starlab_start
 
 # Convenient to save a record of where configure was run.
 
-AC_MSG_NOTICE([saving hostname in CONFIGURE_HOST])
+AC_MSG_NOTICE([saving hostname and configure arguments in CONFIGURE_HOST])
 hostname > CONFIGURE_HOST
+echo "arguments: $all_args" >> CONFIGURE_HOST
 
 #==========================================================================
 
