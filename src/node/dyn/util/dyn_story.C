@@ -29,6 +29,8 @@
 //
 //	void check_set_external		// check and set all external fields
 
+// Created Aug/Sep 2001, Steve McMillan
+
 #include "dyn.h"
 
 // Require that all systems have known initial mass and initial virial
@@ -104,8 +106,8 @@ real get_initial_mass(dyn* b,
 		initial_mass = -1;
 
 		if (verbose && mass_msg)
-		    cerr << "get_initial_mass:  initial_mass unknown -- "
-			 << "set with scale" << endl;
+		    cerr << "get_initial_mass:  initial_mass unknown"
+			 << " (set with scale)" << endl;
 #else
 		initial_mass = 1;
 
@@ -189,7 +191,7 @@ real get_initial_virial_radius(dyn* b,
 
 	    if (verbose && rvir_msg)
 		cerr << "get_initial_virial_radius:  "
-		     << "initial_rvirial unknown -- set with scale" << endl;
+		     << "initial_rvirial unknown (set with scale)" << endl;
 #else
 	    r_virial = 1;
 
@@ -768,9 +770,9 @@ void check_set_plummer(dyn *b,
 
 	 if (verbose) {
 	     real M = b->get_p_mass();
-	     real R = sqrt(b->get_p_scale_sq());
+	     real a = sqrt(b->get_p_scale_sq());
 	     vector center = b->get_p_center();
-	     cerr << "check_set_plummer:  "; PRC(M); PRC(R); PRL(center);
+	     cerr << "check_set_plummer:  "; PRC(M); PRC(a); PRL(center);
 	 }
      }
 }
@@ -811,11 +813,11 @@ void check_set_power_law(dyn *b,
 
 	 if (verbose) {
 	     real A = b->get_pl_coeff();
-	     real R = sqrt(b->get_pl_scale_sq());
+	     real a = sqrt(b->get_pl_scale_sq());
 	     real x = b->get_pl_exponent();
 	     vector center = b->get_pl_center();
 	     cerr << "check_set_power_law:  ";
-	     PRC(A); PRC(R); PRC(x); PRL(center);
+	     PRC(A); PRC(a); PRC(x); PRL(center);
 	 }
      }
 }

@@ -11,7 +11,7 @@
 //  dyn_external.C: functions related to external influences on the system.
 //.............................................................................
 //    version 1:  Jul 2001, Steve McMillan
-//    version 2:
+//    version 2:  Sep 2001, Steve McMillan
 //.............................................................................
 //
 // Member functions:
@@ -378,8 +378,8 @@ local inline real power_law_virial(dyn * b)
     vector acc_com = dR * pow(square(dR)+a2, 0.5*(x-3));
     // PRL(acc_com);
 
-    // Don't actually need the acc_com term, as it should sum to zero
-    // in the loop below...
+    // We don't actually need the acc_com term, as it should sum
+    // to zero in the loop below...
 
     real vir = 0;
     for_all_daughters(dyn, b, bb) {
@@ -445,7 +445,8 @@ void get_external_acc(dyn * b,
 {
     // Compute the external components of the acceleration, jerk,
     // and pot of top-level node b, using the pos and vel provided.
-    // b is used mainly as a convenient means of passing flags.
+    // b is used only as a convenient means of passing and static
+    // dyn data.
 
     pot = 0;
     if (!pot_only) acc = jerk = 0;
@@ -474,9 +475,27 @@ void get_external_acc(dyn * b,
 
 	// Add dynamical friction term to non-escapers only:
 
-	if (getiq(b->get_dyn_story(), "esc") == 0)	// slow?
+	if (getiq(b->get_dyn_story(), "esc") == 0)		// too slow?
 	    acc += Afric;
     }
+}
+
+real vcirc(dyn *b, vector r)
+{
+    // Return the circular velocity at position r.  Node b is used only
+    // as a convenient means of passing static dyn class data.
+
+    vector acc, jerk;
+    real pot;
+
+    get_external_acc(b, r, vector(0), pot, acc, jerk);
+
+    real vc2 = -r*acc;
+
+    if (vc2 > 0)
+	return sqrt(vc2);
+    else
+	return -sqrt(-vc2);	    // vcirc < 0 ==> no circular orbit exists
 }
 
 // Accessors:

@@ -1,12 +1,29 @@
 
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
 //// set_com:  Modify positions and velocities to set the center-of-mass
-////           position and velocity.  Writes to the root dyn story.
+////           position and velocity.  Write com_pos and com_vel to the root
+////           dyn story.
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
+////              -n    force interpretation of r and v in N-body units [no]
 ////              -r    specify center of mass position [(0,0,0)]
 ////              -v    specify center of mass velocity [(0,0,0)]
+////
+//// If an external field has been specified, the velocity is taken to be in
+//// units of the circular orbit speed at the specified location.  Otherwise,
+//// the velocity is taken as is.  Positions and velocities are in physical
+//// units (parsecs and km/s, if relevant) if physical stellar parameters
+//// are known, and N-body units otherwise (or if -n is specified).
 
-//   version 1:  Aug 2001   Steve McMillan
+//   version 1:  Aug/Sep 2001   Steve McMillan
 
 #include "dyn.h"
 
@@ -22,33 +39,20 @@ void dyn::set_com(vector pos, vector vel)	// defaults = 0
     vector dpos = pos - com_pos;
     vector dvel = vel - com_vel;
 
+    // Adjust only top-level nodes; don't touch the root node.
+
     for_all_daughters(dyn, this, bb) {
 	bb->inc_pos(dpos);
 	bb->inc_vel(dvel);
     }
 
-    // Correct entries in dyn story.
+    // Correct entries in the dyn story.
 
     putvq(get_dyn_story(), "com_pos", pos);
     putvq(get_dyn_story(), "com_vel", vel);
 
-    // If a "center" for an external field has been specified,
-    // we should probably adjust that too.
-
-    if (external_field) {
-
-	if (find_qmatch(get_log_story(), "kira_plummer_center")) {
-
-	    // Plummer field:
-
-	    vector c = getvq(get_log_story(), "kira_plummer_center");
-	    if (abs(c) < VERY_LARGE_NUMBER) {
-		c += dpos;
-		putvq(get_log_story(), "kira_plummer_center", c);
-	    }
-	}
-
-    }
+    // Note: Do not modify the "center" of any external field.
+    // This function adjusts only the N-body center of mass.
 }
 
 #else
@@ -60,18 +64,23 @@ main(int argc, char ** argv)
     vector r = 0;
     vector v = 0;
 
+    bool n_flag = false;
+
     check_help();
 
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "c:r:::v:::";
+    char* param_string = "c:nr:::v:::";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
 	    case 'c':	c_flag = TRUE;
 	    		comment = poptarg;
 	    		break;
+	    case 'n':	n_flag = true;
+			break;
+
 	    case 'r':	r = vector(atof(poparr[0]),
 				   atof(poparr[1]),
 				   atof(poparr[2]));
@@ -80,6 +89,7 @@ main(int argc, char ** argv)
 				   atof(poparr[1]),
 				   atof(poparr[2]));
 	    		break;
+
             case '?':	params_to_usage(cerr, argv[0], param_string);
 	    		get_help();
 	    		exit(1);
@@ -93,6 +103,60 @@ main(int argc, char ** argv)
             b->log_comment(comment);
         b->log_history(argc, argv);
 
+	// Check if we have to reinterpret r and v in light of possible
+	// external fields and physical parameters.
+
+	real mass, length, time;
+	bool phys = get_physical_scales(b, mass, length, time);
+
+	// If phys, we are using physical units.  Mass, length, and time are
+	// the physical equivalents of 1 N-body unit, in Msun, pc, and Myr.
+
+	check_set_external(b, true);
+	bool ext = (b->get_external_field() != 0);
+
+	// If ext, we have an external field, assumed attractive.  Note
+	// that this function doesn't make much sense if ext = false...
+	// If ext, the external field has already been converted to
+	// N-body units, regardless of phys.
+
+	// Possibilities:
+	//
+	// no ext field, no physical units:	set r, v as is in N-body units
+	// no ext field, physical units:	convert r, v to N-body and set
+	// ext field, no physical units:	use N-body units, but use v/vc
+	// ext field, physical units:		convert to N-body and use v/vc
+
+	if (phys && !n_flag) {
+
+	    cerr << "set_com:  input  "; PRC(r); PRL(v);
+
+	    // Convert r and v to N-body units.
+
+	    r /= length;
+	    if (!ext) {
+
+		// Input v is in km/s; length/time is the velocity unit
+		// in pc/Myr = 3.086e13/3.156e13 km/s = 0.978 km/s.
+
+		real vunit = 0.978*length/time;
+		v /= vunit;
+	    }
+	}
+
+	if (ext) {
+
+	    // Convert v from units of vcirc into N-body units.
+
+	    real vc = vcirc(b, r);
+	    if (vc > 0) {
+		v *= vc;
+		cerr << "set_com:  t_circ = " << 2*M_PI*abs(r)/vc;
+	    }
+	}
+
+	// Now r and v are in N-body units, appropriately scaled.
+
         b->set_com(r, v);
 	cerr << "set_com:  "; PRC(r); PRL(v);
 
@@ -102,6 +166,3 @@ main(int argc, char ** argv)
 }
 
 #endif
-
-// endof: set_com
-

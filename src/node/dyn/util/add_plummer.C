@@ -10,16 +10,33 @@
 
 //// add_plummer.C:  Add Plummer parameters to an input snapshot and write
 ////                 it out again.  Do not change the input data.
-////                 Use before scaling.
+////                 See add_power_law.
 ////
 //// Options:      -c    add comment [none]
 ////               -C    specify center [(0,0,0)]
 ////               -M    specify mass [1]
 ////               -a/R  specify scale [1]
+////               -n    force interpretation of parameters in N-body units [no]
 
-#ifdef TOOLBOX
+//   version 1:  Aug/Sep 2001   Steve McMillan
+
+// This function is just a special case of add_power_law, and is now
+// handled as such.
 
 #include "dyn.h"
+
+#ifndef TOOLBOX
+
+void add_plummer(dyn *b,
+		 real coeff, real scale,
+		 vector center,			// default = (0, 0, 0)
+		 bool n_flag,			// default = false
+		 bool verbose)			// default = false
+{
+    add_power_law(b, coeff, 0, scale, center, n_flag, verbose, false);
+}
+
+#else
 
 main(int argc, char *argv[])
 {
@@ -29,12 +46,14 @@ main(int argc, char *argv[])
     real mass = 1, scale = 1;
     vector center = 0;
 
+    bool n_flag = false;
+
     check_help();
 
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "a:c:C:::M:R:";
+    char* param_string = "a:c:C:::M:nR:";
 
     dyn *b = get_dyn(cin);
     if (b == NULL) err_exit("Can't read input snapshot");
@@ -57,6 +76,10 @@ main(int argc, char *argv[])
 	    case 'a':
 	    case 'R':	scale = atof(poptarg);
 			break;
+
+	    case 'n':	n_flag = true;
+	    		break;
+
 	    default:
 	    case '?':	params_to_usage(cerr, argv[0], param_string);
 			get_help();
@@ -64,16 +87,8 @@ main(int argc, char *argv[])
 	}
     }
 
-    if (c_flag)
-	b->log_comment(comment);
-
-    putrq(b->get_log_story(), "kira_plummer_mass", mass);
-    putrq(b->get_log_story(), "kira_plummer_scale", scale);
-    putvq(b->get_log_story(), "kira_plummer_center", center);
-
-    cerr << "add_plummer:  M = " << mass << ", R = " << scale << endl;
-    cerr << "              center = " << center << endl;
-
+    add_plummer(b, mass, scale, center, n_flag, true);
     put_node(cout, *b);
 }
+
 #endif
