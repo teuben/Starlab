@@ -140,8 +140,8 @@ setenv	STARLAB_EXTRAS			"-DHAS_USLEEP"
 #setenv	STARLAB_MAKEFLAGS		"-j 4"
 setenv	STARLAB_MAKEFLAGS		" "
 
-setenv  STARLAB_CFITSIOINC              "-I/usr/local/include"
-setenv  STARLAB_CFITSIOLIB		"-L/usr/local/lib"
+setenv  STARLAB_CFITSIOINC              "@CFITSIO_INC@"
+setenv  STARLAB_CFITSIOLIB		"@CFITSIO_LIB@"
 
 #					-DSTARLAB_HAS_GRAPE6  or -DSTARLAB_HAS_GRAPE4   but also needs -DUSE_GRAPE ????
 setenv  STARLAB_GRAPE_FLAGS		" "

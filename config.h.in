@@ -98,6 +98,9 @@
 /* Define if you have the X11 library (-lX11).  */
 #undef HAVE_LIBX11
 
+/* Define if you have the cfitsio library (-lcfitsio).  */
+#undef HAVE_LIBCFITSIO
+
 /* Define this if your machine is big endian (like Sparcs) */
 #undef WORDS_BIGENDIAN
 

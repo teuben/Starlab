@@ -110,26 +110,36 @@ echo "###  OS_FLAG = $STARLAB_OS_FLAG"
 dnl --------------------------------------------------------------------
 
 AC_MSG_CHECKING(whether we have CFITSIO)
-AC_ARG_WITH(cfitsio-prefix, 
-        [  --with-cfitsio-prefix=PFX     Prefix where CFITSIO was installed], 
-        cfitsio_config_prefix="$withval", 
-        cfitsio_config_prefix="/usr/local/")
+AC_ARG_WITH(cfitsio-prefix,
+        [  --with-cfitsio-prefix=PFX     Prefix where CFITSIO was installed],
+        cfitsio_config_prefix="$withval",
+        cfitsio_config_prefix="/usr/local")
 
 if test x$cfitsio_config_prefix != x; then
-        if test -f ${cfitsio_config_prefix}/include/fitsio.h ; then
-                CFITSIO_INCLUDE="-I$cfitsio_config_prefix/include"
-                CFITSIO_LIB="-L$cfitsio_config_prefix"
+    cdir="$cfitsio_config_prefix"
+    found="no"
+    for dir in $cdir $cdir/include $cdir/include/cfitsio
+      do
+        if test -f ${dir}/fitsio.h ; then
+                CFITSIO_INC="-I${dir}"
+                CFITSIO_LIB="-L$cfitsio_config_prefix/lib"
                 CFITSIO_LIB="$CFITSIO_LIB -lcfitsio"
-                CFLAGS="$CFITSIO_INCLUDE $CFLAGS"
-                LIBS="$CFITSIO_LIB $LIBS"
-                AC_DEFINE(_WITH_CFITSIO) 
+                AC_DEFINE(HAVE_LIBCFITSIO)
                 AC_MSG_RESULT(yes)
-        else
-                AC_MSG_RESULT(no)
-                AC_MSG_WARN(could not find CFITSIO library...)
+                found="yes"
+                break;
         fi
+      done
+    if test "$found" = "no"; then
+      AC_MSG_RESULT(no)
+      AC_MSG_WARN(could not find CFITSIO library...)
+    fi
 
 fi
+
+AC_SUBST(CFITSIO_INC)
+AC_SUBST(CFITSIO_LIB)
+
 
 dnl --------------------------------------------------------------------
 
