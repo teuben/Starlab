@@ -326,11 +326,13 @@ char * gethist(int, char **);
 // Convenient invocation of run-time help function.
 
 void check_runtime_help(int argc, char** argv,
-			char* source_file, char* compile_date);
-void get_runtime_help(char* source_file, char* compile_date, int level = 1);
+			char* source_file, char* date, char *time);
+void get_runtime_help(char* source_file, char* date, char *time, int level = 1);
 
-#define check_help() check_runtime_help(argc, argv, _SRC_, _COMPILE_DATE_)
-#define get_help() get_runtime_help(_SRC_, _COMPILE_DATE_)
+// Note: assuming here that the macros __DATE__ and __TIME__ are standard...
+
+#define check_help() check_runtime_help(argc, argv, _SRC_, __DATE__, __TIME__);
+#define get_help() get_runtime_help(_SRC_, __DATE__, __TIME__);
 
 #endif
 

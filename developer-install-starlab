@@ -55,7 +55,7 @@ if (-e configure) then
 
     # Build the package.
 
-    echo Running make \( \(`date`\; this may take a while...\)
+    echo Running make \(`date`\; this may take a while...\)
     echo 						>>& $log
     echo Running make \(`date`\)			>>& $log
     make						>>& $log
@@ -78,16 +78,16 @@ if (-e configure) then
 	echo Couldn\'t find kira...
     endif
 
-    echo Running Testsuite \(  \(`date`; this may take a few minutes\)
+    echo Running Testsuite \(`date`\; this may take a few minutes\)
     echo 						>>& $log
     echo Running Testsuite \(`date`\)			>>& $log
     ./sbin/testsuite					>>& $log
 
-    set n1 = `grep ^Working $log | grep OK | wc -l`
+    set n1 = `grep ^Working $log | grep OK       | wc -l`
     set n2 = `grep ^Working $log | grep Problems | wc -l`
     echo Found $n1 OK and $n2 Problems.
 
-    echo Number of executables found: `ls $install-dir/bin|wc -l`
+    echo Number of executables found: `ls $install_dir/bin | wc -l`
 
     # Deuglify the log file (install.log --> install.log.2)
 

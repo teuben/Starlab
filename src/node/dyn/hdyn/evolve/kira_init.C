@@ -622,14 +622,8 @@ local void kira_system_id(int argc, char** argv)
     // Identify the Starlab version.
 
     cerr << "Starlab version " << VERSION;
-    /*
-    char* s = stredit(_COMPILE_DATE_, '_', ' ');
-    if (s) {
-	cerr << "; kira created on " << s;
-	delete s;
-    }
-    cerr << endl;
-    */
+    cerr << "; kira created on " << __DATE__ << " at " << __TIME__ << endl;
+
     // Attempt to identify the user and host.
 
     cerr << "kira run by user ";

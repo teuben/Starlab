@@ -19,7 +19,8 @@ AC_ARG_ENABLE(xreal,
 	[AC_DEFINE(USE_XREAL, 1,
 		[Define to 1 if you want to enable the xreal type. Although this significantly increases precision, it also incurs a substantial performance penalty.])])
 # Another HUGE FIXME - pgetopt() must be replaced by getopt_long()
-CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__ -D_COMPILE_DATE_=__DATE__"
+#CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__ -D_COMPILE_DATE_=__DATE__"
+CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"
 
 # Checks for programs.
 AC_PROG_CC

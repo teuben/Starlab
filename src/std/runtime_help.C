@@ -24,7 +24,7 @@ local char* stredit(char* s, char c1, char c2)	// duplicate in kira_init.C
     return s1;
 }
 
-void get_runtime_help(char* source_file, char* compile_date, int level)
+void get_runtime_help(char* source_file, char* date, char *time, int level)
 {
     // Extract help information from the specified source file.
     // source_file was the location of the file in question at the
@@ -32,16 +32,15 @@ void get_runtime_help(char* source_file, char* compile_date, int level)
     // possibilities that the name has changed or the file has
     // become inaccessible.
 
-    // As of Sep 2001, source_file has the STARLAB_PATH environment
-    // removed.
-
     cerr << endl
 	 << "    Starlab version " << VERSION << endl;
 
-    char* s = stredit(compile_date, '_', ' ');
-    if (s) {
-	cerr << "    program created " << s << endl;
-	delete s;
+    char* sd = stredit(date, '_', ' ');		// unnecessary now
+    char* st = stredit(time, '_', ' ');		// unnecessary now
+    if (sd && st) {
+	cerr << "    program created on " << sd << " at " << st << endl;
+	delete sd;
+	delete st;
     }
 
     // Look for the source file.  First try the name verbatim, then
@@ -107,7 +106,7 @@ void get_runtime_help(char* source_file, char* compile_date, int level)
 }
 
 void check_runtime_help(int argc, char** argv,
-			char* source_file, char* compile_date)
+			char* source_file, char* date, char *time)
 {
     int help_level = 0;
 
@@ -116,7 +115,7 @@ void check_runtime_help(int argc, char** argv,
 	if (strstr(argv[i], "-HELP")) help_level = 2;
     }
 
-    if (help_level) get_runtime_help(source_file, compile_date, help_level);
+    if (help_level) get_runtime_help(source_file, date, time, help_level);
 }
 
 #else
