@@ -23,14 +23,14 @@
 //	bool hdyn::is_weakly_perturbed
 //	bool hdyn::is_stable
 //
-// To do:  Mixing of many types of motion is too complex.  Especially
+// TO DO:  Mixing of many types of motion is too complex.  Especially
 //	   problematic is the identification of pericenter reflection by
 //	   checking for recession, which can fail in a variety of ways
 //	   in marginal cases.
 //
 //	   Also, picking up unperturbed motion near pericenter biases the
-//	   unperturbed timestep on an extremely short step, and can lead
-//	   to scheduling problems.
+//	   unperturbed timestep on an extremely short step block, and can
+//	   lead to scheduling problems.
 
 #include "hdyn.h"
 #include <star/dstar_to_kira.h>
@@ -3506,12 +3506,38 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			    // advancing par and pnn to the current time, if
 			    // necessary.  (Do this before terminating the
 			    // unperturbed motion, for consistency.)
+			    //
+			    // This action will lead to scheduling problems
+			    // if par or pnn weren't on the timestep list.
+			    // Must correct on return -- simplest just to
+			    // force the list to be reconstructed.
+			    // Indicators:
+			    //
+			    //     (1) full unperturbed motion has ended,
+			    //	   (2) par and/or pnn are up to date, but
+			    //	       aren't on the integration list.
+			    //
+			    // If we confine this correction to top-level
+			    // nodes, we could do the identification here,
+			    // since top-level nodes precede low-level ones.
+			    // However, the corrective action must be taken
+			    // in the calling function in any case.
 
+			    if (par->time < system_time) {
+				cerr << "    synchronizing parent "
+				     << par->format_label() << endl;
+				PRI(4); PRL(par->get_timestep());
+			    }
 			    par->synchronize_node();
-			    pnn->synchronize_node();
+			    PRI(4); PRL(par->get_timestep());
 
-			    // PRI(4); PRL(par->get_timestep());
-			    // PRI(4); PRL(pnn->get_timestep());
+			    if (pnn->time < system_time) {
+				cerr << "    synchronizing nn "
+				     << pnn->format_label() << endl;
+				PRI(4); PRL(pnn->get_timestep());
+			    }
+			    pnn->synchronize_node();
+			    PRI(4); PRL(pnn->get_timestep());
 
 			    // Note that we should really repeat the entire
 			    // previous calculation, since all quantities will
