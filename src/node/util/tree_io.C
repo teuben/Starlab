@@ -296,9 +296,9 @@ local node * get_node_init(istream& s,
 			   bool use_stories)
 {
 
-    if (!check_and_skip_input_line(s, START_PARTICLE)) {
+    if (!check_and_skip_input_line(s, START_PARTICLE))
 	return NULL;
-    }
+
     node* root = get_node_recursive(s, the_npfp, the_hbpfp, the_sbpfp,
 				    use_stories, 0);
     root->set_root(root);
@@ -316,9 +316,15 @@ inline local void put_node_body(ostream & s, node & b,
 
     bool short_short = (short_output && short_output != 4);
 
-    if (short_short)
-	put_string(s, "  name = ", b.format_label());
-    else {
+    if (short_short) {
+
+	// Need i for scatter3; see if this breaks anything...
+
+	// put_string(s, "  name = ", b.format_label());
+	if (b.get_index() >= 0) put_integer(s, "  i = ", b.get_index());
+	if (b.get_name() != NULL) put_string(s, "  name = ", b.get_name());
+
+    } else {
 	if (b.get_index() >= 0) put_integer(s, "  i = ", b.get_index());
 	if (b.get_name() != NULL) put_string(s, "  name = ", b.get_name());
 	put_integer(s, "  N = ", b.n_leaves());
