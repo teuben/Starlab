@@ -47,7 +47,7 @@
 ////                                      (0.5, 1, 2, 5, 10, 25, 50, 75, 90%)
 ////             -n    perform/don't perform actions requiring O(N^2)
 ////                   operations (e.g. computation of energy and core
-////                   radius) [no]
+////                   radius; see -e) [no]
 ////             -o    pipe system to cout [no]
 ////
 ////         If GRAPE is available, the hdyn version of this function will
@@ -104,8 +104,7 @@ local void print_relaxation_time(dyn* b,
     t_relax = 9.62e-2 * sqrt(r_virial * r_virial * r_virial / total_mass)
               * N / log10(0.4 * N);
 
-    PRI(4); PRL(r_virial);
-    PRI(4); PRL(t_relax);
+    PRI(4); PRC(t_relax); PRL(r_virial);
 }
 
 local void print_numbers_and_masses(dyn* b, bool& mass_spectrum)
@@ -1728,7 +1727,7 @@ main(int argc, char **argv)
 
     // For dyn version, calc_e requires n_sq.
 
-    if (!n_sq) calc_e = false;
+    // if (!n_sq) calc_e = false;
 
     // Loop over input until no more data remain.
 

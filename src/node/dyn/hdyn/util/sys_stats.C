@@ -90,7 +90,7 @@ main(int argc, char **argv)
     if (!n_sq) {
 
 #ifndef USE_GRAPE
-	calc_e = false;
+	// calc_e = false;
 #endif
 
     }
