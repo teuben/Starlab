@@ -1,4 +1,9 @@
 
+#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
+#ifndef T_DEBUG_hdyn_grape6
+#   undef T_DEBUG
+#endif
+
        //=======================================================//    _\|/_
       //  __  _____           ___                    ___       //      /|\
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
@@ -28,6 +33,12 @@
 #include "hdyn.h"
 #include "grape6.h"
 #include "hdyn_inline.C"
+
+#define EXPAND_TO_FIND_COLL
+#undef EXPAND_TO_FIND_COLL
+
+#define SORT_NODE_LIST
+//#undef SORT_NODE_LIST
 
 // Set DEBUG =	0 for no debugging info
 //		1 for a substantial amount of high-level info
@@ -389,6 +400,13 @@ local INLINE int force_by_grape(xreal xtime,
 
 //    PRL(ni);
 
+#ifdef T_DEBUG
+    real sys_t = xtime;
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 1 << endl << flush;
+    }
+#endif
+
     for (int i = 0; i < ni; i++) {
 
 //	PRC(i); PRL(nodes[i]);
@@ -495,6 +513,12 @@ local INLINE int force_by_grape(xreal xtime,
 	}
     }
 
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 2 << endl << flush;
+    }
+#endif
+
     // Clear neighbor radii for unused pipes (added by SPZ, May 8 2001).
 
     for (int i = ni; i < n_pipes; i++)
@@ -504,9 +528,22 @@ local INLINE int force_by_grape(xreal xtime,
 		      ipos, ivel, iacc, ijerk, ipot,
 		      &eps2, ih2);
 
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 3 << endl << flush;
+    }
+#endif
+
     int error = g6calc_lasthalf2_(&cluster_id, &nj, &ni, iindex,
 				  ipos, ivel, &eps2, ih2,
 				  iacc, ijerk, ipot, inn);
+
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 4 << endl << flush;
+	PRL(error);
+    }
+#endif
 
     if (DEBUG > 1) {
 	cerr << endl << "  ...results:"
@@ -528,7 +565,7 @@ local INLINE int force_by_grape(xreal xtime,
              }
              if (inn[i] >= nj) {
                  inn[i] = 0;
-                 cerr << "NN forced to zero for particle "<<endl;  
+                 cerr << "warning: NN forced to zero for particle "<<endl;  
                  PRI(4); PRC(i); PRC(iindex[i]);
                  PRL(nodes[i]->format_label());
                  PRL(nodes[i]->get_pos());
@@ -638,6 +675,13 @@ local INLINE int force_by_grape(xreal xtime,
 	PRL(error);
     }
 
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 5 << endl << flush;
+	PRL(error);
+    }
+#endif
+
     return error;
 }
 
@@ -723,21 +767,453 @@ void check_release_grape(kira_options *ko, xreal time, bool verbose)
 //  *                                                                   *
 //  *********************************************************************
 
-local inline bool use_cm_approx(hdyn *bb)
+local inline bool use_cm_approx(hdyn *bb, real d_crit)
 {
-    if (bb->get_kepler()) {
+    // Check if a binary can be treated as unperturbed for purposes of
+    // computing its energy if the estimated tidal effect of its neighbors
+    // is negligible.  Looks as though accepting any unperturbed binary
+    // may lead to unacceptably large tidal errors.  Use d_crit to define
+    // a "close" binary to be treated as unperturbed -- to be reviewed.
+    //
+    // 							(Steve, 5/02)
 
-	// Treat the binary as unperturbed for purposes of computing
-	// its energy if the estimated tidal effect of its neighbors
-	// is enegligible.  For now, accept any unperturbed binary.
+    bool use_cm = false;
+    kepler *k = bb->get_kepler();
 
-//	cerr << "CM approx: "; PRL(bb->format_label());
-	return true;
+    if (k) {
+
+	if (k->get_semi_major_axis() < d_crit) {
+
+	    use_cm = true;
+
+	    // cerr << "use_cm = true (kepler) for " << bb->format_label()
+	    //      << endl;
+	}
+
+    } else if (bb->is_low_level_node()) {
+
+	hdyn *sis = bb->get_younger_sister();
+	if (sis) {
+
+	    vector dx = bb->get_pos() - sis->get_pos();
+
+	    if (abs(dx[0]) < d_crit
+		&& abs(dx[1]) < d_crit
+		&& abs(dx[2]) < d_crit) {
+
+		use_cm = true;
+
+		// cerr << "use_cm = true (close) for " << bb->format_label()
+		//      << endl;
+		// PRL(dx);
+	    }
+	}
     }
-    return false;
+
+#if 0
+    if (use_cm) {
+	cerr << "CM approx: ";
+	hdyn *par = bb->get_parent();
+	PRC(par->format_label()); PRL(bb->format_label());
+    }
+#endif
+
+    return use_cm;
 }
 
 
+
+
+//*************************************************************************
+//*************************************************************************
+//
+// Experimental code for grape_calculate_energies().
+//
+// Basic compile-time options:
+//
+//	OLD_MAY02:	the original version, prior to May 26, 2002
+//	NEW_MAY02:	the new version, with various "enhancements"
+//
+// In the latter case, choose between an intermediate version, cosmetically
+// similar to the new code but functionally more like the original, and the
+// true new version, by use of E_NODES (set ==> new).
+//
+// All versions share the function use_cm_approx() and produce the same
+// results.  The OLD version seems marginally fastest...
+//
+//							(Steve, 5/02)
+
+#define OLD_MAY02
+//#define NEW_MAY02
+
+// NOTE: NEW takes precedence over OLD if both are set...
+//	 E_NODES is only relevant in the NEW case.
+
+#define E_NODES
+//#undef E_NODES
+
+//=========================================================================
+//
+// New code.
+
+#ifdef NEW_MAY02
+
+#ifdef E_NODES
+local int send_all_e_nodes_to_grape(hdyn *b,		// root node
+				    bool cm,		// use CM approx
+				    real d_crit,	// CM cutoff
+				    hdyn **e_nodes,	// list of nodes
+				    real& e_unpert,	// unperturbed energy
+				    int& n_leaves)	// leaves on list
+#else
+local int send_all_leaves_to_grape(hdyn *b,		// root node
+				   bool cm,		// use CM approx
+				   real d_crit, 	// CM cutoff
+				   real& e_unpert)	// unperturbed energy
+#endif
+
+// Send predicted positions (velocities, etc. are not needed to
+// compute the potentials) of all leaves to GRAPE j-particle memory.
+// Return the total number of leaves sent to the GRAPE.
+
+// Called by:	grape_calculate_energies()			// global
+
+{
+    if (DEBUG) {
+	cerr << "  send_all_e_nodes_to_grape"
+	     << endl << flush;
+    }
+
+    int nj = 0;
+    e_unpert = 0;
+#ifdef E_NODES
+    n_leaves = 0;
+#endif
+
+    if (!cm) {
+
+	for_all_leaves(hdyn, b, bb) {
+
+	    // In center of mass approximation, replace bb by its parent.
+	    // The order of traversal of the tree means that this should
+	    // occur at the elder component of a binary, and will skip the
+	    // other component.  The while loop should also take care of
+	    // unperturbed multiples!  For efficiency, keep and return a
+	    // running sum of all internal energies excluded.
+
+	    bool reset_bb = false;
+
+	    while (use_cm_approx(bb, d_crit)) {
+		hdyn *sis = bb->get_younger_sister();
+		hdyn *par = bb->get_parent();
+		real reduced_mass = bb->get_mass() * sis->get_mass()
+						   / par->get_mass();
+		if (bb->get_kepler())
+		    e_unpert += reduced_mass * bb->get_kepler()->get_energy();
+		else {
+		    vector dx = bb->get_pos() - sis->get_pos();
+		    vector dv = bb->get_vel() - sis->get_vel();
+		    e_unpert += reduced_mass * (0.5*square(dv)
+						- par->get_mass()/abs(dx));
+		}
+		bb = par;
+		reset_bb = true;
+	    }
+
+	    // Must be careful to avoid an infinite loop (because of the
+	    // logic used by for_all_leaves():
+
+	    if (reset_bb) {
+		bb = bb->get_oldest_daughter()->get_younger_sister()
+					      ->next_node(b);
+		if (!bb) break;
+	    }
+
+	    // For now, let GRAPE index = address on list.
+
+#ifdef E_NODES
+	    e_nodes[nj] = bb;
+	    n_leaves += bb->is_leaf();
+#endif
+	    bb->set_grape_index(nj++);
+	
+	    // Copy the leaf to the GRAPE with index = address.
+
+	    send_j_node_to_grape(bb, true);	// "true" ==> send predicted pos
+	}
+
+    } else {
+
+	for_all_daughters(hdyn, b, bb) {
+
+	    // For now, let GRAPE index = address on list.
+
+#ifdef E_NODES
+	    e_nodes[nj] = bb;
+	    n_leaves += bb->is_leaf();
+#endif
+	    bb->set_grape_index(nj++);
+	
+	    // Copy the node to the GRAPE with index = address.
+
+	    send_j_node_to_grape(bb, true);	// "true" ==> send predicted pos
+	}
+    }
+
+    if (DEBUG) {
+	cerr << "  ...leaving send_all_e_nodes_to_grape:  ";
+	PRL(nj);
+    }
+
+    return nj;
+}
+
+
+#ifdef E_NODES
+
+local bool force_by_grape_on_all_e_nodes(hdyn **e_nodes,    // node list
+					 int nj)	    // number on list
+
+// Compute the forces on all e_nodes due to all other e_nodes.
+// Only interested in determining the potential energies.
+
+// Called by:	grape_calculate_energies()			// global
+
+{
+    if (DEBUG) {
+	cerr << "  force_by_grape_on_all_e_nodes:  ";
+	PRL(nj);
+    }
+
+    bool status = false;
+
+    if (nj > 0) {
+
+	xreal sys_t = e_nodes[0]->get_system_time();
+	int n_pipes = g6_npipes_();
+
+	// Compute particle forces, n_pipes at a time.
+
+	for (int ip = 0; ip < nj; ip += n_pipes)
+	    status |= force_by_grape(sys_t,
+				     e_nodes+ip, min(n_pipes, nj-ip),
+				     nj, n_pipes,
+				     true);	// "true" ==> compute pot only
+
+    }
+
+    if (DEBUG) {
+	cerr << "  ...leaving force_by_grape_on_all_e_nodes:  ";
+	PRL(status);
+    }
+
+    return status;
+}
+
+#else
+
+
+local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
+					int nj,
+					bool cm)		// CM approx
+
+// Compute the forces on all particles due to all other particles.
+// Only interested in determining the potential energies.
+
+// Called by:	grape_calculate_energies()			// global
+
+{
+    if (DEBUG) {
+	cerr << "  force_by_grape_on_all_leaves:  ";
+	PRL(nj);
+    }
+
+    int n_pipes = g6_npipes_();
+    hdyn **ilist = new hdynptr[n_pipes];
+
+    // Compute particle forces, n_pipes at a time.
+
+    bool status = false;
+
+    int ip = 0;
+    if (!cm) {
+	for_all_leaves(hdyn, b, bb) {
+	    ilist[ip++] = bb;
+	    if (ip == n_pipes) {
+		status |= force_by_grape(b->get_system_time(),
+					 ilist, ip, nj, n_pipes,
+					 true);	// "true" ==> compute pot only
+		ip = 0;
+	    }
+	}
+    } else {
+	for_all_daughters(hdyn, b, bb) {
+	    ilist[ip++] = bb;			// replicated code...
+	    if (ip == n_pipes) {
+		status |= force_by_grape(b->get_system_time(),
+					 ilist, ip, nj, n_pipes,
+					 true);	// "true" ==> compute pot only
+		ip = 0;
+	    }
+	}
+    }
+
+    if (ip)
+	status |= force_by_grape(b->get_system_time(),
+				 ilist, ip, nj, n_pipes,
+				 true);
+
+    if (DEBUG) {
+	cerr << "  ...leaving force_by_grape_on_all_leaves:  ";
+	PRL(status);
+    }
+
+    delete [] ilist;
+    return status;
+}
+
+#endif
+
+
+//						*****************************
+//						*****************************
+//						***                       ***
+//						***  The global function  ***
+//						***                       ***
+//						*****************************
+//						*****************************
+
+
+void grape_calculate_energies(hdyn *b,			// root node
+			      real &epot,
+			      real &ekin,
+			      real &etot,
+			      bool cm)			// default = false
+{
+    // Note: cm = true means use the CM approximation for all top-level
+    // nodes.  If cm = false, then still use the CM approximation for
+    // sufficiently close binaries to avoid roundoff errors on the GRAPE.
+
+    if (DEBUG) {
+	cerr << endl << "grape_calculate_energies..."
+	     << endl << flush;
+	PRL(cm);
+    }
+
+    if (!grape_is_open)
+	reattach_grape(b->get_real_system_time(),
+		       "grape_calculate_energies", b->get_kira_options());
+
+    real cpu0 = cpu_time();
+
+    real d_crit = 1.e-9;
+    if (b->get_d_min_sq() > 0)
+	d_crit = min(0.001*sqrt(b->get_d_min_sq()), d_crit);
+
+    real e_unpert;
+
+#ifdef E_NODES
+
+    // New code (Steve, 5/02): make a list of nodes to use, taking
+    // into account the possible use of the CM approximation.
+
+    int n_top_level = b->n_daughters();
+    hdyn **e_nodes = new hdynptr[3*n_top_level+10];	// (? same as above)
+
+    int n_leaves;
+    int nj =  send_all_e_nodes_to_grape(b, cm, d_crit,
+					e_nodes, e_unpert, n_leaves);
+
+    if (force_by_grape_on_all_e_nodes(e_nodes, nj)) {
+
+#else
+
+    int nj =  send_all_leaves_to_grape(b, cm, d_crit,
+				       e_unpert);
+
+    if (force_by_grape_on_all_leaves(b, nj, cm)) {
+
+#endif
+
+	cerr << "grape_calculate_energies: "
+	     << "error on return from force_by_grape_on_all_xxx()"
+	     << endl;
+
+	hw_err_exit("grape_calculate_energies", 1, b);
+    }
+
+    epot = ekin = 0;
+
+#ifdef E_NODES
+
+	for (int i = 0; i < nj; i++) {
+	    hdyn *bb = e_nodes[i];
+	    real mi = bb->get_mass();
+	    epot += 0.5*mi*bb->get_pot();
+	    vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
+	    ekin += 0.5*mi*vel*vel;
+	}
+#else
+
+    if (!cm) {
+
+	for_all_leaves(hdyn, b, bb) {
+
+	    // Logic here follows that in send_all_e_nodes_to_grape().
+
+	    bool reset_bb = false;
+
+	    while (use_cm_approx(bb, d_crit)) {
+		bb = bb->get_parent();
+		reset_bb = true;
+	    }
+	    if (reset_bb) {
+		bb = bb->get_oldest_daughter()->get_younger_sister()
+					      ->next_node(b);
+		if (!bb) break;
+	    }
+
+	    real mi = bb->get_mass();
+	    epot += 0.5*mi*bb->get_pot();
+	    vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
+	    ekin += 0.5*mi*vel*vel;
+	}
+    } else {
+	for_all_daughters(hdyn, b, bb) {
+	    real mi = bb->get_mass();
+	    epot += 0.5*mi*bb->get_pot();
+	    vector vel = bb->get_vel();
+	    ekin += 0.5*mi*vel*vel;
+	}
+    }
+
+#endif
+
+    etot = ekin + epot + e_unpert;
+
+    grape_was_used_to_calculate_potential = true;	// trigger a reset
+							// next time around
+
+//    cerr << "CPU time for grape_calculate_energies() = "
+//	 << cpu_time() - cpu0 << endl;
+
+    if (DEBUG) {
+	cerr << "...leaving grape_calculate_energies...  ";
+	PRL(etot);
+	cerr << endl;
+    }
+
+#ifdef E_NODES
+    delete [] e_nodes;
+#endif
+}
+
+
+//=========================================================================
+//
+// Old code.
+
+#else
 
 local int send_all_leaves_to_grape(hdyn *b,		// root node
 				   real& e_unpert,	// unperturbed energy
@@ -750,8 +1226,6 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 // Called by:	grape_calculate_energies()			// global
 
 {
-//    if (b->get_system_time() > 173.077
-//	&& b->get_system_time() < 173.08) {
     if (DEBUG) {
 	cerr << "  send_all_leaves_to_grape"
 	     << endl << flush;
@@ -760,10 +1234,14 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
     int nj = 0;
     e_unpert = 0;
 
-//    if (b->get_system_time() > 173.077
-//	&& b->get_system_time() < 173.08) PRL(cm);
-
     if (!cm) {
+
+	// N.B. redundant repetition of d_crit definition:
+
+	real d_crit = 1.e-9;
+	if (b->get_d_min_sq() > 0)
+	    d_crit = min(0.001*sqrt(b->get_d_min_sq()), d_crit);
+
 	for_all_leaves(hdyn, b, bb) {
 
 	    // In center of mass approximation, replace bb by its parent.
@@ -775,37 +1253,31 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 
 	    bool reset_bb = false;
 
-//	    if (b->get_system_time() > 173.077
-//		&& b->get_system_time() < 173.08) pp3(bb, cerr, -1);
-
-	    while (use_cm_approx(bb)) {
+	    while (use_cm_approx(bb, d_crit)) {
 		hdyn *sis = bb->get_younger_sister();
 		hdyn *par = bb->get_parent();
 		real reduced_mass = bb->get_mass() * sis->get_mass()
 						   / par->get_mass();
-		e_unpert += reduced_mass * bb->get_kepler()->get_energy();
+		if (bb->get_kepler())
+		    e_unpert += reduced_mass * bb->get_kepler()->get_energy();
+		else {
+		    vector dx = bb->get_pos() - sis->get_pos();
+		    vector dv = bb->get_vel() - sis->get_vel();
+		    e_unpert += reduced_mass * (0.5*square(dv)
+						- par->get_mass()/abs(dx));
+		}
 		bb = par;
 		reset_bb = true;
 	    }
-
-//	    if (b->get_system_time() > 173.077
-//		&& b->get_system_time() < 173.08) PRL(reset_bb);
 
 	    // Must be careful to avoid an infinite loop (because of the
 	    // logic used by for_all_leaves():
 
 	    if (reset_bb) {
-//		PRL(e_unpert);
-//		PRL(bb->format_label());
 		bb = bb->get_oldest_daughter()->get_younger_sister()
 					      ->next_node(b);
-//		PRL(bb);
 		if (!bb) break;
-//		PRL(bb->format_label());
 	    }
-
-//	    if (b->get_system_time() > 173.077
-//		&& b->get_system_time() < 173.08) PRL(bb->get_external_field());
 
 	    // For now, let GRAPE index = address.
 
@@ -826,15 +1298,11 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 	
 	    // Copy the node to the GRAPE with index = address.
 
-//	    if (b->get_system_time() > 173.077
-//		&& b->get_system_time() < 173.08) PRL(bb->get_external_field());
-
 	    send_j_node_to_grape(bb, true);	// "true" ==> send predicted pos
 	}
     }
 
     if (DEBUG) {
-//    if (b->get_system_time() > 173.077) {
 	cerr << "  ...leaving send_all_leaves_to_grape:  ";
 	PRL(nj);
     }
@@ -920,14 +1388,21 @@ void grape_calculate_energies(hdyn *b,			// root node
 			      real &etot,
 			      bool cm)			// default = false
 {
+    // Note: cm = true means use the CM approximation for all top-level
+    // nodes.  If cm = false, then still use the CM approximation for
+    // sufficiently close binaries to avoid roundoff errors on the GRAPE.
+
     if (DEBUG) {
 	cerr << endl << "grape_calculate_energies..."
 	     << endl << flush;
+	PRL(cm);
     }
 
     if (!grape_is_open)
 	reattach_grape(b->get_real_system_time(),
 		       "grape_calculate_energies", b->get_kira_options());
+
+    real cpu0 = cpu_time();
 
     real e_unpert;
     int nj =  send_all_leaves_to_grape(b, e_unpert, cm);
@@ -941,19 +1416,23 @@ void grape_calculate_energies(hdyn *b,			// root node
 	hw_err_exit("grape_calculate_energies", 1, b);
     }
 
-    grape_was_used_to_calculate_potential = true;	// trigger a reset
-							// next time around
-
-    epot = ekin = etot = 0;
+    epot = ekin = 0;
 
     if (!cm) {
+
+	// N.B. redundant repetition of d_crit definition:
+
+	real d_crit = 1.e-9;
+	if (b->get_d_min_sq() > 0)
+	    d_crit = min(0.001*sqrt(b->get_d_min_sq()), d_crit);
+
 	for_all_leaves(hdyn, b, bb) {
 
 	    // Logic here follows that in send_all_leaves_to_grape().
 
 	    bool reset_bb = false;
 
-	    while (use_cm_approx(bb)) {
+	    while (use_cm_approx(bb, d_crit)) {
 		bb = bb->get_parent();
 		reset_bb = true;
 	    }
@@ -976,7 +1455,14 @@ void grape_calculate_energies(hdyn *b,			// root node
 	    ekin += 0.5*mi*vel*vel;
 	}
     }
+
     etot = ekin + epot + e_unpert;
+
+    grape_was_used_to_calculate_potential = true;	// trigger a reset
+							// next time around
+
+//    cerr << "CPU time for grape_calculate_energies() = "
+//	 << cpu_time() - cpu0 << endl;
 
     if (DEBUG) {
 	cerr << "...leaving grape_calculate_energies...  ";
@@ -984,6 +1470,11 @@ void grape_calculate_energies(hdyn *b,			// root node
 	cerr << endl;
     }
 }
+
+#endif
+
+//*************************************************************************
+//*************************************************************************
 
 
 
@@ -1024,6 +1515,16 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 	    real rnb_sq = 4*b->get_radius()*b->get_radius();
 
+	    // Probably not necessary to expand the neighbor lists in search
+	    // of a coll.  Instead, confine the search to twice the stellar
+	    // radius and use the nn if no coll is found.  Assume that one
+	    // star or the other will pick up its collision partner in time
+	    // for merger to occur.
+
+#ifdef EXPAND_TO_FIND_COLL
+
+	    // Old code:
+
 	    // If the node has a valid nearest neighbor pointer, try
 	    // to use the nn distance as well.
 
@@ -1044,6 +1545,9 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 		rnb_sq = max(rnb_sq, rnn_sq);
 	    }
+#endif
+
+	    // New code simply uses twice the radius (Steve, 5/02).
 
 	    b->set_grape_rnb_sq(rnb_sq);
 	}
@@ -1074,6 +1578,12 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 	    real r_pert2 = perturbation_scale_sq(b, b->get_gamma23());
 
+//*****
+	    // Limit r_pert2 to avoid GRAPE problems...
+
+	    if (r_pert2 > 100) r_pert2 = 100;	// ***** arbitrary -- should
+//*****						// ***** tie to system scale
+
 	    // Note that r_pert2 may be very small for a tightly
 	    // bound binary.
 
@@ -1085,8 +1595,22 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 	    b->set_grape_rnb_sq(r_pert2);
 
-//	    cerr << func << ": computing perturbers for node "
-//		 << b->format_label() << endl << flush;
+#ifdef T_DEBUG
+	    real sys_t = b->get_system_time();
+	    if (IN_DEBUG_RANGE(sys_t)) {
+		cerr << "DEBUG: " << func << ": computing perturbers for node "
+		     << b->format_label() << endl << flush;
+		PRC(binary_scale(b)); PRL(r_pert2);
+		if (T_DEBUG_LEVEL > 0) {
+		    PRC(b->get_gamma23()); PRL(b->get_d_nn_sq());
+		    PRL(b->get_n_perturbers());
+		    hdyn *od = b->get_oldest_daughter();
+		    PRL(od->get_perturbation_squared());
+		    PRL(od->get_pos());
+		    PRL(od->get_pred_pos());
+		}
+	    }
+#endif
 
 	}
     }
@@ -1115,9 +1639,24 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 
     if (ni <= 0) return false;
 
-//    cerr << "entering " << func << ": ";
-//    PRC(ni); PRC(nj_on_grape); PRL(n_pipes);
-//    PRL(nodes[0]);
+#ifdef T_DEBUG
+    real sys_t = xtime;
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 1 << "  ";
+	PRC(ni); PRC(nj_on_grape); PRL(n_pipes);
+	PRC(need_neighbors); PRL(nodes[0]);
+#if 0
+	for (int i = 0; i < ni; i++) {
+	    cerr << i << " " << nodes[i] << " "; PRL(nodes[i]->is_valid());
+	    if (nodes[i]->is_valid())
+		cerr << "    " << nodes[i]->format_label() << " "
+		     << nodes[i]->get_pos() << endl
+		     << "    " << nodes[i]->get_valid_perturbers() << " "
+		     << nodes[i]->get_grape_rnb_sq() << endl << flush;
+	}
+#endif
+    }
+#endif
 
     if (force_by_grape(xtime, nodes, ni, nj_on_grape, n_pipes)) {
 
@@ -1129,6 +1668,12 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 
     bool error = false;
 
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 2 << endl << flush;
+    }
+#endif
+
     if (need_neighbors) {
 
 	// At least one i-particle needs coll or perturber information.
@@ -1138,6 +1683,13 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 #ifndef NO_G6_NEIGHBOUR_LIST
       status = g6_read_neighbour_list_(&cluster_id);
 #endif
+
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 3 << endl << flush;
+    }
+#endif
+
 	if (status) {
 
 	    // An error has occurred.  Flag it and take appropriate action...
@@ -1181,6 +1733,12 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 	    }
 	}
     }
+
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 4 << endl << flush;
+    }
+#endif
 
     return error;
 }
@@ -1270,7 +1828,9 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 //
 //	0	All OK, no further action needed.
 //	1	Array overflow, reduce grape_rnb_sq and retry.
-//	2	No neighbors or no coll, increase grape_rnb_sq and retry.
+//	2	No neighbors or no coll.
+//		Old code: increase grape_rnb_sq and retry.
+//		New code: accept NULL coll as is (and use nn).
 //
 // The value of grape_rnb_sq is changed here.  Retrying is up to the
 // calling function.
@@ -1465,25 +2025,39 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	} else
 	    status = 2;
 
-    } else if (b->is_parent()) {
+    } else {
 
-	// No neighbors OK in this case.  Set up valid zero-length
-	// perturber list and use hardware nearest neighbor as nn
-	// and coll
+	// No neighbors found.  In new code this is OK -- just modify
+	// the coll pointer appropriately.
 
-	b->new_perturber_list();
-	b->set_valid_perturbers(true);
-	b->set_n_perturbers(0);
+	if (b->is_parent()) {
 
-	if (b->get_nn()) {
-	    b->set_d_coll_sq(b->get_d_nn_sq());
-	    b->set_coll(b->get_nn());
-	} else
-	    b->set_nn(b);
+	    // No neighbors OK in this case.  Set up valid zero-length
+	    // perturber list and use hardware nearest neighbor as both
+	    // nn and coll.
 
-//	cerr << "valid_perturbers = true #2 for "
-//	     << b->format_label()
-//	     << endl;
+	    b->new_perturber_list();
+	    b->set_valid_perturbers(true);
+	    b->set_n_perturbers(0);
+
+//	    cerr << "valid_perturbers = true #2 for "
+//	         << b->format_label()
+//	         << endl;
+
+	}
+
+	// Use nn as coll (always do this in the new version).
+
+#ifdef EXPAND_TO_FIND_COLL
+	if (b->is_parent())
+#endif
+	{
+	    if (b->get_nn()) {
+		b->set_d_coll_sq(b->get_d_nn_sq());
+		b->set_coll(b->get_nn());
+	    } else
+		b->set_nn(b);
+	}
 
     }
 
@@ -1495,12 +2069,19 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
     }
 #endif
 
+#ifdef EXPAND_TO_FIND_COLL
 
+    // Old code:
+    //
     // If no nearest neighbor or coll is found, enlarge the neighbor-sphere
     // radius and try again.
 
     if (status)
 	b->set_grape_rnb_sq(RNB_INCREASE_FAC*b->get_grape_rnb_sq());
+
+#endif
+
+    // New code: no neighbors OK in all cases.
 
     return status;	// note: status indicates success of nn/coll search,
 			//	 not the validity of the neighbor list
@@ -1559,20 +2140,27 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 		// Neighbor list must be recomputed:
 		//
 		//	status = 1  ==>  too many neighbors; decrease radius
-		//	status = 2  ==>  too few neighbors; increase radius
+		//	status = 2  ==>  too few neighbors
+		//			 old: increase radius
+		//			 new: accept as is
 		//
-		// The value of grape_rnb_sq has already been adjusted, and
-		// nn has been set from the GRAPE in either case.
+		// The value of grape_rnb_sq has already been adjusted if
+		// necessary, and nn has been set from the GRAPE in either
+		// case.
 
 //		if (bb->is_parent()) PRL(status);
 
-		if (status == 2 && bb->is_parent()) {
+		if (status == 2
+#ifdef EXPAND_TO_FIND_COLL
+		    && bb->is_parent()
+#endif
+		    ) {
 
 		    // Didn't find a neighbor, but we started our search at
-		    // the perturbation radius.  Use the hardware neighbor,
-		    // and assume zero perturbers with no perturbation
-		    // -- already set in get_neighbors_and_adjust_h2(), so
-		    // nothing to do here.
+		    // the perturbation radius or twice the stellar radius.
+		    // Use the hardware neighbor as coll and assume zero
+		    // perturbers with no perturbation -- already set in
+		    // get_neighbors_and_adjust_h2(), so nothing to do here.
 
 		    break;				// go on to next ip
 
@@ -1722,6 +2310,9 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     hdyn *root = next_nodes[0]->get_root(); 
     kira_options *ko = root->get_kira_options();
 
+    int coll_freq = max(1, ko->grape_coll_freq);
+    int pert_freq = max(1, ko->grape_pert_freq);
+
     //------------------------------------------------------------------
 
     // Test the state of the GRAPE and open it if necessary.
@@ -1787,9 +2378,21 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     // the current_nodes list as previous_nodes (for use next time around).
 
     n_previous_nodes = n_top;
-    bool need_neighbors = false;
 
 //    int n_needpertlist = 0;
+
+#ifdef T_DEBUG
+    real sys_t = root->get_system_time();
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 1 << endl << flush;
+    }
+#endif
+
+    // See which nodes need neighbors from the GRAPE and optionally sort
+    // the list to place all such nodes at the start.
+    //					(Experimental - Steve, 5/02)
+
+    int last_nbr_node = -1;
 
     for (i = 0; i < n_top; i++) {
 
@@ -1800,27 +2403,24 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	// computation for a node that doesn't have a valid list.
 
 	bool need_nbrs = set_grape_neighbor_radius(bb, nj_on_grape);
-	need_neighbors |= need_nbrs;
 
 	// From here on, use valid_perturbers as a flag to indicate
 	// whether the hardware neighbor list should be used to construct
 	// a perturber list.
 
 	if (need_nbrs && bb->is_parent()) {
-
 	    bb->set_valid_perturbers(false);
 //	    n_needpertlist++;
+	}
 
-#if 0
-	    // TEMP ONLY: no perturbers for any binary...
-
-	    if (!bb->get_perturber_list())
-		bb->new_perturber_list();
-	    bb->set_valid_perturbers(true);
-	    bb->set_n_perturbers(0);
+#ifdef SORT_NODE_LIST
+	if (need_nbrs) {
+	    hdyn *tmp = current_nodes[++last_nbr_node];
+	    current_nodes[last_nbr_node] = current_nodes[i];
+	    current_nodes[i] = tmp;
+	}
 #endif
 
-	}
     }
 
     if (DEBUG) {
@@ -1831,6 +2431,12 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
 //    PRC(n_top); PRL(n_needpertlist);
 
+
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 2 << endl << flush;
+    }
+#endif
 
     //------------------------------------------------------------------
 
@@ -1850,7 +2456,9 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     //	      radius is less than the interparticle spacing for N > ~1000.
 
     // Compute the i-forces in chunks of maximum size n_pipes.
-    // Must recompute need_neighbors separately for each chunk.
+    // Compute need_neighbors separately for each chunk.
+
+    bool need_neighbors = false;
 
     i = 0;
     while (i < n_top) {
@@ -1873,6 +2481,12 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	// get_force_and_neighbors (via force_by_grape) also sets
 	// nn pointers.
 
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 3 << endl << flush;
+    }
+#endif
+
 	if (get_force_and_neighbors(xtime, current_nodes + i, ni,
 				    nj_on_grape, n_pipes, need_neighbors)) {
 
@@ -1883,17 +2497,48 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
 	    cerr << "  HW nbr overflow, "; PRL(i);
 
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 4 << endl << flush;
+    }
+#endif
+
 	    i += sort_nodes_and_reduce_rnb(current_nodes+i, ni);
+
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 5 << endl << flush;
+    }
+#endif
 
 	} else if (need_neighbors) {
 
 	    // Neighbor lists are OK.  Get colls and perturber lists.
 
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 6 << endl << flush;
+    }
+#endif
+
 	    i += get_coll_and_perturbers(xtime, current_nodes+i, ni,
 					 h2_crit, nj_on_grape, n_pipes);
+
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 7 << endl << flush;
+    }
+#endif
+
 	} else
 
 	    i += ni;
+
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 8 << endl << flush;
+    }
+#endif
 
     }
 
@@ -1902,6 +2547,12 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     // Update the grape_nb_count flags.
 
 //    int n_gotpertlist = 0;
+
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: " << func << " " << 9 << endl << flush;
+    }
+#endif
 
     for (i = 0; i < n_top ; i++) {
 
@@ -1917,14 +2568,19 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 #endif
 
 
-	// Frequency of coll checks is every fourth force calculation.
-	// xx Frequency of perturber checks is every other force calculation.
+	// Frequency of coll checks is every grape_coll_freq force calculation.
+	// Frequency of pert checks is every grape_pert_freq force calculation.
+	// Defaults are set in kira_defaults.h.
 
-	if (bb->is_leaf())
-	    bb->set_grape_nb_count((bb->get_grape_nb_count() + 1)%4);
-	else
+	if (bb->is_leaf()) {
 
-//	    bb->set_grape_nb_count((bb->get_grape_nb_count() + 1)%2);
+	    bb->set_grape_nb_count((bb->get_grape_nb_count() + 1) % coll_freq);
+
+	    // Shouldn't be needed, but just in case:
+
+	    if (bb->get_coll() == NULL) bb->set_coll(bb->get_nn());
+
+	} else {
 
 //	    *** If we reduce the frequency of perturber checks, then we
 //	    *** must be sure to restore the CMs on the perturber list,
@@ -1936,12 +2592,15 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 //	    *** shouldn't be a problem).
 //	    ***						(Steve, 6/01)
 
-	    bb->set_grape_nb_count(0);		// xx -- every time...
+	    bb->set_grape_nb_count((bb->get_grape_nb_count() + 1) % pert_freq);
+
+//	    (Precise value of pert_freq doesn't seem to have a large effect
+//	    on overall CPU time -- Steve, 5/02)
+
+	}
     }
 
-
 //    PRL(n_gotpertlist);
-
 
     if (DEBUG) {
 	cerr << "...leaving " << func << endl << endl << flush;
