@@ -18,6 +18,8 @@
 // Other externally visible functions:
 //
 //	pdyn *create_interpolated_tree2(worldbundle *wb, real t)
+//	char *set_next_center(worldbundleptr wh[], int nh, bool verbose);
+//	char *get_center_id();
 //	vector get_center_pos()
 //	vector get_center_vel()
 //
@@ -330,6 +332,9 @@ char *set_next_center(worldbundleptr wh[],	// entire worldbundle array
 		 << center_id[which_center] << endl;
 	which_center = old_center;
     }
+
+    // Could in principle refine the which_center == 1 return to distinguish
+    // between density center and modified_com (not done).
 
     return center_id[which_center];
 }
