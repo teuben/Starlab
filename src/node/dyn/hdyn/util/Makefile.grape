@@ -19,11 +19,35 @@
 # Version for use on GRAPE systems.
 # Options are nothing, STARLAB_HAS_GRAPE4, or STARLAB_HAS_GRAPE6:
 
+#..............................................................................
+#...for GRAPE..................................................................
+#..............................................................................
+
 GRAPE	= -DSTARLAB_HAS_GRAPE6
 
-# Modify this for the specific system:
+# Some examples (comment/uncomment/add as required):
 
+# For GRAPE-4 in indiana
+#GRAPELIB = -L/home/spz/grape -lg4a -lharp -lprometheus  
+
+# For GRAPE-4 (on merlot@drexel):
+#GRAPELIB =	-L/usr/users/makino/src/harplibs -lg4a -lrt
+
+# For GRAPE-4 (on port@hongo)
+#GRAPELIB =      -L/usr2/makino/disk3src/harplibs -lg4a -lrt
+
+# For GRAPE-6 (on bourgogne@hongo [OSF/EV5] and neomuscat@hongo [OSF/EV6]):
 GRAPELIB = -L/usr2/makino/disk3src/harplibs -lg6 -lg6sim2
+
+# For GRAPE-6 (on alexandria@hongo [Linux/EV6]):
+#GRAPELIB = -L/usr2/makino/disk3src/harplibs -lg6la -lg6lasim2
+
+# For GRAPE-6 (on g6hostX@hongo [P4/K7/linux]):
+#GRAPELIB = -L/usr2/makino/disk3src/harplibs -lg6lx -lg6lxsim2
+
+#..............................................................................
+#..............................................................................
+#..............................................................................
 
 CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) $(GRAPE)
 
@@ -36,20 +60,18 @@ LIBFLAGS	= -L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
 # The repeated searches are needed because hdyn references dstar,
 # and vice versa.)
 
-DEPEND_LIBS	= $(LIB)/libhdyn.a $(LIB)/lib_dyn_.a $(LIB)/libdyn.a \
-		  $(LIB)/libnode.a $(LIB)/libstd.a
-#
-# Note: If we ever want to build executables here, it may be necessary
-#	to include "-ldstar -lsstar" in LIBFLAGS above...
-#
-#EXECUTABLES = hdyn_io hdyn_tt
-
 EXECUTABLES = hdyn_pp3 reset_counters sys_stats scale_grape sys_stats_grape
+
 OBJECT_FILES = hdyn_io.o hydn_init.o hdyn_kepler.o hdyn_pp3.o hdyn_tt.o \
 	       kira_diag.o kira_options.o reset_counters.o \
 	       tidal_init.o hdyn_init.o
 
 LIBRARY = libhdyn.a
+
+NON_CCC_EXECUTABLES =
+
+DEPEND_LIBS	= $(LIB)/libhdyn.a $(LIB)/lib_dyn_.a $(LIB)/libdyn.a \
+		  $(LIB)/libnode.a $(LIB)/libstd.a
 
 #..............................................................................
 

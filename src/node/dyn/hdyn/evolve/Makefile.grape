@@ -79,19 +79,16 @@ CFLAGS  = $(STARLAB_CCC_FLAGS) -I$(INC) ${GRAPE6_CF} -O
 #GRAPELIB =	-L/usr/users/makino/src/harplibs -lg4a -lrt
 
 # For GRAPE-4 (on port@hongo)
-#GRAPELIB =      -L/usr2/makino/disk3src/harplibs/ -lg4a -lrt
+#GRAPELIB =      -L/usr2/makino/disk3src/harplibs -lg4a -lrt
 
-# For GRAPE-6 (on bourgogne@hongo && margaux@hongo [linux]):
-#GRAPELIB = -L/usr2/makino/src/g6hib -lg6 -L/usr2/makino/src/grape6 -lg6sim2
-
-# For GRAPE-6 (on alexandria@hongo EV6):
-#GRAPELIB = -L/usr2/makino/src/g6hib -lg6linux 
-
-# For GRAPE-6 (on alexandria and neomuscat@hongo EV6):
+# For GRAPE-6 (on bourgogne@hongo [OSF/EV5] and neomuscat@hongo [OSF/EV6]):
 GRAPELIB = -L/usr2/makino/disk3src/harplibs -lg6 -lg6sim2
 
-# For GRAPE-6 (on g6hostX@hongo [linux]):
-#GRAPELIB = -L/usr2/makino/disk3src/harplibs -lg6lx  -lg6lxsim2 -lm
+# For GRAPE-6 (on alexandria@hongo [Linux/EV6]):
+#GRAPELIB = -L/usr2/makino/disk3src/harplibs -lg6la -lg6lasim2
+
+# For GRAPE-6 (on g6hostX@hongo [P4/K7/linux]):
+#GRAPELIB = -L/usr2/makino/disk3src/harplibs -lg6lx -lg6lxsim2
 
 #..............................................................................
 #..............................................................................
