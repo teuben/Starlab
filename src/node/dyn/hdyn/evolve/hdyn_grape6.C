@@ -35,7 +35,21 @@
 #   undef T_DEBUG
 #endif
 
-//#define T_DEBUG 0
+// T_DEBUG is not defined by kira_debug.h, so it can be used as a flag.
+
+//#define T_DEBUG		8.9999
+
+// However, T_DEBUG_END is infinite by default, and T_DEBUG_LEVEL = 0.
+// To change these defaults, we must undefine them first...
+
+//#undef  T_DEBUG_END
+//#define T_DEBUG_END	9.0001
+//#undef  T_DEBUG_LEVEL
+//#define T_DEBUG_LEVEL	1
+
+// Set T_DEBUG_LEVEL =	0 (default) for basic debugging info
+//			1 for a substantial amount of high-level info
+//			2 for too much output!
 
 #include "hdyn_inline.C"
 
@@ -44,14 +58,6 @@
 
 #define SORT_NODE_LIST
 //#undef SORT_NODE_LIST
-
-// Older and currently separate debugging track from the T_DEBUG route...
-
-// Set DEBUG =	0 for no debugging info
-//		1 for a substantial amount of high-level info
-//		2 for tons of output!
-
-#define DEBUG	0
 
 // Allow possibility of no neighbor list (former SPZ convention
 // reversed by Steve, 6/01):
@@ -126,20 +132,25 @@ local void reattach_grape(real time, char *id, kira_options *ko)
 //		grape_calculate_densities()			// global
 
 {
-	cerr << id << ":  ";
-	if (!grape_first_attach) cerr << "re";
-	cerr << "attaching GRAPE at time "
-	     << time << endl << flush;
+    static char *func = "reattach_grape";
 
-	g6_open_(&cluster_id);
-	if (ko) ko->grape_last_cpu = cpu_time();
-	grape_is_open = true;
+    cerr << id << ":  ";
+    if (!grape_first_attach) cerr << "re";
+    cerr << "attaching GRAPE at time "
+	 << time << endl << flush;
 
-	if (DEBUG) {
-	    cerr << "GRAPE successfully attached"
-		 << endl << flush;
-	}
-	PRL(cpu_time());
+    g6_open_(&cluster_id);
+    if (ko) ko->grape_last_cpu = cpu_time();
+    grape_is_open = true;
+
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(time)) {
+	cerr << func << ": " << "GRAPE successfully attached"
+	     << endl << flush;
+    }
+#endif
+
+    PRL(cpu_time());
 }
 
 
@@ -159,10 +170,15 @@ local INLINE void send_j_node_to_grape(hdyn *b,
 // root node.
 
 {
-    if (DEBUG > 1) {
-	cerr << "  send_j_node_to_grape:  ";
+    static char *func = "send_j_node_to_grape";
+
+#ifdef T_DEBUG
+    bool in_debug_range = IN_DEBUG_RANGE(b->get_system_time());
+    if (in_debug_range && T_DEBUG_LEVEL > 0) {
+	cerr << "  " << func << ":  ";
 	PRL(b->format_label());
     }
+#endif
 
     int grape_index = b->get_grape_index();
 
@@ -193,7 +209,8 @@ local INLINE void send_j_node_to_grape(hdyn *b,
 
     vector k18 = b->get_k_over_18();		// is stored in hdyn
 
-    if (DEBUG > 1) {
+#ifdef T_DEBUG
+    if (in_debug_range && T_DEBUG_LEVEL > 1) {
 	PRI(4); PRC(cluster_id); PRL(grape_index);
 	PRI(4); PRC(t); PRC(dt); PRL(m);
 	PRI(4); PRL(j6);
@@ -201,6 +218,7 @@ local INLINE void send_j_node_to_grape(hdyn *b,
 	PRI(4); PRL(vel);
 	PRI(4); PRL(pos);
     }
+#endif
     
     g6_set_j_particle_(&cluster_id,
 		       &grape_index,				// address
@@ -212,9 +230,11 @@ local INLINE void send_j_node_to_grape(hdyn *b,
 		       &vel[0],
 		       &pos[0]);
 
-    if (DEBUG > 1) {
+#ifdef T_DEBUG
+    if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	cerr << "  ...sent to GRAPE-6" << endl << flush;
     }
+#endif
 }
 
 
@@ -229,16 +249,22 @@ local int initialize_grape_arrays(hdyn *b,		// root node
 //		grape_calculate_densities()			// global
 
 {
-    if (DEBUG) {
-	cerr << "initialize_grape_arrays at time "
-	     << b->get_real_system_time()<< ":  ";
+    static char *func = "initialize_grape_arrays";
+
+#ifdef T_DEBUG
+    real sys_t = b->get_real_system_time();
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
+	cerr << "  " << func << " at time " << sys_t << ":  ";
 	PRL(reset_counters);
     }
+#endif
 
     int nj = b->n_daughters();
 
-    if (DEBUG)
-	PRL(nj);
+#ifdef T_DEBUG
+    if (in_debug_range)	PRL(nj);
+#endif
 
     if (grape_nj_max <= 0 || grape_nj_max < nj) {
 
@@ -254,8 +280,9 @@ local int initialize_grape_arrays(hdyn *b,		// root node
 
     if (!node_list) {
 
-	if (DEBUG)
-	    PRL(grape_nj_max);
+#ifdef T_DEBUG
+	if (in_debug_range) PRL(grape_nj_max);
+#endif
 
 	node_list = new hdynptr[grape_nj_max];
 	current_nodes = new hdynptr[grape_nj_max];
@@ -285,10 +312,12 @@ local int initialize_grape_arrays(hdyn *b,		// root node
 	    bb->set_grape_nb_count(0);
     }
 
-    if (DEBUG) {
+#ifdef T_DEBUG
+    if (in_debug_range) {
 	cerr << endl << "Initialized GRAPE-6 arrays, ";	PRL(nj);
-	cerr << "...leaving initialize_grape_arrays" << endl;
+	cerr << "...leaving " << func << endl;
     }
+#endif
 
     return nj;
 }
@@ -389,10 +418,14 @@ local INLINE int force_by_grape(xreal xtime,
     if (ni <= 0) return 0;
     if (ni > n_pipes) err_exit("force_by_grape: ni too large\n");
 
-    if (DEBUG > 1) {
+#ifdef T_DEBUG
+    real sys_t = xtime;
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	cerr << "  " << func << ":  ";
 	PRC(xtime); PRC(ni); PRC(nj); PRL(pot_only);
     }
+#endif
 
     if (!iindex) {
 
@@ -417,16 +450,8 @@ local INLINE int force_by_grape(xreal xtime,
 
     // Pack the i-particle data and start the GRAPE calculation.
 
-    if (DEBUG > 1) {
-	cerr << "  loading nodes..."
-	     << endl << flush;
-    }
-
-//    PRL(ni);
-
 #ifdef T_DEBUG
-    real sys_t = xtime;
-    if (IN_DEBUG_RANGE(sys_t)) {
+    if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	cerr << "DEBUG: " << func << " " << 1 << endl << flush;
     }
 #endif
@@ -458,7 +483,7 @@ local INLINE int force_by_grape(xreal xtime,
 
         ivel[i]   = nni->get_pred_vel();
 	iacc[i]   = nni->get_old_acc();
-//	ijerk[i]  = ONE6*nni->get_old_jerk();
+//	ijerk[i]  = ONE6*nni->get_old_jerk();		// don't do this!!
 	ijerk[i]  = nni->get_old_jerk();
         ipot[i]   = nni->get_pot();
         ih2[i]    = nni->get_grape_rnb_sq();
@@ -529,8 +554,8 @@ local INLINE int force_by_grape(xreal xtime,
 	    ijerk[i] = j;
 	}
 
-	if (DEBUG > 1) {
-//	if (pot_only && i < 10) {
+#ifdef T_DEBUG
+	if (in_debug_range && T_DEBUG_LEVEL > 1) {
 	    if (i > 0) cerr << endl;
 	    PRI(4); PRC(i); PRC(iindex[i]); PRL(nni->format_label());
 	    PRI(4); PRL(ipos[i]);
@@ -539,11 +564,12 @@ local INLINE int force_by_grape(xreal xtime,
 	    PRI(4); PRL(ijerk[i]);
 	    PRI(4); PRL(ipot[i]);
 	}
+#endif
 
     }
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
+    if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	cerr << "DEBUG: " << func << " " << 2
 	     << " (g6calc_firsthalf) "
 	     << endl << flush;
@@ -560,7 +586,7 @@ local INLINE int force_by_grape(xreal xtime,
 		      &eps2, ih2);
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
+    if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	cerr << "DEBUG: " << func << " " << 3
 	     << " (g6calc_lasthalf) "
 	     << endl << flush;
@@ -572,20 +598,25 @@ local INLINE int force_by_grape(xreal xtime,
 				  iacc, ijerk, ipot, inn);
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
+    if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	cerr << "DEBUG: " << func << " " << 4
 	     << " (back) "
 	     << endl << flush;
 	PRL(error);
+
+	if (T_DEBUG_LEVEL > 1) {
+	    cerr << endl << "  ...results:"
+		 << endl << flush;
+	}
     }
 #endif
 
-    if (DEBUG > 1) {
-	cerr << endl << "  ...results:"
-	     << endl << flush;
-    }
-
     if (!error) {
+
+#ifdef T_DEBUG
+	bool level2 = false;
+	if (in_debug_range && T_DEBUG_LEVEL > 1) level2 = true;
+#endif
 
 	for (int i = 0; i < ni; i++) {
 
@@ -600,13 +631,14 @@ local INLINE int force_by_grape(xreal xtime,
              }
              if (inn[i] >= nj) {
                  inn[i] = 0;
-                 cerr << "warning: NN forced to zero for particle "<<endl;  
+                 cerr << "warning: NN forced to zero for particle " << endl;  
                  PRI(4); PRC(i); PRC(iindex[i]);
                  PRL(nodes[i]->format_label());
                  PRL(nodes[i]->get_pos());
 	     }
 
-	     if (DEBUG > 1) {
+#ifdef T_DEBUG
+	     if (level2) {
 		 if (i > 0) cerr << endl;
 		 PRI(4); PRC(i); PRC(iindex[i]);
 		 PRL(nodes[i]->format_label());
@@ -614,6 +646,7 @@ local INLINE int force_by_grape(xreal xtime,
 		 PRI(4); PRL(ijerk[i]);
 		 PRI(4); PRC(pot_only); PRC(ipot[i]); PRL(inn[i]);
 	     }
+#endif
 
 	    if (pot_only)
 
@@ -624,17 +657,21 @@ local INLINE int force_by_grape(xreal xtime,
 		hdyn *nn = node_list[inn[i]];
 		real d_nn_sq = 0;
 
-		if (DEBUG > 1) {
+#ifdef T_DEBUG
+		if (level2) {
 		    PRI(4); PRC(inn[i]); PR(nn);
 		}
+#endif
 
 		if (nn) {
 
 		    d_nn_sq = square(ipos[i] - nn->get_pred_pos());
 
-		    if (DEBUG > 1) {
+#ifdef T_DEBUG
+		    if (level2) {
 			PRI(2); PRL(nn->format_label());
 		    }
+#endif
 
 		} else {
 
@@ -642,15 +679,19 @@ local INLINE int force_by_grape(xreal xtime,
 
 		    nn = nodes[i];
 
-		    if (DEBUG > 1)
-			cerr << endl;
+#ifdef T_DEBUG
+		    if (level2) cerr << endl;
+#endif
+
 		}
 
-		if (DEBUG > 2) {
+#ifdef T_DEBUG
+		if (level2 && T_DEBUG_LEVEL > 2) {
 		    hdyn *true_nn = find_and_print_nn(nodes[i]);
 		    if (true_nn != nn)
 			cerr << "    *** error: nn != true_nn" << endl;
 		}
+#endif
 		
 		nodes[i]->set_acc_and_jerk_and_pot(iacc[i], ijerk[i], ipot[i]);
 		nodes[i]->set_nn(nn);
@@ -659,14 +700,15 @@ local INLINE int force_by_grape(xreal xtime,
 
 #if 0000
 		if (nodes[i]->name_is("(5394,21337)")
-		     || nodes[i]->name_is("(21337,5394)")) {
+		    || nodes[i]->name_is("(21337,5394)")) {
 		    cerr << func << ": ";
 		    PRC(nodes[i]); PRC(inn[i]); PRC(nn); PRL(d_nn_sq);
 		}
 #endif
 
 
-		if (DEBUG > 2) {
+#ifdef T_DEBUG
+		if (level2 && T_DEBUG_LEVEL > 2) {
 
 		    // Cross-check:
 
@@ -684,6 +726,8 @@ local INLINE int force_by_grape(xreal xtime,
 			cerr << "    *** error: grape_index " << inn[i]
 			     << " not found" << endl;
 		}
+#endif
+
 	    }
 	}
     }
@@ -708,13 +752,8 @@ local INLINE int force_by_grape(xreal xtime,
 	}
     }
 
-    if (DEBUG > 1) {
-	cerr << "  ...leaving " << func << "(" << level <<"):  ";
-	PRL(error);
-    }
-
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
+    if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	cerr << "DEBUG: " << func << " " << 5 << endl << flush;
 	PRL(error);
     }
@@ -773,10 +812,12 @@ void check_release_grape(kira_options *ko, xreal time, bool verbose)
 {
 #ifdef SHARE_GRAPE
 
-    if (DEBUG) {
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(((real)time))) {
 	cerr << "GRAPE CPU check:  ";
 	PRL(cpu_time());
     }
+#endif
 
     if (cpu_time() - ko->grape_last_cpu > ko->grape_max_cpu) {
 
@@ -957,10 +998,15 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 // Called by:	grape_calculate_energies()			// global
 
 {
-    if (DEBUG) {
-	cerr << "  send_all_e_nodes_to_grape"
-	     << endl << flush;
+    static char *func = "send_all_xxx_to_grape";
+
+#ifdef T_DEBUG
+    real sys_t = b->get_real_system_time();
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
+	cerr << "  " << func << endl << flush;
     }
+#endif
 
     int nj = 0;
     e_unpert = 0;
@@ -1040,10 +1086,12 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 	}
     }
 
-    if (DEBUG) {
-	cerr << "  ...leaving send_all_e_nodes_to_grape:  ";
+#ifdef T_DEBUG
+    if (in_debug_range) {
+	cerr << "  ...leaving " << func << ":  ";
 	PRL(nj);
     }
+#endif
 
     return nj;
 }
@@ -1060,10 +1108,17 @@ local bool force_by_grape_on_all_e_nodes(hdyn **e_nodes,    // node list
 // Called by:	grape_calculate_energies()			// global
 
 {
-    if (DEBUG) {
-	cerr << "  force_by_grape_on_all_e_nodes:  ";
+    static char *func = "force_by_grape_on_all_e_nodes";
+    if (nj <= 0) return false;
+
+#ifdef T_DEBUG
+    real sys_t = e_nodes[0]->get_real_system_time();
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
+	cerr << "  " << func << ": ";
 	PRL(nj);
     }
+#endif
 
     bool status = false;
 
@@ -1087,10 +1142,12 @@ local bool force_by_grape_on_all_e_nodes(hdyn **e_nodes,    // node list
 	}
     }
 
-    if (DEBUG) {
-	cerr << "  ...leaving force_by_grape_on_all_e_nodes:  ";
+#ifdef T_DEBUG
+    if (in_debug_range) {
+	cerr << "  ...leaving " << func << ":  ";
 	PRL(status);
     }
+#endif
 
     return status;
 }
@@ -1108,10 +1165,16 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 // Called by:	grape_calculate_energies()			// global
 
 {
-    if (DEBUG) {
-	cerr << "  force_by_grape_on_all_leaves:  ";
+    static char *func = "force_by_grape_on_all_leaves";
+
+#ifdef T_DEBUG
+    real sys_t = b->get_real_system_time();
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
+	cerr << "  " << func << ": ";
 	PRL(nj);
     }
+#endif
 
     int n_pipes = g6_npipes_();
     hdyn **ilist = new hdynptr[n_pipes];
@@ -1148,10 +1211,12 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 				 ilist, ip, nj, n_pipes,
 				 true);
 
-    if (DEBUG) {
-	cerr << "  ...leaving force_by_grape_on_all_leaves:  ";
+#ifdef T_DEBUG
+    if (in_debug_range) {
+	cerr << "  ...leaving " << func << ":  ";
 	PRL(status);
     }
+#endif
 
     delete [] ilist;
     return status;
@@ -1193,10 +1258,16 @@ void grape_calculate_energies(hdyn *b,			// root node
     // nodes.  If cm = false, then still use the CM approximation for
     // sufficiently close binaries to avoid roundoff errors on the GRAPE.
 
-    if (DEBUG) {
+    static char *func = "grape_calculate_energies";
+
+#ifdef T_DEBUG
+    real sys_t = b->get_real_system_time();
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
 	cerr << endl << "entering grape_calculate_energies... ";
 	PRL(cm);
     }
+#endif
 
     if (!grape_is_open)
 	reattach_grape(b->get_real_system_time(),
@@ -1309,11 +1380,13 @@ void grape_calculate_energies(hdyn *b,			// root node
 //    cerr << "CPU time for grape_calculate_energies() = "
 //	 << cpu_time() - cpu0 << endl;
 
-    if (DEBUG) {
-	cerr << "...leaving grape_calculate_energies...  ";
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "...leaving " << func << "...  ";
 	PRL(etot);
 	cerr << endl;
     }
+#endif
 
 #ifdef E_NODES
     delete [] e_nodes;
@@ -1338,10 +1411,15 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 // Called by:	grape_calculate_energies()			// global
 
 {
-    if (DEBUG) {
-	cerr << "  send_all_leaves_to_grape"
-	     << endl << flush;
+    static char *func = "send_all_leaves_to_grape";
+
+#ifdef T_DEBUG
+    real sys_t = b->get_real_system_time();
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
+	cerr << "  " << func << endl << flush;
     }
+#endif
 
     int nj = 0;
     e_unpert = 0;
@@ -1412,10 +1490,12 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 	}
     }
 
-    if (DEBUG) {
-	cerr << "  ...leaving send_all_leaves_to_grape:  ";
+#ifdef T_DEBUG
+    if (in_debug_range) {
+	cerr << "  ...leaving " << func << ":  ";
 	PRL(nj);
     }
+#endif
 
     return nj;
 }
@@ -1432,10 +1512,16 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 // Called by:	grape_calculate_energies()			// global
 
 {
-    if (DEBUG) {
-	cerr << "  force_by_grape_on_all_leaves:  ";
+    static char *func = "force_by_grape_on_all_leaves";
+
+#ifdef T_DEBUG
+    real sys_t = b->get_real_system_time();
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
+	cerr << "  " << func << ":  ";
 	PRL(nj);
     }
+#endif
 
     int n_pipes = g6_npipes_();
     hdyn **ilist = new hdynptr[n_pipes];
@@ -1472,10 +1558,12 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 				 ilist, ip, nj, n_pipes,
 				 true);
 
-    if (DEBUG) {
-	cerr << "  ...leaving force_by_grape_on_all_leaves:  ";
+#ifdef T_DEBUG
+    if (in_debug_range) {
+	cerr << "  ...leaving " << func << ":  ";
 	PRL(status);
     }
+#endif
 
     delete [] ilist;
     return status;
@@ -1502,11 +1590,15 @@ void grape_calculate_energies(hdyn *b,			// root node
     // nodes.  If cm = false, then still use the CM approximation for
     // sufficiently close binaries to avoid roundoff errors on the GRAPE.
 
-    if (DEBUG) {
-	cerr << endl << "grape_calculate_energies..."
-	     << endl << flush;
-	PRL(cm);
+    static char *func = "grape_calculate_energies";
+
+#ifdef T_DEBUG
+     real sys_t = b->get_real_system_time();
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
+	cerr << "  " << func << endl << flush;
     }
+#endif
 
     if (!grape_is_open)
 	reattach_grape(b->get_real_system_time(),
@@ -1518,9 +1610,10 @@ void grape_calculate_energies(hdyn *b,			// root node
     int nj =  send_all_leaves_to_grape(b, e_unpert, cm);
 
 
-
+#if 1
+    cerr << "  " << func << endl << flush;
     PRC(nj); PRL(e_unpert); 
-
+#endif
 
 
     if (force_by_grape_on_all_leaves(b, nj, cm)) {
@@ -1579,11 +1672,13 @@ void grape_calculate_energies(hdyn *b,			// root node
 //    cerr << "CPU time for grape_calculate_energies() = "
 //	 << cpu_time() - cpu0 << endl;
 
-    if (DEBUG) {
-	cerr << "...leaving grape_calculate_energies...  ";
+#ifdef T_DEBUG
+    if (in_debug_range) {
+	cerr << "...leaving " << func << "...  ";
 	PRL(etot);
 	cerr << endl;
     }
+#endif
 }
 
 #endif
@@ -1756,8 +1851,9 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 
 #ifdef T_DEBUG
     real sys_t = xtime;
-    if (IN_DEBUG_RANGE(sys_t)) {
-	cerr << "DEBUG: " << func << " " << 1 << "  ";
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
+	cerr << endl << "DEBUG: " << func << " " << 1 << "  ";
 	PRC(ni); PRC(nj_on_grape); PRL(n_pipes);
 	PRC(need_neighbors); PRL(nodes[0]);
 #if 0
@@ -1784,7 +1880,7 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
     bool error = false;
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
+    if (in_debug_range) {
 	cerr << "DEBUG: " << func << " " << 2 << endl << flush;
     }
 #endif
@@ -1800,7 +1896,7 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 #endif
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
+    if (in_debug_range) {
 	cerr << "DEBUG: " << func << " " << 3 << endl << flush;
     }
 #endif
@@ -1850,7 +1946,7 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
     }
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
+    if (in_debug_range) {
 	cerr << "DEBUG: " << func << " " << 4 << endl << flush;
     }
 #endif
@@ -2415,9 +2511,15 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     static int nj_on_grape;		// current number of j-particles
 					// in GRAPE memory
 
-    if (DEBUG) {
-	cerr << endl << func << "..." << endl << flush;
+    if (n_next <= 0) return;
+
+#ifdef T_DEBUG
+    real sys_t = next_nodes[0]->get_real_system_time();
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
+	cerr << "  " << func << endl << flush;
     }
+#endif
 
     if (n_pipes == 0) n_pipes = g6_npipes_();
 
@@ -2497,8 +2599,7 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 //    int n_needpertlist = 0;
 
 #ifdef T_DEBUG
-    real sys_t = root->get_system_time();
-    if (IN_DEBUG_RANGE(sys_t)) {
+    if (in_debug_range) {
 	cerr << "DEBUG: " << func << " " << 1 << endl << flush;
     }
 #endif
@@ -2538,18 +2639,12 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
     }
 
-    if (DEBUG) {
-	cerr << func << ":  ";
-	PRC(xtime); PRC(n_next); PRL(n_top);
-    }
-
-
 //    PRC(n_top); PRL(n_needpertlist);
 
-
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
+    if (in_debug_range) {
 	cerr << "DEBUG: " << func << " " << 2 << endl << flush;
+	PRC(xtime); PRC(n_next); PRL(n_top);
     }
 #endif
 
@@ -2587,9 +2682,11 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 		break;
 	    }
 
-	if (DEBUG > 1) {
+#ifdef T_DEBUG
+	if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	    PRI(2); PRC(i); PRC(ni); PRL(need_neighbors);
 	}
+#endif
 
 	// Get the forces on particles i through i + ni - 1 and
 	// read the GRAPE neighbor list, if necessary.  Function
@@ -2597,7 +2694,7 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	// nn pointers.
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
+    if (in_debug_range) {
 	cerr << "DEBUG: " << func << " " << 3 << endl << flush;
     }
 #endif
@@ -2613,17 +2710,17 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	    cerr << "  HW nbr overflow, "; PRL(i);
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
-	cerr << "DEBUG: " << func << " " << 4 << endl << flush;
-    }
+	    if (in_debug_range) {
+		cerr << "DEBUG: " << func << " " << 4 << endl << flush;
+	    }
 #endif
 
 	    i += sort_nodes_and_reduce_rnb(current_nodes+i, ni);
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
-	cerr << "DEBUG: " << func << " " << 5 << endl << flush;
-    }
+	    if (in_debug_range) {
+		cerr << "DEBUG: " << func << " " << 5 << endl << flush;
+	    }
 #endif
 
 	} else if (need_neighbors) {
@@ -2631,18 +2728,18 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	    // Neighbor lists are OK.  Get colls and perturber lists.
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
-	cerr << "DEBUG: " << func << " " << 6 << endl << flush;
-    }
+	    if (in_debug_range) {
+		cerr << "DEBUG: " << func << " " << 6 << endl << flush;
+	    }
 #endif
 
 	    i += get_coll_and_perturbers(xtime, current_nodes+i, ni,
 					 h2_crit, nj_on_grape, n_pipes);
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
-	cerr << "DEBUG: " << func << " " << 7 << endl << flush;
-    }
+	    if (in_debug_range) {
+		cerr << "DEBUG: " << func << " " << 7 << endl << flush;
+	    }
 #endif
 
 	} else
@@ -2650,9 +2747,9 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	    i += ni;
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
-	cerr << "DEBUG: " << func << " " << 8 << endl << flush;
-    }
+	if (in_debug_range) {
+	    cerr << "DEBUG: " << func << " " << 8 << endl << flush;
+	}
 #endif
 
     }
@@ -2664,7 +2761,7 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 //    int n_gotpertlist = 0;
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
+    if (in_debug_range) {
 	cerr << "DEBUG: " << func << " " << 9 << endl << flush;
     }
 #endif
@@ -2717,9 +2814,12 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
 //    PRL(n_gotpertlist);
 
-    if (DEBUG) {
+#ifdef T_DEBUG
+    if (in_debug_range) {
 	cerr << "...leaving " << func << endl << endl << flush;
     }
+#endif
+
 }
 
 
@@ -2745,6 +2845,13 @@ local INLINE void set_grape_density_radius(hdyn *b, real rnn_sq)
 // Called by:	grape_calculate_densities()			// global
 
 {
+    static char *func = "set_grape_density_radius";
+
+#ifdef T_DEBUG
+    real sys_t = b->get_real_system_time();
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+#endif
+
     if (b->get_nn() != NULL && b->get_nn() != b
 	&& b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER
 	&& b->get_d_nn_sq() > 0) {
@@ -2759,38 +2866,52 @@ local INLINE void set_grape_density_radius(hdyn *b, real rnn_sq)
 
 	// Modify the initial guess for particles with a close nn.
 
-	if (DEBUG) {
+#ifdef T_DEBUG
+	if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	    cerr << "nn OK for " << b->format_label() << ",  ";
 	    PRC(rnn_sq); PRL(sqrt(b->get_d_nn_sq()));
 	    PRL(b->get_nn()->format_label());
 	}
-
-#if 0
-	if (b->get_d_nn_sq() < rnn_sq)
-	    rnn_sq = sqrt(rnn_sq * b->get_d_nn_sq());	// empirical
-	else
-	    rnn_sq = b->get_d_nn_sq();
 #endif
 
-	rnn_sq = 5*b->get_d_nn_sq();
+	// Possible for d_nn_sq to be very large in the case of an
+	// escaping particle.  Limit the search in that case.  Note
+	// that, on entry, rnn_sq is the mean interparticle spacing.
+
+	if (b->get_d_nn_sq() > 100*rnn_sq)
+	    rnn_sq = 0;
+	else
+	    rnn_sq = 5*b->get_d_nn_sq();
 
     } else {
 
 	// Node does not know its nearest neighbor.  Value of d_nn_sq
 	// is where the neighbor search stopped.
 
-	// Old:
-	//
-	// b->set_grape_rnb_sq(9 * pow(b->get_d_min_sq(), 1.0/3.0));  // (??)
+	if (b->get_d_nn_sq() > 100*rnn_sq)
+	    rnn_sq = 0;
+	else
+	    rnn_sq = 5*Starlab::max(rnn_sq, b->get_d_nn_sq());
 
-	rnn_sq = 4*Starlab::max(rnn_sq, b->get_d_nn_sq());
-
-	if (DEBUG)
+#ifdef T_DEBUG
+	if (in_debug_range && T_DEBUG_LEVEL > 0)
 	    cerr << "no nn for " << b->format_label() << ",  ";
+#endif
+
     }
 
     b->set_grape_rnb_sq(rnn_sq);
-    if (DEBUG) PRL(sqrt(b->get_grape_rnb_sq()));
+    
+    // Note that rnn_sq = 0 means that the nn is too far away.
+    // Write density = 0 (compute_density will not be called).
+
+    if (rnn_sq <= 0)
+	compute_density(b, 0, NULL, 0);
+
+#ifdef T_DEBUG
+    if (in_debug_range && T_DEBUG_LEVEL > 0)
+	PRL(sqrt(b->get_grape_rnb_sq()));
+#endif
 }
 
 
@@ -2822,6 +2943,13 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 // Called by:	grape_calculate_densities()			// global
 
 {
+    static char *func = "count_neighbors_and_adjust_h2";
+
+#ifdef T_DEBUG
+    real sys_t = b->get_real_system_time();
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+#endif
+
     // Get the list of neighbors from the GRAPE.
 
     int n_neighbors = 0;
@@ -2849,7 +2977,7 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    real rnb_fac = pow(10*N_DENS/(real)n_neighbors, 0.6666667);
 	    b->set_grape_rnb_sq(rnb_fac*b->get_grape_rnb_sq());
 
-	    cerr << "count_neighbors_and_adjust_h2: "
+	    cerr << func << ": "
 		 << "neighbor list overflow for "
 		 << b->format_label() << " (pipe "
 		 << pipe << ")" << endl;
@@ -2861,15 +2989,31 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	}
     }
 
+    if (b->get_grape_rnb_sq() <= 0) {
+
+	// rnb = 0 means density is already set (probably 0).
+	// Nothing to do here, so just exit.
+
+#ifdef T_DEBUG
+	if (in_debug_range && T_DEBUG_LEVEL > 0) {
+	    cerr << "  grape_rnb_sq = 0 for " << b->format_label() << endl;
+	}
+#endif
+
+	return true;
+    }
+
     if (n_neighbors < N_DENS) {
 
 	// Too few neighbors.  Try again.
 
-	if (DEBUG > 1) {
+#ifdef T_DEBUG
+	if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	    cerr << "  increasing grape_rnb_sq for " << b->format_label()
 		 << " (n_neighbors = " << n_neighbors << ", grape_rnb = "
 		 << sqrt(b->get_grape_rnb_sq()) << ")" << endl;
 	}
+#endif
 
 	// Old:
 	//
@@ -2902,28 +3046,34 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
 	// bb is the j-th neighbor of b.
 
-	if (DEBUG > 1) {
+#ifdef T_DEBUG
+	if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	    if (bb != b) {
 		vector diff = b->get_pred_pos() - bb->get_pred_pos();
 		real d2 = diff * diff;
 		d_max = Starlab::max(d_max, d2);
 	    }
 	}
+#endif
+
     }
 
-    if (DEBUG > 1) {
+#ifdef T_DEBUG
+    if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	real grape_rnb = sqrt(b->get_grape_rnb_sq());
 	d_max = sqrt(d_max);
 	cerr << "  " << b->format_label() << ": ";
 	PRC(n_neighbors), PRC(grape_rnb), PRL(d_max);
     }
+#endif
 
     compute_density(b, N_DENS, dynlist, n_neighbors);	// writes to dyn story
 
     // Strangely, compute_density sometimes fails to write the proper
     // info to the dyn story.  Reason and circumstances still unknown...
 
-    if (DEBUG > 1) {
+#ifdef T_DEBUG
+    if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	if (find_qmatch(b->get_dyn_story(), "density_time")
 	    && find_qmatch(b->get_dyn_story(), "density_k_level")
 	    && find_qmatch(b->get_dyn_story(), "density")) {
@@ -2943,6 +3093,7 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	                 << b->format_label() << endl;
 	}
     }
+#endif
 
     delete [] dynlist;
     return true;
@@ -2961,11 +3112,16 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
     static char *func = "get_densities";
     bool error = false;
 
-    if (DEBUG)
-	cerr << func << "..." << nodes[0]->format_label()
-	     << "  " << nodes[0]->get_grape_rnb_sq() << endl << flush;
+    if (ni <= 0) return error;			// should never happen
 
-    if (ni < 0) return error;			// should never happen
+#ifdef T_DEBUG
+    real sys_t = xtime;
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
+	cerr << "DEBUG: " << func << "..." << nodes[0]->format_label()
+	     << "  " << nodes[0]->get_grape_rnb_sq() << endl << flush;
+    }
+#endif
 
     // Get the forces and neighbor lists for the current group of particles.
 
@@ -2978,6 +3134,24 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 
         cerr << func << ": " << "error 1 getting GRAPE neighbor data: "; 
 	PRL(status);
+
+#ifdef T_DEBUG
+	if (in_debug_range) {
+	    cerr << "DEBUG: neighbor radii:" << endl << flush;
+	    for (int ip = 0; ip < ni; ip++) {
+		hdyn *bb = nodes[ip];
+		PRC(ip);
+		if (bb && bb->is_valid() && bb->get_grape_rnb_sq() >= 0)
+		    cerr << bb->format_label() << "  "
+			 << abs(bb->get_pos()) << "  "
+			 << sqrt(bb->get_d_nn_sq()) << "  "
+			 << sqrt(bb->get_grape_rnb_sq())
+			 << endl << flush;
+		else
+		    cerr << "NULL/invalid" << endl << flush;
+	    }
+	}
+#endif
 
 	error = true;
 
@@ -3004,13 +3178,15 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 			      (real)bb->get_system_time());
 			putrq(bb->get_dyn_story(), "density", 0.0);
 
-			if (DEBUG > 1) {
+#ifdef T_DEBUG
+			if (in_debug_range && T_DEBUG_LEVEL > 0) {
 			    PRI(2); PR(bb->get_grape_rnb_sq());
 			    cerr << " too large for "
 			         << bb->format_label() << endl;
 			    PRI(2); PRL(bb->get_pos());
 			    check_neighbors(bb, bb->get_grape_rnb_sq(), 2);
 			}
+#endif
 
 			break;
 
@@ -3028,9 +3204,9 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 			if (++n_retry > 20) 
 			    hw_err_exit(func, 2, nodes[0]);
 
-			if (DEBUG > 1
-			    || (DEBUG > 0 && n_retry > 4 && n_retry%5 == 0)
-			    || (n_retry > 9 && n_retry%10 == 0) ) {
+#ifdef T_DEBUG
+			if (in_debug_range && T_DEBUG_LEVEL > 0
+			    || (n_retry > 4 && n_retry%5 == 0) ) {
 			    PRI(2); cerr << func << ": recomputing forces for "
 				<< nodes[0]->format_label() << " + " << ni-1
 				<< endl;
@@ -3038,6 +3214,7 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 				 << nodes[0]->get_grape_rnb_sq()
 				 << ",  n_retry = " << n_retry << endl;
 			}
+#endif
 
 			int status = 0;
 			if (status = get_force_and_neighbors(xtime, nodes, ni,
@@ -3061,10 +3238,12 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 	}
     }
 
-    if (DEBUG) {
+#ifdef T_DEBUG
+    if (in_debug_range) {
 	cerr << "leaving " << func << "...";
 	PRL(error);
     }
+#endif
 
     return error;
 }
@@ -3085,9 +3264,13 @@ void grape_calculate_densities(hdyn* b,			// root node
 {
     static char *func = "grape_calculate_densities";
 
-    if (DEBUG) {
+#ifdef T_DEBUG
+    real sys_t = b->get_real_system_time();
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
 	cerr << endl << func << "..."; PRL(h2_crit);
     }
+#endif
 
 #ifdef NO_G6_NEIGHBOUR_LIST
     cerr << "No hardware neighbor list available..." << endl;
@@ -3129,6 +3312,8 @@ void grape_calculate_densities(hdyn* b,			// root node
 //	set_grape_density_radius(top_nodes[j], h2_crit);
 	set_grape_density_radius(top_nodes[j], rnn_sq);
 
+    // (Note that grape_rnb may return zero...)
+
     int n_pipes = g6_npipes_();
 
     int n_retry = 0;
@@ -3165,11 +3350,13 @@ void grape_calculate_densities(hdyn* b,			// root node
 	    // The neighbor list overflowed.  Reduce all current neighbor
 	    // radii and try again.
 
-	    if (DEBUG) {
+#ifdef T_DEBUG
+	    if (in_debug_range) {
 	        cerr << "reducing neighbor radii: i = " << i
 		     << ", first rnb_sq = " << top_nodes[i]->get_grape_rnb_sq()
 		     << endl;
 	    }
+#endif
 
 	    // Reduction factor is 0.9 for now...
 
@@ -3207,8 +3394,10 @@ void grape_calculate_densities(hdyn* b,			// root node
 	PRL(n_retry);
     }
 
-    if (DEBUG)
+#ifdef T_DEBUG
+    if (in_debug_range)
         cerr << "...leaving " << func << endl << endl << flush;
+#endif
 
     // Force cleanup later.
 
