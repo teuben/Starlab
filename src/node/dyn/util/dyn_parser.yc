@@ -143,6 +143,8 @@ real_vec:	{ $$ = v_ptr; } | real_vec NUMBER { $1->push_back($2); };
 
 dyn* fget_dyn(FILE* fp) {
 
+#ifdef STARLAB_USE_FDYN
+
   extern FILE* yyin;
   v_ptr = new vector<double>;
   yyin = fp;
@@ -151,5 +153,7 @@ dyn* fget_dyn(FILE* fp) {
   if (!p.empty()) root = p.top(), p.pop();
   delete v_ptr;
   return root;
+
+#endif
 
 }

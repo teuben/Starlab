@@ -23,7 +23,16 @@ YFLAGS		=
 
 EXTRA_CLEAN	= dyn_lexer.C dyn_parser.C dyn_parser.H
 
-CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC)
+CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) -DSTARLAB_USE_FDYN
+
+#-----------------------------------------------------------------------
+
+# To omit the fget_dyn code (e.g. lex/bison/make not working properly),
+# remove -DSTARLAB_USE_FDYN from CFLAGS and comment out the following line.
+
+FDYN_OBJECTS = dyn_lexer.o dyn_parser.o
+
+#-----------------------------------------------------------------------
 
 #LIBFLAGS	= -L$(LIB) -ldyn -lnode -lstd -lm
 
@@ -55,8 +64,7 @@ OBJECT_FILES =	compute_com.o compute_density.o compute_max_cod.o \
 		refine_mass.o refine_mass2.o \
 		add_plummer.o add_power_law.o \
 		radial_density.o radial_vdisp.o radial_profile.o \
-		wrappers.o \
-		dyn_lexer.o dyn_parser.o
+		wrappers.o $(FDYN_OBJECTS)
 
 LIBRARY = libdyn.a
 
@@ -67,10 +75,12 @@ include $(STARLAB_PATH)/inc/Makefile.worker.inc
 #..............................................................................
 
 dyn_lexer.C:	dyn_lexer.l dyn_parser.C
-	$(LEX) $(LFLAGS) -o$@ $<
+	$(LEX) $(LFLAGS) -o$@ dyn_lexer.l
+#	$(LEX) $(LFLAGS) -o$@ $<		# better (needs gmake)
 
 dyn_parser.C:	dyn_parser.yc
-	$(YACC) $(YFLAGS) -do $@ $<
+	$(YACC) $(YFLAGS) -do $@ dyn_parser.yc
+#	$(YACC) $(YFLAGS) -do $@ $<		# better (needs gmake)
 
 #..............................................................................
 #..............................................................................
