@@ -1,0 +1,34 @@
+# csh -f
+
+#!/bin/csh -f
+
+# Copy specified file(s) from one version of Starlab to the corresponding
+# location(s) in another version of Starlab.
+
+if ($#argv < 3) then
+    echo At least three arguments required.
+    echo Usage:  vcp  from_version  to_version  file(s)-to-copy
+    exit
+endif
+
+set starlab_base = $STARLAB_PATH:h
+
+foreach file ($argv[3*])
+
+    set tmp = (`find $starlab_base/$1 -name $file -print`)
+    if ($#tmp < 1) then
+        echo Can\'t find $file in Starlab version $1
+        exit
+    endif
+    set from_file = $tmp[1]
+
+    set to_dir = `echo $from_file:h | sed s%$1%$2%`
+    if (! -d $to_dir) then
+        echo Can\'t find directory $to_dir
+        exit
+    endif
+
+    echo "(Not) Copying  $from_file"
+    echo "           to  $to_dir"
+
+end

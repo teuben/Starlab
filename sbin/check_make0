@@ -1,0 +1,28 @@
+#!/bin/csh -f
+
+# Note: this is really specific to tar0...
+
+if ($#argv < 1) exit
+
+set CEXT = gz
+
+# Avoid use of ls since some insert color characters by default...
+# Assume standard naming scheme.
+
+#set last_tar = \
+#    (X `/bin/ls -rt -1 | grep s_tar_lab_{$STARLAB_VERSION}_0.$CEXT | tail -1`)
+
+set last_tar = \
+    (X ` echo * | tr " " "\n" | grep s_tar_lab_{$STARLAB_VERSION}_0.$CEXT | tail -1`)
+
+if ($#last_tar <= 1) then
+    make do_tar0 | grep -v 'make\[.\]'
+else
+    (cd $STARLAB_PATH/sbin ; make check_dep)
+    set dep = `check_dep $last_tar[2] $*`
+    if ($dep) then
+	make do_tar0 | grep -v 'make\[.\]'
+    else
+	echo The latest tar0 file \($last_tar[2]\) is still up to date.
+    endif
+endif

@@ -1,0 +1,27 @@
+#!/bin/csh -f
+#
+if ($?DISPLAY == 0) then
+    echo DISPLAY variable not set
+    exit
+endif
+#
+# Get the host name from the DISPLAY variable.
+#
+set temp = (`echo $DISPLAY | tr ':' ' '`)
+set host_name = $temp[1]
+#
+# Program testx may hang if the display host is inaccessible, so see if
+# it responds to a ping before continuing.  The "8 1" is a kludge.  On
+# Suns, it translates to a timeout of 8 seconds (the 1 is ignored); on
+# HPUX, the 8 is a packetsize (the minimum) and the 1 is the timeout!
+#
+set temp = (`ping $host_name 8 1 |& egrep 'no answer|unknown'`)
+if ($#temp > 0) then
+    echo Host $host_name is unreachable
+    exit
+endif
+#
+# OK, so the display host appears to be accessible.
+# Now see if we can open an X-window.
+#
+testx

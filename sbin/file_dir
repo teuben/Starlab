@@ -1,0 +1,25 @@
+#!/bin/csh -f
+
+if ($#argv < 1) exit
+
+# May need to remove these lines if checking the database is
+# unacceptable slow -- make the database by hand in that case.
+
+set db = starlab_db
+
+set tmp = (`find $STARLAB_PATH/sbin -name $db -mtime -1 -print`)
+set tmp1 = (`grep $STARLAB_PATH $STARLAB_PATH/sbin/$db`)
+if ($#tmp < 1 || $#tmp1 < 1) then
+
+#   Rebuild the Starlab source file database.
+
+    $STARLAB_PATH/sbin/make_db
+endif
+
+set tmp = (`grep $1 $STARLAB_PATH/sbin/$db`)
+
+if ($#tmp < 1) then
+    echo " "
+else
+    echo $tmp[1]:h
+endif

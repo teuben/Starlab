@@ -1,0 +1,17 @@
+#!/bin/csh -f
+#
+# kn name1 name2 ...
+#
+# Kill jobs by name--works on BSD, Linux.
+#
+if ($#argv < 1) exit
+#
+foreach arg ($argv[*])
+    loop:
+    set temp = `ps xww | grep $arg | grep -v kn | grep -v grep`
+    if ($#temp > 0) then
+	kill $temp[1]
+	sleep 1
+	goto loop
+    endif
+end

@@ -1,0 +1,54 @@
+#!/bin/csh -f
+#
+# Semi-sensible version of "tail" to handle multiple files and switches
+# interspersed with filenames.  (Switches begin with "-".)
+#
+# First find the real tail (the one not in sbin):
+#
+set tail = " "
+foreach dir ($path)
+    if (X$tail == X && $dir:t != "sbin" && $dir:t != ".") then
+	if (-e $dir/tail) set tail = $dir/tail
+    endif
+end
+#
+if (X$tail == X) exit Real tail not found
+alias TAIL $tail
+#
+set temp = (`which strindex`)
+if ($#temp > 1) then
+#
+#   Revert to the default tail if the program "strindex" cannot be found.
+#
+    TAIL $argv
+else
+#
+#   Separate switches from filenames.
+#
+    set args = ""
+    set files = ()
+    foreach arg ($argv[*])
+	set i = `strindex "$arg" -`
+	if ($i == 0) then
+	    set args = "$args $arg"
+	else
+	    set files = ($files $arg)
+	endif
+    end
+#
+    if ($#files > 0) then
+	foreach file ($files)
+	    if (-e $file) then
+        	if ($#files > 1) then
+		    echo ' '
+		    echo '==>' $file '<=='
+		endif
+		TAIL $args $file
+	    else
+		echo {$file}: no such file or directory
+	    endif
+	end
+    else
+	TAIL $args
+    endif
+endif

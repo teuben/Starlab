@@ -1,0 +1,136 @@
+#!/bin/csh -f
+
+# Compare two versions of Starlab.
+
+if ($#argv != 2) then
+    echo Usage: starlab_compare version1 version2
+    exit
+endif
+
+set outd = $cwd
+set retry = 0
+
+retry:
+set try_home = 0
+
+if (! -d $1) then
+    echo "Can't find directory $1 in $cwd"
+    @ try_home++
+endif
+
+if (! -d $2) then
+    echo "Can't find directory $2 in $cwd"
+    @ try_home++
+endif
+
+if ($try_home > 0) then
+    if ($retry == 1) then
+	set dir = `find . -name $1 -print`
+	if (X$dir == X) then
+	    set retry = 2
+	else
+	    cd $cwd/$dir/..
+	    set retry = 2
+	    if ($cwd != $HOME) then
+		echo Trying directory $cwd/$dir/..
+		goto retry
+	    endif
+	endif
+    endif
+    if ($retry == 2) then
+	echo Giving up...
+	exit
+    endif
+    echo Trying home directory...
+    cd
+    set retry = 1
+    goto retry
+endif
+
+#-----------------------------------------------------------------------
+
+set temp_diff_file  =  $outd/starlab_temp_diff_file
+set solo_diff_file  =  $outd/starlab_solo_files
+set diff_file       =  $outd/starlab_diff_files
+set list_diffs      =  $outd/starlab_diffs
+
+# Note GNU diff has a "brief" option (-q) which simply lists the
+# names of files that differ.  Other diffs don't have this, so we
+# must do the same work twice to get the information in the form
+# we want.
+#
+#diff -bwirq $1 $2 \
+
+diff -bwir $1 $2 \
+	| grep -v "/bin/" \
+	| grep -v "/lib/" 				>! $temp_diff_file
+
+foreach v ($1 $2)
+    grep "Only in $v" $temp_diff_file \
+	    | grep -v '~$' \
+	    | grep -v '\.save$' \
+	    | egrep '\.[cCfFh]$|Makefile$|/sbin:'	>! only_in_$v
+end
+
+# GNU version:
+#
+#grep -v "Only" $temp_diff_file \
+#	| awk '/Files/ {print $2, "    ", $4;}'	>! $diff_file
+
+grep '^diff' $temp_diff_file \
+	| awk '{print $3, "    ", $4;}'			>! $diff_file
+
+set temp = (`cat $diff_file`)
+set n = $#temp
+@ n /= 2
+
+if ($n == 0) then
+    echo Versions are identical
+    goto end
+endif
+
+echo $n file pairs saved in $diff_file
+
+# Produce a more detailed listing of the differences.
+
+echo ""							>! $list_diffs
+
+set i = 0
+while ($i < $#temp)
+    @ i++
+    set file1 = $temp[$i]
+    set date1 = `ls -lg $file1 | awk '{print $6, $7, $8;}'`
+    @ i++
+    set file2 = $temp[$i]
+    set date2 = `ls -lg $file2 | awk '{print $6, $7, $8;}'`
+
+    set tmp1 = (`file $file1 | grep text`)
+    set tmp2 = (`file $file2 | grep text`)
+
+    if ($#tmp1 > 0 && $#tmp2 > 0) then
+
+#       Only compare text files.
+
+	echo ""						>> $list_diffs
+	echo ""						>> $list_diffs
+	echo "*****  diff -bwi  (<) $file1"		>> $list_diffs
+	echo "*****                 [$date1]"		>> $list_diffs
+	echo "*****             (>) $file2"		>> $list_diffs
+	echo "*****                 [$date2]"		>> $list_diffs
+	echo ""						>> $list_diffs
+	echo ""						>> $list_diffs
+
+	diff -bwi $file1 $file2				>> $list_diffs
+
+	echo ""						>> $list_diffs
+	echo ""						>> $list_diffs
+	echo "============================================================" \
+							>> $list_diffs
+    endif
+end
+
+end:
+\rm $temp_diff_file
+
+echo Differences saved in $list_diffs
+echo See also files only_in_$1 and only_in_$2

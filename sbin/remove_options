@@ -1,0 +1,46 @@
+#!/bin/csh -f
+#
+# Add/remove options from Starlab compile/tar operations.
+#
+# *** Note: This actually EDITS the file "local/cshrc.starlab" ***
+#
+if ($#argv < 1) exit
+#
+set args = ($argv[*])
+if ($argv[1] == ALL) then
+    set args = (STAR HYDRO KEPLER MCD GFX XUTIL DYN HDYN SDYN SDYN3)
+endif
+#
+set full_name = $0
+set name = $full_name:t
+if ($name == "add_options") then
+    set action = 1
+else
+    set action = -1
+endif
+#
+set tmp1 = $STARLAB_PATH/local/.$$.starlab_temp.1
+set tmp2 = $STARLAB_PATH/local/.$$.starlab_temp.2
+#
+onintr cleanup
+#
+/bin/mv $STARLAB_PATH/local/cshrc.starlab $STARLAB_PATH/local/cshrc.starlab.old
+/bin/cp $STARLAB_PATH/local/cshrc.starlab.old $tmp1
+#
+foreach arg ($args)
+    awk	-f $STARLAB_PATH/sbin/change_option.awk		\
+	option="STARLAB_"$arg				\
+	action=$action					\
+ 	$tmp1 >! $tmp2
+    /bin/mv $tmp2 $tmp1
+end
+#
+cleanup:
+#
+if (-e $tmp1) then
+    mv $tmp1 $STARLAB_PATH/local/cshrc.starlab
+endif
+#
+if (-e $tmp2) then
+    /bin/rm $tmp2
+endif

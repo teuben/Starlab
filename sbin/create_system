@@ -1,0 +1,15 @@
+#!/bin/csh -f
+
+if ($#argv < 1) then
+    set N = 20
+else
+    set N = $1
+endif
+
+	mknode		-n $N -i					|\
+	mkmass		-l 1 -u 1 -m 1					|\
+	mksecondary	-f 1 -l 1					|\
+	addplummer							|\
+	scale		-E -0.25 -q 0.5 -m 1				|\
+	mkbinary	-l 2 -u 10
+

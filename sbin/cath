@@ -1,0 +1,22 @@
+#!/bin/csh -f
+#
+# cat files with ~one-line headers:
+#
+if ($#argv < 1) exit 0
+@ count = 0
+foreach file ($argv[*])
+    if ($count > 0) echo 
+    @ count++
+    set label = '*  File:  "'$file'"  *'
+    set temp = `echo -n "$label" | wc`
+    set length = $temp[3]
+    set bar = ""
+    @ i = 1
+    while ($i <= $length)
+	@ i++
+	set bar = "$bar"'*'
+    end
+    echo "$bar" ; echo "$label" ; echo "$bar"
+    echo " "
+    cat $file
+end

@@ -1,0 +1,22 @@
+#!/bin/csh -f
+#
+# BUNDLE:   Concatenate several files in a conveniently separable form.
+#
+# Syntax:   bundle  file-list
+#
+
+if ($#argv < 1) exit
+
+echo '#'
+echo '# To unbundle, sh this file'
+echo '#'
+
+foreach file ($argv[*])
+    if (-e $file ) then
+	echo "echo Unbundling file $file ... 1>&2"
+	echo "cat >$file <<'End of $file'"
+	cat $file
+	echo "End of $file"
+#
+    endif
+end

@@ -1,0 +1,18 @@
+#!/bin/csh -f
+
+# Note: this is really specific to autosave0...
+
+if ($#argv < 1) exit
+
+set last_tar = (X `ls -rt -1 | grep autosave$STARLAB_VERSION.tar0.Z | tail -1`)
+
+if ($#last_tar <= 1) then
+    make do_autosave0 | grep -v 'make\[.\]'
+else
+    set dep = `check_dep $last_tar[2] $*`
+    if ($dep) then
+	make do_autosave0 | grep -v 'make\[.\]'
+    else
+	echo The latest autosave0 file \($last_tar[2]\) is still up to date.
+    endif
+endif
