@@ -291,7 +291,9 @@ local void delete_double(hdyn *b,		    // b is binary CM
 			 int full_dump = 0)
 {
     if (b->get_oldest_daughter()->get_kepler() == NULL) {
-	cerr << "Deleting double without a kepler pointer"<<endl;
+	cerr << "delete_double: deleting double for "
+	     << b->format_label() << " without a kepler pointer"
+	     << endl;
 	delete_double(b);
 	return;
     }
@@ -505,7 +507,7 @@ bool create_or_delete_binary(hdyn *bi,		      // pointer to parent node
   
     if (has_dstar(bi->get_oldest_daughter())) {
 	if (REPORT_DEL_DOUBLE )
-	    cerr << "Delete existing binary from "
+	    cerr << "create_or_delete_binary: delete existing binary from "
 		 << bi->format_label()<<endl;
 
 	// Setting this flag false means that the binary will not
@@ -524,7 +526,7 @@ bool create_or_delete_binary(hdyn *bi,		      // pointer to parent node
     }
     else {
 	if (REPORT_ADD_DOUBLE)
-	    cerr << "Create new binary to "
+	    cerr << "create_or_delete_binary: create new binary to "
 		 << bi->format_label()<<endl;
 
 	adddouble(bi, bi->get_oldest_daughter()->get_time());
