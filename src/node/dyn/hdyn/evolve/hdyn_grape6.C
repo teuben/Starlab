@@ -441,6 +441,9 @@ local INLINE int force_by_grape(xreal xtime,
 	eps2   = nodes[0]->get_eps2();
     }
 
+    real mass = 0;			// for use below if we need to
+    real mass32 = 0;			// estimate quantities for scaling
+
     // Send the current time to the GRAPE.
 
     real time = 0;
@@ -501,14 +504,21 @@ local INLINE int force_by_grape(xreal xtime,
 
 	if (nni->is_top_level_node()) {
 
-	    if (abs(ipot[i]) <= vsn
-		|| abs(abs(ijerk[i][0])) <= vsn) {
+	    if (abs1(ipot[i]) <= vsn
+		|| abs(abs1(ijerk[i][0])) <= vsn) {
 
 		// Assume that pot, acc, jerk are not set properly.
 		// For now, assume that the average numbers appropriate
-		// to the mean field of a standard cluster are OK.
+		// to the mean field of the cluster are OK.
 
-		ipot[i] = -1;
+		if (mass <= 0) {
+		    if (nodes[0])
+			mass = nodes[0]->get_root()->get_mass();
+		    if (mass <= 0) mass = 1;	// shouldn't happen...
+		    mass32 = mass*sqrt(mass);
+		}
+
+		ipot[i] = -mass;
 
 		if (abs(iacc[i]) <= vsn ||
 		    abs(ijerk[i]) <= vsn) {
@@ -520,11 +530,8 @@ local INLINE int force_by_grape(xreal xtime,
 		    // messages from the GRAPE.  Large values should cause
 		    // underflow and no messages.
 
-		    iacc[i]   = vec(1);
-		    ijerk[i]  = vec(100);
-
-		    // Hmmm.  Increasing these numbers seems to increase
-		    // the number of error messages...
+		    iacc[i]   = vec(mass);
+		    ijerk[i]  = vec(10*mass32);
 		}
 	    }
 
@@ -579,9 +586,21 @@ local INLINE int force_by_grape(xreal xtime,
 #endif
 
     // Clear neighbor radii for unused pipes (added by SPZ, May 8 2001).
+    // Should we also fill the pipeline with copies of the last element,
+    // just in case (Steve, 7/04)?
 
-    for (int i = ni; i < n_pipes; i++)
+    for (int i = ni; i < n_pipes; i++) {
         ih2[i] = 0;
+
+	// Should we also fill the pipeline with copies of the last
+	// element, just in case (Steve, 7/04)?
+
+	// ipos[i] = ipos[ni-1];
+	// ivel[i] = ivel[ni-1];
+	// iacc[i] = iacc[ni-1];
+	// ijerk[i] = ijerk[ni-1];
+	// ipot[i] = ipot[ni-1];
+    }
 
     g6calc_firsthalf_(&cluster_id, &nj, &ni, iindex,
 		      ipos, ivel, iacc, ijerk, ipot,
@@ -1298,8 +1317,8 @@ void grape6_calculate_energies(hdyn *b,			// root node
     int nj =  send_all_e_nodes_to_grape(b, cm, d_crit,
 					e_nodes, e_unpert, n_leaves);
 
-//    PRC(nj); PRC(n_leaves);
-//    cerr << "entering force_by_grape_on_all_e_nodes" << endl << flush;
+//  PRC(nj); PRC(n_leaves);
+//  cerr << "entering force_by_grape_on_all_e_nodes" << endl << flush;
 
     if (force_by_grape_on_all_e_nodes(e_nodes, nj)) {
 
@@ -1307,7 +1326,7 @@ void grape6_calculate_energies(hdyn *b,			// root node
 
     int nj =  send_all_leaves_to_grape(b, cm, d_crit, e_unpert);
 
-//    PRC(nj); cerr << "entering force_by_grape_on_all_leaves"
+//  PRC(nj); cerr << "entering force_by_grape_on_all_leaves"
 //		  << endl << flush;
 
     if (force_by_grape_on_all_leaves(b, nj, cm)) {
@@ -1321,30 +1340,30 @@ void grape6_calculate_energies(hdyn *b,			// root node
 	hw_err_exit(func, 1, b);
     }
 
-//    cerr << "...back.  Computing energies." << endl << flush;
+//  cerr << "...back.  Computing energies." << endl << flush;
 
     epot = ekin = 0;
 
 #ifdef E_NODES
 
-	for (int i = 0; i < nj; i++) {
-	    hdyn *bb = e_nodes[i];
-	    real mi = bb->get_mass();
-	    epot += 0.5*mi*bb->get_pot();
-	    vec vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
-	    ekin += 0.5*mi*vel*vel;
+    for (int i = 0; i < nj; i++) {
+	hdyn *bb = e_nodes[i];
+	real mi = bb->get_mass();
+	epot += 0.5*mi*bb->get_pot();
+	vec vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
+	ekin += 0.5*mi*vel*vel;
 
 #if 0
-	    if (bb->is_low_level_node() && bb->get_kepler()) {
-		PRC(bb->format_label());
-		PRC(bb->get_pot());
-		real pe = -bb->get_binary_syster()->get_mass()
-		    / bb->get_kepler()->get_separation();
-		PRL(pe);
-	    }
+	if (bb->is_low_level_node() && bb->get_kepler()) {
+	    PRC(bb->format_label());
+	    PRC(bb->get_pot());
+	    real pe = -bb->get_binary_syster()->get_mass()
+		/ bb->get_kepler()->get_separation();
+	    PRL(pe);
+	}
 #endif
 
-	}
+    }
 #else
 
     if (!cm) {
@@ -1361,7 +1380,7 @@ void grape6_calculate_energies(hdyn *b,			// root node
 	    }
 	    if (reset_bb) {
 		bb = bb->get_oldest_daughter()->get_younger_sister()
-					      ->next_node(b);
+		    ->next_node(b);
 		if (!bb) break;
 	    }
 
@@ -1386,7 +1405,7 @@ void grape6_calculate_energies(hdyn *b,			// root node
     grape_was_used_to_calculate_potential = true;	// trigger a reset
 							// next time around
 
-//    cerr << "CPU time for grape6_calculate_energies() = "
+//  cerr << "CPU time for grape6_calculate_energies() = "
 //	 << cpu_time() - cpu0 << endl;
 
 #ifdef T_DEBUG
@@ -1906,7 +1925,11 @@ local INLINE int get_force_and_neighbors(xreal xtime,
 
 	int status = 0;
 #ifndef NO_G6_NEIGHBOUR_LIST
+#ifdef G6_OLD_READ_NEIGHBOUR_LIST
+	status = g6_read_neighbour_list_old_(&cluster_id);
+#else
 	status = g6_read_neighbour_list_(&cluster_id);
+#endif
 #endif
 
 #ifdef T_DEBUG
