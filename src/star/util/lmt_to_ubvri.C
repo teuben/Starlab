@@ -539,6 +539,7 @@ void ltm_to_ubvri(const real logl,
       U = B + uminb;
       R = V - vminr;
       I = R - rmini;
+
 }
 
   
@@ -622,7 +623,7 @@ void get_ubvri_star(dyn *bi, stellar_type& stype,
        stype = extract_stellar_type_string(
 	       getsq(bi->get_star_story(), "Type")); 
        T_rel = getrq(bi->get_star_story(), "T_rel");
-       mass = getrq(bi->get_star_story(), "M_env");
+       mass = getrq(bi->get_star_story(), "M_env")
             + getrq(bi->get_star_story(), "M_core");
        T_eff = getrq(bi->get_star_story(), "T_eff");
        star_class = get_spectral_class(T_eff);

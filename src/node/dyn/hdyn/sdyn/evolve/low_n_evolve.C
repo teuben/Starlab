@@ -56,7 +56,8 @@ void step(sdyn * b,        // sdyn array
 	  tfp the_tfp,     // timestep function pointer
 	  int n_iter,      // number of iterations
           int x_flag,      // exact-time termination flag
-	  int s_flag)      // symmetric timestep ?
+	  int s_flag,      // symmetric timestep ?
+	  real &min_min_ssd)
 {
     int collision_flag = 0;
 
@@ -67,7 +68,8 @@ void step(sdyn * b,        // sdyn array
 
 	real prev_new_dt = new_dt;
         b->calculate_new_acc_and_jerk_from_new(b, eps*eps, n_iter - i,  // hack
-					       collision_flag);
+					       collision_flag,
+					       min_min_ssd);
 	if (i < n_iter && s_flag) {
 
 	    real end_point_dt = the_tfp(b, eta);
@@ -99,8 +101,10 @@ void initialize(sdyn * b,        // sdyn array
 {
     predict_step(b, 0);
 
+    real min_min_ssd;
     int collision_flag;
-    b->calculate_new_acc_and_jerk_from_new(b, eps*eps, 1, collision_flag);
+    b->calculate_new_acc_and_jerk_from_new(b, eps*eps, 1, collision_flag,
+					   min_min_ssd);
 
     for_all_daughters(sdyn, b, bb) bb->store_new_into_old();
 }
@@ -302,6 +306,7 @@ bool low_n_evolve(sdyn * b,       // sdyn array
 		  int s_flag,     // symmetric timestep ?
 		  int n_iter,     // number of iterations
 		  real n_max,     // if > 0: max. number of integration steps
+		  real& min_min_ssd,
 		  real cpu_time_check,
 		  real dt_print,  // external print interval
 		  sdyn_print_fp   // pointer to external print function
@@ -311,7 +316,8 @@ bool low_n_evolve(sdyn * b,       // sdyn array
     bool terminate = false;
 
     real t = b->get_time();
-    real tr = t + (real)b->get_time_offset();  // total real time in N-body units
+    real tr = t + (real)b->get_time_offset();  //b->.. is xreal!
+                                            // total real time in N-body units
 
     real t_end = t + delta_t;      // final time, at the end of the integration
     real t_out = t + dt_out;       // time of next diagnostic output
@@ -361,7 +367,8 @@ bool low_n_evolve(sdyn * b,       // sdyn array
 
         step(b, t, eps, eta, dt, max_dt, end_flag, coll_flag, 
 	     the_tfp, n_iter,
-	     x_flag, s_flag);
+	     x_flag, s_flag, 
+	     min_min_ssd);
 	b->set_time(t);                  // should be prettified some time soon
 	for_all_daughters(sdyn, b, bi)
 	    bi->set_time(t);
@@ -412,7 +419,7 @@ bool low_n_evolve(sdyn * b,       // sdyn array
 	    put_node(cout, *c);
 	    delete_node(c);
 */
-	    put_node(cout, *b);
+	  //	    put_node(cout, *b);
 
 	    cout << flush; 
 	    t_snap += dt_snap;
@@ -570,9 +577,11 @@ main(int argc, char **argv)
     b->log_history(argc, argv);
 
     cpu_init();
+    real min_min_ssd = VERY_LARGE_NUMBER;
     low_n_evolve(b, delta_t, dt_out, dt_snap, snap_cube_size,
 		 eps, eta, x_flag,
 		 timestep_name, s_flag, n_iter, n_max,
+		 min_min_ssd,
 		 cpu_time_check);
 
 }

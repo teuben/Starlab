@@ -1,5 +1,5 @@
 
-//#include "sdyn.h"
+#include "stdio.h"
 #include "scatter.h"
 
 // set_merger_mass_and_radius: determine mass and radius of merger product

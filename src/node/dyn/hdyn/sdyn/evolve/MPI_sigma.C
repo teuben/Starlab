@@ -8,7 +8,7 @@
 
 #ifndef TOOLBOX
 
-#ifdef USE_MPI
+#ifdef HAS_MPI
 
 void initialize_MPI(int &myid, int &nproc) {
 
@@ -146,7 +146,7 @@ local void slave_part_of_experiment(sigma_input input,
 
 }
 
-#ifdef USE_MPI
+#ifdef HAS_MPI
 void slave_process(int master, 
 		   sigma_input &input, MPI_Datatype inputtype,
 		   scatter_exp &experiment, MPI_Datatype scatter_exp_type) {
@@ -215,7 +215,7 @@ void slave_process(int master,
 }
 #endif
 
-#ifdef USE_MPI
+#ifdef HAS_MPI
 void terminate_all_processors() {
 
   cerr << "Start terminating all processes"<<endl;
@@ -247,7 +247,7 @@ void terminate_all_processors() {
 }
 #endif
 
-#ifdef USE_MPI
+#ifdef HAS_MPI
 int master_process(sigma_out & out,
 		   sigma_input &input, MPI_Datatype inputtype,
 		   scatter_exp &experiment, MPI_Datatype scatter_exp_type) {
@@ -392,5 +392,83 @@ int master_process(sigma_out & out,
   return experiment.get_nhits(out.n_zone);
 }
 #endif
+
+#else
+
+main(int argc, char **argv) {
+
+  sigma_input input;
+
+  // identical binary collision
+  //char* default_init  
+  //      = "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
+
+    char* default_init  
+      = "-M 0.66667 -rm 3 -S 30 -v 0 -t -r1 0 -r2 0 -e 0 -q 0.5 -p -a 1 -q 1 -r1 0 -r2 0";        // Iota Ori Probleem 
+
+
+  // I-orionis problem with zero radii stars
+  //char* default_init  
+  // = "-M 0.5 -v 0 -r 1 -t -r1 0 -r2 0 -q 0.5 -p -a 1 -q 0.00001 -r1 0 -r2 0";        
+
+  // Simplified I-orionis problem with zero radii stars
+  //char* default_init  
+  //  = "-M 0.66667 -v 0 -r 1 -t -r1 0 -r2 0 -q 0.50 -p -a 1 -q 1 -r1 0 -r2 0";
+
+  // Simplified I-orionis problem with non-zero radii stars
+  //  char* default_init  
+  //      = "-M 0.879 -v 2 -r 1 -t -r1 0.0508 -r2 0.0348 -q 0.567 -p -a 1 -q 1 -r1 0.0394 -r2 0.0394";
+
+  strcpy(&input.init_string[0], default_init);
+
+  //    check_help();
+
+    real  delta_t = VERY_LARGE_NUMBER;       // time span of the integration
+    real  dt_out = VERY_LARGE_NUMBER;       // time output interval
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "A:c:C:d:D:e:g:Ii:m:M:N:pqQs:t:v:V:";
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1)
+	switch(c) {
+	    case 'A': input.eta = atof(poptarg);
+		      break;
+	    case 'c': input.cpu_time_check = 3600*atof(poptarg);
+	                                     // (Specify in hours)
+		      break;
+	    case 'd': input.max_trial_density = atof(poptarg);
+		      break;
+	    case 'D': input.dt_out = atof(poptarg);
+	    case 'g': input.tidal_tol_factor = atof(poptarg);
+		      break;
+		      //case 'I': intermediate_sigma = 1 - intermediate_sigma;
+		      //break;
+	    case 'i': strcpy(input.init_string, poptarg);
+		      break;
+	    case 'M': input.pmass = atof(poptarg);
+		      break;
+	    case 'm': input.pmass = atof(poptarg);
+		      break;
+	    case 'N': input.n_rand = atoi(poptarg);
+		      break;
+		      // case 'p': print_counts = 1 - print_counts;
+		      // break;
+	    case 's': input.seed = atoi(poptarg);
+		      break;
+	    case 't': input.delta_t = atof(poptarg);
+		      break;
+	    case 'v': input.v_inf = atof(poptarg);
+		      break;
+   	    case 'V': //input.debug = atoi(poptarg);
+	              input.verbose = atoi(poptarg);
+		      break;
+            case '?': params_to_usage(cerr, argv[0], param_string);
+	      //		      get_help();
+	}
+
+    execute_sigma_experiment(input);
+    
+}
 
 #endif

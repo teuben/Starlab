@@ -16,12 +16,12 @@
 ##
 
 CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC)
-LIBFLAGS	= -L$(LIB) -lsdyn -l_dyn_ -ldyn -lnode -lstd -lm
-DEPEND_LIBS	= $(LIB)/libsdyn.a $(LIB)/lib_dyn_.a \
+LIBFLAGS	= -L$(LIB) -lsdyn -lhdyn -l_dyn_ -ldyn -lnode -lstd -lm
+DEPEND_LIBS	= $(LIB)/libsdyn.a $(LIB)/libhdyn.a $(LIB)/lib_dyn_.a \
 		  $(LIB)/libdyn.a $(LIB)/libnode.a $(LIB)/libstd.a
 
-EXECUTABLES = makescat
-OBJECT_FILES = makescat.o makesigm.o
+EXECUTABLES = mkscat 
+OBJECT_FILES = mkscat.o mksigm.o
 
 LIBRARY = libsdyn.a
 

@@ -3,7 +3,7 @@
 #ifndef TOOLBOX
 
 #ifdef USE_specific_function
-#ifdef USE_MPI
+#ifdef HAS_MPI
 void print_scatter_specific_information(sdyn *b,
 					sigma_input input, 
 					scatter_exp experiment) {

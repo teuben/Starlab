@@ -12,8 +12,8 @@
 #include "stdinc.h"
 #include "sdyn.h"
 #include "string.h"
-#ifdef USE_MPI
-#include  "mpi++.h"
+#ifdef HAS_MPI
+#include  <mpi++.h>
 #else
 #include "localmpi++.h"
 #endif
@@ -66,7 +66,12 @@ class scatter_exp {
     char final_form[255];
 
     real time;
+
+    real min_min_ssd;              // minimum distance squared
+    real min_min_time;             // time at mimimun distance
+
     real energy_error;
+    real angular_momentum_error;
     real sigma;                   // breakdown of cross-section by type
     real sigma_err_sq;            // breakdown of squared errors by type
 
@@ -107,12 +112,15 @@ class scatter_exp {
        scatter_exp(const scatter_exp &exp) {
 
 	 time = exp.time;
+	 min_min_ssd = exp.min_min_ssd;
+	 min_min_time = exp.min_min_time;
 	 final_bound = exp.final_bound;
 	 n_coll = exp.n_coll;
 	 sd = exp.sd;
 	 n_star = exp.n_star;
 	 n_zone = exp.n_zone;
 	 energy_error = exp.energy_error;
+	 angular_momentum_error = exp.angular_momentum_error;
 	 form_changes = exp.form_changes;
 	 resonance = exp.resonance;
 	 stop = exp.stop;
@@ -161,6 +169,10 @@ class scatter_exp {
 
   void initialize_to_zero();
 
+  void set_min_min_ssd(real m) {min_min_ssd = m;}
+  real get_min_min_ssd() {return min_min_ssd;}
+  real get_min_min_time() {return min_min_time;}
+
   void set_nstar(int n) {n_star = n;}
   int get_nstar() {return n_star;}
   int get_n_found() {return n_found;}
@@ -190,6 +202,8 @@ class scatter_exp {
   real *get_time_ptr() {return &time;}
   void set_energy_error(real e) {energy_error = e;}
   real get_energy_error() {return energy_error;}
+  void set_angular_momentum_error(real l) {angular_momentum_error = l;}
+  real get_angular_momentum_error() {return angular_momentum_error;}
 
   void set_n_steps(int n) {n_steps = n;}
   int  get_n_steps() {return n_steps;}

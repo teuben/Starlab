@@ -49,10 +49,10 @@
 
 #include <fitsio.h>
 
-enum wavelength {U=0, B, F, R, J};
+enum wavelength {X=-1, U=0, B, F, R, J};
 
-#define XCCD_MAX 512
-#define YCCD_MAX 512
+#define XCCD_MAX 1024
+#define YCCD_MAX 1024
 
 //#define ARCSEC_PER_PIXEL 0.0455  // HST WFPC
 //#define ARCSEC_PER_PIXEL 0.0966  // HST Planetary camera
@@ -101,12 +101,14 @@ local void print_ccd(real **ccd, char filename[], real t_exposure) {
     fitsfile *fptr;
     int status, ii, jj;
     long  fpixel, nelements, exposure;
-    unsigned short array[512][512];  
+    //    unsigned short array[512][512];  
+    unsigned short array[XCCD_MAX][YCCD_MAX];  
 
 //    char filename[] = "ccd.fit";
     int bitpix   =  USHORT_IMG; 
     long naxis    =   2;
-    long naxes[2] = { 512, 512 }; 
+    //    long naxes[2] = { 512, 512 }; 
+    long naxes[2] = { XCCD_MAX, YCCD_MAX }; 
 
     remove(filename); 
     status = 0;
@@ -207,7 +209,7 @@ local real calibrate_exposure_time(real upper_Llimit,
 
 }
 
-local real add_standard_stars(real **ccd, wavelength band, real beta_PSF,
+local void add_standard_stars(real **ccd, wavelength band, real beta_PSF,
 			      real arcsec_per_pixel, real fwhm, bool verbose) {
 
   real Lu, Lb, Lv, Lr, Li;
@@ -256,12 +258,32 @@ local real get_luminosity(dyn* bi, wavelength band,
 
   //	Lu= Lb= Lv= Lr= Li = VERY_LARGE_NUMBER;
   //	get_Lubvri_star(bi, stype, Lu, Lb, Lv, Lr, Li);
-  //	PRC(Lu);PRC(Lb);PRC(Lv);PRC(Lr);PRL(Li);
+  // PRC(Lu);PRC(Lb);PRC(Lv);PRC(Lr);PRL(Li);
+  //cerr << type_string(stype) << endl;
 
   real magn;
   real Msun;
   real air_mass = 0;
   switch(band) {
+    case X: magn = Lu;
+	    Msun = 5.61;
+	    switch(stype) {
+	      //	    case Carbon_Dwarf:
+	      //	    case Helium_Dwarf:
+	    case Oxygen_Dwarf:
+	    case Xray_Pulsar:
+	    case Radio_Pulsar:
+	    case Neutron_Star:
+	    case Black_Hole:
+	      magn = Lu - 10;
+	      Msun = 5.61;
+	      PRC(magn);
+		break;
+	    default: 
+	      magn = VERY_LARGE_NUMBER; // cut out all stars.
+	    }
+
+	    break;
     case U: magn = Lu;
 	    Msun = 5.61;
 	    break;
@@ -280,11 +302,12 @@ local real get_luminosity(dyn* bi, wavelength band,
 
   real Mbol = 4.76;
   real luminosity = pow(10, 0.4*(Mbol-magn - distance_modulus));
-//  cerr << "Magnitude = " << magn << " ";PRL(luminosity);
+  //cerr << "Magnitude = " << magn << " ";PRL(luminosity);
 
   real dL = gauss()*sqrt(luminosity*luminosity_norm);
   luminosity += dL/luminosity_norm;
-//  PRC(luminosity);PRL(dL);
+  PRC(luminosity);PRL(dL);
+
   return luminosity;
 }
 
@@ -723,8 +746,10 @@ main(int argc, char ** argv) {
     int input_seed=0;
     int nbad_column = 0;
 
-    int nx_bin = 512; // one pixel = 0.076 arcsec
-    int ny_bin = 512;
+    //    int nx_bin = 512; // one pixel = 0.076 arcsec
+    //    int ny_bin = 512;
+    int nx_bin = XCCD_MAX; // one pixel = 0.076 arcsec
+    int ny_bin = YCCD_MAX;
 
     bool add_background_stars = false;
     bool add_standard_star = false;

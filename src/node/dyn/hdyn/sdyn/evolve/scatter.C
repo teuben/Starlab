@@ -88,7 +88,7 @@ void scatter(sdyn* b, scatter_input input,
   bool terminate = false;
 
   real t_out = b->get_time_offset();
-  real t_end = delta_t + b->get_time_offset();
+  real t_end = delta_t + (real)b->get_time_offset(); // is xreal
   PRC(t_out);PRL(t_end); 
 
   char previous_form[255];
@@ -120,7 +120,7 @@ void scatter(sdyn* b, scatter_input input,
 	&& cpu_time() - cpu_save > abs(cpu_time_check)) return;
     
     if(b->get_time()>=t_out) {
-      cerr<< " terminate on t_out" << b->get_teim()<<endl;
+      cerr<< " terminate on t_out" << b->get_time()<<endl;
       real ekin, epot;
       calculate_energy(b, ekin, epot);
       if(input.verbose==1) {
@@ -291,9 +291,12 @@ main(int argc, char **argv)
 //  char* default_init  
 //    = "-M 0.879 -rm 3 -v 0.0071 -t -r1 0.0508 -r2 0.0348 -e 0 -q 0.567 -p -a 1 -q 1 -r1 0.0394 -r2 0.0394";        // Iota Ori Probleem 
 
+    char* default_init  
+      = "-M 0.66667 -rm 3 -S 30 -v 0 -t -r1 0 -r2 0 -e 0 -q 0.5 -p -a 1 -q 1 -r1 0 -r2 0";        // Iota Ori Probleem 
+
   // identical binary collision
-  char* default_init  
-    = "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
+    //char* default_init  
+    //= "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
 
   strcpy(&input.init_string[0], default_init);
 
@@ -344,6 +347,9 @@ main(int argc, char **argv)
 
   execute_scatter_experiment(input);
 
+  //    cerr << "scatter history" << flush << endl;
+  //    hi->put_scatter_hist(cerr, false);
+  //    cerr << " N done = " << n_exp << endl;
 }
 #endif
 

@@ -1,12 +1,11 @@
-
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\ ~
+      //  __  _____           ___                    ___       //      /|\
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
  //                                                       //            _\|/_
-//=======================================================//              /|\ ~
+//=======================================================//              /|\
 
 /*
  *  sigma.h: definitions for determining cross sections
@@ -63,7 +62,7 @@ class sigma_input : public scatter_input {
   }
 
   friend ostream& operator<<(ostream& s, scatter_input&);
-#ifdef USE_MPI
+#ifdef HAS_MPI
   MPI_Datatype sigma_input::initialize_data_structures_MPI();
 #else
   MPI_Datatype sigma_input::initialize_data_structures_MPI() {
@@ -254,3 +253,5 @@ void print_scatter_specific_information(sdyn *b,
 					scatter_exp experiment);
 
 #endif
+
+

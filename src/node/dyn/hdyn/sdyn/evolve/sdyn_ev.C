@@ -5,6 +5,8 @@
 
 #include "sdyn.h"
 
+//extern real min_min_ssd;
+
 local int code_collision_flag(sdyn *bi, sdyn *bj) {
 
 #if 0
@@ -68,18 +70,25 @@ void sdyn::accumulate_new_acc_and_jerk_from_new(
 			sdyn * bj,                  // n-body system pointer
 			real eps2,                  // softening length squared
 			int no_diag_flag,    // if true, intermediate iteration
-			int & collision_flag)
+			int & collision_flag,
+			real & min_min_ssd)
     {
     if(bj->get_oldest_daughter() != NULL)
         for_all_daughters(sdyn, bj, bb)
 	    accumulate_new_acc_and_jerk_from_new(bb, eps2,
-						 no_diag_flag, collision_flag);
+						 no_diag_flag, collision_flag,
+						 min_min_ssd);
     else
 	if(this != bj)
 	    {
 	    vector d_pos = new_pos - bj->get_new_pos();
 	    vector d_vel = new_vel - bj->get_new_vel();
 	    real r2 = d_pos*d_pos;
+
+	    //	    if(!strcmp(get_name(), "t1")) {
+	      if (r2 < min_min_ssd) min_min_ssd = r2;
+	      //	    }
+
 	    if (r2 < (radius + bj->get_radius()) 
 		   * (radius + bj->get_radius())) {
 		collision_flag = code_collision_flag(this, bj);
@@ -125,7 +134,8 @@ void sdyn::accumulate_new_acc_and_jerk_from_new(
 
 void sdyn::calculate_new_acc_and_jerk_from_new(sdyn * b, real eps_squared,
 					       int  no_diag_flag,
-					       int  & collision_flag) {
+					       int  & collision_flag,
+					       real & min_min_ssd) {
 
     if(oldest_daughter != NULL)
 	{
@@ -141,7 +151,8 @@ void sdyn::calculate_new_acc_and_jerk_from_new(sdyn * b, real eps_squared,
         for_all_daughters(sdyn, this, bb)
 	    bb->calculate_new_acc_and_jerk_from_new(b, eps_squared,
 						    no_diag_flag,
-						    collision_flag);
+						    collision_flag,
+						    min_min_ssd);
 	if (! no_diag_flag)
 	    {
 	    for_all_daughters(sdyn, this, d)
@@ -166,7 +177,8 @@ void sdyn::calculate_new_acc_and_jerk_from_new(sdyn * b, real eps_squared,
 	new_acc = new_jerk = 0;
 	min_encounter_time_sq = min_free_fall_time_sq = VERY_LARGE_NUMBER;
 	accumulate_new_acc_and_jerk_from_new(b, eps_squared, no_diag_flag,
-					     collision_flag);
+					     collision_flag,
+					     min_min_ssd);
 	}
     }
 

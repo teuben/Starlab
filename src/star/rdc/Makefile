@@ -19,7 +19,8 @@
 CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC_STAR) -I$(INC) $(STARLAB_CFITSIOINC)
 LIBFLAGS	= -L$(LIB) -lrdc -ldstar -lsstar -ldyn -lnode -lstd $(STARLAB_CFITSIOLIB) -lm
 DEPEND_LIBS	= $(LIB)/libsstar.a  $(LIB)/libdstar.a $(LIB)/librdc.a \
-	          $(LIB)/libdyn.a $(LIB)/libnode.a   $(LIB)/libstd.a
+	          $(LIB)/libdyn.a $(LIB)/libnode.a   $(LIB)/libstd.a \
+		  $(STARLAB_CFITSIOINC)/libcfitsio.a
 
 EXECUTABLES = rdc_SeBa makepovfile rs_findtype rs_snapshot \
 	      rs_population rs_scenarios rs_birthrate \

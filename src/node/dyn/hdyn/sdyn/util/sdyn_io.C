@@ -45,10 +45,7 @@ ostream& sdyn::print_dyn_story(ostream& s,
 			       int short_output)	// default = 0
 							// (not implemented)
 {
-    // Could start with _dyn_::print_dyn_story(), but prefer
-    // to control the output here.
-
-    // Header and footer now placed by put_node().
+    put_story_header(s, DYNAMICS_ID);
 
     put_real_number(s, "  t  =  ", time);
     put_real_number(s, "  m  =  ", mass);
@@ -70,6 +67,8 @@ ostream& sdyn::print_dyn_story(ostream& s,
 	    put_story_contents(s, *dyn_story);
     }
 
+    put_story_footer(s, DYNAMICS_ID);
+    
     return s;
 }
 

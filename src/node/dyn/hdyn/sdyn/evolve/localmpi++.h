@@ -1,9 +1,9 @@
 #ifndef STARLAB_LOCALMPI_H
 #   define STARLAB_LOCALMPI_H
 
-//#define USE_MPI
+//#define HAS_MPI
 
-#ifndef USE_MPI
+#ifndef HAS_MPI
 class MPI {
   public:
   class COMM_WORLD {};

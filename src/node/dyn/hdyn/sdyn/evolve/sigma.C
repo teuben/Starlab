@@ -40,8 +40,11 @@ main(int argc, char **argv) {
   sigma_input input;
 
   // identical binary collision
-  char* default_init  
-        = "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
+  //char* default_init  
+  //      = "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
+
+    char* default_init  
+      = "-M 0.66667 -rm 3 -S 30 -v 0 -t -r1 0 -r2 0 -e 0 -q 0.5 -p -a 1 -q 1 -r1 0 -r2 0";        // Iota Ori Probleem 
 
 
   // I-orionis problem with zero radii stars
@@ -58,7 +61,7 @@ main(int argc, char **argv) {
 
   strcpy(&input.init_string[0], default_init);
 
-    check_help();
+  //    check_help();
 
     real  delta_t = VERY_LARGE_NUMBER;       // time span of the integration
     real  dt_out = VERY_LARGE_NUMBER;       // time output interval
@@ -130,7 +133,7 @@ main(int argc, char **argv) {
 	              input.verbose = atoi(poptarg);
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
-		      get_help();
+	      //		      get_help();
 	}
 
     execute_sigma_experiment(input);

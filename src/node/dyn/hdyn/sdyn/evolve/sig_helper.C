@@ -10,6 +10,7 @@
 
 // Starlab library function.
 
+#include "stdio.h"
 #include "sigma.h"
 #include "sigma_MPI.h"
 
@@ -232,9 +233,9 @@ local void print_formatted(real x)
 	cerr << dummy_string;
 
     } else if (x < 0.01)
-	fprintf(stderr, "%7.1e", x);	// 2 sig. fig. for small numbers
+      fprintf(stderr, "%7.1e", x);	// 2 sig. fig. for small numbers
     else
-	fprintf(stderr, "%8.2e", x);	// 3 sig. fig. for large numbers
+      fprintf(stderr, "%8.2e", x);	// 3 sig. fig. for large numbers
 }
 
 local void print_error(real x)

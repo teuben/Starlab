@@ -31,6 +31,7 @@ bool tree_evolve(sdyn * b,        // sdyn array
 		 real dt_snap,    // snapshot output interval
 		 real snap_cube_size,
 		 real eta,        // time step parameter
+		 real & min_min_ssd,
 		 real cpu_time_check,
 		 real dt_print,   // external print interval
 		 sdyn_print_fp p) // pointer to external print function
@@ -50,7 +51,9 @@ bool tree_evolve(sdyn * b,        // sdyn array
     terminate = low_n_evolve(b, delta_t, dt_out, dt_snap, snap_cube_size,
 		 SOFTENING, eta, X_FLAG, TIMESTEP_CRITERION,
 		 S_FLAG, N_ITER, N_MAX,
+			     min_min_ssd,
 		 cpu_time_check, dt_print, p);
+			     
 
     b->end_offset_time();
     for_all_daughters(sdyn, b, bbb) bbb->end_offset_time();
@@ -128,8 +131,9 @@ main(int argc, char **argv)
     b->log_history(argc, argv);
     cpu_init();
 
+    real min_min_ssd = VERY_LARGE_NUMBER;
     tree_evolve(b, delta_t, dt_out, dt_snap, snap_cube_size, eta,
-		cpu_time_check);
+		min_min_ssd, cpu_time_check);
 
 }
 

@@ -1,14 +1,17 @@
 
-#ifdef USE_MPI
-#include "mpi++.h"
+#ifdef HAS_MPI
+#include <mpi++.h>
 #else
 #include "localmpi++.h"
 #endif
 
+#include "stdio.h"
 #include "scatter_exp.h"
 
 void scatter_exp::initialize_to_zero() {
 
+	 min_min_ssd = VERY_LARGE_NUMBER;
+	 min_min_time = 0;
         
   //  initial_form = new char[255];
   //  final_form = new char[255];
@@ -392,7 +395,7 @@ scatter_discriptor scatter_exp::classify_scatter() {
   return discriptor;
 }
 
-#ifdef USE_MPI
+#ifdef HAS_MPI
 
 MPI_Datatype scatter_exp::initialize_data_structures_MPI() {
 
