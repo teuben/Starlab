@@ -1,4 +1,4 @@
-dnl configure.in for "starlab" 
+dnl configure.in for "starlab4" 
 
 AC_MSG_CHECKING([starlab])
 
@@ -8,10 +8,9 @@ dnl "autoconf" manually.
 
 AC_INIT(inc/kira.h)
 
-nl ---			STARLAB base directory
+dnl ---			STARLAB base directory
 STARLAB_PATH="`pwd`"
 AC_SUBST(STARLAB_PATH)
-
 
 dnl 
 AC_CONFIG_HEADER(config.h)

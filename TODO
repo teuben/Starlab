@@ -45,6 +45,9 @@ Some issues for starlab4
 - Makefile will be removed, and called Makefile.in, since configure should create
   it.
 
+- rehosting the STARLAB_PATH directory root to another place will break --help,
+  since it ignores $STARLAB_PATH and looks at the path during installation
+
 - remove redundancies in Makefile's by using a 'makedefs' file that can be
   included
 
