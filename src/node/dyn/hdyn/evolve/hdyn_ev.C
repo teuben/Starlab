@@ -441,7 +441,7 @@ real kepler_step(hdyn *b,
 
     real keplstep = local_kepler_step(b, correction_factor);
 
-#if 1
+#if 0
     if (keplstep > 0) {
 
 	// Debugging repeats earlier calculations...

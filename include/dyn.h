@@ -463,7 +463,7 @@ real print_lagrangian_radii(dyn* b,
 			    bool noprint = false);
 
 typedef bool boolfn(dyn*);
-void compute_general_mass_radii(dyn*, int,
+bool compute_general_mass_radii(dyn*, int,
 				bool nonlin = false,
 				boolfn *bf = NULL);
 

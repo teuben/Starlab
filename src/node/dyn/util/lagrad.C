@@ -67,17 +67,18 @@ local int compare_radii(const void * pi, const void * pj)  // increasing radius
 
 //-----------------------------------------------------------------------------
 //  compute_general_mass_radii  --  Get the massradii for all particles.
+//				    Return true iff the radii are usable.
 //-----------------------------------------------------------------------------
 
 static real nonlin_masses[9] = {0.005, 0.01, 0.02, 0.05, 0.1,
 				0.25, 0.5, 0.75, 0.9};
 
-void compute_general_mass_radii(dyn * b, int nzones,
+bool compute_general_mass_radii(dyn * b, int nzones,
 				bool nonlin,
 				boolfn bf)
 {
-    if (nzones < 2) return;
-    if (nonlin && nzones != 10) return;		// Special case
+    if (nzones < 2) return false;
+    if (nonlin && nzones != 10) return false;		// special case
 
     // Note: nzones specifies the number of radial zones to consider.
     //	     However, we only store radii corresponding to the nzones-1 
@@ -93,6 +94,12 @@ void compute_general_mass_radii(dyn * b, int nzones,
 	    if ((*bf)(bb)) n++;
     }
 
+    if (n <= 0) {				// possible in restricted cases
+	cerr << endl
+	     << "    compute_general_mass_radii: no stars in this category\n";
+	return false;
+    }
+
     // Use the density center if known and up to date (preferred).
     // Otherwise, use modified center of mass, if known and up to date.
 
@@ -106,9 +113,10 @@ void compute_general_mass_radii(dyn * b, int nzones,
     rm_pair_ptr rm_table = new rm_pair[n];
 
     if (rm_table == NULL) {
-	cerr << "compute_general_mass_radii: "
+	cerr << endl
+	     << "    compute_general_mass_radii: "
 	     << "not enough memory left for rm_table\n";
-	return;
+	return false;
     }
 
     // Set up an array of (radius, mass) pairs.  Also find the total
@@ -135,14 +143,15 @@ void compute_general_mass_radii(dyn * b, int nzones,
 
     // Determine the Lagrangian radii.
 
-    // cerr << "Determining Lagrangian radii 1" << endl << flush;
+    // cerr << "    determining Lagrangian radii 1" << endl << flush;
 
     real* mass_percent = new real[nzones-1];
     if (mass_percent == NULL) {
-	cerr << "compute_general_mass_radii: "
+	cerr << endl
+	     << "    compute_general_mass_radii: "
 	     << "not enough memory left for mass_percent\n";
 	delete [] rm_table;
-	return;
+	return false;
     }
 
     int k;
@@ -155,16 +164,17 @@ void compute_general_mass_radii(dyn * b, int nzones,
 
     real *rlagr = new real[nzones-1];
     if (rlagr == NULL) {
-	cerr << "compute_general_mass_radii: "
+	cerr << endl
+	     << "    compute_general_mass_radii: "
 	     << "not enough memory left for r_lagr\n";
 	delete [] rm_table;
 	delete [] mass_percent;
-	return;
+	return false;
     }
     real cumulative_mass = 0.0;
     i = 0;
 
-    // cerr << "Determining Lagrangian radii 2" << endl << flush;
+    // cerr << "    determining Lagrangian radii 2" << endl << flush;
 
     for (k = 0; k < nzones-1; k++) {
 
@@ -174,7 +184,7 @@ void compute_general_mass_radii(dyn * b, int nzones,
 	rlagr[k] = rm_table[i-1].radius;
     }
 
-    // cerr << "writing stories" << endl << flush;
+    // cerr << "    writing stories" << endl << flush;
 
     // Place the data in the root dyn story.
 
@@ -194,6 +204,8 @@ void compute_general_mass_radii(dyn * b, int nzones,
     delete [] mass_percent;
     delete [] rm_table;
     delete [] rlagr;
+
+    return true;
 }
 
 // Convenient synonyms:
@@ -249,12 +261,15 @@ void set_lagr_cutoff_mass(dyn *b, real f)
     vector<real> *m = new vector<real>;
     for_all_daughters (dyn, b, bb)
 	if (bb->is_leaf()) m->push_back(bb->get_mass());
+
     sort(m->begin(), m->end());
 
-    int nf = (int)f*m->size(), i = nf;
-    while ((*m)[i] == (*m)[nf]) i++;
-
-    cutoff_mass = (*m)[i];
+    int nf = (int)(f*m->size()) - 1, i = nf;
+    while (i < m->size() && (*m)[i] == (*m)[nf]) i++;
+    if (i < m->size())
+	cutoff_mass = (*m)[i];
+    else
+	cutoff_mass = VERY_LARGE_NUMBER;
 }
 
 real get_lagr_cutoff_mass()
@@ -275,7 +290,7 @@ real print_lagrangian_radii(dyn* b,
 {
     bool nonlin = false;
 
-    real rhalf = 1;
+    real rhalf = 0;
     int ihalf;
 
     int nl, indent;
@@ -294,22 +309,24 @@ real print_lagrangian_radii(dyn* b,
 	ihalf = 6;
     }
 
-    if (which_star == 0)
-	compute_general_mass_radii(b, nl, nonlin);
-    else if (which_star == 1)
-	compute_general_mass_radii(b, nl, nonlin, binary_fn);
-    else if (which_star == 2)
-	compute_general_mass_radii(b, nl, nonlin, single_fn);
-    else if (which_star == 3)
-	compute_general_mass_radii(b, nl, nonlin, double_fn);
-    else if (which_star == 4)
-	compute_general_mass_radii(b, nl, nonlin, massive_fn);
+    bool status = false;
 
-    if (find_qmatch(b->get_dyn_story(), "n_lagr")
+    if (which_star == 0)
+	status = compute_general_mass_radii(b, nl, nonlin);
+    else if (which_star == 1)
+	status = compute_general_mass_radii(b, nl, nonlin, binary_fn);
+    else if (which_star == 2)
+	status = compute_general_mass_radii(b, nl, nonlin, single_fn);
+    else if (which_star == 3)
+	status = compute_general_mass_radii(b, nl, nonlin, double_fn);
+    else if (which_star == 4)
+	status = compute_general_mass_radii(b, nl, nonlin, massive_fn);
+
+    if (status && find_qmatch(b->get_dyn_story(), "n_lagr")
 	&& getrq(b->get_dyn_story(), "lagr_time") == b->get_system_time()) {
 
-	// Assume that lagr_pos has been properly set if n_lagr is set
-	// and lagr_time is current.
+	// Assume that lagr_pos has been properly set if n_lagr is set and
+	// lagr_time is current.  Redundant now that status is returned.
 
 	vec lagr_pos = getvq(b->get_dyn_story(), "lagr_pos");
 
@@ -348,6 +365,7 @@ real print_lagrangian_radii(dyn* b,
 	rhalf = r_lagr[ihalf];
 	delete [] r_lagr;
     }
+
     return rhalf;
 }
 
