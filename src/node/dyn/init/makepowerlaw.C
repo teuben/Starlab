@@ -11,36 +11,38 @@
 ////
 ////                     r  -->  sqrt(r^2 + a^2)
 ////
-//// In addition, we allow the possibility that the power-law is cut off
-//// within some radius b, and that there is a point-mass at the center.
-//// The default mass for the central point is the power-law mass within
-//// the cutoff.  The potential is softened to avoid numerical problems.
-//// If b is nonzero, a is set to zero.
+//// The power-law particle distribution is created between some minimum
+//// and maximum radii.  The inner radius is for numerical convenience, to
+//// limit the number of stars on very tight orbits.  In addition, we allow
+//// the possibility that the power-law potential is cut off within some
+//// radius b and that there a point mass at the center.  The default mass
+//// for the central point is the power-law mass within the cutoff.  The
+//// point-mass potential is softened to avoid numerical problems.  If b is
+//// nonzero, a is set to zero.
 ////
-//// We assume that x > 0.  Particle parameters will be chosen so that the
-//// total mass of the N-body system is 1, independent of the actual mass
-//// of the background distribution.  For now, we are interested only in
-//// test particles.  The particles are drawn from the power-law distribution,
-//// even within the cutoff radius.  For numerical convenience, we also
-//// allow the possibility of an inner cutoff radius, to limit the number
-//// of stars on very tight orbits.
+//// We assume that x > 0.  Particle parameters will be chosen so that
+//// the total mass of the N-body system is 1, independent of the actual
+//// mass of the background distribution.  For now, we are interested only
+//// in test particles.  The particles are currently always drawn from the
+//// power-law distribution, even within the cutoff radius.
 ////
 //// Options:     -A    specify the coefficient A [1]
 ////              -a/R  specify scale [1]
 ////              -b    cutoff radius [0]
 ////              -c    add a comment to the output snapshot [false]
+////              -d    make orbits disk-like within the cutoff [isotropic]
 ////              -e    softening parameter [b/100]
 ////              -i    number the particles sequentially [don't number]
-////              -l    specify inner cutoff radius [0.1]
+////              -l    minimum radius of the N-body system [0.1]
 ////              -m/M  central mass [mass at cutoff]
 ////              -n    specify number of particles [no default]
 ////              -o    echo value of random seed [don't echo]
-////              -r    maximum radius of the N-body system [10]
+////              -u    maximum radius of the N-body system [10]
 ////              -s    specify random seed [random from system clock]
 ////              -x    specify exponent [1]
 ////
 //// The output snapshot will have the external field already enabled, and
-//// will contain a flag to ignore internal interactions.
+//// will contain a flag to disable internal interactions.
 
 #include "dyn.h"
 
@@ -49,7 +51,8 @@
 local void  makepowerlaw(dyn * root, int n,
 			 real A, real a, real x,
 			 real cutoff, real mass,
-			 real r_min, real r_max)
+			 real r_min, real r_max,
+			 bool d_flag)
 {
     real xi = 1/x, pmass = 1./n, armax = 0, vc;
     root->set_mass(1);
@@ -64,14 +67,14 @@ local void  makepowerlaw(dyn * root, int n,
 
 	bi->set_mass(pmass);
 
-	// Radii are distributed between 0 and r_max, roughly uniformly
-	// in r^x.  Power-law is OK if a << r_max; otherwise, better to
-	// use a "core-halo" approximation to m(r):
+	// Radii are distributed between r_min and r_max, roughly uniformly
+	// in r^x.  Power-law is OK if a << r_max; otherwise, better to use
+	// a "core-halo" approximation to m(r):
 	//
 	//	m(r)  ~  (r/a)^3 (a/r_max)^x	(r < a)
 	//		 (r/r_max)^x		(r > a)
 	//
-	// Use this distribution even inside the cutoff radius.
+	// Use this distribution even inside the cutoff radius, if any.
 
 	real radius = 0;
 	while (radius < r_min) {	// lower limit for convenience only
@@ -86,17 +89,17 @@ local void  makepowerlaw(dyn * root, int n,
 	// Details of orbits within the cutoff radius are to be determined.
 	// For now, the orbits form a disk close to the central point mass.
 
-	if (radius > cutoff)
+	if (radius > cutoff || !d_flag)
 
-	    // Spherically symmetric.
+	    // Spherically symmetric distribution.
 
 	    costheta = randinter(-1, 1);
 
 	else {
 
-	    // Progressively force orbits into the x-y plane as r --> 0.
+	    // Progressively force particles into the x-y plane as r --> 0.
 
-	    real lim = radius/cutoff;
+	    real lim = sqrt(radius/cutoff);
 	    costheta = randinter(-lim, lim);
 	}
 
@@ -110,7 +113,7 @@ local void  makepowerlaw(dyn * root, int n,
 
 	// Choose velocities to ensure equilibrium in the external field.
 	// Modify the velocity dispersion inside the cutoff to take the
-	// central potential into account.
+	// central point mass into account.
 
 	real vrms;
 
@@ -131,9 +134,10 @@ local void  makepowerlaw(dyn * root, int n,
 	}
 
 	// Play with orbital orientations.  At present, orbits become more
-	// nearly planar and circular as we approach the center.
+	// nearly planar and circular as we approach the center if d_flag
+	// is set (see above).
 
-	if (radius > cutoff) {
+	if (radius > cutoff || !d_flag) {
 
 	    // Isotropic.
 
@@ -165,17 +169,18 @@ local void  makepowerlaw(dyn * root, int n,
 #define  SEED_STRING_LENGTH  60
 
 main(int argc, char ** argv) {
-    int  i;
-    int  n;
+    int  i, n;
     int  input_seed, actual_seed;
-    int  a_flag = false;
-    int  c_flag = false;
-    int  e_flag = false;
-    int  i_flag = false;
-    int  m_flag = false;
-    int  n_flag = false;
-    int  o_flag = false;
-    int  s_flag = false;
+
+    bool a_flag = false;
+    bool c_flag = false;
+    bool d_flag = false;
+    bool e_flag = false;
+    bool i_flag = false;
+    bool m_flag = false;
+    bool n_flag = false;
+    bool o_flag = false;
+    bool s_flag = false;
 
     char  *comment;
     char  seedlog[SEED_STRING_LENGTH];
@@ -191,7 +196,7 @@ main(int argc, char ** argv) {
 
     extern char *poptarg;
     int c;
-    char* param_string = "A:a:b:c:e:il:M:m:n:oR:r:s:x:";
+    char* param_string = "A:a:b:c:de:il:M:m:n:oR:u:s:x:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -206,6 +211,8 @@ main(int argc, char ** argv) {
 		      break;
 	    case 'c': c_flag = true;
 		      comment = poptarg;
+		      break;
+	    case 'd': d_flag = true;
 		      break;
 	    case 'e': e_flag = true;
 	    	      softening = atof(poptarg);
@@ -223,7 +230,7 @@ main(int argc, char ** argv) {
 		      break;
 	    case 'o': o_flag = true;
                       break;
-	    case 'r': r_max = atof(poptarg);
+	    case 'u': r_max = atof(poptarg);
 		      break;
 	    case 's': s_flag = true;
 		      input_seed = atoi(poptarg);
@@ -242,7 +249,7 @@ main(int argc, char ** argv) {
     }
     
     if (n < 1) {
-        cerr << "makepowerlaw: n < 1 not allowed" << endl;
+        cerr << "makepowerlaw: n > 0 required" << endl;
 	exit(1);
     }
 
@@ -297,7 +304,8 @@ main(int argc, char ** argv) {
 
     // Create dyn data.
 
-    makepowerlaw(b, n, coeff, scale, exponent, cutoff, mass, r_min, r_max);
+    makepowerlaw(b, n, coeff, scale, exponent,
+		 cutoff, mass, r_min, r_max, d_flag);
 
     // Flag actions for use by kira.
 
