@@ -6,8 +6,9 @@
 ////             (and will work with standard dyn data files), but
 ////             includes additional functions specific to the hdyn class.
 ////
-//// Options:    -a    specify viewing axis [1/2/3 = x/y/z]
-////             -b    allow backward steps [no]
+//// Options:
+////             -a    specify viewing axis [1/2/3 = x/y/z]
+////             -b    allow backward steps (up to 512 frames retained) [no]
 ////             -C    center each frame on the standard system center [no]
 ////             -d    dimensionality of plot [2]
 ////             -D    delay time between frames, in ms [16]
@@ -28,8 +29,8 @@
 ////        systems that causes xstarplot to crash if too many run-time
 ////        user commands are received in a short space of time (e.g.
 ////        try holding down the ">" key in 3D mode).  Presently, the
-////        only fix is to avoid excessive keystrokes in the graphics
-////        window at run time...
+////        only option is to avoid excessive keystrokes in the graphics
+////        window...
 
 //.............................................................................
 //    version 1:  May 1989   Piet Hut            email: piet@iassns.bitnet
@@ -1716,7 +1717,7 @@ main(int argc, char** argv)
 
 #define MAX_SNAP 512
 
-    hdynptr b[MAX_SNAP];	// Array of snapshots
+    hdynptr b[MAX_SNAP];	// array of snapshots
     int max_snap = 1;
 
     check_help();
