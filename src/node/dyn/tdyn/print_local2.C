@@ -36,11 +36,32 @@ local void print_binary_diagnostics(real t, tdyn *b, tdyn *bb, pdyn *curr)
 
     PRI(4); PRL(-M/(2*ebb));
 
+#ifndef NEW_INTERP
+
+    // Old code:
+
     PRL(interpolate_pos(b, b->get_time(), bb));
     PRL(interpolate_pos(b, t, bb));
     if (n)
-	PRL(interpolate_pos(b, n->get_time(),
-			    bb));
+	PRL(interpolate_pos(b, n->get_time(), bb));
+
+#else
+
+    // Equivalent new code uses set_interpolated_pos():
+
+    vector interp_pos_time;
+    set_interpolated_pos(b, b->get_time(), interp_pos_time, bb);
+    PRL(interp_pos_time);
+    vector interp_pos_t;
+    set_interpolated_pos(b, t, interp_pos_t, bb);
+    PRL(interp_pos_t);
+    if (n) {
+	vector interp_pos_ntime;
+	set_interpolated_pos(b, n->get_time(), interp_pos_ntime, bb);
+	PRL(interp_pos_ntime);
+    }
+
+#endif
 
     real dt = t - (real)b->get_time();
     real dtn = 0;

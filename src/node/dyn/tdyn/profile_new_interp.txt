@@ -1,0 +1,266 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  us/call  us/call  name    
+ 22.96     72.15    72.15 83536704     0.86     0.86  set_interpolated_pos(tdyn *, double, pdyn *, tdyn *)
+ 16.51    124.01    51.86 83536804     0.62     0.62  find_event(worldline *, tdyn *, double)
+ 15.54    172.84    48.83    16704  2923.25 15874.44  interpolate_tree(worldbundle *, double, double, pdyn *&, bool, bool)
+ 11.15    207.88    35.04 83519900     0.42     2.59  update_interpolated_tree(worldbundle *, worldline *, segment *, pdyn *, double, double, bool, bool)
+  9.31    237.13    29.25 83536804     0.35     1.83  update_node(worldbundle *, worldline *, double, tdyn *, tdyn *, bool, bool)
+  6.96    259.00    21.87                             node::next_node(node *)
+  6.95    280.84    21.84 83866768     0.26     0.26  unique_id(char *)
+  3.42    291.59    10.75                             node::n_daughters(void)
+  3.38    302.22    10.63                             main
+  1.07    305.57     3.35 83866768     0.04     0.30  unique_id(pdyn *)
+  0.90    308.41     2.84    27688   102.57   106.38  attach_new_node(worldbundle *, worldline *, pdyn *, tdyn *, tdyn *, bool)
+  0.77    310.84     2.43                             node::format_label(void)
+  0.24    311.58     0.74                             get_line(istream &, char *)
+  0.17    312.12     0.54   339230     1.59     1.59  worldbundle::find_index(double)
+  0.09    312.41     0.29                             get_node_recursive(istream &, node *(*)(hydrobase *(*)(void), starbase *(*)(void), bool), hydrobase *(*)(void), starbase *(*)(void), bool, int)
+  0.09    312.69     0.28                             getequals(char const *, char *)
+  0.09    312.96     0.27   308154     0.88     0.88  tdyn::scan_dyn_story(istream &)
+  0.07    313.19     0.23                             read_unformatted_real(istream &)
+  0.07    313.41     0.22   258122     0.85     2.93  worldbundle::attach(tdyn *, int)
+  0.06    313.61     0.20   308154     0.65     0.65  new_tdyn(hydrobase *(*)(void), starbase *(*)(void), bool)
+  0.06    313.81     0.20                             matchbracket(char const *, char const *)
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+ 
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this 
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 4 byte(s) for 0.00% of 314.18 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]     88.1   10.63  266.09                 main [1]
+                0.00  265.12   16700/16705       create_interpolated_tree2(worldbundle *, double, bool) [2]
+                0.03    0.77       6/6           read_bundle(istream &, int) [14]
+                0.00    0.13       1/1           print_worldline_stats(worldbundle **, int) [24]
+                0.00    0.04       1/2           preload_pdyn(worldbundle **, int, bool) [26]
+-----------------------------------------------
+                0.00    0.08       5/16705       preload_pdyn(worldbundle **, int, bool) [26]
+                0.00  265.12   16700/16705       main [1]
+[2]     84.4    0.00  265.20   16705         create_interpolated_tree2(worldbundle *, double, bool) [2]
+               48.83  216.34   16704/16704       interpolate_tree(worldbundle *, double, double, pdyn *&, bool, bool) [3]
+                0.03    0.00   16705/16705       trim(worldbundle *, double &) [32]
+-----------------------------------------------
+               48.83  216.34   16704/16704       create_interpolated_tree2(worldbundle *, double, bool) [2]
+[3]     84.4   48.83  216.34   16704         interpolate_tree(worldbundle *, double, double, pdyn *&, bool, bool) [3]
+               35.04  181.27 83519900/83519900     update_interpolated_tree(worldbundle *, worldline *, segment *, pdyn *, double, double, bool, bool) [4]
+                0.01    0.02   16704/83536804     update_node(worldbundle *, worldline *, double, tdyn *, tdyn *, bool, bool) [5]
+                0.00    0.00       5/55381       worldbundle::find_index(pdyn *) [25]
+-----------------------------------------------
+               35.04  181.27 83519900/83519900     interpolate_tree(worldbundle *, double, double, pdyn *&, bool, bool) [3]
+[4]     68.8   35.04  181.27 83519900         update_interpolated_tree(worldbundle *, worldline *, segment *, pdyn *, double, double, bool, bool) [4]
+               29.24  123.99 83520100/83536804     update_node(worldbundle *, worldline *, double, tdyn *, tdyn *, bool, bool) [5]
+                3.34   21.76 83502500/83866768     unique_id(pdyn *) [8]
+                2.84    0.11   27688/27688       attach_new_node(worldbundle *, worldline *, pdyn *, tdyn *, tdyn *, bool) [12]
+                0.00    0.00     300/700         worldbundle::find_worldline(pdyn *) [41]
+                0.00    0.00   27688/27688       clean_up_subtree(worldbundle *, pdyn *, bool) [43]
+-----------------------------------------------
+                0.01    0.02   16704/83536804     interpolate_tree(worldbundle *, double, double, pdyn *&, bool, bool) [3]
+               29.24  123.99 83520100/83536804     update_interpolated_tree(worldbundle *, worldline *, segment *, pdyn *, double, double, bool, bool) [4]
+[5]     48.8   29.25  124.01 83536804         update_node(worldbundle *, worldline *, double, tdyn *, tdyn *, bool, bool) [5]
+               72.15    0.00 83536704/83536704     set_interpolated_pos(tdyn *, double, pdyn *, tdyn *) [6]
+               51.86    0.00 83536804/83536804     find_event(worldline *, tdyn *, double) [7]
+                0.00    0.00     100/700         worldbundle::find_worldline(pdyn *) [41]
+                0.00    0.00     100/100         interpolate_vel(tdyn *, double, tdyn *) [44]
+-----------------------------------------------
+               72.15    0.00 83536704/83536704     update_node(worldbundle *, worldline *, double, tdyn *, tdyn *, bool, bool) [5]
+[6]     23.0   72.15    0.00 83536704         set_interpolated_pos(tdyn *, double, pdyn *, tdyn *) [6]
+-----------------------------------------------
+               51.86    0.00 83536804/83536804     update_node(worldbundle *, worldline *, double, tdyn *, tdyn *, bool, bool) [5]
+[7]     16.5   51.86    0.00 83536804         find_event(worldline *, tdyn *, double) [7]
+-----------------------------------------------
+                0.00    0.00     700/83866768     worldbundle::find_worldline(pdyn *) [41]
+                0.00    0.01   25005/83866768     worldbundle::worldbundle(tdyn *) [37]
+                0.00    0.01   55381/83866768     worldbundle::find_index(pdyn *) [25]
+                0.01    0.07  283182/83866768     worldbundle::attach(tdyn *, int) [16]
+                3.34   21.76 83502500/83866768     update_interpolated_tree(worldbundle *, worldline *, segment *, pdyn *, double, double, bool, bool) [4]
+[8]      8.0    3.35   21.85 83866768         unique_id(pdyn *) [8]
+               21.84    0.01 83866768/83866768     unique_id(char *) [10]
+-----------------------------------------------
+                                                 <spontaneous>
+[9]      7.0   21.87    0.00                 node::next_node(node *) [9]
+-----------------------------------------------
+               21.84    0.01 83866768/83866768     unique_id(pdyn *) [8]
+[10]     7.0   21.84    0.01 83866768         unique_id(char *) [10]
+                0.01    0.00  363732/363732      unique_id(int) [40]
+-----------------------------------------------
+                                                 <spontaneous>
+[11]     3.4   10.75    0.00                 node::n_daughters(void) [11]
+-----------------------------------------------
+                2.84    0.11   27688/27688       update_interpolated_tree(worldbundle *, worldline *, segment *, pdyn *, double, double, bool, bool) [4]
+[12]     0.9    2.84    0.11   27688         attach_new_node(worldbundle *, worldline *, pdyn *, tdyn *, tdyn *, bool) [12]
+                0.00    0.10   55376/55381       worldbundle::find_index(pdyn *) [25]
+                0.00    0.00     300/700         worldbundle::find_worldline(pdyn *) [41]
+-----------------------------------------------
+                                                 <spontaneous>
+[13]     0.8    2.43    0.00                 node::format_label(void) [13]
+-----------------------------------------------
+                0.03    0.77       6/6           main [1]
+[14]     0.3    0.03    0.77       6         read_bundle(istream &, int) [14]
+                0.22    0.54  258122/258122      worldbundle::attach(tdyn *, int) [16]
+                0.01    0.01       5/5           worldbundle::worldbundle(tdyn *) [37]
+                0.00    0.00       5/5           check_final_escapers(worldbundle *, tdyn *) [45]
+-----------------------------------------------
+                                                 <spontaneous>
+[15]     0.2    0.29    0.47                 get_node_recursive(istream &, node *(*)(hydrobase *(*)(void), starbase *(*)(void), bool), hydrobase *(*)(void), starbase *(*)(void), bool, int) [15]
+                0.27    0.00  308154/308154      tdyn::scan_dyn_story(istream &) [20]
+                0.20    0.00  308154/308154      new_tdyn(hydrobase *(*)(void), starbase *(*)(void), bool) [22]
+-----------------------------------------------
+                0.22    0.54  258122/258122      read_bundle(istream &, int) [14]
+[16]     0.2    0.22    0.54  258122         worldbundle::attach(tdyn *, int) [16]
+                0.45    0.00  283149/339230      worldbundle::find_index(double) [18]
+                0.01    0.07  283182/83866768     unique_id(pdyn *) [8]
+-----------------------------------------------
+                                                 <spontaneous>
+[17]     0.2    0.74    0.00                 get_line(istream &, char *) [17]
+-----------------------------------------------
+                0.00    0.00     700/339230      worldbundle::find_worldline(double) [42]
+                0.09    0.00   55381/339230      worldbundle::find_index(pdyn *) [25]
+                0.45    0.00  283149/339230      worldbundle::attach(tdyn *, int) [16]
+[18]     0.2    0.54    0.00  339230         worldbundle::find_index(double) [18]
+-----------------------------------------------
+                                                 <spontaneous>
+[19]     0.1    0.28    0.00                 getequals(char const *, char *) [19]
+-----------------------------------------------
+                0.27    0.00  308154/308154      get_node_recursive(istream &, node *(*)(hydrobase *(*)(void), starbase *(*)(void), bool), hydrobase *(*)(void), starbase *(*)(void), bool, int) [15]
+[20]     0.1    0.27    0.00  308154         tdyn::scan_dyn_story(istream &) [20]
+-----------------------------------------------
+                                                 <spontaneous>
+[21]     0.1    0.23    0.00                 read_unformatted_real(istream &) [21]
+-----------------------------------------------
+                0.20    0.00  308154/308154      get_node_recursive(istream &, node *(*)(hydrobase *(*)(void), starbase *(*)(void), bool), hydrobase *(*)(void), starbase *(*)(void), bool, int) [15]
+[22]     0.1    0.20    0.00  308154         new_tdyn(hydrobase *(*)(void), starbase *(*)(void), bool) [22]
+-----------------------------------------------
+                                                 <spontaneous>
+[23]     0.1    0.20    0.00                 matchbracket(char const *, char const *) [23]
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+
+Index by function name
+
+ [458] pdyn::~pdyn(void)      [41] worldbundle::find_worldline(pdyn *) [26] preload_pdyn(worldbundle **, int, bool)
+  [37] worldbundle::worldbundle(tdyn *) [42] worldbundle::find_worldline(double) [24] print_worldline_stats(worldbundle **, int) (...readbundle.C)
+  [16] worldbundle::attach(tdyn *, int) [13] node::format_label(void) [14] read_bundle(istream &, int)
+  [12] attach_new_node(worldbundle *, worldline *, pdyn *, tdyn *, tdyn *, bool) (attach_new_node.C) [17] get_line(istream &, char *) [30] read_unformatted32_real(istream &)
+  [28] worldbundle::check(void) [33] get_node(istream &, node *(*)(hydrobase *(*)(void), starbase *(*)(void), bool), hydrobase *(*)(void), starbase *(*)(void), bool) [21] read_unformatted_real(istream &)
+  [27] worldline::check(int)  [34] get_node_init(istream &, node *(*)(hydrobase *(*)(void), starbase *(*)(void), bool), hydrobase *(*)(void), starbase *(*)(void), bool) (tree_io.C) [39] read_unformatted_vector(istream &, vector &)
+  [36] check_and_skip_input_line(istream &, char *) [15] get_node_recursive(istream &, node *(*)(hydrobase *(*)(void), starbase *(*)(void), bool), hydrobase *(*)(void), starbase *(*)(void), bool, int) (tree_io.C) [20] tdyn::scan_dyn_story(istream &)
+  [45] check_final_escapers(worldbundle *, tdyn *) (worldline.C) [19] getequals(char const *, char *) [6] set_interpolated_pos(tdyn *, double, pdyn *, tdyn *)
+  [43] clean_up_subtree(worldbundle *, pdyn *, bool) (worldline2.C) [3] interpolate_tree(worldbundle *, double, double, pdyn *&, bool, bool) (worldline2.C) [32] trim(worldbundle *, double &) (worldline2.C)
+  [29] count_events(worldbundle *) [44] interpolate_vel(tdyn *, double, tdyn *) [8] unique_id(pdyn *)
+  [38] count_segments(worldbundle *) [1] main             [10] unique_id(char *)
+   [2] create_interpolated_tree2(worldbundle *, double, bool) [23] matchbracket(char const *, char const *) [40] unique_id(int)
+   [7] find_event(worldline *, tdyn *, double) [11] node::n_daughters(void) [4] update_interpolated_tree(worldbundle *, worldline *, segment *, pdyn *, double, double, bool, bool) (worldline2.C)
+  [25] worldbundle::find_index(pdyn *) [22] new_tdyn(hydrobase *(*)(void), starbase *(*)(void), bool) [5] update_node(worldbundle *, worldline *, double, tdyn *, tdyn *, bool, bool) (update_node.C)
+  [18] worldbundle::find_index(double) [9] node::next_node(node *) [35] wlcompare(void const *, void const *) (worldline.C)

@@ -1,4 +1,4 @@
-local inline void attach_new_node(worldbundle *wb, worldline *ww,
+local INLINE void attach_new_node(worldbundle *wb, worldline *ww,
 				  pdyn *root, tdyn *top, tdyn *bb,
 				  bool debug)
 {
@@ -109,4 +109,5 @@ local inline void attach_new_node(worldbundle *wb, worldline *ww,
     // Set standard values for some quantities:
 
     ww->set_t_curr(-VERY_LARGE_NUMBER);
+    ww->set_current_event(NULL);
 }

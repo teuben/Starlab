@@ -500,10 +500,16 @@ local void interpolate_tree(worldbundle *wb, real t, real t_int,
 			 << w->get_id() << endl;
 		}
 
-		// Could in principle speed this up if we save the previous
-		// segment visited for this worldline (in normal use)...
+		// If possible, start at the previous segment visited in
+		// this worldline (may speed things up in normal use).
+		// -- hard to see much improvememt in speed...
 
-		segment *s = w->get_first_segment();
+#if 1
+		segment *s = w->get_current_segment();
+		if (!s || s->get_t_start() > t)
+#endif
+		    s = w->get_first_segment();
+
 		while (s && s->get_t_end() < t) s = s->get_next();
 
 		if (debug) {
@@ -580,6 +586,10 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
 
     if (!wb_last) set_kepler_fast_flag();	// use the "fast" kepler solver
 
+    // Try to take care of rounding error in t.
+
+    if (!trim(wb, t)) return NULL;
+
     if (wb != wb_last) {
 	if (wb->get_pdyn_root()) {
 	    root = wb->get_pdyn_root();		// restore an existing tree
@@ -601,10 +611,6 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
     // the pdyn tree interpolated to the current time.
 
     bool debug = false;
-
-    // Try to take care of rounding error in t.
-
-    if (!trim(wb, t)) return NULL;
 
     // Build the new tree.
 
@@ -677,7 +683,7 @@ main(int argc, char *argv[])
 	    worldline *w = wb->get_bundle()[loc];
 	    segment *s = w->get_first_segment();
 	    while (s && s->get_t_start() > t) s = s->get_next();
-	    print_event(s->get_first_event(), t);
+	    print_event(w, s->get_first_event(), t);
 	} else
 	    cerr << "not found" << endl;
     }

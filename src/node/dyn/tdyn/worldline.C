@@ -1,4 +1,5 @@
 
+
        //=======================================================//    _\|/_
       //  __  _____           ___                    ___       //      /|\
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
@@ -45,10 +46,14 @@
 //	real unique_id(pdyn *b)
 //	void print_id(void *id, char *label)
 //	worldbundle *read_bundle(istream &s, int verbose)
-//	tdyn *find_event(tdyn *bn, real t)
-//	void print_event(tdyn *bn, real t)
+//	tdyn *find_event(worldline *w, tdyn *bn, real t)
+//	void print_event(worldline *w, tdyn *bn, real t)
 //	vector interpolate_pos(tdyn *p, real t, tdyn *bn)
-//	vector get_pos(tdyn *b, tdyn *bn, real t)
+//	vector interpolate_pos(tdyn *p, real t, vector& pos, bool inc, tdyn *bn)
+//	void set_interpolated_pos(tdyn *p, real t, vector& pos, tdyn *bn)
+//      void set_interpolated_pos(tdyn *p, real t, pdyn *curr, tdyn *bn);
+//	void inc_interpolated_pos(tdyn *p, real t, vector& pos, tdyn *bn)
+//	vector get_pos(worldline *w, tdyn *b, tdyn *bn, real t)
 //	pdyn *create_interpolated_tree(worldbundle *wb, real t)
 //
 //	real physical_mass_scale()
@@ -193,6 +198,51 @@ void worldline::dump(int offset)	// default = 0
     }
 }
 
+local check_print_worldline_header(bool& print, int i)
+{
+    cerr << "worldline " << i << ":" << endl;
+    print = false;
+}
+
+void worldline::check(int i)	// default = -1
+{
+    // Check a worldline, start to finish.
+
+    bool print = true;
+
+    segment *s = get_first_segment();
+    int is = 0;
+    while (s) {
+	tdyn *b0 = s->get_first_event();
+	tdyn *b = b0;
+	int ie = 0;
+	while (b) {
+	    real t = b->get_time();
+	    if (b != b0) {
+		tdyn *p = b->get_prev();
+		if (!p) {
+		    if (print) check_print_worldline_header(print, i);
+		    cerr << "    segment " << is << ", event "
+			 << ie << " has prev = NULL" << endl;
+		} else if (p->get_next() != b) {
+		    if (print) check_print_worldline_header(print, i);
+		    cerr << "    segment " << is << ", event "
+			 << ie << " has prev->next != this" << endl;
+		}
+	    }
+	    b = b->get_next();
+	    ie++;
+	}
+	if (ie == 1) {
+	    if (print) check_print_worldline_header(print, i);
+	    cerr << "    *** single event in segment " << is << " ***" << endl;
+	}
+
+	s = s->get_next();
+	is++;
+    }
+}
+
 void segment::print(char *label)
 {
     if (label == NULL) label = "    ";
@@ -314,6 +364,14 @@ void worldbundle::dump(int offset)	// default = 0
 	get_worldline(i)->dump(offset);
     }
 }
+
+void worldbundle::check()
+{
+    cerr << "checking worldbundle " << this << endl;
+    for (int i = 0; i < get_nw(); i++)
+	get_worldline(i)->check(i);
+}
+
 //======================================================================
 
 int worldbundle::find_index(real id)
@@ -468,15 +526,16 @@ void worldbundle::attach(tdyn *bn,
 
 			// Note from Steve (8/01):  For unknown reasons, the id
 			// check in add_event may cause errors when optimization
-			// is turned on.  Problems arise in multiple systems (so
-			// we are working near the last significant digit), where
-			// the ids may return unequal even though the bits are
-			// identical.  Didn't occur in the July 29, 2001 version
-			// of the code.  Does occur in the August 2 version!
+			// is turned on.  Problems arise in multiple systems
+			// (so we are working near the last significant digit),
+			// where the ids may return unequal even though the
+			// bits are identical.  Didn't occur in the July 29,
+			// 2001 version of the code.  Does occur in the August
+			// 2 version!
 			//
-			// Workaround for now: skip the check, which is redundant
-			// here anyway.  Longer-term: improve the handling of
-			// unique_id.
+			// Workaround for now: skip the check, which is
+			// redundant here anyway.  Longer-term: improve the
+			// handling of unique_id.
 
 		    }
 
@@ -768,27 +827,86 @@ int count_events(worldbundle *wb)
 
 // Navigation of the 4tree data and diagnostic output.
 
-tdyn *find_event(tdyn *bn, real t)
+tdyn *find_event(worldline *w, tdyn *bn, real t)
 {
-    // Find time t along the worldline segment starting at bn.
-    // Return a pointer to the event immediately preceding t.
+    // Find time t along the segment of worldline w starting at base
+    // node bn.  Return a pointer to the event immediately preceding t.
+    //
+    // If worldline w is set, first see if any current_event pointer
+    // exists; if so, start our search there.  The logic in the calling
+    // function should ensure that time t lies in the current segment.
+
+    // Default is forward search starting at bn.  This may be modified
+    // if current_event information exists.
 
     tdyn *b = bn;
 
-    while (b && b->get_next() && b->get_next()->get_time() < t)
-	b = b->get_next();
+    if (w) {
+
+	tdyn *curr = w->get_current_event();
+
+	if (curr) {
+
+	    real t_curr = curr->get_time();
+
+	    if (t_curr > t) {
+
+		if (t > 0.5*(bn->get_time() + t_curr)) {
+
+		    // Do a backward search from curr.
+
+		    b = curr;
+#if 0
+		    if (b != bn && !b->get_prev()) {
+			cerr << endl << "prev = NULL for node " << b << endl;
+			PRC(b); PRL(bn);
+			cerr << "worldline dump:" << endl;
+			w->dump();
+			cerr << "checking worldline..." << endl;
+			w->check(-1);
+		    }
+#endif
+
+		    tdyn *p;
+		    while (b && (p = b->get_prev()) && b->get_time() > t)
+			b = p;
+
+		    return b;
+		}
+
+	    } else {
+
+		// Explicitly test the most obvious possibility first.
+
+		tdyn *n = curr->get_next();
+		if (n && n->get_time() >= t) return curr;
+
+		// Do a forward search from n.
+
+		b = n;
+
+	    }
+	}
+    }
+
+    // Do a forward search from b.  Note that repeated "get_next" calls
+    // may be quite time consuming if we keep going outside the cache.
+
+    tdyn *n;
+    while (b && (n = b->get_next()) && n->get_time() < t)
+	b = n;
 
     // The portion of the trajectory spanning t runs from b to b->next.
 
     return b;
 }
 
-void print_event(tdyn *bn, real t)
+void print_event(worldline *w, tdyn *bn, real t)
 {
     // Print info on the portion of the worldline portion
     // starting at bn that spans t.
 
-    tdyn *b = find_event(bn, t);
+    tdyn *b = find_event(w, bn, t);
 
     if (b) {
 	PRC(t); PRC(b->get_time()); PRL(b->get_next());
@@ -800,7 +918,116 @@ void print_event(tdyn *bn, real t)
 #include "print_local.C"	// avoid repeating local print functions
 //----------------------------------------------------------------------
 
+local inline bool check_and_initialize(tdyn *p,
+				       real tp,
+				       real t,
+				       vector& pos,
+				       bool inc,
+				       tdyn *bn)
+{
+    if (tp < t) {
+
+	tdyn *n = p->get_next();
+
+	if (!n) {
+
+	    cerr << "interpolate_pos: error 2: next node not found: ";
+	    PRC(p->format_label()); PRL(t);
+	    PRI(26); PRC(bn); PRL(bn->get_time());
+	    PRI(26); PRC(p); PRL(p->get_time());
+	    PRI(26); PRL(p->get_time()-t);
+	    if (bn) {
+		PRI(26); PRL(bn->format_label());
+	    }
+	    // print_details(wb, p, t);
+
+	    if (inc)
+		pos += p->get_pos();
+	    else
+		pos = p->get_pos();
+	    return false;
+
+	} else if (n->get_time() < t) {
+
+	    cerr << "interpolate_pos: error 3: specified time above range: ";
+	    PRC(p->format_label()); PRC(t); PRL(p->get_time());
+	    // print_details(wb, p, t);
+
+	    if (inc)
+		pos += p->get_pos();
+	    else
+		pos = p->get_pos();
+	    return false;
+	}
+
+	// We now have tp < t <= n->time.  We will interpolate using
+	// a fit to pos and vel.  Check to see if the interpolating
+	// coefficients must be set.
+
+	if (p->get_jerk()[0] == 0) {
+
+	    // Recompute acc/2 and jerk/6 to fit pos and vel.
+
+	    // Note that we overwrite acc and jerk by equivalent
+	    // vectors that guarantee continuity of pos and vel.
+
+	    // *** Flag this to prevent recalculation by setting ***
+	    // *** jerk = 0 as the tree is constructed.          ***
+
+	    // Set up the interpolating acc and jerk.
+
+	    real dt = n->get_time() - tp;
+	    real dti = 1/dt;
+
+	    if (streq(p->get_name(), "root")) {		// infrequent...
+
+		// Use linear interpolation for the cluster center.
+		// Discard vel information to make pos continuous.
+
+		p->set_vel(dti*(n->get_pos() - p->get_pos()));
+		p->set_acc(0);
+		p->set_jerk(vector(VERY_SMALL_NUMBER, 0, 0));
+
+	    } else {
+
+		// Standard fourth-order interpolation otherwise.
+
+		p->set_acc((3*(n->get_pos()-p->get_pos())
+			    - dt*(2*p->get_vel()+n->get_vel()))*dti*dti);
+		p->set_jerk((p->get_vel()+n->get_vel()
+			     - 2*dti*(n->get_pos()-p->get_pos()))*dti*dti);
+	    }
+	}
+	return true;
+
+    } else if (tp > t) {
+
+	cerr << "interpolate_pos: error 1: specified time below range: ";
+	PRC(p->format_label()); PRC(t); PRL(p->get_time());
+	// print_details(wb, p, t); // wb not available here...
+    }
+
+    // (Special case tp == t is handled here.)
+
+    if (inc)
+	pos += p->get_pos();
+    else
+	pos = p->get_pos();
+
+    return false;
+}
+
 // Interpolation of part of the 4tree to a specific time.
+
+// Retain numerous "interpolate_pos" functions for timing and testing...
+// Apparently very little time difference between them.  New code may be
+// marginally faster, by perhaps 5 percent, but its use unaccountably
+// increases the time spent in other portions of the code, for a net
+// improvement of only 1 percent or so.  See profile_*_interp.txt.  The
+// function node::next_node() seems to be used 4 times more frequently
+// in the new code, offsetting most of the gain in the other functions.
+
+// Old version:
 
 vector interpolate_pos(tdyn *p, real t,
 		       tdyn *bn)		// default = NULL; specifies
@@ -899,6 +1126,102 @@ vector interpolate_pos(tdyn *p, real t,
 	return p->get_pos();
 }
 
+// Overloaded (and not used?):
+
+void interpolate_pos(tdyn *p,
+		     real t,
+		     vector& pos,
+		     bool inc,			// default = false
+		     tdyn *bn)			// default = NULL; specifies
+						// the actual base node
+{
+    // The range (p to p->next) includes time t.
+    // Interpolate and return the pos of this particle.
+
+    real tp = p->get_time();
+
+    if (check_and_initialize(p, tp, t, pos, inc, bn)) {
+
+	real dt = t - tp;
+
+	if (inc)
+	    pos += p->get_pos() + dt * (p->get_vel()
+					   + dt * (p->get_acc()
+						      + dt * p->get_jerk()));
+	else
+	    pos = p->get_pos() + dt * (p->get_vel()
+					  + dt * (p->get_acc()
+						     + dt * p->get_jerk()));
+    }
+}
+
+// New versions (NEW_INTERP):
+
+void set_interpolated_pos(tdyn *p,
+			  real t,
+			  vector& pos,
+			  tdyn *bn)		// default = NULL; specifies
+						// the actual base node
+{
+    // The range (p to p->next) includes time t.
+    // Interpolate and set the value of pos.
+
+    real tp = p->get_time();
+
+    if (check_and_initialize(p, tp, t, pos, false, bn)) {
+
+	real dt = t - tp;
+	pos = p->get_pos() + dt * (p->get_vel()
+				      + dt * (p->get_acc()
+					         + dt * p->get_jerk()));
+    }
+}
+
+// Overloaded:
+
+void set_interpolated_pos(tdyn *p,
+			  real t,
+			  pdyn *curr,
+			  tdyn *bn)		// default = NULL; specifies
+						// the actual base node
+{
+    // The range (p to p->next) includes time t.
+    // Interpolate and set the value of pos.
+
+    real tp = p->get_time();
+    vector pos;
+
+    if (check_and_initialize(p, tp, t, pos, false, bn)) {
+
+	real dt = t - tp;
+	curr->set_pos(p->get_pos() + dt * (p->get_vel()
+					    + dt * (p->get_acc()
+						     + dt * p->get_jerk())));
+    } else
+
+	curr->set_pos(pos);
+}
+
+void inc_interpolated_pos(tdyn *p,
+			  real t,
+			  vector& pos,
+			  tdyn *bn)		// default = NULL; specifies
+						// the actual base node
+{
+    // The range (p to p->next) includes time t.
+    // Interpolate and increment the value of pos.
+
+    real tp = p->get_time();
+
+    if (check_and_initialize(p, tp, t, pos, true, bn)) {
+
+	real dt = t - tp;
+	pos += p->get_pos() + dt * (p->get_vel()
+				       + dt * (p->get_acc()
+					          + dt * p->get_jerk()));
+    }
+}
+
 vector interpolate_vel(tdyn *p, real t,
 		       tdyn *bn)		// default = NULL; specifies
 						// actual base node
@@ -926,20 +1249,23 @@ vector interpolate_vel(tdyn *p, real t,
 	return p->get_vel();
 }
 
-// Old versions of interpolate_pos() and interpolate_vel() are
+// Older versions of interpolate_pos() and interpolate_vel() are
 // (for now) saved in old_interpolate.C
 
-vector get_pos(tdyn *b, tdyn *bn,
-	       real t)			// default = -VERY_LARGE_NUMBER
+local vector get_pos(worldline *w,
+		     tdyn *b, tdyn *bn,
+		     real t = VERY_LARGE_NUMBER)
 {
     // Return the current absolute position of node b, properly
     // corrected for its location in the tree.
 
-    // The node of interest is b; the base node for the worldline
-    // segment (containing all parental information) is bn.
+    // The node of interest is b; the base node for the segment of
+    // worldline w (containing all parental information) is bn.
 
     if (t == -VERY_LARGE_NUMBER) t = b->get_time();
-    vector pos = interpolate_pos(b, t, bn);
+
+    vector pos;
+    set_interpolated_pos(b, t, pos, bn);
 
     // The tree structure associated with the base node should extend
     // to the top level, but will not contain the root node unless bn
@@ -956,9 +1282,9 @@ vector get_pos(tdyn *b, tdyn *bn,
 
 	// Find the portion of the parent worldline spanning t.
 
-	tdyn *p = find_event(bp, t);
+	tdyn *p = find_event(w, bp, t);
 
-	pos += interpolate_pos(p, t, bn);
+	inc_interpolated_pos(p, t, pos, bn);
 	bp = bp->get_parent();
     }
 
@@ -986,7 +1312,7 @@ void worldbundle::print_worldline(char *name,
 		tdyn *b = bn;
 		while (b) {			    // loop over events
 		    cout << "    " << b->get_time()
-			 << " " << get_pos(b, bn) << endl << flush;
+			 << " " << get_pos(w, b, bn) << endl << flush;
 		    b = b->get_next();
 		}
 
@@ -1005,9 +1331,9 @@ void worldbundle::print_worldline(char *name,
 
 		if (s) {
 		    tdyn *bn = s->get_first_event();
-		    tdyn *b = find_event(bn, t);
+		    tdyn *b = find_event(w, bn, t);
 		    cout << "    " << t
-			 << " " << get_pos(b, bn) << endl << flush;
+			 << " " << get_pos(w, b, bn) << endl << flush;
 		}
 
 		t += dt;
@@ -1253,7 +1579,7 @@ main(int argc, char *argv[])
 	    worldline *w = wb->get_bundle()[loc];
 	    segment *s = w->get_first_segment();
 	    while (s && s->get_t_start() > t) s = s->get_next();
-	    print_event(s->get_first_event(), t);
+	    print_event(w, s->get_first_event(), t);
 	} else
 	    cerr << "not found" << endl;
     }

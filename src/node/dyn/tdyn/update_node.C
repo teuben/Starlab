@@ -1,4 +1,4 @@
-local inline void update_node(worldbundle *wb,
+local INLINE void update_node(worldbundle *wb,
 			      worldline *ww, real t,
 			      tdyn *bb, tdyn *top, bool vel,
 			      bool debug)
@@ -7,7 +7,7 @@ local inline void update_node(worldbundle *wb,
     // bb to the node curr in the interpolated tree.  For convenience,
     // top is the top-level node of bb.
 
-    tdyn *b = find_event(bb, t);	// speed up by saving last event...
+    tdyn *b = find_event(ww, bb, t);
     pdyn *curr = ww->get_tree_node();
 
     if (debug)
@@ -88,7 +88,8 @@ local inline void update_node(worldbundle *wb,
 		if (!bb->get_elder_sister()) {
 
 		    tdyn *bbsis = bb->get_younger_sister();
-		    tdyn *sis = find_event(bbsis, t);
+		    worldline *wwsis = wb->find_worldline(bbsis);
+		    tdyn *sis = find_event(wwsis, bbsis, t);
 
 		    // Check that sis has the same time and also has kep set.
 
@@ -158,7 +159,11 @@ local inline void update_node(worldbundle *wb,
 	// of a binary.
 
 	if (NEW == 0 || bb == top || !bb->get_elder_sister())
+#ifndef NEW_INTERP
 	    curr->set_pos(interpolate_pos(b, t, bb));
+#else
+	    set_interpolated_pos(b, t, curr, bb);
+#endif
 
 	// Need velocity information on low-level nodes, or if forced:
 
@@ -232,6 +237,7 @@ local inline void update_node(worldbundle *wb,
     curr->set_luminosity(b->get_luminosity());
 
     ww->set_t_curr(t);
+    ww->set_current_event(b);
 
     if (debug)
 	cerr << "updated " << curr->format_label() << endl;

@@ -26,7 +26,9 @@ NON_CCC_EXECUTABLES =
 DEPEND_LIBS	= $(LIB)/libtdyn.a $(LIB)/libdyn.a $(LIB)/libnode.a \
 		  $(LIB)/libstd.a
 
-CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC) $(STARLAB_GFX_CFLAGS)
+CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC) $(STARLAB_GFX_CFLAGS) -DNEW_INTERP
+
+# -g -pg
 
 CPPFLAGS = 
 
@@ -36,7 +38,7 @@ LIBFLAGS  =	-L$(LIB) -ltdyn -ldyn -lnode \
 
 EXEFLAGS = 
 
-# Special target (extra objects not in library):
+# Special targets (use extra objects not in the library):
 
 xstarplot2:	xstarplot2.C gfx_util.o dyn_util.o
 	$(STARLAB_CCC) $(CFLAGS) $(STARLAB_CCC_FLAGS) -o $(BIN)/$@ \

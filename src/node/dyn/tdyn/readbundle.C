@@ -32,6 +32,9 @@ local void print_worldline_stats(worldbundleptr wh[], int nh)
     cerr << "totals: " << nwtot << " worldlines, "
 	 << nstot << " segments, " << netot << " events"
 	 << endl << endl;
+
+    for (int ih = 0; ih < nh; ih++)
+	wh[ih]->check();
 }
 
 main(int argc, char** argv)
@@ -75,6 +78,9 @@ main(int argc, char** argv)
     while (nh < 1024 && (wb = read_bundle(s, false))) wh[nh++] = wb;
 
     print_worldline_stats(wh, nh);
+    preload_pdyn(wh, nh, true);
+
+    PRL(nloop);
 
     int ih = 0;
     wb = wh[ih];
@@ -105,11 +111,12 @@ main(int argc, char** argv)
 #define EPS 1.e-12
 
 	if (dt > 0 && t > wb->get_t_max() + EPS) {
-	    iloop++;
 	    if (++ih >= nh) {
 		ih = 0;
 		wb = wh[ih];
 		t = wb->get_t_min();
+		iloop++;
+		PRL(iloop);
 	    } else
 		wb = wh[ih];
 	}
@@ -117,14 +124,14 @@ main(int argc, char** argv)
 	// May be moving backwards, so check that too.
 
 	if (dt < 0 && t < wb->get_t_min() - EPS) {
-	    iloop++;
 	    if (--ih < 0) {
 		ih = nh-1;
 		wb = wh[ih];
 		t = wb->get_t_max();
+		iloop++;
+		PRL(iloop);
 	    } else
 		wb = wh[ih];
 	}
-
     }
 }
