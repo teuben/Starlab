@@ -1,0 +1,47 @@
+eval "exec /usr/local/bin/perl -S $0 $*"
+    if $running_under_some_shell;
+			# this emulates #! processing on NIH machines.
+			# (remove #! line above if indigestible)
+
+
+if(@ARGV == 0 || ! -f $ARGV[0]) {
+  print STDERR "Usage: extrange infile.kira [file.index]  > snippet.kira
+Given a kira file, and a portion of an index file as from kiraindex, 
+writes to stdout the corresponding portion of the kira file.
+Example usage:
+  Get final world-snapshot from file.kira, e.g. for restart:
+	kiraindex file.kira > file.index
+	tail -1 file.index | extrange file.kira > lastpiece.kira
+  Extract intact portion of a truncated file:
+	kiraindex file.kira > file.index
+	extrange file.kira file.index > intact.kira
+";
+  exit(1);
+}
+
+$inf = shift(@ARGV);
+while(<>) {
+  if(/^\d[.e\d]* (\d+) (\d+)/) {
+    $from = $1 if $from eq "";
+    $to = $2;
+  }
+}
+
+open(INF, $inf) || die "Can't open $inf: $!, exiting ";
+
+seek(INF, $from, 0);
+$now = 8192 - ($from % 8192);
+$nleft = $to - $from;
+
+while($nleft > 0) {
+    $now = $nleft if($now > $nleft);
+    $got = read(INF, $_, $now);
+    print $_;
+    if($got < $now) {
+	printf STDERR "Only got %d of %d bytes at offset %.0f\n", $got, $now, $from;
+	last;
+    }
+    $from += $now;
+    $nleft -= $now;
+    $now = 8192;
+}
