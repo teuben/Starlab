@@ -1,11 +1,17 @@
 
 // Place temporary post-step debugging code here, to clean up kira.C.
 
-PRL(ds);
+int p = cerr.precision PRL(ds);
 for (int ii = 0; ii < n_next; ii++)
     if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
 	hdyn *n = next_nodes[ii];
-	PRC(ii); n->print_label(cerr); PRL(n->get_acc());
+	PRC(ii); PRL(n->format_label());
+	PRL(n->get_pos());
+	PRL(n->get_vel());
+	PRL(n->get_old_acc());
+	PRL(n->get_acc());
+	PRL(n->get_old_jerk());
+	PRL(n->get_jerk());
     }
 
 
