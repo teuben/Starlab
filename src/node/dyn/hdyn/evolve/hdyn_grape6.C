@@ -2706,10 +2706,10 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 //						*****************************
 
 
-void grape_calculate_acc_and_jerk(hdyn **next_nodes,
-				  int n_next,
-				  xreal xtime,
-				  bool restart)
+int grape_calculate_acc_and_jerk(hdyn **next_nodes,
+				 int n_next,
+				 xreal xtime,
+				 bool restart)
 
 //  This function is called from kira_calculate_top_level_acc_and_jerk,
 //  which is called only from calculate_acc_and_jerk_for_list.
@@ -2719,10 +2719,10 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
     static int n_pipes = 0;		// number of pipelines to use
 
-    static int nj_on_grape;		// current number of j-particles
+    static int nj_on_grape = 0;		// current number of j-particles
 					// in GRAPE memory
 
-    if (n_next <= 0) return;
+    if (n_next <= 0) return 0;
 
 #ifdef T_DEBUG
     real sys_t = next_nodes[0]->get_real_system_time();
@@ -2734,7 +2734,6 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
     if (n_pipes == 0) n_pipes = g6_npipes_();
 
-    if (n_next <= 0) return;
     hdyn *root = next_nodes[0]->get_root(); 
     kira_options *ko = root->get_kira_options();
 
@@ -3035,6 +3034,7 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     }
 #endif
 
+    return nj_on_grape;
 }
 
 

@@ -1104,12 +1104,12 @@ local void set_grape4_neighbour_radius(hdyn * b, int nj_on_grape)
 //  This function is called from kira_calculate_top_level_acc_and_jerk,
 //  which is called only from calculate_acc_and_jerk_for_list.
 
-void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
-				  int n_next,
-				  xreal time,
-				  bool restart)
+int grape_calculate_acc_and_jerk(hdyn ** next_nodes,
+				 int n_next,
+				 xreal time,
+				 bool restart)
 {
-    static int nj_on_grape4;
+    static int nj_on_grape4 = 0;
 
     hdyn * root = next_nodes[0]->get_root();
     kira_options *ko = root->get_kira_options();
@@ -1380,6 +1380,8 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 	    nb_check_counter[hindex] = 0;
 
     }
+
+    return nj_on_grape4;
 }
 
 
