@@ -350,8 +350,12 @@ local inline void print_startup_message(hdyn * b, int type, bool new_kep)
 
     cerr << "    perturbation = " << sqrt(b->get_perturbation_squared());
 
-    if (b->get_parent()->get_nn() && b->get_parent()->get_nn()->is_valid())
-	cerr << "  (" << b->get_parent()->get_nn()->format_label() << ")";
+    hdyn *pnn = b->get_parent()->get_nn();
+    if (pnn && pnn->is_valid()) {
+	if (pnn->get_kepler() && pnn->get_fully_unperturbed())
+	    pnn = pnn->get_parent();
+	cerr << "  (" << pnn->format_label() << ")";
+    }
 
     cerr << endl;
 
@@ -1185,11 +1189,24 @@ bool hdyn::is_stable(int& status,
 
 
 
+local inline int n_leaves_or_unperturbed(hdyn* b)	// copied from hdyn_ev.C
+{
+    // Like n_leaves, but counting fully unperturbed center of mass nodes
+    // as single particles.
+
+    hdyn* od = b->get_oldest_daughter();
+    if (od == NULL || (od->get_kepler() && od->get_fully_unperturbed())) {
+	return 1;
+    } else {
+	int n = 0;
+	for_all_daughters(hdyn, b, bb)
+	    n += n_leaves_or_unperturbed(bb);
+	return n;
+    }
+}
+
 local hdyn *has_binary_perturber(hdyn *b)
 {
-    if (!b->is_low_level_node())
-	return NULL;
-
     // Return a pointer to the first binary perturber found for binary
     // component b, or NULL if no such perturber is found.
     //
@@ -1200,8 +1217,38 @@ local hdyn *has_binary_perturber(hdyn *b)
     //		(3) the entire perturber list,
     //
     // in making this decision.  Need to experiment.
+    //
+    // Also, if this binary is part of a multiple more complex than a
+    // triple, cautiously return the top-level node to force a reduction
+    // in the perturbation criterion.
+
+    bool p = false;
+
+    // p = (b->get_system_time() > 82.15 && b->get_system_time() < 82.25);
+
+    if (p) {
+	PRC(b->get_system_time());
+	PRL(b->format_label());
+    }
+
+    if (!b->is_low_level_node())
+	return NULL;
+
+    hdyn *par = b->get_parent();
+    if (par->is_low_level_node()) {
+
+	// We are part of a multiple system.  See how complex it is.
+
+	hdyn *top = b->get_top_level_node();
+	int nmult = n_leaves_or_unperturbed(top);
+
+	if (b->get_kepler() && b->get_fully_unperturbed()) nmult++;
+
+	if (nmult > 3) return top;
+    }
 
     hdyn *pnode = b->find_perturber_node();
+    if (p) PRL(pnode);
 
     // If pnode is null or perturbers are invalid, but we got to this point,
     // then the perturbation must have been computed using the whole system,
@@ -1214,14 +1261,26 @@ local hdyn *has_binary_perturber(hdyn *b)
     // Look at all perturbers.
 
     int np = pnode->get_n_perturbers();
-    if (np < 0 || !b->get_valid_perturbers())
+
+    if (p) {
+	PRC(pnode); PRC(pnode->get_valid_perturbers()); PRL(np);
+    }
+
+    if (np < 0 || !pnode->get_valid_perturbers())
 	return NULL;
 
+    if (p) PRL(pnode->format_label());
+
+    // Option (3):
+
     for (int i = 0; i < np; i++) {
-	hdyn *p = pnode->get_perturber_list()[i];
-	if (p && p->is_valid()
-	    && p->is_low_level_node() && !p->get_kepler())
-	    return p;
+	hdyn *pn = pnode->get_perturber_list()[i];
+	if (pn && pn->is_valid()) {
+	    if (p) PRL(pn->format_label());
+	    if (pn->is_low_level_node() && !pn->get_kepler()
+		&& pn->get_parent() != par->get_parent())
+		return pn;
+	}
     }
 
     return NULL;
@@ -1275,6 +1334,8 @@ bool hdyn::is_unperturbed_and_approaching()
     //			STABLE_OUTER		// for multiples
 
     if (is_multiple(this)) {
+
+//	cerr << "unp_and_app: multiple" << endl << flush;
 
 	init_binary_type = binary_type = MULTIPLE_CM;
 
@@ -1339,6 +1400,8 @@ bool hdyn::is_unperturbed_and_approaching()
 
     } else {
 
+//	cerr << "unp_and_app: binary" << endl << flush;
+
 	// Rest of function applies only to binaries.
 
 	if (slow && slow->get_stop()) {
@@ -1373,6 +1436,8 @@ bool hdyn::is_unperturbed_and_approaching()
 
 	bool approaching = (posvel < 0);	// posvel is recomputed at the
 						// end of every perturbed step
+
+//	PRL(approaching);
 
 	if (!approaching && !get_kepler() && !slow) {
 
@@ -1482,8 +1547,12 @@ bool hdyn::is_unperturbed_and_approaching()
 	    // if (streq(format_label(), "100a"))
 	    //     cerr << "100a true peri refl..." << endl;
 
-	    // PRC(perturbation_squared);
-	    // PRL(gamma2 * options->partial_merge_factor);
+#if 0
+	    cerr << "partial merger" << endl << flush;
+	    PRC(perturbation_squared);
+	    PRC(gamma2); PRL(options->partial_merge_factor);
+	    PRL(gamma2 * options->partial_merge_factor);
+#endif
 
 	    init_binary_type = binary_type = PERICENTER_REFLECTION;
 	    return true;
@@ -1506,34 +1575,50 @@ bool hdyn::is_unperturbed_and_approaching()
 				 && is_low_level_leaf()
 				 && younger_sister->is_low_level_leaf();
 
+#if 0
+		PRC(kep); PRL(get_parent()->format_label());
+		PRC(perturbation_squared); PRC(crit_pert2);
+		PRL(low_pert);
+#endif
+
 		if (low_pert) {
 
-		    // Modify the scceptance criterion if the threshhold is
+		    // Modify the acceptance criterion if the threshhold is
 		    // large and one of the perturbers is a binary component.
 		    //					       (Steve, 8/03)
 
 		    hdyn *p = has_binary_perturber(this);
+
 		    if (p) {
+
+			// PRC(1); PRL(p);
 
 			// NN or a perturber is a binary.  Tighten the
 			// criterion for unperturbed motion.  Numbers
 			// are somewhat arbitrary, but seem to give
 			// reasonable results...
-			//
-			// Note the special case that a return of 'this'
-			// means that we shouldn't use the pointer, but
-			// should strengthen the criterion.
 
 			if (crit_pert2 > 1.e-10) {
-			    crit_pert2 = max(1.e-10, 0.1*crit_pert2);
+
+			    crit_pert2 = max(1.e-10, 0.01*crit_pert2);
+
+			    // PRL(crit_pert2);
+
 			    if (perturbation_squared > crit_pert2) {
+#if 0
 				cerr << "is_unperturbed_and_approaching 1: "
 				     << "reducing unperturbed limit on "
 				     << format_label() << endl;
+				int prec = cerr.precision(HIGH_PRECISION);
 				cerr << "    at time " << system_time
 				     << " because of binary perturber ";
-				if (p != this) cerr << p->format_label();
-				cerr << endl;
+				cerr.precision(prec);
+				hdyn *pp = p;
+				if (p->is _low_level_node())
+				    pp = p->get_parent();
+				cerr << pp->format_label()
+				     << endl;
+#endif
 				low_pert = false;
 			    }
 			}
@@ -1670,7 +1755,7 @@ bool hdyn::is_unperturbed_and_approaching()
 			}
 		    }
 		}
-		}
+	    }
 
 	    if (kep || binary_type == FULL_MERGER) {
 
@@ -1682,6 +1767,12 @@ bool hdyn::is_unperturbed_and_approaching()
 
 		bool low_pert = (pert_fac*perturbation_squared < crit_pert2);
 		bool close = is_close_pair();
+
+#if 0
+		PRC(kep); PRL(get_parent()->format_label());
+		PRC(pert_fac); PRC(perturbation_squared); PRL(crit_pert2);
+		PRC(low_pert); PRL(close);
+#endif
 
 		if (low_pert && !close) {
 
@@ -1695,27 +1786,37 @@ bool hdyn::is_unperturbed_and_approaching()
 		    // Code here follows earlier "full_merge_tolerance" code.
 
 		    hdyn *p = has_binary_perturber(this);
+
 		    if (p) {
+
+			// PRC(2); PRL(p);
 
 			// NN or a perturber is a binary.  Tighten the
 			// criterion for unperturbed motion.  Numbers
 			// are somewhat arbitrary, but seem to give
 			// reasonable results...
-			//
-			// Note the special case that a return of 'this'
-			// means that we shouldn't use the pointer, but
-			// should strengthen the criterion.
 
-			if (crit_pert2 > 1.e-9) {
-			    crit_pert2 = max(1.e-9, 0.1*crit_pert2);
+			if (crit_pert2 > 5.e-10) {
+
+			    crit_pert2 = max(5.e-10, 0.01*crit_pert2);
+
+			    // PRL(crit_pert2);
+
 			    if (pert_fac*perturbation_squared > crit_pert2) {
+#if 0
 				cerr << "is_unperturbed_and_approaching 2: "
 				     << "reducing unperturbed limit on "
 				     << format_label() << endl;
+				int prec = cerr.precision(HIGH_PRECISION);
 				cerr << "    at time " << system_time
 				     << " because of binary perturber ";
-				if (p != this) cerr << p->format_label();
-				cerr << endl;
+				cerr.precision(prec);
+				hdyn *pp = p;
+				if (p->is _low_level_node())
+				    pp = p->get_parent();
+				cerr << pp->format_label()
+				     << endl;
+#endif
 				low_pert = false;
 			    }
 			}
@@ -3334,6 +3435,8 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	// ways.
 
 	hdyn *par = get_parent(), *pnn = par->get_nn();
+	while (pnn->get_kepler() && pnn->get_fully_unperturbed())
+	    pnn = pnn->get_parent();
 
 	// Last clause of the following if() is a bit restrictive, but very
 	// likely to be true, and for now we don't want to deal with all the
@@ -3442,7 +3545,8 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			    cerr << endl
 				 << "integrate_unperturbed_motion: "
 				 << "absorbing tidal error for "
-				 << parent->format_label()
+				 << parent->format_label();
+			    cerr << "/" << pnn->format_label()
 				 << endl
 				 << "    at time " << system_time
 //				 << endl << "    ";
@@ -3523,21 +3627,33 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			    // However, the corrective action must be taken
 			    // in the calling function in any case.
 
-			    if (par->time < system_time) {
+			    bool pr = false;
+			    if (verbose && par->time < system_time) {
 				cerr << "    synchronizing parent "
-				     << par->format_label() << endl;
-				PRI(4); PRL(par->get_timestep());
+				     << par->format_label()
+				     << ":  time step "
+				     << par->get_timestep();
+				pr = true;
 			    }
 			    par->synchronize_node();
-			    PRI(4); PRL(par->get_timestep());
+			    if (pr) {
+				cerr << " --> " << par->get_timestep()
+				     << endl;
+			    }
 
-			    if (pnn->time < system_time) {
-				cerr << "    synchronizing nn "
-				     << pnn->format_label() << endl;
-				PRI(4); PRL(pnn->get_timestep());
+			    pr = false;
+			    if (verbose && pnn->time < system_time) {
+				cerr << "    synchronizing pnn "
+				     << pnn->format_label()
+				     << ":  time step "
+				     << pnn->get_timestep();
+				pr = true;
 			    }
 			    pnn->synchronize_node();
-			    PRI(4); PRL(pnn->get_timestep());
+			    if (pr) {
+				cerr << " --> " << par->get_timestep()
+				     << endl;
+			    }
 
 			    // Note that we should really repeat the entire
 			    // previous calculation, since all quantities will
@@ -3644,7 +3760,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		|| fully_unperturbed || save_unpert) {
 
 		int p = cerr.precision(HIGH_PRECISION);
-		cerr << "\nending unperturbed motion for "
+		cerr << endl << "ending unperturbed motion for "
 		     << format_label();
 		cerr << " and " << get_binary_sister()->format_label()
 		     << " at time " << time << endl;
@@ -3654,8 +3770,11 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		cerr << ")  perturbation = " << sqrt(perturbation_squared);
 
 		hdyn *pnn = get_parent()->get_nn();
-		if (pnn && pnn->is_valid())
+		if (pnn && pnn->is_valid()) {
+		    if (pnn->get_kepler() && pnn->get_fully_unperturbed())
+			pnn = pnn->get_parent();
 		    cerr << "  (" << pnn->format_label() << ")";
+		}
 
 		cerr << endl;
 
@@ -3677,6 +3796,8 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 			hdyn* p = get_parent();
 			hdyn* pnn = p->get_nn();
+			if (pnn->get_kepler() && pnn->get_fully_unperturbed())
+			    pnn = pnn->get_parent();
 
 			print_binary_from_dyn_pair(this, get_binary_sister(),
 						   0, 0, true);
