@@ -29,27 +29,30 @@
 
 #ifndef TOOLBOX
 
-void dyn::set_com(vector pos, vector vel)	// defaults = 0
+void dyn::set_com(vector set_pos, vector set_vel)	// defaults = 0
 {
     vector com_pos;
     vector com_vel;
 
-    compute_com(this, com_pos, com_vel); 
+    compute_com(this, com_pos, com_vel); 	// includes 'this' pos and vel
 
-    vector dpos = pos - com_pos;
-    vector dvel = vel - com_vel;
+    // Force daughters to have zero CM quantities.
 
-    // Adjust only top-level nodes; don't touch the root node.
+    com_pos -= pos;
+    com_vel -= vel;
 
     for_all_daughters(dyn, this, bb) {
-	bb->inc_pos(dpos);
-	bb->inc_vel(dvel);
+	bb->inc_pos(-com_pos);
+	bb->inc_vel(-com_vel);
     }
+
+    pos = set_pos;
+    vel = set_vel;
 
     // Correct entries in the dyn story.
 
-    putvq(get_dyn_story(), "com_pos", pos);
-    putvq(get_dyn_story(), "com_vel", vel);
+    putvq(get_dyn_story(), "com_pos", set_pos);
+    putvq(get_dyn_story(), "com_vel", set_vel);
 
     // Note: Do not modify the "center" of any external field.
     // This function adjusts only the N-body center of mass.

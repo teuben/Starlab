@@ -289,6 +289,10 @@ void scale(dyn *b, real eps,
     vector com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
 
+    com_vel -= b->get_vel();		// com includes root node; energies
+    					// computed here are relative to the
+					// root node
+
     real com_kin = 0.5*mass*square(com_vel);
 
     if (debug) {
@@ -555,12 +559,13 @@ main(int argc, char ** argv)
 	exit(1);
     }
 
-    dyn *b = get_dyn();
+    dyn *b;
 
-    if (b) {
+    while (b  = get_dyn()) {
 	b->log_history(argc, argv);
 	scale(b, eps, c_flag, e_flag, e, m_flag, m, q_flag, q, r_flag, r, debug);
 	put_dyn(b);
+	rmtree(b);
     }
 }
 

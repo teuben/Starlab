@@ -1022,6 +1022,9 @@ local void print_most_massive_stars(dyn *b,
     if (abs(center_pos) == 0)
 	cod = (get_std_center(b, center_pos, center_vel) == 1);
 
+    center_pos -= b->get_pos();		// std_center quantities include
+    center_vel -= b->get_vel();		// the root node
+
     // Want to print out stars more massive than mass_limit, but no more
     // than number_limit.  New code from Steve (8/01).
 

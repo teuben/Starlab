@@ -2,6 +2,10 @@
 //// compute_com:  Determine the center of mass position and velocity of
 ////               the input N-body system.
 ////
+////               Note: The computed center of mass is defined relative in
+////               absolute terms, and so includes the pos and vel of the
+////               parent node.
+////
 ////               Center of mass position and velocity are written to the
 ////               dyn story of the top-level node; they are also optionally
 ////               returned as function arguments in the library version.
@@ -27,12 +31,10 @@ void compute_com(dyn *b, vector& pos, vector& vel)
     pos /= total_mass;
     vel /= total_mass;
 
-#if 0
-    // Include the root node (all quantities are relative to the root).
+    // Include the parent quantities.
 
     pos += b->get_pos();
     vel += b->get_vel();
-#endif
 
     putrq(b->get_dyn_story(), "com_time", b->get_system_time());
     putvq(b->get_dyn_story(), "com_pos", pos);

@@ -7,6 +7,10 @@
 ////                    in the paper below(*), to use a weighting factor
 ////                    linear in the density, may not converge well).
 ////
+////                    Note: The computed density center is defined relative in
+////                    absolute terms, and so includes the pos and vel of the
+////                    parent node.
+////
 ////                    Densities are not computed here -- run compute_density
 ////                    before invoking compute_mean_cod.
 ////
@@ -84,6 +88,11 @@ void compute_mean_cod(dyn *b, vector& pos, vector& vel)
 	pos /= total_weight;
 	vel /= total_weight;
     }
+
+    // Include the parent quantities.
+
+    pos += b->get_pos();
+    vel += b->get_vel();
 
     putsq(b->get_dyn_story(), "density_center_type", "mean");
     putrq(b->get_dyn_story(), "density_center_time", b->get_system_time());

@@ -607,6 +607,10 @@ void log_output(hdyn * b,
 
     vector cod_pos, com_vel, cod_vel;
     compute_com(b, cod_pos, com_vel);
+
+    cod_pos -= b->get_pos();		// CM quantities include the
+    com_vel -= b->get_vel();		// root node pos and vel
+
     cod_vel = com_vel;
 
 #if 1

@@ -3,6 +3,7 @@
 ////           demonstrations only.
 ////
 //// Options:  -c    add a comment to the output snapshot [false]
+////           -C    output data in 'col' format [no]
 ////           -r    random velocities [0]
 ////           -s    random seed
 ////
@@ -31,12 +32,14 @@ main(int argc, char ** argv)
  
     extern char *poptarg;
     int c;
-    char* param_string = "c:v:s:";
+    char* param_string = "c:Cv:s:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
 	    case 'c': c_flag = true;
 		      comment = poptarg;
+		      break;
+	    case 'C': C_flag = true;
 		      break;
 	    case 's': s_flag = true;
 		      input_seed = atoi(poptarg);
@@ -69,7 +72,7 @@ main(int argc, char ** argv)
     while(c != EOF) {
 	while (c != '\n' && c != EOF) {
 	    if (!isspace(c)) {
-
+ 
 		n++;
 		bo->set_pos(vector(j*LENGTH_SCALE_FACTOR,
 				   i*LENGTH_SCALE_FACTOR, 0));
@@ -103,6 +106,8 @@ main(int argc, char ** argv)
     if (c_flag == TRUE)
         b->log_comment(comment);
     b->log_history(argc, argv);
+
+    if (C_flag) b->set_col_output(true);
 
     b->to_com();
     put_dyn(b);

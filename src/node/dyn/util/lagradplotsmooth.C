@@ -1,12 +1,11 @@
 
-//// lagradplotsmooth:  plot Lagrangian radii for input N-body
-////                    system(s), based on the geometric center;
-////                    takes output from "lagradplot -q" and
-////                    smoothes over w output lines.
-/////
+//// lagradplotsmooth:  plot Lagrangian radii for input N-body system(s), based
+////                    on the geometric center; takes output from "lagradplot -q"
+////                    and smooths over w output lines.
+////
 ////                    (Probably only marginally useful to use this center
-////                     without first piping the system through to_com or
-////                     to_cod.)
+////                     -- better to use the density center or modified center
+////                    of mass, as in lagrad...)
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
 ////              -w    number of output lines to smooth over

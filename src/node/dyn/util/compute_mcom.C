@@ -4,6 +4,10 @@
 ////                as the center of mass of the f [default 90%] particles
 ////                closest to the center of mass.
 ////
+////                Note: The computed center of mass is defined relative in
+////                absolute terms, and so includes the pos and vel of the
+////                parent node.
+////
 ////                Center of mass position and velocity are written to the
 ////                dyn story of the top-level node; they are also optionally
 ////                returned as function arguments in the library version.
@@ -52,6 +56,7 @@ void compute_mcom(dyn *b,
     }
 
     // See if com_pos is already defined and up to date, or compute it.
+    // Com quantities now include the root node (Steve, 6/03).
 
     if (find_qmatch(b->get_dyn_story(), "com_pos")
 	&& getrq(b->get_dyn_story(), "com_time") == b->get_system_time()) {
@@ -59,6 +64,9 @@ void compute_mcom(dyn *b,
 	vel = getvq(b->get_dyn_story(), "com_vel");
     } else
 	compute_com(b, pos, vel);
+
+    pos -= b->get_pos();	// move to relative quantitles
+    vel -= b->get_vel();
 
     // Use pos and vel as the starting point for computing the modified com.
 
@@ -119,6 +127,11 @@ void compute_mcom(dyn *b,
 	}
 
     } while (loop);
+
+    // Include the parent quantities.
+
+    pos += b->get_pos();
+    vel += b->get_vel();
 
     putrq(b->get_dyn_story(), "mcom_time", b->get_system_time());
     putvq(b->get_dyn_story(), "mcom_pos", pos);

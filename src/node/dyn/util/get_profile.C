@@ -1,6 +1,6 @@
 
 // profile: print out a cumulative mass profile for a system,
-//	    relative to the system center of mass.
+//	    relative to the tandard system center.
 //.............................................................................
 //    version 1:  June 1997, Steve McMillan
 //.............................................................................
@@ -41,7 +41,10 @@ main(int argc, char ** argv)
         real msum = 0;
 	int i = 0, n = 0;
 
-        b->to_com();
+	vector pos, vel;
+        get_std_center(b, pos, vel);
+
+	pos -= b->get_pos();		// center includes pos of b...
 
 	for_all_daughters(dyn, b, bb) n++;
 
@@ -49,7 +52,7 @@ main(int argc, char ** argv)
 
 	for_all_daughters(dyn, b, bb) {
 
-	    sys[i].radius = bb->get_pos()*bb->get_pos();
+	    sys[i].radius = square(bb->get_pos() - pos);
 	    sys[i].mass = bb->get_mass();
 	    
 	    i++;

@@ -102,10 +102,12 @@ void compute_general_mass_radii(dyn * b, int nzones,
     real total_mass = 0;
     int i = 0;
 
+    vector dlagr_pos = lagr_pos - b->get_pos();
+
     for_all_daughters(dyn, b, bi) {
 	if (bf == NULL || (*bf)(bi)) {
 	    total_mass += bi->get_mass();
-	    rm_table[i].radius = abs(bi->get_pos() - lagr_pos);
+	    rm_table[i].radius = abs(bi->get_pos() - dlagr_pos);
 	    rm_table[i].mass = bi->get_mass();
 	    i++;
 	}

@@ -1,6 +1,6 @@
 
 //// makeplummer:  construct a Plummer model, with a spatial or mass cut-off
-////             to ensure finite radius.
+////               to ensure finite radius.
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
 ////              -C    output data in 'col' format [no]

@@ -422,6 +422,8 @@ local void compute_core_parameters(dyn* b, int k, vector& center,
       compute_density(b, k, n, local_density, m_cutoff, M_cutoff);
       compute_mean_cod(b, local_density, center, vel, m_cutoff, M_cutoff);
 
+      // LOCAL version -- mean_cod quantities do NOT include the root node!
+
       real total_weight = 0;
       real sum = 0;
       for_all_daughters(dyn, b, bi) 

@@ -2,8 +2,8 @@
 //// lagradplot:  compute and plot Lagrangian radii for input N-body
 ////              system(s), based on the coordinate center.
 ////              (Probably only marginally useful to use this center
-////               without first piping the system through to_com or
-////               to_cod.)
+////               -- better to use the density center or modified center
+////               of mass, as in lagrad...)
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
 ////              -t    use ten-percentiles rather than quartiles [quartiles]

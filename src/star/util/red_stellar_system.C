@@ -1,6 +1,6 @@
 /*
- *  red_stellar system.C: reduce some usefull information from the
- *  			 stellar system
+ *  red_stellar system.C: reduce some useful information from the
+ *  			  stellar system
  *.............................................................................
  *    version 1:  Jan 1997   Simon Portegies Zwart   email: spz@astro.uva.nl
  *.............................................................................
@@ -247,11 +247,6 @@ local bool bound_object(dyn* bj, dyn* bi)
     return bound;
 }
 
-/*-----------------------------------------------------------------------------
- *  compute_mean_cod -- Returns the position and velocity of the density
- *		        center of an N-body system.
- *-----------------------------------------------------------------------------
- */
 local void compute_cod_velocity(dyn *b, vector& vel)
 {
   real total_weight = 0;
@@ -300,6 +295,9 @@ void compute_core_parameters(dyn* b, int k, vector& center, vector &vcore,
 {
     compute_density(b, k);
     compute_mean_cod(b, center, vcore);
+
+    center -= b->get_pos();		// mean_cod quantities
+    vcore -= b->get_vel();		// include the root node
 
     b->set_vel(vcore);
     compute_cod_velocity(b, vcore); 

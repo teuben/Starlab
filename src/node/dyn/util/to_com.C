@@ -1,41 +1,24 @@
 
-//// to_com:  Bring all positions and velocities to center-of-mass frame.
-////          Uses compute_com and writes to root dyn story.
+//// to_com:  Bring all positions and velocities to center-of-mass
+////          frame.  Forces all daughter nodes to have a CM at rest
+////          at the origin, and zeroes the root pos and vel.  Uses
+////          compute_com and writes to the root dyn story.
 ////          Does not correct the virial radius in the case of a
 ////          tidal field.
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
 
 //   version 1:  Dec 1992   Piet Hut
+//   version 2:  May 2003   Steve McMillan
 
 #include "dyn.h"
 
 #ifndef TOOLBOX
 
-void dyn::to_com()
+void dyn::to_com()	// function is a special case of set_com
+			// -- retain for compatibility
 {
-    vector com_pos;
-    vector com_vel;
-
-    compute_com(this, com_pos, com_vel);
-
-//    pos += com_pos;	// Note: The position and velocity of the root node
-//    vel += com_vel;	//       have no particular dynamical significance.
-			//	 They are not integrated forward in time,
-			// 	 and play no role in any integrator.
-
-    for_all_daughters(dyn, this, bj) {
-	bj->pos -= com_pos;
-	bj->vel -= com_vel;
-    }
-
-    // Correct entries in top-level dyn story.
-
-    com_pos = vector(0,0,0);
-    com_vel = vector(0,0,0);
-
-    putvq(get_dyn_story(), "com_pos", com_pos);
-    putvq(get_dyn_story(), "com_vel", com_vel);
+    set_com();		// default: pos = 0, vel = 0
 }
 
 #else
@@ -71,8 +54,9 @@ main(int argc, char ** argv)
         b->log_history(argc, argv);
 
         b->to_com();
+
 	put_dyn(b);
-	delete b;
+	rmtree(b);
     }
 }
 

@@ -31,7 +31,7 @@ EXECUTABLES =	compute_com compute_mcom compute_density compute_max_cod \
 		extract_snap flatten freeze freezebin lagrad lagradplot \
 		list_snap merge_low molecules reflect_velocities scale \
 		plot_stars starplot snap2speck \
-		sys_stats set_com to_cod to_com jiggle \
+		sys_stats set_com to_com jiggle \
                 lagradplotsmooth get_std_center \
 		add_plummer add_power_law add_tidal \
 		set_ignore_internal add_daughter_node getsnap \

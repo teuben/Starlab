@@ -56,7 +56,7 @@ void refine_cluster_mass(dyn *b,
     if (b->get_external_field() == 0) return;
 
     if (b->get_tidal_field() == 0) {
-	refine_cluster_mass2(b, verbose);	// experimental
+	refine_cluster_mass2(b, verbose);	// external, not tidal
 	return;
     }
 
@@ -80,6 +80,9 @@ void refine_cluster_mass(dyn *b,
 
     vector center, vcenter;
     int which = get_std_center(b, center, vcenter);
+
+    center -= b->get_pos();			// std_center quantities
+    vcenter -= b->get_vel();			// include the root node
 
     // which = 1 for density center, 2 for mcom.
 

@@ -8,8 +8,8 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-// refine_mass2.C:  More careful determination of cluster mass and center,
-//		    for use with an external non-tidal field.
+// refine_mass2.C:  More careful determination of cluster mass and
+//		    center, for use with an external non-tidal field.
 //		    Also flag escapers.
 //
 // Externally visible functions:
@@ -148,6 +148,7 @@ void refine_cluster_mass2(dyn *b,
     // to generate the surface.
     //
     // Experimental code, implemented by Steve, 8/01.
+    // Note: most likely to be called from refine_cluster_mass().
 
     // Method only works for a single external, velocity-independent field...
 
@@ -176,6 +177,9 @@ void refine_cluster_mass2(dyn *b,
 
     real M_inside = 0;
     R = abs(center - b->get_external_center());		// global R
+
+    center -= b->get_pos();			// std_center quantities
+    vcenter -= b->get_vel();			// include the root node
 
     for_all_daughters(dyn, b, bb)
 	if (abs(bb->get_pos() - center) <= R)
@@ -238,7 +242,7 @@ void refine_cluster_mass2(dyn *b,
 	real phi_L2 = ext_pot(b, ext_center + r_L2*Rhat) - M/(r_L2-R);
 	// PRC(phi_L1); PRC(phi_L2);
 
-	phi_lim = Starlab::max(phi_L1, phi_L2);		// maximize the cluster mass
+	phi_lim = Starlab::max(phi_L1, phi_L2);    // maximize the cluster mass
 	r_L = Starlab::max(R-r_L1, r_L2-R);
 
 	if (verbose > 1) PRL(r_L);
@@ -321,17 +325,20 @@ void refine_cluster_mass2(dyn *b,
 
     // Write our best estimate of the center to the dyn story.
 
+    vector bc_pos = b->get_pos()+center;
+    vector bc_vel = b->get_vel()+vcenter;
+
     putrq(b->get_dyn_story(), "bound_center_time", (real)b->get_system_time());
-    putvq(b->get_dyn_story(), "bound_center_pos", center);
-    putvq(b->get_dyn_story(), "bound_center_vel", vcenter);
+    putvq(b->get_dyn_story(), "bound_center_pos", bc_pos);
+    putvq(b->get_dyn_story(), "bound_center_vel", bc_vel);
 
     // Send the relevant data to the dynamical friction code, and compute
     // the current frictional acceleration.  Could combine these calls, but
     // keep as is for now.
 
     set_friction_mass(M_inside);
-    set_friction_vel(vcenter);
-    set_friction_acc(b, abs(center));
+    set_friction_vel(b->get_vel()+vcenter);
+    set_friction_acc(b, abs(b->get_pos()+center));
 
     // Repeat the inner loop above and flag stars as escapers or not.
 

@@ -86,8 +86,8 @@ bool tree_is_unbound(sdyn* root, real ttf, int debug) {
 	cerr << endl;
     }
 
-    //    root->flatten_node();  // make the node flat.
-    root->to_com();      // Move to the center-of-mass frame.
+    //    root->flatten_node();		// make the node flat.
+    root->to_com();      		// Move to the center-of-mass frame.
 
     real kin = 0;
     real pot = 0;

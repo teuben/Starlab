@@ -287,12 +287,16 @@ void compute_core_parameters(dyn* b, int k,
 
     if (getrq(b->get_dyn_story(), "density_center_time")
 		!= b->get_system_time()
-	|| !strcmp(getsq(b->get_dyn_story(), "density_center_type"), "mean"))
-      {
+	|| !strcmp(getsq(b->get_dyn_story(), "density_center_type"), "mean")) {
+
 	// Find point with maximum density (changed by SM&SPZ Oct 11, 2001)
+
 	compute_max_cod(b, center, vel);
-	//	compute_mean_cod(b, center, vel);
-      }
+	// compute_mean_cod(b, center, vel);
+    }
+
+    center -= b->get_pos();		// quantities include
+    vel -= b->get_pos();		// the root node
 
     real total_weight = 0;
     real sum = 0;

@@ -1688,11 +1688,14 @@ local void kira_alt_output(hdyn *b)
     ofstream alt("alt_output", ios::app|ios::out);
 
     vector cmpos, cmvel;
-    get_std_center(b, cmpos, cmvel);	       // use CM for now (note: doesn't
-    					       // use pred quantities -- should
-					       // create a "pred" version...)
+    get_std_center(b, cmpos, cmvel);	        // use CM for now (note: doesn't
+    					        // use pred quantities -- should
+						// create a "pred" version...)
 
-    for_all_daughters(hdyn, b, bb) {	       // top-level nodes only
+    cmpos -= b->get_pos();			// std_center quantities
+    cmvel -= b->get_vel();			// include the root node
+
+    for_all_daughters(hdyn, b, bb) {		// top-level nodes only
 
 	real sys_t = bb->get_system_time();
 	real m = bb->get_mass();
@@ -1702,7 +1705,7 @@ local void kira_alt_output(hdyn *b)
 	real v2 = square(dv);
 	real vr2 = square(dr*dv)/r2;
 	
-	alt << sys_t << " "		       // wasteful -- fix soon!
+	alt << sys_t << " "		       	// wasteful -- fix soon!
 	    << m << " " << r2 << " " << v2 << " " << vr2
 	    << endl;
     }

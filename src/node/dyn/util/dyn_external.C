@@ -189,10 +189,13 @@ local inline real plummer_virial(dyn * b)
     // Don't actually need the acc_com term, as it should sum to zero
     // in the loop below...
 
+    vector dcom_pos = com_pos - b->get_pos();		// com quantities
+    vector dcen_pos = b->get_p_center() - com_pos;	// include root node
+
     real vir = 0;
     for_all_daughters(dyn, b, bb) {
-	vector dr = bb->get_pos() - com_pos;
-	dR = bb->get_pos() - b->get_p_center();
+	vector dr = bb->get_pos() - dcom_pos;
+	dR = bb->get_pos() - dcen_pos;
 	vector acc_ext = dR * pow(square(dR)+a2, -1.5);
 	real dvir = bb->get_mass()*dr*(acc_ext - acc_com);
 	// PRL(dvir);
@@ -534,10 +537,13 @@ local inline real power_law_virial(dyn * b)
     // We don't actually need the acc_com term, as it should sum
     // to zero in the loop below...
 
+    vector dcom_pos = com_pos - b->get_pos();		// com quantities
+    vector dcen_pos = b->get_pl_center() - com_pos;	// include root node
+
     real vir = 0;
     for_all_daughters(dyn, b, bb) {
-	vector dr = bb->get_pos() - com_pos;
-	dR = bb->get_pos() - b->get_pl_center();
+	vector dr = bb->get_pos() - dcom_pos;
+	dR = bb->get_pos() - dcen_pos;
 	vector acc_ext = dR * pow(square(dR)+a2, 0.5*(x-3));
 	real dvir = bb->get_mass()*dr*(acc_ext - acc_com);
 	// PRL(dvir);

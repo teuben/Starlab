@@ -121,7 +121,7 @@ main(int argc, char ** argv)
         }            
 
     if ((b = get_dyn()) == NULL)
-       err_exit("compute_com: No N-body system on standard input");
+       err_exit("get_std_center: No N-body system on standard input");
 
     while (b) {
 
@@ -135,6 +135,7 @@ main(int argc, char ** argv)
 
         put_dyn(b);
 	rmtree(b);
+
 	b = get_dyn();
     }
 }

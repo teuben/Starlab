@@ -158,6 +158,9 @@ void check_and_remove_escapers(hdyn* b,
     vector center_pos, center_vel;
     get_std_center(b, center_pos, center_vel);
 
+    center_pos -= b->get_pos();			// std_center quantities
+    center_vel -= b->get_vel();			// include the root node
+
     // Note from Steve (7/01):  If we have a tidal field, we should
     // probably determine the center self-consistently as the center
     // of mass of particles within the Jacobi surface.

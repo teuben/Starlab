@@ -464,6 +464,8 @@ int main(int argc, char ** argv)
 
 	    vector com_pos, com_vel;
 	    compute_com(b, com_pos, com_vel);
+	    com_vel -= b->get_pos();		// energies are relative
+						// to the parent node
 
 	    real kin = get_top_level_kinetic_energy(b)
 			    - 0.5*b->get_mass()*square(com_vel);

@@ -505,6 +505,8 @@ local void print_energies(dyn* b,
 
     vector com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
+
+    com_vel -= b->get_vel();		// CM quantities include root node
     real kin_com = 0.5*b->get_mass()*square(com_vel);
 
     real kin_int = kinetic_energy - kin_com;
@@ -1409,8 +1411,15 @@ void sys_stats(dyn* b,
 
     vector com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
+
     cerr << "    center of mass position = " << com_pos << endl
 	 << "                   velocity = " << com_vel << endl;
+
+    // CM quantities include the root node, but from here on we will work
+    // with quantities relative to the root.
+
+    com_pos -= b->get_pos();
+    com_vel -= b->get_vel();
 
     bool heavy_stars = check_for_doubling(b);
     // PRI(4); PRL(heavy_stars);

@@ -106,6 +106,9 @@ main(int argc, char ** argv)
 	vector cpos, cvel;
 	get_std_center(b, cpos, cvel);
 
+	cpos -= b->get_pos();		// std_center quantities include
+	cvel -= b->get_vel();		// the root node
+
 	// See if we need to compute r_max.
 
 	if (r_max <= 0) {
