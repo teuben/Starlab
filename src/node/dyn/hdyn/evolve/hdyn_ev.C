@@ -280,7 +280,7 @@ void hdyn::synchronize_node()
 //                                                 ________
 //               1              /   | acc |       V | pot |   \         ~
 //   timestep = ---  eta * min (   ---------  ,  -----------   )        ~
-//               32             \   | jerk |       | acc |    /         ~
+//               16             \   | jerk |       | acc |    /         ~
 //
 //  The first expression gives the time scale on which the acceleration is
 //  changing significantly.
@@ -290,13 +290,15 @@ void hdyn::synchronize_node()
 
 void hdyn::set_first_timestep(real additional_step_limit) // default = 0
 {
-    real eta_init = eta / 32;	// initial accuracy parameter
+    real eta_init = eta / 16;	// initial accuracy parameter (arbitrary)
 
     real j2 = jerk * jerk;
     real a2 = acc * acc;
 
-    real dt_adot = eta_init/4;	// time step based on rate of change of acc
-    real dt_ff   = eta_init/4;	// time step based on free-fall time
+    real step_limit = eta_init;	// another arbitrary limit...
+
+    real dt_adot = step_limit;	// time step based on rate of change of acc
+    real dt_ff   = step_limit;	// time step based on free-fall time
     real dt;			// minimum of the two
 
     if (j2 > 0)
@@ -309,9 +311,9 @@ void hdyn::set_first_timestep(real additional_step_limit) // default = 0
 
     // Apply an upper limit to the time step:
 
-    dt = min(dt, eta_init/4);	// eta_init/4 is arbitrary limit...
+    dt = min(dt, step_limit);
 
-    real true_limit = step_limit;
+    real true_limit = min(initial_step_limit, step_limit);
     if (additional_step_limit > 0) true_limit = min(true_limit,
 						    additional_step_limit);
 
@@ -320,6 +322,10 @@ void hdyn::set_first_timestep(real additional_step_limit) // default = 0
     if (time != 0)
 	while (fmod(time, timestep) != 0)
 	    timestep *= 0.5;
+
+//    cerr << "in set_first_timestep() for " << format_label()
+//	 << " at time " << system_time << endl;
+//    PRC(eta_init); PRC(true_limit); PRL(dt);
 
     xreal tnext = time + timestep;
 
