@@ -143,6 +143,33 @@ local bool print_numbers_and_masses(dyn* b)
     return (m_min < m_max);
 }
 
+local void print_parameters_for_massive_black_holes(dyn *b, 
+						    real kT, 
+						    vector center, 
+						    bool verbose) {
+
+  int n_bh = 0;
+  for_all_daughters(dyn, b, bi) {
+    if(find_qmatch(bi->get_log_story(), "black_hole")) {
+      
+      n_bh ++;
+      bool long_binary_output = true;	
+      print_binary_from_dyn_pair(b, bi,
+				 kT, center, verbose,
+				 long_binary_output);
+    }
+  }
+
+  if(n_bh==0) {
+    cerr << "           "
+         << "   ---   "
+         << "No massive black holes"
+         << "   ---   ";
+  }
+}
+
+
+
 local int which_zone(dyn* bi, vector& center_pos, int n_lagr, real* r_lagr)
 {
     vector dr = bi->get_pos() - center_pos;
@@ -1491,6 +1518,15 @@ void sys_stats(dyn* b,
 	    print_numbers_and_masses_by_radial_zone(b, 1);
 
 	}
+
+	bool black_hole = true;
+	if(black_hole) {
+	  if (verbose)
+	    cerr << endl
+	         << "  Orbital paremters for massive black holes:"
+		 << endl;
+	    print_parameters_for_massive_black_holes(b, kT, center, verbose);
+	}	
 
 	if (verbose)
 	    cerr << "\n  Anisotropy by Lagrangian zone (singles):\n";
