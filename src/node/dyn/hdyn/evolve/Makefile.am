@@ -26,6 +26,8 @@ libhdyn_2_la_SOURCES = hdyn_unpert.C hdyn_ev.C hdyn_tree.C hdyn_merge.C \
     kira_stellar.C kira_approx.C kira_encounter.C kira_top_level.C kira_int.C \
     kira_density.C hdyn_grape4.C hdyn_grape6.C kira.C kira_smallN.C
 
+hdyn_ev_lo_CXXFLAGS = -O0
+
 kira_SOURCES = kira.C
 kira_CPPFLAGS = -DTOOLBOX
 kira_LDADD = ../libhdyn.la ../xutil/libxhdyn.la \
