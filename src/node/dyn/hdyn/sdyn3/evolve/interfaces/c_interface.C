@@ -57,7 +57,7 @@ extern "C" {
     void c_print_scatter3_info(initial_state3* init,
 			       intermediate_state3* inter,
 			       final_state3* final,
-			       bool Q_flag, bool q_flag, bool b_flag,
+			       bool Q_flag, bool q_flag, int b_flag,
 			       real cpu) {
 	cerr << ":  ";
 	print_scatter3_outcome(*inter, *final, cerr);

@@ -392,7 +392,7 @@ local void log_output_1(int n_experiments, int i, ostream &s)
 local void log_output_2(initial_state3 &init,
 			intermediate_state3 &inter,
 			final_state3 &final,
-			bool Q_flag, bool q_flag, bool b_flag,
+			bool Q_flag, bool q_flag, int b_flag,
 			real cpu,
 			ostream &s)
 {
@@ -427,7 +427,7 @@ main(int argc, char **argv)
     int psi_flag = 0;
     real psi = 0;
 
-    bool  b_flag = FALSE;
+    int   b_flag = 0;
     bool  q_flag = FALSE;
     bool  Q_flag = FALSE;
 
@@ -481,6 +481,7 @@ main(int argc, char **argv)
 	    case 'O': strncpy(outfile, poptarg, 511);
 		      outfile[511] = '\0';
 	    	      outfile_set = true;
+		      break;
 	    case 'p': planar_flag = 1;
 		      break;
 	    case 'P': planar_flag = -1;
@@ -575,9 +576,12 @@ main(int argc, char **argv)
 		 dt_out, dt_snap, snap_cube_size);
 	cpu = cpu_time() - cpu;
 
+	// Specified b_flag may be 0 or 1.  New option b_flag > 1
+	// indicates body output in final report only.
+
 	if (outfile_set) {
 	    ofstream s(outfile, ios::app);
-	    log_output_2(init, inter, final, Q_flag, q_flag, b_flag, cpu, s);
+	    log_output_2(init, inter, final, Q_flag, q_flag, b_flag+2, cpu, s);
 	    s.close();
 	} else
 	    log_output_2(init, inter, final, Q_flag, q_flag, b_flag, cpu, cerr);

@@ -46,10 +46,15 @@ void print_bodies(ostream & s, body * system, int prec)
 
     s << "  body structure:" << endl;
     for (int k = 0; k < 3; k++) {
-        s << "    " << system[k].index << "  "   << system[k].mass;
-	for (int kp = 0; kp < 3; kp++) s << "  "   << system[k].pos[kp];
-	for (int kv = 0; kv < 3; kv++) s << "  "   << system[k].vel[kv];
-	s << endl;
+
+	// No need to print lines with zero index or negative mass...
+
+	if (system[k].index > 0 && system[k].mass > 0) {
+	    s << "    " << system[k].index << "  "   << system[k].mass;
+	    for (int kp = 0; kp < 3; kp++) s << "  "   << system[k].pos[kp];
+	    for (int kv = 0; kv < 3; kv++) s << "  "   << system[k].vel[kv];
+	    s << endl;
+	}
     }
 }
 
@@ -161,13 +166,26 @@ void print_scatter3_summary(intermediate_state3& inter,
 void print_scatter3_report(initial_state3& init,
 			   intermediate_state3& inter,
 			   final_state3& final,
-			   real cpu,
-			   bool b_flag,
+			   real cpu,		// default = -1
+			   int b_flag,		// default = 0
 			   ostream& s)		// default = cerr
 {
-    print_initial(s, init, b_flag);
-    print_intermediate(s, inter, b_flag);
+    int flag1 = b_flag, flag2 = b_flag;
+
+    // Don't want init body output if b_flag = 2.
+
+    if (b_flag == 2) flag1 = 0;
+
+    // Intermediate and final body arrays will be the same unless a
+    // merger occurred.  Suppress intermediate output for b_flag = 2
+    // if there were no mergers.
+
+    if (b_flag == 2 && final.descriptor < merger_binary_1) flag2 = 0;
+
+    print_initial(s, init, flag1);
+    print_intermediate(s, inter, flag2);
     print_final(s, final, b_flag);
+
     if (cpu > 0) s << "  CPU time = " << cpu << endl;
 }
 

@@ -36,7 +36,7 @@ main(int argc, char **argv)
 
     int planar_flag = 0;
 
-    bool  b_flag = FALSE;
+    int   b_flag = 0;
     bool  q_flag = FALSE;
     bool  Q_flag = FALSE;
 
