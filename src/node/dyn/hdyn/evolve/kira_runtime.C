@@ -255,6 +255,12 @@ local bool kill_multiples(hdyn * b)
     return killed;
 }
 
+
+
+// Functions to allow modifications to run-time parameters and options.
+// Note the many similarities between modify_params, modify_options,
+// and modify_diag -- possible merger of the three?
+
 local void modify_params(hdyn * b, char * name,
 			 real& t_end, real& new_dt_log, real& new_dt_snap,
 			 int& long_binary_output, char* new_snap_save_file)
@@ -475,6 +481,7 @@ local char *get_string(char *s)
     return NULL;
 }
 
+
 local void modify_options(hdyn * b, char * name, bool del = true)
 {
     // Modify entries in the hdyn::kira_options class.
@@ -641,6 +648,18 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 		b->get_kira_options()->grape_check_count
 		    = get_value(s, DEFAULT_GRAPE_CHECK_COUNT);
 
+	    else if ((s = strstr(line, "grape_coll_freq"))
+		     || (s = strstr(line, "grape_coll")))
+
+		b->get_kira_options()->grape_coll_freq
+		    = get_value(s, DEFAULT_GRAPE_COLL_FREQ);
+
+	    else if ((s = strstr(line, "grape_pert_freq"))
+		     || (s = strstr(line, "grape_pert")))
+
+		b->get_kira_options()->grape_pert_freq
+		    = get_value(s, DEFAULT_GRAPE_PERT_FREQ);
+
 	    else if ((s = strstr(line, "grape_max_cpu"))
 		     || (s = strstr(line, "grape_max")))
 
@@ -678,6 +697,7 @@ local void modify_options(hdyn * b, char * name, bool del = true)
     }
 }
 
+
 local void modify_diag(hdyn * b, char * name, bool del = true)
 {
     // Modify entries in the hdyn::kira_diag class.
@@ -940,6 +960,7 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
     }
 }
 
+
 local void pp(hdyn * b, char * name)
 {
     ifstream file(name);
@@ -1020,14 +1041,15 @@ local void dump_to_file(hdyn* b, char* name)
 	cerr << "No data written" << endl;
 }
 
+
 // Check_kira_init:  read and process configuration files if present,
 //		     but do *not* delete them.
 
 void check_kira_init(hdyn *b)
 {
     // Look in standard places for nonstandard options.  Merge the old
-    // old "INIT_DIAG" and "INIT_OPTIONS" settings into a single file
-    // (change made by Steve, 1/02).
+    // old "INIT_DIAG" and "INIT_OPTIONS" settings into a single .kira
+    // file (change made by Steve, 1/02).
 
     char file[1024];
 
@@ -1053,7 +1075,9 @@ void check_kira_init(hdyn *b)
     }
 }
 
-// Check_kira_runtime:  read and process files if present, then delete them.
+
+// Check_kira_runtime:  read and process reconfiguration files if present,
+//			then delete them.
 
 bool check_kira_runtime(hdyn* b,
 			real& t_end, real& new_dt_log, real& new_dt_snap,
