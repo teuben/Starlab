@@ -170,18 +170,19 @@ local void mkbinary(dyn* b, real lower, real upper,
 			    "mkbinary: Illegal limits on angular momentum");
 		    do {
 			ecc = sqrt(randinter(0,emax));
-			l_const = log(upper) - log(lower);
-			angular_momentum = lower * pow(frac, randinter(0,1));
+			l_const = log(upper) - log(max(lower, a_min));
+			angular_momentum = max(lower, a_min)*pow(frac, randinter(0,1));
 			sma = pow(angular_momentum, 2)
 			    	/ (m_total*(1-pow(ecc, 2)));
-			if (sma*(1-pow(ecc, 2)) > a_min) detached = true;
+			if (sma*(1-ecc) > a_min) 
+			  detached = true;
 		    }
 		    while(!detached);
 		}
 		else {
 		    ecc = sqrt(randinter(0,emax));
 		    l_const = log(upper) - log(lower);
-		    angular_momentum = lower * pow(frac, randinter(0,1));
+		    angular_momentum = lower*pow(frac, randinter(0,1));
 		    sma = pow(angular_momentum, 2) / (m_total*(1-pow(ecc, 2)));
 		}
 		energy = 0.5 * m_total / sma;
@@ -201,12 +202,12 @@ local void mkbinary(dyn* b, real lower, real upper,
 		    if (option == 3) {// limits between peri- and apocenter.
 			real pericenter, apocenter;
 			do {
-			    ecc = sqrt(randinter(0,emax));
-			    pericenter = lower*(1-ecc);
+			    ecc = sqrt(randinter(0, emax));
+			    pericenter = max(lower, a_min)*(1-ecc);
 			    apocenter = upper*(1+ecc);
-			    a_const = log(upper) - log(lower);
-			    semi_major_axis = lower*exp(randinter(0., a_const));
-			    if (semi_major_axis*(1-pow(ecc, 2)) > a_min  &&
+			    a_const = log(upper) - log(max(lower, a_min));
+			    semi_major_axis = max(lower, a_min)*exp(randinter(0., a_const));
+			    if (semi_major_axis*(1-ecc) > a_min  &&
 				(semi_major_axis > pericenter &&
 				 semi_major_axis < apocenter))
 				detached = true;
@@ -221,10 +222,11 @@ local void mkbinary(dyn* b, real lower, real upper,
 			// good enough.  mkbinary does not know much about
 			// stars.
 			do {
-			    ecc = sqrt(randinter(0,emax));
-			    a_const = log(upper) - log(lower);
-			    semi_major_axis = lower*exp(randinter(0., a_const));
-			    if(semi_major_axis*(1-pow(ecc, 2))>a_min)
+			    ecc = sqrt(randinter(0, emax));
+			    a_const = log(upper) - log(max(lower, a_min));
+			    semi_major_axis = max(lower, a_min)*exp(randinter(0., a_const));
+			    // if(semi_major_axis*(1-pow(ecc, 2))>a_min)
+			    if(semi_major_axis*(1-ecc)>a_min)
 				detached = true;
 			}
 			while(!detached);
