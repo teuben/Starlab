@@ -418,7 +418,51 @@ void hdyn::setup_binary_node()
     // Note that pot is not set -- must be recalculated.
 
     time = older_daughter->time;
-    timestep = Starlab::min(older_daughter->timestep, younger_daughter->timestep);
+
+    // Set the time step equal to the smallest perturbed leaf step.
+
+    timestep = older_daughter->timestep;
+
+    for_all_nodes(hdyn, this, bb) {
+	if (bb != this) {
+
+	    hdyn *od = bb->get_oldest_daughter();
+
+	    if (!od || od->kep) {
+
+		timestep = Starlab::min(timestep, bb->timestep);
+
+		// Treat unperturbed CM as a leaf as far as the time
+		// step is concerned, but check its unpertubed time step
+		// and finally move to the younger daughter to fool
+		// next_node() into skipping the internal structure of
+		// the unperturbed system.
+
+		if (od) {
+		    real dt = od->time + od->unperturbed_timestep - time;
+		    if (dt > 0)
+			while (timestep > dt) timestep /= 2;
+		    bb = od->get_younger_sister();
+		}
+	    }
+	}
+    }
+
+    // Make sure timestep is consistent with the current time.
+    // (Should be unnecessary, as time should be a multiple of the
+    // component time steps which triggered the creation of this node.)
+
+    int count = 0;
+    while (fmod((real)time, timestep) != 0) {
+	timestep /= 2;
+	if (++count >= 10)
+	    cerr << "warning: timestep = " << timestep
+		 << " for " << format_label() << endl;
+	if (++count > 20) {
+	    cerr << "warning: breaking from while loop" << endl;
+	    break;
+	}
+    }
 
     mass = older_daughter->mass + younger_daughter->mass;
 
