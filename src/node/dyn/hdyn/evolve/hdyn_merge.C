@@ -563,7 +563,14 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
     
     real epot0, ekin0, etot0;
     calculate_energies(get_root(), eps2, epot0, ekin0, etot0);	// dyn function
-    
+    cerr << "The hard way: ";
+    PRC(epot0); PRC(ekin0); PRL(etot0);
+
+    cerr << "The hard-ware way: ";
+    calculate_internal_energies(get_root(), epot0, ekin0, etot0);
+    PRC(epot0); PRC(ekin0); PRL(etolst0);
+
+
     hdyn* cm = get_parent();
     
     real epot_int = -mass * bcoll->mass / abs(pos - bcoll->pos);
@@ -714,8 +721,13 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
     
     real epot, ekin, etot;
     calculate_energies(get_root(), eps2, epot, ekin, etot);	// dyn function
-    
+    cerr << "The hard way: ";
     PRC(epot); PRC(ekin); PRL(etot);
+
+    cerr << "The hard-ware way: ";
+    calculate_internal_energies(get_root(), epot, ekin, etot);
+    PRC(epot); PRC(ekin); PRL(etot);
+
     // pp3(cm, cerr);
     
     real de_total = etot - etot0;

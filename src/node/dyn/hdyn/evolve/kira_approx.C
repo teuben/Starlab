@@ -12,9 +12,9 @@
 
 #include "stdinc.h"
 
-#ifndef TOOLBOX
-
 #define POW -0.125		// approximations work best for POW close to 0
+
+#ifndef TOOLBOX
 
 #define X0	1.0
 #define X1	1.5
