@@ -13,10 +13,15 @@
  *.............................................................................
  */
 
-//// gethist:  check Starlab function for saving command line
-////           and date of execution.
+//// Check Starlab function for saving command line and date of execution.
 ////
-//// No options
+//// Options:
+//// None.
+////
+//// Written by Piet Hut.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
 
 #include <time.h>
 #include "stdinc.h"
@@ -186,17 +191,24 @@ char *gethist(int argc, char ** argv)
 
 #else
 
-/*-----------------------------------------------------------------------------
- *  main  --  driver to test  gethist() .
- *            for example:
- *                gethist these are words "but this is a single string"
- *-----------------------------------------------------------------------------
- */
+//-----------------------------------------------------------------------------
+//  main  --  driver to test gethist() .
+//            for example:
+//                gethist these are words "but this is a single string"
+//-----------------------------------------------------------------------------
+
 main(int argc, char ** argv)
-    {
+{
     check_help();
+    extern char *poptarg;
+    int c;
+    char* param_string = "c:";
+
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {}
+
     printf("%s\n", gethist(argc, argv));
-    }
+}
 
 #endif
 

@@ -10,10 +10,16 @@
  *.............................................................................
  */
 
-//// precision:  Set Starlab output precision using environment
-////             variable STARLAB_PRECISION, if available.
+//// Set Starlab output precision using environment variable
+//// STARLAB_PRECISION, if available.
 ////
-//// No options
+//// Options:
+//// None.
+////
+//// Written by Piet Hut and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
 
 // Probably should be implemented as a class (like kira_options)...
 
@@ -80,6 +86,13 @@ int adjust_starlab_precision(int p)
 main(int argc, char** argv)
 {
     check_help();
+    extern char *poptarg;
+    int c;
+    char* param_string = "c:";
+
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {}
+
     set_starlab_precision(cout);
     
     real x = sqrt(2.0);

@@ -1,8 +1,14 @@
 #include "stdinc.h"
 
-//// runtime_help:  test Starlab run-time help function
+//// Test Starlab run-time help function
 ////
-//// Options:       -help     print this message
+//// Options:
+////       --help     print this message
+////
+//// Written by Piet Hut and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
 
 #ifndef TOOLBOX
 
@@ -126,6 +132,12 @@ void check_runtime_help(int argc, char** argv,
 main(int argc, char** argv)
 {
     check_help();
+    extern char *poptarg;
+    int c;
+    char* param_string = "c:";
+
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {}
 }
 
 #endif

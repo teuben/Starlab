@@ -30,13 +30,18 @@
 //.............................................................................
 
 
-//// randinter:  Check Starlab random number generators.  Print out a
-////             specified number of random numbers uniformly distributed
-////             on [0,1).
+//// Check the Starlab random number generators.  Print out a specified
+//// number (N) of random numbers uniformly distributed on [0,1).
 ////
-//// Options:    first argument = number of "throws of the dice" [no default]
-////             second argument = random seed [take from system clock]
-
+//// Usage: randinter N seed
+////
+//// Options:
+////      first argument = number of "throws of the dice" [no default]
+////      second argument = random seed [take from system clock]
+////
+//// Written by Piet Hut and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include <time.h>
 #include "stdinc.h"
@@ -351,6 +356,13 @@ real gausrand(real mean, real sdev)
 main(int argc, char **argv) {
 
     check_help();
+    extern char *poptarg;
+    int c;
+    char* param_string = "c:";
+
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {}
+
     if (argc < 2)
 	err_exit("randinter N [S] (for N throws of dice, from seed S)");
 

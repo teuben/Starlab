@@ -1,14 +1,21 @@
 #include  "starlab_vector.h"
 
-//// test_vector:  test Starlab vec class operators
+//// Test Starlab vec class operators.
 ////
-//// No options
+//// options:
+////    None.
 
 #define POST_GCC_30
 
 main(int argc, char** argv)
 {
     check_help();
+    extern char *poptarg;
+    int c;
+    char* param_string = "c:";
+
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {}
 
     vec x(1.0);
 #ifdef POST_GCC_30

@@ -2,9 +2,15 @@
 //  story.C
 //
 
-//// story:  test Starlab story manipulation functions
+//// Test Starlab story manipulation functions.
 ////
-//// No options
+//// Options:
+//// None.
+////
+//// Written by Piet Hut and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
 
 #include "story.h"
 
@@ -1210,8 +1216,15 @@ int  is_quantity_name(story * a_story, char * name)
 
 main(int argc, char** argv)
     {
-    story * s;
     check_help();
+    extern char *poptarg;
+    int c;
+    char* param_string = "c:";
+
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {}
+
+    story * s;
 
 //    while (cin >> s)
 //	{

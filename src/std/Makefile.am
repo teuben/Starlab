@@ -18,8 +18,8 @@
 
 
 pkglib_LTLIBRARIES = libstd.la
-bin_PROGRAMS = gethist pgetopt randinter runtime_help precision story \
-    test_vector xtest xreal
+bin_PROGRAMS = gethist pgetopt randinter runtime_help precision \
+	story test_vector xtest xreal
 
 libstd_la_LDFLAGS = -lm
 libstd_la_SOURCES = randinter.C pgetopt.C gethist.C precision.C story.C \
