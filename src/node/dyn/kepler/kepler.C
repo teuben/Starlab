@@ -157,8 +157,11 @@ local void err_or_warn(char *s)
 	// Place a fairly conservative limit here (Steve, 8/02).
 
 	warning(s);
-	if (kepler_tolerance_level == 3 && ++nwarnings > MAX_WARNINGS)
+
+	if (kepler_tolerance_level == 3 && ++nwarnings > MAX_WARNINGS) {
+	    cerr << "err_or_warn: too many warnings: "; PRL(MAX_WARNINGS);
 	    kepler_tolerance_level = 0;
+	}
 
     } else
 	err_exit(s);
