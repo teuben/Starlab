@@ -345,7 +345,7 @@ void put_story(ostream& str, story& s)
 #define  SAFE_INT_LENGTH     (5 + (BYTE_LENGTH*sizeof(int))/3)
 #define  SAFE_REAL_LENGTH    (10 + (BYTE_LENGTH*sizeof(real))/3)
 #define  SAFE_STRING_LENGTH   1    /* this should hold the string terminator */
-#define  SAFE_vector_LENGTH  (3 * (SAFE_REAL_LENGTH + 2))
+#define  SAFE_VECTOR_LENGTH  (3 * (SAFE_REAL_LENGTH + 2))
 #define  EXTRA_LENGTH  5           /* for initial "  " and " = " */
 
 /*-----------------------------------------------------------------------------
@@ -392,7 +392,8 @@ local void  write_ulq(story * a_story_line, char * name, unsigned long value)
  *  write_rq  --  write a real quantity to a line.
  *-----------------------------------------------------------------------------
  */
-local void  write_rq(story * a_story_line, char * name, real value, int p = 6)
+local void  write_rq(story * a_story_line, char * name, real value,
+		     int p = STD_PRECISION)
 {
     if (!a_story_line || !name) return;
 
@@ -439,18 +440,25 @@ local void  write_sq(story * a_story_line, char * name, char * value)
  *  write_vq  --  write a vector quantity to a line.
  *-----------------------------------------------------------------------------
  */
-local void  write_vq(story * a_story_line, char * name, vec & value)
+local void  write_vq(story * a_story_line, char * name, vec & value,
+		     int p = STD_PRECISION)
 {
     if (!a_story_line || !name) return;
 
     char * new_string;
     int  new_string_length;
+    char format[128];
     
-    new_string_length = EXTRA_LENGTH + strlen(name) + SAFE_vector_LENGTH;
+    new_string_length = EXTRA_LENGTH + strlen(name) + SAFE_VECTOR_LENGTH;
     new_string  = new char[new_string_length];
 
-    sprintf(new_string, "  %s = %.6g %.6g %.6g", name,	// %g here may cause
-	    value[0], value[1], value[2]);		// obscure problems
+    // Allow variable precision (SLWM 6/99).
+
+    sprintf(format, "  %%s = %%.%dg %%.%dg %%.%dg",	// new format seems OK
+	    p, p, p);
+    // sprintf(new_string, "  %s = %.6g %.6g %.6g",	// old format...
+
+    sprintf(new_string, format, name, value[0], value[1], value[2]);
 
     a_story_line->set_text(new_string);
     delete [] new_string;
@@ -1012,7 +1020,8 @@ void dump_story(story* s, int indent)
  *             overwrite the line containing that quantity.
  *-----------------------------------------------------------------------------
  */
-void putrq(story * a_story, char * name, real value, int precision)
+void putrq(story * a_story, char * name, real value,
+	   int precision)			// default = STD_PRECISION
 {
     if (!a_story || !name) return;
 
@@ -1029,14 +1038,11 @@ void putrq(story * a_story, char * name, real value, int precision)
 	dump_story(a_story);
     }
 
-    if ((story_line = find_qmatch(a_story, name)) == NULL)
-	{
-
+    if ((story_line = find_qmatch(a_story, name)) == NULL) {
 	if (dbg) cerr << "making new story" << endl;
-
 	story_line = new story;	
 	add_daughter_story(a_story, story_line);
-	}
+    }
 
 
     if (dbg) {
@@ -1145,19 +1151,19 @@ void putsq(story * a_story, char * name, char * value)
  *             overwrite the line containing that quantity.
  *-----------------------------------------------------------------------------
  */
-void putvq(story * a_story, char * name, vec & value)
+void putvq(story * a_story, char * name, vec & value,
+	   int precision)			// default = STD_PRECISION
 {
     if (!a_story || !name) return;
 
     story * story_line;
 
-    if ((story_line = find_qmatch(a_story, name)) == NULL)
-	{
+    if ((story_line = find_qmatch(a_story, name)) == NULL) {
 	story_line = new story;	
 	add_daughter_story(a_story, story_line);
-	}
+    }
 
-    write_vq(story_line, name, value);
+    write_vq(story_line, name, value, precision);
 }
 
 /*-----------------------------------------------------------------------------
