@@ -1,0 +1,29 @@
+Some issues for starlab4
+------------------------
+
+
+- use flags in a consistent way, such that -I and -L additions are not needed
+  in the makefiles. In particular, linking X11 application in starlab3 has:
+	-L$(STARLAB_X11LIB) -lX11 $(STARLAB_XLIB)
+  and I needed to make it
+	$(STARLAB_X11LIB) $(STARLAB_XLIB)
+
+- to solve the makefile.SITE issue in src/node/dyn/hdyn/util and
+  src/node/dyn/hdyn/evolve i suggest we use a SITE variable in the makefile,
+  look at the Makefile's config_new target. In general, we could also solve
+  this using two STARLAB_GRAPE_* variables? See cshrc.starlab.in for comments.
+
+- update TOOLS
+	
+- use of the CPP preprocessor is only guarenteed for .c files... we use .F
+  but i've seen  for gnu
+	cpp file.F > file.f
+  and for others i also saw
+	cpp file.F file.f
+  (which does not work for gnu)
+  Or is the -E or -P flag the trick here. At any rate,need to figure out a consistent
+  syntax.
+
+- remove redundancies in Makefile's by using a 'makedefs' file that can be
+  included
+
