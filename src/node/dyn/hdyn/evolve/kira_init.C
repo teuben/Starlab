@@ -19,6 +19,8 @@
 
 #define		DEFAULT_ETA		0.1
 #define		DEFAULT_GAMMA		1.e-7
+#define		DEFAULT_DMIN		0.25
+#define		DEFAULT_LAG		2.5
 
 #define		DEFAULT_DT		10
 #define		DEFAULT_DT_REINIT	1
@@ -29,7 +31,7 @@
 
 #define		SEED_STRING_LENGTH	60
 
-#define Rsun_pc 2.255e-8	// R_sun/1 parsec = 6.960e+10/3.086e+18;
+#define Rsun_pc 2.255e-8	// R= _sun/1 parsec = 6.960e+10/3.086e+18;
 
 local void initialize_index(node * b, bool verbose)
 {
@@ -219,9 +221,20 @@ local void set_runtime_params(hdyn *b, bool verbose,
     choose_param(b, verbose, eps, eps_flag, "eps", true);
     b->set_eps(eps);				// ^^^^	(0 is OK)
 
-    choose_param(b, verbose, d_min, d_min_flag, "d_min");
-    int nbody = b->n_leaves();	// note scaling with *current* N
-    b->set_d_min_sq(square(d_min/nbody));
+    choose_param(b, verbose, d_min, d_min_flag, "d_min_fac");
+    b->set_d_min_fac(d_min);
+
+    // Create a value for d_min_sq().  The value will be revised
+    // in evolve_system().
+
+    int nbody = b->n_daughters();	// note scaling with *current* N
+					// and assumption that rvirial = 1
+    real d_min_sq = square(d_min/nbody);
+
+    // See if a value exists in the snapshot.
+
+    choose_param(b, verbose, d_min_sq, false, "d_min_sq");
+    b->set_d_min_sq(d_min_sq);
 
     choose_param(b, verbose, lag_factor, lag_flag, "lag_factor");
     b->set_lag_factor(square(lag_factor));
@@ -699,8 +712,8 @@ bool kira_initialize(int argc, char** argv,
 
     real eta = DEFAULT_ETA;
     real eps = 0.0;
-    real d_min = 1.0;
-    real lag_factor = 2.5;
+    real d_min = DEFAULT_DMIN;
+    real lag_factor = DEFAULT_LAG;
     real gamma = DEFAULT_GAMMA;
 
     bool eta_flag = false, eps_flag = false, d_min_flag = false,

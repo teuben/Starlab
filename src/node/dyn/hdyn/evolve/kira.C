@@ -968,12 +968,8 @@ local int integrate_list(hdyn * b,
 		// PRC(bi), PRL(bcoll);
 
 
-
-
 		// *** Must have check_and_merge take care of full_dump
 		// *** output in this case...
-
-
 
 
 		tree_changed = true;
@@ -1239,6 +1235,29 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose)
 							// timesteps are only
 							// set if zero
 
+    // Reset and save d_min_sq().
+
+    int n = 0;
+    real mass = 0;
+    real pot = 0;
+    for_all_daughters(hdyn, b, bb) {
+	n++;
+	mass += bb->get_mass();
+	pot += bb->get_mass()*bb->get_pot();
+    }
+    pot /= 2;
+    PRC(mass); PRC(pot);
+
+    real rvirial = -0.5*mass*mass/pot;
+    PRC(rvirial); PRL(n);
+
+    cerr << "old "; PRC(b->get_d_min_sq());
+    real d_min_sq = square(b->get_d_min_fac()*rvirial/n);
+    b->set_d_min_sq(d_min_sq);
+    cerr << "new "; PRL(b->get_d_min_sq());
+
+    putrq(b->get_log_story(), "kira_d_min_sq", d_min_sq);
+
     b->reconstruct_perturbed_list();
 
     // Quietly reinitialize all kepler structures.
@@ -1446,6 +1465,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     // bool next_flag[2 * b->n_daughters()];		// fails on SGI
     bool *next_flag = new bool[2 * b->n_daughters()];	// equivalent?
+    real *last_dt = new real[2 * b->n_daughters()];
 
     set_n_top_level(b);
 
@@ -1898,16 +1918,23 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	if (full_dump) {
 
-	    // The only current use of this array is to test for changes
-	    // in unperturbed status.  This may expand as we refine the
-	    // full_dump output.  Not a clean way of doing this...
-	    // (Steve, 10/00)
+	    // The next_nodes[] array is used to test for changes in
+	    // unperturbed status.  The last_dt[] array saves timesteps
+	    // at the start of the step.
+	    //
+	    // Not a particularly clean way to proceed...
+	    //
+	    //					(Steve, 10/00, 8/01)
 
-	    for (int i = 0; i < n_next; i++)
+	    for (int i = 0; i < n_next; i++) {
+
 		if (next_nodes[i]->get_kepler())
 		    next_flag[i] = true;
 		else
 		    next_flag[i] = false;
+
+		last_dt[i] = next_nodes[i]->get_timestep();
+	    }
 
 	}
 
@@ -1919,6 +1946,9 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	count += 1;
 
 	if (full_dump) {
+
+	    // Check for dump of worldline information.
+
 	    for (int i = 0; i < n_next; i++) {
 
 		hdyn *curr = next_nodes[i];
@@ -1927,9 +1957,8 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 		    // Always dump new tree information (see hdyn_tree.C),
 		    // but allow the possibility of fewer dumps during
-		    // normal integration.
-
-		    // Ordinarily, dump every n_dump steps.
+		    // normal integration.  Ordinarily, dump every n_dump
+		    // steps.
 
 		    bool dump_now = (fmod(curr->get_steps(), n_dump) == 0);
 
@@ -1938,6 +1967,64 @@ local void evolve_system(hdyn * b,	       // hdyn array
 		    dump_now |=
 			(next_flag[i] && !curr->get_kepler()
 			 || (!next_flag[i] && curr->get_kepler()));
+
+#if 0
+		    // *** New treatment of lightly perturbed binaries.
+		    // *** What about slow binaries?  Later...
+
+		    if (curr->is_low_level_node()
+			&& !curr->get_kepler()
+			&& curr->get_perturbation_squared()
+				< SMALL_TDYN_PERT_SQ) {
+
+			// Which criterion to use?
+
+			int which = 2;
+
+			if (which == 1) {
+
+			    // Attempt #1: Only dump if we have just crossed
+			    //	           the parent step:
+
+			    real t_par = curr->get_parent()->get_time();
+			    dump_now = (t >= t_par && t - last_dt[i] < t_par);
+
+			    // However, the parent step for a significantly
+			    // perturbed binary may not be significantly greater
+			    // than the internal step, so the gain may not be
+			    // very great.  The parent timestep is sensitive
+			    // to "wiggles" due to perturbers, and increases
+			    // significantly as the perturbation increases.
+
+			} else if (which == 2) {
+
+			    // Attempt #2: Simply increase the dump timescale
+			    //	           to come closer to a few bound orbits.
+			    //	           Possibly could be corrected to take
+			    //	           into account whether or not the
+			    //	           orbit is bound; however, if we simply
+			    //	           interpolate from the start to the end
+			    //	           of an unbound segment, should be OK.
+
+			    dump_now = (fmod(curr->get_steps(),
+					     10*n_dump) == 0);
+			}
+
+			if (dump_now && !curr->get_elder_sister()) {
+			    cerr << endl
+				 << curr->get_parent()->format_label()
+				 << " is lightly perturbed; get_steps = "
+				 << curr->get_steps() << endl;
+			    PRL(sqrt(max(0.0,
+					 curr->get_perturbation_squared())));
+			    real ratio = curr->get_parent()->get_timestep()
+					   / curr->get_timestep();
+			    PRL(curr->get_parent()->get_timestep());
+			    PRC(curr->get_timestep());
+			    PRL(ratio);
+			}
+		    }
+#endif
 
 		    if (dump_now) {
 

@@ -299,6 +299,7 @@ local void modify_params(hdyn * b, char * name,
 		if (tmp > 0 && tmp < 1) {
 		    cerr << "Setting eta = " << tmp << endl;
 		    b->set_eta(tmp);
+		    putrq(b->get_log_story(), "eta", tmp);
 		}
 
 	    } else if (s = strstr(line, "-b")) {
@@ -337,9 +338,9 @@ local void modify_params(hdyn * b, char * name,
 
 		real tmp = atof(s+2);
 		if (tmp > 0 && tmp < 100) {
-		    cerr << "Setting d_min = " << tmp << " / N\n";
-		    tmp /= b->n_leaves();
-		    b->set_d_min_sq(tmp*tmp);
+		    cerr << "Setting d_min_fac = " << tmp << endl;
+		    b->set_d_min_fac(tmp);
+		    putrq(b->get_log_story(), "d_min_fac", tmp);
 		}
 
 	    } else if (s = strstr(line, "-g")) {
@@ -348,6 +349,7 @@ local void modify_params(hdyn * b, char * name,
 		if (tmp > 0 && tmp < 100) {
 		    cerr << "Setting lag_factor = " << tmp << " (squared)\n";
 		    b->set_lag_factor(tmp*tmp);
+		    putrq(b->get_log_story(), "lag_factor", tmp);
 		}
 
 	    } else if (s = strstr(line, "-k")) {
@@ -356,6 +358,7 @@ local void modify_params(hdyn * b, char * name,
 		if (tmp > 0 && tmp < 1) {
 		    cerr << "Setting gamma = " << tmp << endl;
 		    b->set_gamma2(tmp*tmp);
+		    putrq(b->get_log_story(), "gamma", tmp);
 		}
 
 	    } else if (s = strstr(line, "-N")) {
