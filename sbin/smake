@@ -20,5 +20,26 @@ while [ "x$1" != "x" ]; do
 done
 
 echo Making \"$list\" in $dir
+
+# Warn if we aren't building within the current Starlab tree.
+
+if  [ "x$dir" != "x$STARLAB_PATH" ]; then
+
+#   The following 4 lines can be removed once sbin/make all is automatic.
+
+    tmp=`which readlink 2> /dev/null`
+    if [ "x$tmp" = "x" ]; then
+	make -C $STARLAB_PATH/sbin all > /dev/null
+    fi
+
+    sl=`readlink -f $STARLAB_PATH`
+    dr=`readlink -f $dir`
+
+    if [[ "$sl" > "$dr" ]]; then
+	echo Warning: building outside the current Starlab tree
+    fi
+
+fi
+
 make -s -C $dir $list
 
