@@ -1601,7 +1601,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	if (ttmp > t_log) {
 
-	    // Standard log output.
+	    // 1. Standard log output.
 
 	    // System should be synchronized here, but it is not essential.
 	    // However, energy errors may not be reliable, and the system
@@ -1637,7 +1637,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	if (ttmp > t_sync) {
 
-	    // System is synchronized.
+	    // 2. System is synchronized.
 	    // Check to see if we should stop the run.
 
 	    if (check_file("STOP")) {
@@ -1655,8 +1655,8 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-	// Output a snapshot to cout at the scheduled time, or at end of run.
-	// NOTE: This is the *only* place where output to cout can occur.
+	// 3. Output a snapshot to cout at the scheduled time, or at end of
+	// run. NOTE: This is the *only* place where output to cout can occur.
 
 	// Not essential to have dt_snap >= dt_reinit, but should have this
 	// if we want full restart capability.
@@ -1679,7 +1679,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-	// Full dumps should precede and follow major changes when the
+	// 3. Full dumps should precede and follow major changes when the
 	// system is properly synchronized.
 
 	// bool full_dump_now = (full_dump
@@ -1757,7 +1757,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	if (ttmp > t_esc) {
 
-	    // Check for and remove escapers.
+	    // 4. Check for and remove escapers.
 
 	    // System is reinitialized and time step list is
 	    // recomputed if any stars are removed.
@@ -1789,7 +1789,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	if (reinit) {
 
-	    // Reinitialize the system.
+	    // 5. Reinitialize the system.
 
 	    // *** REQUIRE dt_reinit >= dt_sync. ***
 
