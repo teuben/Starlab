@@ -1,5 +1,5 @@
 
-//// mkblack_hole: Replaces the star closest to com with a black hole
+//// makeblack_hole: Replaces the star closest to com with a black hole
 ////                
 ////
 //// Options:      -M    select black hole mass
@@ -15,7 +15,7 @@ char  tmp_string[SEED_STRING_LENGTH];
 
 #ifdef TOOLBOX
 
-local void mkblack_hole(dyn* b, int id, real m_bh) {
+local void makeblack_hole(dyn* b, int id, real m_bh) {
 
     b->to_com();
 
@@ -52,7 +52,7 @@ local void mkblack_hole(dyn* b, int id, real m_bh) {
         bh->set_vel(bh->get_vel() * sqrt(prev_mass/m_bh));
     }
     else 
-	err_exit("mkblack_hole: selected star not found");
+	err_exit("makeblack_hole: selected star not found");
 
     putiq(bh->get_log_story(), "black_hole", 1);
 
@@ -97,7 +97,7 @@ int main(int argc, char ** argv) {
     if (id>b->n_leaves())
       err_exit("selected id exceeds particle number");
 
-    mkblack_hole(b, id, m_bh);
+    makeblack_hole(b, id, m_bh);
 
     real initial_mass = getrq(b->get_log_story(), "initial_mass");
 

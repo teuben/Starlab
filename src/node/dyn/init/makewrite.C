@@ -1,12 +1,12 @@
 
-//// mkwrite:  Turn a text file into a snapshot.  Used in some
+//// makewrite:  Turn a text file into a snapshot.  Used in some
 ////           demonstrations only.
 ////
 //// Options:  -c    add a comment to the output snapshot [false]
 ////           -r    random velocities [0]
 ////           -s    random seed
 ////
-//// Example:  /usr/games/banner -w 40 STARLAB | mkwrite -c "STARLAB"
+//// Example:  /usr/games/banner -w 40 STARLAB | makewrite -c "STARLAB"
 
 #include "dyn.h"
 #include <ctype.h>
@@ -110,4 +110,3 @@ main(int argc, char ** argv)
 
 #endif
 
-/* end of: mkwrite.c */

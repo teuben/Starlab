@@ -5,7 +5,7 @@
 ////
 //// Options:     -s    specify random seed [random from system clock]
 
-// For details on model construction, see notes in mkplummer.C
+// For details on model construction, see notes in makeplummer.C
 // Steve McMillan, July 1996
 
 #include "dyn.h"

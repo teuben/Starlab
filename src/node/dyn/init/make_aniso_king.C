@@ -8,7 +8,7 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// mk_aniso_king: construct an anisotropic King model.
+//// make_aniso_king: construct an anisotropic King model.
 ////
 //// Options:     -a    specify alpha1 [-0.0009]
 ////              -A    specify "Oort A"
@@ -76,8 +76,8 @@ extern "C" real RAND(int &seed)
     return randinter(0, 1);
 }
 
-local void mk_aniso_king(dyn * b, int n, real w0, real alpha1, real alpha3,
-			 bool u_flag, int test, int seed)
+local void make_aniso_king(dyn * b, int n, real w0, real alpha1, real alpha3,
+			   bool u_flag, int test, int seed)
 
 // Create an anisotropic King model using Heggie's Fortran code, and
 // optionally initialize an N-body system with G = 1, total mass = 1,
@@ -88,11 +88,11 @@ local void mk_aniso_king(dyn * b, int n, real w0, real alpha1, real alpha3,
     // start of aking.
 
     if (alpha3 != 0 && alpha1 >= 0)
-	err_exit("mk_aniso_king: must specify alpha1 < 0");
+	err_exit("make_aniso_king: must specify alpha1 < 0");
     if (w0 < 1)
-	err_exit("mk_aniso_king: must specify w0 > 1");
+	err_exit("make_aniso_king: must specify w0 > 1");
     if (w0 > 12)
-	err_exit("mk_aniso_king: must specify w0 < 12");
+	err_exit("make_aniso_king: must specify w0 < 12");
 
     // Compute the cluster density/velocity/potential profile
 
@@ -204,20 +204,21 @@ local void mk_aniso_king(dyn * b, int n, real w0, real alpha1, real alpha3,
 	tidal_energy /= fac;
 	r_jacobi *= fac;
 
-	// Story output mimics mkking where possible.
+	// Story output mimics makeking where possible.
 
-	putrq(b->get_dyn_story(), "initial_total_energy", -0.25);
+	putrq(b->get_log_story(), "initial_total_energy", -0.25);
+	putrq(b->get_dyn_story(), "total_energy", -0.25);
     }
 
     // Write essential model information to the root dyn story.
-    // Story output mimics mkking where possible.
+    // Story output mimics makeking where possible.
 
     putrq(b->get_log_story(), "initial_mass", 1.0);
     putrq(b->get_log_story(), "initial_rvirial", r_virial);
     putrq(b->get_log_story(), "initial_rtidal_over_rvirial",
 	  r_jacobi/r_virial, 10);
 
-    cerr << " mk_aniso_king: "; PRL(r_jacobi/r_virial);
+    cerr << " make_aniso_king: "; PRL(r_jacobi/r_virial);
 
     // Note that, for this model, kira *must* use this Jacobi
     // radius to be consistent.
@@ -341,23 +342,23 @@ main(int argc, char ** argv)
         }
 
     if (!w_flag) {
-        cerr << "mk_aniso_king: please specify the dimensionless depth";
+        cerr << "make_aniso_king: please specify the dimensionless depth";
         cerr << " with -w #\n";
         exit(1);
     }
 
 //    if (test == 0) {
-//        cerr << "mk_aniso_king: please specify the number # of";
+//        cerr << "make_aniso_king: please specify the number # of";
 //        cerr << " particles with -n #\n";
 //        exit(1);
 //    }
 
     if (n < 0)
-	err_exit("mk_aniso_king: n > 0 required");
+	err_exit("make_aniso_king: n > 0 required");
 
     if (A_flag && B_flag && G_flag) {
 
-      cerr << " mk_aniso_king: Custom tidal field with Oort constants" 
+      cerr << " make_aniso_king: Custom tidal field with Oort constants" 
 	   << endl;
       PRI(4);PRC(Oort_A);PRC(Oort_B);PRL(rho_G);
       tidal_type = 4;
@@ -396,7 +397,7 @@ main(int argc, char ** argv)
 	    F_flag = false;
 
 	if (F_flag) {
-	    cerr << " mk_aniso_king: tidal_type = " << tidal_type;
+	    cerr << " make_aniso_king: tidal_type = " << tidal_type;
 	    if (tidal_type >= 3) cerr << ", alpha1 = " << alpha1;
 	    cerr << ", alpha3/alpha1 = " << alpha3_over_alpha1
 		 << endl;
@@ -405,13 +406,13 @@ main(int argc, char ** argv)
     }
 
     if (!b_flag && !F_flag)
-	cerr << " mk_aniso_king: using default alpha3/alpha1 = "
+	cerr << " make_aniso_king: using default alpha3/alpha1 = "
 	     << alpha3_over_alpha1 << endl;
 
     alpha3 = alpha3_over_alpha1 * alpha1;
 
     if (!a_flag) {
-	cerr << " mk_aniso_king: using default "; PR(alpha1);
+	cerr << " make_aniso_king: using default "; PR(alpha1);
 	if (!b_flag) {
 	    cerr << ", "; PR(alpha3);
 	}
@@ -455,14 +456,14 @@ main(int argc, char ** argv)
     actual_seed = srandinter(input_seed);
 
     if (o_flag)
-	cerr << "mk_aniso_king: random seed = " << actual_seed << endl;
+	cerr << "make_aniso_king: random seed = " << actual_seed << endl;
 
     sprintf(tmp_string,
 	    "       random number generator seed = %d",
 	    actual_seed);
     b->log_comment(tmp_string);
 
-    mk_aniso_king(b, n, w0, alpha1, alpha3, u_flag, test, actual_seed);
+    make_aniso_king(b, n, w0, alpha1, alpha3, u_flag, test, actual_seed);
 
     b->set_tidal_field(alpha1, alpha3);
     putiq(b->get_log_story(), "kira_tidal_field_type", tidal_type);
@@ -479,4 +480,3 @@ main(int argc, char ** argv)
 
 #endif
 
-/* end of: mk_aniso_king.C */  

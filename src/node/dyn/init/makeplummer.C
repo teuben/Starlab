@@ -1,5 +1,5 @@
 
-//// mkplummer:  construct a Plummer model, with a spatial or mass cut-off
+//// makeplummer:  construct a Plummer model, with a spatial or mass cut-off
 ////             to ensure finite radius.
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
@@ -34,7 +34,7 @@
                                               //   (not used right now)      
 #define  SEED_STRING_LENGTH  60
 
-local void  mkplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
+local void  makeplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
 {
     int  i;
 
@@ -173,8 +173,9 @@ local void  mkplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
 	real energy = kinetic + potential;
 	scale_energy(b, -0.25, energy);			// scales energy
 
+	putrq(b->get_log_story(), "initial_total_energy", -0.25);
 	putrq(b->get_log_story(), "initial_rvirial", 1.0);
-	putrq(b->get_dyn_story(), "initial_total_energy", -0.25);
+	putrq(b->get_dyn_story(), "total_energy", -0.25);
     }
 }
 
@@ -221,7 +222,7 @@ local void reshuffle_all(dyn* b, int n)
 //-----------------------------------------------------------------------------
 //  main  --
 //      usage:
-//                mkplummer -n# [options]  ,
+//                makeplummer -n# [options]  ,
 // 
 //            where # is the number of bodies in the Nbody system.
 //    options:
@@ -306,7 +307,7 @@ main(int argc, char ** argv)
 	}            
     
     if (!n_flag) {
-        cerr << "mkplummer: specify the number # of";
+        cerr << "makeplummer: specify the number # of";
 	cerr << " particles with -n#\n";
 	exit(1);
     }
@@ -340,7 +341,7 @@ main(int argc, char ** argv)
         input_seed = 0;                         	// default
     actual_seed = srandinter(input_seed);
 
-    if (o_flag) cerr << "mkplummer: random seed = " << actual_seed << endl;
+    if (o_flag) cerr << "makeplummer: random seed = " << actual_seed << endl;
 
     sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
@@ -349,7 +350,7 @@ main(int argc, char ** argv)
         mfrac = MFRAC_DEFAULT;                   	 // default
 
     if (n != 0) {
-        mkplummer(b, n, mfrac, rfrac, u_flag);
+        makeplummer(b, n, mfrac, rfrac, u_flag);
 	if (R_flag) reshuffle_all(b, n);
     }
 
@@ -359,4 +360,3 @@ main(int argc, char ** argv)
 
 #endif
 
-// end of: mkplummer.C

@@ -8,7 +8,7 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// mkking: construct a King model.
+//// makeking: construct a King model.
 ////
 //// Options:     -b    specify Steve's rescaling parameter (< 1) [0]
 ////                    [models with b > 0 are just rescaled King models;
@@ -70,7 +70,7 @@ real rr[NM+1], d[NM+1], v2[NM+1], psi[NM+1], zm[NM+1];
 
 // Convenient to keep these global (for now):
 
-// Array indx is used in setpos and mkking
+// Array indx is used in setpos and makeking
 //		[indexes the mass distribution of the initial model],
 //    "	   g  is used in gg and setvel
 //		[contains the indefinite integral of y^2 exp(-y^2) dy].
@@ -519,7 +519,7 @@ void setpos(dyn * b, real& p)
       break;
     }
 
-  if (iflag == 0) err_exit("mkking: error in getpos");
+  if (iflag == 0) err_exit("makeking: error in getpos");
 
   real rfac = (rno - zm[i1-1]) / (zm[i1] - zm[i1-1]);
   real r = rr[i1-1] + rfac * (rr[i1] - rr[i1-1]);
@@ -635,7 +635,7 @@ local void dump_model_and_exit(int nprof, real mfac = 1, real rfac = 1)
 }
 
 
-void mkking(dyn * b, int n, real w0, bool n_flag, bool u_flag, int test)
+local void makeking(dyn * b, int n, real w0, bool n_flag, bool u_flag, int test)
 
 // Create a King model, and optionally initialize an N-body system
 // with total mass = n, core radius = 1.
@@ -648,7 +648,7 @@ void mkking(dyn * b, int n, real w0, bool n_flag, bool u_flag, int test)
     int nprof;
     real v20;
 
-    if (w0 > 16) err_exit("mkking: must specify w0 < 16");
+    if (w0 > 16) err_exit("makeking: must specify w0 < 16");
 
     initialize_global();
 
@@ -820,9 +820,9 @@ void mkking(dyn * b, int n, real w0, bool n_flag, bool u_flag, int test)
 	real energy = kinetic + potential;
 	scale_energy(b, -0.25, energy);			// scales energy
 
-	putrq(b->get_dyn_story(), "initial_total_energy", -0.25);
+	putrq(b->get_log_story(), "initial_total_energy", -0.25);
 	putrq(b->get_log_story(), "initial_rvirial", 1.0);
-
+	putrq(b->get_dyn_story(), "total_energy", -0.25);
     }
 }
 
@@ -880,13 +880,13 @@ main(int argc, char ** argv)
         }
 
     if (!w_flag) {
-        cerr << "mkking: please specify the dimensionless depth";
+        cerr << "makeking: please specify the dimensionless depth";
         cerr << " with -w #\n";
         exit(1);
     }
 
     if (beta >= 1) {
-        cerr << "mkking: beta < 1 required\n";
+        cerr << "makeking: beta < 1 required\n";
         exit(1);
     }
 
@@ -894,7 +894,7 @@ main(int argc, char ** argv)
     scale_fac = exp(beta_w0);
 
 //    if (!n_flag && test != 1 && test != 2) {
-//        cerr << "mkking: please specify the number # of";
+//        cerr << "makeking: please specify the number # of";
 //        cerr << " particles with -n #\n";
 //        exit(1);
 //    }
@@ -907,15 +907,15 @@ main(int argc, char ** argv)
 	n = b->n_leaves();
 
 	if (n < 1)
-	    err_exit("mkking: n > 0 required");
+	    err_exit("makeking: n > 0 required");
  
-	cerr << "mkking: read " << n << " masses from input snapshot with" 
+	cerr << "makeking: read " << n << " masses from input snapshot with" 
 	     << endl;
     }
     else {
 
 	if (n < 1)
-	    err_exit("mkking: n > 0 required");
+	    err_exit("makeking: n > 0 required");
 
 	b = new dyn();
 	dyn *by, *bo;
@@ -945,18 +945,17 @@ main(int argc, char ** argv)
     actual_seed = srandinter(input_seed);
     
     if (o_flag)
-	cerr << "mkking: random seed = " << actual_seed << endl;
+	cerr << "makeking: random seed = " << actual_seed << endl;
 
     sprintf(tmp_string,
 	    "       random number generator seed = %d",
 	    actual_seed);
     b->log_comment(tmp_string);
 
-    mkking(b, n, w0, n_flag, u_flag, test);
+    makeking(b, n, w0, n_flag, u_flag, test);
 
     put_node(b);
 }
 
 #endif
 
-/* end of: mkking.C */  

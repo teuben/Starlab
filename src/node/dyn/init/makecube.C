@@ -1,5 +1,5 @@
 
-//// mkcube: construct a simple homogeneous cube, with
+//// makecube: construct a simple homogeneous cube, with
 ////
 ////              M = 1, T/U = -1/2, E = -1/4.
 ////
@@ -19,7 +19,7 @@
 
 #ifdef TOOLBOX
 
-local void  mkcube(dyn * root, int n, int u_flag)
+local void  makecube(dyn * root, int n, int u_flag)
 {
     dyn  * bi;
 
@@ -47,8 +47,9 @@ local void  mkcube(dyn * root, int n, int u_flag)
 	scale_virial(root, -0.5, potential, kinetic);	// scales kinetic
 	real energy = kinetic + potential;
 	scale_energy(root, -0.25, energy);		// scales energy
-	putrq(root->get_dyn_story(), "initial_total_energy", -0.25);
+	putrq(root->get_log_story(), "initial_total_energy", -0.25);
 	putrq(root->get_log_story(), "initial_rvirial", 1.0);
+	putrq(root->get_dyn_story(), "total_energy", -0.25);
     }
 }
 
@@ -109,7 +110,7 @@ main(int argc, char ** argv) {
     }
     
     if (n < 1) {
-        cerr << "mkcube: n < 1 not allowed\n";
+        cerr << "makecube: n < 1 not allowed\n";
 	exit(1);
     }
 
@@ -121,7 +122,7 @@ main(int argc, char ** argv) {
     b->set_oldest_daughter(bo);
     bo->set_parent(b);
     if (l_flag)
-	putrq(b->get_dyn_story(), "cube_size", cube_size);
+	putrq(b->get_log_story(), "cube_size", cube_size);
 
     for (i = 1; i < n; i++) {
         by = new dyn();
@@ -139,16 +140,15 @@ main(int argc, char ** argv) {
     if (s_flag == FALSE) input_seed = 0;
     actual_seed = srandinter(input_seed);
 
-    if (o_flag) cerr << "mkcube: random seed = " << actual_seed << endl;
+    if (o_flag) cerr << "makecube: random seed = " << actual_seed << endl;
 
     sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
-    if (n > 0) mkcube(b, n, u_flag);
+    if (n > 0) makecube(b, n, u_flag);
 
     put_node(b);
 }
 
 #endif
 
-/* end of: mkcube.c */

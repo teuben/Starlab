@@ -194,9 +194,9 @@ void main(int argc, char ** argv)
 
 	char* energy_string = "initial_total_energy";
 
-	if (find_qmatch(b->get_dyn_story(), energy_string))
+	if (find_qmatch(b->get_log_story(), energy_string))
 	    scale_energy(energy, b->n_daughters(), b->get_mass(),
-			 getrq(b->get_dyn_story(), energy_string));
+			 getrq(b->get_log_story(), energy_string));
 	else
 	    cerr << "split_particle: Using unscaled energy limits.\n";
 

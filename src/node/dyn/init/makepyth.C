@@ -1,5 +1,5 @@
 
-//// mkpyth:  set up a 3-body system corresponding to the Pythagorean problem.
+//// makepyth:  set up a 3-body system corresponding to the Pythagorean problem.
 ////
 //// Options:    -c    add a comment to the output snapshot [false]
 ////             -i    number the particles sequentially [don't number]
@@ -73,4 +73,3 @@ main(int argc, char ** argv)
 
 #endif
 
-/* end of: mkpyth.c */

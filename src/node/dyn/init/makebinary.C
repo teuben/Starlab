@@ -1,8 +1,8 @@
 
-//// mkbinary:  Complete the binary formation process by adding binary
+//// makebinary:  Complete the binary formation process by adding binary
 ////            orbits to an existing binary tree.  It is assumed that
 ////            the binary tree structure and all masses have already
-////            been set (e.g. by mksecondary), and that positions and
+////            been set (e.g. by makesecondary), and that positions and
 ////            velocities of all top-level nodes are already known.
 ////
 ////            If possible, use the system parameters to scale the
@@ -135,7 +135,7 @@ local real minimum_semi_major_axis(dyn* b1, dyn* b2)
     real ms_sec  = b2->get_starbase()->conv_m_dyn_to_star(b2->get_mass());
 
     // Use stellar mass as radius indicater.
-    // mkbinary known little about stars
+    // makebinary known little about stars
     real rs_prim = zero_age_main_sequnece_radius(ms_prim);
     real rs_sec = zero_age_main_sequnece_radius(ms_sec);
 
@@ -159,8 +159,8 @@ local bool dyn_present(dyn* bi) {
   return dynamics_present;
 }
 
-local void mkbinary(dyn* b, real lower, real upper,
-		    int select, int option, real emax)
+local void makebinary(dyn* b, real lower, real upper,
+		      int select, int option, real emax)
 {
     // Binary parameters are drawn from a 1/x distribution,
     // between the specified limits.
@@ -224,7 +224,7 @@ local void mkbinary(dyn* b, real lower, real upper,
 
 		    if (pow(upper, 2) <= a_min*m_total*(1-pow(ecc, 2))) {
 		      PRC(upper);PRL(a_min*m_total*(1-pow(ecc, 2)));
-		      err_exit("mkbinary: Illegal limits on angular momentum");
+		      err_exit("makebinary: Illegal limits on angular momentum");
 		    }
 		    a_min = Starlab::max(lower, a_min);
 		    real frac = upper/lower;
@@ -270,7 +270,7 @@ local void mkbinary(dyn* b, real lower, real upper,
 
 		    if(a_max<=a_min) {
 		      PRC(a_max);PRL(a_min);
-		      err_exit("mkbinary: Illegal limits on semi major axis");
+		      err_exit("makebinary: Illegal limits on semi major axis");
 		    }
 		    a_min = Starlab::max(lower, a_min);
 
@@ -404,7 +404,7 @@ int main(int argc, char ** argv)
 	}
 
     if (lower < 0 || upper < 0 || lower > upper)
-	err_exit("mkbinary: Illegal limits");
+	err_exit("makebinary: Illegal limits");
 
     dyn* b;
     b = get_dyn();
@@ -440,17 +440,17 @@ int main(int argc, char ** argv)
 	    upper *= scale;
 	}
 	else
-	    cerr << "mkbinary: Using unscaled angular-momentum limits.\n";
+	    cerr << "makebinary: Using unscaled angular-momentum limits.\n";
     }
     else if (function_select == 2) {
 	if (b->get_starbase()->conv_r_star_to_dyn(1)>0) {
 	  //	    lower = b->get_starbase()->conv_r_star_to_dyn(lower);
 	  //	    upper = b->get_starbase()->conv_r_star_to_dyn(upper);
-	  cerr << "mkbinary: Do not transform upper limit to dynamical units"
+	  cerr << "makebinary: Do not transform upper limit to dynamical units"
 	       << endl;
 	}
 	else
-	    cerr << "mkbinary: Using unscaled semi-major axis limits.\n";
+	    cerr << "makebinary: Using unscaled semi-major axis limits.\n";
     }
     else if (function_select == 3) {
 	if (find_qmatch(b->get_dyn_story(), energy_string)) {
@@ -475,10 +475,10 @@ int main(int argc, char ** argv)
 			 b->n_daughters(), b->get_mass(), kin);
 
 	} else
-	    cerr << "mkbinary: Using unscaled energy limits.\n";
+	    cerr << "makebinary: Using unscaled energy limits.\n";
     }
 
-    mkbinary(b, lower, upper, function_select, option, emax);
+    makebinary(b, lower, upper, function_select, option, emax);
 
     put_dyn(b);
     rmtree(b);

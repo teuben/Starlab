@@ -1,5 +1,5 @@
 
-//// mkheavystar:  Double the mass of one or more stars in a snapshot
+//// makeheavystar:  Double the mass of one or more stars in a snapshot
 ////               to approximate the presence of a binary.
 ////
 //// Options:      -f    specify fraction of stars to double [0.1]
@@ -23,8 +23,8 @@ local void double_mass(node* original, real mass_ratio)
     //    putiq(original->get_log_story(), "mass_doubled", 1);
 }
 
-local void mkheavystar(node* b, real fraction_doubled, real lower_limit,
-		       real mass_ratio)
+local void makeheavystar(node* b, real fraction_doubled, real lower_limit,
+		         real mass_ratio)
 {
  
     real sum = 0;
@@ -78,9 +78,9 @@ int main(int argc, char ** argv)
 	}
 
     if (fraction_doubled < 0 || fraction_doubled > 1)
-	err_exit("mkheavystar: Illegal doubling fraction");
+	err_exit("makeheavystar: Illegal doubling fraction");
     //    if (lower_limit <= 0 || lower_limit > 1)
-    //	err_exit("mkheavystar: Illegal mass ratio limit");
+    //	err_exit("makeheavystar: Illegal mass ratio limit");
 
     node *b;
     b = get_node();
@@ -93,7 +93,7 @@ int main(int argc, char ** argv)
     //            "       random number generator seed = %d",actual_seed);
     //    b->log_comment(seedlog);
 
-    mkheavystar(b, fraction_doubled, lower_limit, mass_ratio);
+    makeheavystar(b, fraction_doubled, lower_limit, mass_ratio);
 
     put_node(b);
     return 0;

@@ -91,7 +91,7 @@ void bound3(sdyn3 * b,
 {
     inter.id = final.id = init.id;	    // For bookkeeping...
 
-    mksphere(b, 3);			    // Note that all systems are
+    makesphere(b, 3);			    // Note that all systems are
     initialize_bodies(inter.system);	    // initialized as "non-particles"
     initialize_bodies(final.system);	    // until explicitly set.
 

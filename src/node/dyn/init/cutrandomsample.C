@@ -1,5 +1,5 @@
 
-//// mknode:  create a linked list of equal-mass nodes.
+//// makenode:  create a linked list of equal-mass nodes.
 ////
 //// Options:   -m       specify total mass [1]
 ////            -n       specify number of nodes [1]
@@ -165,10 +165,6 @@ int main(int argc, char ** argv)
 }
 
 #endif
-
-/* end of: mknode.c */
-
-
 
 #if 0
     //    if(s) {

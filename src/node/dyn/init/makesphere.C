@@ -1,5 +1,5 @@
 
-//// mksphere: construct a simple homogeneous sphere, with
+//// makesphere: construct a simple homogeneous sphere, with
 ////
 ////              M = 1, T/U = -1/2, E = -1/4.
 ////
@@ -19,7 +19,9 @@
 
 #ifndef TOOLBOX
 
-void  mksphere(dyn * root, int n,
+// Don't make local -- used elsewhere.
+
+void  makesphere(dyn * root, int n,
 	       int u_flag)			// default = false
 {
     real radius, costheta, sintheta, phi;
@@ -60,8 +62,9 @@ void  mksphere(dyn * root, int n,
 	scale_virial(root, -0.5, potential, kinetic);	// scales kinetic
 	real energy = kinetic + potential;
 	scale_energy(root, -0.25, energy);		// scales energy
-	putrq(root->get_dyn_story(), "total_energy", -0.25);
+	putrq(root->get_log_story(), "initial_total_energy", -0.25);
 	putrq(root->get_log_story(), "initial_rvirial", 1.0);
+	putrq(root->get_dyn_story(), "total_energy", -0.25);
     }
 }
 
@@ -122,7 +125,7 @@ main(int argc, char ** argv) {
     }
     
     if (n < 1) {
-        cerr << "mksphere: n < 1 not allowed\n";
+        cerr << "makesphere: n < 1 not allowed\n";
 	exit(1);
     }
 
@@ -148,12 +151,12 @@ main(int argc, char ** argv) {
     if (s_flag == FALSE) input_seed = 0;
     actual_seed = srandinter(input_seed);
 
-    if (o_flag) cerr << "mksphere: random seed = " << actual_seed << endl;
+    if (o_flag) cerr << "makesphere: random seed = " << actual_seed << endl;
 
     sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
-    if (n > 0) mksphere(b, n, u_flag);
+    if (n > 0) makesphere(b, n, u_flag);
 
     put_node(b);
     rmtree(b);
@@ -161,4 +164,3 @@ main(int argc, char ** argv) {
 
 #endif
 
-/* end of: mksphere.c */

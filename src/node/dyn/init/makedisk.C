@@ -1,5 +1,5 @@
 
-//// mkdisk: construct a near-keplerian disk, with N low-mass objects
+//// makedisk: construct a near-keplerian disk, with N low-mass objects
 ////         orbiting a single massive object on almost circular paths.
 ////
 //// Units:  masses are measured in millions of solar masses
@@ -30,9 +30,9 @@
 
 #ifdef TOOLBOX
 
-local void mkdisk(dyn* b, int n,
-		  real m_central, real m_disk,
-		  real r_inner, real r_outer, real radius, real v_disp)
+local void makedisk(dyn* b, int n,
+		    real m_central, real m_disk,
+		    real r_inner, real r_outer, real radius, real v_disp)
 {
     real pmass = m_disk / n;
     v_disp *= sqrt(3.0);	// so a uniform distribution has proper v_disp;
@@ -167,32 +167,32 @@ main(int argc, char ** argv)
 	    }            
     
     if (n <= 0) {
-        cerr << "mkdisk: must specify number of particles with -n#\n";
+        cerr << "makedisk: must specify number of particles with -n#\n";
 	exit(1);
     }
     
     if (m_disk <= 0) {
-        cerr << "mkdisk: must specify disk mass with -m\n";
+        cerr << "makedisk: must specify disk mass with -m\n";
 	exit(1);
     }
     
     if (m_central <= 0) {
-        cerr << "mkdisk: must specify central mass with -M\n";
+        cerr << "makedisk: must specify central mass with -M\n";
 	exit(1);
     }
     
     if (r_inner <= 0) {
-        cerr << "mkdisk: must specify inner disk radius with -r\n";
+        cerr << "makedisk: must specify inner disk radius with -r\n";
 	exit(1);
     }
     
     if (r_outer <= 0) {
-        cerr << "mkdisk: must specify outer disk radius with -R\n";
+        cerr << "makedisk: must specify outer disk radius with -R\n";
 	exit(1);
     }
     
     if (r_outer <= r_inner) {
-        cerr << "mkdisk: must specify r_outer > r_inner\n";
+        cerr << "makedisk: must specify r_outer > r_inner\n";
 	exit(1);
     }
 
@@ -265,11 +265,11 @@ main(int argc, char ** argv)
     if (s_flag == false) input_seed = 0;
     actual_seed = srandinter(input_seed);
 
-    if (o_flag) cerr << "mkdisk: random seed = " << actual_seed << endl;
+    if (o_flag) cerr << "makedisk: random seed = " << actual_seed << endl;
     sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
-    mkdisk(b, n,
+    makedisk(b, n,
 	   m_central, m_disk,
 	   r_inner, r_outer, radius, v_disp);
 

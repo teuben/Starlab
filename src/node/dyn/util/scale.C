@@ -452,8 +452,9 @@ void scale(dyn *b, real eps,
 
     if (b->get_system_time() == 0) {
 	putrq(b->get_log_story(), "initial_mass", mass, HIGH_PRECISION);
+	putrq(b->get_log_story(), "initial_total_energy", kin+pot_int+pot_ext);
 	putrq(b->get_log_story(), "initial_rvirial", r_virial);
-	putrq(b->get_dyn_story(), "initial_total_energy", kin+pot_int+pot_ext);
+	putrq(b->get_dyn_story(), "total_energy", kin+pot_int+pot_ext);
     }
 }
 
