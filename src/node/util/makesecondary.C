@@ -268,7 +268,8 @@ local void makesecondary(node* b, real binary_fraction,
 		if (m_prim >= min_mprim && m_prim <= max_mprim) {
 		    sum += binary_fraction;
 		    if (sum >= 0.9999999999) {	// avoid roundoff problems!
-			sum = 0;
+			sum -= 1;		// thanks to Karim-Pierre MAALEJ
+						// 9/04
 			q = random_mass_ratio(lower_limit, upper_limit);
 			
 			m_secondaries += add_secondary(bi, q, force_index, nmax, split);
@@ -325,7 +326,7 @@ local void makesecondary(node* b, real binary_fraction,
 		if (m_prim >= min_mprim && m_prim <= max_mprim) {
 		    sum += binary_fraction;
 		    if (sum >= 0.9999999999) {	// avoid roundoff problems!
-			sum = 0;
+			sum -= 1;
 			qmin = mmin/bi->get_mass();
 			qmax = Starlab::min(mmax,
 					    bi->get_mass())/bi->get_mass();
