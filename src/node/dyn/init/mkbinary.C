@@ -405,8 +405,9 @@ void main(int argc, char ** argv)
     }
     else if (function_select == 2) {
 	if (b->get_starbase()->conv_r_star_to_dyn(1)>0) {
-	    lower = b->get_starbase()->conv_r_star_to_dyn(lower);
-	    upper = b->get_starbase()->conv_r_star_to_dyn(upper);
+	  //	    lower = b->get_starbase()->conv_r_star_to_dyn(lower);
+	  //	    upper = b->get_starbase()->conv_r_star_to_dyn(upper);
+	  cerr << "Do not transform upper limit to dynamical units"<<endl;
 	}
 	else
 	    cerr << "mkbinary: Using unscaled semi-major axis limits.\n";
