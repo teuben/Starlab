@@ -15,14 +15,14 @@
 ##    Sep 1996					Steve McMillan: added PVM
 ##.............................................................................
 
-CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) -O3
+CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) -O3 -O0
 LIBFLAGS	= -L$(LIB) -lsdyn3 -lhdyn -l_dyn_ -ldyn -lnode -lstd -lm
 DEPEND_LIBS	= $(LIB)/libsdyn3.a $(LIB)/libhdyn.a $(LIB)/lib_dyn_.a \
 		  $(LIB)/libdyn.a $(LIB)/libnode.a $(LIB)/libstd.a
 
 # Note that most applications are NOT routinely built.
 
-EXECUTABLES =	low_n3_evol rate3 scatter3 sigma3 tree3_evolve pvm_bin
+EXECUTABLES =	bound3 low_n3_evol rate3 scatter3 sigma3 tree3_evolve pvm_bin
 
 OBJECT_FILES =  extend_or_end.o low_n3_evol.o scat_helper3.o \
 		scat_init.o scatter3.o sdyn3_ev.o \

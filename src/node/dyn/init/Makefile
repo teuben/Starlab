@@ -24,7 +24,8 @@ EXECUTABLES	= mkcube mkdisk mkplummer mkpyth mksphere mkwrite \
 	 	  mkheavystar mk_aniso_king readp readstoa \
 	          mkplanetary mkblack_hole grow_black_hole
 
-OBJECT_FILES =
+OBJECT_FILES	= mksphere.o
+LIBRARY		= libdyn.a
 
 aking.o:	aking.f
 	$(STARLAB_FORTRAN_COMPILE) $(STARLAB_FORTRAN_FLAGS) -g3 -c aking.f

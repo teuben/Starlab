@@ -55,13 +55,13 @@ real total_angular_momentum(sdyn3* b)
 void sdyn3::accumulate_new_acc_and_jerk_from_new(
 			sdyn3* bj,                  // n-body system pointer
 			real eps2,                  // softening length squared
-			int no_sdd_flag,
+			int no_ssd_flag,
 			int& collision_flag)
 {
     if (bj->get_oldest_daughter() != NULL)
         for_all_daughters(sdyn3, bj, bb)
 	    accumulate_new_acc_and_jerk_from_new(bb, eps2,
-						 no_sdd_flag, collision_flag);
+						 no_ssd_flag, collision_flag);
     else
 	if (this != bj) {
 
@@ -81,7 +81,7 @@ void sdyn3::accumulate_new_acc_and_jerk_from_new(
 	    new_acc -= mr3inv*d_pos;
             new_jerk -= mr3inv*(d_vel + a3*d_pos);
 
-	    if (!no_sdd_flag) {
+	    if (!no_ssd_flag) {
 
 		// Update nn and oscillation data.
 
@@ -113,14 +113,14 @@ void sdyn3::accumulate_new_acc_and_jerk_from_new(
 
 void sdyn3::calculate_new_acc_and_jerk_from_new(sdyn3* b,
 						real eps_squared,
-						int  no_sdd_flag,
+						int  no_ssd_flag,
 						int& collision_flag)
 {
     if (oldest_daughter != NULL) {
 
 	collision_flag = 0;
 
-	if (!no_sdd_flag){
+	if (!no_ssd_flag){
 	    ssd = 0;
 	    nn_label = 0;
 	    for_all_daughters(sdyn3, this, c)
@@ -129,9 +129,9 @@ void sdyn3::calculate_new_acc_and_jerk_from_new(sdyn3* b,
 
         for_all_daughters(sdyn3, this, bb)
 	    bb->calculate_new_acc_and_jerk_from_new(b, eps_squared,
-						    no_sdd_flag,
+						    no_ssd_flag,
 						    collision_flag);
-	if (!no_sdd_flag)
+	if (!no_ssd_flag)
 	    for_all_daughters(sdyn3, this, d) {
 		if (d->get_init_nn_label() <= 0)
 		    d->set_init_nn_label(d->get_nn_label());
@@ -139,7 +139,7 @@ void sdyn3::calculate_new_acc_and_jerk_from_new(sdyn3* b,
 			d->set_nn_change_flag(1);
 	    }
 
-	if (!no_sdd_flag) {
+	if (!no_ssd_flag) {
 
 	    if (min_min_ssd > ssd) min_min_ssd = ssd;
 	    
@@ -166,7 +166,7 @@ void sdyn3::calculate_new_acc_and_jerk_from_new(sdyn3* b,
         new_pot = 0;
 	new_acc = new_jerk = 0;
 	min_encounter_time_sq = min_free_fall_time_sq = VERY_LARGE_NUMBER;
-	accumulate_new_acc_and_jerk_from_new(b, eps_squared, no_sdd_flag,
+	accumulate_new_acc_and_jerk_from_new(b, eps_squared, no_ssd_flag,
 					     collision_flag);
     }
 }

@@ -17,9 +17,10 @@
 
 #include "dyn.h"
 
-#ifdef TOOLBOX
+#ifndef TOOLBOX
 
-local void  mksphere(dyn * root, int n, int u_flag)
+void  mksphere(dyn * root, int n,
+	       int u_flag)			// default = false
 {
     real radius, costheta, sintheta, phi;
     dyn  * bi;
@@ -50,7 +51,7 @@ local void  mksphere(dyn * root, int n, int u_flag)
 
     root->to_com();
 
-    if (! u_flag && n > 1) {
+    if (!u_flag && n > 1) {
 
         real kinetic, potential;
 
@@ -62,6 +63,8 @@ local void  mksphere(dyn * root, int n, int u_flag)
 	putrq(root->get_log_story(), "initial_rvirial", 1.0);
     }
 }
+
+#else
 
 #define  SEED_STRING_LENGTH  60
 
