@@ -1811,7 +1811,7 @@ bool hdyn::is_unperturbed_and_approaching()
 
 			if (crit_pert2 > 5.e-10) {
 
-			    crit_pert2 = max(5.e-10, 0.01*crit_pert2);
+			    crit_pert2 = Starlab::max(5.e-10, 0.01*crit_pert2);
 
 			    // PRL(crit_pert2);
 
