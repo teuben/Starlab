@@ -48,7 +48,7 @@ if (-e configure) then
 
     # Build the package.
 
-    echo Running make
+    echo Running make \(this may take a while...\)
     echo 						>>& $log
     echo Running make					>>& $log
     make						>>& $log
@@ -80,13 +80,11 @@ if (X$OK == "X1") then
 cat <<EOF
 
 Congratulations, Starlab appears to have been successfully installed!
-
 To use the Starlab tools, please make sure that the directory
 
         $install_dir/bin
 
 is in your search path and *precedes* any system files.
-
 For programmers, the Starlab header files are installed in
 
         $install_dir/include/starlab
@@ -96,10 +94,10 @@ end the libraries are in
         $install_dir/lib/starlab
 
 Developers should find that any changes made to the automake "Makefile.am"
-files will cause the relevant Makefiles ot be automagically regenerated.
+files will cause the relevant Makefiles to be automagically regenerated.
 
-                                          Enjoy!
-                                          The Starlab Team
+                                      Enjoy!
+                                      The Starlab Team
 
 EOF
 endif

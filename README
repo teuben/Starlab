@@ -1,8 +1,35 @@
 
 README:
 
+Installation procedes in GNU standard way:
+
+	./configure --prefix=install-dir
+	make
+	make install
+
+See the INSTALL file in this directory for more information.
+
+However, Starlab now makes heavy use of the "autotools" aucoconf,
+automake, and libtool.  Unless you are sure that your system has
+versions of these tools newer than those used to build the package,
+you probably first will want to install the autotools found in
+src/packages.  You can do this by hand, or run the script
+
+	install-autotools
+
+found in that directory.
+
+If you prefer to install everything automatically, run the script
+
+	AAA-developer-install-starlab.csh
+
+in this directory.
+
 Copyrights:
 
-- see the README file in "doc/README", or
+- see the COPYING file in this directory for information on the GPL.
+
+- for use and attribution policies, see the README file in
+  "doc/README", or
 
 	http://www.sns.ias.edu/~starlab/policies
