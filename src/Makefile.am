@@ -18,9 +18,9 @@
 
 SUBDIRS = std node star hydro harpsims
 
-#if !NO_X
-#   SUBDIRS += gfx
-#endif
+if !NO_X
+    SUBDIRS += gfx
+endif
 
 EXTRA_DIST = packages/autoconf-2.59.tar.gz packages/automake-1.8.5.tar.gz \
     packages/libtool-1.5.6.tar.gz
