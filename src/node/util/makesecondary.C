@@ -8,22 +8,23 @@
 ////               this function is called, but before mkbinary, if
 ////               it is desired to specify energies in kT units.
 ////
-//// Options:      -q    select choice of minimum mass ratio [false]
+//// Options:      -f    specify binary fraction [0.1]
+////                             for stars with mass >= spacified with -m
+////               -i    use (a,b) as component indices [false]
+////               -I    don't limit masses to primary mass range [false]
+////               -l    specify lower limit on mass ratio or 
+////                                               secondary mass [0]
+////               -M    specify upper limit for primaries to be binaries [inf]
+////               -m    specify lower limit for primaries to be binaries [0]
+////               -q    select choice of minimum mass ratio [false]
 ////                         if true, secondary mass ratio is chosen
 ////                             uniformly on [lower_limit, upper_limit]
 ////                         if false, secondary mass is chosen uniformly
 ////                             on [mmin, primary_mass], where mmin and
 ////                             mmax are specified on the command line
-////               -f    specify binary fraction [0.1]
-////                             for stars with mass >= spacified with -m
-////               -I    don't limit masses to primary mass range [false]
-////               -M    specify upper limit for primaries to be binaries [inf]
-////               -m    specify lower limit for primaries to be binaries [0]
-////               -l    specify lower limit on mass ratio or 
-////                                               secondary mass [0]
+////               -s    specify random seed [random from system clock]
 ////               -u    specify upper limit on mass ratio or 
 ////                                           secondary mass [1 or m_primary]
-////               -s    specify random seed [random from system clock]
 
 //		   Steve McMillan, July 1996
 //                 Simon Portegies Zwart, Tokyo, December 1997
@@ -48,11 +49,12 @@ local void name_from_components(node *od, node *yd)
 //		  a binary.  Only the mass, name and tree structure
 //		  are modified at this stage.
 //
-//		  By default, new primary and secondary components have
-//		  names "na" and "nb", respectively, where "n" was the
-//		  name of the original star.  However, this may lead to
-//		  unique_id problems with worldlines, so allow the
-//		  alternative of enforcing numeric names.
+//		  The old default naming was for primary and secondary
+//		  components to have names "na" and "nb", respectively,
+//		  where "n" was the name of the original star.  However,
+//		  this leads to unique_id problems with worldlines, so
+//		  numeric names are now the default, with (a,b) the
+//		  alternative.  (Steve, 5/01)
 
 local void add_secondary(node* original, real mass_ratio,
 			 bool force_index, int &nmax)
@@ -79,13 +81,14 @@ local void add_secondary(node* original, real mass_ratio,
     // There are two possible naming conventions.  If force_index is
     // false, then we take the original name and add "a" and "b" for
     // the component names.  If force_index is true, the first component
-    // inherits the original index and the second component gets a new
-    // index.  In either case, the new CM name is (cpt1,cpt1), as usual.
+    // inherits the original index and the second component gets an
+    // index offset by some "resonable" amount.  In either case, the new
+    // CM name is (cpt1,cpt1), as usual.
 
     if (force_index) {
 
 	primary->set_index(original->get_index());
-	secondary->set_index(++nmax);
+	secondary->set_index(original->get_index()+nmax);
 
     } else {
 
@@ -201,9 +204,14 @@ local void mksecondary(node* b, real binary_fraction,
 
 	// All stars will are to have numeric labels.  First check
 	// that the original labels are numeric.  If not, force all
-	// labels into numeric form.
+	// labels into numeric form.  Function check_indices() returns
+	// the maximum (corrected) index found.
 
 	nmax = check_indices(b);
+
+	// Round nmax up to something "reasonable".
+
+	nmax = (int)(pow(10., ((int)log10((real)nmax)) + 1.0) + 0.1);
     }
 
     // For now, use a flat distribution in secondary mass ratio.
@@ -326,7 +334,7 @@ void main(int argc, char ** argv)
     real upper_limit = VERY_LARGE_NUMBER;
     real max_mprim = VERY_LARGE_NUMBER;
     real min_mprim = 0;
-    bool force_index = false;
+    bool force_index = true;
     real q_flag = false;	     // flag for mass-ratio selection
     int random_seed = 0;
     char seedlog[64];
@@ -340,24 +348,24 @@ void main(int argc, char ** argv)
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
 
-            case 'q': q_flag = true;
-		      break;
 	    case 'f': binary_fraction = atof(poptarg);
+		      break;
+	    case 'i': force_index = true;
+		      break;
+	    case 'I': ignore_limits = true;
+		      break;
+	    case 'l': lower_limit = atof(poptarg);
 		      break;
 	    case 'M': max_mprim = atof(poptarg);
 		      break;
 	    case 'm': min_mprim = atof(poptarg);
 		      break;
-	    case 'i': force_index = true;
+            case 'q': q_flag = true;
 		      break;
-	    case 'l': lower_limit = atof(poptarg);
-		      break;
-	    case 'I': ignore_limits = true;
+	    case 's': random_seed = atoi(poptarg);
 		      break;
 	    case 'u': upper_limit = atof(poptarg);
 	    	      u_flag = true;
-		      break;
-	    case 's': random_seed = atoi(poptarg);
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 		      exit(1);
