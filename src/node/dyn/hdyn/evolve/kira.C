@@ -1687,13 +1687,13 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	//			  	 || t>= t_esc || t >= t_sync));
 
 	// No full output at every t_sync.
-	// Stellar evolution forces t_sync to be 1/64!
+	// Stellar evolution forces t_sync to be 1/64 or less!
 
 	bool full_dump_now = (full_dump
 			      && (t >= t_reinit || t >= t_esc || t >= t_end));
 
 	// Note that t = t_reinit = t_esc now at restart, so the second
-	// clause of the if is true initially.
+	// clause of the if() test is true initially.
 
 	// This dump ends the current worldbundle, so don't do it initially.
 
@@ -1706,10 +1706,12 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    int short_output = 1;
 	    if (ttmp > t_end) short_output = 4;		// new (7/01)
 
+	    set_complete_system_dump(true);
 	    put_node(cout, *b,
 		     false,		// don't print xreal
 		     short_output);	// short output (uses STARLAB_PRECISION)
 
+	    set_complete_system_dump(false);
 	    cerr << "Full dump (";
 	    if (short_output == 1) cerr << "t";
 	    else cerr << "h";
@@ -1811,7 +1813,9 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	// Second full_dump output marks the start of a new worldbundle.
 
 	if (full_dump_now) {
+	    set_complete_system_dump(true);
 	    put_node(cout, *b, false, 1);
+	    set_complete_system_dump(false);
 	    cerr << endl << "Full dump (tdyn format) at time " << t << endl;
 	}
 

@@ -674,7 +674,9 @@ void snap_output(hdyn * b, real steps, int& snaps,
 	ofstream file(snap_save_file);
 
 	if (file) {
+	    set_complete_system_dump(true);
 	    put_node(file, *b, b->get_kira_options()->print_xreal);
+	    set_complete_system_dump(false);
 	    file.close();
 	    cerr << "Snapshot saved in file "
 		 << snap_save_file
@@ -698,7 +700,9 @@ void snap_output(hdyn * b, real steps, int& snaps,
 		 << ", time = " << b->get_system_time() << endl;
 	if (verbose) cerr << endl;
 
+	set_complete_system_dump(true);
 	put_node(cout, *b, b->get_kira_options()->print_xreal);
+	set_complete_system_dump(false);
 	cout << flush;
 
 	// if (ttmp > t_end) exit(0);	// do this in kira, not here...
