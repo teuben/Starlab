@@ -269,7 +269,9 @@ dyn *get_dyn(istream & s,		// default = cin
   static enum { NUL, DYN, COL } format = NUL;
   static bool fast = false;
   switch (format) {
-  case DYN: return fast ? fget_dyn() : get_dyn();
+  case DYN:
+    return fast ? fget_dyn() :
+      (dyn*)get_node(s, new_dyn, the_hbpfp, the_sbpfp, use_stories);
   case COL: return get_col(s, new_dyn, the_hbpfp, the_sbpfp, use_stories);
   case NUL:
     fast = getenv("STARLAB_USE_FDYN");		// fast input off by default
