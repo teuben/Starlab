@@ -390,10 +390,6 @@ local inline xreal read_xreal(const char *str)
 }
 
 
-xreal get_xreal(char *str)
-{
-    return read_xreal(str);
-}
 
 // Note that the >> operator is not symmetric with <<...
 
@@ -437,6 +433,23 @@ istream & operator >> (istream & s, xreal & x)
 }
 
 #endif
+
+xreal get_xreal(char *str)
+{
+#if defined USE_XREAL
+
+    // "True" xreal:
+
+    return read_xreal(str);
+
+#else
+
+    // xreal is really just real:
+
+    return (xreal)strtod(str, NULL);
+
+#endif
+}
 
 xreal get_xreal_from_input_line(char * input_line)
 {
@@ -540,6 +553,10 @@ void identify_xreal(ostream &s)	// default = cerr
 
 main()
 {
+    identify_xreal();
+
+#ifdef USE_XREAL
+
     cerr.precision(HIGH_PRECISION);
 
     while (1) {
@@ -566,6 +583,8 @@ main()
 	real dy = y - x;
 	PRL(dy);
     }
+
+#endif
 }
 
 #endif

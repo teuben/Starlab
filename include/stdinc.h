@@ -326,6 +326,8 @@ void xprint(xreal x,
 	    ostream & s = cerr,
 	    bool newline = true);
 real fmod2(xreal x, real y);
+xreal get_xreal(char *str);
+void identify_xreal(ostream& s = cerr);
 
 //=============================================================================
 //  Various declarations
