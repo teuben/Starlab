@@ -134,7 +134,24 @@ local real mf_GdeMarchi(real m_lower, real m_upper) {
     real mass = tapered_power_law(m_lower, x1, x2, mbreak);
     return mass;
 
+  real x1 = -2.35;
+  real x2 = 2.40;
+  real mbreak = 0.15;
+    real dNdm_min = tapered_power_law(m_lower, x1, x2, mbreak);
+    real dNdm_max = tapered_power_law(m_upper, x1, x2, mbreak);
+//    PRC(dNdm_min);PRL(dNdm_max);
+    real m, rnd;
+    real dNdm_try, dNdm;
+    do {
+	rnd = randinter(0,1);
+	m = m_lower + rnd*(m_upper-m_lower);
+	dNdm_try = randinter(dNdm_min,dNdm_max);
+	dNdm = tapered_power_law(m, x1, x2, mbreak);
+    }
+    while(dNdm_try>dNdm);
+    return m;
 #endif
+
 }
 
 // see: de la Fuente Marcos, Aarseth, Kiseleva, Eggleton
