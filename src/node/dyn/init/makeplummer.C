@@ -8,24 +8,30 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makeplummer:  construct a Plummer model, with a spatial or mass cut-off
-////               to ensure finite radius.
+//// Construct a Plummer model, with a spatial or mass cut-off to ensure
+//// finite radius.  The new model system is written to standard output.
+//// The model system is shifted to place its center of mass at rest at
+//// the origin of coordinates.  Unscaled systems will be in approximate
+//// virial equilibrium, based on the continuum limit.
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
-////              -C    output data in 'col' format [no]
-////              -i    number the particles sequentially [don't number]
-////              -m    mass cutoff (for finite radius) [0.999]
-////              -n    specify number of particles [no default]
-////              -o    echo value of random seed [don't echo]
-////              -r    radius cutoff [22.804 for default mass cutoff]]
-////              -R    toggle reshuffle of particles to remove correlation
-////                    between index and distance from cluster center [true]
-////              -s    specify random seed [random from system clock]
-////              -u    leave unscaled [scale to E=-1/4, M = 1, R = 1]
+//// Usage:   makeplummer [OPTIONS]
 ////
-//// On exit, the final system is shifted to place its center of mass at
-//// rest at the origin of coordinates.  Unscaled systems will be in
-//// approximate virial equilibrium, based on the continuum limit.
+//// Options:
+////          -c    add a comment to the output snapshot [false]
+////          -C    output data in 'col' format [no]
+////          -i    number the particles sequentially [don't number]
+////          -m    specify mass cutoff (for finite radius) [0.999]
+////          -n    specify number of particles [no default]
+////          -o    echo value of random seed [don't echo]
+////          -r    specify radius cutoff [22.804 for default mass cutoff]
+////          -R    toggle reshuffle of particles to remove correlation
+////                between index and distance from cluster center [true]
+////          -s    specify random seed [random from system clock]
+////          -u    leave unscaled [scale to E=-1/4, M = 1, R = 1]
+////
+//// Written by Piet Hut and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //............................................................................
 //   version 1:  July 1989   Piet Hut               email: piet@iassns.bitnet
