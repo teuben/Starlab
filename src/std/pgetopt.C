@@ -125,7 +125,7 @@ int  pgetopt(int argc, char ** argv, char * optstr)
 
     if (streq(argv[argv_counter], VERSION_OPTION_A)
 	|| streq(argv[argv_counter], VERSION_OPTION_B)) {
-	cerr << "Starlab version " << STARLAB_VERSION << endl;
+	cerr << "Starlab version " << VERSION << endl;
 	exit(0);
     }
 

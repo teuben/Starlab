@@ -36,7 +36,7 @@ void get_runtime_help(char* source_file, char* compile_date, int level)
     // removed.
 
     cerr << endl
-	 << "    Starlab version " << STARLAB_VERSION << endl;
+	 << "    Starlab version " << VERSION << endl;
 
     char* s = stredit(compile_date, '_', ' ');
     if (s) {

@@ -74,7 +74,7 @@ local int  eff_length(char * s)
 #define  INTRO_LENGTH      strlen(INTRO_PART)
 #define  STARLAB_PART      "Starlab "
 #define  STARLAB_LENGTH    strlen(STARLAB_PART)
-#define  VERSION_PART      STARLAB_VERSION
+#define  VERSION_PART      VERSION
 #define  VERSION_LENGTH    strlen(VERSION_PART)
 #define  DATE_STR_LENGTH   24
 #define  DATE_SEPARATOR    "\n       "
