@@ -416,83 +416,31 @@ bool is_member(worldbundle *wb, pdyn *p)
     return false;
 }
 
-#define EPS 1.e-12
-
-pdyn *create_interpolated_tree2(worldbundle *wb, real t,
-				bool vel)		// default = false
+local void interpolate_tree(worldbundle *wb, real t, real t_int,
+			    pdynptr& root, bool vel, bool debug)
 {
-    static worldbundle *wb_last = NULL;		// last worldbundle to be
-    						// handled
-
-    static pdyn *root = NULL;			// root node of the
-    						// interpolated tree
-
-    static real t_int = -VERY_LARGE_NUMBER;	// time last the interpolated
-						// tree was updated
-
-    // Use the "fast" kepler solver...
-
-    if (!root) set_kepler_fast_flag();
-
-    if (wb != wb_last) {
-	if (root) {
-	    rmtree(root);
-
-	    // Replace by dealloc_tree() or dealloc_all() if we do
-	    //our own memory management.
-
-	    root = NULL;
-	}
-	for (int i = 0; i < wb->get_nw(); i++) {
-	    wb->get_bundle()[i]->clear_tree_node();
-	    wb->get_bundle()[i]->set_t_curr(-VERY_LARGE_NUMBER);
-	}
-
-	t_int = -VERY_LARGE_NUMBER;
-    }
-
-    if (t == t_int && root) return root;
-
-    // We no longer create the tree from scratch each time.  Rather,
-    // we modify all or part of an existing tree (starting at root)
-    // if possible.
-
-    // All leaves on the bundle list are still current, by construction.
-    // Find the base segment corresponding to each and use it to update
-    // the pdyn tree interpolated to the current time.
-
-    bool debug = false;
-
-    // Try to take care of rounding error in t.  Management of worldbundles
-    // should be the responsibility of the calling program.  (This would not
-    // be an issue if timesteps were constrained to be powers of 2...)
-
-    real dt = t - wb->get_t_max();
-    if (dt > EPS)
-	return NULL;
-    else if (dt > 0)
-	t = wb->get_t_max();
-
-    dt = t - wb->get_t_min();
-    if (dt < -EPS)
-	return NULL;
-    else if (dt < 0)
-	t = wb->get_t_min();
+    // Compute the new tree for worldbundle wb at time t, with root
+    // as the root node.
 
     // Find the array of worldlines (worldbundle), and initialize
     // the tree_node pointers.
 
     worldlineptr *bundle = wb->get_bundle();
 
-    // Create a root node.
+    // All leaves on the bundle list are still current, by construction.
+    // Find the base segment corresponding to each and use it to update
+    // the pdyn tree interpolated to the current time.
 
-    if (!root) root = new pdyn(NULL, NULL, false);
+    // Create a root node, if necessary.
 
-    // Replace by alloc_pdyn() if we do our own memory management.
+    if (!root) {
+	root = new pdyn(NULL, NULL, false);
+	// if (!root) root = alloc_pdyn(NULL, NULL, false, true, debug);
+	root->set_name("root");
+	root->set_worldline_index(wb->find_index(root));
+    }
 
     root->set_system_time(t);
-    root->set_name("root");
-    root->set_worldline_index(wb->find_index(root));
 
     root->set_pos(0);			// unnecessary, but not wrong...
     root->set_vel(0);
@@ -503,6 +451,7 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
 
     root->set_root(root);
     bundle[0]->set_tree_node(root);
+
     // bundle[0]->set_t_curr(t);	// will be set in the loop below
 
     // Loop through remaining worldlines and take action for leaves only.
@@ -512,10 +461,9 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
     // components accordingly.
 
     // Handle the interpolation of the root node here too...
-    // Root acc and jerk have been set up on input, so just
-    // interpolate them as worldline 0 in the following loop.
+    // Root acc and jerk have been set up on input, so just interpolate
+    // them as worldline 0 in the following loop.
 
-    // for (int i = 1; i < wb->get_nw(); i++) {
     for (int i = 0; i < wb->get_nw(); i++) {
 
 	worldline *w = bundle[i];
@@ -575,11 +523,90 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
 	    }
 	}
     }
+}
+
+#define EPS 1.e-12
+
+local bool trim(worldbundle *wb, real& t)
+{
+    // Try to take care of rounding error in t.  Management of worldbundles
+    // should be the responsibility of the calling program.  (This would not
+    // be an issue if timesteps were constrained to be powers of 2...)
+
+    real dt = t - wb->get_t_max();
+    if (dt > EPS)
+	return false;
+    else if (dt > 0)
+	t = wb->get_t_max();
+
+    dt = t - wb->get_t_min();
+    if (dt < -EPS)
+	return false;
+    else if (dt < 0)
+	t = wb->get_t_min();
+
+    return true;
+}
+
+pdyn *create_interpolated_tree2(worldbundle *wb, real t,
+				bool vel)		// default = false
+{
+    static worldbundle *wb_last = NULL;		// last worldbundle handled
+    static real t_int = -VERY_LARGE_NUMBER;	// last interpolation time
+
+    static pdyn *root = NULL;			// root node of the
+    						// interpolated tree
+
+    if (!wb_last) set_kepler_fast_flag();	// use the "fast" kepler solver
+
+    if (wb != wb_last) {
+	if (wb->get_pdyn_root()) {
+	    root = wb->get_pdyn_root();		// restore an existing tree
+	    t_int = wb->get_t_int();
+	} else {
+	    root = NULL;			// build a new tree
+	    t_int = -VERY_LARGE_NUMBER;
+	}
+    }
+
+    if (t == t_int && root) return root;
+
+    // We no longer create the tree from scratch each time.  Rather,
+    // we modify all or part of an existing tree (starting at root)
+    // if possible.
+
+    // All leaves on the bundle list are still current, by construction.
+    // Find the base segment corresponding to each and use it to update
+    // the pdyn tree interpolated to the current time.
+
+    bool debug = false;
+
+    // Try to take care of rounding error in t.
+
+    if (!trim(wb, t)) return NULL;
+
+    // Build the new tree.
+
+    interpolate_tree(wb, t, t_int, root, vel, debug);
+
+    wb->set_t_int(t);
+    if (wb != wb_last) wb->set_pdyn_root(root);
 
     wb_last = wb;
     t_int = t;
 
     return root;
+}
+
+void preload_pdyn(worldbundleptr wh[], int nh,
+		  bool verbose)			// default = false
+{
+    for (int i = 0; i < nh; i++) {
+	create_interpolated_tree2(wh[i], wh[i]->get_t_min());
+	if (verbose)
+	    cerr << "allocated memory for worldbundle " << i
+		 << ",  t_min = " << wh[i]->get_t_min() << endl;
+    }
 }
 
 #else
