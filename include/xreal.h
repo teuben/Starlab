@@ -67,8 +67,7 @@ class xreal {
 	int to_int() {return i;}			// always round down!
 	real to_real();
 
-	void xprint(ostream& s = cerr)			// xprint(x) is better
-	    {s << i << " " << f;};
+	void print(ostream& s = cerr);			// xprint(x) is better
 
 	xreal::operator int() {return to_int();}
 	xreal::operator real() {return to_real();}
@@ -104,13 +103,7 @@ inline ostream & operator << (ostream & s, xreal x)
 				// -- use x.xprint() for complete ouptut
 }
 
-inline istream & operator >> (istream & s, xreal & x) {
-    xint_t i;
-    xfrac_t f;
-    s >> i >> f;		// s >> x.i >> x.f fails; don't know why...
-    x = xreal(i, f);
-    return s;
-}
+istream & operator >> (istream & s, xreal & x);
 
 // Various real/xreal comparisons (rule: always promote to xreal).
 
@@ -132,6 +125,11 @@ inline bool operator >= (real x, xreal y) {return ((xreal)x >= y);}
 // inline real operator + (xreal x, real y) {return (real)(x + (xreal)y);}
 // inline real operator - (xreal x, real y) {return (real)(x - (xreal)y);}
 
+void xprint(xreal x,
+	    ostream & s = cerr,
+	    bool newline = true);
+
+xreal get_xreal (char *str);
 real fmod2(xreal x, real y);
 
 #endif

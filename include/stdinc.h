@@ -30,8 +30,11 @@
 #include  <fstream>
 
 #ifdef HAVE_CONFIG_H
-#  include  "config.h"       // config.h is created by "configure" (see autoconf)
+#  include  "config.h"	// config.h is created by "configure" (see autoconf)
 #endif
+
+#define HAVE_STRTOLL	// set for 32-bit Linux, omit for 64-bit Dec UNIX
+			// should (will...) set this up in config.h
 
 // New GNU, HP, and Sun all use stdiostream.h, which includes both
 // the stdio.h (C) and the iostream.h (C++) header files.  SGI and
@@ -274,9 +277,7 @@ inline real	square(real x)			{return x*x;}
    real fmod2(xreal x, real y);
 #endif
 
-void xprint(xreal x, ostream & s = cerr, bool newline = true);
-
-// Long long is an ongoing irritant...  See std/util_io.C
+// Long long is an ongoing irritant...  See std/xreal.C
 
 #ifdef HAVE_STRTOLL
 
@@ -284,12 +285,14 @@ void xprint(xreal x, ostream & s = cerr, bool newline = true);
 
 #  define STRTOL strtoll
 #  define STRTOUL strtoull
+
 #else
 
 // e.g. Dec UNIX
 
 #  define STRTOL strtol
 #  define STRTOUL strtoul
+
 #endif
 
 //=============================================================================

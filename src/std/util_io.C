@@ -140,53 +140,6 @@ void set_vector_from_string(vec & v, char *val)
     }
     v = vec(component[0],component[1],component[2]);
 }
-    
-
-static bool print = true;
-
-xreal get_xreal_from_input_line(char * input_line)
-{
-    char *val = strchr(input_line, '=');
-    if(val == NULL) return (xreal)0;
-    val++;
-
-#if defined USE_XREAL
-
-    // "True" xreal:
-
-    char *sp, *ep;
-    long long i = STRTOL(val, &sp, 10);		  // signed integer part
-    unsigned long long f = STRTOUL(sp, &ep, 0);   // unsigned fractional part
-						  // "0" here means that we
-						  // can read hex or integer
-
-    if (sp == ep) {				  // if we didn't get both
-						  // of above,
-
-	// Hmmm... most likely we have real input data.  Try just reading
-	// a real number.  (Steve, 6/00)
-
-	if (print) {
-	    cerr << "get_xreal_from_input_line: error reading xreal input "
-		 << "from line" << endl
-		 << "    " << input_line << endl
-		 << "Assuming real data." << endl << endl;
-	    print = false;
-	}
-
-	return (xreal)strtod( val, NULL );
-    }
-
-    return xreal(i, f);
-
-#else
-
-    // xreal is really just real:
-
-    return (xreal)strtod( val, NULL );
-
-#endif
-}
 
 //
 //---------------------------------------------------------------------
@@ -242,34 +195,14 @@ void put_story_footer(ostream & s, char * id)
     }
 }
 
-
-#ifdef USE_XREAL
-void put_real_number(ostream & s, char * label, xreal x)
-{
-    // Simplest version:
-
-    // s << label << x.get_i() << " " << x.get_f() << endl;
-
-    // Better: Use hex for the fractional part...
-
-    xfrac_t f = x.get_f();
-    char tmp[128];
-
-    if (f == 0)
-	sprintf(tmp, "0");			// handy
-    else
-	sprintf(tmp, "%#16.16llx", f);
-
-    s << label << x.get_i() << " " << tmp << endl;
-}
-#endif
-
 // NOTE use of precision here.  If the STARLAB_PRECISION environment
 // variable is set, the first call to set_starlab_precision will use
 // its value (whatever it may be).  Subsequent calls will return the
 // same value originally read from the environment.  If no environment
 // variable is set, a default value (currently 18 -- see precision.C)
 // is used.
+
+// See also xreal version in xreal.C.
 
 void put_real_number(ostream & s, char * label, real x)
 {

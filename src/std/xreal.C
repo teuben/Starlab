@@ -174,26 +174,167 @@ real fmod2(xreal x, real y)
 }
 
 #endif
+
+
+//----------------------------------------------------------------------
+//
+// All the xreal I/O functions should appear here, for consistency.
+
+// Input functions are derived from a single get_xreal function.
+
+#ifdef USE_XREAL
+
+// Read an xreal from a string.
+// C++ input apparently doesn't understand 0xa123bcde format for hex...
+// Operator not widely used; use scanf until this is resolved.
+
+static bool print_xreal = true;
+
+local inline xreal read_xreal(const char *str)
+{
+    // Extract an xreal from a string, with tests for various formats.
+    // Should be able to understand
+    //
+    //		int int
+    //		int hex
+    //		real
+
+    char *sp, *ep;
+    // PRL(str);
+    long long i = STRTOL(str, &sp, 10);		  // signed integer part
+    // PRC(i); PRL(sp);
+    unsigned long long f = STRTOUL(sp, &ep, 0);   // unsigned fractional part
+						  // "0" here means that we
+						  // can read hex or integer
+    // PRC(f); PRL(ep);
+
+    if (sp == ep) {				  // if we didn't get both
+						  // of above,
+
+	// Hmmm... most likely we have real input data.  Try just reading
+	// a real number.  (Steve, 6/00)
+
+	if (print_xreal) {
+	    cerr << "read_xreal: error reading xreal input "
+		 << "from string" << endl
+		 << "    " << str << endl
+		 << "Assuming real data." << endl << endl;
+	    print_xreal = false;
+	}
+
+	return (xreal)strtod(str, NULL);
+    }
+
+    return xreal(i, f);
+}
+
+xreal get_xreal(char *str)
+{
+    return read_xreal(str);
+}
+
+// Note that the >> operator is not symmetric with <<...
+
+istream & operator >> (istream & s, xreal & x)
+{
+// C++ input apparently doesn't understand "0xa123bcde" format for hex...
+
+// xint_t i;
+// xfrac_t f;
+// s >> i >> f;			// s >> x.i >> x.f fails; don't know why...
+// x = xreal(i, f);
+
+    // Operator is not widely used; just use read_xreal().
+
+    // Start by reading in two "words".  Easiest to use STL strings for this.
+
+    string i, f;
+    s >> i >> f;
+    string str = i + " " + f;
+    x = read_xreal(str.c_str());
+
+    return s;
+}
+
+#endif
+
+xreal get_xreal_from_input_line(char * input_line)
+{
+    char *val = strchr(input_line, '=');
+    if(val == NULL) return (xreal)0;
+    val++;
+
+#if defined USE_XREAL
+
+    // "True" xreal:
+
+    return read_xreal(val);
+
+#else
+
+    // xreal is really just real:
+
+    return (xreal)strtod(val, NULL);
+
+#endif
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+// All xreal "print" functions are really versions of a single xprint.
 
 void xprint(xreal x,
 	    ostream & s,	// default = cerr
 	    bool newline)	// default = true
 {
 #ifdef USE_XREAL
+
+    // Simplest version:
+    //
+    // s << label << x.get_i() << " " << x.get_f() << endl;
+    //
+    // Better: Use hex (leading 0x) for the fractional part...
+
     xfrac_t f = x.get_f();
     char tmp[128];
-//    s << x.get_i() << "+" << f;
     if (f == 0)
 	sprintf(tmp, "0");		// handy
     else
 	sprintf(tmp, "%#16.16llx", f);
-    s << x.get_i() << " " << tmp;	// see also put_real_number()
+
+    s << x.get_i() << " " << tmp;
+
 #else
+
     s << x;
+
 #endif
+
     if (newline) s << endl;
 }
 
+#ifdef USE_XREAL
+
+// Member function xprint is rarely used, but convenient to retain it.
+// Simply define it in terms of the non-member xprint function.
+
+void xreal::print(ostream& s)
+{
+    xprint(*this, s, false);
+}
+
+// Xreal version of put_real_number is just xprint with a label.
+
+void put_real_number(ostream & s, char * label, xreal x)
+{
+    s << label;
+    xprint(x, s);
+}
+#endif
+
+//----------------------------------------------------------------------
+
+
 #else
 
 main()
