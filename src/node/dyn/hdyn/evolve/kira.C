@@ -762,7 +762,9 @@ local int integrate_list(hdyn * b,
 
 	if (bi && bi->is_valid()) {
 
+#ifdef CPU_COUNTERS
 	    cpu = cpu_time();
+#endif
 
 	    if (!bi->get_kepler()) {
 

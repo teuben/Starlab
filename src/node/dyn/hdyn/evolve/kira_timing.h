@@ -17,4 +17,4 @@
 // Define CPU_COUNTERS to time various parts of the integration procedure.
 
 #define CPU_COUNTERS
-//#undef  CPU_COUNTERS
+#undef  CPU_COUNTERS
