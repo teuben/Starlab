@@ -34,7 +34,7 @@ EXECUTABLES =	compute_com compute_mcom compute_density compute_max_cod \
 		sys_stats set_com to_cod to_com jiggle \
                 lagradplotsmooth get_std_center \
 		add_plummer add_power_law add_tidal \
-		set_ignore_internal add_daughter_node
+		set_ignore_internal add_daughter_node getsnap
 
 OBJECT_FILES =	compute_com.o compute_density.o compute_max_cod.o \
 		compute_mcom.o compute_mean_cod.o \
