@@ -54,10 +54,7 @@ real print_encounter_elements(hdyn* bi, hdyn* bj,
 	    && find_qmatch(bj->get_log_story(), "coll_tskip")) {
 	    real ti = getrq(bi->get_log_story(), "coll_tskip");
 	    real tj = getrq(bj->get_log_story(), "coll_tskip");
-
-	    PRC(t); PRC(ti); PRL(tj);
-
-	    if (ti < VERY_LARGE_NUMBER && tj < VERY_LARGE_NUMBER
+	    if (ti < VERY_LARGE_NUMBER && tj < VERY_LARGE_NUMBER    // overkill
 		&& t < ti || t < tj) print = false;
 	}
 
@@ -118,13 +115,11 @@ real print_encounter_elements(hdyn* bi, hdyn* bj,
 	    cerr << endl;
 	}
 	else {
-	    cerr << "     E = " << k.get_energy() << endl;
+	    cerr << "     E = " << k.get_energy() << ", ";
 	    real coll_tskip = k.pred_advance_to_radius(2*k.get_periastron());
 	    PRL(coll_tskip);
-	    PRL(bi->get_log_story());
 	    putrq(bi->get_log_story(), "coll_tskip", coll_tskip);
 	    putrq(bj->get_log_story(), "coll_tskip", coll_tskip);
-	    PRL(bi->get_log_story());
 	    putrq(bi->get_log_story(), "coll_tskip", coll_tskip);
 	}
     }
