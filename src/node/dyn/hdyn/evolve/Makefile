@@ -8,15 +8,14 @@
 # #                                                       #             _\|/_
 ##=======================================================#               /|\
 #
-##
+#
 ##  src/node/dyn/hdyn/evolve/Makefile
 ##.............................................................................
-##    Dec 1994					Piet Hut & Steve McMillan
-##    Apr 1999					Steve McMillan
+##    Jul 2000					Steve McMillan
 ##.............................................................................
 #
-# This Makefile is for linux ONLY.  See Makefile.* for versions used
-# on other systems.
+# This Makefile is for hongo ONLY.  See Makefile.* for versions used
+# on other systems
 #
 # Local (i.e. non-environment) macros used in Makefile.worker.inc:
 #
@@ -36,7 +35,7 @@
 #
 #..............................................................................
 
-OBJECT_FILES = hdyn_unpert.o hdyn_ev.o hdyn_tree.o hdyn_merge.o \
+OBJECT_FILES = hdyn_unpert.o hdyn_ev.o hdyn_merge.o hdyn_tree.o \
 	       hdyn_debug.o hdyn_grape.o hdyn_schedule.o hdyn_slow.o \
 	       kira_init.o kira_runtime.o \
 	       perturbed_list.o correct_perturbers.o kira_check.o \
@@ -44,29 +43,90 @@ OBJECT_FILES = hdyn_unpert.o hdyn_ev.o hdyn_tree.o hdyn_merge.o \
 	       kira_ev.o kira_log.o kira_stellar.o kira_approx.o \
 	       kira_encounter.o kira_top_level.o
 
-LIBRARY = libhdyn.a
+# The kira_*.o are really local, but keep them in libhdyn.a for now.
 
-EXECUTABLES = kira
+LIBRARY      = libhdyn.a
 
-NON_CCC_EXECUTABLES = 
+EXECUTABLES  = kira kira_grape6
 
-DEPEND_LIBS	= $(LIB)/libhdyn.a $(LIB)/lib_dyn_.a $(LIB)/libdyn.a \
-		  $(LIB)/libnode.a $(LIB)/libdstar.a $(LIB)/libsstar.a \
-		  $(LIB)/libstd.a
+NON_CCC_EXECUTABLES =
 
-CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC)
+# (Note that $(INC) and $(LIB) are defined in Makefile.worker.inc)
 
-CPPFLAGS = 
+DEPEND_LIBS  =	$(LIB)/libhdyn.a $(LIB)/lib_dyn_.a $(LIB)/libdyn.a \
+		$(LIB)/libnode.a $(LIB)/libdstar.a $(LIB)/libsstar.a \
+		$(LIB)/libstd.a
 
-LIBFLAGS  =	-L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
-                -ldstar -lsstar -lstd -lm 
-#		~/ccmalloc-0.2.3/src/ccmalloc.o -ldl
 
-#EXEFLAGS = -pg
+# no GRAPE
+CFLAGS       =	$(STARLAB_CCC_FLAGS) -I$(INC) 
+
+# For GRAPE-4:
+#CFLAGS       =	$(STARLAB_CCC_FLAGS) -I$(INC) \
+#		  -DSTARLAB_HAS_GRAPE4 -DSHARE_GRAPE -DUSE_HALF_CHIP $(CC_EXTRA)
+
+# For GRAPE-6:
+#CFLAGS       =	$(STARLAB_CCC_FLAGS) -I$(INC) \
+#		  -DSTARLAB_HAS_GRAPE6 -DSHARE_GRAPE $(CC_EXTRA) -O3
+
+# Note from Steve, 3/99:
+#
+# Using "-pg" here for gprof causes strange problems assembling
+# *some* files on merlot...
+#
+# With /bin/as (DEC as), get assembler errors in hdyn_ev.
+# With /usr/local/bin/as (GNU gas), "-pg" is not recognized.
+#
+# If include "-pg" only in the load step, kira builds under /bin/as,
+# but we lose detailed gprof output...
+
+CPPFLAGS     =
+
+# Comment out the "GRAPELIB =" line if we don't have GRAPE hardware.
+
+# For GRAPE-4 (on merlot@drexel):
+
+#GRAPELIB =	-L/usr/users/makino/src/harplibs -lg4a -lrt
+
+# For GRAPE-6
+
+# On bourgogne@hongo:
+
+#GRAPELIB = -L/usr2/makino/src/g6hib -lg6 -L/usr2/makino/src/grape6 -lg6sim2
+
+# On neomuscat@hongo:
+
+#GRAPELIB = -L/usr2/makino/src/g6hib -lg6test -L/usr2/makino/src/grape6 -lg6sim2
+
+LIBFLAGS     =	-L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
+                -ldstar  -lsstar -lstd \
+	         $(GRAPELIB) \
+                -L/usr/lib -lg++ -lstdc++ -lstd -lm \
+		-L/usr/ccs/lib/cmplrs/cc -lprof1 -lpdf
+
+# (Last line is apparently needed on merlot if "-pg" is used.
+#  Not wanted for Dec C++.)
+
+# (Steve, 3/99) include -pg in build step via EXEFLAGS.
+# Including -pg in CFLAGS causes problems.
+
+#EXEFLAGS    = -pg
+EXEFLAGS     = 
 
 #..............................................................................
 
 include $(STARLAB_PATH)/inc/Makefile.worker.inc
+
+hdyn_grape.C:	hdyn_grape4.C hdyn_grape6.C
+	@touch hdyn_grape.C
+
+kira_grape4.C : kira.C
+	echo "#define USE_GRAPE" > kira_grape4.C
+	cat kira.C >> kira_grape4.C
+
+kira_grape6.C : kira.C
+	echo "#define USE_GRAPE" > kira_grape6.C
+	cat kira.C >> kira_grape6.C
 
 #..............................................................................
 #..............................................................................
@@ -76,3 +136,10 @@ include $(STARLAB_PATH)/inc/Makefile.worker.inc
 ##  |  the end of:  |         /|\         |  src/node/dyn/hdyn/evolve/Makefile
 ##  +---------------+                     +------------------------------//
 ##========================= STARLAB =====================================\\
+
+
+
+
+
+
+
