@@ -51,6 +51,11 @@
 
 void  addstar(node * b, real t_current, stellar_type type, bool verbose)
 {
+  //    if(!((star*)b->get_starbase())->get_seba_counters()) {
+  //      cerr << "Initialize SeBa counters" << endl;
+  //      ((star*)b->get_starbase())->set_seba_counters(new seba_counters);
+  //    }
+
     if (b->get_oldest_daughter() != NULL) {
 
 	real m_min = VERY_LARGE_NUMBER;
@@ -143,16 +148,21 @@ void  addstar(node * b, real t_current, stellar_type type, bool verbose)
 	    m_rel = m_tot = b->get_starbase()
 			     ->conv_m_dyn_to_star(b->get_mass());
 
+	    stellar_type local_type = type;
+
 	    // Treat by dynamics pre-requested black holes 
 	    if(getiq(b->get_log_story(), "black_hole")==1) {
-	      single_star* new_star = new_single_star(Black_Hole, id, 
-						      t_cur, t_rel, 
-						      m_rel, m_tot, m_tot,
-						      m_tot,
-						      p_rot, b_fld, b);
+	      local_type = Black_Hole;
+	      m_core = m_tot;
+	      mco_core = m_tot;
 	    }
-	    else
-	      single_star* new_star = new_single_star(type, id, 
+	    else if(m_tot<cnsts.parameters(minimum_main_sequence)) {
+	      local_type = Brown_Dwarf;
+	      m_core = 0.01*m_tot;
+	      mco_core = 0;
+	    }
+	    
+	    single_star* new_star = new_single_star(local_type, id, 
 						    t_cur, t_rel, 
 						    m_rel, m_tot, m_core,
 						    mco_core,

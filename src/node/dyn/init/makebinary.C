@@ -13,6 +13,7 @@
 ////                           (L^2 = am[1-e^2]), solar units
 ////                      2    semi-major axis or peri/apo, solar units
 ////                      3    energy
+////            -e    maximum eccentricity [1]
 ////            -l    lower limit on selected binary parameter [1]
 ////            -o    specify interpretation of limits [1]
 ////                      -f 1:
@@ -140,6 +141,16 @@ local real minimum_semi_major_axis(dyn* b1, dyn* b2)
     return max(sma_prim, sma_sec);
 }
 
+local bool dyn_present(dyn* bi) {
+
+  bool dynamics_present = true;
+  if(bi->get_pos()[0]==0 && bi->get_pos()[1]==0 && bi->get_pos()[2]==0 &&
+     bi->get_vel()[0]==0 && bi->get_vel()[1]==0 && bi->get_vel()[2]==0)
+    dynamics_present = false;
+
+  return dynamics_present;
+}
+
 local void mkbinary(dyn* b, real lower, real upper,
 		    int select, int option, real emax)
 {
@@ -152,6 +163,9 @@ local void mkbinary(dyn* b, real lower, real upper,
 
 	    dyn* primary = bi->get_oldest_daughter();
 	    dyn* secondary = primary->get_younger_sister();
+	    vector nul = 0;
+	    if(!dyn_present(primary) || !dyn_present(secondary)) {
+
 	    real m_total = bi->get_mass();
 	    real mu = primary->get_mass() * secondary->get_mass() / m_total;
 
@@ -241,7 +255,9 @@ local void mkbinary(dyn* b, real lower, real upper,
 
 		    //binding energy = 0.5 * m_total / sma;
 		    real a_max = 0.5 * m_total;
-		    a_max = max(a_max, upper);
+		    if(upper>a_min) {
+		      a_max = min(a_max, upper);
+		    }
 
 		    if(a_max<=a_min) {
 		      PRC(a_max);PRL(a_min);
@@ -283,6 +299,10 @@ local void mkbinary(dyn* b, real lower, real upper,
 		    ecc = sqrt(randinter(0,emax));
 		    a_const = log(upper) - log(lower);
 		    semi_major_axis = lower*exp(randinter(0., a_const));
+		    semi_major_axis = b->get_starbase()
+                                       ->conv_r_star_to_dyn(semi_major_axis);
+
+
 		}
 		energy = 0.5 * m_total / semi_major_axis;
 	    }
@@ -308,6 +328,7 @@ local void mkbinary(dyn* b, real lower, real upper,
 	    //PR(sma); PR(ecc); PRL(L);
 
 	    add_dynamics(bi, ecc, energy);
+	}
 	}
 }
 
