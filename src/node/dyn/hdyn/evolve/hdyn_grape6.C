@@ -218,7 +218,16 @@ local INLINE void send_j_node_to_grape(hdyn *b,
 	PRI(4); PRL(pos);
     }
 #endif
-    
+
+    // enabling DMA on the Athlon according to Jun's documentation (sect. 4.3)
+    // Ernie, 01/31/'05
+    static bool init_jp_called;
+    if (!init_jp_called) {
+      cerr << "calling g6_initialize_jp_buffer_" << endl;
+      int size = 10000;
+      g6_initialize_jp_buffer_(&cluster_id, &size), init_jp_called = true;
+    }
+
     g6_set_j_particle_(&cluster_id,
 		       &grape_index,				// address
 		       &grape_index,				// index
@@ -601,6 +610,10 @@ local INLINE int force_by_grape(xreal xtime,
 	// ijerk[i] = ijerk[ni-1];
 	// ipot[i] = ipot[ni-1];
     }
+    
+    // enabling DMA on the Athlon according to Jun's documentation (sect. 4.3)
+    // Ernie, 01/31/'05
+    g6_flush_jp_buffer_(&cluster_id);
 
     g6calc_firsthalf_(&cluster_id, &nj, &ni, iindex,
 		      ipos, ivel, iacc, ijerk, ipot,

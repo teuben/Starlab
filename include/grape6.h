@@ -89,6 +89,9 @@ extern "C" int g6_get_neighbour_list_(int *cluster_id,
 				      int *nblen,
 				      int nbl[]);
 
+extern "C" int g6_initialize_jp_buffer_(int *clusterid, int *size);
+extern "C" int g6_flush_jp_buffer_(int *clusterid);
+
 #endif
 
 //=======================================================================//

@@ -84,3 +84,8 @@ int g6_get_neighbour_list_(int *cluster_id,
 			   int *max_length,
 			   int *nblen,
 			   int nbl[]) {return 0;};
+
+int g6_initialize_jp_buffer_(int *clusterid,
+			     int *size) {return 0;}
+
+int g6_flush_jp_buffer_(int *clusterid) {return 0;}
