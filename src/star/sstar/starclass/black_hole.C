@@ -412,11 +412,11 @@ bool black_hole::super_nova() {
       // Energy kick
       // real energy_kick = sqrt(impulse_kick);
   
-      
-//      real v_kick  = cnsts.super_nova_kick(no_velocity_kick);
+  
+      real v_kick  = cnsts.super_nova_kick(no_velocity_kick);
 
-      real v_kick  = impulse_kick
-                   * cnsts.super_nova_kick(Paczynski_velocity_kick);
+//      real v_kick  = impulse_kick
+//                     * cnsts.super_nova_kick(Paczynski_velocity_kick);
 
       real theta_kick = acos(1-2*random_angle(0, 1));
       real phi_kick   = random_angle(0, cnsts.mathematics(two_pi));

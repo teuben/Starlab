@@ -293,11 +293,11 @@ local real potential(dyn *b, real r)		// background potential;
     real a2 = b->get_pl_scale_sq();
     real x = b->get_pl_exponent();
 
-#ifdef OLD_ERROR_VERSION_5OCT2001
-    return -A*pow(r*r+a2, 0.5*x-1);		// *** wrong! ***
-#else
+    //#ifdef OLD_ERROR_VERSION_5OCT2001
+    //    return -A*pow(r*r+a2, 0.5*x-1);		// *** wrong! ***
+    //#else
     return -A*pow(r*r+a2, 0.5*(x-1))/(x-1);
-#endif
+    //#endif
 }
 
 static vector Afric = 0;			// frictional acceleration
@@ -308,13 +308,14 @@ void set_friction_acc(dyn *b, real r)
 	real sigma2 = sqrt(-2*potential(b, r)/3);  // this is sqrt(2) * sigma;
 						   // assume virial equilibrium
 	real V = abs(Vcm);
-	real X = V/sigma2;			// scaled velocity; BT p. 425
+	real X = sqrt(2-b->get_pl_exponent());
+//	real X = V/sigma2;			// scaled velocity; BT p. 425
 
-#ifndef NEW_4OCT2001
-	real coeff = beta;			// discard after current runs
-#else
+	//#ifndef NEW_4OCT2001
+	//	real coeff = beta;			// discard after current runs
+	//#else
 	real coeff = 4*M_PI*beta*logLambda(b, r);
-#endif
+	//#endif
 
 	if (X > 0.1)
 

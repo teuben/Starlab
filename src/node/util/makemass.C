@@ -16,8 +16,10 @@
 ////                                            2) Miller & Scalo
 ////                                            3) Scalo
 ////                                            4) Kroupa
+////                                            5) Tapered_Power_Law
 ////            Option -F requires one of the following strings:
-////                      (Power_Law, Miller_Scalo, Scalo, Kroupa)
+////                      (Power_Law, Miller_Scalo, 
+////                       Scalo, Kroupa, Tapered_Power_Law)
 ////                   -f requires the appropriate interger.
 ////            -i        (re)number stellar index from highest to lowest mass.
 ////            -l/L      lower mass limit [1]
@@ -52,6 +54,40 @@ local real mf_Miller_Scalo(real m_lower, real m_upper) {
 	    / (pow(1-rnd, 0.75) + 0.032*pow(1-rnd, 0.25));
     }
     while(m_lower>m || m>m_upper);
+    return m;
+}
+
+//Tapered power-law (from Guido de Marchi private communication Oct. 2001)
+//dN/dLogm= m^(-1.35)*(1-exp(-m/0.25)^2.4)
+local real tapered_power_law(real m, 
+			     const real x1 = -1.35, 
+			     const real x2 = 2.4, 
+			     const real mbreak = 0.25) {
+
+  real dNdm = pow(m, x1)*(1-pow(exp(-m/mbreak), x2));
+  return dNdm;
+}
+
+local real mf_GdeMarchi(real m_lower, real m_upper) {
+
+//dN/dLogm= m^(-1.35)*(1-exp(-m/0.15)^2.4)
+// for now we do it the poor way by Monte Carlo
+
+  real x1 = -2.35;
+  real x2 = 2.40;
+  real mbreak = 0.15;
+    real dNdm_min = tapered_power_law(m_lower, x1, x2, mbreak);
+    real dNdm_max = tapered_power_law(m_upper, x1, x2, mbreak);
+//    PRC(dNdm_min);PRL(dNdm_max);
+    real m, rnd;
+    real dNdm_try, dNdm;
+    do {
+	rnd = randinter(0,1);
+	m = m_lower + rnd*(m_upper-m_lower);
+	dNdm_try = randinter(dNdm_min,dNdm_max);
+	dNdm = tapered_power_law(m, x1, x2, mbreak);
+    }
+    while(dNdm_try>dNdm);
     return m;
 }
 
@@ -108,6 +144,9 @@ real get_random_stellar_mass(real m_lower, real m_upper,
        case Kroupa: // Kroupa, Tout & Gilmore 1993, MNRAS 262, 545
 	  m = Kroupa_Tout_Gilmore(m_lower, m_upper);
 	      break;
+       case Tapered_Power_Law:
+	  m = mf_GdeMarchi(m_lower, m_upper);
+	      break;
        default:
           cerr << "WARNING: \n"
 	       << "        real get_random_stellar_mass:\n"
@@ -138,6 +177,9 @@ char* type_string(mass_function mf) {
        case Kroupa:
             sprintf(mf_name, "Kroupa");
 	    break;
+       case Tapered_Power_Law:
+            sprintf(mf_name, "Tapered_Power_Law");
+	    break;
        default:
             sprintf(mf_name, "Unknown");
 	    break;
@@ -159,6 +201,8 @@ mass_function extract_mass_function_type_string(char* type_string) {
         type = Scalo;
      else if (!strcmp(type_string, "Kroupa"))
         type = Kroupa;
+     else if (!strcmp(type_string, "Tapered_Power_Law"))
+        type = Tapered_Power_Law;
      else if (!strcmp(type_string, "Unknown"))
         type = Unknown_MF;
      else {

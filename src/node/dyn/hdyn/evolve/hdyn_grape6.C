@@ -649,7 +649,7 @@ local void hw_err_exit(char *func, int id, hdyn *b)
 //  **********************************************************************
 
 
-void check_release_grape(kira_options *ko, xreal time)
+void check_release_grape(kira_options *ko, xreal time, bool verbose)
 {
 #ifdef SHARE_GRAPE
 
