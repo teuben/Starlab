@@ -47,7 +47,7 @@
 ////                                      (0.5, 1, 2, 5, 10, 25, 50, 75, 90%)
 ////             -n    perform/don't perform actions requiring O(N^2)
 ////                   operations (e.g. computation of energy and core
-////                   radius) [yes]
+////                   radius) [no]
 ////             -o    pipe system to cout [no]
 ////
 ////         If GRAPE is available, the hdyn version of this will compute the energies even if
@@ -75,16 +75,17 @@ local bool check_for_doubling(dyn* b)
 	return false;
 }
 
-local real print_relaxation_time(dyn* b,
+local void print_relaxation_time(dyn* b,
 				 real& potential_energy,
 				 real& kinetic_energy,
+				 real& r_virial,
 				 void (*compute_energies)(dyn*, real,
 							  real&, real&, real&,
 							  bool))
 {
     // Print the relaxation time
 
-    real r_virial, t_relax;
+    real t_relax;
     real total_mass = 0;
     int N = b->n_leaves();
 
@@ -105,11 +106,9 @@ local real print_relaxation_time(dyn* b,
 
     PRI(4); PRL(r_virial);
     PRI(4); PRL(t_relax);
-
-    return r_virial;
 }
 
-local bool print_numbers_and_masses(dyn* b)
+local void print_numbers_and_masses(dyn* b, bool& mass_spectrum)
 {
     // Numbers of stars and nodes:
 
@@ -146,7 +145,7 @@ local bool print_numbers_and_masses(dyn* b)
     cerr << "    m_min = " << m_min << "  m_max = " << m_max
 	 << "  m_av = " << m_av << endl;
 
-    return (m_min < m_max);
+    mass_spectrum = (m_min < m_max);
 }
 
 local void print_parameters_for_massive_black_holes(dyn *b,
@@ -496,7 +495,7 @@ local void print_energies(dyn* b,
 
     if (kinetic_energy == 0)
 	compute_energies(b, 0.0, potential_energy, kinetic_energy, e_total,
-			 true);
+			 true);				// "true" ==> top-level
 
     real total_int_energy = kinetic_energy + potential_energy;	// internal pot
     real external_pot = get_external_pot(b);
@@ -539,7 +538,11 @@ local void print_energies(dyn* b,
 
     for_all_daughters(dyn, b, bb) {
 	if (bb->is_parent()) {
-	    compute_energies(b, 0.0, pe, ke, e_total, false);
+
+	    // Tricky!!  Do the calculation only if a CM is detected.
+
+	    compute_energies(b, 0.0, pe, ke, e_total, false);	// "false" ==>
+								// all leaves
 	    break;
 	}
     }
@@ -1313,7 +1316,7 @@ bool parse_sys_stats_main(int argc, char *argv[],
     binaries = true;			// print binary output
     B_flag = false;			// force binary evolution (hdyn version)
     calc_e = true;			// compute energy
-    n_sq = true;			// allow n^2 operations
+    n_sq = false;			// don't allow n^2 operations
     out = false;			// write cin to cout
     long_binary_output = true;		// long binary output
     verbose = true;			// extended output
@@ -1347,7 +1350,7 @@ bool parse_sys_stats_main(int argc, char *argv[],
 		      else
 			  which_lagr = 2;
 		      break;
-	    case 'n': n_sq = false;
+	    case 'n': n_sq = !n_sq;
 		      break;
 	    case 'o': out = true;
 		      break;
@@ -1399,7 +1402,8 @@ void sys_stats(dyn* b,
     }
 
     if (verbose) cerr << "\n  Overall parameters (sys_stats):\n";
-    bool mass_spectrum = print_numbers_and_masses(b);
+    bool mass_spectrum = false;
+    print_numbers_and_masses(b, mass_spectrum);
 
     vector com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
@@ -1413,8 +1417,8 @@ void sys_stats(dyn* b,
 
     real r_virial = -1;
     if (compute_energy)				// Need virial radius for tR
-	r_virial  = print_relaxation_time(b, potential_energy, kinetic_energy,
-					  compute_energies);
+	print_relaxation_time(b, potential_energy, kinetic_energy,
+			      r_virial, compute_energies);
 
     // NB:  If set, potential energy here is internal potential energy.
 
