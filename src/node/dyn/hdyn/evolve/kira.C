@@ -188,7 +188,7 @@
 
 static hdyn **next_nodes = NULL;
 
-#ifndef TOOLBOX
+//#ifndef TOOLBOX
 
 
 #ifndef T_DEBUG_kira
@@ -3076,7 +3076,7 @@ void kira(hdyn * b,	       // hdyn array
 }
 
 
-#else
+//#else
 
 #include <unistd.h>				// for termination below...
 #include <signal.h>
@@ -3139,5 +3139,5 @@ main(int argc, char **argv) {
 
 }
 
-#endif
+//#endif
 
