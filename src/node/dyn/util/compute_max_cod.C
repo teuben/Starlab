@@ -33,10 +33,13 @@
 //		       center of an N-body system.
 //-----------------------------------------------------------------------------
 
+#define MAX_COUNT 5
+
 void compute_max_cod(dyn *b, vector& pos, vector& vel)
 {
     real max_density = 0;
     bool print_message = true;
+    int count = 0;
 
     pos = 0;
     vel = 0;
@@ -48,17 +51,22 @@ void compute_max_cod(dyn *b, vector& pos, vector& vel)
 
 	if (dens_time != b->get_system_time() && print_message) {
 	    warning("compute_max_cod: using out-of-date densities.");
-	    print_message = false;
+	    PRC(d->format_label()), PRL(dens_time);
+	    if (++count > MAX_COUNT) print_message = false;
 	}
 
 	real this_density = getrq(d->get_dyn_story(), "density");
 
-	if (this_density > -VERY_LARGE_NUMBER) {
+	if (this_density > 0) {
 	    if (max_density < this_density) {
 		max_density = this_density;
 		pos = d->get_pos();
 		vel = d->get_vel();
 	    }
+	} else if (this_density <= -VERY_LARGE_NUMBER) {
+	    warning("compute_max_cod: density not set.");
+	    PRL(d->format_label());
+	    if (++count > MAX_COUNT) print_message = false;
 	}
     }
 

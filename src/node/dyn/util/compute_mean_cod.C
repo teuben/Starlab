@@ -61,12 +61,17 @@ void compute_mean_cod(dyn *b, vector& pos, vector& vel)
 	    if (++count > MAX_COUNT) print_message = false;
 	}
 
-	real density = getrq(d->get_dyn_story(), "density");
-	if (density > -VERY_LARGE_NUMBER) {
-	    real dens2 = density * density;		// weight factor
+	real this_density = getrq(d->get_dyn_story(), "density");
+
+	if (this_density > 0) {
+	    real dens2 = this_density * this_density;	    // weight factor
 	    total_weight += dens2;
 	    pos += dens2 * d->get_pos();
 	    vel += dens2 * d->get_vel();
+	} else if (this_density <= -VERY_LARGE_NUMBER) {
+	    warning("compute_mean_cod: density not set.");
+	    PRL(d->format_label());
+	    if (++count > MAX_COUNT) print_message = false;
 	}
     }	
 
