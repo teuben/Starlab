@@ -234,7 +234,9 @@ local void set_runtime_params(hdyn *b, bool verbose,
 
     real ratio = d_min_sq / square(d_min/nbody);
     if (ratio < 0.0002 || ratio > 5.e3)
-	cerr << "*** warning: d_min_sq ratio = " << ratio << " ***" <<  endl;
+	cerr << endl
+	     << "*** warning: d_min_sq ratio = " << ratio << " ***"
+	     << endl;
 
     choose_param(b, verbose, lag_factor, lag_flag, "lag_factor");
     b->set_lag_factor(square(lag_factor));
@@ -384,7 +386,7 @@ local void get_physical_scales(hdyn* b,
 {
     // (Re)determine physical scales and set conversion factors.
 
-    // *****  Redundant in new version...  *****
+    // ***  Redundant in new version...  ***
 
     // First derive the N-body time unit.
 
@@ -679,7 +681,9 @@ local void check_total_mass(hdyn *b, bool reset = true)
 
     if (total_mass > 0) {
 	if (abs(b->get_mass()/total_mass - 1) > MASS_TOL) {
-	    cerr << endl << "*** Root mass disagrees with total mass" << endl;
+	    cerr << endl
+		 << "*** Root mass disagrees with total mass"
+		 << endl;
 	    PRI(4); PRC(b->get_mass()); PRL(total_mass);
 	    if (reset) {
 		cerr << "    resetting..." << endl;
@@ -705,8 +709,7 @@ bool kira_initialize(int argc, char** argv,
 		     bool& verbose,
 		     bool& save_snap_at_log,
 		     char* snap_save_file,
-		     int& n_stop,	// n to terminate simulation
-		     bool& ignore_internal)
+		     int& n_stop)	// n to terminate simulation
 {
 
     // Establish defaults for parameters (static class members or
@@ -780,7 +783,7 @@ bool kira_initialize(int argc, char** argv,
 
     bool allow_kira_override = true;
 
-    ignore_internal = false;
+    bool ignore_internal = false;
 
     bool r_virial_set = false;
     real input_r_virial;
@@ -905,7 +908,9 @@ bool kira_initialize(int argc, char** argv,
 			    else
 				set_write_unformatted(true);
 
-			    cerr << "*** binary tracking on" << endl;
+			    cerr << endl
+				 << "*** binary tracking on ***"
+				 << endl;
 
 			} else{
 			    dt_snap = atof(poptarg);
@@ -1033,10 +1038,8 @@ bool kira_initialize(int argc, char** argv,
     set_friction_beta(friction_beta);
     cerr << "Dynamical friction beta = " << friction_beta << endl;
 
-    bool snap_ignore_internal = false;
-    if (find_qmatch(b->get_log_story(), "ignore_internal")
-	&& getiq(b->get_log_story(), "ignore_internal") == 1)
-	snap_ignore_internal = true;
+    check_set_ignore_internal(b, verbose);
+    bool snap_ignore_internal = b->get_ignore_internal();
 
     if (ignore_internal || snap_ignore_internal) {
 	if (!snap_ignore_internal) {
@@ -1046,10 +1049,12 @@ bool kira_initialize(int argc, char** argv,
 
 	} else
 
-	    cerr << "*** Ignoring all internal forces "
-		 << "-- external field only ***" << endl;
+	    cerr << endl
+		 << "*** Ignoring internal forces "
+		 << "-- external field only ***"
+		 << endl;
 
-	ignore_internal = true;
+	b->set_ignore_internal(true);
     }
 
     //----------------------------------------------------------------------

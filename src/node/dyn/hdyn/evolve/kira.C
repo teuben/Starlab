@@ -638,7 +638,7 @@ local int integrate_list(hdyn * b,
 			 hdyn ** next_nodes, int n_next,
 			 bool exact, bool & tree_changed,
 			 int full_dump,
-			 bool ignore_internal)
+			 real r_reflect)
 {
     static bool restart_grape = true;
     static bool reset_force_correction = true;	// no longer used
@@ -704,8 +704,7 @@ local int integrate_list(hdyn * b,
     calculate_acc_and_jerk_for_list(b, next_nodes, n_next, t_next,
 				    exact, tree_changed,
 				    reset_force_correction,  // no longer used
-				    restart_grape,
-				    ignore_internal);
+				    restart_grape);
 
 #ifdef TIME_LIST
     }
@@ -895,6 +894,37 @@ local int integrate_list(hdyn * b,
     }
 #endif
 
+
+
+
+#if 111111
+    if (r_reflect > 0) {
+	for (i = 0; i < n_next; i++) {
+	    hdyn *bi = next_nodes[i];
+	    if (bi && bi->is_valid()) {
+		real ri2 = square(bi->get_pos());
+
+		// Apply reflection if necessary.  Don't worry about error
+		// introduced in the jerk -- particle is at the edge of the
+		// system, so jerk change should be small (and no effect on
+		// other particles, as this option should only be used when
+		// ignore_internal is true.
+
+		if (ri2 > 1) {
+		    real vr = bi->get_pos() * bi->get_vel();
+		    bi->set_vel(bi->get_vel() - 2*vr*bi->get_pos()/ri2);
+		}
+
+		// cerr << endl << "reflected " << bi->format_label()
+		//      << " at time " << bi->get_time() << endl << flush;
+	    }
+	}
+    }
+#endif
+
+
+
+
     // Complete all steps before modifying binary structure...
 
     diag = false;
@@ -1050,7 +1080,7 @@ local int integrate_list(hdyn * b,
 		     << "from integrate_list [1]"
 		     << " at time " << b->get_system_time() << endl;
 
-		initialize_system_phase2(b, 1, true, ignore_internal);
+		initialize_system_phase2(b, 1, true);
 		b->reconstruct_perturbed_list();
 
 		PRL(tree_changed);
@@ -1079,7 +1109,7 @@ local int integrate_list(hdyn * b,
 	cerr << "call initialize_system_phase2() from integrate_list [2]"
 	     << " at time " << b->get_system_time() << endl;
 
-	initialize_system_phase2(b, 2, true, ignore_internal);
+	initialize_system_phase2(b, 2, true);
 	b->reconstruct_perturbed_list();
 
 	tree_changed = true;
@@ -1289,8 +1319,7 @@ local int integrate_list(hdyn * b,
 
 
 
-local void full_reinitialize(hdyn* b, xreal t, bool verbose,
-			     bool ignore_internal)
+local void full_reinitialize(hdyn* b, xreal t, bool verbose)
 {
     cerr << "\nReinitializing system at time " << t << endl;
 
@@ -1300,10 +1329,9 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
     // b->to_com();
     initialize_system_phase1(b, t);
     initialize_system_phase2(b, 3,
-			     false,			// "false" here means
+			     false);			// "false" here means
 							// timesteps are only
 							// set if zero
-			     ignore_internal);
     // Reset and save d_min_sq().
 
     int n = 0;
@@ -1514,18 +1542,26 @@ local void evolve_system(hdyn * b,	       // hdyn array
 			 bool verbose,
 			 bool save_snap_at_log, // save snap at log output
 			 char* snap_save_file, // filename to save in
-			 int n_stop,	       // when to stop
-			 bool ignore_internal)
+			 int n_stop)	       // when to stop
 {
     // Modified order in which output/snapshots/reinitialization/etc. are
     // performed -- Steve, 7/01
 
-    // Carried through option to ignore all internal forces -- Steve, 12/01.
+    // Carried through option to ignore all internal forces
+    // and added snapshot "reflection" option		    -- Steve, 12/01.
 
     // Initialization:
 
     clean_up_files();
     cpu_init();
+
+    real r_reflect = -1;
+    if (find_qmatch(b->get_log_story(), "r_reflect")) {
+	r_reflect = getrq(b->get_log_story(), "r_reflect");
+	cerr << endl
+	     << "*** Reflecting boundary at radius " << r_reflect << " ***"
+	     << endl;
+    }
 
     initialize_counters_from_log(b);
     kc_prev = *b->get_kira_counters();		// (make a local copy)
@@ -1707,7 +1743,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
     // reinitialization is scheduled within the while loop.  However,
     // we need to know the time steps for fast_get_nodes_to_move().
 
-    full_reinitialize(b, t, verbose, ignore_internal);
+    full_reinitialize(b, t, verbose);
 
     bool tree_changed = true;	// used by fast_get_nodes_to_move;
     				// set by integration/evolution routines
@@ -1951,7 +1987,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	    // *** REQUIRE dt_reinit >= dt_sync. ***
 
-	    full_reinitialize(b, t, verbose, ignore_internal);
+	    full_reinitialize(b, t, verbose);
 	    tree_changed = true;
 
 	    fast_get_nodes_to_move(b, next_nodes, n_next, ttmp, tree_changed);
@@ -2057,7 +2093,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	int ds = integrate_list(b, next_nodes, n_next, exact,
 				tree_changed, full_dump,
-				ignore_internal);
+				r_reflect);
 
 	bool force_energy_check = false;
 	if (ds < 0) {
@@ -2347,15 +2383,12 @@ main(int argc, char **argv)
     char snap_save_file[256];
     int  n_stop;		// n to terminate simulation
 
-    bool ignore_internal = false;
-
     if (!kira_initialize(argc, argv,
 			 b, delta_t, dt_log, long_binary_out,
 			 dt_snap, dt_sstar,
 			 dt_esc, dt_reinit, dt_fulldump,
 			 exact, cpu_time_limit, verbose,
-			 save_snap_at_log, snap_save_file, n_stop,
-			 ignore_internal))
+			 save_snap_at_log, snap_save_file, n_stop))
 	get_help();
 
     // b->to_com();	// don't modify input data -- use tool to do this
@@ -2369,8 +2402,7 @@ main(int argc, char **argv)
     evolve_system(b, delta_t, dt_log, long_binary_out,
 		  dt_snap, dt_sstar, dt_esc, dt_reinit, dt_fulldump,
 		  exact, cpu_time_limit,
-		  verbose, save_snap_at_log, snap_save_file, n_stop,
-		  ignore_internal);
+		  verbose, save_snap_at_log, snap_save_file, n_stop);
 
     cerr << endl << "End of run at time " << b->get_system_time()
 	 << endl

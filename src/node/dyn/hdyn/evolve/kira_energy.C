@@ -36,7 +36,8 @@ void calculate_energies_with_external(hdyn* b,
 
     // First, get the internal energy (use GRAPE if available).
 
-    calculate_internal_energies(b, epot, ekin, etot, cm, use_grape);
+    if (!b->get_ignore_internal())
+	calculate_internal_energies(b, epot, ekin, etot, cm, use_grape);
 
     if (b->get_external_field() > 0) {
 
