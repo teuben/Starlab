@@ -188,7 +188,8 @@ void kira_compute_densities(hdyn* b, vector& cod_pos, vector& cod_vel)
 
 }
 
-void kira_synchronize_tree(hdyn *b)
+void kira_synchronize_tree(hdyn *b,
+			   bool sync_low_level)		// default = false
 {
     // GRAPE replacement for synchronize_tree().  Synchronize all
     // top-level nodes.  Called from integrate_list() in kira.C and
@@ -206,7 +207,9 @@ void kira_synchronize_tree(hdyn *b)
 
     // Make a list of top-level nodes in need of synchronization.
     // Generally interested in recomputation of acc and jerk, so
-    // probably don't need to treat low-level nodes.
+    // probably don't need to treat low-level nodes.  Default is
+    // not to touch them.  Note that, even if sync_low_level is
+    // true, we still won't synchronize unperturbed binaries.
 
     xreal sys_t = b->get_system_time();
 
@@ -290,6 +293,16 @@ void kira_synchronize_tree(hdyn *b)
     }
 
     delete [] next_nodes;
+
+    // Deal with low-level nodes.
+
+    if (sync_low_level) {
+	for_all_daughters(hdyn, b, bi) {
+	    hdyn *od = bi->get_oldest_daughter();
+	    if (od && !od->get_kepler())
+		synchronize_tree(od);
+	}
+    }
 
     cerr << endl
 	 << "end of synchronization"

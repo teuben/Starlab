@@ -502,42 +502,60 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     // kira_synchronize_tree() in kira_grape_include.C to switch between
     // GRAPE (if available) and non-GRAPE code.
 
-   cerr << "merge_nodes: calling synchronize_tree..." << flush;
-    PRL(cpu_time());
-    pp3("(1,10001)");
+//    cerr << "merge_nodes: calling synchronize_tree..." << flush;
+//    PRL(cpu_time());
+//    pp3("(1,10001)");
 //    pp3("(21,100021)");
 //    pp3("(23,100023)");
 
-    kira_synchronize_tree(get_root());
+    kira_synchronize_tree(get_root(), true);	// true ==> sync_low_level
 
-    cerr << "back" << endl << flush;
-    PRL(cpu_time());
-    pp3("(1,10001)");
+    // NOTE: (kira_)synchronize_tree will not synchronize an unperturbed
+    // binary (specifically, 'this'), so sync the components now to avoid
+    // problems later.
+
+    hdyn *sister = get_binary_sister();
+    time = system_time;
+    sister->time = system_time;
+
+//    cerr << "back" << endl << flush;
+//    PRL(cpu_time());
+//    pp3("(1,10001)");
 //    pp3("(21,100021)");
 //    pp3("(23,100023)");
 
-    // Yes, it really is possible that 'this' or bcoll is unperturbed
-    // (probably in periastron passage)!  Better delete any kepler
-    // structures here to avoid problems later.  Probably OK simply
-    // to get rid of the keplers, since we are about to merge the
-    // nodes...
+    // It is possible that 'this' or bcoll is unperturbed (probably
+    // at periastron passage)!  Better delete any kepler structures
+    // here to avoid problems later.  Probably OK simply to get
+    // rid of the keplers, since we are about to merge the nodes...
+    // (OK so long as the nodes are synchronized, that is.)
 
     if (get_kepler()) {
+
 	rmkepler();
-	cerr << "deleted kepler for " << format_label() << endl;
-    } else if (get_binary_sister() != bcoll) {
-	if (bcoll->get_kepler()) bcoll->rmkepler();
-	cerr << "deleted kepler for " << bcoll->format_label() << endl;
+	cerr << "merge_nodes: deleted kepler for " << format_label() << endl;
+
+	// Deleting the kepler pointer will cause problems if the
+	// component times are not synchronized, as an attempt will
+	// be made later to predict them...  (Corrected above.)
+
+    } else if (sister != bcoll) {
+
+	if (bcoll->get_kepler()) {
+	    bcoll->rmkepler();
+	    cerr << "merge_nodes: deleted kepler for "
+		 << bcoll->format_label() << endl;
+	}
     }
 
-    if (is_top_level_node() || get_binary_sister() != bcoll) {
+    if (is_top_level_node() || sister != bcoll) {
 
         // Nodes to be merged ('this' and bcoll) are not binary
 	// sisters.  Force them to become sisters prior to actually
 	// merging them, temporarily placing them in the same
 	// subtree if necessary.
 
-	cerr << "creating CM node" << endl;
+	cerr << "merge_nodes: creating CM node" << endl;
 
 	hdyn* ancestor = common_ancestor(this, bcoll);
 	
@@ -564,7 +582,9 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
 	    // pp2(get_top_level_node(), cerr);
 
-	    if (get_binary_sister() != bcoll) {
+	    sister = get_binary_sister();
+
+	    if (sister != bcoll) {
 
 		if (full_dump)
 		    put_node(cout, *(get_top_level_node()), false, 3);
@@ -577,7 +597,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	
 	    if (decombine) {
 
-		// cerr << "call split_top_level_node 3" << endl;
+		// cerr << "merge_nodes: call split_top_level_node 3" << endl;
 
 		split_top_level_node(get_top_level_node(), full_dump);
 
@@ -609,7 +629,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
     // Compute energies prior to merger, for bookkeeping purposes:
 
-    cerr << "calculating energies..." << endl << flush;
+    cerr << "merge_nodes: calculating energies..." << endl << flush;
     real epot0, ekin0, etot0;
 
     // calculate_energies(get_root(), eps2, epot0, ekin0, etot0); //dyn function
@@ -630,6 +650,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
     PRC(epot_int); PRC(ekin_int); PRL(etot_int);
     PRL(cpu_time());
+
     //pp3(cm, cerr);
     //pp3(cm->get_root(), cerr);
 
@@ -683,7 +704,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	} else
 	    cm->set_radius((1-MASS_LOSS)*cm->get_radius());
 
-	cerr << "non-stellar merger: new radius = "
+	cerr << "merge_nodes: non-stellar merger: new radius = "
 	     << cm->get_radius() << endl;
 
     } else {
@@ -717,7 +738,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	((star*)(primary->sbase))
 	                ->merge_elements(((star*)(secondary->sbase)));
 	
-	cerr << "Merger product: "<< endl;
+	cerr << "merge_nodes: merger product: "<< endl;
 	cerr << format_label() << " (";
 	//	        put_state(make_star_state(sbase), cerr);
 	        put_state(make_star_state(primary), cerr);
@@ -750,7 +771,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	dv = anomalous_velocity(cm);
     }
 
-    cerr << "new node name = " << cm->format_label() << endl;
+    cerr << "merge_nodes: new node name = " << cm->format_label() << endl;
     PRL(cpu_time());
 
 //     pp3(cm->get_top_level_node());
@@ -776,7 +797,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
     correct_leaf_for_change_of_mass(cm, dm);
     if (cm->mass < 0) {
-	cerr << "check and merge, negative mass ";
+	cerr << "merge_nodes: negative mass ";
 	PRL(cm->mass);
     }
 
@@ -899,7 +920,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     // Also, if cm is on the perturbed binary list, better remove it.
 
     if (cm->on_perturbed_list()) {
-	cerr << "Removing " << cm->format_label()
+	cerr << "merge_nodes: removing " << cm->format_label()
 	     << " from perturbed binary list " << endl;
 	cm->remove_from_perturbed_list();
     } else
