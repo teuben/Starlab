@@ -29,7 +29,7 @@ if ($#argv > 0) set install_dir = $1
 
 # Don't allow (accidental?) installation in ., PWD, or STARLAB_PATH.
 # Attach /usr to install_dir in all those cases.  Use readlink to
-# expand all paths.
+# expand all paths before comparing.
 
 make -s -C sbin readlink	>& /dev/null
 
@@ -42,7 +42,7 @@ set cur = `sbin/readlink -f $PWD`
 if ("x$install_dir" == "x$dot" \
     || "x$install_dir" == "x$slp" \
     || "x$install_dir" == "x$cur") then
-    echo "*** Don't allow installation in $install_dir; appending /usr ***"
+    echo "Don't allow installation in $install_dir; appending /usr"
     set install_dir = "$install_dir/usr"
 endif
 
