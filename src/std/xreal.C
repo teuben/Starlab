@@ -489,8 +489,9 @@ void xprint(xreal x,
     // s << label << x.get_i() << " " << x.get_f() << endl;
     //
     // but now use hex (with leading 0x) for the fractional part.
+    // Use 0x instead of showbase because g++ 2.95 doesn't understand.
 
-    s << x.get_i() << " " << hex << showbase << x.get_f() << dec;
+    s << x.get_i() << " " << hex << "0x" << x.get_f() << dec;
 
 #else
 
