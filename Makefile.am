@@ -187,7 +187,6 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		src/node/dyn/hdyn/sdyn/evolve/sigma_MPI.h \
 		src/node/dyn/hdyn/sdyn/evolve/test_low_n_evolve.C \
 		src/node/dyn/hdyn/sdyn3/evolve/all_sig.C \
-		src/node/dyn/hdyn/sdyn3/evolve/bound3.C \
 		src/node/dyn/hdyn/sdyn3/evolve/debug3.C \
 		src/node/dyn/hdyn/sdyn3/evolve/d_ecc.C \
 		src/node/dyn/hdyn/sdyn3/evolve/d_ecc_test.C \
@@ -203,19 +202,16 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		src/node/dyn/hdyn/sdyn3/evolve/pscat.C \
 		src/node/dyn/hdyn/sdyn3/evolve/pvm_pack.C \
 		src/node/dyn/hdyn/sdyn3/evolve/pvm_scatt.h \
-		src/node/dyn/hdyn/sdyn3/evolve/rate3.C \
 		src/node/dyn/hdyn/sdyn3/evolve/rate_stats.C \
 		src/node/dyn/hdyn/sdyn3/evolve/scatter3_slave.C \
 		src/node/dyn/hdyn/sdyn3/evolve/scatt_stats_1.C \
 		src/node/dyn/hdyn/sdyn3/evolve/scatt_stats_2a.C \
 		src/node/dyn/hdyn/sdyn3/evolve/scatt_stats_2.C \
 		src/node/dyn/hdyn/sdyn3/evolve/scatt_stats.C \
-		src/node/dyn/hdyn/sdyn3/evolve/sigma3.C \
 		src/node/dyn/hdyn/sdyn3/evolve/SPECS \
 		src/node/dyn/hdyn/sdyn3/evolve/template.C \
 		src/node/dyn/hdyn/sdyn3/evolve/test_2.C \
 		src/node/dyn/hdyn/sdyn3/evolve/test3.C \
-		src/node/dyn/hdyn/sdyn3/xutil \
 		src/node/dyn/hdyn/util/hdyn_sync.C \
 		src/node/dyn/hdyn/util/kira_debug.h \
 		src/node/dyn/hdyn/util/runf.C \
@@ -318,7 +314,6 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		src/star/util/Version_2 \
 		src/star/util/Version_3 \
 		src/star/util/VminR.tab \
-		src/star/xutil \
 		src/std/mycat.C \
 		src/std/set_up.C \
 		src/std/setup_starlab.C \
