@@ -129,7 +129,7 @@ local bool remove_escapers(hdyn* b,
 	predict_loworder_all(b, b->get_system_time());	// Unnecessary?
 
 	cerr << "initialize_system_phase2 called from remove_escapers\n";
-	initialize_system_phase2(b, 4);
+	initialize_system_phase2(b, 4);		// default set_dt
     }
 
     return true;
