@@ -754,7 +754,8 @@ void initialize_system_phase2(hdyn *b,
 
 	    bb->store_old_force();
 
-	    if (set_dt || (bb->get_time() <= 0 || bb->get_timestep() <= 0) ) {
+	    if (set_dt || ((real)bb->get_time() <= 0
+			   || bb->get_timestep() <= 0) ) {
 
 		real dtlim = bb->get_timestep()/2;
 		bb->set_first_timestep();
@@ -794,7 +795,7 @@ void initialize_system_phase2(hdyn *b,
 
     // Check for perturbed binaries in the input data...
 
-    if (set_dt && time <= 0) {
+    if (set_dt && (real)time <= 0) {
 	for_all_nodes(hdyn, b, bb) {
 	    if ((bb != b) && (!bb->get_kepler())) {
 		if (bb->is_parent()

@@ -382,7 +382,7 @@ void hdyn::set_first_timestep(real additional_step_limit) // default = 0
 
     timestep = adjust_number_to_power(dt, true_limit);
 
-    if (time != 0)
+    if ((real)time != 0)
 	while (fmod(time, timestep) != 0)
 	    timestep *= 0.5;
 
@@ -1551,7 +1551,7 @@ bool hdyn::correct_and_update()
 		// Flag the problem internally.
 
 		char tmp[128];
-		sprintf(tmp, "runaway in correct at time %f", time);
+		sprintf(tmp, "runaway in correct at time %f", (real)time);
 		log_comment(tmp);
 
 		int n_runaway = 0;
