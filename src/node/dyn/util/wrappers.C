@@ -23,13 +23,15 @@ real bound_mass(dyn *b){return 0;}
 
 real total_energy(dyn *b){return 0;}
 
-vec  total_ang_mom(dyn *b, vec x, vec v)	// vec defaults = 0
+vec  total_angular_momentum(dyn *b, vec x, vec v)	// vec defaults = 0
 {
     vec J = 0;
     for_all_daughters(dyn, b, bb)
 	J += ang_mom(bb, x, v);
     return J;
 }
+
+// Not currently implemented:
 
 real core_radius(dyn *b){return 0;}
 
