@@ -1,8 +1,24 @@
 #!/bin/sh
 
 # Make command-line arguments, starting at the top-level Starlab
-# directory and suppressing some extraneous output..
+# (or other) directory and suppressing some extraneous output.
+#
+# Option "-d dir" replaces STARLAB_PATH by dir.
 
-echo Making $@ in $STARLAB_PATH
-make -s -C $STARLAB_PATH $@
+list=""
+dir=$STARLAB_PATH
+
+while [ "x$1" != "x" ]; do
+    if [ "x$1" = "x-d" ]; then
+	shift
+	dir=$1
+    else
+	echo $1 b
+	list="$list $1"
+    fi
+    shift
+done
+
+echo Making \"$list\" in $dir
+make -s -C $dir $list
 
