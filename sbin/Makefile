@@ -1,6 +1,6 @@
 LDFLAGS = -lm
-EXECUTABLES = check_dep earliest_time latest_time sqrt kiraformat \
-	      mytime
+EXECUTABLES = check_dep earliest_time kiraformat largest_int latest_time \
+	      mytime sqrt
 
 # strings trn
 
