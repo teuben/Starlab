@@ -155,8 +155,24 @@ local void evolve_an_unperturbed_binary(hdyn *bi,	// bi is binary CM
 	else
 	    ((double_star*)(bi->get_starbase()))->try_zero_timestep();
     }
-    else 
-	bi->get_starbase()->evolve_element(stellar_evolution_time);
+    else {
+      // **** Look also in double_star::evolve_the_binary() ***
+      double_star *the_binary = dynamic_cast(double_star*, bi->get_starbase());
+      the_binary->evolve_the_binary(stellar_evolution_time);
+      // SPZ 8 Febr 2003.
+      // this line: 
+      // bi->get_starbase()->evolve_element(stellar_evolution_time);
+      // was there instead of the current line:
+      // bi->get_starbase()->evolve_the_binary(stellar_evolution_time);
+      // which is commented out! 
+      // The reasoning is as follows:
+      // 1) for isolated binary evolution we would prefer to have the
+      //    binary updated only when either of the stars require an upate.
+      //    There is basically no external influence on the binary.
+      // 2) However, when the binary can be perturbed by external means 
+      //    (via the parameter force_update) the binary SHOULD be 
+      //    updated irrespective of any other parameters or circumstances.
+    }
       
     new_dyn_mass_from_star = get_total_mass(bi);
     new_dyn_sma_from_star = bi->get_starbase()->

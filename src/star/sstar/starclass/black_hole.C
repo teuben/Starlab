@@ -21,7 +21,7 @@ black_hole::black_hole(hyper_giant & w) : single_star(w) {
 
       core_mass = black_hole_mass();
       envelope_mass = m_tot - core_mass;
-      
+
 // (GN+SPZ May  4 1999) last update age is time of previous type change
       last_update_age = next_update_age;
 
@@ -29,15 +29,14 @@ black_hole::black_hole(hyper_giant & w) : single_star(w) {
 
       bool hit_companion = super_nova();
       post_supernova_story(); 
-      
+
       instantaneous_element();
       update();
-      
+
       if (hit_companion)
          direct_hit();
 
       post_constructor();
-
 
       if (is_binary_component()) {
 	get_binary()->set_first_contact(false);
@@ -452,7 +451,8 @@ bool black_hole::super_nova() {
 //      cerr << "return hit_companion;" <<hit_companion << flush << endl;
       return hit_companion;
     }
-    else if(get_binary()->get_bin_type() == Disrupted ||
+    else if(is_binary_component()) {  //+++
+      if(get_binary()->get_bin_type() == Disrupted ||
 	    get_binary()->get_bin_type() == Merged) {
 
       get_companion()->set_spec_type(Accreting, false);
@@ -529,6 +529,7 @@ bool black_hole::super_nova() {
 	velocity = v_sn;
          }
       }
+    } // +++
     envelope_mass = 0;
 
     return hit_companion;

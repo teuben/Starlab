@@ -318,24 +318,24 @@ void double_star::dump(ostream & s, bool brief) {
 	secondary_roche_lobe = roche_radius(semi, m2, m1);
     }
     
-    if(identity>0)
-	s << identity << " ";
-    else
-	s << get_node()->format_label() << " ";
+    //    if(identity>0)
+    //	s << identity << " ";
+    //    else
+    //	s << get_node()->format_label() << " ";
 
     s << binary_age << " "
       << semi << " "
       << eccentricity << "    "
 
-      << stp->get_identity() << " "	  
+      //      << stp->get_identity() << " "	  
       << stp->get_element_type() << " "
       << m1 << " "
-      << primary_roche_lobe - stp->get_effective_radius() << "    "
+      << stp->get_effective_radius()/primary_roche_lobe  << "    "
 
-      << sts->get_identity() << " "	  
+      //      << sts->get_identity() << " "	  
       << sts->get_element_type() << " "
       << m2 << " "
-      << secondary_roche_lobe - sts->get_effective_radius() 
+      << sts->get_effective_radius()/secondary_roche_lobe
       << endl;
 
       //get_initial_primary()->dump(s, brief);
@@ -984,6 +984,7 @@ void double_star::evolve_element(const real end_time)
     //if (current_time<=end_time)
 
     real current_time = binary_age;
+
     if (binary_age<end_time)
 	do {
 	  if (REPORT_BINARY_EVOLUTION) {
@@ -1008,10 +1009,26 @@ void double_star::evolve_element(const real end_time)
 	  current_time += internal_time_step(get_evolve_timestep());
 	    
 	  // safety: Never evolve passed end_time.
+	  // removed SPZ, 7 Febr 2003
+	  //if (current_time>=end_time)
+	  //  break;
+	  // The previous if-statment has been removed as it prevents 
+	  // a binary to be regularly updated if small time steps are 
+	  // required. This may not have been a problem in the passed.
+	  // Low mass binaries ware likely not updated, even though they
+	  // may have undergone severe dynamical evolution, which again 
+	  // could have affected the binary evolution.
+	  // for high mass binaries (R136) this is no problem, as the 
+	  // evolution timescale for these massive binaries are short
+	  // to begin with.
+	  // However, we may have ignored some aspects of binary evolution 
+	  // in the passed.
+
 	  if (current_time>=end_time)
-	     break;
-	      
-          evolve_the_binary(current_time);
+	    evolve_the_binary(end_time);
+	  else {
+	    evolve_the_binary(current_time);
+	  }
 
 	} while (binary_age<end_time);
     else if (end_time == 0)

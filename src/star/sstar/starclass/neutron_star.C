@@ -371,7 +371,7 @@ bool neutron_star::super_nova() {
 	envelope_mass = 0;
 	return hit_companion;
       }
-      else {
+      else if(is_binary_component()) {  //+++
 
 	// Supernova is performed by the binary evolution
 
@@ -456,11 +456,11 @@ bool neutron_star::super_nova() {
             v_sn = sqrt(pow(v_sn, 2) + pow(v_cm, 2)
                  + 2*v_sn*v_cm*cos(theta_kick));
             velocity = v_sn;
-         }
+	  }
+	}
       }
       envelope_mass = 0;
 
-      }
      return hit_companion;
 }
 

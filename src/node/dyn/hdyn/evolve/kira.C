@@ -2132,7 +2132,8 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	bool reg_snap = (ttmp > t_snap
 			 || (dt_snap < VERY_LARGE_NUMBER && ttmp > t_end)
-			 || (fmod(steps, 1000) == 0 && check_file("DUMP")));
+			 );
+			 //			 || (fmod(steps, 1000) == 0 && check_file("DUMP")));
 
 	if (reg_snap || save_snap) {
 

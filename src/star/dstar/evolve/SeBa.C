@@ -80,6 +80,7 @@
 ////                        -R the number of binaries indicated.
 ////                        oterwise one binary is simulated with
 ////                        -M, -m, -a, -e as initial conditions.
+////            -T binary end time. [35] Myr
 ////
 //   Note:  libnode.a is referenced for the routines which produce the 
 //          mass function
@@ -90,6 +91,8 @@
 //                      -Coupling to starlab
 //	version 3.0	Simon Portegies Zwart, Amsterdam, June 1997
 //	version 3.3	Simon Portegies Zwart, Cambridge, March 1999
+//      version ...     Simon Portegies Zwart, lost track....
+//	version 4.0	Simon Portegies Zwart, Amsterdam, February 2003
 //
 
 #include "dyn.h" 
