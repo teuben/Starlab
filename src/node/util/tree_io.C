@@ -439,17 +439,23 @@ node *get_node(istream& s,		// default = cin
     // Note that, for compression to be carried out, we must (1) compile
     // HAS_GZIP set, then (2) run with STARLAB_USE_GZIP defined.
 
+    node *n = NULL;
+
 #ifdef HAS_GZIP
     if (char * zip = getenv("STARLAB_USE_GZIP")) {
 	ipfstream sz("|gzip -d -f");
 	if (sz) {
-	    return get_node_init(sz, the_npfp, the_hbpfp, the_sbpfp,
-				 use_stories);
+	    n = get_node_init(sz, the_npfp, the_hbpfp, the_sbpfp,
+			      use_stories);
 	}
     }
 #endif
 
-    return get_node_init(s, the_npfp, the_hbpfp, the_sbpfp, use_stories);
+    if (!n)
+	n = get_node_init(s, the_npfp, the_hbpfp, the_sbpfp, use_stories);
+
+    n->check_and_correct_node(true);	// not clear why this works...
+    return n;
 }
 
 // put_node: the function that does all the work of outputting nodes
