@@ -444,7 +444,7 @@ void worldbundle::attach(tdyn *bn,
 
 // From Steve (10/00):
 //
-// Root dumps re done by kira twice per synchronization interval, so each
+// Root dumps are done by kira twice per synchronization interval, so each
 // worldbundle is self-contained (this is the *same* as the way in which
 // tree changes are handled...).
 
@@ -1101,12 +1101,19 @@ dyn *create_interpolated_tree(worldbundle *wb, real t,
 				     << b->get_time() << " "
 				     << b->format_label() << endl;
 
+			    // May be better to attach the worldline ID
+			    // as index...
+
+#if 0
 			    if (b->get_name()) {
 				curr->set_name(b->get_name());
 				curr->set_index(atoi(b->get_name()));
 			    }
 			    if (b->get_index() >= 0)
 				curr->set_index(b->get_index());
+#else
+			    curr->set_index(wb->find_index(b));
+#endif
 
 			    curr->set_mass(b->get_mass());
 
