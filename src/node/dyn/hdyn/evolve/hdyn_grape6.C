@@ -2253,7 +2253,9 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 		vec diff = b->get_pred_pos() - bb->get_pred_pos();
 		real diff2 = diff * diff;
 
-		// (Re)compute nn and coll here.
+		// (Re)compute nn and coll here.  Note that we do NOT
+		// check the story for black hole information -- this is
+		// the default for get_sum_of_radii().
 
 		real sum_of_radii = get_sum_of_radii(b, bb);
 		update_nn_coll(b, 100,		// (100 = ID)	    // inlined

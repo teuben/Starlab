@@ -914,6 +914,10 @@ local bool get_neighbors_and_adjust_h2(int chip, hdyn * b)
 		vec diff = b->get_pred_pos() - bb->get_pred_pos();
 		real d2 = diff * diff;
 
+		// (Re)compute nn and coll here.  Note that we do NOT
+		// check the story for black hole information -- this is
+		// the default for get_sum_of_radii().
+
 		real sum_of_radii = get_sum_of_radii(b, bb);
 		update_nn_coll(b, 100,		// (100 = ID)	    // inlined
 			       d2, bb, dmin_sq, bmin,
