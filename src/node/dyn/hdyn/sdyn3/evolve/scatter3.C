@@ -209,6 +209,111 @@ local void check_init(initial_state3 & init)
     if (init.eta <= 0) err_exit("check_init: eta <= 0");
 }
 
+local real energy2(sdyn3 *bi, sdyn3 *bj)
+{
+    real mi = bi->get_mass();
+    real mj = bj->get_mass();
+    real m = mi + mj;
+
+    return 0.5*square(bi->get_vel()-bj->get_vel())
+		- m/abs(bi->get_pos()-bj->get_pos());
+}
+
+// collision_to_peri: Move the closest colliding pair to periastron
+//		      before saving a copy of the system.
+
+local void collision_to_peri_to_system(sdyn3 * b,
+				       intermediate_state3 &inter)
+{
+    sdyn3 *bi_coll = NULL, *bj_coll = NULL;
+    sdyn3 *bi_save = NULL, *bj_save = NULL;
+    real x_min = VERY_LARGE_NUMBER;
+
+    for_all_daughters(sdyn3, b, bi)
+	for (sdyn3 * bj = bi->get_younger_sister(); bj != NULL; 
+	     bj = bj->get_younger_sister()) {
+
+	    vector sep = bi->get_pos() - bj->get_pos();
+	    real r = abs(sep);
+	    real rad_sum = bi->get_radius() + bj->get_radius();
+	    if (r < rad_sum) {
+
+		// bi and bj have collided.
+
+		real x = r / rad_sum;
+		if (x < x_min) {
+		    x_min = x;
+		    bi_coll = bi;
+		    bj_coll = bj;
+		}
+	    }
+	}
+
+    if (bi_coll && bj_coll) {
+
+//	cerr << bi_coll->format_label();
+//	cerr << " and " << bj_coll->format_label() << " have collided." << endl;
+
+	// Move bi_coll and bj_coll to periastron, assuming a kepler orbit.
+
+	real mi = bi_coll->get_mass();
+	real mj = bj_coll->get_mass();
+	real m = mi + mj;
+
+	// Save the center of mass pos and vel of the binary.
+
+	vector cmpos = (mi * bi_coll->get_pos() + mj * bj_coll->get_pos()) / m;
+	vector cmvel = (mi * bi_coll->get_vel() + mj * bj_coll->get_vel()) / m;
+
+	// Make a kepler and transform it to periastron.
+
+	kepler k;
+	set_kepler_from_sdyn3(k, bi_coll, bj_coll);
+
+//	k.print_all();
+
+	k.transform_to_time(k.get_time_of_periastron_passage());
+
+//	cerr << endl;
+//	k.print_all();
+
+	// Modify bi_coll and bj_coll.
+
+	bi_save = new sdyn3;
+	bj_save = new sdyn3;
+
+	bi_save->set_mass(bi_coll->get_mass());
+	bi_save->set_pos(bi_coll->get_pos());
+	bi_save->set_vel(bi_coll->get_vel());
+	bj_save->set_mass(bj_coll->get_mass());
+	bj_save->set_pos(bj_coll->get_pos());
+	bj_save->set_vel(bj_coll->get_vel());
+
+//	PRC(energy(b)); PRL(energy2(bi_coll, bj_coll));
+
+	bi_coll->set_pos(cmpos - mj * k.get_rel_pos() / m);    // rel_pos is
+	bi_coll->set_vel(cmvel - mj * k.get_rel_vel() / m);    // from 1 to 2
+	bj_coll->set_pos(cmpos + mi * k.get_rel_pos() / m);
+	bj_coll->set_vel(cmvel + mi * k.get_rel_vel() / m);
+
+//	PRC(energy(b)); PRL(energy2(bi_coll, bj_coll));
+    }
+
+    sdyn3_to_system(b, inter.system);
+
+    if (bi_save) {
+
+	// Restore the dynamical variables.
+
+	bi_coll->set_pos(bi_save->get_pos());
+	bi_coll->set_vel(bi_save->get_vel());
+	bj_coll->set_pos(bj_save->get_pos());
+	bj_coll->set_vel(bj_save->get_vel());
+	delete bi_save;
+	delete bj_save;
+    }
+}
+
 // scatter3:  Perform a three-body scattering, initializing from a specified
 //            state and returning intermediate- and final-state structures.
 
@@ -289,7 +394,13 @@ void scatter3(initial_state3 & init,
 
 	inter.n_osc = b->get_n_ssd_osc();	// For convenience
 
-	sdyn3_to_system(b, inter.system);
+	// Save the intermediate state of the system.  If a merger
+	// has occurred, move the colliding pair to periastron before
+	// saving.  (Work with a copy of the system, as we will want
+	// to continue the integration using b.)
+
+	collision_to_peri_to_system(b, inter);
+
 	merge_collisions(b);
 
 	// See if the number of stars has decreased.
@@ -336,7 +447,7 @@ void scatter3(initial_state3 & init,
 
     final.time = b->get_time();
     final.n_steps = (int) b->get_n_steps();
-    final.error = energy(b) - e_init; // *Absolute* error, note!
+    final.error = energy(b) - e_init;		// *absolute* error, note!
 
     sdyn3_to_system(b, final.system);
 
