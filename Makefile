@@ -29,14 +29,19 @@ DIRS = etc src
 
 #..............................................................................
 
-# If make is invoked without argument, the following help message is displayed:
+# The default is now GNU standard: make all.
+
+all:	sbins .libs bins
+	@echo all done
+
+#..............................................................................
 
 help:
 	@echo This Makefile offers the following make options:
-	@echo '  all:  executes    make libs  and  make bins'
-	@echo '  libs: executes a  make lib  everywhere in src'
-	@echo '  bins: executes a  make bin  everywhere in src'
-	@echo '  dist: creates a current CVS snapshot (net access needed)'
+	@echo '  all:   executes    make libs  and  make bins  (default)'
+	@echo '  libs:  executes a  make lib  everywhere in src'
+	@echo '  bins:  executes a  make bin  everywhere in src'
+	@echo '  dist:  creates a current CVS snapshot (net access needed)'
 	@echo '  clean: removes the tarfile tar.starlab, removes core file'
 	@echo '         and emacs backup versions, here, in inc, demo,'
 	@echo '         deletes all files in lib and bin (which means that all'
@@ -57,11 +62,6 @@ install:
 #..............................................................................
 
 sure:	clean all
-
-#..............................................................................
-
-all:	sbins .libs bins
-	@echo all done
 
 #..............................................................................
 
