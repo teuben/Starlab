@@ -59,6 +59,8 @@ void  makesphere(dyn * root, int n,
 
         real kinetic, potential;
 
+	// Note: scale_* operates on internal energies.
+
 	get_top_level_energies(root, 0.0, potential, kinetic);
 	scale_virial(root, -0.5, potential, kinetic);	// scales kinetic
 	real energy = kinetic + potential;

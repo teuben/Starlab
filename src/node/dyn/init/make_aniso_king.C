@@ -177,6 +177,8 @@ local void make_aniso_king(dyn * b, int n, real w0, real alpha1, real alpha3,
 	// Scaling is OK because cluster is Roche-lobe filling.
 	// Function scale_virial adjusts kinetic.
 
+	// Note: scale_* operates on internal energies.
+
 	scale_virial(b, -0.5, potential, kinetic);  // potential + tidal_energy
 
 	real energy = kinetic + potential + tidal_energy;

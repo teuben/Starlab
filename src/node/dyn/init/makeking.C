@@ -816,6 +816,8 @@ local void makeking(dyn * b, int n, real w0, bool n_flag, bool u_flag, int test)
 
 	real kinetic, potential;
 
+	// Note: scale_* operates on internal energies.
+
 	get_top_level_energies(b, 0.0, potential, kinetic);
 	scale_virial(b, -0.5, potential, kinetic);	// scales kinetic
 	real energy = kinetic + potential;

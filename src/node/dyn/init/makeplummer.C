@@ -169,6 +169,8 @@ local void  makeplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
 
         real kinetic, potential;
 
+	// Note: scale_* operates on internal energies.
+
 	get_top_level_energies(b, 0.0, potential, kinetic);
 	scale_virial(b, -0.5, potential, kinetic);	// scales kinetic
 	real energy = kinetic + potential;
