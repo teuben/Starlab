@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-m4_include([local/version.m4])
+m4_include([version.m4])
 AC_INIT(Starlab, VERSION_NUMBER, [steve@physics.drexel.edu])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_LIBOBJ_DIR(lib)
