@@ -97,6 +97,7 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
 		cpu0 = cpu_time();
 	    }
 	}
+#endif
 
     for (int k = 0; k < kmax; k++) {
 
