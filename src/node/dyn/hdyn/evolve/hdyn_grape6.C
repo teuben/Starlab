@@ -138,7 +138,8 @@ local void reattach_grape(real time, char *id, kira_options *ko)
 
 
 
-local INLINE void send_j_node_to_grape(hdyn *b, bool predict = false)
+local INLINE void send_j_node_to_grape(hdyn *b,
+				       bool computing_energy = false)
 
 // Send node b to the GRAPE-6 j-particle list.
 
@@ -146,27 +147,31 @@ local INLINE void send_j_node_to_grape(hdyn *b, bool predict = false)
 //		send_all_leaves					// local
 //		grape_calculate_acc_and_jerk			// global
 
+// The flag computing_energy will be used only in the energy calculation,
+// to ensure that no hardware prediction is done on the GRAPE during the
+// force computation, and that all positions are expressed relative to the
+// root node.
+
 {
     if (DEBUG > 1) {
 	cerr << "  send_j_node_to_grape:  ";
-	PRC(b->format_label()); PRL(predict);
+	PRL(b->format_label());
     }
 
     int grape_index = b->get_grape_index();
 
-    real t = b->get_time() - grape_time_offset;			// 0 <= t <= 1
+    real t = b->get_time();
+    if (computing_energy) t = b->get_system_time();
+
+    t -= grape_time_offset;			// 0 <= t <= 1
+
     real dt = b->get_timestep();
     if (dt <= 0) dt = 1;
     real m = b->get_mass();
 
     vector pos;
-    if (predict)
-
-	// Only interested in pot or density in this case, so we just need
-	// to predict particle positions.
-
-	pos = hdyn_something_relative_to_root(b, &hdyn::get_pred_pos);
-
+    if (computing_energy)
+	pos = hdyn_something_relative_to_root(b, &hdyn::get_pos);
     else
 	pos = b->get_pos();
 
@@ -204,8 +209,7 @@ local INLINE void send_j_node_to_grape(hdyn *b, bool predict = false)
 
 
 local int initialize_grape_arrays(hdyn *b,		// root node
-				  bool reset_counters = true,
-				  bool predict = false)
+				  bool reset_counters = true)
 
 // Initialize arrays associated with GRAPE-6 j-particles.
 // Return the total number of j-particles sent to the GRAPE.
@@ -217,7 +221,7 @@ local int initialize_grape_arrays(hdyn *b,		// root node
     if (DEBUG) {
 	cerr << "initialize_grape_arrays at time "
 	     << b->get_real_system_time()<< ":  ";
-	PRC(reset_counters); PRL(predict);
+	PRL(reset_counters);
     }
 
     int nj = b->n_daughters();
@@ -264,7 +268,7 @@ local int initialize_grape_arrays(hdyn *b,		// root node
 	
 	// Copy the node to the GRAPE with index = address.
 
-	send_j_node_to_grape(bb, predict);
+	send_j_node_to_grape(bb);
 
 	if (reset_counters)
 	    bb->set_grape_nb_count(0);
@@ -362,6 +366,8 @@ local INLINE int force_by_grape(xreal xtime,
 //		get_force_and_neighbors				// local
 //		grape_calculate_densities()			// global
 
+// Flag pot_only = true means that we are calculating the total energy.
+
 {
     static char *func = "force_by_grape";
 
@@ -415,95 +421,84 @@ local INLINE int force_by_grape(xreal xtime,
 
 	iindex[i] = nodes[i]->get_grape_index();
 
-#if 0
-	// Old version:
-
-	if (pot_only)
-
-	    // Nodes in this case are leaves, not necessarily top-level.
-
-	    ipos[i] = hdyn_something_relative_to_root(nodes[i],
-						      &hdyn::get_pred_pos);
-	else
-	    ipos[i]   = nodes[i]->get_pred_pos();
-
-	ivel[i]   = nodes[i]->get_pred_vel();
-	iacc[i]   = nodes[i]->get_old_acc();
-	ijerk[i]  = ONE6*nodes[i]->get_old_jerk();
-	ipot[i]   = nodes[i]->get_pot();
-	ih2[i]    = nodes[i]->get_grape_rnb_sq();
-
-#else
-
-	// New version.  Suggested by Jun (May 8 2001) to prevent the
+	// New version suggested by Jun (May 8 2001) to prevent the
 	// "call Jun" message.  Implemented by SPZ.  Corrected by Steve.
-	// Mainly, we want to avoid sending zeroes to g6calc_firsthalf()
-	// in acc, jerk, or pot, as these are used for scaling purposes.
+	// We must avoid sending zeroes to g6calc_firsthalf() in acc,
+	// jerk, or pot, as these are used for scaling purposes.
 
 	if (pot_only) {
 
             // Nodes in this case are leaves, not necessarily top-level.
+	    // Don't extrapolate in this case (see 11/02 note below).
 
             ipos[i] = hdyn_something_relative_to_root(nodes[i],
-                                                      &hdyn::get_pred_pos);
+//						      &hdyn::get_pred_pos);
+						      &hdyn::get_pos);
 
-#if 0
-            // Set some NOT-SO-LARGE NUMBERS to acc and jerk to avoid
-            // overflow flag.
-
-            iacc[i]   = vector(1);
-            ijerk[i]  = vector(1);
-#endif
-
-        } else {
-
+        } else
             ipos[i]   = nodes[i]->get_pred_pos();
-#if 0
-            iacc[i]   = nodes[i]->get_old_acc();
-            ijerk[i]  = ONE6*nodes[i]->get_old_jerk();
-
-
-
-	    // Added for pentium linux G6 (SPZ: 12 Sept 2001)
-	    // Modified by Steve (2 Oct 2001).
-
-	    if (abs(iacc[i]) <= VERY_SMALL_NUMBER || 
-		abs(ijerk[i]) <= VERY_SMALL_NUMBER) {
-		cerr << "WARNING: Initializing acc and jerk from zero."
-		     << endl;
-	      iacc[i]   = vector(1);
-	      ijerk[i]  = vector(1);
-	    }
-#endif
-
-        }
 
         ivel[i]   = nodes[i]->get_pred_vel();
-        ih2[i]    = nodes[i]->get_grape_rnb_sq();
 	iacc[i]   = nodes[i]->get_old_acc();
 	ijerk[i]  = ONE6*nodes[i]->get_old_jerk();
         ipot[i]   = nodes[i]->get_pot();
+        ih2[i]    = nodes[i]->get_grape_rnb_sq();
 
-	// Must take care with pot, acc, and jerk.  Quite expensive to
+	// Must take care of pot, acc, and jerk.  Quite expensive to
 	// check the abs of a vector, so try more indirect tests first.
 	// Normally,  these values will be zero only at initialization,
 	// but we may also encounter this immediately after a new CM
-	// node is created.
+	// node is created.  Also, if we are calculating the energy,
+	// there may be problems with low-level nodes.
 
-	if (abs(ipot[i]) <= VERY_SMALL_NUMBER
-	    || abs(abs(iacc[i][0])) <= VERY_SMALL_NUMBER) {
+	if (nodes[i]->is_top_level_node()) {
 
-	    ipot[i] = 1;
-	    if (abs(iacc[i]) <= VERY_SMALL_NUMBER ||
-                abs(ijerk[i]) <= VERY_SMALL_NUMBER) {
-                // cerr << "WARNING: Initializing acc and jerk from zero."
-		//	<< endl;
-		iacc[i]   = vector(1);
-		ijerk[i]  = vector(1);
-            }
+	    if (abs(ipot[i]) <= VERY_SMALL_NUMBER
+		|| abs(abs(iacc[i][0])) <= VERY_SMALL_NUMBER) {
+
+		// Assume that pot, acc, jerk are not set properly.
+		// For now, assume that the average numbers appropriate
+		// to the mean field of a standard cluster are OK.
+
+		ipot[i] = 1;
+
+		if (abs(iacc[i]) <= VERY_SMALL_NUMBER ||
+		    abs(ijerk[i]) <= VERY_SMALL_NUMBER) {
+
+		    // cerr << "WARNING: Initializing acc and jerk from zero."
+		    //      << endl;
+
+		    iacc[i]   = vector(1);
+		    ijerk[i]  = vector(1);
+		}
+	    }
+
+	} else {
+
+	    // Only interested in a low-level node during the potential
+	    // calculation.  In this case, it is quite unlikely that
+	    // any of pot, acc, or jerk is usable.  Choose quantities
+	    // appropriate to the nearest neighbor.
+
+	    hdyn *sis = nodes[i]->get_younger_sister();
+	    if (!sis) sis = nodes[i]->get_elder_sister();
+	    real m = sis->get_mass();
+	    real r, r2;
+
+	    kepler *k = nodes[i]->get_kepler();
+	    if (k) {
+		r = k->get_separation();
+		r2 = r*r;
+	    } else {
+		r2 = square(nodes[i]->get_pos() - sis->get_pos());
+		r = sqrt(r);
+	    }
+
+	    real j = m/(r*r2);
+	    ipot[i] = j*r2;
+	    iacc[i] = j*r;
+	    ijerk[i] = j;
 	}
-
-#endif
 
 	if (DEBUG > 1) {
 	    if (i > 0) cerr << endl;
@@ -782,45 +777,67 @@ local inline bool use_cm_approx(hdyn *bb, real d_crit)
     // 							(Steve, 5/02)
 
     bool use_cm = false;
-    kepler *k = bb->get_kepler();
 
-    if (k) {
+    if (bb->is_low_level_node()) {
 
-	if (k->get_semi_major_axis() < d_crit) {
+	kepler *k = bb->get_kepler();
 
-	    use_cm = true;
+	if (k) {
 
-	    // cerr << "use_cm = true (kepler) for " << bb->format_label()
-	    //      << endl;
-	}
-
-    } else if (bb->is_low_level_node()) {
-
-	hdyn *sis = bb->get_younger_sister();
-	if (sis) {
-
-	    vector dx = bb->get_pos() - sis->get_pos();
-
-	    if (abs(dx[0]) < d_crit
-		&& abs(dx[1]) < d_crit
-		&& abs(dx[2]) < d_crit) {
+	    if (k->get_semi_major_axis() < d_crit) {
 
 		use_cm = true;
 
-		// cerr << "use_cm = true (close) for " << bb->format_label()
-		//      << endl;
-		// PRL(dx);
+#if 0
+		cerr << "use_cm = true (kepler) for " << bb->format_label()
+		     << endl;
+#endif
+
 	    }
-	}
-    }
+
+	} else {
+
+	    hdyn *sis = bb->get_younger_sister();
+	    if (sis) {
+
+		vector dx = bb->get_pos() - sis->get_pos();
+
+		if (abs(dx[0]) < d_crit
+		    && abs(dx[1]) < d_crit
+		    && abs(dx[2]) < d_crit) {
+
+		    use_cm = true;
 
 #if 0
-    if (use_cm) {
-	cerr << "CM approx: ";
-	hdyn *par = bb->get_parent();
-	PRC(par->format_label()); PRL(bb->format_label());
-    }
+		    cerr << "use_cm = true (close) for " << bb->format_label()
+			 << endl;
+		    PRL(dx);
 #endif
+
+		}
+
+#if 0
+		if (!use_cm) {
+		    cerr << "no CM for " << bb->format_label() << endl;
+		    PRC(d_crit); PRL(abs(dx));
+		} else {
+		    cerr << "using CM for " << bb->format_label() << endl;
+		    PRC(d_crit); PRL(abs(dx));
+		}
+#endif
+
+	    }
+	}
+
+#if 0
+	if (use_cm) {
+	    cerr << "CM approx: ";
+	    hdyn *par = bb->get_parent();
+	    PRC(par->format_label()); PRL(bb->format_label());
+	}
+#endif
+
+    }
 
     return use_cm;
 }
@@ -828,6 +845,21 @@ local inline bool use_cm_approx(hdyn *bb, real d_crit)
 
 
 
+//*************************************************************************
+//*************************************************************************
+//
+// **** Note from Steve, 11/02: ****
+//
+// From now on, we *never* extrapolate positions or velocities when
+// computing energies.  This is consistent with the use of the non-GRAPE
+// version of this function (calculate_energies) and, in normal use, the
+// system should always be synchronized when the energy is computed, so
+// extrapolation is unnecessary.  Only unperturbed binaries may be out of
+// sync.  However, (1) they cannot be predicted in the usual way and (2)
+// their internal energies should be correct anyway, so not extrapolating
+// is OK here too.  In addition, other programs (e.g. sys_stats) using this
+// function may not know the acc and jerk, so again prediciton is dangerous.
+//
 //*************************************************************************
 //*************************************************************************
 //
@@ -843,12 +875,13 @@ local inline bool use_cm_approx(hdyn *bb, real d_crit)
 // true new version, by use of E_NODES (set ==> new).
 //
 // All versions share the function use_cm_approx() and produce the same
-// results.  The OLD version seems marginally fastest...
+// results.  The NEW/E_NODES version is cleanest, but the OLD version still
+// seems marginally fastest...  
 //
 //							(Steve, 5/02)
 
 #define OLD_MAY02
-//#define NEW_MAY02
+#define NEW_MAY02
 
 // NOTE: NEW takes precedence over OLD if both are set...
 //	 E_NODES is only relevant in the NEW case.
@@ -942,8 +975,9 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 	    bb->set_grape_index(nj++);
 	
 	    // Copy the leaf to the GRAPE with index = address.
+	    // Send system_time to avoid prediction.
 
-	    send_j_node_to_grape(bb, true);	// "true" ==> send predicted pos
+	    send_j_node_to_grape(bb, true);
 	}
 
     } else {
@@ -959,8 +993,9 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 	    bb->set_grape_index(nj++);
 	
 	    // Copy the node to the GRAPE with index = address.
+	    // Send system_time to avoid prediction.
 
-	    send_j_node_to_grape(bb, true);	// "true" ==> send predicted pos
+	    send_j_node_to_grape(bb, true);
 	}
     }
 
@@ -1088,6 +1123,20 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 //						*****************************
 
 
+local inline real critical_sep(hdyn *b)
+{
+    // Standard choice of radius to treat a binary as unperturbed,
+    // for purposes of computing the energy.  Parameters are fairly
+    // arbitrary, but GRAPE precision is such that d_crit can be chosen
+    // conservatively small to minimize the tidal effects.
+
+    real d_crit = 1.e-9;
+    if (b->get_d_min_sq() > 0)
+	d_crit = min(0.01*sqrt(b->get_d_min_sq()), d_crit);
+    return d_crit;
+}
+
+
 void grape_calculate_energies(hdyn *b,			// root node
 			      real &epot,
 			      real &ekin,
@@ -1109,11 +1158,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 		       "grape_calculate_energies", b->get_kira_options());
 
     real cpu0 = cpu_time();
-
-    real d_crit = 1.e-9;
-    if (b->get_d_min_sq() > 0)
-	d_crit = min(0.001*sqrt(b->get_d_min_sq()), d_crit);
-
+    real d_crit = critical_sep(b);
     real e_unpert;
 
 #ifdef E_NODES
@@ -1128,12 +1173,12 @@ void grape_calculate_energies(hdyn *b,			// root node
     int nj =  send_all_e_nodes_to_grape(b, cm, d_crit,
 					e_nodes, e_unpert, n_leaves);
 
+
     if (force_by_grape_on_all_e_nodes(e_nodes, nj)) {
 
 #else
 
-    int nj =  send_all_leaves_to_grape(b, cm, d_crit,
-				       e_unpert);
+    int nj =  send_all_leaves_to_grape(b, cm, d_crit, e_unpert);
 
     if (force_by_grape_on_all_leaves(b, nj, cm)) {
 
@@ -1156,6 +1201,17 @@ void grape_calculate_energies(hdyn *b,			// root node
 	    epot += 0.5*mi*bb->get_pot();
 	    vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
 	    ekin += 0.5*mi*vel*vel;
+
+#if 0
+	    if (bb->is_low_level_node() && bb->get_kepler()) {
+		PRC(bb->format_label());
+		PRC(bb->get_pot());
+		real pe = -bb->get_binary_syster()->get_mass()
+		    / bb->get_kepler()->get_separation();
+		PRL(pe);
+	    }
+#endif
+
 	}
 #else
 
@@ -1214,10 +1270,10 @@ void grape_calculate_energies(hdyn *b,			// root node
 
 
 //=========================================================================
-//
-// Old code.
 
 #else
+
+// Old code.
 
 local int send_all_leaves_to_grape(hdyn *b,		// root node
 				   real& e_unpert,	// unperturbed energy
@@ -1240,11 +1296,7 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 
     if (!cm) {
 
-	// N.B. redundant repetition of d_crit definition:
-
-	real d_crit = 1.e-9;
-	if (b->get_d_min_sq() > 0)
-	    d_crit = min(0.001*sqrt(b->get_d_min_sq()), d_crit);
+	real d_crit = critical_sep(b);
 
 	for_all_leaves(hdyn, b, bb) {
 
@@ -1288,8 +1340,9 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 	    bb->set_grape_index(nj++);
 	
 	    // Copy the leaf to the GRAPE with index = address.
+	    // Send system_time to avoid prediction.
 
-	    send_j_node_to_grape(bb, true);	// "true" ==> send predicted pos
+	    send_j_node_to_grape(bb, true);
 	}
 
     } else {
@@ -1301,8 +1354,9 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 	    bb->set_grape_index(nj++);
 	
 	    // Copy the node to the GRAPE with index = address.
+	    // Send system_time to avoid prediction.
 
-	    send_j_node_to_grape(bb, true);	// "true" ==> send predicted pos
+	    send_j_node_to_grape(bb, true);
 	}
     }
 
@@ -1411,6 +1465,12 @@ void grape_calculate_energies(hdyn *b,			// root node
     real e_unpert;
     int nj =  send_all_leaves_to_grape(b, e_unpert, cm);
 
+
+
+    PRC(nj); PRL(e_unpert); 
+
+
+
     if (force_by_grape_on_all_leaves(b, nj, cm)) {
 
 	cerr << "grape_calculate_energies: "
@@ -1424,11 +1484,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 
     if (!cm) {
 
-	// N.B. redundant repetition of d_crit definition:
-
-	real d_crit = 1.e-9;
-	if (b->get_d_min_sq() > 0)
-	    d_crit = min(0.001*sqrt(b->get_d_min_sq()), d_crit);
+	real d_crit = critical_sep(b);
 
 	for_all_leaves(hdyn, b, bb) {
 
@@ -1451,6 +1507,9 @@ void grape_calculate_energies(hdyn *b,			// root node
 	    vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
 	    ekin += 0.5*mi*vel*vel;
 	}
+
+	PRC(epot); PRL(ekin);
+
     } else {
 	for_all_daughters(hdyn, b, bb) {
 	    real mi = bb->get_mass();
@@ -2989,11 +3048,11 @@ void grape_calculate_densities(hdyn* b,			// root node
     if (!grape_is_open)
 	reattach_grape(b->get_real_system_time(), func, b->get_kira_options());
 
-    // Copy all (predicted pos) top-level nodes to the GRAPE hardware.
+    // Copy all top-level nodes to the GRAPE hardware.
+    // We will compute the forces, etc. using the same functions
+    // as grape_calculate_acc_and_jerk.
 
-    int nj_on_grape = initialize_grape_arrays(b,
-					      true,	// (irrelevant)
-					      true);	// predict pos
+    int nj_on_grape = initialize_grape_arrays(b);
 
     // Make a list of top-level nodes.
 
