@@ -553,9 +553,9 @@ local void print_lagrangian_ubvri_radii(dyn *b, int nzones,
 					bin_option binning) {
 
   cerr << "  (currently NON) Projected ubvri Lagrangian radii" << endl;
-  cerr << "    [%]      u        b        v        r        i"
+  cerr << "    [%]      u        b<        v        r        i"
        << endl;
-  cerr << " Temporary removed"<<endl;
+  cerr << " Temporarily removed"<<endl;
 
 #if 0
   real *rLu = new real[nzones];
@@ -989,53 +989,72 @@ local void print_massive_star_header(bool cod) {
 	     << endl;
 }
 
-local void print_most_massive_stars(dyn *b, real mass_limit,
+typedef  struct
+{
+    real mass;
+    dyn *b;
+} md_pair, *md_pair_ptr;
+
+local int compare_mass(const void * pi, const void * pj)  // decreasing mass
+{
+    if (((md_pair_ptr) pi)->mass > ((md_pair_ptr) pj)->mass)
+        return -1;
+    else if (((md_pair_ptr)pi)->mass < ((md_pair_ptr)pj)->mass)
+        return +1;
+    else
+        return 0;
+}
+
+
+local void print_most_massive_stars(dyn *b,
+				    real mass_limit,
 				    real number_limit,
 				    vector center_pos,
 				    bool verbose) {
 
     bool cod = false;
-  
     vector center_vel = 0;
-    bool try_com = false;
-    if (abs(center_pos) == 0) {
-	if (find_qmatch(b->get_dyn_story(), "density_center_pos")) {
 
-	    if (getrq(b->get_dyn_story(), "density_center_time")
-		!= b->get_system_time()) {
+    if (abs(center_pos) == 0)
+	cod = (get_std_center(b, center_pos, center_vel) == 1);
 
-		try_com = true;
-	    } else
-		cod = true;
+    // Want to print out stars more massive than mass_limit, but no more
+    // than number_limit.  New code from Steve (8/01).
 
-	    center_pos = getvq(b->get_dyn_story(), "density_center_pos");
-	    center_vel = getvq(b->get_dyn_story(), "density_center_vel");
+    int nl = 0;
+    for_all_daughters(dyn, b, bi)
+	if (bi->is_leaf()) nl++;
+    
+    md_pair_ptr md_list = new md_pair[nl];
+
+    nl = 0;
+    for_all_daughters(dyn, b, bi)
+	if (bi->is_leaf()) {
+	    md_list[nl].mass = bi->get_starbase()->get_total_mass();
+	    md_list[nl].b = bi;
+	    nl++;
 	}
 
-	if (try_com && find_qmatch(b->get_dyn_story(), "com_pos")) {
+    // Sort the list, in order of decreasing mass.
 
-	    if (getrq(b->get_dyn_story(), "com_time")
-		!= b->get_system_time()) {
-		warning("lagrad: neglecting out-of-date center of mass");
-	    } else
-		center_pos = getvq(b->get_dyn_story(), "com_pos");
-	    center_vel = getvq(b->get_dyn_story(), "com_vel");
-	}
-    }
+    qsort((void *)md_list, (size_t)nl, sizeof(md_pair), compare_mass);
 
-    int ns=0, nb=0;
-    for_all_daughters(dyn, b, bi) 
-	if (bi->is_leaf()                    &&
-	    ((bi->get_index()>0 && bi->get_index() <= number_limit) ||
-	     bi->get_starbase()->get_total_mass() >= mass_limit)) {
-	
-	    if (!ns)
-		print_massive_star_header(cod);
+    int ns = 0;
+    if (nl < rint(number_limit)) nl = (int)rint(number_limit);
 
-	    print_massive_star(bi, center_pos, center_vel, verbose);
-	    ns++;
-	}
+    for (ns = 0; ns < nl; ns++)
+	if (md_list[ns].mass < mass_limit) break;
 
+    if (ns > 0) print_massive_star_header(cod);
+
+    // Stars:
+
+    for (int i = 0; i < ns; i++)
+	print_massive_star(md_list[i].b, center_pos, center_vel, verbose);
+
+    // Binaries:
+
+    int nb = 0;
     for_all_daughters(dyn, b, bi) {
 	if (!bi->is_leaf())                   
 	    nb += print_massive_binary_recursive(bi, center_pos, center_vel,
