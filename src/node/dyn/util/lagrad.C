@@ -202,6 +202,9 @@ void  compute_mass_radii_percentiles(dyn * b)
     compute_general_mass_radii(b, 10);
 }
 
+
+
+// Print_lagrangian_radii and supporting functions.
 
 local bool testnode(dyn * b)
 {
@@ -222,10 +225,6 @@ local bool double_fn(dyn * b)
 {
     return (getiq(b->get_log_story(), "mass_doubled") == 1);
 }
-
-
-
-// Print_lagrangian_radii and supporting functions.
 
 #include <vector>
 #include <algorithm>
