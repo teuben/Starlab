@@ -522,7 +522,7 @@ void print_binary_from_dyn_pair(dyn* bi, dyn* bj,
 				real kT = 0,
 				vec center = vec(0,0,0),
 				bool verbose = true,
-				bool short_output = false);
+				bool long_output = true);
 
 real print_structure_recursive(dyn* b,
 			       void (*dstar_params)(dyn*),
@@ -530,14 +530,14 @@ real print_structure_recursive(dyn* b,
 			       real kT = 0.0,
 			       vec center = vec(0,0,0),
 			       bool verbose = true,
-			       bool short_output = false,
+			       bool long_output = true,
 			       int indent = 0);
 
 real print_structure_recursive(dyn* b,
 			       real kT = 0.0,
 			       vec center = vec(0,0,0),
 			       bool verbose = true,
-			       bool short_output = false,
+			       bool long_output = true,
 			       int indent = 0);
 
 void compute_core_parameters(dyn*, int, bool, vec&, real&, int&, real&);

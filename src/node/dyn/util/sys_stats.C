@@ -807,6 +807,7 @@ local void print_binaries(dyn* b, real kT,
 			  bool long_binary_output = true,
 			  void (*dstar_params)(dyn*) = NULL)
 {
+    
     // Print out the properties of "known" binaries (i.e. binary subtrees),
     // and get some statistics on binaries in the core.  Note that *all*
     // binary subtrees are printed, regardless of energy.
@@ -845,26 +846,29 @@ local void print_binaries(dyn* b, real kT,
 		    cerr << "    ";
 		else
 		    cerr << "  U ";
-		bi->pretty_print_node(cerr);
+		cerr << bi->format_label();
 	    }
+
+	    int init_indent = BIN_INDENT - 4 - strlen(bi->format_label());
 
 	    if (bi->n_leaves() > 2) {
 
-		if (verbose) cerr << "   is a multiple system:\n";
+		if (verbose) {
+		    for (int i = 0; i < init_indent; i++) cerr << " ";
+		    cerr << "is a multiple system" << endl;
+		}
 
-		// Recursively print out the structure :
+		// Recursively print out the structure (indent = 0, note):
 
-		kepler k;
 		eb += print_structure_recursive(bi,
 						dstar_params,
 						n_unp, e_unp,
-						kT, center, &k, verbose);
+						kT, center, verbose,
+						long_binary_output);
 
 		bin_recursive(bi, center, rcore, rhalf, kT);
 
 	    } else {
-
-		int init_indent = BIN_INDENT - 4 - strlen(bi->format_label());
 
 		// if (verbose) {
 		//    if (od->get_kepler()) {

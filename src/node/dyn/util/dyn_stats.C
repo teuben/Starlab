@@ -195,36 +195,19 @@ void print_binary_from_dyn_pair(dyn* bi, dyn* bj,
 }
 
 real print_structure_recursive(dyn* bi,
-			       real kT,
-			       vec center,
-			       bool verbose,
-			       bool long_binary_output,
-			       int indent)
-{
-    // Simpler interface onto print_structure_recursive()
-
-    int idum = 0;
-    real edum = 0;
-
-    return print_structure_recursive(bi, NULL, idum, edum, kT, center,
-				     verbose, long_binary_output, indent);
-}
-
-real print_structure_recursive(dyn* bi,
 			       void (*dstar_params)(dyn*),
 			       int& n_unp, real& e_unp,
-			       real kT,
-			       vec center,
-			       bool verbose,
-			       bool long_binary_output,
-			       int indent)
-
-// Recursively print out the orbital parameters of a hierarchical system,
-// regardless of energy.  Update some unperturbed counters and return the
-// total energy of the system.  On entry, bi is the top-level CM.
-
+			       real kT,			// default = 0
+			       vec center,		// default = (0,0,0)
+			       bool verbose,		// default = true
+			       bool long_binary_output,	// default = true
+			       int indent)		// default = 0
 {
-      
+
+    // Recursively print out the orbital parameters of a hierarchical system,
+    // regardless of energy.  Update some unperturbed counters and return the
+    // total energy of the system.  On entry, bi is the top-level CM.
+
     real eb = 0;
     if (bi->get_oldest_daughter()) {
 
@@ -241,15 +224,15 @@ real print_structure_recursive(dyn* bi,
 	dyn* primary = od;
 	if (yd->get_mass() > od->get_mass()) primary = yd;
 
-	int init_indent = 21;
+	int init_indent = BIN_INDENT;
 	if (indent > 0) {
 	    for (int i = 0; i < indent; i++) cerr << " ";
 	    if (!od->get_kepler())
 		cerr << "    ";
 	    else
 		cerr << "  U ";
-	    bi->pretty_print_node(cerr); cerr << "   ";
-	    init_indent = 14 - strlen(bi->format_label()) - indent;
+	    cerr << bi->format_label();
+	    init_indent -= 4 + strlen(bi->format_label()) + indent;
 	}
 
 	real dist_from_center = abs(primary->get_pos() - center);
@@ -257,7 +240,7 @@ real print_structure_recursive(dyn* bi,
 	eb += print_binary_params(&k, primary->get_mass(), kT,
 				  dist_from_center, verbose,
 				  long_binary_output, init_indent);
-	cerr << endl;
+	// cerr << endl;
 
 	if (dstar_params != NULL && od->is_leaf() && yd->is_leaf())
 	    dstar_params(bi);
@@ -278,6 +261,22 @@ real print_structure_recursive(dyn* bi,
     }
 
     return eb;
+}
+
+real print_structure_recursive(dyn* bi,
+			       real kT,			// default = 0
+			       vec center,		// default = (0,0,0)
+			       bool verbose,		// default = true
+			       bool long_binary_output,	// default = true
+			       int indent)		// default = 0
+{
+    // Simpler interface onto print_structure_recursive()
+
+    int idum = 0;
+    real edum = 0;
+
+    return print_structure_recursive(bi, NULL, idum, edum, kT, center,
+				     verbose, long_binary_output, indent);
 }
 
 void compute_core_parameters(dyn* b, int k,

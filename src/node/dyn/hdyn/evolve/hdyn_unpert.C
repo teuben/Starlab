@@ -4211,6 +4211,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 		cerr << endl << "top-level node is effectively unperturbed "
 		     << "-- candidate for special treatment." << endl;
+		print_structure_recursive(top, 0, 0, true, true, 1);
 
 		// We have just perturbed the inner component of a hard
 		// multiple system and we expect time step problems near
