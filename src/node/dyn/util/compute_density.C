@@ -45,8 +45,7 @@
 local void write_density(dyn *d, int k, real density)
 {
     putrq(d->get_dyn_story(), "density_time", d->get_system_time());
-    if (k > 0)
-	putiq(d->get_dyn_story(), "density_k_level", k);
+    putiq(d->get_dyn_story(), "density_k_level", k);
     putrq(d->get_dyn_story(), "density", density);
 }
 
