@@ -47,7 +47,7 @@ OBJECT_FILES = hdyn_unpert.o hdyn_ev.o hdyn_tree.o hdyn_merge.o \
 
 LIBRARY = libhdyn.a
 
-EXECUTABLES = kira kira_grape4 kira_grape6
+EXECUTABLES = kira
 
 NON_CCC_EXECUTABLES = 
 
@@ -55,35 +55,12 @@ DEPEND_LIBS	= $(LIB)/libhdyn.a $(LIB)/lib_dyn_.a $(LIB)/libdyn.a \
 		  $(LIB)/libnode.a $(LIB)/libdstar.a $(LIB)/libsstar.a \
 		  $(LIB)/libstd.a
 
-# Without GRAPE:
-NOGRAPE_CF	=	$(STARLAB_CCC_FLAGS) -I$(INC)
-GRAPE4_CF	=	$(STARLAB_CCC_FLAGS) -I$(INC) \
-		  -DSTARLAB_HAS_GRAPE4 -DSHARE_GRAPE -DUSE_HALF_CHIP \
-		  $(CC_EXTRA)
-GRAPE6_CF	= $(STARLAB_CCC_FLAGS) -I$(INC) \
-		  -DSTARLAB_HAS_GRAPE6 -DSHARE_GRAPE $(CC_EXTRA) \
-	          -inline -static
-
-CFLAGS  = ${GRAPE6_CF}
-
-# For GRAPE-4 in indiana
-#GRAPELIB = -L/home/spz/grape -lg4a -lharp -lprometheus  
-# For GRAPE-4 (on merlot@drexel):
-#GRAPELIB =	-L/usr/users/makino/src/harplibs -lg4a -lrt
-# For GRAPE-4 (on port@hongo)
-#GRAPELIB =      -L/usr2/makino/disk3src/harplibs/ -lg4a -lrt
-# For GRAPE-6 (on bourgogne@hongo):
-#GRAPELIB = -L/usr2/makino/src/g6hib -lg6 -L/usr2/makino/src/grape6 -lg6sim2
-# For GRAPE-6 (on alexandria@hongo EV6):
-GRAPELIB = -L/usr2/makino/disk3src/harplibs -lg6 -lg6sim2
-
-#GRAPELIB = -L/usr2/makino/src/g6hib -lg6linux 
+CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC)
 
 CPPFLAGS = 
 
 LIBFLAGS  =	-L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
-                -ldstar -lsstar -lstd -lm \
-	         $(GRAPELIB) 
+                -ldstar -lsstar -lstd -lm 
 #		~/ccmalloc-0.2.3/src/ccmalloc.o -ldl
 
 EXEFLAGS = 
@@ -91,20 +68,6 @@ EXEFLAGS =
 #..............................................................................
 
 include $(STARLAB_PATH)/inc/Makefile.worker.inc
-
-#..............................................................................
-#...for GRAPE..................................................................
-
-hdyn_grape.C:	hdyn_grape4.C hdyn_grape6.C
-	@touch hdyn_grape.C
-
-kira_grape4.C : kira.C
-	echo "#define USE_GRAPE" > kira_grape4.C
-	cat kira.C >> kira_grape4.C
-
-kira_grape6.C : kira.C
-	echo "#define USE_GRAPE" > kira_grape6.C
-	cat kira.C >> kira_grape6.C
 
 #..............................................................................
 #..............................................................................
