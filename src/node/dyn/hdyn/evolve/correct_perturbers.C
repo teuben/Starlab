@@ -31,19 +31,30 @@ local void check_format_and_print(hdyn* bi)
 local void check_and_correct_perturbers(hdyn* bi, hdyn ** ilist, int n,
 					hdyn * cm)
 {
-    if (bi->get_perturber_list() == NULL) {
+    hdynptr* plist = bi->get_perturber_list();		// convenient shorthand
+
+    // Note: this function is only called if perturber_list is valid
+    // (possibly only for low-level nodes).
+
+    if (!plist) {
 	cerr << endl << "warning: check_and_correct_perturbers: "
 	     << bi->format_label()
 	     << " has valid_perturbers but no perturber_list" << endl;
 	return;
     }
 
-    hdynptr* plist = bi->get_perturber_list();		// convenient shorthand
+    int np = bi->get_n_perturbers();
+    bool low = false;
+
+    if (!bi->get_valid_perturbers() && bi->get_valid_perturbers_low()) {
+	np = bi->get_n_perturbers_low();
+	low = true;
+    }
 
     bool first = true;
     int null_count = 0;
 
-    for (int i = 0; i < bi->get_n_perturbers(); i++) {
+    for (int i = 0; i < np; i++) {
 	hdyn* p = plist[i];
 	for (int j = 0; j < n; j++) {
 	    if (ilist[j] == p) {
@@ -70,11 +81,14 @@ local void check_and_correct_perturbers(hdyn* bi, hdyn ** ilist, int n,
 
     if (null_count > 0) {
 	int offset = 0;
-	for (int i = 0; i < bi->get_n_perturbers(); i++) {
+	for (int i = 0; i < np; i++) {
 	    if (offset > 0) plist[i-offset] = plist[i];
 	    if (plist[i] == NULL) offset++;
 	}
-	bi->set_n_perturbers(bi->get_n_perturbers()-null_count);
+	if (low)
+	    bi->set_n_perturbers_low(np-null_count);
+	else
+	    bi->set_n_perturbers(np-null_count);
     }
 }
 
@@ -107,13 +121,15 @@ void correct_perturber_lists(hdyn * b, hdyn ** list, int n,
     if (ALLOW_LOW_LEVEL_PERTURBERS) {
 
 	for_all_nodes(hdyn, b, bi)
-	    if (bi->get_valid_perturbers())
+	    if (bi->get_valid_perturbers()
+		|| bi->get_valid_perturbers_low())
 		check_and_correct_perturbers(bi, list, n, cm);
 
     } else {
 
 	for_all_daughters(hdyn, b, bi)
-	    if (bi->get_valid_perturbers())
+	    if (bi->get_valid_perturbers()
+		|| bi->get_valid_perturbers_low())
 		check_and_correct_perturbers(bi, list, n, cm);
     }
 
@@ -127,15 +143,26 @@ void correct_perturber_lists(hdyn * b, hdyn ** list, int n,
 
 local int expand_perturber_list(hdyn* bi, hdyn* bb, bool verbose)
 {
-    if (bi->get_perturber_list() == NULL) {
+    hdynptr* plist = bi->get_perturber_list();		// convenient shorthand
+
+    // Note: this function is only called if perturber_list is valid
+    // (possibly only for low-level nodes).
+
+    if (!plist) {
 	cerr << endl << "warning: expand_perturber_list: "
 	     << bi->format_label()
 	     << " has valid_perturbers but no perturber_list" << endl;
 	return 0;
     }
 
-    hdynptr* plist = bi->get_perturber_list();		// convenient shorthand
     int np = bi->get_n_perturbers();
+    bool low = false;
+
+    if (!bi->get_valid_perturbers() && bi->get_valid_perturbers_low()) {
+	np = bi->get_n_perturbers_low();
+	low = true;
+    }
+
 
     for (int i = 0; i < np; i++) {
 	hdyn* p = plist[i];
@@ -163,7 +190,10 @@ local int expand_perturber_list(hdyn* bi, hdyn* bb, bool verbose)
 
 		// List will overflow if expanded.  Make it invalid.
 
-		bi->set_valid_perturbers(false);
+		if (low)
+		    bi->set_valid_perturbers_low(false);
+		else
+		    bi->set_valid_perturbers(false);
 
 	    } else {
 
@@ -178,7 +208,10 @@ local int expand_perturber_list(hdyn* bi, hdyn* bb, bool verbose)
 		for_all_leaves(hdyn, bb, bbb)
 		    plist[np++] = bbb;
 
-		bi->set_n_perturbers(np);
+		if (low)
+		    bi->set_n_perturbers_low(np);
+		else
+		    bi->set_n_perturbers(np);
 	    }
 
 	    return 1;
@@ -200,11 +233,13 @@ void expand_perturber_lists(hdyn* b, hdyn* bb,	// bb is CM node
     int np = 0;
     if (ALLOW_LOW_LEVEL_PERTURBERS) {
 	for_all_nodes(hdyn, b, bi)
-	    if (bi != bb && bi->get_valid_perturbers())
+	    if (bi != bb &&
+		(bi->get_valid_perturbers() || bi->get_valid_perturbers()))
 		np += expand_perturber_list(bi, bb, verbose);
     } else {
 	for_all_daughters(hdyn, b, bi)
-	    if (bi != bb && bi->get_valid_perturbers())
+	    if (bi != bb &&
+		(bi->get_valid_perturbers() || bi->get_valid_perturbers()))
 		np += expand_perturber_list(bi, bb, verbose);
     }
 }

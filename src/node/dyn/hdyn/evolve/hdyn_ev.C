@@ -127,6 +127,11 @@
 // ****  Updated at CM step, based on parent perturber list.   ****
 // ****  Binary component perturber lists are INDEPENDENT.     ****
 
+// Extra problem: top-level perturber list may be invalid (too big),
+// but we can't afford to compute perturbation due to the entire system
+// on low-level binaries.  Fix by reusing invalid top-level perturber
+// list for low-level binaries (flag: valid_perturbers_low).
+
 // #define ALLOW_LOW_LEVEL_PERTURBERS		true	// now defined
 							// in hdyn.h
 
@@ -1668,7 +1673,14 @@ void hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 
     real distance_squared;
 
+    // ***********************************************************************
+    // ** Note: the perturber list code here does not (yet) allow for "low" **
+    // ** perturber lists in the event that the top-level list overflows.   **
+    // ** See hdyn_grape6.C.  (Steve, 3/03)                                 **
+    // ***********************************************************************
+
     for_all_daughters(hdyn, b, bi)	
+
 	if (bi != this) {
 
 	    vector d_pos = bi->get_pred_pos() - pred_pos;
@@ -1689,8 +1701,8 @@ void hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 	    // Note: we do *not* take the slowdown factor into account
 	    //	     when computing the perturber list.
 
-	    // See equivalent code for use with GRAPE-4 in
-	    // hdyn_grape4.C/get_neighbors_and_adjust_h2.
+	    // See equivalent code for use with GRAPE in
+	    // hdyn_grape[46].C/get_neighbors_and_adjust_h2.
 
 	    if (make_perturber_list
 		&& is_perturber(this, bi->mass,			// (inlined)
@@ -1740,9 +1752,19 @@ void hdyn::perturber_acc_and_jerk_on_leaf(vector &a,
 
     d_coll_sq = VERY_LARGE_NUMBER;
 
-    if (!pnode->valid_perturbers || pnode->n_perturbers <= 0)
-	return;
+    // Note from Steve (3/03): pnode may have "low-only" perturbers available.
+    // Use this list if necessary (better than an O(N) calculation).
 
+    if (!pnode) return;
+
+    int np = 0;
+    if (pnode->valid_perturbers)
+	np = pnode->n_perturbers;
+    else if (pnode->valid_perturbers_low)
+	np = pnode->n_perturbers_low;
+
+    if (np <= 0) return;
+    
     // Added &hdyn:: to four "hdyn_something_relative_to_root" (Steve, 6/27/97).
 
     // Removed all four "hdyn_something_relative_to_root" references, which are
@@ -1776,7 +1798,7 @@ void hdyn::perturber_acc_and_jerk_on_leaf(vector &a,
 
     bool reset = false;
 
-    for (int i = 0; i < pnode->n_perturbers; i++) {
+    for (int i = 0; i < np; i++) {
 
 	hdyn *bb = pnode->perturber_list[i];
 
@@ -1858,7 +1880,7 @@ void hdyn::perturber_acc_and_jerk_on_leaf(vector &a,
 		       sum_of_radii, d_coll_sq, coll);
     }
 
-    step_node->inc_indirect_force(pnode->n_perturbers);		// bookkeeping
+    step_node->inc_indirect_force(np);				// bookkeeping
 }
 
 
@@ -2225,8 +2247,14 @@ void hdyn::check_add_perturber(hdyn* p, vector& this_pos)
 // 	PRL(perturbation_radius_factor);
 //    }
 
-    // Note: we do *not* take the slowdown factor into account
-    //	     when computing the perturber list.
+    // Note 1: we do *not* take the slowdown factor into account
+    //	       when computing the perturber list.
+
+    // *************************************************************************
+    // ** Note 2: the perturber list code here does not (yet) allow for "low" **
+    // ** perturber lists in the event that the top-level list overflows.     **
+    // ** See hdyn_grape6.C.  (Steve, 3/03)                                   **
+    // *************************************************************************
 
     if (is_perturber(this, p->mass,
 		     square(this_pos - ppos),
@@ -2255,6 +2283,25 @@ void hdyn::check_add_perturber(hdyn* p, vector& this_pos)
 
 void hdyn::create_low_level_perturber_list(hdyn* pnode)
 {
+
+    // Create a perturber list attached to this node, based on the list found
+    // in pnode.  Extra possibility (Steve, 3/03): pnode may not have a complete
+    // perturber list, if the "low" option is set, but the list there is still
+    // usable for construction of this low-level list.
+
+    valid_perturbers = false;
+    if (!pnode) return;
+
+    int np = 0;
+    if (pnode->valid_perturbers)
+	np = pnode->n_perturbers;
+    else if (pnode->valid_perturbers_low)
+	np = pnode->n_perturbers_low;
+
+    if (np <= 0) return;
+
+    // Looks as if we have enough info to build the list.
+
     new_perturber_list();
 
     perturbation_radius_factor
@@ -2273,12 +2320,12 @@ void hdyn::create_low_level_perturber_list(hdyn* pnode)
     // ...then accept any node on the pnode list that satisfies the
     // inner node perturbation criterion.
 
-    for (int i = 0; i < pnode->n_perturbers; i++)
+    for (int i = 0; i < np; i++)
 	check_add_perturber(pnode->perturber_list[i], this_pos);
 
     valid_perturbers = true;
 
-    if (n_perturbers > MAX_PERTURBERS)
+    if (n_perturbers > MAX_PERTURBERS)			// can't happen?
 
 	remove_perturber_list();
 
@@ -2346,6 +2393,10 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     // top-level node.  Any CM node above this node may have a
     // valid perturber list.  Use the lowest-level one.
 
+    // Note from Steve (3/03): Don't worry about "low-only" perturber
+    // lists in the perturbation calculation.  See note in function
+    // perturber_acc_and_jerk_on_leaf() above.
+
     // Now pass a pointer to the node containing the perturber list
     // (NULL ==> no valid list) instead of bool "use_perturber_list"
     // flag.  Also, since the low-level perturber list includes all
@@ -2359,10 +2410,36 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     hdyn *top = pnode;
     int np = -1;
 
-    if (!pnode)
-	top = root;			// better use GRAPE if possible!
-    else
-	np = pnode->n_perturbers;	// may be -1, 0, or >0, note
+    // From Steve (3/03): If no valid perturber list is found, setting
+    // top = root here will force a O(N) calculation of the force using
+    // the front end.  We'd prefer not to do this...  In case of overflow,
+    // the GRAPE version of the code now creates a "low-only" perturber
+    // list, specifically for the computation of low-level perturbations.
+    // If the low-level list hasn't yet been constructed using that list,
+    // use the top-level list here.  Perturber_acc_and_jerk() will do the
+    // right thing if sent a pnode with only low-lvel data available.
+
+    // *** Flag this when it occurs? ***
+
+    if (!pnode) {
+
+	if (top_level->valid_perturbers_low) {
+
+	    // Use the partial top-level list.
+
+	    top = pnode = top_level;
+	    np = pnode->n_perturbers_low;
+
+	} else
+
+	    top = root;			// better to use GRAPE if possible, but at
+					// present this will force an O(N) calculation
+					// on the front end...
+    } else
+
+	np = pnode->n_perturbers;
+
+    // np may be -1, 0, or >0, note.
 
     if (!kep) {
 
@@ -2552,6 +2629,9 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	// This may be a little less efficient, but it is much easier to code,
 	// so keep it for now.  (Steve, 8/98)
 
+	// Note that create_low_level_perturber_list() knows what to do if
+	// only low-only perturber data are found in pnode.
+
 	if (is_parent())
 	    create_low_level_perturber_list(pnode);
 
@@ -2711,7 +2791,7 @@ void hdyn::top_level_node_prologue_for_force_calculation(bool exact)
 
     if (exact) {
 
-	// Perform the entire force calculation.
+	// Perform the entire O(N) force calculation on the front end...
 
 	n_perturbers = 0;
 	valid_perturbers = false;
@@ -2769,10 +2849,10 @@ void hdyn::top_level_node_prologue_for_force_calculation(bool exact)
 
 void hdyn::top_level_node_real_force_calculation()
 {
-    // ***************************************************************
-    // **** This function is NEVER called if GRAPE is available   ****
-    // **** -- it is replaced by grape4/6_calculate_acc_and_jerk. ****
-    // ***************************************************************
+    // *************************************************************
+    // **** This function is NEVER called if GRAPE is available ****
+    // **** -- it is replaced by grape_calculate_acc_and_jerk.  ****
+    // *************************************************************
 
 #ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
@@ -2810,16 +2890,17 @@ void hdyn::top_level_node_real_force_calculation()
 
 void hdyn::top_level_node_epilogue_force_calculation()
 {
+    static char *func = "top_level_node_epilogue_force_calculation";
+
 #ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
-	cerr << "  top_level_node_epilogue_force_calculation for "
-	     << format_label() << endl;
+	cerr << "  " << func << " for " << format_label() << endl;
     }
 #endif
 
 #if 0
     if (time > 13.62265) {
-	cerr << "top_level_node_epilogue_force_calculation(1): " << endl;
+	cerr << func << "(1): " << endl;
 	PRC(format_label()); PRC(nn->format_label()); PRL(sqrt(d_nn_sq));
     }
 #endif
@@ -2847,7 +2928,7 @@ void hdyn::top_level_node_epilogue_force_calculation()
 
 #if 0
     if (time > 13.62265) {
-	cerr << "top_level_node_epilogue_force_calculation(2): " << endl;
+	cerr << func << "(2): " << endl;
 	PRC(format_label()); PRC(nn->format_label()); PRL(sqrt(d_nn_sq));
     }
 #endif
@@ -2865,17 +2946,92 @@ void hdyn::top_level_node_epilogue_force_calculation()
     //     RL(d_nn_sq);
     // }
 
-    if (n_perturbers > MAX_PERTURBERS) {
-	
-	// Perturber list has overflowed.  Use the entire tree (below).
+    // Perturber list was computed in "real_force_calculation" or by GRAPE.
 
+    // If the perturber list has overflowed and no perturber list is available,
+    // we will have to use the entire tree (below).  We'd prefer to avoid this
+    // if possible, so the GRAPE version of the code provides the "low-only" list
+    // -- a subset of the complete list, for the MAX_PERTURBERS closest nodes.
+    // It is intended for use in computing low-level perturbers, but it is as
+    // large as possible, so it can be used here as an approximate means of
+    // avoiding a potentially expensive calculation on the front end.  It is
+    // constructed so that it should now overflow when CM nodes are expanded
+    // into components, so the "low" list should always be usable.  Note that
+    // calculate_partial_acc_and_jerk() knows what to do if sent a node with
+    // only "low" data available.
+    //							(Steve, 3/03)
+
+    if (n_perturbers > MAX_PERTURBERS || !valid_perturbers) {
 	valid_perturbers = false;
 	kc->perturber_overflow++;
+    }
+
+    // Use whatever data we have to try to avoid an expensive calculation.
+    // Note that the decision to use the low-level perturber list for the
+    // top-level node as an efficiency measure (with errors) is completely
+    // independent of the use of the list for low-level nodes.
 	
-    } else if (n_perturbers > 0) {
+    if (valid_perturbers && n_perturbers > 0
+	|| valid_perturbers_low && n_perturbers_low > 0) {
 	
-	// Use the perturber list to correct the center-of-mass force.
-	// First, subtract out center-of-mass contribution:
+	// Expand a copy of the perturber list to see in advance if the list
+	// will overflow.  Shrink the perturber list until the expansion is
+	// successful.
+
+	hdynptr plist[MAX_PERTURBERS];
+	int np = n_perturbers, nlist;
+	if (!valid_perturbers) np = n_perturbers_low;
+	nlist = np;
+	for (int i = 0; i < np; i++)
+	    plist[i] = perturber_list[i];
+
+	real dmax2 = 0;
+	real d2[MAX_PERTURBERS];
+
+	while (!expand_nodes(nlist, plist)) {
+
+	    // Expanded list is too long.  Reduce the length and retry.
+
+	    if (dmax2 == 0) {
+
+		kc->perturber_overflow++;
+
+		for (int i = 0; i < np; i++) {
+		    d2[i] = square(perturber_list[i]->get_pred_pos() - pred_pos);
+		    if (d2[i] > dmax2) dmax2 = d2[i];
+		}
+	    }
+
+	    // Shrink the list.
+
+	    dmax2 *= 0.95;
+
+	    int nskip = 0;
+	    for (int i = 0; i < np; i++) {
+		if (nskip > 0) {
+		    perturber_list[i-nskip] = perturber_list[i];
+		    d2[i-nskip] = d2[i];
+		}
+		if (d2[i] > dmax2) nskip++;
+	    }
+	    np -= nskip;
+
+	    valid_perturbers = false;
+	    valid_perturbers_low = true;	// by construction
+
+	    // Make a new copy and continue.
+
+	    nlist = np;
+	    for (int i = 0; i < np; i++)
+		plist[i] = perturber_list[i];
+	}
+
+	// Original list is perturber_list, of length np;
+	// expanded list is plist, of length nlist.
+
+	// Use the (partial) perturber list to correct the center-of-mass force.
+	// First, subtract out the center-of-mass contribution due to perturbers
+	// (note that, at this point, the perturber list contains only CMs):
 	
 	vector a_cm, a_p, j_cm, j_p;
 	real p_p;
@@ -2887,7 +3043,7 @@ void hdyn::top_level_node_epilogue_force_calculation()
 
 #if 0
 	if (time > 13.62265) {
-	    cerr << "top_level_node_epilogue_force_calculation(3a): " << endl;
+	    cerr << func << "(3a): " << endl;
 	    PRC(format_label()); PRC(nn->format_label()); PRL(sqrt(d_nn_sq));
 	}
 #endif
@@ -2902,97 +3058,90 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	// Replace nodes by components on the perturber list and
 	// add in contribution due to components.
 
-	bool debug = false;
+	for (int i = 0; i < nlist; i++)
+	    perturber_list[i] = plist[i];
 
-	if (!expand_nodes(n_perturbers, perturber_list, debug)) {
+	if (valid_perturbers)
+	    n_perturbers = nlist;
+	else if (valid_perturbers_low) {
+	    n_perturbers = MAX_PERTURBERS + 1;
+	    n_perturbers_low = nlist;
+	}
+
+	// Include component forces in the CM force (explicit loop).
 	
-	    // Perturber list has overflowed.  Use the entire tree (below).
-	    // Note: may cause problems if this is a slow binary...
-	
-	    valid_perturbers = false;
-	    kc->perturber_overflow++;
-	
+	calculate_partial_acc_and_jerk(this, this, this,
+				       a_p, j_p, p_p, d_nn_sq, nn,
+				       !USE_POINT_MASS,
+				       this,
+				       this);
+
+#if 0
+	if (time > 13.62265) {
+	    cerr << "top_level_node_epilogue_force_calculation(3b): "
+		 << endl;
+	    PRC(format_label()); PRC(nn->format_label());
+	    PRL(sqrt(d_nn_sq));
+	}
+#endif
+
+	// Include the "slow" term in correcting acc and jerk.  The
+	// back reaction is handled in correct_acc_and_jerk.
+
+	// In the case of slow binary motion, on exit from this function,
+	// acc and jerk remain computed in the point-mass approximation;
+	// the perturbative corrections are stored separately.
+
+	// This may not be quite right if one of the perturbers is
+	// itself a slow binary.  However, the procedure followed in
+	// correct_and_update() should properly treat the dominant
+	// term due to the internal motion of this node.
+
+
+// 	if (time >= xreal(2296, 3651856000000000000)) {
+// 	    cerr << endl << "in top_level_node_epilogue_force_calculation"
+// 		 << endl;
+// 	    int p = cerr.precision(HIGH_PRECISION);
+// 	    PRL(format_label());
+// 	    pp3(get_top_level_node());
+// 	    cerr << endl;
+//	    cerr.precision(p);
+// 	}
+
+
+	if (!od->slow) {
+
+	    // Normal correction in non-slow case.
+
+	    acc += a_p - a_cm;
+	    jerk += j_p - j_cm;
+
 	} else {
 
-	    // (Explicit loop)
-	
-	    calculate_partial_acc_and_jerk(this, this, this,
-					   a_p, j_p, p_p, d_nn_sq, nn,
-					   !USE_POINT_MASS,
-					   this,
-					   this);
+	    // Keep the CM approximation and save the perturbation
+	    // for use in correct_and_update().
 
+	    od->slow->set_acc_p(a_p - a_cm);
+	    od->slow->set_jerk_p(j_p - j_cm);
+
+	    // The new perturber list is valid and intact.  Update
+	    // the slow_perturbed lists of the top_level_nodes of all
+	    // perturbers.
+
+	    for (int j = 0; j < n_perturbers; j++) {
+		hdyn *pert_top = perturber_list[j]->get_top_level_node();
 #if 0
-	    if (time > 13.62265) {
-		cerr << "top_level_node_epilogue_force_calculation(3b): "
+		cerr << "adding " << format_label();
+		cerr << " to slow_perturbed list of "
+		     << pert_top->format_label()
 		     << endl;
-		PRC(format_label()); PRC(nn->format_label());
-		PRL(sqrt(d_nn_sq));
-	    }
 #endif
-
-	    // Include the "slow" term in correcting acc and jerk.  The
-	    // back reaction is handled in correct_acc_and_jerk.
-
-	    // In the case of slow binary motion, on exit from this function,
-	    // acc and jerk remain computed in the point-mass approximation;
-	    // the perturbative corrections are stored separately.
-
-	    // This may not be quite right if one of the perturbers is
-	    // itself a slow binary.  However, the procedure followed in
-	    // correct_and_update() should properly treat the dominant
-	    // term due to the internal motion of this node.
-
-
-
-
-// 	    if (time >= xreal(2296, 3651856000000000000)) {
-// 		cerr << endl << "in top_level_node_epilogue_force_calculation"
-// 		     << endl;
-// 		int p = cerr.precision(HIGH_PRECISION);
-// 		PRL(format_label());
-// 		pp3(get_top_level_node());
-// 		cerr << endl;
-//		cerr.precision(p);
-// 	    }
-
-
-
-
-	    if (!od->slow) {
-
-		// Normal correction in non-slow case.
-
-		acc += a_p - a_cm;
-		jerk += j_p - j_cm;
-
-	    } else {
-
-		// Keep the CM approximation and save the perturbation
-		// for use in correct_and_update().
-
-		od->slow->set_acc_p(a_p - a_cm);
-		od->slow->set_jerk_p(j_p - j_cm);
-
-		// The new perturber list is valid and intact.  Update
-		// the slow_perturbed lists of the top_level_nodes of all
-		// perturbers.
-
-		for (int j = 0; j < n_perturbers; j++) {
-		    hdyn *pert_top = perturber_list[j]->get_top_level_node();
-#if 0
-		    cerr << "adding " << format_label();
-		    cerr << " to slow_perturbed list of "
-			 << pert_top->format_label()
-			 << endl;
-#endif
-		    pert_top->add_slow_perturbed(this, diag->slow_perturbed);
-		}
+		pert_top->add_slow_perturbed(this, diag->slow_perturbed);
 	    }
-
-	    pot += p_p;
-	
 	}
+
+	pot += p_p;
+	
 
 	// if (nn == NULL) {
 	//     pretty_print_node(cerr);
@@ -3005,11 +3154,17 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	    PRC(format_label()); PRC(nn->format_label()); PRL(sqrt(d_nn_sq));
 	}
 #endif
+
     }
 
-    // Recompute the force exactly if the perturber list has overflowed.
+    // Recompute the force exactly if the perturber list has overflowed
+    // (shouldn't happen, now).
 
-    if (!valid_perturbers) {
+    if (!valid_perturbers && !valid_perturbers_low) {
+
+	cerr << func << ": calculate_partial_acc_and_jerk for "
+	     << format_label() << " at time " << system_time << endl;
+
 	n_perturbers = -1;
 	calculate_partial_acc_and_jerk(root, root, this,
 				       acc, jerk, pot, d_nn_sq, nn,
@@ -3313,8 +3468,10 @@ local inline hdyn *need_correction(hdyn * bj, hdyn * bi)
 	// *should not* occur unless previous force calculation is exact...
 	// ...or if neighbor-list overflow has occurred (Steve 7/98).
 
-	if (btop->get_valid_perturbers()) {
-	    for (int j = 0; j < btop->get_n_perturbers(); j++)
+	if (btop->get_valid_perturbers() || btop->get_valid_perturbers_low()) {
+	    int np = btop->get_n_perturbers();
+	    if (!btop->get_valid_perturbers()) np = btop->get_n_perturbers_low();
+	    for (int j = 0; j < np; j++)
 		if (btop->get_perturber_list()[j]->get_top_level_node() == bj)
 		    bret = NULL;
 	}

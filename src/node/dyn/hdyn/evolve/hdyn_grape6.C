@@ -35,17 +35,17 @@
 #   undef T_DEBUG
 #endif
 
-// T_DEBUG is not defined by kira_debug.h, so it can be used as a flag.
+// T_DEBUG is not defined by kira_debug.h, so it can be used here as a flag.
 
-//#define T_DEBUG		8.9999
+//#define T_DEBUG		175.04687
 
 // However, T_DEBUG_END is infinite by default, and T_DEBUG_LEVEL = 0.
 // To change these defaults, we must undefine them first...
 
-//#undef  T_DEBUG_END
-//#define T_DEBUG_END	9.0001
-//#undef  T_DEBUG_LEVEL
-//#define T_DEBUG_LEVEL	1
+#undef  T_DEBUG_END
+#define T_DEBUG_END	175.04688
+#undef  T_DEBUG_LEVEL
+#define T_DEBUG_LEVEL	2
 
 // Set T_DEBUG_LEVEL =	0 (default) for basic debugging info
 //			1 for a substantial amount of high-level info
@@ -497,19 +497,22 @@ local INLINE int force_by_grape(xreal xtime,
 	//
 	// Note that these tests won't catch NaN values...
 
+	real vsn = VERY_SMALL_NUMBER;
+	vsn = 1.e-8;				// problems wih outliers...
+
 	if (nni->is_top_level_node()) {
 
-	    if (abs(ipot[i]) <= VERY_SMALL_NUMBER
-		|| abs(abs(iacc[i][0])) <= VERY_SMALL_NUMBER) {
+	    if (abs(ipot[i]) <= vsn
+		|| abs(abs(ijerk[i][0])) <= vsn) {
 
 		// Assume that pot, acc, jerk are not set properly.
 		// For now, assume that the average numbers appropriate
 		// to the mean field of a standard cluster are OK.
 
-		ipot[i] = 1;
+		ipot[i] = -1;
 
-		if (abs(iacc[i]) <= VERY_SMALL_NUMBER ||
-		    abs(ijerk[i]) <= VERY_SMALL_NUMBER) {
+		if (abs(iacc[i]) <= vsn ||
+		    abs(ijerk[i]) <= vsn) {
 
 		    // cerr << "WARNING: Initializing acc and jerk from zero."
 		    //      << endl;
@@ -2134,11 +2137,19 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	real dcmin_sq = VERY_LARGE_NUMBER;
 	hdyn *cmin = NULL;
 
+	// Setup for perturber calculation.
+
 	int npl = 0;
 	hdyn **pl = NULL;
 	real rpfac = 0;
 
-	if (b->is_parent() && !b->get_valid_perturbers()) {
+	int want_perturbers = b->is_parent() && !b->get_valid_perturbers();
+
+	// Choices:	want_perturbers = 0	==> no perturbers
+	//				  1	==> top-level perturbers
+	//				  2	==> low-level perturbers (new)
+
+	if (want_perturbers) {
 
 	    // Need to rebuild the perturber list.
 
@@ -2150,6 +2161,16 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    rpfac = b->get_perturbation_radius_factor();
 	}
 
+	// Compute nn, coll and possibly the perturber list.
+	// New code: if perturber list overflows, continue to accumulate
+	// perturbers appropriate for low-level nodes, retaining as many of
+	// the closest perturbers as possible and making sure that the list
+	// will not overflow when CMs are expanded into components.
+	//						      (Steve, 3/03)
+
+	// Hmmm.  This loop has grown far too big.  Should move out to
+	// a separate function soon...
+
 	for (int j = 0; j < n_neighbors; j++) {
 
 	    hdyn *bb = node_list[neighbor_list[j]];
@@ -2159,13 +2180,13 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    if (bb != b) {		// bb = b shouldn't occur...
 
 		vector diff = b->get_pred_pos() - bb->get_pred_pos();
-		real d2 = diff * diff;
+		real diff2 = diff * diff;
 
 		// (Re)compute nn and coll here.
 
 		real sum_of_radii = get_sum_of_radii(b, bb);
 		update_nn_coll(b, 100,		// (100 = ID)	    // inlined
-			       d2, bb, dmin_sq, bmin,
+			       diff2, bb, dmin_sq, bmin,
 			       sum_of_radii,
 			       dcmin_sq, cmin);
 
@@ -2173,12 +2194,152 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 		// See equivalent code for use without GRAPE in
 		// hdyn_ev.C/flat_calculate_acc_and_jerk.
 
-		if (b->is_parent() && !b->get_valid_perturbers()) {
+		if (want_perturbers) {
 
 		    // Update the new perturber list.
 
 		    if (is_perturber(b, bb->get_mass(),
-				     d2, rpfac)) {		    // inlined
+				     diff2, rpfac)) {		    // inlined
+
+			// New code: if we find too many perturbers and b is
+			// the CM of a multiple system, continue to accumulate
+			// perturbers for use by the low-level nodes.
+			//					(Steve, 3/03)
+
+			if (npl >= MAX_PERTURBERS) {
+
+			    // We are about to overflow the perturber list.
+			    // Increment want_perturbers and compress the
+			    // list to include at least the perturbers of
+			    // the largest component component node, and
+			    // continue.  If we are already accumulating
+			    // the low-level list, give up.  Try to avoid
+			    // overflow (now and on later expansion).
+
+			    if (want_perturbers == 1) {
+
+				// Reduce the search radius.
+				// Goals:
+				//	retain as many perturbers as possible
+				//	include perturbers of daughter nodes
+				//	avoid overflow on CM expansion
+
+				// Estimate the total number of leaves in
+				// the GRAPE neighbor list, simply assuming
+				// two leaves per CM node.
+
+				int ntot = 0;
+				for (int k = 0; k < n_neighbors; k++) {
+				    hdyn *bbb = node_list[neighbor_list[k]];
+				    if (bbb->is_parent())
+					ntot += 2;
+				    else
+					ntot++;
+				}
+
+				real nsc  = (0.8*MAX_PERTURBERS)
+						/ ntot;		// desired scale
+
+				// Correct the value of rpfac (0.8 is caution).
+
+				real sc = perturber_rescale(b, nsc);
+				rpfac *= sc;
+
+				// Check that we will enclose enough low-level
+				// perturbers -- flag if not (best we can do).
+
+				hdyn *od = b->get_oldest_daughter();
+				hdyn *yd = od->get_younger_sister();
+
+				if (od->is_parent() || yd->is_parent()) {
+
+				    // This is a multiple system.  Check the
+				    // values of rpfac appropriate to the
+				    // components.  Note clumsy arguments in
+				    // define_perturbation_radius_factor().
+
+				    real rpf1 = 0, rpf2 = 0;
+				    real gamma23 = b->get_gamma23();
+				    if (od->is_parent()) rpf1 =
+					define_perturbation_radius_factor
+							     (od, gamma23);
+				    if (yd->is_parent()) rpf2 =
+					define_perturbation_radius_factor
+							     (yd, gamma23);
+
+				    if (rpfac < rpf1 || rpfac < rpf2) {
+					cerr << func << ": new "; PR(rpfac);
+					cerr << " for " << b->format_label()
+					     << endl;
+					PRC(rpf1); PRL(rpf2);
+				    }
+				}
+
+				if (rpfac > 0) {
+
+				    // Compress the list.  As a further check,
+				    // use the first MAX_PERTURBERS items as
+				    // representative of the whole.
+				    
+				    vector pos = b->get_pred_pos();
+				    int npold = MAX_PERTURBERS;
+				    int npnew = MAX_PERTURBERS+1;
+
+				    // List is of length npold.  Compress to
+				    // new factor rpfac.
+
+#if 1
+				    cerr << endl << func << ": compressing"
+					 << " perturber list for "
+					 << b->format_label() << endl;
+				    int p = cerr.precision(HIGH_PRECISION);
+				    cerr << "time " << b->get_system_time()
+					 << ", ";
+				    cerr.precision(p);
+				    PRC(n_neighbors); PRC(ntot); PRL(sc);
+#endif
+
+				    int count = 0;
+				    int ngoal = (int)(nsc*MAX_PERTURBERS);
+
+				    while (npnew > ngoal) {
+
+					if (++count > 1) {
+					    real rescale
+						= perturber_rescale(b,
+							((real)ngoal)/npnew);
+					    if (rescale > 0.9) rescale = 0.9;
+					    rpfac *= rescale;
+					}
+					npnew = 0;
+
+					for (int k = 0; k < npold; k++) {
+
+					    hdyn *bbb = pl[k];
+
+					    diff = pos - bbb->get_pred_pos();
+					    diff2 = diff * diff;
+
+					    if (is_perturber(b, bbb->get_mass(),
+							     diff2, rpfac))
+						pl[npnew++] = bbb;
+					}
+
+//  					if (count > 2) {
+//  					    PRC(count); PRC(rpfac);
+//  					    PRC(npold); PRC(npnew);
+//  					    PRL(nsc*MAX_PERTURBERS);
+//  					}
+
+					npold = npnew;
+				    }
+
+				    npl = npnew;
+				}
+
+				want_perturbers = 2;
+			    }
+			}
 
 			if (npl < MAX_PERTURBERS)
 			    pl[npl] = bb;
@@ -2189,28 +2350,71 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    }
 	}
 
-	if (b->is_parent() && !b->get_valid_perturbers()) {
+	// Complete the perturber list determination.
 
-	    // Found npl perturbers.
+	if (want_perturbers) {
+
+	    // Found npl perturbers.  Decide how to interpret the list.
+	    // Possibilities are:
+	    //
+	    //	npl >  MAX_PERTURBERS	- list has overflowed: delete
+	    //	npl <= MAX_PERTURBERS	- list is intact, so
+	    //
+	    //		       update  n_perturbers     if want_perturbers = 1
+	    //			       n_perturbers_low if want_perturbers = 2
 
 	    b->set_n_perturbers(npl);
 
 	    if (npl > MAX_PERTURBERS) {
 
-		// Too many perturbers.
+		// Too many perturbers: list still invalid, despite all
+		// our efforts above!!  Basically we never want to do this.
+		// If it occurs, should modify code to iterate until this
+		// is no longer the case.
+
+		cerr << func << ": too many perturbers for "
+		     << b->format_label()
+		     << " -- deleting list" << endl << flush;
 
 		b->remove_perturber_list();
 
-//		cerr << func << ": too many perturbers for "
-//		     << b->format_label()
-//		     << " -- deleting list" << endl << flush;
-
 	    } else {
 
-		b->set_valid_perturbers(true);
-//		cerr << "valid_perturbers = true #1 for "
-//		     << b->format_label()
-//		     << endl;
+		if (want_perturbers == 1) {
+
+		    // Top-level list is valid.
+
+		    b->set_valid_perturbers(true);
+
+//		    cerr << "valid_perturbers = true #1 for "
+//			 << b->format_label()
+//			 << endl;
+
+		} else {
+
+		    // Top-level list is invalid, low-level list is OK.
+		    // Don't use n_perturbers for low-level list, in case some
+		    // code needs its value to be out of range for bookeeping
+		    // purposes (should check this and clean up...).
+
+		    b->set_valid_perturbers(false);
+		    b->set_valid_perturbers_low(true);
+
+		    b->set_n_perturbers(MAX_PERTURBERS+1);
+		    b->set_n_perturbers_low(npl);
+
+#if 1
+		    cerr << "    " << npl << " partial perturbers";
+		    if (npl > 0) {
+			cerr << ":";
+			for (int i = 0; i < Starlab::min(npl, 5); i++)
+			    cerr << " " << pl[i]->format_label();
+			cerr << "...";
+		    }
+		    cerr << endl;
+#endif
+
+		}
 	    }
 
 	}
@@ -3072,8 +3276,8 @@ local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	    if (bb != b) {
 		vector diff = b->get_pred_pos() - bb->get_pred_pos();
-		real d2 = diff * diff;
-		d_max = Starlab::max(d_max, d2);
+		real diff2 = diff * diff;
+		d_max = Starlab::max(d_max, diff2);
 	    }
 	}
 #endif
@@ -3416,10 +3620,12 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 		    if (status = count_neighbors_and_adjust_h2(bb, ip)) {
 
 #ifdef T_DEBUG
-			PR(status);
-			cerr << " for particle " << bb->format_label()
-			     << " rnb_sq now " << bb->get_grape_rnb_sq()
-			     << endl;
+			if (in_debug_range) {
+			    PR(status);
+			    cerr << " for particle " << bb->format_label()
+				 << " rnb_sq now " << bb->get_grape_rnb_sq()
+				 << endl;
+			}
 #endif
 
 			if (bb->get_grape_rnb_sq() > h2_crit) {

@@ -125,7 +125,7 @@ local inline void update_nn_coll(hdyn *this_node, int id,
 // In these cases, "perturbation_radius_factor" is (apart from the mass
 // factor) perturbation_radius^3.
 //
-// Also,in these cases, pert_factor_sq is really gamma2^{-1/3} = gamma^{-2/3}.
+// Also, in these cases, pert_factor_sq is really gamma2^{-1/3} = gamma^{-2/3}.
 // All we really need is 1/gamma!  FIX THIS SOON!!
 //
 //*** Distance criterion is fine for perturbers of mass comparable to or
@@ -245,6 +245,29 @@ local inline real perturbation_scale_sq(hdyn *b,
 
     real r_bin = binary_scale(b);
     return pert_factor_sq * r_bin * r_bin;
+}
+
+local inline real perturber_rescale(hdyn *b, real fac)
+{
+    // Estimate the scaling of perturbation_radius_factor to reduce the
+    // neighbors enclosed by a factor of fac (< 1), taking into account
+    // the possible different values of perturber_criterion.
+
+    int  perturber_criterion = b->get_kira_options()->perturber_criterion;
+
+    if (perturber_criterion == 0) {
+
+	// Perturbation_radius_factor ~ distance squared.
+
+	if (fac > 0) fac = pow(fac, 2./3);
+
+    }  else {
+
+	// Perturbation_radius_factor ~ distance cubed.  No action needed.
+
+    }
+
+    return fac;
 }
 
 // is_perturber: check the perturbation criterion.
