@@ -45,7 +45,9 @@ local void mkblack_hole(dyn* b, int id, real m_bh) {
 	PRL(m_bh);
     }
 
+    real prev_mass; 
     if(bh) 
+      prev_mass = bh->get_mass();
 	bh->set_mass(m_bh);
     else 
 	err_exit("mkblack_hole: central star not found");
@@ -59,7 +61,7 @@ local void mkblack_hole(dyn* b, int id, real m_bh) {
 
     b->set_mass(m_sum);
     // Selected black holes keeps same kinetic energy
-    b->set_vel(b->get_vel()/sqrt(m_sum));
+    b->set_vel(b->get_vel() * sqrt(prev_mass/m_sum));
 
     sprintf(tmp_string,
 	    "         black hole added, total mass = %8.2f", m_sum); 
