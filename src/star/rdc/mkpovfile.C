@@ -808,11 +808,12 @@ void print_povray_header(dyn* b, vector cam_pos,
 }
 
 void print_mpegplayer_param_file(ostream& s,
-				 int first_frame = 1,
-				 int last_frame = 100,
-				 int horizontal = 120,
-				 int vertical = 90,
-				 int GOP_size = 10) {
+				 int first_frame /* = 1   */,
+				 int last_frame  /* = 100 */,
+				 int horizontal  /* = 120 */,
+				 int vertical    /* = 90  */,
+				 int GOP_size    /* = 10  */
+				) {
 				 
 
      s <<"# mpeg_encode parameter file\n"

@@ -33,7 +33,7 @@ real get_sum_of_radii(hdyn* bi, hdyn* bj) {
 
 real print_encounter_elements(hdyn* bi, hdyn* bj,
 			      char* s, 		    // default = "Collision"
-			      bool verbose = true)
+			      bool verbose /* = true */)
 {
     kepler k;
     initialize_kepler_from_dyn_pair(k, bi, bj, true);	// minimal kepler
