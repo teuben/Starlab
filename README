@@ -190,3 +190,25 @@ To install Starlab:
  - For further information, see "starlab/doc/README"
 
  - For some sample programs, see "starlab/etc/demo"
+
+
+******
+
+Dec-2000: Example "cut and paste session" to setup starlab on redhat62:
+
+cd starlab	 ( or whereever you're in the starlab root directory)
+	
+cp templates/Makefile.local.inc      local
+cp templates/starlab_setup           local
+cp templates/cshrc.starlab.redhat62  local/cshrc.starlab
+
+setenv STARLAB_PATH `pwd`
+source $STARLAB_PATH/local/starlab_setup
+
+cp src/node/dyn/hdyn/evolve/Makefile.linux src/node/dyn/hdyn/evolve/Makefile
+cp src/node/dyn/hdyn/util/Makefile.linux src/node/dyn/hdyn/util/Makefile
+make libs bins >& LOG1
+
+
+
+On a Piii600/256M/15MB/sec machine this takes about 3.5 minutes.
