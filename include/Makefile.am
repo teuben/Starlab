@@ -44,7 +44,7 @@ nobase_pkginclude_HEADERS = bound3.h chydro.h config.h \
     star/super_giant.h star/thorne_zytkow.h \
     star/white_dwarf.h static_star.h stdinc.h \
     story.h tdyn.h util_io.h util_math.h \
-    worldline.h xreal.h
+    worldline.h xreal.h hop.h
 
 clean:
 distclean:
