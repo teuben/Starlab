@@ -17,7 +17,11 @@
 ##
 
 pkglib_LTLIBRARIES = libtdyn.la
-bin_PROGRAMS = print_id scanbinary scanbundle tdyn_io worldlines xstarplot22
+bin_PROGRAMS = print_id scanbinary scanbundle tdyn_io worldlines
+
+if !NO_X
+   bin_PROGRAMS += xstarplot22
+endif
 
 libtdyn_la_LIBADD = ../libdyn.la
 libtdyn_la_SOURCES = tdyn_io.C tdyn_tt.C worldline.C worldline2.C
@@ -34,7 +38,7 @@ scanbinary_LDADD = libtdyn.la
 scanbundle_LDADD = libtdyn.la
 tdyn_io_LDADD = libtdyn.la
 worldlines_LDADD = libtdyn.la
-xstarplot22_LDADD = libtdyn.la ../../../gfx/liblux.la
+xstarplot22_LDADD = libtdyn.la ../../../gfx/libgfx.la
 
 print_id_SOURCES = print_id.C
 scanbinary_SOURCES = scanbinary.C

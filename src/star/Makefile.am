@@ -16,4 +16,8 @@
 ##..............................................................................
 ##
 
-SUBDIRS = sstar dstar util #xutil rdc
+SUBDIRS = sstar dstar util # rdc
+
+#if !NO_X
+#   SUBDIRS += xutil
+#endif

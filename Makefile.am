@@ -333,12 +333,37 @@ SUBDIRS = sbin src include
 
 all-recursive: libs
 
+# The following is a list of directories containing Makefiles with a
+# "libs" target.  The purpose of libs is to ensure that all libraries
+# are properly constructed before the executables are built.  If we
+# don't have X, still include the X-related directories here.  Note 
+# that the "xutil" directories in dyn, star, and sdyn3 do not add to
+# libraries and are controlled from their parent directories, while
+# the libraries created by gfx and hdyn/xutil are managed within their
+# respective Makefiles.
+
+LIBDIRS = src/std \
+	  src/node \
+	  src/node/dyn \
+	  src/node/dyn/_dyn_ \
+	  src/node/dyn/tdyn \
+	  src/node/dyn/hdyn \
+	  src/node/dyn/hdyn/xutil \
+	  src/node/dyn/hdyn/stubs \
+	  src/node/dyn/hdyn/sdyn \
+	  src/node/dyn/hdyn/sdyn3 \
+	  src/star/sstar \
+	  src/star/dstar \
+	  src/hydro \
+	  src/gfx
+
 .PHONY: libs
 libs:
-	for dir in src/std src/gfx src/node src/node/dyn \
-	    src/node/dyn/_dyn_ src/node/dyn/hdyn src/node/dyn/hdyn/stubs \
-	    src/node/dyn/hdyn/sdyn src/node/dyn/hdyn/sdyn3 \
-	    src/node/dyn/hdyn/xutil src/node/dyn/tdyn \
-	    src/star/sstar src/star/dstar src/hydro; do \
+	for dir in $(LIBDIRS); do \
+	    echo Making libs in $$dir; \
 	    $(MAKE) $(AM_MAKEFLAGS) -C $$dir libs; \
 	done
+
+
+
+

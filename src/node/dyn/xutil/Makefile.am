@@ -18,6 +18,6 @@
 
 bin_PROGRAMS = xstarplot
 
-xstarplot_LDADD = ../libdyn.la ../../../gfx/liblux.la
+xstarplot_LDADD = ../libdyn.la ../../../gfx/libgfx.la
 
 xstarplot_SOURCES = xstarplot.C

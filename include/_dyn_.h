@@ -131,6 +131,9 @@ class  _dyn_ : public dyn
 	inline vec  get_nopred_pos()   {return pred_pos;}
 	inline vec  get_nopred_vel()   {return pred_vel;}
 
+	inline void set_pred_pos(vec p)	  {pred_pos = p;}
+	inline void set_pred_vel(vec v)	  {pred_vel = v;}
+
 	void  clear_t_pred()		  {t_pred = -VERY_LARGE_NUMBER;
 					   if (slow) slow->clear_tau_pred();}
 	inline xreal  get_t_pred()        {return t_pred;}

@@ -17,7 +17,14 @@
 ##
 
 pkglib_LTLIBRARIES = libxhdyn.la
-bin_PROGRAMS = snap_to_image xstarplot
+bin_PROGRAMS = snap_to_image
+
+if !NO_X
+    bin_PROGRAMS += xstarplot
+endif
+
+# Note that Qt_pp3 contains code to check for Qt, so OK to include
+# it in the library without testing X (NO_X ==> no Qt).
 
 libxhdyn_la_LDFLAGS = ../libhdyn.la
 libxhdyn_la_SOURCES = Qt_pp3.C
@@ -34,8 +41,8 @@ if HAVE_LIBQT
   CLEANFILES = moc_pp3_widget.C
 endif
 
-snap_to_image_LDADD = ../libhdyn.la ../../../../gfx/liblux.la
-xstarplot_LDADD = ../libhdyn.la ../../../../gfx/liblux.la
+snap_to_image_LDADD = ../libhdyn.la ../../../../gfx/libgfx.la
+xstarplot_LDADD = ../libhdyn.la ../../../../gfx/libgfx.la
 
 snap_to_image_SOURCES = snap_to_image.C
 xstarplot_SOURCES = xstarplot.C gfx_util.C dyn_util.C

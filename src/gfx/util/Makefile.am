@@ -16,14 +16,14 @@
 ##..............................................................................
 ##
 
-noinst_LTLIBRARIES = liblux-3.la
+noinst_LTLIBRARIES = libgfx-1.la
 bin_PROGRAMS = data make_image
 
-liblux_3_la_SOURCES = colormaps.C write_sun.C sun_header.C write_gif.C \
+libgfx_1_la_SOURCES = colormaps.C write_sun.C sun_header.C write_gif.C \
     encode_gif.C write_png.C
 
-data_LDADD = ../liblux.la
-make_image_LDADD = ../liblux.la
+data_LDADD = ../libgfx.la
+make_image_LDADD = ../libgfx.la
 
 data_SOURCES = data.C
 make_image_SOURCES = make_image.C

@@ -16,14 +16,14 @@
 ##..............................................................................
 ##
 
-noinst_LTLIBRARIES = liblux-1.la
+noinst_LTLIBRARIES = libgfx-2.la
 bin_PROGRAMS = plot_data simple ximage
 
-liblux_1_la_SOURCES = win.c draw.c draw1.c color.c dialog.c mcd.c interface.c \
+libgfx_2_la_SOURCES = win.c draw.c draw1.c color.c dialog.c mcd.c interface.c \
     termio.c utility.c simple.c
 
 simple_CPPFLAGS = -DTEST
 
-plot_data_LDADD = ../liblux.la
-simple_LDADD = ../liblux.la
-ximage_LDADD = ../liblux.la
+plot_data_LDADD = ../libgfx.la
+simple_LDADD = ../libgfx.la
+ximage_LDADD = ../libgfx.la

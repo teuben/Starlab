@@ -16,7 +16,11 @@
 ##..............................................................................
 ##
 
-SUBDIRS = util kepler init evolve _dyn_ hdyn tdyn xutil
+SUBDIRS = util kepler init evolve _dyn_ hdyn tdyn
+
+if !NO_X
+   SUBDIRS += xutil
+endif
 
 pkglib_LTLIBRARIES = libdyn.la
 

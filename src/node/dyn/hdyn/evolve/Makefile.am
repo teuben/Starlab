@@ -29,7 +29,7 @@ libhdyn_2_la_SOURCES = hdyn_unpert.C hdyn_ev.C hdyn_tree.C hdyn_merge.C \
 kira_CPPFLAGS = -DTOOLBOX
 
 kira_LDADD = ../libhdyn.la ../xutil/libxhdyn.la \
-    ../../../../star/dstar/libdstar.la
+	     ../../../../star/dstar/libdstar.la
 
 kira_SOURCES = kira.C
 
@@ -37,4 +37,5 @@ if HAVE_GRAPE
   kira_LDADD += $(GRAPE_LIBS)
   AM_LDFLAGS = $(GRAPE_LDFLAGS)
 endif
+
 kira_LDADD += ../stubs/libstubs.la

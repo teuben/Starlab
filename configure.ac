@@ -1,8 +1,12 @@
 # -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-# Undocumented configure variables used here that might change in the future.
-# no_x
+# Undocumented configure variables used in this script that might change
+# in the future:
+#
+#	no_x
+#
+# Note that numerous autoconf cache (ac_cv_xxx) variables are also used.
 
 AC_PREREQ(2.59)
 m4_include([version.m4])
@@ -194,12 +198,17 @@ AM_CONDITIONAL(HAVE_LIBPNG, [test "x$ac_cv_lib_png_main" = "xyes"])
 #--------------------------------------------------------------------------
 # Check for Qt.
 
+good_qt=no
 AC_ARG_WITH(qt, AS_HELP_STRING([--with-qt], use Qt [[[default=yes]]]),
     [qt="$withval"])
 AC_ARG_WITH(qt-dir,
     AS_HELP_STRING([--with-qt-dir=QTDIR], directory where Qt is installed),
     [qt_dir="$withval"])
+
 if test "x$no_x" = "xyes"; then
+    if test "x$qt" != "xno"; then
+	AC_MSG_NOTICE(*** disabling Qt because X not available ***)
+    fi
     qt=no
 fi
 AM_CONDITIONAL(NO_X, [test "x$no_x" = "xyes"])
@@ -356,11 +365,47 @@ AC_MSG_NOTICE([linking starlab_start to starlab_start.$shell])
 cd $STARLAB_SOURCE_PATH
 ln -f -s starlab_start.$shell starlab_start
 
-# Convenient to save a record of where configure was run.
+# Convenient to save a record of where configure was run and to
+# confirm some common options.
 
 AC_MSG_NOTICE([saving hostname and configure arguments in CONFIGURE_HOST])
-echo Starlab configured on `hostname` on `date`		> CONFIGURE_HOST
-echo "configure arguments: $all_args"		       >> CONFIGURE_HOST
+echo Starlab configured on `hostname` on `date`		>  CONFIGURE_HOST
+if test "x$all_args" = "x"; then
+    echo "configure arguments: (none)"			>> CONFIGURE_HOST
+else
+    echo "configure arguments: $all_args"		>> CONFIGURE_HOST
+fi
+echo "configuration:"					>> CONFIGURE_HOST
+echo -n "    "						>> CONFIGURE_HOST
+if test "x$xreal" = "xyes"; then
+    echo with xreal					>> CONFIGURE_HOST
+else
+    echo without xreal					>> CONFIGURE_HOST
+fi
+echo -n "    "						>> CONFIGURE_HOST
+if test "x$grape" = "xyes"; then
+    echo with GRAPE					>> CONFIGURE_HOST
+else
+    echo without GRAPE					>> CONFIGURE_HOST
+fi
+echo -n "    "						>> CONFIGURE_HOST
+if test "x$no_x" = "xyes"; then
+    echo without X support				>> CONFIGURE_HOST
+else
+    echo with X support					>> CONFIGURE_HOST
+fi
+echo -n "    "						>> CONFIGURE_HOST
+if test "x$good_qt" = "xyes"; then
+    echo with Qt					>> CONFIGURE_HOST
+else
+    echo without Qt					>> CONFIGURE_HOST
+fi
+echo -n "    "						>> CONFIGURE_HOST
+if test "x$ac_cv_lib_png_main" = "xyes"; then
+    echo with PNG					>> CONFIGURE_HOST
+else
+    echo without PNG					>> CONFIGURE_HOST
+fi
 
 #==========================================================================
 

@@ -16,22 +16,41 @@
 ##..............................................................................
 ##
 
-SUBDIRS = lux lux++ util #libs draw
-
-pkglib_LTLIBRARIES = liblux.la
-
-liblux_la_LDFLAGS = $(X_PRE_LIBS) -lX11 $(X_EXTRA_LIBS) -lm
-if HAVE_LIBPNG
-  liblux_la_LDFLAGS += -lpng
+SUBDIRS = util
+if !NO_X
+    SUBDIRS += lux lux++ #libs draw
 endif
-liblux_la_LIBADD = lux/liblux-1.la lux++/liblux-2.la util/liblux-3.la
-liblux_la_SOURCES =
+
+pkglib_LTLIBRARIES = libgfx.la
+
+if !NO_X
+    libgfx_la_LDFLAGS = $(X_PRE_LIBS) -lX11 $(X_EXTRA_LIBS) -lm
+else
+    libgfx_la_LDFLAGS = -lm
+endif
+
+if HAVE_LIBPNG
+    libgfx_la_LDFLAGS += -lpng
+endif
+
+libgfx_la_LIBADD = util/libgfx-1.la
+if !NO_X
+    libgfx_la_LIBADD += lux/libgfx-2.la lux++/libgfx-3.la
+endif
+libgfx_la_SOURCES =
 
 AM_LDFLAGS = $(X_LIBS)
 
-.PHONY: libs clibs
-libs: clibs liblux.la
-clibs:
-	$(MAKE) $(AM_MAKEFLAGS) -C lux liblux-1.la
-	$(MAKE) $(AM_MAKEFLAGS) -C lux++ liblux-2.la
-	$(MAKE) $(AM_MAKEFLAGS) -C util liblux-3.la
+if !NO_X
+    CLIBSX = clibs23
+endif
+
+.PHONY: libs clibs1 $(CLIBSX)
+libs: clibs1 $(CLIBSX) libgfx.la
+
+clibs1:
+	$(MAKE) $(AM_MAKEFLAGS) -C util libgfx-1.la
+
+clibs23:
+	$(MAKE) $(AM_MAKEFLAGS) -C lux libgfx-2.la
+	$(MAKE) $(AM_MAKEFLAGS) -C lux++ libgfx-3.la

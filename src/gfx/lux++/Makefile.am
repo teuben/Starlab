@@ -16,6 +16,6 @@
 ##..............................................................................
 ##
 
-noinst_LTLIBRARIES = liblux-2.la
+noinst_LTLIBRARIES = libgfx-3.la
 
-liblux_2_la_SOURCES = dialog++.c
+libgfx_3_la_SOURCES = dialog++.c

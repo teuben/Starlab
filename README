@@ -158,10 +158,10 @@ DEVELOPERS
 - The new configuration procedure produces a lot of output, which may
   become annoying if you find yourself repeatedly rebuilding programs as
   you debug them.  To reduce the volume of diagnostic information coming
-  from the make process, use the 'smake' script in $STARLAB_PATH/sbin.
-  It will build the specified target, starting the process at the top
-  level (i.e. at $STARLAB_PATH), using the "make -s" option to suppress
-  extraneous output.
+  from the make process, use "make -s" or the 'smake' script found in
+  $STARLAB_PATH/sbin.  Smake will build the specified target, starting
+  the process at the top level (i.e. at $STARLAB_PATH), using "make -s"
+  option to suppress extraneous output.
 
 - The current configuration currently creates duplicate copies of objects
   and executables -- local versions are used to build the package, and
