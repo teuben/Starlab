@@ -20,7 +20,7 @@
 // Substantially rewrote code and removed timing and some other
 // debugging #ifdefs -- too confusing, and no longer relevant
 // after the rewrite.
-//						Steve, 4/03
+//					      Steve 4/03, 8/03
 
 #include "hdyn.h"
 #include "kira_timing.h"
@@ -68,24 +68,26 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
     }
 #endif
 
-    // Explicitly split the calculation into low-level and top-level
-    // nodes (Steve, 4/03).  Low-level nodes run from 0 to n_low-1;
-    // top-level nodes from n_low to n_next-1.
+    // Explicitly split the calculation into top-level and low-level
+    // nodes (Steve, 4/03).  Top-level nodes run from 0 to n_top-1;
+    // low-level nodes from n_top to n_next-1.
     //
     // The first loop here does the splitting, at the same time
     // performing the first part of the force calculation.
 
     bool print = kd->kira_ev;
-    int n_low = 0;
+    int n_top = 0;
 
     for (int i = 0; i < n_next; i++) {
 
 	hdyn *bi = next_nodes[i];
-	bool low = false;
+	bool top = false;
 
 	if (bi->get_parent() == b) {
 
 	    // This is a top-level node.
+
+	    top = true;
 
 	    predict_loworder_all(bi, sys_t);
 
@@ -103,16 +105,13 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 	} else {
 
 	    // This is a low-level node.
-
-	    low = true;
-
 	    // Predict the entire clump containing node bi (Steve, 8/98):
 
 	    if (!ignore_internal)
 		predict_loworder_all(bi->get_top_level_node(), sys_t);
 	}
 
-	if (ignore_internal && (low || !exact)) {
+	if (ignore_internal && (!top || !exact)) {
 
 	    // Set flags in case of no internal forces...
 
@@ -126,9 +125,9 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 	// All initial operations on bi are complete.
 	// Reorder the list if necessary.
 
-	if (low) {
-	    next_nodes[i] = next_nodes[n_low];
-	    next_nodes[n_low++] = bi;
+	if (top) {
+	    next_nodes[i] = next_nodes[n_top];
+	    next_nodes[n_top++] = bi;
 	}
     }
 
@@ -140,9 +139,9 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 #endif
 
     // Complete the top-level force calculation (now top-level nodes
-    // run from n_low to n_next-1):
+    // run from 0 to n_top-1):
 
-    if (n_low < n_next) {
+    if (n_top > 0) {
 
 	if (tree_changed)
 	    restart_grape = true;
@@ -154,7 +153,7 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 	}
 #endif
 
-	int n_top = 1;
+	int n_force = 1;
 
 	// Calculate top-level forces.  Note new return value from
 	// kira_calculate_top_level_acc_and_jerk() (Steve, 4/03).
@@ -170,14 +169,14 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 	// as appropriate.
 
 	if (!exact && !ignore_internal)
-	    n_top = kira_calculate_top_level_acc_and_jerk(next_nodes+n_low,
-							  n_next-n_low,
-							  time, restart_grape);
+	    n_force = kira_calculate_top_level_acc_and_jerk(next_nodes,
+							    n_top, time,
+							    restart_grape);
 
-//   if (sys_t >= 44.15329 && sys_t <= 44.1533) {
-//     cerr << "after top-level acc_and_jerk" << endl;
-//     pp3(next_nodes[0]->get_top_level_node());
-//   }
+//	if (sys_t >= 44.15329 && sys_t <= 44.1533) {
+//	    cerr << "after top-level acc_and_jerk" << endl;
+//	    pp3(next_nodes[0]->get_top_level_node());
+//	}
 
 #ifdef T_DEBUG
 	if (IN_DEBUG_RANGE(sys_t)) {
@@ -204,18 +203,18 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 	    // the list.  Should be unset immediately on return, but see the
 	    // note below.
 
-	    n_top--;
+	    n_force--;
 
 	    // Epilogue operations.
 
-	    for (int i = n_low; i < n_next; i++) {
+	    for (int i = 0; i < n_top; i++) {
 
 		hdyn *bi = next_nodes[i];
 
 		// Epilogue force calculation mostly performs CM corrections
 		// and cleans up the perturber list.
 
-		bi->inc_direct_force(n_top);		// direct force counter
+		bi->inc_direct_force(n_force);		// direct force counter
 		bi->top_level_node_epilogue_force_calculation();
 		bi->set_on_integration_list();
 	    }
@@ -226,14 +225,14 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 				     reset_force_correction);
 	    else
 
-		correct_acc_and_jerk(next_nodes+n_low,	// new version
-				     n_next-n_low);
+		correct_acc_and_jerk(next_nodes,	// new version
+				     n_top);
 
 	    // Don't unset the "on_integration_list" flags here, because
 	    // the loop through memory may cost more than it is worth.
 	    // *** Must unset these flags in the calling function. ***
 
-	    // for (int i = n_low; i < n_next; i++)
+	    // for (int i = 0; i < n_top; i++)
 	    //     next_nodes[i]->clear_on_integration_list();
 
 	}
@@ -249,7 +248,7 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 
 	if (b->get_external_field() > 0) {
 
-	    for (int i = n_low; i < n_next; i++) {
+	    for (int i = 0; i < n_top; i++) {
 
 		hdyn *bb = next_nodes[i];
 
@@ -265,12 +264,12 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
     }
 
     // Everything is done for top-level nodes.  Complete the low-level
-    // force calculations.  Do this at the end, so any recomputation of
+    // force calculations.  Do this last, so any recomputation of
     // top-level perturber lists has already occurred.
 
     if (!ignore_internal) {
 
-	for (int i = 0; i < n_low; i++) {
+	for (int i = n_top; i < n_next; i++) {
 
 	    hdyn *bi = next_nodes[i];
 	    if (!bi->get_kepler()) {
@@ -330,7 +329,7 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 //     pp3(next_nodes[0]->get_top_level_node());
 //   }
 
-    return n_low;
+    return n_top;
 }
 
 
