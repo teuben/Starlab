@@ -7,12 +7,14 @@
 ////               image to other formats.
 ////
 ////  Options:     -c         expect char input
-////               -f         expect float input       [default]
+////               -f         expect float input                      [default]
+////               -g         same as -F 1
 ////               -i         expect int input
-////               -F fmt     specify image format (gif, png, sun) [gif]
-////               -m file    specify colormap file    [use built-in]
-////               -s nx ny   specify image dimensions [no default;
-////                                                    ny = nx if not set]
+////               -F fmt     specify image format (gif, png, sun)        [gif]
+////               -m file    specify colormap file              [use built-in]
+////               -p         same as -F 2
+////               -s nx ny   specify image dimensions     [no default;
+////                                                        ny = nx if not set]
 
 #include "stdinc.h"
 #include "image_fmt.h"
@@ -34,7 +36,8 @@ main(int argc, char** argv)
     int i;
     float f;
 
-    char *fmt = "gif";
+    char *gif = "gif", *png = "png";
+    char *fmt = gif;
     bool nset = false;
 
     /* Parse the argument list. */
@@ -46,11 +49,15 @@ main(int argc, char** argv)
 				break;
 		case 'f':	which = 2;
 				break;
-		case 'i':	which = 1;
-				break;
 		case 'F':	fmt = argv[++i];
 				break;
+		case 'g':	fmt = gif;
+				break;
+		case 'i':	which = 1;
+				break;
 		case 'm':	colormap = argv[++i];
+				break;
+		case 'p':	fmt = png;
 				break;
 		case 's':	m = atoi(argv[++i]);
 				if (i+1 < argc && argv[i+1][0] != '-') {
