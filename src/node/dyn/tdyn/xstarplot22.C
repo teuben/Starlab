@@ -1981,11 +1981,8 @@ main(int argc, char** argv)
     // print_worldlines(wh, nh);
     // print_escapes(wh, nh);
 
-    set_next_center(wh, nh, true);
-    set_next_center(wh, nh, true);
-    set_next_center(wh, nh, true);
-    set_next_center(wh, nh, true);
-    PRL(get_center_id());
+    set_center(wh, nh, 1, true);
+    PRC(get_center()); PRL(get_center_id());
 
     // Now display the data.
 

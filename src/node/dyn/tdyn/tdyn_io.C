@@ -353,6 +353,16 @@ istream & tdyn::scan_dyn_story(istream & s)
 			putvq(dyn_story, "center_vel", vel);
 			break;
 		    }
+
+		    if (!strcmp("center_type", keyword)) {
+			int type = strtol(val, NULL, 10);
+
+			if (!dyn_story)
+			    dyn_story = mk_story_chapter(DYNAMICS_ID);
+
+			putiq(dyn_story, "center_type", type);
+			break;
+		    }
 		}
 		goto other;
 

@@ -18,8 +18,10 @@
 // Other externally visible functions:
 //
 //	pdyn *create_interpolated_tree2(worldbundle *wb, real t)
-//	char *set_next_center(worldbundleptr wh[], int nh, bool verbose);
-//	char *get_center_id();
+//	char *set_center(worldbundleptr wh[], int nh,
+//			 int center_number, bool verbose)
+//	int get_center()
+//	char *get_center_id(int center_number)
 //	vector get_center_pos()
 //	vector get_center_vel()
 //
@@ -228,6 +230,36 @@ local inline void update_interpolated_tree(worldbundle *wb,
 // and set jerk = 0.  The rest will be handled automatically by the
 // interpolation routines.
 
+static int n_center = 2;
+static int which_center = 0;	// 0 to n_center-1 are legal
+static int which_std = 0;	// 1 or 2 is legal
+
+static char *center_id[] = {"standard-center", "bound-center"};
+static char *std_center_id[] = {"density-center", "modified-com"};
+
+int get_n_center() {return n_center;}
+int get_center() {return which_center;}
+
+char *get_center_id(int center_number)		// default = -1
+{
+    // Don't attempt to tie the descriptive string to the strings used
+    // in the root dyn stories.
+
+    if (center_number < 0)
+	return get_center_id(which_center);	// print the current center
+    else if (center_number >= n_center)
+	return NULL;
+    else if (center_number == 0) {
+	if (which_std == 1)
+	    return std_center_id[0];
+	else if (which_std == 2)
+	    return std_center_id[1];
+	else
+	    return center_id[center_number];
+    } else
+	return center_id[center_number];
+}
+
 local bool scan_root_nodes(worldbundleptr wh[],
 			   int nh,
 			   bool verbose,
@@ -269,6 +301,11 @@ local bool scan_root_nodes(worldbundleptr wh[],
 		    b->set_vel(getvq(b->get_dyn_story(), vel_id));
 		    b->clear_acc();
 		    b->clear_jerk();
+
+		    if (which_center != 0)
+			which_std = 0;
+		    else if (which_std == 0)
+			which_std = getiq(b->get_dyn_story(), "center_type");
 		}
 
 		b = b->get_next();
@@ -291,21 +328,22 @@ local bool scan_root_nodes(worldbundleptr wh[],
     return true;
 }
 
-static int  n_center = 2;
-static char *center_id[] = {"standard-center", "bound-center"};
-static int  which_center = 0;
-
-char *set_next_center(worldbundleptr wh[],	// entire worldbundle array
-		      int nh,
-		      bool verbose)		// default = false
+char *set_center(worldbundleptr wh[],	// entire worldbundle array
+		 int nh,
+		 int new_center,
+		 bool verbose)		// default = false
 {
-    // Set all root nodes to use the next defined center, and return
-    // a string describing that center.  Don't attempt to tie the
-    // descriptive string to the strings used in the root dyn stories.
+    // Set all root nodes to use the specified center, and return
+    // a string describing that center.
+
+    if (new_center < 0 || new_center >= n_center) {
+	if (verbose)
+	    cerr << "set_next_center: invalid center number" << endl;
+	return NULL;
+    }
 
     int old_center = which_center;
-    which_center++;
-    if (which_center >= n_center) which_center = 0;
+    which_center = new_center;
 
     char center_pos_id[128], center_vel_id[128];
     if (which_center == 0) {
@@ -325,21 +363,16 @@ char *set_next_center(worldbundleptr wh[],	// entire worldbundle array
 	scan_root_nodes(wh, nh, false, center_pos_id, center_vel_id, false);
 	if (verbose)
 	    cerr << "set_next_center: new center is "
-		 << center_id[which_center] << endl;
+		 << get_center_id(which_center) << endl;
     } else {
 	if (verbose)
 	    cerr << "set_next_center: unable to change center to "
-		 << center_id[which_center] << endl;
+		 << get_center_id(which_center) << endl;
 	which_center = old_center;
     }
 
-    // Could in principle refine the which_center == 1 return to distinguish
-    // between density center and modified_com (not done).
-
-    return center_id[which_center];
+    return get_center_id(which_center);
 }
-
-char *get_center_id() {return center_id[which_center];}
 
 static vector center_pos = 0;
 vector get_center_pos()	{return center_pos;}
