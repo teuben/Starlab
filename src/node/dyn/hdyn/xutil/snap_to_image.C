@@ -977,7 +977,7 @@ main(int argc, char** argv)
 	    } else {
 		strcpy(ext1, ".gif");
 		strcpy(ext2, ".gif");
-		sprintf(command, "xargs gifsicle `ls %s %s.*%s` -o %s%s",
+		sprintf(command, "xargs gifsicle `/bin/ls %s %s.*%s` -o %s%s",
 			rev, output_file_id, ext1, output_file_id, ext2);
 	    }
 
