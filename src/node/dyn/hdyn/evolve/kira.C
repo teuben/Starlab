@@ -1449,6 +1449,7 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
     real cpu_0 = cpu_time();
 
     b->set_system_time(t);
+    b->set_time(t);
     // b->to_com();
     initialize_system_phase1(b, t);
     initialize_system_phase2(b, 3, 0);			// "0" here means
@@ -1501,19 +1502,35 @@ local bool check_sync(hdyn* b)
 {
     bool need_new_list = false;
 
-    for_all_nodes(hdyn, b, bb)
+    for_all_nodes(hdyn, b, bb) {
+
+#if 0
+	if (bb->name_is("2009")) {
+	    cerr << bb->format_label() << " time = "
+		 << bb->get_time() << " (";
+	    xprint(bb->get_time(), cerr, false);
+	    cerr << ")" << endl;
+	    cerr << "system time = "
+		 << b->get_system_time() << " (";
+	    xprint(b->get_system_time(), cerr, false);
+	    cerr << ")" << endl;
+	}
+#endif
+
 	if (bb->get_time() != b->get_system_time()
 	     && bb->get_kepler() == NULL) {
-	  cerr << "check_sync warning:  node "
-	       << bb->format_label() << " not synchronized" << endl
-	       << "                     system time = "
-	       << b->get_system_time() << " (";
-	  xprint(b->get_system_time(), cerr, false); cerr << ")" << endl;
-	  cerr << "                     node time   = "
-	       << bb->get_time() << " (";
-	  xprint(bb->get_time(), cerr, false); cerr << ")" << endl;
-	  need_new_list = true;
+
+	    cerr << "check_sync warning:  node "
+		 << bb->format_label() << " not synchronized" << endl
+		 << "                     system time = "
+		 << b->get_system_time() << " (";
+	    xprint(b->get_system_time(), cerr, false); cerr << ")" << endl;
+	    cerr << "                     node time   = "
+		 << bb->get_time() << " (";
+	    xprint(bb->get_time(), cerr, false); cerr << ")" << endl;
+	    need_new_list = true;
 	}
+    }
 
     return need_new_list;
 }
@@ -1855,7 +1872,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 		 << endl;
     }
 
-    xreal t = b->get_time();		// current time
+    xreal t = b->get_system_time();	// current time	(was get_time()...)
 
     real tt = t;			// use to avoid xreal problems with
 					// possible VERY_LARGE_NUMBERs below
@@ -1948,15 +1965,10 @@ local void evolve_system(hdyn * b,	       // hdyn array
     bool tree_changed = true;	// used by fast_get_nodes_to_move;
     				// set by integration/evolution routines
 
-
-
-
-
+    cerr << "check_sync #0 at t = " << b->get_system_time() << " (";
+    xprint(b->get_system_time(), cerr, false);
+    cerr << ")" << endl;
     check_sync(b);
-
-
-
-
 
     while (t <= t_end) {
 
@@ -2100,6 +2112,11 @@ local void evolve_system(hdyn * b,	       // hdyn array
 		cerr << endl << "***** Calculation STOPped by user at time "
 		     << t << " *****" << endl << endl;
 	    }
+
+	    cerr << endl << "check_sync #1 at t = "
+		 << b->get_system_time() << " (";
+	    xprint(b->get_system_time(), cerr, false);
+	    cerr << ")" << endl;
 
 	    tree_changed |= check_sync(b);
 	    update_step(ttmp, t_sync, dt_sync);
@@ -2305,6 +2322,12 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	xreal t_prev = b->get_system_time();
 
+#if 0
+	cerr << "old time = "; xprint(t, cerr, true);
+	cerr << "new time = "; xprint(ttmp, cerr, true);
+	cerr << "xreal dt = "; xprint((xreal)next_nodes[0]->get_timestep(), cerr, true);
+#endif
+
 	b->set_system_time(t = ttmp);
 	b->set_time(t);
 
@@ -2434,6 +2457,52 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    pp3("(21,100021)");
 	    pp3("(23,100023)");
 	}
+#endif
+
+#if 0
+	cerr << endl << "check_sync #2 at t = "
+	     << b->get_system_time() << " (";
+	xprint(b->get_system_time(), cerr, false);
+	cerr << ")" << endl;
+	int n_unp = 0;
+	for (int ii = 0; ii < n_next; ii++) {
+	    if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
+		hdyn *bb = next_nodes[ii];
+		if (bb->get_kepler()) n_unp++;
+	    }
+	}
+	PRC(n_next); PRL(n_unp);
+	for (int ii = 0; ii < min(2,n_next); ii++) {
+	    if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
+		hdyn *bb = next_nodes[ii];
+		if (ii > 0) cerr << "  ";
+		cerr << bb->format_label() << " "
+		     << bb->get_timestep() << " ";
+		xprint(bb->get_time(), cerr, false);
+	    }
+	}
+	cerr << endl;
+	    
+	for (int ii = 0; ii < n_next; ii++) {
+	    if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
+		hdyn *bb = next_nodes[ii];
+
+		if (bb->get_time() != b->get_system_time()
+		    && bb->get_kepler() == NULL) {
+		    cerr << "check_sync warning:  node "
+			 << bb->format_label() << " not synchronized" << endl
+			 << "                     system time = "
+			 << b->get_system_time() << " (";
+		    xprint(b->get_system_time(), cerr, false);
+		    cerr << ")" << endl;
+		    cerr << "                     node time   = "
+			 << bb->get_time() << " (";
+		    xprint(bb->get_time(), cerr, false);
+		    cerr << ")" << endl;
+		}
+	    }
+	}
+	cerr << "...done" << endl;
 #endif
 
 	bool force_energy_check = false;
