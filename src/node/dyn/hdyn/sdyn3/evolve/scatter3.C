@@ -346,6 +346,7 @@ void scatter3(initial_state3 & init,
 	inter.r_min[2] = final.sma * (final.ecc - 1); // (Approximately)
 	inter.r_min_min = inter.r_min[0];
 	inter.descriptor = non_resonance;
+	inter.n_snap = 0;
 
 	return;
     }
@@ -361,6 +362,9 @@ void scatter3(initial_state3 & init,
     // Evolve the system until the interaction is over or a collision occurs.
 
     inter.n_kepler = 0;
+    inter.n_snap = 0;
+
+    putiq(b->get_log_story(), "total_snaps", 0);
 
     do {
 
@@ -442,6 +446,9 @@ void scatter3(initial_state3 & init,
 	else
 	    inter.descriptor = democratic_resonance;
     }
+
+    if (find_qmatch(b->get_log_story(), "total_snaps"))
+	inter.n_snap = getiq(b->get_log_story(), "total_snaps");
 
     // Set final state:
 

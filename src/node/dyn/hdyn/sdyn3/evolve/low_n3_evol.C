@@ -744,6 +744,8 @@ bool low_n3_evolve(sdyn3* b,	   // sdyn3 array
     // making this integration step completely self-contained.
 
     real t = b->get_time();
+    if (find_qmatch(b->get_log_story(), "total_snaps"))
+	total_snaps = getiq(b->get_log_story(), "total_snaps");
 
     // Note: Should have delta_t be a multiple of each dt for proper
     //	     synchronization.  Note however that t may not be a multiple
@@ -890,7 +892,8 @@ bool low_n3_evolve(sdyn3* b,	   // sdyn3 array
 		    put_node(cout, *b, false, 2);
 		    cout << flush;
 		    total_snaps++;
-
+		    putiq(b->get_log_story(), "total_snaps", total_snaps);
+		    
 		    if (snap_limit > 0 && total_snaps > snap_limit)
 			return true;
 

@@ -94,8 +94,9 @@ void print_intermediate(ostream & s, intermediate_state3 & i,
     s << "intermediate_state:" << endl;
     s << "  " << state_string(i.descriptor)
       << "  n_osc = " << i.n_osc
-      << "  n_kepler = " << i.n_kepler
-      << endl;
+      << "  n_kepler = " << i.n_kepler;
+    if (i.n_snap > 0) s << "  n_snap = " << i.n_snap;
+    s << endl;
 
     if (i.r_min_min * i.r_min_min < 0.9 * VERY_LARGE_NUMBER)
 	{
