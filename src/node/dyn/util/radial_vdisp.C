@@ -22,40 +22,90 @@
 
 #ifndef TOOLBOX
 
-void get_radial_vdisp(dyn * b, int n_zones,
-		      vector cpos, vector cvel,
-		      real r[], real v2[])
-{
-    if (n_zones < 2) return;
+// Prototype function.  Could also be implemented using get_radial_profile()
+// with a target function of v*v.
 
-    // Determine the mass and total mv^2 per bin.
+// Sorting code is taken almost verbatim from lagrad.C and radial_density.C.
+
+typedef struct {
+    real r_sq;
+    real mass;
+    real v_sq;
+} rmv, *rmv_ptr;
+
+//-----------------------------------------------------------------------------
+//  compare_radii  --  compare the radii of two particles
+//-----------------------------------------------------------------------------
+
+local int compare_radii(const void * pi, const void * pj)  // increasing radius
+{
+    if (((rmv_ptr)pi)->r_sq > ((rmv_ptr)pj)->r_sq)
+        return +1;
+    else if (((rmv_ptr)pi)->r_sq < ((rmv_ptr)pj)->r_sq)
+        return -1;
+    else
+        return 0;
+}
+
+int get_radial_vdisp(dyn *b, vector cpos, vector cvel,
+		     int n_zones, real r[], real v2[])
+{
+    if (n_zones < 2) return 1;
+
+    // Set up an array of (r_sq, mass, vel) triples.
+
+    int n = b->n_daughters();	// (NB implicit loop through the entire system)
+
+    // Would be possible to determine n and set up the array simultaneously
+    // using malloc and realloc.  Not so easy with new...
+    
+    rmv_ptr table = new rmv[n];
+
+    if (!table) {
+	cerr << "get_radial_densities: insufficient memory for table"
+	     << endl;
+	return 1;
+    }
+
+    int i = 0;
+    for_all_daughters(dyn, b, bi) {
+	table[i].r_sq = square(bi->get_pos() - cpos);
+	table[i].mass = bi->get_mass();
+	table[i].v_sq = square(bi->get_vel() - cvel);
+	i++;
+    }
+
+    // Sort the array by radius (may repeat work done elsewhere...).
+
+    qsort((void *)table, (size_t)i, sizeof(rmv), compare_radii);
+
+    // Initialize the target arrays (mass and mv^2).
 
     real mass[n_zones];
+    int j;
+    for (int j = 0; j < n_zones; j++) mass[j] = v2[j] = 0;
 
-    for (int i = 0; i < n_zones; i++)
-	mass[i] = v2[i] = 0;
+    // Bin the (ordered) data.
 
-    for_all_daughters(dyn, b, bb) {
+    j = 0;
+    real rj2 = r[j]*r[j];
 
-	real rr = abs(bb->get_pos()-cpos);	// would be more efficient
-						// to use the square...
-
-	// Don't assume linear binning, so locate the bin the hard way.
-	// Could do much better here if we sorted the radii first.
-
-	for (int i = 0; i < n_zones; i++)
-	    if (rr <= r[i]) {
-		mass[i] += bb->get_mass();
-		v2[i] += bb->get_mass() * square(bb->get_vel() - cvel);
-		break;
-	    }
+    for (i = 0; i < n; i++) {
+	real ri_sq = table[i].r_sq;
+	while (ri_sq > rj2) {
+	    j++;
+	    if (j >= n_zones) break;
+	    rj2 = r[j]*r[j];
+	}
+	if (j >= n_zones) break;
+	mass[j] += table[i].mass;
+	v2[j] += table[i].mass * table[i].v_sq;
     }
 
     // Convert from mv^2 to <v^2>.
 
-    for (int i = 0; i < n_zones; i++)
-	if (mass[i] > 0) v2[i] /= mass[i];
-
+    for (j = 0; j < n_zones; j++)
+	if (mass[j] > 0) v2[j] /= mass[j];
 }
 
 #else
@@ -127,7 +177,7 @@ main(int argc, char ** argv)
 
 	// Compute and print the velocity dispersion array.
 
-	get_radial_vdisp(b, n_zones, cpos, cvel, r, v2);
+	get_radial_vdisp(b, cpos, cvel, n_zones, r, v2);
 
 	real r0 = 0;
 	for (int i = 0; i < n_zones; i++) {

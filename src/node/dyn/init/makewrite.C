@@ -22,6 +22,7 @@ main(int argc, char ** argv)
 {
     char  *comment;
     bool  c_flag = false;
+    bool  C_flag = false;
 
     real v_rand = 0;
 

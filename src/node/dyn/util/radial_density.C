@@ -22,37 +22,89 @@
 
 #ifndef TOOLBOX
 
-void get_radial_densities(dyn * b, int n_zones,
-			  vector cpos,
-			  real r[], real rho[])
+// Prototype function.  Could also be implemented using get_density_profile()
+// with a mass selection function that accepts all stars.
+
+
+// Sorting code is taken almost verbatim from lagrad.C.
+
+typedef struct {
+    real r_sq;
+    real mass;
+} rm_pair, *rm_pair_ptr;
+
+//-----------------------------------------------------------------------------
+//  compare_radii  --  compare the radii of two particles
+//-----------------------------------------------------------------------------
+
+local int compare_radii(const void * pi, const void * pj)  // increasing radius
 {
-    if (n_zones < 2) return;
+    if (((rm_pair_ptr) pi)->r_sq > ((rm_pair_ptr) pj)->r_sq)
+        return +1;
+    else if (((rm_pair_ptr)pi)->r_sq < ((rm_pair_ptr)pj)->r_sq)
+        return -1;
+    else
+        return 0;
+}
 
-    // Determine the mass per bin.
+int get_radial_densities(dyn *b, vector cpos,
+			 int n_zones, real r[], real rho[])
+{
+    if (n_zones < 2) return 1;
 
-    for (int i = 0; i < n_zones; i++) rho[i] = 0;
+    // Set up an array of (r_sq, mass) pairs.
 
-    for_all_daughters(dyn, b, bb) {
+    int n = b->n_daughters();	// (NB implicit loop through the entire system)
 
-	real rr = abs(bb->get_pos()-cpos);	// would be more efficient
-						// to use the square...
+    // Would be possible to determine n and set up the array simultaneously
+    // using malloc and realloc.  Not so easy with new...
+    
+    rm_pair_ptr table = new rm_pair[n];
 
-	// Don't assume linear binning, so locate the bin the hard way.
-	// Could do much better here if we sorted the radii first.
+    if (!table) {
+	cerr << "get_radial_densities: insufficient memory for table"
+	     << endl;
+	return 1;
+    }
 
-	for (int i = 0; i < n_zones; i++)
-	    if (rr <= r[i]) {
-		rho[i] += bb->get_mass();
-		break;
-	    }
+    int i = 0;
+    for_all_daughters(dyn, b, bi) {
+	table[i].r_sq = square(bi->get_pos() - cpos);
+	table[i].mass = bi->get_mass();
+	i++;
+    }
+
+    // Sort the array by radius (may repeat work done elsewhere...).
+
+    qsort((void *)table, (size_t)i, sizeof(rm_pair), compare_radii);
+
+    // Initialize the density array.
+
+    int j;
+    for (j = 0; j < n_zones; j++) rho[j] = 0;
+
+    // Bin the (ordered) data.
+
+    j = 0;
+    real rj2 = r[j]*r[j];
+
+    for (i = 0; i < n; i++) {
+	real ri_sq = table[i].r_sq;
+	while (ri_sq > rj2) {
+	    j++;
+	    if (j >= n_zones) break;
+	    rj2 = r[j]*r[j];
+	}
+	if (j >= n_zones) break;
+	rho[j] += table[i].mass;
     }
 
     // Convert from mass to density.
 
-    real v0 = 0;
-    for (int i = 0; i < n_zones; i++) {
-	real v1 = pow(r[i], 3);
-	rho[i] /= (4*M_PI/3) * (v1 - v0);	// dM --> dM/dV
+    real v0 = 0;	// assume that the first zone extends in to r = 0
+    for (j = 0; j < n_zones; j++) {
+	real v1 = pow(r[j], 3);
+	rho[j] /= (4*M_PI/3) * (v1 - v0);	// dM --> dM/dV
 	v0 = v1;
     }
 }
@@ -119,14 +171,14 @@ main(int argc, char ** argv)
 	    r_max = sqrt(r_max);
 	}
 
-	// Set up the radial array.
+	// Set up a linear radial array.
 
 	for (int i = 0; i < n_zones; i++)
 	    r[i] = (i+1) * r_max / n_zones;	// r[i] = outer edge of zone i
 
 	// Compute and print the density array.
 
-	get_radial_densities(b, n_zones, cpos, r, rho);
+	get_radial_densities(b, cpos, n_zones, r, rho);
 
 	real r0 = 0;
 	for (int i = 0; i < n_zones; i++) {

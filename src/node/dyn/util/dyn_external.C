@@ -277,7 +277,7 @@ local real logLambda(dyn *b, real r)
     if (beta <= 0 || !b->get_pl())
 	LogLambda = 0;
 
-    if (mass <= 0)				// no physical mass scale
+    if (mass_unit <= 0)				// no physical mass scale
 	LogLambda = 1;
     else {
 
