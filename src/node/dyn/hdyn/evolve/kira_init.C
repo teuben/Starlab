@@ -653,8 +653,8 @@ local void kira_system_id(int argc, char** argv)
     const time_t tt = time(NULL);
     cerr << "    on  " << ctime(&tt);
 
-    cerr << "Command line reference:  " << argv[0] << endl;
-    cerr << "Arguments: ";
+    cerr << "command line reference:  " << argv[0] << endl;
+    cerr << "arguments: ";
     for (int i = 1; i < argc; i++) {
 	cerr << " " << argv[i];
 	if (i%20 == 0) cerr << endl << "           ";
@@ -678,7 +678,7 @@ local void kira_system_id(int argc, char** argv)
 	if (file) {
 
 	    file >> tmp;
-	    cerr << "System `which " << argv[0] << "` = " << tmp << endl;
+	    cerr << "system `which " << argv[0] << "` = " << tmp << endl;
 
 	    file.close();
 	    sprintf(tmp, "rm ./KIRA_TEMP");
@@ -687,7 +687,7 @@ local void kira_system_id(int argc, char** argv)
 
     }
 
-    cerr << "Current directory = " << getenv("PWD") << endl;
+    cerr << "current directory = " << getenv("PWD") << endl;
     cerr << endl;
 }
 
@@ -848,13 +848,13 @@ bool kira_initialize(int argc, char** argv,
     if (read_from_file) {
 	ifstream s(infile);
 	if (!s) {
-	    cerr << "Data file " << infile << " not found." << endl;
+	    cerr << "data file " << infile << " not found." << endl;
 	    exit(1);
 	}
-	cerr << "Input file is " << infile << endl;
+	cerr << "input file is " << infile << endl;
 	b = get_hdyn(s);
     } else {
-	cerr << "Reading input from stdin" << endl;
+	cerr << "reading input from stdin" << endl;
 	b = get_hdyn(cin);
     }
 
@@ -1422,10 +1422,6 @@ bool kira_initialize(int argc, char** argv,
 
 	    // Command line specified sec in solar radii.  Convert it to
 	    // N-body units for use by check_merge_nodes (which uses d_nn_sq).
-
-	    cerr << "set stellar merger criterion in starbase (SIF= "
-		 << sec << ")" << endl; 
-	    b->get_starbase()->set_stellar_merger_criterion_in_double_star(sec);
 
 	    sec = b->get_starbase()->conv_r_star_to_dyn(sec);
 	    b->set_stellar_encounter_criterion_sq(pow(sec, 2));

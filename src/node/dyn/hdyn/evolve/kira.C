@@ -1444,7 +1444,7 @@ local int integrate_list(hdyn * b,
 local void full_reinitialize(hdyn* b, xreal t, bool verbose,
 			     bool init = false)
 {
-    cerr << "\nReinitializing system at time " << t << endl;
+    cerr << endl << "reinitializing system at time " << t << endl;
 
     real cpu_0 = cpu_time();
 
@@ -1902,8 +1902,8 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	dt_alt3 = 10;
     }
 
-    t_alt1 = 0;
-    t_alt2 = 0;
+    t_alt1 = tt;			// assume that these times work
+    t_alt2 = tt;			// with the alt output intervals
 
     //----------------------------------------------------------------------
 
@@ -1922,8 +1922,8 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	PRC(t_snap); PRC(t_log); PRC(t_sync); PRC(t_esc); PRL(t_fulldump);
 
 	if (alt_flag) {
-	    cerr << endl << "Additional output:  ";
-	    PRC(dt_alt1); PRC(dt_alt2); PRL(dt_alt3);
+	    cerr << endl << "additional output:  ";
+	    PRC(t_alt1); PRC(dt_alt1); PRC(dt_alt2); PRL(dt_alt3);
 	}
 
 	ko->print();

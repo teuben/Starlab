@@ -6,8 +6,6 @@ real starbase::r_conv_star_to_dyn = -1; // length conversion factor
 real starbase::t_conv_star_to_dyn = -1; // time conversion factor
 
 bool starbase::use_hdyn = true;
-real starbase::SIF = 1;
-
  
 #define Rsun_pc 2.255e-8		// R_sun/1 parsec = 6.960e+10/3.086e+18;
 

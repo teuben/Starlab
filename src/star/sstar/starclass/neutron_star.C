@@ -347,7 +347,7 @@ bool neutron_star::super_nova() {
 #endif
      }
 
-     //     real v_kick = cnsts.super_nova_kick(Paczynski_velocity_kick, v_disp);
+//     real v_kick = cnsts.super_nova_kick(Paczynski_velocity_kick, v_disp);
      real v_kick = cnsts.super_nova_kick(no_velocity_kick, v_disp);
 
      // real v_kick     = cnsts.super_nova_kick(); //random_kick();

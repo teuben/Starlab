@@ -106,7 +106,7 @@ void hdyn::reconstruct_perturbed_list()
     }
 
     cerr << endl
-	 << "Rebuilt perturbed_list; n_perturbed = " << n_perturbed
+	 << "rebuilt perturbed_list; n_perturbed = " << n_perturbed
 	 << endl;
 }
 
@@ -114,7 +114,7 @@ void hdyn::dump_perturbed_list()
 {
     if (n_perturbed <= 0) return;
 
-    cerr << "Perturbed_list (n_perturbed = " << n_perturbed << "):"
+    cerr << "perturbed_list (n_perturbed = " << n_perturbed << "):"
 	 << endl;
 
     for (int i = 0; i < n_perturbed; i++)
