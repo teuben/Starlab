@@ -2,7 +2,7 @@
 //// snap_to_image:  Construct images (in Sun rasterfile format) of
 ////                 a series of snapshots.
 ////
-//// Options:   -1           combine all frames in a single image  [yes]
+//// Options:   -1           toggle combine all frames in a single image [yes]
 ////            -c           compress the image file(s) using gzip [no]
 ////            -C colormap  specify a colormap file name [no]
 ////            -f filename  specify root name of image files [snap, - = stdout]
@@ -382,7 +382,7 @@ main(int argc, char** argv)
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
-	    case '1':	combine = true;
+	    case '1':	combine = !combine;
 			break;
 	    case 'c':	compress = true;
 			break;
@@ -670,6 +670,10 @@ main(int argc, char** argv)
 
 		    if (radius)
 			r = psize * bb->get_radius() * rfac;
+
+		    // Single pixels are too small for an animation.
+
+		    if (!combine) r = max(r, 1.0);
 
 		    add_point(a, nx, ny, x, y, i, j, grid, r, color, z, zarray);
 		}
