@@ -773,7 +773,7 @@ main(int argc, char ** argv) {
     char* filename = "ccd.fits";
     extern char *poptarg;
     int c;
-    char* param_string = "A:a:B:bcx:y:d:F:f:P:R:sS:L:x:y:N:v";
+    char* param_string = "A:a:B:bcx:y:d:F:f:p:P:R:sS:L:x:y:N:v";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
         switch(c)

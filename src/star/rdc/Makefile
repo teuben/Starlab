@@ -17,7 +17,7 @@
 
 
 CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC_STAR) -I$(INC) $(STARLAB_CFITSIOINC)
-LIBFLAGS	= -L$(LIB) -lrdc -ldstar -lsstar -ldyn -lnode -lstd $(STARLAB_CFITSIOLIB) -lm
+LIBFLAGS	= -L$(LIB) -lrdc -ldstar -lsstar -lhdyn -l_dyn_ -ldyn -lnode -lstd $(STARLAB_CFITSIOLIB) -lm
 DEPEND_LIBS	= $(LIB)/libsstar.a  $(LIB)/libdstar.a $(LIB)/librdc.a \
 	          $(LIB)/libdyn.a $(LIB)/libnode.a   $(LIB)/libstd.a \
 		  $(STARLAB_CFITSIOINC)/libcfitsio.a

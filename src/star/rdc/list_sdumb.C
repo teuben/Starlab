@@ -6,7 +6,7 @@
 
 #include "single_star.h"
 #include "sstar_to_dyn.h"
-#include "dyn.h"
+#include "hdyn.h"
 
 #ifdef TOOLBOX
 
@@ -27,7 +27,17 @@ local void combine_ubvri(real Up, real Bp, real Vp, real Rp, real Ip,
 
 #endif
 
-local void get_UBVRI_of_star(dyn *bi, vector pos,
+local bool star_is_bound(hdyn* b, vector& cod_vel) {
+
+  bool bound = false;
+  if (0.5*square(b->get_vel()-cod_vel) + b->get_pot() < 0) 
+    bound = true;
+
+    return bound;
+
+}
+
+local void get_UBVRI_of_star(hdyn *bi, vector pos,
 	real &Us, real &Bs, real &Vs, real &Rs, real &Is) {
 
 
@@ -94,11 +104,15 @@ local void get_UBVRI_of_star(dyn *bi, vector pos,
      }
 }
 
-local void print_star(dyn *bi, vector pos, vector vel,
-	real &Up, real &Bp, real &Vp, real &Rp, real &Ip) { 
+local void print_star(hdyn *bi, bool bound, vector pos, vector vel,
+		      real &Up, real &Bp, real &Vp, real &Rp, real &Ip, 
+		      bool verbose) { 
 
 
   int id = bi->get_index();
+
+  //  vector cod_vel = 0;
+  //  bool bound = star_is_bound(bi, cod_vel);
 
   // To solar radii
   //  vector pos = bi->get_pos() - dc_pos;
@@ -188,14 +202,25 @@ local void print_star(dyn *bi, vector pos, vector vel,
  	           Us, Bs, Vs, Rs, Is,
                    U, B, V, R, I);
 
-     cout << " Time= " << time << " id= " << id
-          << " type= " << stype << " m= " << M_tot << " R= " << R_eff
-          << " L= " << L_eff 
-	  << " T_eff= " << T_eff 
-	  << " r= "  << pos[0] << " " << pos[1] << " " << pos[2] 
-	  << " v= "  << vel[0] << " " << vel[1] << " " << vel[2] 
-          << " ubvri= "<<  U << " " << B << " " << V << " " << R << " "
-          << I	<< " :: ";
+     if(verbose)
+       cout << " Time= " << time << " id= " << id << " b= " << bound 
+	    << " type= " << stype << " m= " << M_tot << " R= " << R_eff
+	    << " L= " << L_eff 
+	    << " T_eff= " << T_eff 
+	    << " r= "  << pos[0] << " " << pos[1] << " " << pos[2] 
+	    << " v= "  << vel[0] << " " << vel[1] << " " << vel[2] 
+	    << " ubvri= "<<  U << " " << B << " " << V << " " << R << " "
+	    << I	<< " :: ";
+     else {
+       cout << time <<" "<< id << bound <<" "
+	    <<" "<< stype <<" "
+	    << M_tot <<" "<< R_eff <<" "<< L_eff  <<" "<< T_eff 
+	    <<" "<< pos[0] << " " << pos[1] << " " << pos[2] 
+	    <<" "<< vel[0] << " " << vel[1] << " " << vel[2] 
+	    <<" "<< U << " " << B << " " << V << " " << R << " "
+	    << I	<< " ";
+       //       PRC(id);PRC(pos[0]);PRC(pos[1]);PRL(pos[2]);
+     }
 
      Up=U;
      Bp=B;
@@ -203,8 +228,8 @@ local void print_star(dyn *bi, vector pos, vector vel,
      Ip=I;
 }
 
-local int print_binary_recursive(dyn *b, vector dc_pos, vector dc_vel,
-	real &U, real &B, real &V, real &R, real &I) { 
+local int print_binary_recursive(hdyn *b, vector dc_pos, vector dc_vel,
+	real &U, real &B, real &V, real &R, real &I, bool verbose) { 
 
   int nb = 0;
   if (b->get_oldest_daughter()) {
@@ -215,20 +240,31 @@ local int print_binary_recursive(dyn *b, vector dc_pos, vector dc_vel,
 //    vector v_com  = dyn_something_relative_to_root(b, &dyn::get_vel) -dc_vel;
 
     real m_tot = b->get_starbase()->conv_m_dyn_to_star(b->get_mass());
+    //    PRC(m_tot);PRC(r_com);PRL(v_com);
 
-    for_all_daughters(dyn, b, bb)
+    for_all_daughters(hdyn, b, bb)
       if (bb->n_leaves() >= 2) {
-	cout << "\nBinary: ";
+	if(verbose) cout << "\nBinary: ";
+	else cout << "\n2 ";
 	U=B=V=R=I=VERY_LARGE_NUMBER;
-	nb += print_binary_recursive(bb, dc_pos, dc_vel, U, B, V, R, I);
+	nb += print_binary_recursive(bb, dc_pos, dc_vel, U, B, V, R, I,
+				     verbose);
       }
       else {
 	if (bb->get_parent()==bb->get_root()) {
 	  U=B=V=R=I=VERY_LARGE_NUMBER;
-	  cout << "\nStar:: ";
+	  if(verbose) cout << "\nStar:: ";
+	  else cout << "\n1 ";
 	}
-        print_star(bb, bb->get_pos()-r_com, bb->get_vel()-v_com,
-	           U, B, V, R, I);
+
+	// Specific for star clusters which are not at the COM.
+	// Such as Arches star cluster models.
+	//        print_star(bb, bb->get_pos()-r_com, bb->get_vel()-v_com,
+	//           U, B, V, R, I, verbose);
+	vector nul = 0;
+	bool bound = star_is_bound(bb, nul);
+        print_star(bb, bound, bb->get_pos(), bb->get_vel(),
+	           U, B, V, R, I, verbose);
 //	if (bb->get_parent()==bb->get_root())
 //	   cerr << endl;
       }
@@ -237,7 +273,7 @@ local int print_binary_recursive(dyn *b, vector dc_pos, vector dc_vel,
   return nb;
 }
 
-local void print_integrated_cluster(dyn *b, vector dc_pos,
+local void print_integrated_cluster(hdyn *b, vector dc_pos,
 	                            real r_min, real r_max,
 	                            real v_min, real v_max,
 	real &U, real &B, real &V, real &R, real &I,
@@ -257,7 +293,7 @@ local void print_integrated_cluster(dyn *b, vector dc_pos,
     real Us, Bs, Vs, Rs, Is;
     real U, B, V, R, I;
     U=B=V=R=I=VERY_LARGE_NUMBER;
-    for_all_leaves(dyn, b, bb) {
+    for_all_leaves(hdyn, b, bb) {
 	r = bb->get_pos()-dc_pos;
 	if(project<=2)
           rcom = r[project];
@@ -302,11 +338,12 @@ main(int argc, char ** argv)
     real v_max = -VERY_LARGE_NUMBER;
     real v_min = VERY_LARGE_NUMBER;
 
+    bool verbose = false;
     int project = 0; // project along x, y, z or no projection [3]
 
     extern char *poptarg;
     int c;
-    char* param_string = "CV:v:R:r:p:";
+    char* param_string = "CV:vR:r:p:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c)
@@ -315,7 +352,9 @@ main(int argc, char ** argv)
 	              break;
 	    case 'V': v_max = atof(poptarg);
 	              break;
-	    case 'v': v_min = atof(poptarg);
+		      //	    case 'v': v_min = atof(poptarg);
+		      //	              break;
+	    case 'v': verbose = !verbose;
 	              break;
 	    case 'R': r_max = atof(poptarg);
 	              break;
@@ -328,20 +367,21 @@ main(int argc, char ** argv)
                       exit(1);
 	    }
 
-    dyn *b = NULL;
+    hdyn *b = NULL;
     int count = 0;
 
     bool cod, try_com = false;
     vector dc_pos = 0;
     vector dc_vel = 0;
-    while (b = get_dyn(cin)) {
+    while (b = get_hdyn(cin)) {
 
 	real rd_min = b->get_starbase()->conv_r_star_to_dyn(r_min);
 	real rd_max = b->get_starbase()->conv_r_star_to_dyn(r_max);
 
-	cout << "\n\nTime = "
-             << b->get_starbase()->conv_t_dyn_to_star(b->get_system_time())
-	     << endl;
+	if(verbose)
+	  cout << "\n\nTime = "
+	       << b->get_starbase()->conv_t_dyn_to_star(b->get_system_time())
+	       << endl;
 
 	if (find_qmatch(b->get_dyn_story(), "density_center_pos")) {
       
@@ -370,8 +410,10 @@ main(int argc, char ** argv)
 	real U,B,V,R,I;
 	U=B=V=R=I=VERY_LARGE_NUMBER;
 
+	//	PRC(dc_pos);PRL(dc_vel);
 	if (!C_flag)
-	   print_binary_recursive(b, dc_pos, dc_vel, U, B, V, R, I);
+	   print_binary_recursive(b, dc_pos, dc_vel, U, B, V, R, I,
+				  verbose);
 	else
   	   print_integrated_cluster(b, dc_pos, rd_min, rd_max, v_min,
 v_max,

@@ -419,7 +419,7 @@ bool low_n_evolve(sdyn * b,       // sdyn array
 	    put_node(cout, *c);
 	    delete_node(c);
 */
-	  //	    put_node(cout, *b);
+	    put_node(cout, *b);
 
 	    cout << flush; 
 	    t_snap += dt_snap;

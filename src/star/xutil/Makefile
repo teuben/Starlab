@@ -17,15 +17,20 @@
 
 CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC_STAR) -I$(INC) \
 		  $(STARLAB_GFX_CFLAGS) $(STARLAB_EXTRAS)
-LIBFLAGS	= -L$(LIB) -lsstar -lsdyn3 -lhdyn -ldyn -lnode \
-	   	  -lstd -llux $(STARLAB_POSIX_LIB) \
-	   	  -L$(STARLAB_X11LIB) -lX11 $(STARLAB_XLIB) -lm
-DEPEND_LIBS	= $(LIB)/libstar.a $(LIB)/libsdyn3.a $(LIB)/libhdyn.a \
-		  $(LIB)/libdyn.a $(LIB)/libnode.a $(LIB)/libnode.a
+#LIBFLAGS	= -L$(LIB) -lsstar -lsdyn3 -lhdyn -ldyn -lnode \
+#	   	  -lstd -llux $(STARLAB_POSIX_LIB) \
+#	   	  $(STARLAB_X11LIB) $(STARLAB_XLIB) -lm
+#DEPEND_LIBS	= $(LIB)/libstar.a $(LIB)/libsdyn3.a $(LIB)/libhdyn.a \
+#		  $(LIB)/libdyn.a $(LIB)/libnode.a $(LIB)/libnode.a
+LIBFLAGS        = -L$(LIB) -L$(STARLAB_LIB) -lsstar \
+	          -lhdyn -l_dyn_ -ldyn -lnode \
+	          -lstd -llux $(STARLAB_POSIX_LIB) \
+	          $(STARLAB_X11LIB) $(STARLAB_XLIB) -lm
+DEPEND_LIBS     = $(LIB)/libstd.a $(LIB)/libnode.a $(LIB)/libdyn.a
 
 include $(STARLAB_PATH)/inc/Makefile.worker.inc
 
-EXECUTABLES = xhrdplot
+EXECUTABLES = xhrdplot snap_to_hrdimage
 
 xhrdplot:	 xhrdplot.C gfx_util.o dyn_util.o hrd_util.o
 	  $(STARLAB_CCC) $(CFLAGS) $(STARLAB_CCC_FLAGS) -o $(BIN)/$@ \
