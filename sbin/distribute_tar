@@ -1,4 +1,4 @@
-#!/usr/local/bin/tcsh -f
+#!/bin/sh
 
 # Distribute (using send_tar) the most recent version of starlab to a
 # number of sites.  Note that send_tar expects that an anonymous ftp
@@ -11,35 +11,26 @@
 # To place a new site on the list, just ensure that the proper ftp
 # directory exists, then add the site address to the following list.
 
-foreach site (\
+me=`hostname`
+me=`expr match "$h" "\([^.]*\)"`   ; # everything before first .
+
+for site in \
 		alexandria.c.u-tokyo.ac.jp \
 		cassini.physics.drexel.edu \
 		ftp.sns.ias.edu \
 		kepler.physics.drexel.edu \
 		merlot.physics.drexel.edu \
 		halley.physics.drexel.edu \
-						)
+do
 # (Keep halley at the end, as it may not be on the network...)
 
 #   Compare leading parts of names to avoid local copies.  Note that
 #   this will fail to send (e.g.) from merlot.physics.drexel.edu to
 #   merlot.c.u-tokyo.ac.jp!
 
-    set h = `hostname`
-    while (X$h != X$h:r)
-	set tmp = $h:r
-	set h = $tmp
-    end
-
-    set s = $site
-    while (X$s != X$s:r)
-	set tmp = $s:r
-	set s = $tmp
-    end
-
-    if (X$s != X$h) then
+    s=`expr match "$site" "\([^.]*\)"`
+    if [ "X$s" != "X$me" ]; then
 	echo Sending to $site...
 	send_tar $site hash
-    endif
-
-end
+    fi
+done

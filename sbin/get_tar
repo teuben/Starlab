@@ -1,34 +1,42 @@
-#!/usr/local/bin/tcsh -f
+#!/bin/sh
 
 # Get a Starlab-format tar file from ~/ftp/incoming.  This command
 # will not work at IAS or Komaba because the FTP directories there
 # are not globally accessible -- use "komaba_get_tar" at Komaba;
 # currently we don't have a script for use at IAS.  (Steve 12/98)
 
-set dir = ~/ftp/incoming
+dir=$HOME/ftp/incoming
 
-if (! -d $dir) then
-    echo No directory $dir
-    exit
-endif
+if [ ! -d "$dir" ]; then
+    echo "$0: No directory $dir" >&2
+    exit 1
+fi
 
-set tarfile = ' '
+tarfile=""
 
-if ($#argv < 1) then
+if [ $# -eq 0 ]; then
 
-    set tmp = ($dir/*s_tar*)  # Note: filename format assumed and ls not used
+    set -- $dir/*s_tar*  ; # Note: filename format assumed and ls not used
 
-    if ($#tmp < 1) then
-	echo No files found
-	exit
-    else
-	set tarfile = $tmp[$#tmp]
-    endif
+    # If there's a "*" in the result, the pattern didn't match anything.
+    case "$1" in
+	*\**)
+		echo "$0: No $tmp files found" >&2
+		exit 1 ;;
+    esac
+
+    # Find last arg (latest tarball?)
+    while [ $# -gt 1 ]; do
+	shift
+    done
+    tarfile="$1"
 else
-    set tarfile = $dir/$1
-endif
+    tarfile="$dir/$1"
+fi
 
-if (X$tarfile == X) exit
+if [ -z "$tarfile" ]; then
+    exit 1
+fi
 
 echo Retrieving tar file $tarfile
 cp $tarfile .
