@@ -34,9 +34,13 @@ if [ -f "$real_src" -a -s "$real_src" ]; then   # if nonempty, compile it!
     /bin/cp $real_src $src
     date=`date +%a_%b_%d_%Y,_%T_%Z`
 
-    echo "$* $src ($real_src) -o $outfile $huh -D_SRC_=\"$PWD/$real_src\" \
+#   DON'T use PWD!! -- still broken on some (Compaq) OSs... (Steve, 7/01)
+
+    pwd=`pwd`
+
+    echo "$* $src ($real_src) -o $outfile $huh -D_SRC_=\"$pwd/$real_src\" \
 					       -D_COMPILE_DATE_=\"$date\""
-    "$@"           $src   -o "$outfile" $huh -D_SRC_=\"$PWD/$real_src\" \
+    "$@"           $src   -o "$outfile" $huh -D_SRC_=\"$pwd/$real_src\" \
 					       -D_COMPILE_DATE_=\"$date\"
 
 #   (Doesn't seem to be easy to combine these repeated arguments
