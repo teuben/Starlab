@@ -65,6 +65,13 @@ void super_giant::instantaneous_element() {
   //  effective_radius =	
   radius = (0.25*pow(luminosity, 0.4)
 	 + 0.8*pow(luminosity, 0.67))/pow(relative_mass, 0.27);
+
+  if(second_dredge_up_time<=0) 
+    second_dredge_up_time = last_update_age 
+                          + (next_update_age-last_update_age) 
+                          * min(1., relative_mass
+			  / cnsts.parameters(super_giant2neutron_star));
+
 }
 
 // evolve a super_giant star upto time argument according to

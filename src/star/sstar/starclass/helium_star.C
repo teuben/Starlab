@@ -212,6 +212,9 @@ void helium_star::instantaneous_element() {
     if (envelope_mass <= 0) {
       effective_radius = radius  = core_radius;
     }
+
+    if (final_core_mass <= 0)
+      final_core_mass = final_CO_core_mass(m_tot);
 }
 
 void helium_star::evolve_element(const real end_time)
@@ -222,7 +225,7 @@ void helium_star::evolve_element(const real end_time)
     
     real m_tot = get_total_mass();
     if (relative_age>next_update_age) {
-      
+
       core_mass = COcore_mass = CO_core_mass();
       envelope_mass = m_tot - core_mass;
 	
