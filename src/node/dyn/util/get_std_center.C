@@ -84,6 +84,9 @@ int get_std_center(dyn *b, vec& pos, vec& vel,
 
 	    // Compute the modified center of mass.
 
+	    if (verbose)
+		warning("get_std_center: ignoring out-of-date mcom");
+
 	    compute_mcom(b, pos, vel);
 	    which = 2;
 	}
