@@ -4169,6 +4169,11 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 		put_node(top, cerr);
 		cerr << endl;
+
+		// Make sure multiple tree is synchronized.
+		// Call integrate_multiple(top).
+		// Reinstate new multiple configuration and continue
+		// unperturbed motion if necessary.
 	    }
 
 	    if (np > 0) delete [] pertlist;
