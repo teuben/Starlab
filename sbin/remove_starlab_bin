@@ -1,0 +1,24 @@
+# Remove $STARLAB_PATH/bin and $STARLAB_PATH/sbin from the search
+# path.  For use with (t)csh only.  Invoke by
+#
+#	source remove_starlab_bin 
+
+if (! $?STARLAB_PATH) then
+    echo STARLAB_PATH not set.
+    exit
+endif
+
+set dir1 = $STARLAB_PATH/sbin
+set dir2 = $STARLAB_PATH/bin
+
+# Rewrite the path variable.
+
+set newpath = ()
+foreach dir ($path)
+    if ($dir != $dir1 && $dir != $dir2) then
+	set newpath = ($newpath $dir)
+    endif
+end
+
+set path = ($newpath)
+rehash
