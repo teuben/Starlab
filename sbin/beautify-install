@@ -1,6 +1,6 @@
 #!/bin/csh -f
 
-# Attempt to beautify/deuglify the godawful raw Starlab install log.
+# Attempt to deuglify the raw Starlab install log.
 #
 # Targets to improve/remove:
 #
@@ -12,24 +12,30 @@
 # ^if g++ ... \
 # ^then ...
 
-set which = 2			# hardcoded
-
+set which = 0
 set in = install.log
-if ($#argv > 0) set in = $1
 
-if ($which == 1) then
+if ($#argv > 0) set which = $1
+if ($#argv > 0) set in = $2
 
-    # Version 1: insert space before each compile/link command.
+if (! -e $in) then
+    echo {$0}: can\'t find $in
+    exit
+endif
+
+if ($which == 0) then
+
+    # Insert space before each compile/link command, but don't
+    # delete anything.
 
     sed 's/^if \/bin\/sh/\n\nif \/bin\/sh/;s/^mkdir .libs/\n\nmkdir .libs/;s/^if g++/\n\nif g++/' $in >! $in.2
 
 else
 
-    # Version 2: remove "setup" commands; insert space before "real" commands.
+    # Remove "setup" commands and insert space before "real" commands.
 
     sed '/^if \/bin\/sh/d;/^then /d;s/^mkdir .libs/\n\nmkdir .libs/;/^if g++/d;s/^gcc/\n\ngcc/;s/^g++/\n\ng++/;s/^ gcc/\n\ngcc/;s/^ g++/\n\ng++/;s/\/bin\/sh /\n\/bin\/sh /' $in >! $in.2
 
 endif
 
-
-
+echo cleaned up output is in $in.2

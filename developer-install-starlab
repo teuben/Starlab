@@ -11,7 +11,7 @@ if ($?STARLAB_PATH == 0) then
 endif
 echo STARLAB_PATH = $STARLAB_PATH
 
-set install_dir = $STARLAB_PATH/usr
+set install_dir = $STARLAB_PATH/usr	# this is now the configure default
 echo install_dir \ = $install_dir
 
 set log = install.log
@@ -46,33 +46,28 @@ if (-e configure) then
 
     # Perform the usual configuration process:
 
-    echo Running configure
+    echo Running configure \(`date`\)
     echo ./configure $Qt --prefix=$install_dir
     echo 						>>& $log
-    echo Running configure				>>& $log
+    echo Running configure \(`date`\)			>>& $log
     echo ./configure $Qt --prefix=$install_dir		>>& $log
     ./configure $Qt --prefix=$install_dir		>>& $log
 
     # Build the package.
 
-    echo Running make \(this may take a while...\)
+    echo Running make \( \(`date`\; this may take a while...\)
     echo 						>>& $log
-    echo Running make					>>& $log
+    echo Running make \(`date`\)			>>& $log
     make						>>& $log
 
-    echo Running make install
+    echo Running make install \(`date`\)
     echo 						>>& $log
-    echo Running make install				>>& $log
+    echo Running make install \(`date`\)		>>& $log
     make install					>>& $log
-
-    # Deuglify the log file (install.log --> install.log.2)
-
-    ./beautify-install $log
 
     # Then test whatever...
 
     rehash
-    echo Testing...
 
     echo Looking for kira
     set which_kira = (`which kira | grep -v 'Command not found.'`)
@@ -82,6 +77,21 @@ if (-e configure) then
     else
 	echo Couldn\'t find kira...
     endif
+
+    echo Running Testsuite \(  \(`date`; this may take a few minutes\)
+    echo 						>>& $log
+    echo Running Testsuite \(`date`\)			>>& $log
+    ./sbin/testsuite					>>& $log
+
+    set n1 = `grep ^Working $log | grep OK | wc -l`
+    set n2 = `grep ^Working $log | grep Problems | wc -l`
+    echo Found $n1 OK and $n2 Problems.
+
+    echo Number of executables found: `ls $install-dir/bin|wc -l`
+
+    # Deuglify the log file (install.log --> install.log.2)
+
+    ./sbin/beautify-install $OK $log
 
 endif
 

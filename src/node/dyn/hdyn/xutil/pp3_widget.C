@@ -176,7 +176,7 @@ void pp3_widget::set_node(hdyn *b)			    // set all from b
 
 	    ostringstream s;
 	    pp3(b, s);
-	    text->setText(s.str());
+	    text->setText(s.str().c_str());  // Qt < 3.1 needs the c_str part...
 	}
 
 	// Reset the timer:

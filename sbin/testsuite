@@ -1,6 +1,6 @@
 #! /bin/csh -f
 #
-#  this script will find Testfile's and create a testsuite from it
+#  this script will find Testfiles and create a testsuite from it
 #  Note that it will run in a directory $STARLAB_PATH/tmp/test$$
 #
 #   22-mar-97   Orinally written for NEMO             Peter Teuben

@@ -5,6 +5,11 @@ Some issues for starlab4   (*'s have been done, -'s are to be done)
 4.1 was right after the merge
 4.1.1 was when most programs work (notably the f2c interface in e.g.
 	make_aniso_king.C was the problem maker)
+4.3 was when the build process became fully automated
+
+
+
+[old notes...]
 
 
 === GCC3 issues ================================================================================

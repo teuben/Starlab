@@ -1,34 +1,66 @@
 
 README:
 
-Installation procedes in GNU standard way:
+- We assume that the variable STARLAB_PATH points to the top-level
+  installation directory (i.e. the one containing this file).
+
+- Installation proceeds in GNU standard way:
 
 	./configure --prefix=install-dir
 	make
 	make install
 
-See the INSTALL file in this directory for more information.
+  See the INSTALL file in this directory for more information.  The
+  current default install-dir is
 
-However, Starlab now makes heavy use of the "autotools" aucoconf,
-automake, and libtool.  Unless you are sure that your system has
-versions of these tools newer than those used to build the package,
-you probably first will want to install the autotools found in
-src/packages.  You can do this by hand, or run the script
+	$STARLAB_PATH/usr.
+
+- However, Starlab now makes heavy use of GNU "autotools," namely
+  aucoconf, automake, and libtool.  Unless you are sure that your
+  system has versions of these tools newer than those used to build
+  the package, you probably first will want to install the autotools
+  found in $STARLAB_PATH/src/packages.  You can do this by hand, or
+  run the script
 
 	install-autotools
 
-found in that directory.  You will also have to modify your search
-path to ensure that the directory containing the newly installed
-autotools *precedes* any system directory before proceeding with
-the Starlab installation.
+  found in that directory.  You will also have to modify your search
+  path to ensure that the directory containing the newly installed
+  autotools *precedes* any system directory before proceeding with
+  the Starlab installation.
 
-If you prefer to install everything automatically, run the script
+- If you prefer to install everything automatically, run the script
 
 	developer-install-starlab
 
-in this directory.
+  in this directory.  This script basically performs the actions just
+  described, but it also provides timing information and attempts to
+  clean up the "make" output.
 
-Copyrights:
+- Once the package is successfully installed, to use the Starlab tools,
+  make sure that the directory
+
+        $install_dir/bin
+
+  is in your search path, preceding any system files.  You may also
+  find it useful to include the Starlab administrative directory
+
+	$STARLAB_PATH/sbin
+
+- For programmers, the Starlab header files are installed in
+
+        $install_dir/include/starlab
+
+  and the libraries are in
+
+        $install_dir/lib/starlab
+
+  If the autotools are properly installed, developers should find that
+  any changes made to the automake "Makefile.am" files will cause the
+  relevant Makefiles to be automagically regenerated.
+
+
+COPYRIGHTS:
 
 - see the COPYING file in this directory for information on the GPL.
 
