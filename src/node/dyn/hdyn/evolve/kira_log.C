@@ -672,10 +672,11 @@ void log_output(hdyn * b,
     // is properly set, and includes the external field, if any.
     // The earlier "bound" quantities may be suspect...
 
-    if (steps > 0) {
-	update_cpu_counters(b);
-	print_counters(b->get_kira_counters(), kc_prev);
-    }
+    // Update, but don't print, counters if steps = 0.  Note that kc_prev
+    // is set equal to kc in print_counters.  (Steve, 5/02)
+
+    update_cpu_counters(b);
+    print_counters(b->get_kira_counters(), (steps > 0), kc_prev);
 
     print_statistics(b, long_binary_output);
     cerr << flush;
