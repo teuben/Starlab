@@ -42,7 +42,7 @@ OBJECT_FILES = hdyn_unpert.o hdyn_ev.o hdyn_tree.o hdyn_merge.o \
 	       perturbed_list.o correct_perturbers.o kira_check.o \
 	       kira_counters.o kira_energy.o kira_escape.o \
 	       kira_ev.o kira_log.o kira_stellar.o kira_approx.o \
-	       kira_encounter.o
+	       kira_encounter.o kira_top_level.o
 
 LIBRARY = libhdyn.a
 
