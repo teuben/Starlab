@@ -72,7 +72,7 @@ particles:	  { $$ = 0; } | particles particle {
 
 log:		  '(' LOG log_story ')' LOG;
 
-log_story:	| log_story LOG_STORY { p.top()->log_comment($2) };
+log_story:	| log_story LOG_STORY { p.top()->log_comment($2); free($2); };
 
 dynamics:	  '(' DYNAMICS key_val_pairs ')' DYNAMICS;
 
@@ -92,14 +92,18 @@ key_val_pair:	  KEYWORD '=' real_vec {
   else {
     ostringstream line;
     line << $1 << " = " << $3;
-    add_story_line(p.top()->get_dyn_story(), const_cast<char*>(line.str().c_str()));
+    add_story_line(p.top()->get_dyn_story(),
+		   const_cast<char*>(line.str().c_str()));
   }
+  free($1);
   $3->clear();
 }
 		| KEYWORD '=' STRING {
   ostringstream line;
   line << $1 << " = " << $3;
-  add_story_line(p.top()->get_dyn_story(), const_cast<char*>(line.str().c_str()));
+  add_story_line(p.top()->get_dyn_story(),
+		 const_cast<char*>(line.str().c_str()));
+  free($1), free($3);
 };
 
 real_vec:	{ $$ = v_ptr; } | real_vec NUMBER { $1->push_back($2); };
