@@ -258,7 +258,8 @@ void put_chapter(ostream& str, story& s)
     put_tailline(str, s);
 }
 
-void put_story_contents(ostream& str, story& s)
+void put_story_contents(ostream& str, story& s,
+			char *prefix)		// default = NULL
 {
     if (!is_chapter(&s))
 	{
@@ -267,13 +268,15 @@ void put_story_contents(ostream& str, story& s)
 	}
 
     for (story * d = s.get_first_daughter_node(); d != NULL;
-						  d = d->get_next_story_node())
-	{
-	if (is_chapter(d))
+	 d = d->get_next_story_node()) {
+
+        if (is_chapter(d))
 	    put_chapter(str, *d);
-	else
+	else {
+	    if (prefix) str << prefix;
 	    put_line_text(str, *d);
 	}
+    }
 }
 
 void put_story(ostream& str, story& s)
