@@ -503,6 +503,25 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 
 	    newstep = aarsethstep * correction_factor;
 
+#if 0
+	    // Handy to look at timestep details (e.g. inconsistent acc
+	    // and jerk in an external potential...).
+
+	    cerr << endl;
+	    PRL(b->format_label());
+	    PRL(acc);
+	    PRL(jerk);
+	    PRL(bt2);
+	    PRL(at3);
+	    PRC(abs(acc)); PRL(abs(jerk));
+	    PRC(a2); PRL(j2);
+	    PRC(abs(bt2)); PRL(abs(at3));
+	    PRC(k2); PRL(l2);
+	    PRC(tmp1); PRC(tmp2); PRC(tmp3); PRL(tmp4);
+
+	    PRC(timestep); PRL(newstep);
+#endif    
+
 	}
     }
 
