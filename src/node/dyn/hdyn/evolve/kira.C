@@ -1227,6 +1227,7 @@ local void evolve_system(hdyn * b,		// hdyn array
 				tree_changed, n_list_top_level,
 				full_dump, r_reflect);
 
+
 	if (n_list_top_level > 0) {
 
 	    // Count blocks and steps for top-level nodes only.

@@ -5,7 +5,7 @@ PRL(ds);
 for (int ii = 0; ii < n_next; ii++)
     if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
 	hdyn *n = next_nodes[ii];
-	PRC(ii); n->print_label(); PRL(n->get_acc());
+	PRC(ii); n->print_label(cerr); PRL(n->get_acc());
     }
 
 
