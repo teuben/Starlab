@@ -157,10 +157,12 @@ local void reattach_grape(real time, char *id, kira_options *ko)
 
 // Local flags, possibly reset at initialization.
 
-static bool use_jp_dma = true;
+static bool use_jp_dma = false;
 static bool init_jp_dma = false;
 
-void grape6_force_nodma() {use_jp_dma = false;}
+void grape6_set_dma(bool jp_dma) {	// default = true
+    use_jp_dma = jp_dma;
+}
 
 local INLINE void send_j_node_to_grape(hdyn *b,
 				       bool computing_energy = false)

@@ -43,16 +43,16 @@ inline void swap(unsigned char *a, unsigned char *b)
 }
 
 void make_alternate_colormap(unsigned char* red,
-				   unsigned char* green,
-				   unsigned char* blue)
+			     unsigned char* green,
+			     unsigned char* blue)
 {
     // Make a "reverse standard colormap" (red --> blue).
 
     int i;
 
     for (i = 0; i < 48; i++) {				// violet to blue
-	red[i] = 5*(48-i)-1;				// 235 117 255
-	green[i] = red[i]/2;				//   5   2 255
+	red[i] = 5*(48-i)-1;				// 239 119 255
+	green[i] = red[i]/2;				//   4   2 255
 	blue[i] = 255;
     }
     for (i = 48; i < 86; i++) {				// blue to blue-green
@@ -67,7 +67,7 @@ void make_alternate_colormap(unsigned char* red,
     }
     for (i = 100; i < 130; i++) {			// green to yellow
         red[i] = (unsigned char)(8.5*(i-100));		//   0 255   0
-        green[i] = 255;					// 24 6255   0
+        green[i] = 255;					// 246 p255   0
         blue[i] = 0;
     }
     for (i = 130; i < 215; i++) {			// yellow to red

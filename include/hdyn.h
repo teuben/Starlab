@@ -857,7 +857,7 @@ void correct_acc_and_jerk(hdyn** next_nodes,	// NEW
 // ----- In hdyn_grape4/6.C: -----
 
 int get_grape4_chip(hdyn *b);
-void grape6_force_nodma();
+void grape6_set_dma(bool jp_dma = true);
 
 void check_release_grape(unsigned int config,
 			 kira_options *ko, xreal time, bool verbose = true);

@@ -775,7 +775,7 @@ bool kira_initialize(int argc, char** argv,
 
     bool force_nogrape = false;
     bool force_nodens = false;
-    bool force_nodma = false;
+    bool use_dma = false;
     bool enable_smallN = false;
 
     char seedlog[SEED_STRING_LENGTH];
@@ -879,9 +879,9 @@ bool kira_initialize(int argc, char** argv,
 	    case '1':	force_nodensity();
 	    		force_nodens = true;
 			break;
-	    case '2':	grape6_force_nodma();
-	    		force_nodma = true;
-			break;
+	    case '2':	use_dma = true;
+	    		grape6_set_dma(use_dma);
+	    		break;
 	    case '3':	enable_isolated_multiples();
 	    		enable_smallN = true;
 			break;
@@ -1505,10 +1505,10 @@ bool kira_initialize(int argc, char** argv,
 	cerr << "density computation enabled" << endl;
 
     if (config) {
-	if (force_nodma)
-	    cerr << "GRAPE DMA transfers suppressed" << endl;
-	else
+	if (use_dma)
 	    cerr << "GRAPE DMA transfers enabled" << endl;
+	else
+	    cerr << "GRAPE DMA transfers suppressed" << endl;
     }
 
     if (enable_smallN)
