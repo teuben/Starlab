@@ -154,6 +154,11 @@ int main(int argc, char ** argv)
 
     addstar(root, t_start, type);
 
+    // Starev does not include hdyn.h nor the hdyn library
+    // get_use_hdyn is therefore not defined.
+    // The result is that kick velocities will be scaled
+    // spuriously......
+    //    root->set_use_hdyn(false);
     cerr.precision(STD_PRECISION);
 
     //    put_node(root);
