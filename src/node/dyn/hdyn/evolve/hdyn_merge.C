@@ -144,9 +144,13 @@ local hdyn* apply_tidal_dissipation(hdyn* bi, hdyn* bj, kepler k)
 
     hdynptr list[2] = {bi, bj};
     bool _false = false;
-    calculate_acc_and_jerk_for_list(bi->get_root(), list, 2,
+
+    calculate_acc_and_jerk_for_list(list, 2,
 				    bi->get_time(),
 				    _false, _false, _false, _false);
+
+    bi->clear_on_integration_list();	// see comment in kira_ev.C
+    bj->clear_on_integration_list();
 
     bi->get_kira_counters()->de_total -= de_diss;
     bi->get_kira_counters()->de_tidal_diss -= de_diss;
@@ -493,7 +497,9 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	}
     }
 
+    real epot0, ekin0, etot0;
     bool is_pert = (get_kepler() == NULL);
+
     real sum_of_radii_sq = pow(get_sum_of_radii(this, bcoll), 2);
     // real sum_of_radii_sq = pow(radius+bcoll->radius, 2);
 
@@ -503,14 +509,31 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     // kira_synchronize_tree() in kira_grape_include.C to switch between
     // GRAPE (if available) and non-GRAPE code.
 
-//    cerr << "merge_nodes: calling synchronize_tree..." << flush;
-//    PRL(cpu_time());
+    cerr << "merge_nodes: calling kira_synchronize_tree..." << flush;
+    PRL(cpu_time());
 
     kira_synchronize_tree(get_root(), true);	// true ==> sync_low_level
 
     // NOTE: (kira_)synchronize_tree will not synchronize an unperturbed
     // binary (specifically, 'this'), so sync the components now to avoid
     // problems later.
+
+    // Possible problem (TO BE ADDRESSED LATER if it proves costly):
+    // After synchronization, the entire system has been integrated to
+    // the current time, and all time steps are consistent with this
+    // time. Unfortunately, since the step was driven by two nearby stars,
+    // whose time steps were probably very short, it is likely that we
+    // have forced the system into a very low-level block, and that many
+    // steps will be needed to restore "normal" timesteps.
+
+    // May be OK just to take the 10-20 steps per particle needed to
+    // regain normal timesteps.  Alternatively, we could modify the process
+    // of timestep reduction by first offsetting the time of everything in
+    // the system so we aren't in such a deep timestep block.  Since this
+    // is simply a uniform offset of all times, it would have no physical
+    // effect, and we can ensure that we don't cross a stellev boundary.
+    //
+    //						(Steve, 4/03)
 
     time = system_time;
     hdyn *sister = NULL;
@@ -519,11 +542,19 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	sister->time = system_time;
     }
 
-//    cerr << "back" << endl << flush;
-//    PRL(cpu_time());
+    cerr << "back" << endl << flush;
+    PRL(cpu_time());
 
-//    pp3(this, cerr);
-//    pp3(bcoll, cerr);
+#if 0
+    for_all_nodes(hdyn, (hdyn*)root, bb)
+	if (!bb->get_kepler())
+	    if (fmod(system_time, bb->timestep) != 0) {
+		PRC(bb->format_label()); PRC(system_time); PRL(bb->timestep);
+	    }
+#endif
+
+    // pp3(this, cerr);
+    // pp3(bcoll, cerr);
 
     // It is possible that 'this' or bcoll is unperturbed (probably
     // at periastron passage)!  Better delete any kepler structures
@@ -559,6 +590,10 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	cerr << "merge_nodes: creating CM node" << endl;
 
 	hdyn* ancestor = common_ancestor(this, bcoll);
+
+	PRL(ancestor->format_label());
+	// if (!ancestor->is_root())
+	//     pp3(ancestor);
 	
 	if (ancestor->is_root()) {
 
@@ -617,8 +652,20 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	    if (full_dump)
 		put_node(cout, *(get_top_level_node()), false, 3);
 
+	    // cerr << "merge_nodes: calculating energies 0..."
+	    //      << endl << flush;
+	    // calculate_energies_with_external(get_root(),
+	    //					epot0, ekin0, etot0);
+	    // PRC(epot0); PRC(ekin0); PRL(etot0);
+
+	    cerr << "calling move_node for " << bcoll->format_label();
+	    cerr << " and " << format_label() << endl;
+
 	    move_node(bcoll, this);		// Move bcoll to become
 						// sister of this.
+
+	    pp3(ancestor);
+
 	    if (full_dump)
 		put_node(cout, *(get_top_level_node()), false, 2);
 	}		
@@ -634,15 +681,13 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
     // Compute energies prior to merger, for bookkeeping purposes:
 
-    cerr << "merge_nodes: calculating energies..." << endl << flush;
-    real epot0, ekin0, etot0;
-
     // calculate_energies(get_root(), eps2, epot0, ekin0, etot0); //dyn function
     // replaced by GRAPE-friendly function (SPZ, March 2001)
     // kira_calculate_internal_energies(get_root(), epot0, ekin0, etot0);
     // Replaced with ..._with_external by Steve, Jan 02, to maintain
     // continuity in pot and avoid GRAPE warning messages.
 
+    cerr << "merge_nodes: calculating energies 1..." << endl << flush;
     calculate_energies_with_external(get_root(), epot0, ekin0, etot0);
     PRC(epot0); PRC(ekin0); PRL(etot0);
 
@@ -656,8 +701,8 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     PRC(epot_int); PRC(ekin_int); PRL(etot_int);
     PRL(cpu_time());
 
-    //pp3(cm, cerr);
-    //pp3(cm->get_root(), cerr);
+    // pp3(cm, cerr);
+    // pp3(cm->get_root(), cerr);
 
     label_merger_node(cm);
 
@@ -727,7 +772,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	((star*)(secondary->sbase))->dump(cerr, false);
 	
 // 	real tmp1, tmp2, tmp3;
-// 	cerr << endl << "computing energies #1:"
+// 	cerr << endl << "computing energies #2:"
 // 	     << endl << flush;
 // 	calculate_energies_with_external(get_root(), tmp1, tmp2, tmp3);
 // 	cerr << "OK" << endl << endl << flush;
