@@ -1708,7 +1708,7 @@ main(int argc, char** argv)
     // Note: "short" is relative.  Currently, 128 copies of a 1000-body
     // is too much to keep in memory!
 
-#define MAX_SNAP 64
+#define MAX_SNAP 512
 
     hdynptr b[MAX_SNAP];	// Array of snapshots
     int max_snap = 1;

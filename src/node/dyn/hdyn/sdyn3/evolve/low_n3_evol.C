@@ -26,7 +26,8 @@
 
 #ifndef TOOLBOX
 
-#define UNPERTURBED_DIAG true
+//#define UNPERTURBED_DIAG true
+#define UNPERTURBED_DIAG false
 #define PRECISION 12
 
 local void restore_pos_and_vel(kepler& inner, kepler& outer, real time,
@@ -403,9 +404,9 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
     b1->set_min_nn_dr2(Starlab::min(b1->get_min_nn_dr2(), peri_sq));
     b2->set_min_nn_dr2(Starlab::min(b2->get_min_nn_dr2(), peri_sq));
 
-    print_unperturbed_diag(b, b1, b2, b3,
-			   inner, outer,
-			   "Beginning unperturbed motion");
+//    print_unperturbed_diag(b, b1, b2, b3,
+//			   inner, outer,
+//			   "Beginning unperturbed motion");
 
     // Check for a collision at binary periastron.
 

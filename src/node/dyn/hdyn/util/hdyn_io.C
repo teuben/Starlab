@@ -173,10 +173,10 @@ istream & hdyn::scan_dyn_story(istream & s)
 
 	    } else {
 
-		if (sizeof(xreal) != sizeof(real))	// crude test...
-		    cerr << "hdyn::scan_dyn_story: input "
-			 << "time data type is real"
-			 << endl;
+//		if (sizeof(xreal) != sizeof(real))	// crude test...
+//		    cerr << "hdyn::scan_dyn_story: input "
+//			 << "time data type is real"
+//			 << endl;
 
 		real_system_time = system_time = strtod(val, NULL);
 
