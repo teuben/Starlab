@@ -1,0 +1,109 @@
+#!/bin/tcsh -f
+# (tcsh necessary with Redhat Linux, v. 4.x...)
+#
+# Starlab make helper.
+#
+# Place object files corresponding to non-null source files in the
+# specified library ($2) in directory $1, then remove all zero-length
+# C++ source files and their associated object files.
+#
+# Finally, touch/ranlib all dependent libraries to ensure rebuilding.
+#
+# Input is a list of object files.
+#
+if ($#argv < 3) exit
+if (X$2 == X) then
+#
+#   If the library is null, we still have to check for and remove
+#   zero-length files...
+#
+    foreach file ($argv[3*])
+	set temp = $file:r
+	set src = $temp.C
+	set temp = (`wc $src`)
+	if ($temp[1] == 0) then
+		/bin/rm -f $src
+	endif	
+    end
+    exit
+endif
+#
+set lib = $1/$2
+#
+if (-e $lib) then
+#
+#   Make a copy of the archive to check later if any change has
+#   actually been made to it.
+#
+    /bin/mv $lib $lib.save
+    /bin/cp $lib.save $lib
+else
+    touch $lib.save
+endif
+#
+set list = ( )
+foreach file ($argv[3*])
+    set temp = $file:r
+    set src = $temp.C
+    set obj = $temp.o # = $file (supposedly...)
+    set temp = (`wc $src`)
+    if ($temp[1] == 0) then
+	/bin/rm -f $src
+	/bin/rm -f $obj
+    else
+	set list = ($list $obj)
+    endif	
+end
+if ($#list > 0) ar ruv $lib $list
+#
+# Check for changes.  Note that ar will change the date of the library even
+# if nothing is actually done.  This causes great confusion with make...
+#
+if (-e $lib && -e $lib.save) then
+    diff -bwi $lib $lib.save >&! /dev/null
+    set temp = $status
+else
+    set temp = 1
+endif
+#
+if ($temp == 0) then
+#
+#   No difference--move back the original, and leave .lib unchanged.
+#
+    /bin/mv $lib.save $lib
+else
+#
+#   Real change--run ranlib, if necessary.
+#
+    alias rantmp $STARLAB_RANLIB
+    rantmp $lib
+    /bin/rm $lib.save
+#
+#   Update the local placeholder.
+#
+    touch .lib
+#
+#   Update all dependent dynamical libraries...
+#
+    cd $1
+    set lib_list = ( )
+#
+    if ($2 == libstd.a) then
+	set lib_list = (libnode.a libdyn.a libhdyn.a libsdyn.a \
+		     	libsdyn3.a libstar.a libhydro.a)
+    else if ($2 == libnode.a) then
+	set lib_list = (libdyn.a libhdyn.a libsdyn.a \
+			libsdyn3.a libstar.a libhydro.a)
+    else if ($2 == libdyn.a) then
+	set lib_list = (libhdyn.a libsdyn.a libsdyn3.a)
+    else if ($2 == libhdyn.a) then
+	set lib_list = (libsdyn.a libsdyn3.a)
+    endif
+#
+    foreach lib ($lib_list)
+	if (-e $lib) then
+	   touch $lib
+	   rantmp $lib
+	endif
+    end
+endif

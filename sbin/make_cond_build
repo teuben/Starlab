@@ -1,0 +1,50 @@
+#!/bin/tcsh -f
+# (tcsh necessary with Redhat Linux, v. 4.x...)
+#
+# Starlab make helper.
+#
+# Compile a C++ source file $1.C iff it is non-null.  Compile
+# as ...$1 to avoid overwriting any existing object file.
+# Second argument is where to put the executable.
+# Third argument gives libraries to link with.
+# Other arguments give compile command, switches, etc.
+#
+# NOTE: It might be best to make this a Bourne-shell script, for
+#       the sake of efficiency.
+#
+# As of June 1998, we pass the full pathname of the source file to
+# the compiler, so that run-time help information can be embedded
+# in the source code.  The macro _SRC_ now becomes a reserved keyword.
+#
+# $PWD doesn't seem to do the right thing under csh and Dec UNIX
+# at Komaba.  Using tcsh instead...  Alternatively, $cwd seems OK.
+
+if ($#argv < 3) then
+    exit
+endif
+
+set real_src = $1.C
+
+set temp = (`wc $real_src`)
+if ($temp[1] == 0) then
+    /bin/rm $real_src
+else
+    set src = ...$real_src
+    /bin/cp $real_src $src
+
+    set date = `date +%a_%b_%d_%Y,_%T_%Z`
+    alias comp $argv[4*]
+
+    echo $argv[4*] $src \($real_src\) -o $2 $3 -D_SRC_=\"$PWD/$real_src\" \
+					       -D_COMPILE_DATE_=\"$date\"
+    comp           $src               -o $2 $3 -D_SRC_=\"$PWD/$real_src\" \
+					       -D_COMPILE_DATE_=\"$date\"
+
+#   (Doesn't seem to be easy to combine these repeated arguments
+#    into a single string...)
+
+    if ($status == 0) then
+	touch $1
+    endif
+    /bin/rm $src
+endif

@@ -1,0 +1,28 @@
+#!/bin/tcsh -f
+# (tcsh necessary with Redhat Linux, v. 4.x...)
+#
+# Starlab make helper.
+#
+# Prepend the current directory (relative to STARLAB_PATH) onto the
+# specified files, and print them out.  For use with "make tarlist".
+#
+if ($#argv < 1) exit
+#
+# Determine where we are...
+#
+set tmp = (`pwd | tr "/" " "`)
+set local_path = " "
+#
+set add = 0
+foreach subdir ($tmp)
+    if ($add == 1) then
+	set local_path = $local_path$subdir/
+    endif
+    if ($subdir == $STARLAB_VERSION) set add = 1
+end
+#
+# List the files, with directory.
+#
+foreach file ($argv[*])
+    echo $local_path$file " "
+end
