@@ -34,6 +34,7 @@ real hdyn::eta		= 0;
 real hdyn::eps		= 0;
 real hdyn::eps2		= 0;
 
+real hdyn::d_min_fac	= 1;
 real hdyn::d_min_sq	= 0;
 real hdyn::lag_factor	= 0;
 real hdyn::mbar		= 0;
@@ -392,8 +393,8 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	    // Print out basic stellar information.
 	    // See inc/star/star_support.h for element_type.
 
-//	    put_string(s,      "  S  =  ",
-//		       type_short_string(sbase->get_element_type()));
+	    // put_string(s,      "  S  =  ",
+	    //		  type_short_string(sbase->get_element_type()));
 	    put_integer(s,     "  S  =  ", (int)sbase->get_element_type());
 
 	    if (write_unformatted && short_short) {
@@ -410,11 +411,24 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	    }
 	}
 
-	// Use kep as a flag here (careful!).
+	// Use kep as a general-purpose flag here (careful!).
 
 	if (kep)
 	    put_integer(s, "  kep  =  ", 1);
+#if 1
+	else {
 
+	    // *** Hook for future treatment of lightly perturbed binaries.
+	    // *** Indicator is kep = 2; currently not used by tdyn.
+
+	    if (is_low_level_node()
+		&& get_perturbation_squared() < SMALL_TDYN_PERT_SQ)
+		put_integer(s, "  kep  =  ", 2);
+	}
+#endif
+
+	// Defunct node:
+	 
 	if (short_output == 3)
 	    put_integer(s, "  defunct  =  ", 1);
 
