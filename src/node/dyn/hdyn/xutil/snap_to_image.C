@@ -1,6 +1,5 @@
 
-//// snap_to_image:  Construct images (in Sun rasterfile format) of
-////                 a series of snapshots.
+//// snap_to_image:  Construct images of a series of snapshots.
 ////
 //// Options:   -1           toggle combine all frames in a single image   [yes]
 ////            -c           compress the image file(s) using gzip          [no]
@@ -73,7 +72,7 @@ void make_greymap(unsigned char* red,
 		  unsigned char* green,
 		  unsigned char* blue);
 
-// Our three-color concention now requires us to define our own standards,
+// Our three-color convention now requires us to define our own standards,
 // basically the same map replicated three times at different intensities.
 // Thus, index, index-85, index-170, and 0 are the 4 color levels (including
 // black) associated with a given color.
@@ -669,8 +668,16 @@ main(int argc, char** argv)
 		    // We are coloring by mass or index and sizing by mass
 		    // or radius.
 
+		    // Special case:
+
+		    if (ncolor > 0) {
+			cmin = 1;
+			cmax = ncolor;
+		    }
+
 		    for_all_leaves(hdyn, b, bb) {
-			if (index_all < 0 && bb->get_index() >= 0) {
+			if (ncolor == 0 && index_all < 0
+			      && bb->get_index() >= 0) {
 			    cmin = min(cmin, bb->get_index());
 			    cmax = max(cmax, bb->get_index());
 			}
