@@ -633,6 +633,7 @@ void hdyn::update_dyn_from_kepler(bool need_acc_and_jerk)	// default = true
     if (!need_acc_and_jerk) {
 
 	hdyn* pnode = find_perturber_node();
+	PRL(pnode);
 
 	if (pnode && pnode->valid_perturbers && pnode->n_perturbers == 0)
 	    perturbation_squared = 0;
@@ -642,9 +643,18 @@ void hdyn::update_dyn_from_kepler(bool need_acc_and_jerk)	// default = true
 
     if (need_acc_and_jerk) {
 
+	// Recompute perturbation_squared based on updated pos and vel.
+
 	clear_interaction();
-	calculate_acc_and_jerk(true);	// recomputes perturbation_squared
-					// based on updated pos and vel
+
+	// Doing these steps here allows us to bypass calculate_acc_and_jerk
+	// and go directly to calculate_acc_and_jerk_on_low_level_node.
+
+	d_coll_sq = VERY_LARGE_NUMBER;
+	coll = NULL;
+	sister->d_coll_sq = VERY_LARGE_NUMBER;
+	calculate_acc_and_jerk_on_low_level_node();
+
 	store_old_force();
     }
 
