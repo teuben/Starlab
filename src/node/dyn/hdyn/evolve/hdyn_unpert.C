@@ -23,8 +23,8 @@
 //	bool hdyn::is_weakly_perturbed
 //	bool hdyn::is_stable
 //
-// To do:  Should keep track of tidal errors associated with termination
-//	   of unperturbed motion.
+// To do:  Should keep track of tidal errors associated with the
+//	   termination of unperturbed motion.
 //
 //	   Mixing of many types of motion is too complex.  Especially
 //	   problematic is the identification of pericenter reflection by
@@ -1750,6 +1750,15 @@ void hdyn::startup_unperturbed_motion()
 	    if (diag->unpert_report_level > 0)
 		print_unperturbed_binary_params();
 
+#if 0
+
+	    real predicted_mean_anomaly = kep->get_mean_anomaly()
+	      + unperturbed_timestep * kep->get_mean_motion();
+	    predicted_mean_anomaly = sym_angle(predicted_mean_anomaly);
+	    PRI(4); PRL(predicted_mean_anomaly);
+
+#endif
+
 	}
     }
 
@@ -2049,13 +2058,23 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 	    }
 	}
 
+#if 0
+
+	real predicted_mean_anomaly = kep->get_mean_anomaly()
+	  + steps * timestep * kep->get_mean_motion();
+	predicted_mean_anomaly = sym_angle(predicted_mean_anomaly);
+	PRI(4); PRL(predicted_mean_anomaly);
+
+#endif
+
 	// Now steps is the number of perturbed time steps to the reflection
 	// point (rounded to the nearest integer), or the number of perturbed
 	// steps corresponding to an integral number of orbits (plus mapping
 	// to apocenter for true binaries) if full merging is applied.  Note
 	// that, in either case, the resulting unperturbed step is *not*
-	// necessarily a power of 2, but it does retain the binary's place
-	// in the block scheduling scheme if and when perturbed motion resumes.
+	// necessarily a power of 2, but it does maintain (or improve) the
+	// binary's place in the block scheduling scheme if and when perturbed
+	// motion resumes.
 
 	// ** Could improve scheduling by using time step near apocenter, not
 	// ** promoting pericenter reflection to full unperturbed motion, and
@@ -2128,9 +2147,27 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 
 
 
-local xreal latest_time(xreal t_min, xreal t_max, real dtblock,
-			real ma_min, real ma_max,
-			real mean_anomaly, real mean_motion)
+#define DEBUG_SCHEDULE
+#undef DEBUG_SCHEDULE
+
+#ifdef DEBUG_SCHEDULE
+bool debug_flag = false;
+#endif
+
+// Careful!  Debugging causes problems with optimization under
+// RH Linux 7.2 with g++ 2.96...  Adding/cutting lines can change
+// the results and lead to incorrect output.	(Steve, 7/02)
+//
+// Dec(Compaq) OS4.0/gcc-whatever: Seems fine.
+//
+// RH 7.2/gcc-2.96: Works with inline below, fails without (-O2).
+//		    Optimization -O1 seems to be OK...
+
+local
+//inline
+xreal latest_time(xreal t_min, xreal t_max, real dtblock,
+		  real ma_min, real ma_max,
+		  real mean_anomaly, real mean_motion)
 {
     // Determine the latest time (integer * dtblock) that lies between
     // t_min and t_max and has mean anomaly in the range (ma_min, ma_max).
@@ -2147,6 +2184,12 @@ local xreal latest_time(xreal t_min, xreal t_max, real dtblock,
     real f = floor((real)t_max / dtblock);
     xreal t_last = dtblock * f;			// target time on this block
 
+#ifdef DEBUG_SCHEDULE
+    if (debug_flag) {
+        PRC(t_last); PRL(t_min);
+    }
+#endif
+
     if (t_last <= t_min) return t_min;
 
     // t_last is the last block time in the allowed range.
@@ -2154,11 +2197,23 @@ local xreal latest_time(xreal t_min, xreal t_max, real dtblock,
 
     real ma = sym_angle(mean_anomaly + mean_motion * (real)(t_last - t_min));
 
+#ifdef DEBUG_SCHEDULE
+    if (debug_flag) {
+        PRC(ma); PRC(ma_min); PRL(ma_max);
+    }
+#endif
+
     if (ma > ma_min && ma < ma_max) return t_last;
 
-    // Determine (modulo 2 PI) change in ma per dtblock.
+    // Determine (modulo 2 PI) the change in ma per dtblock.
 
     real dma = sym_angle(dtblock * mean_motion);
+
+#ifdef DEBUG_SCHEDULE
+    if (debug_flag) {
+        PRL(dma);
+    }
+#endif
 
     if (dma == 0) return t_min;
 
@@ -2173,8 +2228,12 @@ local xreal latest_time(xreal t_min, xreal t_max, real dtblock,
 
     // Now we want to find a time t_last corresponding to 0 < ma < ma_max.
 
-//    PRC(t_min); PRC(t_max); PRL(dtblock);
-//    PRC(ma_max); PRC(ma/(2*M_PI)); PRL(dma/(2*M_PI));
+#ifdef DEBUG_SCHEDULE
+    if (debug_flag) {
+	PRC(t_min); PRC(t_max); PRL(dtblock);
+	PRC(ma_max); PRC(ma/(2*M_PI)); PRL(dma/(2*M_PI));
+    }
+#endif
 
     // Deal with the easy cases first...
 
@@ -2196,6 +2255,13 @@ local xreal latest_time(xreal t_min, xreal t_max, real dtblock,
 
 	// Do it the hard way (step by step), for now.
 
+#ifdef DEBUG_SCHEDULE
+	if (debug_flag) {
+	    cerr << "the hard way..." << endl << flush;#endif
+
+	}
+#endif
+
 	while (t_last > t_min) {
 	    t_last -= dtblock;
 	    ma -= dma;
@@ -2206,6 +2272,11 @@ local xreal latest_time(xreal t_min, xreal t_max, real dtblock,
 	}
     }
 
+#ifdef DEBUG_SCHEDULE
+    if (debug_flag) {
+	PRL(t_last);
+    }
+#endif
     return t_last;
 }
 
@@ -2578,7 +2649,8 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	    real mean_anomaly_min = mean_anomaly
 					+ ((real)(t_min-time))*mean_motion;
 
-	    xreal t_max = p->get_next_time() + 0.5*p->get_timestep();
+	    real pdt = p->get_timestep();
+	    xreal t_max = p->get_next_time() + 0.5*pdt;
 
 	    // Define range of acceptable final mean anomalies.
 
@@ -2589,16 +2661,23 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	    // if t_next > t_min.
 
 	    xreal t_next = t_min;
-	    real dtblock = unpert_step_limit;
+	    real dtblock = min(unpert_step_limit, 2*pdt);
 	    int kb = get_effective_block(dtblock);
 
-	    for (; dtblock >= timestep; kb++, dtblock /= 2)
-		if ((t_next = latest_time(t_min, t_max, dtblock,
-					  ma_min, ma_max,
-					  mean_anomaly_min,
-					  mean_motion))
-			> t_min)
-		    break;
+#ifdef DEBUG_SCHEDULE
+	    debug_flag = false;
+	    if (name_is("11032") || name_is("13993")) debug_flag = true;
+#endif
+
+	    while (dtblock >= timestep) {
+		t_next = latest_time(t_min, t_max, dtblock,
+				     ma_min, ma_max,
+				     mean_anomaly_min,
+				     mean_motion);
+		if (t_next > t_min) break;
+		kb++;
+		dtblock /= 2;
+	    }
 
 	    if (t_next <= t_min
 		|| kb >= get_effective_block(time+pert_steps*timestep)) {
@@ -2606,7 +2685,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 		// Nothing to be gained from optimizing.  Don't
 		// change pert_steps.
 
-#if 0
+#ifdef DEBUG_SCHEDULE
 		cerr << "    retaining unoptimized pert_steps" << endl;
 #endif
 
@@ -2615,10 +2694,11 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 		real old_steps = pert_steps;
 		pert_steps = floor(((real)(t_next - time)) / timestep + 0.1);
 
-#if 0
+#ifdef DEBUG_SCHEDULE
+
 		// (These debugging lines can be quite expensive...)
 
-//		if (name_is("15943")) {
+		if (debug_flag) {
 //		if (system_time > 0.112) {
 
 		    cerr << endl << "get_unperturbed_steps for "
@@ -2633,13 +2713,15 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 		    PRI(4); PRL(get_effective_block(timestep));
 
 		    PRI(4); PRL(old_steps);
-		    PRI(4); PRC(time+old_steps*timestep);
+		    PRI(4); PRL(time+old_steps*timestep);
 		    PRI(4); PRL(get_effective_block(old_steps*timestep));
 		    PRI(4); PRL(get_effective_block(time+old_steps*timestep));
 		    PRI(4); PRL(sym_angle(mean_anomaly
 				+ mean_motion*old_steps*timestep));
 
+		    PRI(4); PRC(ma_min); PRL(ma_max);
 		    PRI(4); PRC(kb); PRC(dtblock); PRL(dtblock/timestep);
+		    PRI(4); PRC(t_next); PRL(t_min);
 		    PRI(4); PRC(pert_steps); PRL(pert_steps/old_steps);
 		    PRI(4); PRL(get_effective_block(pert_steps*timestep));
 		    PRI(4); PRL(get_effective_block(time+pert_steps*timestep));
@@ -2650,7 +2732,19 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 			cerr << "    ????" << endl;
 
 		    cerr.precision(pp);
-//		}
+
+
+
+	    real predicted_mean_anomaly = kep->get_mean_anomaly()
+	      + pert_steps * timestep * kep->get_mean_motion();
+	    predicted_mean_anomaly = sym_angle(predicted_mean_anomaly);
+	    PRI(4); PRL(predicted_mean_anomaly);
+
+
+
+
+
+		}
 #endif
 
 	    }
@@ -2874,7 +2968,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
     if (is_u && set_u) {
 
-	// Is still unperturbed. Not much to do here now...
+	// Is still unperturbed.  Not much more to do here now...
 
         if (diag->report_continue_unperturbed
 	    || (diag->report_multiple && is_multiple(this)
