@@ -128,7 +128,12 @@ local inline void update_node(worldbundle *wb,
 
 	// Delete any old kepler (if real).
 
-	if (curr->get_kepler() && curr->get_kepler() != (kepler*)1) {
+	if (curr->get_kepler() == (kepler*)2) PRL(curr->get_kepler());
+
+	if (curr->get_kepler()
+	     && curr->get_kepler() != (kepler*)1
+	     && curr->get_kepler() != (kepler*)2) {	// "2" shouldn't be
+							// needed, but...
 	    delete curr->get_kepler();
 
 	    if (debug && 

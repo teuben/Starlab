@@ -16,8 +16,9 @@ local inline void attach_new_node(worldbundle *wb, worldline *ww,
 	     << bb->get_time() << " "
 	     << bb->format_label() << endl;
 
-    // pdyn *curr = new pdyn(NULL, NULL, false);
-    pdyn *curr = alloc_pdyn(NULL, NULL, false);
+    pdyn *curr = new pdyn(NULL, NULL, false);
+
+    // Replace by alloc_pdyn() if we do our own memory management.
 
     // Attach curr to the tree.  Don't use add_node, as it will
     // create a tree with nodes in the reverse order!
@@ -93,6 +94,11 @@ local inline void attach_new_node(worldbundle *wb, worldline *ww,
 
 	// Cleanest way to get the worldline index:
 
+	int i = wb->find_index(bb);
+	if (i < 0) {
+	    PRL(wb->find_index(bb));
+	    PRC(bb); PRL(bb->format_label());
+	}
 	curr->set_worldline_index(wb->find_index(bb));
 
 	curr->set_mass(bb->get_mass());

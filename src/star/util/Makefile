@@ -25,10 +25,7 @@ DEPEND_LIBS     = $(LIB)/libsint.a \
 
 EXECUTABLES  = kingfit red_stellar_system rcore2 coagulation rearrange_mf \
 	       red_star_cluster encountervelocity imf_evolve proj_lagr \
-               lmt_to_ubvri makedyn_from_input project nn_distribution \
-	       cmb_binaries \
-	       conv_dyn_to_star conv_star_to_dyn
-
+               lmt_to_ubvri makedyn_from_input nn_distribution
 # project
 
 OBJECT_FILES = proj_lagr.o kingfit.o lmt_to_ubvri.o

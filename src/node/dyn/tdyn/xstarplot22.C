@@ -8,7 +8,7 @@
 ////             -e    color by energy [no]
 ////             -E    toggle display of stars flagged as escapers [true]
 ////             -f    solid-color stars [true]
-////             -F    input file [world.dat]
+////             -F    input file [run.out]
 ////             -k    maximum size of CM indicator is k/N [2]
 ////             -l    show links and nodes [no]
 ////             -L    specify limits [take from initial data]
@@ -1855,7 +1855,7 @@ main(int argc, char** argv)
 {
     // Establish some defaults:
 
-    int   k = 3;		// Note x = 1, y = 2, z = 3 here!
+    int   k = 3;		// note x = 1, y = 2, z = 3 here!
     int   d = 2;
     float D = 16*MIN_DELAY;
     real dt = 0.015625;		// powers of 2 are preferred, but not essential
@@ -1866,7 +1866,7 @@ main(int argc, char** argv)
     float scale = 1.0;
 
     char infile[128];
-    strcpy(infile, "world.dat");
+    strcpy(infile, "run.out");
 
     bool f_flag = TRUE;		// if TRUE, the star is solid
     bool o_flag = FALSE;	// if TRUE, output stdin to stdout
@@ -1981,7 +1981,7 @@ main(int argc, char** argv)
     // print_worldlines(wh, nh);
     // print_escapes(wh, nh);
 
-    set_center(wh, nh, 0, true);
+    set_center(wh, nh, 1, true);
     PRC(get_center()); PRL(get_center_id());
 
     // Now display the data.

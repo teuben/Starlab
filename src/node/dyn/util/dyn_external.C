@@ -258,25 +258,30 @@ local real potential(dyn *b, real r)		// background potential;
 static vector Afric = 0;			// frictional acceleration
 void set_friction_acc(dyn *b, real r)
 {
-    real sigma2 = sqrt(-2*potential(b, r)/3);	// this is sqrt(2) * sigma;
-						// assume virial equilibrium
-    real V = abs(Vcm);
-    real X = V/sigma2;				// scaled velocity; BT p. 425
+    if (beta != 0) {
 
-    if (X > 0.1) 
+	real sigma2 = sqrt(-2*potential(b, r)/3);  // this is sqrt(2) * sigma;
+						   // assume virial equilibrium
+	real V = abs(Vcm);
+	real X = V/sigma2;			   // scaled velocity; BT p. 425
 
-	Afric = -beta * Mfric * Vcm * density(b, r) * pow(V, -3)
-		      * (erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
-    else
+	if (X > 0.1) 
 
-	// Expand for small X:
+	    Afric = -beta * Mfric * Vcm * density(b, r) * pow(V, -3)
+			  * (erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
+	else
 
-	Afric = -beta * Mfric * Vcm * density(b, r)
-		      * 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
+	    // Expand for small X:
 
-    cerr << endl << "set_friction_acc: "; PRL(Afric);
-    PRC(beta); PRC(Mfric); PRL(density(b, r));
-    PRL(Vcm);
+	    Afric = -beta * Mfric * Vcm * density(b, r)
+			  * 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
+
+#if 1
+	cerr << endl << "set_friction_acc: "; PRL(Afric);
+	PRC(beta); PRC(Mfric); PRL(density(b, r));
+	PRL(Vcm);
+#endif
+    }
 }
 
 //-------------------------------------------------------------------------

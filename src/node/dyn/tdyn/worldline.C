@@ -22,7 +22,6 @@
 //	worldbundle::worldbundle(tdyn *b)
 //	void worldbundle::print()
 //	void worldbundle::dump()
-//	void worldbundle::get_n_daughters()
 //	int worldbundle::find_index(real id)
 //	int worldbundle::find_index(char *name)
 //	int worldbundle::find_index(pdyn *b)
@@ -132,7 +131,7 @@ real unique_id(pdyn *b)
     // an integer from the node name.  If the node has no name or index,
     // ignore it (id = -1).
 
-    // The root node should be called "root" or "?", and will therefore
+    // The root node should be called "root", and will therefore
     // be assigned an ID of 0.
 
     if (b->get_index() > 0)
@@ -312,16 +311,6 @@ void worldbundle::dump(int offset)	// default = 0
 	get_worldline(i)->dump(offset);
     }
 }
-
-int worldbundle::get_n_daughters()
-{
-    // Return the number of daughters of the first event of the
-    // root worldline of this worldbundle.
-
-    return get_worldline(0)->get_first_segment()
-			   ->get_first_event()->n_daughters();
-}
-
 //======================================================================
 
 int worldbundle::find_index(real id)
@@ -339,8 +328,10 @@ int worldbundle::find_index(real id)
 
     int loc;
 
-    if (nw <= 0 || id < bundle[0]->get_id())
+    if (nw <= 0 || id < bundle[0]->get_id()) {
+	PRC(id); PRL(bundle[0]->get_id());
 	loc = -1;
+    }
 
     else if (id > bundle[nw-1]->get_id())
 	loc = -nw-1;
@@ -382,7 +373,7 @@ int worldbundle::find_index(real id)
 }
 
 int worldbundle::find_index(char *name)	{return find_index(unique_id(name));}
-int worldbundle::find_index(pdyn *b)	{return find_index(unique_id(b));}
+int worldbundle::find_index(pdyn *b)    {return find_index(unique_id(b));}
 
 worldline *worldbundle::find_worldline(real id)
 {
@@ -1149,8 +1140,9 @@ pdyn *create_interpolated_tree(worldbundle *wb, real t,
 
     // Create a root node.
 
-    // pdyn *root = new pdyn(NULL, NULL, false);
-    pdyn *root = alloc_pdyn(NULL, NULL, false);
+    pdyn *root = new pdyn(NULL, NULL, false);
+
+    // Replace by alloc_pdyn() if we do our own memory management.
 
     root->set_system_time(t);
     root->set_pos(0);
