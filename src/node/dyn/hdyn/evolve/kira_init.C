@@ -615,8 +615,21 @@ local char* stredit(char* s, char c1, char c2)	// duplicate in runtime_help.C
     return s1;
 }
 
+#include <time.h>
+
 local void kira_system_id(int argc, char** argv)
 {
+    // Identify the Starlab version.
+
+    cerr << "Starlab version " << STARLAB_VERSION;
+
+    char* s = stredit(_COMPILE_DATE_, '_', ' ');
+    if (s) {
+	cerr << "; kira created on " << s;
+	delete s;
+    }
+    cerr << endl;
+
     // Attempt to identify the user and host.
 
     cerr << "kira run by user ";
@@ -635,18 +648,17 @@ local void kira_system_id(int argc, char** argv)
 	cerr << " (host type " << getenv("HOSTTYPE") <<")";
     cerr << endl;
 
-    cerr << "Starlab version " << STARLAB_VERSION;
+    // Also log the time and date.
 
-    char* s = stredit(_COMPILE_DATE_, '_', ' ');
-    if (s) {
-	cerr << "; kira created on " << s;
-	delete s;
-    }
-    cerr << endl;
+    const time_t tt = time(NULL);
+    cerr << "    on  " << ctime(&tt);
 
     cerr << "Command line reference:  " << argv[0] << endl;
     cerr << "Arguments: ";
-    for (int i = 1; i < argc; i++) cerr << " " << argv[i];
+    for (int i = 1; i < argc; i++) {
+	cerr << " " << argv[i];
+	if (i%20 == 0) cerr << endl << "           ";
+    }
     cerr << endl;
 
     if (   (argv[0][0] == '.' && argv[0][1] == '/')	// easier to list
@@ -656,7 +668,7 @@ local void kira_system_id(int argc, char** argv)
 
 	char tmp[256];
 	sprintf(tmp, "which %s > ./KIRA_TEMP", argv[0]);
-	cerr << tmp << endl;
+	// cerr << tmp << endl;
 
 	system(tmp);		// Note: "system" adds newline and insists
 				// on writing to stdout, so we must capture

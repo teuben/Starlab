@@ -1900,11 +1900,6 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	dt_alt1 = 1./32;		// hardwired options...
 	dt_alt2 = 1;
 	dt_alt3 = 10;
-
-	if (verbose) {
-	    cerr << endl << "additional output: ";
-	    PRC(dt_alt1); PRC(dt_alt2); PRL(dt_alt3);
-	}
     }
 
     t_alt1 = 0;
@@ -1925,6 +1920,11 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	PRL(dt_fulldump);
 
 	PRC(t_snap); PRC(t_log); PRC(t_sync); PRC(t_esc); PRL(t_fulldump);
+
+	if (alt_flag) {
+	    cerr << endl << "Additional output:  ";
+	    PRC(dt_alt1); PRC(dt_alt2); PRL(dt_alt3);
+	}
 
 	ko->print();
 	kd->print();
