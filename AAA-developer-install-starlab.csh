@@ -11,6 +11,7 @@ if ($?STARLAB_PATH == 0) then
 endif
 echo STARLAB_PATH = $STARLAB_PATH
 
+echo ""
 set install_dir = $STARLAB_PATH/usr
 echo install_dir \ = $install_dir
 
@@ -80,7 +81,7 @@ if (X$OK == "X1") then
 cat <<EOF
 
 Congratulations, you have successfully installed Starlab!
-To use the Starlab tools, please make sure that the directory
+To use the Starlab tools, make sure that the directory
 
         $install_dir/bin
 
@@ -89,7 +90,7 @@ For programmers, the Starlab header files are installed in
 
         $install_dir/include/starlab
 
-end the libraries are in
+and the libraries are in
 
         $install_dir/lib/starlab
 
