@@ -405,7 +405,7 @@ real stellar_evolution_constants::star_to_dyn(dynamics_update_parameter dup) {
              break; 
         case semi_major_axis_update_limit:             return 0.001;
 	      break;                        
-        case binary_update_time_fraction:              return 0.001; //was 0.05
+        case binary_update_time_fraction:              return cnsts.safety(maximum_binary_update_time_fraction); //was 0.05
              break;
         default:
 	     cerr << "\nNo recognized option in "

@@ -124,11 +124,20 @@ void exchange_secondary(dyn *bi,
   //  cerr<<"exchange_secondary"<<endl;
 
   dyn *root = bi->get_parent();
+  //  dyn *pi = bi->get_oldest_daughter();
+
   dyn *pi = bi->get_oldest_daughter();
-  starbase *sbpi = (starbase*)pi->get_starbase();
+  dyn *pj = pi->get_younger_sister();
+  dyn *ps;
+  if(pi->get_mass()>=pj->get_mass()) 
+    ps = pj;
+  else
+    ps = pi;
+
+  starbase *sbpi = (starbase*)ps->get_starbase();
   starbase *sbsi = (starbase*)si->get_starbase();
-  pi->set_starbase(sbsi);
-  sbsi->set_node(pi);
+  ps->set_starbase(sbsi);
+  sbsi->set_node(ps);
 
   si->set_starbase(sbpi);
   sbpi->set_node(si);
@@ -148,11 +157,20 @@ void exchange_primary(dyn *bi,
   //  cerr<<"exchange_primary"<<endl;
 
   //  dyn *root = bi->get_parent();
-  dyn *pi = bi->get_oldest_daughter()->get_younger_sister();
-  starbase *sbpi = (starbase*)pi->get_starbase();
+  //  dyn *pi = bi->get_oldest_daughter()->get_younger_sister();
+  //  dyn *pi = bi->get_oldest_daughter();
+  dyn *pi = bi->get_oldest_daughter();
+  dyn *pj = pi->get_younger_sister();
+  dyn *ps;
+  if(pi->get_mass()>=pj->get_mass()) 
+    ps = pi;
+  else
+    ps = pj;
+
+  starbase *sbpi = (starbase*)ps->get_starbase();
   starbase *sbsi = (starbase*)si->get_starbase();
-  pi->set_starbase(sbsi);
-  sbsi->set_node(pi);
+  ps->set_starbase(sbsi);
+  sbsi->set_node(ps);
 
   si->set_starbase(sbpi);
   sbpi->set_node(si);
@@ -191,7 +209,7 @@ void merger_binary_primary(dyn* bi,
 			   dyn *si,
 			   final_state3& final3) {
 
-  cout<<"merger_binary_primary"<<endl;
+  //  cout<<"merger_binary_primary"<<endl;
 
   dyn *pi = bi->get_oldest_daughter()->get_younger_sister();
   merge_two_stars(pi, si);

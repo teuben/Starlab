@@ -983,7 +983,7 @@ void double_star::instantaneous_element() {
 //       The BINARY_UPDATE_TIMESTEP must therefore be small.
 void double_star::evolve_element(const real end_time) 
 {
-  //cerr<<"Evolve the binary"<<endl;
+  //  cerr<<"Evolve the binary"<<flush <<endl;
   //    real current_time = binary_age
   //			  + BINARY_UPDATE_TIMESTEP*get_evolve_timestep();
   //  real current_time = binary_age
@@ -994,9 +994,10 @@ void double_star::evolve_element(const real end_time)
     // such a constructiona anyway.
     // Implemented by (SPZ:2/1998)
     //if (current_time<=end_time)
-
+ 
     real current_time = binary_age;
 
+    //PRC(binary_age);PRL(end_time);
     if (binary_age<end_time)
 	do {
 	  if (REPORT_BINARY_EVOLUTION) {
