@@ -1,74 +1,24 @@
-etc/primer/README:
+Starlab Policies
 
-This directory contains introductory material for starlab.
-
-The file Primer.tex is a bit outdated, written in the spring of
-1993 for starlab 1.0.
-
-As for copyrights, we have summarized our attitude in Primer.tex,
-section 9, which is reproduced below.  The same statements hold for
-the present version, Starlab 1.2.  Specifically, we reserve the right
-of co-authorship for any publication in which scattering programs are
-used (in src/dyn/scatter3 and src/dyn/scatter), in the same spirit as
-discussed below under item 3.
-                               Piet and Steve
-
-
-\null\bigskip
-\centerline{\bf 9. Ownership and Authorship}
-\medskip
-
-The primary authors of Starlab 1.0 are Piet Hut, Steve McMillan, and
-Jun Makino.  Other contributors to this initial release are Fred
-Rasio, whose SPH code is in {\tt src/hydro/alt/fred}, and Simon
-Portegies-Zwart, whose stellar-evolution integrators may be found in
-src/usr/spz.  We encourage users of Starlab to add their programs and
-libraries to the package.  It is our hope that subsequent releases
-will contain substantial amounts of user-written material.  They can
-send their code to Piet or Steve, after they have carefully checked
-that it is working and is compatible with the latest starlab version.
-We will then install that code in the appropriate {\tt usr/name}
-directory, from which it may eventually find its way into {\tt src}
-directory.
+The primary authors of Starlab are Piet Hut, Steve McMillan, Jun
+Makino, and Simon Portegies Zwart. We encourage users of Starlab to
+add their programs and libraries to the package. It is our hope that
+subsequent releases will contain substantial amounts of user-written
+material. They can send their code to Piet or Steve, after they have
+carefully checked that it is working and is compatible with the latest
+Starlab version.
 
 The prospect of having several people share (and possibly augment) a
 software package leads to the thorny question of ownership of
 software, and, more concretely, authorship of papers written using
-that software.  We want the distribution to be as free as possible,
-but we must all recognize that Starlab represents a substantial
-investment of programming time and effort on the part of the
-contributors.  For that reason, while we do not wish to establish
-hard-and-fast rules, we feel that some guidelines for the use of the
-package may be helpful.
+that software. We want the distribution to be as free as possible, but
+we must recognize that Starlab represents a substantial investment of
+programming time and effort on the part of the contributors.
 
-\item{1.}{If Starlab is used in a project and is found useful, but not
-critical to the outcome, then both the package and the authors of the
-programs used should simply be acknowledged at the end of any
-resultant papers.  A similar acknowledgement in the later papers of a
-long series would also be appropriate.  Examples would be the use of
-Starlab for data reduction, for organizing series of experiments, or
-simply for providing an embedding environment for wiring together new
-pieces of code in a standardized format.}
-
-\item{2.}{Users should try to avoid collision in publications.  For
-example, the SPH code provided here will probably be used soon (i.e.
-in 1993), by Fred, Steve, and possibly others to do some simulations
-of small star clusters.  If you would like to use the SPH code
-provided here in order to write an article about the same topic,
-priority should be given to the author (in this case Fred), so that he
-can publish his results well before the competing article.  In
-practice, the easiest way to check for collisions is to keep Piet and/or
-Steve informed of the uses to which the code is being put -- something
-we'd like to know, in any case!}
-
-\item{3.}{If Starlab, or a particular section of Starlab, is an
-integral part of a piece of research, the author(s) of the code in
-question should be offered co-authorship on any paper(s) resulting
-from the research, even if there are no direct collisions.  If a
-series of papers ensues, we would expect that the author of the
-software would typically be offered co-authorship on the first one or
-two. The authorship of any given Starlab program will be prominently
-displayed near the start of the source file.}
-
-\item{4.}{In case of doubt, ask Piet or Steve.}
-
+We do not wish to establish hard-and-fast rules. Our only guideline is
+that, if Starlab is used in a project and is found useful, then we ask
+that both the package and the authors of the programs used should be
+acknowledged at the end of any resultant papers. Contributors must
+recognise that, in adding a program to Starlab, they surrender any
+legal (if not moral) right to control its future use, as well as any
+claim to co-authorship in publications resulting from it.
