@@ -765,7 +765,7 @@ local int integrate_list(hdyn * b,
 			err_exit("Run terminated in integrate_list");
 		    } else {
 			cerr << endl << "recomputed  "; PRL(bi->get_acc());
-			PRI(11); PRL(bi->get_jerk());
+			PRI(12); PRL(bi->get_jerk());
 		    }
 		}
 
