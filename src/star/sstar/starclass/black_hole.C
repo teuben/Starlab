@@ -39,6 +39,8 @@ black_hole::black_hole(hyper_giant & w) : single_star(w) {
 
       post_constructor();
 
+      cout << get_total_mass() << endl;
+
       if (is_binary_component()) {
 	get_binary()->set_first_contact(false);
 	get_companion()->set_spec_type(Accreting, false);
@@ -75,6 +77,8 @@ black_hole::black_hole(super_giant & g) : single_star(g) {
          direct_hit();
  
       post_constructor();
+
+      cout << get_total_mass() << endl;
 
       if (is_binary_component()) {
 	get_binary()->set_first_contact(false);
@@ -134,6 +138,10 @@ black_hole::black_hole(helium_giant & h) : single_star(h) {
       real m_tot = get_total_mass();
       real COcore_mass = core_mass;
       core_mass = m_tot;
+      // (GN Apr 14 2004) set envelope = 0 to avoid increasing 
+      // get_total_mass() which is used in black_hole_mass(...)!
+      envelope_mass = 0;
+
       core_mass = black_hole_mass(COcore_mass);
       envelope_mass = m_tot - core_mass;
 
@@ -156,6 +164,9 @@ black_hole::black_hole(helium_giant & h) : single_star(h) {
          direct_hit();
 
       post_constructor();
+
+      cout << get_total_mass() << endl;
+
       if (is_binary_component()) {
 	get_binary()->set_first_contact(false);
 	get_companion()->set_spec_type(Accreting, false);
@@ -189,6 +200,8 @@ black_hole::black_hole(neutron_star & n) : single_star(n) {
          direct_hit();
 
       post_constructor();
+
+      cout << get_total_mass() << endl;
 
       if (is_binary_component()) {
 	get_binary()->set_first_contact(false);
@@ -307,27 +320,77 @@ real black_hole::aic_binding_energy() {
 // Based on: Fryer & Kalogera, 2001ApJ...554..548F
 real black_hole::black_hole_mass(const real COcore_mass) {
 
-  real initial_bh_mass = 1.000*COcore_mass;
-  real helium_envelope = core_mass-initial_bh_mass;
+  // (GN Apr 13 2004) test only 3 Msun collapses initially (like FK01)
+  //  real initial_bh_mass = 1.000*COcore_mass;
+  real initial_bh_mass = 3.0;
+  real CO_envelope = COcore_mass - initial_bh_mass;
+  real helium_envelope = core_mass- COcore_mass;
   real hydrogen_envelope = get_total_mass() - core_mass; 
-  
-  //  PRC(COcore_mass);PRC(initial_bh_mass);PRC(helium_envelope);
-  //  PRL(hydrogen_envelope);
 
-  real E_supernova = 1.0E51;  // [erg]
+//  PRC(get_total_mass());PRC(COcore_mass);PRL(core_mass);
+//  PRL(core_radius);
+//  PRC(COcore_mass);PRC(initial_bh_mass);PRC(CO_envelope);PRC(helium_envelope);
+//  PRL(hydrogen_envelope);
+
+
+    // (GN Apr 14 2004) Changed Binding energy formalism, as it wasn't
+    //  consistent: outerlayers shoudl be lost first!
+    // Also introduced CO_envelope to denote CO material outside
+    // collapsing core
+
+  real E_supernova = 1.0E50;  // [erg]
   real Lambda = 0.4;
 
   real GM2_R = cnsts.physics(G)*pow(cnsts.parameters(Msun), 2)
              / cnsts.parameters(Rsun);
+  real Ebinding_CO = GM2_R*CO_envelope*initial_bh_mass
+                       / (Lambda*0.01);
   real Ebinding_helium = GM2_R*helium_envelope*initial_bh_mass
                        / (Lambda*core_radius);
   real Ebinding_hydrogen = GM2_R*hydrogen_envelope*core_mass
                          / (Lambda*effective_radius);
 
-  real fallback_helium = helium_envelope *
-    Starlab::min(1., Starlab::max(0., (1-E_supernova/Ebinding_helium)));
-  
+  real Ebinding = Ebinding_CO + Ebinding_helium + Ebinding_hydrogen;
+
   real fallback_hydrogen = 0;
+  real fallback_helium = 0;
+  real fallback_CO = 0;
+
+  if (E_supernova < Ebinding) { // Fall back
+
+    fallback_CO = CO_envelope;
+
+    if (E_supernova < Ebinding_hydrogen) { // only part H envelope lost
+      fallback_hydrogen = hydrogen_envelope 
+                        * (1 - E_supernova/Ebinding_hydrogen);
+
+      fallback_helium = helium_envelope;
+
+    }
+    else if (E_supernova - Ebinding_hydrogen < Ebinding_helium) { // H + some He lost
+      fallback_helium = helium_envelope
+	             * (1 - (E_supernova - Ebinding_hydrogen)/Ebinding_helium);
+    
+    }
+    else { // H + He + some CO lost
+      fallback_CO *= 1- (E_supernova - Ebinding_hydrogen - Ebinding_helium)
+			/Ebinding_CO;
+    }
+  }
+
+
+#if 0
+    // (GN Apr 14 2004) Experiment with direct collapse
+  if (COcore_mass > 15) { // direct collapse
+
+    fallback_hydrogen = hydrogen_envelope;
+    fallback_helium = helium_envelope;
+    fallback_CO = CO_envelope;
+
+  }
+#endif
+
+#if 0
   if(fallback_helium > 0) {
     fallback_hydrogen = hydrogen_envelope;
   }
@@ -338,11 +401,13 @@ real black_hole::black_hole_mass(const real COcore_mass) {
       Starlab::max(0., 
 		  (1-(E_supernova-Ebinding_helium)/Ebinding_hydrogen)));
   }
+#endif
 
-  real final_bh_mass = initial_bh_mass + fallback_helium + fallback_hydrogen;
+  real final_bh_mass = initial_bh_mass  + fallback_CO
+                     + fallback_helium + fallback_hydrogen;
 
-  PRC(E_supernova); PRC(Ebinding_helium); PRL(Ebinding_hydrogen);
-  PRC(fallback_helium); PRC(fallback_hydrogen); PRL(final_bh_mass);
+//  PRC(E_supernova); PRC(Ebinding_CO);PRC(Ebinding_helium); PRL(Ebinding_hydrogen);
+//  PRC(fallback_CO);PRC(fallback_helium); PRC(fallback_hydrogen); PRL(final_bh_mass);
 
   return final_bh_mass;
 
