@@ -38,7 +38,7 @@ local int compare_radii(const void * pi, const void * pj)  // increasing radius
 void compute_mcom(dyn *b,
 		  vector& pos, vector& vel,
 		  real f,			// default = 0.9
-		  int n_iter = 2)		// default = 2
+		  int n_iter)			// default = 2
 {
     // See if mcom_pos is already defined and up to date, with the
     // same value of f.
@@ -128,7 +128,7 @@ void compute_mcom(dyn *b,
 
 void compute_mcom(dyn *b,
 		  real f,			// default = 0.9
-		  int n_iter = 2)		// default = 2
+		  int n_iter)			// default = 2
 {
     vector pos, vel;
     compute_mcom(b, pos, vel, f, n_iter);
