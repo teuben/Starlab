@@ -47,7 +47,7 @@
 ////                                     B: track binary changes (unformatted)
 ////              -e    specify softening length [0][*]
 ////              -E    use exact calculation [false]
-////              -f    specify close-encounter distance [1 --> 1/N][*]
+////              -f    specify close-encounter distance [0.25 --> 0.25/N][*]
 ////              -F    turn on dynamical friction and specify the
 ////                                     rescaling coefficient [none]
 ////              -g    specify hysteresis factor [2.5][*]
