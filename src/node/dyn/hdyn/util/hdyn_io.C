@@ -279,9 +279,10 @@ istream & hdyn::scan_dyn_story(istream & s)
 		    set_vector_from_input_line(acc, input_line);
 		else if (!strcmp("pot", keyword))
 		    pot = strtod(val, NULL);
-		else if (!strcmp("R_eff", keyword))
-		    radius = strtod(val, NULL);
-		else if (!strcmp("steps", keyword))
+		else if (!strcmp("R_eff", keyword)) {
+		    real r = strtod(val, NULL);
+		    set_radius(r);
+		} else if (!strcmp("steps", keyword))
 		    steps = strtod(val, NULL);
 		else if (!strcmp("dir_f", keyword))
 		    direct_force = strtod(val, NULL);
