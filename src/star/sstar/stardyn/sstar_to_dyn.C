@@ -88,7 +88,7 @@ local void evolve_the_stars(node* bi, const real end_time) {
 	 cerr <<" -dt="<<current_time<<" "<<time_step<<endl;
    }
 
-    bi->get_starbase()->evolve_element(end_time);
+//    bi->get_starbase()->evolve_element(end_time);
 
     //bi->get_starbase()->get_seba_counters()->step_sstar++;
 
