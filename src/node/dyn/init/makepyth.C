@@ -2,6 +2,7 @@
 //// makepyth:  set up a 3-body system corresponding to the Pythagorean problem.
 ////
 //// Options:    -c    add a comment to the output snapshot [false]
+////             -C    output data in 'col' format [no]
 ////             -i    number the particles sequentially [don't number]
 
 //   version 1:  Nov 1994   Piet Hut               email: piet@iassns.bitnet
@@ -17,22 +18,25 @@
 main(int argc, char ** argv)
 {
     int  i;
-    bool  c_flag = FALSE;
-    bool  i_flag = FALSE;
-    char  *comment;
+    bool c_flag = FALSE;
+    bool C_flag = FALSE;
+    bool i_flag = FALSE;
+    char *comment;
 
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:i";
+    char* param_string = "c:Ci";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
-	    case 'c': c_flag = TRUE;
+	    case 'c': c_flag = true;
 		      comment = poptarg;
 		      break;
-	    case 'i': i_flag = TRUE;
+	    case 'C': C_flag = true;
+		      break;
+	    case 'i': i_flag = true;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
@@ -55,7 +59,7 @@ main(int argc, char ** argv)
     b2.set_younger_sister(&b3);
     b3.set_elder_sister(&b2);
 
-    if (c_flag == TRUE)
+    if (c_flag)
         b.log_comment(comment);
     b.log_history(argc, argv);
 
@@ -67,8 +71,10 @@ main(int argc, char ** argv)
     b2.set_pos(vector(-2,-1,0));
     b3.set_pos(vector(1,-1,0));
 
+    if (C_flag) b.set_col_output(true);
+
     b.to_com();
-    put_node(&b);
+    put_dyn(&b);
 }
 
 #endif

@@ -106,7 +106,7 @@ main(int argc, char ** argv)
 
     addplummer(b, mfrac, rfrac);
 
-    put_node(b);
+    put_dyn(b);
 }
 
 #endif

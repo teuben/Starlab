@@ -1723,7 +1723,7 @@ main(int argc, char **argv)
 	sys_stats(b, 0.5, verbose, binaries, long_binary_output,
 		  which_lagr, true, calc_e, n_sq);
 
-	if (out) put_node(b);
+	if (out) put_dyn(b);
 	rmtree(b);
     }
 }

@@ -15,11 +15,9 @@
 void compute_com(dyn *b, vector& pos, vector& vel)
 {
     real total_mass = 0;
-
     pos = 0;
     vel = 0;
     
-//  for_all_leaves(dyn, b, d)
     for_all_daughters(dyn, b, d) {
 	total_mass += d->get_mass();
 	pos += d->get_mass() * d->get_pos();
@@ -28,6 +26,13 @@ void compute_com(dyn *b, vector& pos, vector& vel)
 
     pos /= total_mass;
     vel /= total_mass;
+
+#if 0
+    // Include the root node (all quantities are relative to the root).
+
+    pos += b->get_pos();
+    vel += b->get_vel();
+#endif
 
     putrq(b->get_dyn_story(), "com_time", b->get_system_time());
     putvq(b->get_dyn_story(), "com_pos", pos);

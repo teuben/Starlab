@@ -4,6 +4,7 @@
 ////              M = 1, T/U = -1/2, E = -1/4.
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
+////              -C    output data in 'col' format [no]
 ////              -i    number the particles sequentially [don't number]
 ////              -l    write cube size to dyn story [don't write]
 ////              -n    specify number of particles [no default]
@@ -59,13 +60,14 @@ main(int argc, char ** argv) {
     int  i;
     int  n;
     int  input_seed, actual_seed;
-    int  c_flag = FALSE;
+    bool c_flag = false;
+    bool C_flag = false;
     int  n_flag = FALSE;
     int  s_flag = FALSE;
     int  i_flag = FALSE;
     int  l_flag = FALSE;
     int  o_flag = FALSE;
-    int  u_flag = FALSE;   // if TRUE, leave scaling untouched
+    int  u_flag = FALSE;   // if true, leave scaling untouched
 
     char  *comment;
     char  seedlog[SEED_STRING_LENGTH];
@@ -76,34 +78,36 @@ main(int argc, char ** argv) {
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:iln:os:u";
+    char* param_string = "c:Ciln:os:u";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c)
 	    {
-	    case 'c': c_flag = TRUE;
+	    case 'c': c_flag = true;
 		      comment = poptarg;
 		      break;
-	    case 'i': i_flag = TRUE;
+	    case 'C': C_flag = true;
 		      break;
-	    case 'l': l_flag = TRUE;
+	    case 'i': i_flag = true;
 		      break;
-	    case 'n': n_flag = TRUE;
+	    case 'l': l_flag = true;
+		      break;
+	    case 'n': n_flag = true;
 		      n = atoi(poptarg);
 		      break;
-	    case 'o': o_flag = TRUE;
+	    case 'o': o_flag = true;
                       break;
-	    case 's': s_flag = TRUE;
+	    case 's': s_flag = true;
 		      input_seed = atoi(poptarg);
 		      break;
-	    case 'u': u_flag = TRUE;
+	    case 'u': u_flag = true;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
                       exit(1);
 	    }            
     
-    if (n_flag == FALSE) {
+    if (!n_flag) {
         cerr << "makecube: must specify the number # of";
 	cerr << " particles with -n#\n";
 	exit(1);
@@ -133,11 +137,12 @@ main(int argc, char ** argv) {
         bo = by;
     }
 
+    if (C_flag) b->set_col_output(true);
     if (c_flag) b->log_comment(comment);
 
     b->log_history(argc, argv);
 
-    if (s_flag == FALSE) input_seed = 0;
+    if (!s_flag) input_seed = 0;
     actual_seed = srandinter(input_seed);
 
     if (o_flag) cerr << "makecube: random seed = " << actual_seed << endl;
@@ -147,7 +152,7 @@ main(int argc, char ** argv) {
 
     if (n > 0) makecube(b, n, u_flag);
 
-    put_node(b);
+    put_dyn(b);
 }
 
 #endif

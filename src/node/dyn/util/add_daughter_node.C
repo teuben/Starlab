@@ -140,7 +140,7 @@ main(int argc, char ** argv)
     
     if (e_flag) root->pretty_print_tree(cerr);
 
-    put_node(root);
+    put_dyn(root);
     rmtree(root);
 }
 

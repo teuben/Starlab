@@ -10,6 +10,8 @@
 
 #include "node.h"
 
+// All functions are node -- why is this here??  (Steve, 5/03)
+
 #ifdef TOOLBOX
 
 // double_mass: Double the mass of a star to approximate a binary.

@@ -15,6 +15,7 @@
 ////              -b    specify alpha3/alpha1 [-1/3]
 ////              -B    specify "Oort B"
 ////              -c    add a comment to the output snapshot [false]
+////              -C    output data in 'col' format [no]
 ////              -F    specify tidal field type as in kira [1]
 ////                        1: point-mass
 ////                        2: isothermal halo
@@ -276,6 +277,7 @@ main(int argc, char ** argv)
     bool G_flag = false;
 
     bool c_flag = false;
+    bool C_flag = false;
     bool i_flag = false;
     bool n_flag = false;
     bool o_flag = false;
@@ -293,7 +295,7 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "A:a:B:b:c:F:G:in:os:T:uw:";
+    char* param_string = "A:a:B:b:c:CF:G:in:os:T:uw:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
         switch(c) {
@@ -316,6 +318,8 @@ main(int argc, char ** argv)
             case 'c': c_flag = true; 
                       comment = poptarg;
                       break;
+	    case 'C': C_flag = true;
+		      break;
             case 'F': tidal_type = atoi(poptarg);
 		      b_flag = false;
 	    	      F_flag = true;
@@ -448,6 +452,8 @@ main(int argc, char ** argv)
 	}
     }
 
+    if (C_flag) b->set_col_output(true);
+
     if (c_flag)
 	b->log_comment(comment);		// add comment to story
     b->log_history(argc, argv);
@@ -475,7 +481,7 @@ main(int argc, char ** argv)
     }
 
     if (n_flag)
-	put_node(b);
+	put_dyn(b);
 }
 
 #endif

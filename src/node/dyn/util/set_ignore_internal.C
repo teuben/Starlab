@@ -46,7 +46,7 @@ main(int argc, char *argv[])
 //      }
 
     putrq(b->get_log_story(), "ignore_internal", 1);
-    put_node(b);
+    put_dyn(b);
 }
 
 #endif

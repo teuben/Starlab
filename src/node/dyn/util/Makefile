@@ -35,7 +35,7 @@ EXECUTABLES =	compute_com compute_mcom compute_density compute_max_cod \
                 lagradplotsmooth get_std_center \
 		add_plummer add_power_law add_tidal \
 		set_ignore_internal add_daughter_node getsnap \
-		print_time
+		print_time radial_density radial_vdisp
 
 OBJECT_FILES =	compute_com.o compute_density.o compute_max_cod.o \
 		compute_mcom.o compute_mean_cod.o \
@@ -44,7 +44,10 @@ OBJECT_FILES =	compute_com.o compute_density.o compute_max_cod.o \
 		flatten.o lagrad.o merge_low.o scale.o sys_stats.o to_com.o \
 		set_com.o plot_stars.o get_std_center.o \
 		refine_mass.o refine_mass2.o \
-		add_plummer.o add_power_law.o
+		add_plummer.o add_power_law.o \
+		radial_density.o radial_vdisp.o
+
+
 
 LIBRARY = libdyn.a
 

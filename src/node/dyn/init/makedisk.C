@@ -9,6 +9,7 @@
 ////                          vel. unit = 65.7 km/s
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
+////              -C    output data in 'col' format [no]
 ////              -i    number the particles sequentially [don't number]
 ////              -l    specify particle radius [0]
 ////              -m    specify the total mass of the disk [no default]
@@ -108,6 +109,7 @@ local void makedisk(dyn* b, int n,
 main(int argc, char ** argv)
 {
     bool c_flag = false;
+    bool C_flag = false;
     bool n_flag = false;
     bool s_flag = false;
     bool i_flag = false;
@@ -130,13 +132,15 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:il:m:M:n:or:R:s:v:V";
+    char* param_string = "c:Cil:m:M:n:or:R:s:v:V";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c)
 	    {
 	    case 'c': c_flag = true;
 		      comment = poptarg;
+		      break;
+	    case 'C': C_flag = true;
 		      break;
 	    case 'i': i_flag = true;
 		      break;
@@ -243,6 +247,8 @@ main(int argc, char ** argv)
     dyn *b, *by, *bo;
     b = new dyn();				// root node
 
+    if (C_flag) b->set_col_output(true);
+
     bo = new dyn();				// central mass
     if (i_flag) 
         bo->set_label(0);
@@ -273,7 +279,7 @@ main(int argc, char ** argv)
 	   m_central, m_disk,
 	   r_inner, r_outer, radius, v_disp);
 
-    put_node(b);
+    put_dyn(b);
 }
 
 #endif

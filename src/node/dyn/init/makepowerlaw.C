@@ -30,6 +30,7 @@
 ////              -a/R  specify scale [1]
 ////              -b    cutoff radius [0]
 ////              -c    add a comment to the output snapshot [false]
+////              -C    output data in 'col' format [no]
 ////              -d    make orbits disk-like within the cutoff [isotropic]
 ////              -e    softening parameter [b/100]
 ////              -i    number the particles sequentially [don't number]
@@ -174,6 +175,7 @@ int main(int argc, char ** argv) {
 
     bool a_flag = false;
     bool c_flag = false;
+    bool C_flag = false;
     bool d_flag = false;
     bool e_flag = false;
     bool i_flag = false;
@@ -197,7 +199,7 @@ int main(int argc, char ** argv) {
 
     extern char *poptarg;
     int c;
-    char* param_string = "A:a:b:c:de:il:M:m:n:oR:u:s:x:v:";
+    char* param_string = "A:a:b:c:Cde:il:M:m:n:oR:u:s:x:v:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -212,6 +214,8 @@ int main(int argc, char ** argv) {
 		      break;
 	    case 'c': c_flag = true;
 		      comment = poptarg;
+		      break;
+	    case 'C': C_flag = true;
 		      break;
 	    case 'd': d_flag = true;
 		      break;
@@ -278,6 +282,8 @@ int main(int argc, char ** argv) {
     b = new dyn();
     if (i_flag) b->set_label("root");
 
+    if (C_flag) b->set_col_output(true);
+
     bo = new dyn();
     if (i_flag) bo->set_label(1);
     b->set_oldest_daughter(bo);
@@ -326,7 +332,7 @@ int main(int argc, char ** argv) {
 	putrq(b->get_log_story(), "r_reflect", r_max);
     }
 
-    put_node(b);
+    put_dyn(b);
     return 0;
 }
 

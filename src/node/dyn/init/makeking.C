@@ -15,6 +15,7 @@
 ////                     models with b < 0 approach isothermal spheres
 ////                     as b --> -infinity]
 ////              -c    add a comment to the output snapshot [false]
+////              -C    output data in 'col' format [no]
 ////              -i    number the particles sequentially [don't number]
 ////              -n    specify number of particles [no default]
 ////                    if unspecified assumes an input snapshot with masses.
@@ -832,6 +833,7 @@ main(int argc, char ** argv)
     int  input_seed, actual_seed;
 
     bool c_flag = false;
+    bool C_flag = false;
     bool i_flag = false;
     bool n_flag = false;
     bool o_flag = false;
@@ -849,7 +851,7 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "b:c:in:os:T:uw:";
+    char* param_string = "b:c:Cin:os:T:uw:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
         switch(c) {
@@ -858,6 +860,8 @@ main(int argc, char ** argv)
             case 'c': c_flag = true;
                       comment = poptarg;
                       break;
+	    case 'C': C_flag = true;
+		      break;
 	    case 'i': i_flag = true;
                       break;
             case 'n': n_flag = true;
@@ -941,6 +945,8 @@ main(int argc, char ** argv)
 	b->log_comment(comment);		// add comment to story
     b->log_history(argc, argv);
     
+    if (C_flag) b->set_col_output(true);
+
     if (s_flag == false) input_seed = 0;	// default
     actual_seed = srandinter(input_seed);
     
@@ -954,7 +960,7 @@ main(int argc, char ** argv)
 
     makeking(b, n, w0, n_flag, u_flag, test);
 
-    put_node(b);
+    put_dyn(b);
 }
 
 #endif

@@ -68,7 +68,7 @@ main(int argc, char ** argv)
 
     addstoa(b, m_flag);
 
-    put_node(b);
+    put_dyn(b);
 }
 
 #endif

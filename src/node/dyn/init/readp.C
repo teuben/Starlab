@@ -5,6 +5,7 @@
 ////                                       etc.)
 ////
 ////         data into a Starlab snapshot (flat tree).
+////         This is the inverse function to dumbp.
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
 ////              -i    number the particles sequentially [don't number]
@@ -39,52 +40,12 @@ int main(int argc, char ** argv)
 		      exit(1);
 	}
 
-    // Create the root node.
-
-    dyn * root = new dyn();
-    root->set_system_time(0);
-    if (i_flag) root->set_index(0);
-
-    // Create the system node by node.
-
-    dyn *b, *bo;
-    real total_mass = 0;
-    int n = 0;
-
-    while (!cin.eof()) {
-
-	int index; cin >> index; if (cin.eof()) break;	// note: only minimal
-	real mass; cin >> mass; if (cin.eof()) break;	// checking for
-	vector pos; cin >> pos; if (cin.eof()) break;	// corrupted data
-	vector vel; cin >> vel;
-
-	dyn * b = new dyn();
-
-	b->set_index(index);
-	b->set_mass(mass);
-	b->set_pos(pos);
-	b->set_vel(vel);
-
-	b->set_parent(root);
-
-	if (n++ == 0)
-	    root->set_oldest_daughter(b);
-	else {
-	    b->set_elder_sister(bo);
-	    bo->set_younger_sister(b);
-	}
-
-	if (i_flag) b->set_index(n);
-	bo = b;
+    dyn *root;
+    while (root = get_col()) {
+	dyn::set_col_output(false);	// force dyn output (default is col)
+	put_dyn(root);
+	rmtree(root);
     }
-	    
-    root->set_mass(total_mass);
-
-    root->log_history(argc, argv);
-    if (c_flag) root->log_comment(comment);
-
-    put_node(root);
-    return 0;
 }
 
 #endif

@@ -239,7 +239,7 @@ main(int argc, char *argv[])
     }
 
     add_power_law(b, coeff, exponent, scale, center, n_flag, true, G_flag);
-    put_node(b);
+    put_dyn(b);
 }
 
 #endif

@@ -255,6 +255,7 @@ main(int argc, char ** argv)
     real  rfrac;
 
     bool  c_flag = false;
+    bool  C_flag = false;
     bool  i_flag = false;
     bool  m_flag = false;
     bool  n_flag = false;
@@ -271,35 +272,37 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:im:n:os:r:Ru";
+    char* param_string = "c:Cim:n:os:r:Ru";
 
     mfrac = rfrac = VERY_LARGE_NUMBER;
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
 
-	    case 'c': c_flag = TRUE;
+	    case 'c': c_flag = true;
 		      comment = poptarg;
 		      break;
-	    case 'i': i_flag = TRUE;
+	    case 'C': C_flag = true;
 		      break;
-	    case 'm': m_flag = TRUE;
+	    case 'i': i_flag = true;
+		      break;
+	    case 'm': m_flag = true;
 		      mfrac = atof(poptarg);
 		      break;
-	    case 'n': n_flag = TRUE;
+	    case 'n': n_flag = true;
 		      n = atoi(poptarg);
 		      break;
-	    case 'o': o_flag = TRUE;
+	    case 'o': o_flag = true;
 		      break;
-	    case 'r': r_flag = TRUE;
+	    case 'r': r_flag = true;
 		      rfrac = atof(poptarg);
 		      break;
 	    case 'R': R_flag = !R_flag;
 		      break;
-	    case 's': s_flag = TRUE;
+	    case 's': s_flag = true;
 		      input_seed = atoi(poptarg);
 		      break;
-	    case 'u': u_flag = TRUE;
+	    case 'u': u_flag = true;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
@@ -314,6 +317,8 @@ main(int argc, char ** argv)
     
     dyn *b, *by, *bo;
     b = new dyn();
+
+    if (C_flag) b->set_col_output(true);
 
     if (n > 0) {
 	bo = new dyn();
@@ -333,11 +338,11 @@ main(int argc, char ** argv)
         bo = by;
     }
 
-    if (c_flag == TRUE)
+    if (c_flag)
         b->log_comment(comment);
     b->log_history(argc, argv);
 
-    if (s_flag == FALSE)
+    if (!s_flag)
         input_seed = 0;                         	// default
     actual_seed = srandinter(input_seed);
 
@@ -354,7 +359,7 @@ main(int argc, char ** argv)
 	if (R_flag) reshuffle_all(b, n);
     }
 
-    put_node(b);
+    put_dyn(b);
     rmtree(b);
 }
 

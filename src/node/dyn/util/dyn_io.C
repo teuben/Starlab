@@ -50,7 +50,10 @@ real dyn::pl_cutoff_sq = 0;
 real dyn::pl_mass = 0;
 real dyn::pl_softening_sq = 0;
 
-FILE* dyn::fp = 0;
+FILE* dyn::ifp = 0;
+FILE* dyn::ofp = 0;
+
+bool dyn::col_output = false;
 
 void dyn::print_static(ostream& s)		// default = cerr
 {
@@ -198,63 +201,85 @@ ostream& dyn::print_dyn_story(ostream& s,
 }
 
 // gets called by get_dyn when input format is columns of numbers.
-
 dyn* get_col(istream& s,
 	     npfp the_npfp,		// note: return value is always node*
 	     hbpfp the_hbpfp,
 	     sbpfp the_sbpfp,
 	     bool use_stories)
 {
+
+  static int t;
   dyn* root = (dyn*)the_npfp(the_hbpfp, the_sbpfp, use_stories);
   root->set_index(0);
-  static int t;
-
   // Write time to both the root node (static class data) and to
   // the root node (dyn story), because different user functions
   // may expect either placement.  (To be cleaned up...)
-
   root->set_system_time(t++);
-  if (use_stories)
-    putrq(root->get_dyn_story(), "t", t);
+  // Is time supposed to be incremented here?
+  if (use_stories) putrq(root->get_dyn_story(), "t", t);
 
-  static unsigned i = 0;
-  int id, n = 0;
+  static unsigned lineno = 0;
+  bool first_dyn = true;
   dyn* bo;
 
-  char line[256];
-  while (true) {
+  dyn::set_col_output(true);
 
-    if (dyn::get_fp()) fgets(line, sizeof line, dyn::get_fp());
-    else s.getline(line, sizeof line), strcat(line, "\n");
-    if (++i, !line) break;
-    if (line[0] == '\n') return root;
-    if (line[0] == '#') {
+  while (true) {
+    char line[256];
+    if (dyn::get_ifp()) {
+      if (!fgets(line, sizeof line, dyn::get_ifp())) break;
+    } else {
+      if (s.getline(line, sizeof line - 1)) strcat(line, "\n");
+      else break;
+    }
+    switch (++lineno, line[0]) {
+    case '\n': return root;
+    case '#': continue;
+    case ';':
       if (use_stories) {
 	line[strlen(line)-1] = '\0';
 	if (strlen(&line[1])) root->log_comment(&line[1]);
       }
       continue;
     }
+    int id;
     double m, x[3], v[3];
     if (sscanf(line, "%i %lg %lg %lg %lg %lg %lg %lg\n", &id, &m, &x[0], &x[1],
                &x[2], &v[0], &v[1], &v[2]) != 8)
-      cerr << "Malformed input on line #" << i << endl, exit(1);
-    dyn* b = (dyn*)the_npfp(the_hbpfp, the_sbpfp, use_stories);
+      cerr << "Malformed input on line #" << lineno << '\n', exit(1);
+    dyn* const b = (dyn*)the_npfp(the_hbpfp, the_sbpfp, use_stories);
     b->set_index(id);
     b->set_mass(m);
     b->set_pos(vector(x[0], x[1], x[2]));
     b->set_vel(vector(v[0], v[1], v[2]));
     b->set_parent(root);
-    if (n++) b->set_elder_sister(bo), bo->set_younger_sister(b);
-    else root->set_oldest_daughter(b);
-    b->set_index(n);
+    if (first_dyn) root->set_oldest_daughter(b), first_dyn = false;
+    else  b->set_elder_sister(bo), bo->set_younger_sister(b);
     bo = b;
   }
 
-  if (n) return root;
-  delete root;
-  return NULL;
+  if (!first_dyn) return root;
+  else { delete root; return NULL; }
 }
+
+// this I/O problem is getting to be a real pain in the (my) ass
+void put_col(dyn* root, ostream& s) {
+
+  if (dyn::get_ofp()) {
+    for_all_daughters(dyn, root, i)
+      fprintf(dyn::get_ofp(), "%i %g %g %g %g %g %g %g\n", i->get_index(),
+	      i->get_mass(), i->get_pos()[0], i->get_pos()[1], i->get_pos()[2],
+	      i->get_vel()[0], i->get_vel()[1], i->get_vel()[2]);
+    putc('\n', dyn::get_ofp());
+  } else {
+    for_all_daughters(dyn, root, i)
+      s << i->get_index() << ' ' << i->get_mass() << ' ' << i->get_pos() << ' '
+	<< i->get_vel() << '\n';
+    s << '\n';
+  }
+
+}
+
 
 #else
 main(int argc, char** argv)
@@ -264,7 +289,7 @@ main(int argc, char** argv)
 
     while (b = get_dyn()) {
 	cout << "TESTING put_dyn:" << endl;
-        put_node(b);
+        put_dyn(b);
 	cout << "TESTING pp2()   :" << endl;
 	pp2(b);
 	delete b;

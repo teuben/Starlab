@@ -133,7 +133,7 @@ int main(int argc, char ** argv)
     else {
         root = read_stoa(i_flag);
         root->log_history(argc, argv);
-        put_node(root);
+        put_dyn(root);
     }
     return 0;
 }

@@ -88,7 +88,7 @@ main(int argc, char *argv[])
     }
 
     add_plummer(b, mass, scale, center, n_flag, true);
-    put_node(b);
+    put_dyn(b);
 }
 
 #endif

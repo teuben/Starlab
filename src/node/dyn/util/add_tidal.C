@@ -165,6 +165,6 @@ main(int argc, char *argv[])
 	cerr << "add_tidal:  Rt/Rv = " << RtRv << ", field type = "
 	     << tidal_field_type << endl;
 
-    put_node(b);
+    put_dyn(b);
 }
 #endif
