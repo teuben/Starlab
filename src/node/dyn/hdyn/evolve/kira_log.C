@@ -594,8 +594,9 @@ void log_output(hdyn * b, real count, real steps,
 {
     // Standard log output (to stderr, note).
 
-    vector cod_pos, cod_vel;
-    compute_com(b, cod_pos, cod_vel);
+    vector cod_pos, com_vel, cod_vel;
+    compute_com(b, cod_pos, com_vel);
+    cod_vel = com_vel;
 
 //#if 0
 
@@ -637,12 +638,14 @@ void log_output(hdyn * b, real count, real steps,
 	print_external(ext);
 	cerr << ")" << endl;
     }
+    cerr << "          CM kinetic energy = "
+	 << 0.5*b->get_mass()*square(com_vel) << endl;
 
     cerr.precision(p);
 
-    // Note: on return from print_recalculated_energies, hdyn::pot is
-    // properly set, and includes the tidal field, if any.  The earlier
-    // "bound" quantities may be suspect...
+    // Note: on return from print_recalculated_energies, hdyn::pot
+    // is properly set, and includes the external field, if any.
+    // The earlier "bound" quantities may be suspect...
 
     if (steps > 0) {
 	update_cpu_counters(b);
