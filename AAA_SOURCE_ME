@@ -30,7 +30,7 @@ if ($status) then
 endif
 echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
 
-echo Building Starlab \(this may take a few minutes\)
+echo Building Starlab \(this may take a few minutes\)...
 make all >>& install.log
 if ($status) then
     @ stat++
