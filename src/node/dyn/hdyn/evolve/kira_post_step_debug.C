@@ -1,6 +1,14 @@
 
 // Place temporary post-step debugging code here, to clean up kira.C.
 
+PRL(ds);
+for (int ii = 0; ii < n_next; ii++)
+    if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
+	hdyn *n = next_nodes[ii];
+	PRC(ii); n->print_label(); PRL(n->get_acc());
+    }
+
+
 #if 0
     if ((t > 1250.854692 && t < 1250.854695)
 	|| (t > 1250.854730 && t < 1250.854732)
