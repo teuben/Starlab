@@ -735,16 +735,16 @@ local int integrate_list(hdyn * b,
 #endif
 
     // NEW FORMULATION (Steve, 4/03): calculate_acc_and_jerk_for_list()
-    // will partially sort the list as it goes, placing the low-level
-    // nodes at the start.  Return value now is the number of low-level
+    // will partially sort the list as it goes, placing the top-level
+    // nodes at the start.  Return value now is the number of top-level
     // nodes on the list.  Note also the change in arguments.
 
-    int n_low = 
+
+    n_list_top_level =
 	calculate_acc_and_jerk_for_list(next_nodes, n_next, t_next,
 					exact, tree_changed,
 					reset_force_correction,  // not used
 					restart_grape);
-    n_list_top_level = n_next - n_low;
 
     // Next loop through top-level nodes must turn off the
     // on_integration_list() flags...
