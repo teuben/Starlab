@@ -1,0 +1,18 @@
+#!/usr/local/bin/tcsh -f
+
+if ($#argv < 1) exit
+
+set tmp = $1
+set ext = $tmp:e
+
+alias CAT cat
+if (X$ext == XZ) then
+    alias CAT 'uncompress -c'
+else if (X$ext == Xgz) then
+    alias CAT 'gunzip -c'
+endif
+
+CAT $* | grep 'N =' | grep 'bound)' | tr -d '(' \
+    | awk '{print ++i, $6, $7;}' \
+    | plot_data -q -x 'log #' -y 'N, N_bound' -c 1 2 3 -C green red \
+		-h "Data from $*"
