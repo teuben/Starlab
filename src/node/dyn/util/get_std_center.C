@@ -13,6 +13,9 @@
 ////               story of the top-level node; they are also optionally
 ////               returned as function arguments in the library version.
 ////
+////               Note: The computed center is defined in absolute terms,
+////               and so includes the pos and vel of the parent node.
+////
 //// Options:     -c    add a comment to the output snapshot [false]
 
 #include "dyn.h"

@@ -2,9 +2,9 @@
 //// compute_com:  Determine the center of mass position and velocity of
 ////               the input N-body system.
 ////
-////               Note: The computed center of mass is defined relative in
-////               absolute terms, and so includes the pos and vel of the
-////               parent node.
+////               Note: The computed center of mass is defined in
+////               absolute terms, and so includes the pos and vel of
+////               the parent node.
 ////
 ////               Center of mass position and velocity are written to the
 ////               dyn story of the top-level node; they are also optionally

@@ -7,9 +7,9 @@
 ////                    in the paper below(*), to use a weighting factor
 ////                    linear in the density, may not converge well).
 ////
-////                    Note: The computed density center is defined relative in
-////                    absolute terms, and so includes the pos and vel of the
-////                    parent node.
+////                    Note: The computed density center is defined in
+////                    absolute terms, and so includes the pos and vel of
+////                    the parent node.
 ////
 ////                    Densities are not computed here -- run compute_density
 ////                    before invoking compute_mean_cod.

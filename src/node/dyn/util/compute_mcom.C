@@ -4,9 +4,9 @@
 ////                as the center of mass of the f [default 90%] particles
 ////                closest to the center of mass.
 ////
-////                Note: The computed center of mass is defined relative in
-////                absolute terms, and so includes the pos and vel of the
-////                parent node.
+////                Note: The computed center of mass is defined in
+////                absolute terms, and so includes the pos and vel of
+////                the parent node.
 ////
 ////                Center of mass position and velocity are written to the
 ////                dyn story of the top-level node; they are also optionally
