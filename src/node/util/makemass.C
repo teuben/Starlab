@@ -64,8 +64,26 @@ local real tapered_power_law(real m,
 			     const real x2 = 2.4, 
 			     const real mbreak = 0.25) {
 
-  real dNdm = pow(m, x1)*(1-pow(exp(-m/mbreak), x2));
-  return dNdm;
+  real x = randinter(1, 91.43);
+  real ms = 0;
+  if(x < 1) ms = randinter(5.62, 100);
+  else if(x < 2) ms = randinter(3.55, 5.62);
+  else if(x < 5.16) ms = randinter(2.24, 3.55);
+  else if(x < 9.14) ms = randinter(1.41, 2.24);
+  else if(x < 15.17) ms = randinter(0.89, 1.41);
+  else if(x < 21.93) ms = randinter(0.56, 0.89);
+  else if(x < 37.07) ms = randinter(0.35, 0.56);
+  else if(x < 57.03) ms = randinter(0.22, 0.35);
+  else if(x < 73.63) ms = randinter(0.14, 0.22);
+  else if(x < 85.93) ms = randinter(0.09, 0.14);
+  else if(x < 91.43) ms = randinter(0.04, 0.09);
+  else ms = randinter(0.0, 0.04);
+  
+  // 562   3.55   2.24   1.41   0.89   0.56   0.35   0.22   0.14   0.09  0.04
+  //     |      |      |      |      |      |      |      |      |      |
+  //    1.00   3.16   3.98   6.03   6.76  15.14  19.96  16.60  12.30   5.5
+// 1    2.00   5.16   9.14   15.17  21.93 37.07  57.03  73.63  85.93  91.43
+  return ms;
 }
 
 local real mf_GdeMarchi(real m_lower, real m_upper) {
@@ -73,6 +91,11 @@ local real mf_GdeMarchi(real m_lower, real m_upper) {
 //dN/dLogm= m^(-1.35)*(1-exp(-m/0.15)^2.4)
 // for now we do it the poor way by Monte Carlo
 
+  real x1, x2, mbreak;
+    real mass = tapered_power_law(m_lower, x1, x2, mbreak);
+    return mass;
+
+#if 0
   real x1 = -2.35;
   real x2 = 2.40;
   real mbreak = 0.15;
@@ -89,6 +112,7 @@ local real mf_GdeMarchi(real m_lower, real m_upper) {
     }
     while(dNdm_try>dNdm);
     return m;
+#endif
 }
 
 // see: de la Fuente Marcos, Aarseth, Kiseleva, Eggleton
