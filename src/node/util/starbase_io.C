@@ -89,9 +89,9 @@ real starbase::get_luminosity() {return 0;}
 
 vector starbase::get_anomal_velocity() {
                  vector v; return v;}
-void starbase::set_anomal_velocity(vector v) {}
+void starbase::set_anomal_velocity(const vector v) {}
 void starbase::evolve_element(const real) {}
-star* starbase::merge_elements(star*) {}
+star* starbase::merge_elements(star*) { return NULL; }    // HELP HELP
 
 real starbase::get_semi() {return 0;}
 void starbase::set_semi(real a) {}
