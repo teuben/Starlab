@@ -31,13 +31,13 @@ echo package prefix flag is \"$pre\"
 
 ./clean-autotools
 
-# See which tool packagesexist.
+# See which tool packages exist.
 
-set tools = (`find -name autoconf\*.tar.gz \
-		-o -name automake\*.tar.gz \
-		-o -name libtool\*.tar.gz  | sed "s/.tar.gz//"`)
+set autoconf = (`find . -name autoconf\*.tar.gz | sed "s/.tar.gz//"`)
+set automake = (`find . -name automake\*.tar.gz | sed "s/.tar.gz//"`)
+set libtool  = (`find . -name libtool\*.tar.gz  | sed "s/.tar.gz//"`)
 
-foreach dir ($tools)
+foreach dir ($autoconf $automake $libtool)
 
     echo unpacking $dir
     gunzip -c $dir.tar.gz | tar xf -

@@ -6,11 +6,11 @@
 
 # See which tool directories exist.
 
-set tools = (`find -name autoconf\* -type d -prune \
-		-o -name automake\* -type d -prune \
-		-o -name libtool\*  -type d -prune`)
+set autoconf = (`find . -name autoconf\* -type d -prune`)
+set automake = (`find . -name automake\* -type d -prune`)
+set libtool  = (`find . -name libtool\*  -type d -prune`)
 
-foreach dir ($tools)
+foreach dir ($autoconf $automake $libtool)
 
     echo cleaning $dir
     if (-d $dir) then
