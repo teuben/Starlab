@@ -16,7 +16,7 @@
 ////                            plot                                 [position]
 ////           -i index     specify (real) color index for all stars
 ////                                                       [use internal index]
-////           -l scale     specify size of field of view (+/- scale)       [3]
+////           -l scale     specify width of field of view (+/- scale)      [3]
 ////           -m           use mass to determine star color and/or size   [no]
 ////           -n nmax      specify maximum number of images to produce   [Inf]
 ////           -N nbody     color using a (small-N) colormap               [no]
@@ -31,7 +31,8 @@
 ////           -q           toggle suppression of diagnostic output
 ////                                                           [don't suppress]
 ////           -r           use stellar radius to set point size           [no]
-////           -s size      specify image size, in pixels                 [256]
+////           -R           animate in reverse                             [no]
+////           -s nx ny     specify image size, in pixels                 [256]
 ////           -S nskip     specify snaps to skip between images            [0]
 ////           -t           test the color map [don't test]
 ////           -x           specify right (log effective temparature) edge
@@ -387,7 +388,9 @@ main(int argc, char** argv)
     bool compress = false;
     int format = 0;
 
-    real boxl = L;
+    int nx = NX, ny = NY;
+
+    real boxw = L;
     real xleft = -L;
     real xright = L;
     real ybot = -L;
@@ -402,7 +405,6 @@ main(int argc, char** argv)
     bool xlim_set = false;
     bool ylim_set = false;
 
-    int nx = NX, ny = NY;
     int n = 0, nskip = 0;
 
     int origin = 0;
@@ -424,11 +426,13 @@ main(int argc, char** argv)
     bool quiet = true;
     bool delete_frames = false;
 
+    bool reverse = false;
+
     check_help();
 
-    extern char *poptarg;
+    extern char *poptarg, *poparr[];
     int c;
-    char* param_string = "1acC:df:F:gGi:Hl:X:x:Y:y:mn:N:o:O:p:P:qrs:S:t";
+    char* param_string = "1acC:df:F:gGi:Hl:X:x:Y:y:mn:N:o:O:p:P:qrRs:.S:t";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
@@ -456,7 +460,7 @@ main(int argc, char** argv)
 			break;
 	    case 'H':	HRD = !HRD;
 			break;
-	    case 'l':	boxl = atof(poptarg);
+	    case 'l':	boxw = atof(poptarg);
 			break;
 	    case 'i':	index_all = atof(poptarg);
 	    		if (index_all < 0)
@@ -501,7 +505,10 @@ main(int argc, char** argv)
 			break;
 	    case 'r':	radius = true;
 			break;
-	    case 's':   nx = ny = atoi(poptarg);
+	    case 'R':	reverse = true;
+			break;
+	    case 's':   nx = ny = atoi(poparr[0]);
+	    		if (poparr[1][0] != '-') ny = atoi(poparr[1]);
 		        break;
 	    case 'S':   nskip = atoi(poptarg);
 		        break;
@@ -549,8 +556,10 @@ main(int argc, char** argv)
 	    ytop = 3;
 	}
     } else {
-	xleft = ybot = -boxl;
-	xright = ytop = boxl;
+	xleft = -boxw;
+	xright = boxw;
+	ybot = -(boxw*ny)/nx;
+	ytop = (boxw*ny)/nx;
     }
 
     // Note on color maps and conventions (Steve, 8/02):
@@ -642,9 +651,9 @@ main(int argc, char** argv)
     real mmin = VERY_LARGE_NUMBER, mmax = -VERY_LARGE_NUMBER;
     real rmin = VERY_LARGE_NUMBER, rmax = -VERY_LARGE_NUMBER;
 
-    // Box settings (some may change with the forst dataset):
+    // Box settings (some may change with the first dataset):
 
-    real logfac = 1, rfac = nx/(2*boxl);
+    real logfac = 1, rfac = nx/(2*boxw);
 
     real lx = xright - xleft;
     real ly = ytop - ybot;
@@ -688,32 +697,34 @@ main(int argc, char** argv)
 		// Determine overall scalings (and the mass range, if
 		// relevant) from *this* snapshot.
 
-		// Start by checking that some opints will actually be visible!
+		// Start by checking that some points will actually be visible!
 
 		if (!HRD) {
 		    int total, count;
-		    real boxl_save = boxl;
-		    boxl /= 2;
+		    real boxw_save = boxw;
+		    boxw /= 2;
 		    do {
-			boxl *= 2;
+			boxw *= 2;
 			total = count = 0;
 			for_all_daughters(hdyn, b, bb) {
 			    total++;
 			    vec pos = b->get_pos() + bb->get_pos();
-			    if (abs1(pos) <= boxl) count++;
+			    if (abs1(pos) <= boxw) count++;
 			}
 		    }  while (total > 10 && count < (3*total)/4);
 
-		    if (boxl > 1.1*boxl_save) {
+		    if (boxw > 1.1*boxw_save) {
 
 			cerr << "snap_to_image: box size increased to "
-			     << boxl << endl;
+			     << boxw << endl;
 
-			// Reprats lines above..
+			// Repeats lines above..
 
-			xleft = ybot = -boxl;
-			xright = ytop = boxl;
-			rfac = nx/(2*boxl);
+			xleft = -boxw;
+			xright = boxw;
+			ybot = -(boxw*ny)/nx;
+			ytop = (boxw*ny)/nx;
+			rfac = nx/(2*boxw);
 
 			lx = xright - xleft;
 			ly = ytop - ybot;
@@ -955,17 +966,19 @@ main(int argc, char** argv)
 	    // Create the movie.
 
 	    char ext1[8], ext2[8], command[1024];
+	    char rev[3] = "  ";
+	    if (reverse) strcpy(rev, "-r");
 
 	    if (format == 0) {
 		strcpy(ext1, ".png");
 		strcpy(ext2, ".mng");
-		sprintf(command, "png2mng.pl -i %s -s %d %d > %s%s",
-			output_file_id, nx, ny, output_file_id, ext2);
+		sprintf(command, "png2mng.pl %s -i %s -s %d %d > %s%s",
+			rev, output_file_id, nx, ny, output_file_id, ext2);
 	    } else {
 		strcpy(ext1, ".gif");
 		strcpy(ext2, ".gif");
-		sprintf(command, "gifsicle %s.*%s -o %s%s",
-			output_file_id, ext1, output_file_id, ext2);
+		sprintf(command, "xargs gifsicle `ls %s %s.*%s` -o %s%s",
+			rev, output_file_id, ext1, output_file_id, ext2);
 	    }
 
 	    cerr << endl
