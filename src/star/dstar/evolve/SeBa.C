@@ -164,7 +164,9 @@ local bool  evolve_binary(dyn * bi,
     while (time<end_time);
 
   ds->dump("SeBa.data", true);
+  ds->set_star_story(NULL);
     
+  rmtree(bi, false);
   return true;
 
 }
@@ -414,6 +416,10 @@ int main(int argc, char ** argv) {
    
       evolve_binary(the_binary, start_time, end_time, 
 		    stop_at_merger_or_disruption, stop_at_remnant_formation);
+
+      delete the_binary;
+      delete root;
+
 
 //      the_binary->get_starbase()->dump(cerr, false);
 
