@@ -1389,9 +1389,11 @@ void sys_stats(dyn* b,
 	PRI(4); PRL(rhalf);
 
 	if (rhalf > 0) {
-	    real density = 1.5*nd / (4*M_PI*pow(rhalf, 3));
+	    real density = 1.5*b->get_root()->get_mass()
+				/ (4*M_PI*pow(rhalf, 3));
 	    putrq(b->get_root()->get_dyn_story(), "kira_rhalf", rhalf);
 	    putrq(b->get_root()->get_dyn_story(), "kira_half_density", density);
+	    set_new_rhalf();
 	}
 
 	// PRL(heavy_stars);

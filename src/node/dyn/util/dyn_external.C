@@ -165,12 +165,21 @@ local inline void add_plummer(dyn *b,
 
 // Add dynamical friction term.
 
+static bool new_rhalf = true;
+static int count_warning = 0;
+
+void set_new_rhalf(bool s)	// default = true
+{
+    new_rhalf = s;
+    count_warning = 0;
+}
+
 static real rhalf = 0;
 static real density = 0;
 
-local bool set_rhalf(dyn *b)
+local inline bool get_rhalf(dyn *b)
 {
-    if (rhalf > 0) return true;
+    if (!new_rhalf) return true;
 
     dyn *root = b->get_root();
     story *s = root->get_dyn_story();
@@ -182,7 +191,11 @@ local bool set_rhalf(dyn *b)
 	rhalf   = getrq(s, "kira_rhalf");
 	density = getrq(s, "kira_half_density");  // assume present if rhalf is
 
-	if (rhalf <= 0 || density <= 0) return false;
+	if (rhalf <= 0 || density <= 0) {
+	    if (++count_warning < 10)
+		warning("set_rhalf: rhalf or density improperly set");
+	    return false;
+	}
 
     } else {
 
@@ -194,11 +207,17 @@ local bool set_rhalf(dyn *b)
 				       true);		    // noprint
 
 	if (rhalf > 0) {
-	    real density = 1.5*root->n_daughters() / (4*M_PI*pow(rhalf, 3));
-	    putrq(s, "half_density", density);
+	    putrq(s, "kira_rhalf", rhalf);
+	    density = 1.5*root->get_mass() / (4*M_PI*pow(rhalf, 3));
+	    putrq(s, "kira_half_density", density);
+	} else {
+	    if (++count_warning < 10)
+	        warning("set_rhalf: computed rhalf <= 0");
+	    return false;
 	}
     }
 
+    new_rhalf = false;
     return true;
 }
 
@@ -215,20 +234,12 @@ local inline void add_plummer_friction(dyn *b,
     real M = b->get_p_mass();
     if (M == 0) return;
 
+    if (!get_rhalf(b)) return;
+
     // Set parameters to reduce/cut off the friction term.
-
-    if (rhalf < 0)
-	return;
-    else if (rhalf == 0)
-	if (!set_rhalf(b)) {
-	    rhalf = -1;
-	    return;
-	}
-    if (density <= 0) return;
-
     // Still need to deal more generally with the scaling of the
     // particle masses to the mass of the background field.
-
+   
     real mass = b->get_mass();		// scale the mass of black hole??
     real speed = sqrt(square(vel));
     real a2 = b->get_p_scale_sq();
@@ -243,13 +254,14 @@ local inline void add_plummer_friction(dyn *b,
 					// 0.2387324 = 3/(4*pi)
     real p_core_dens = 0.2387324*M/pow(a2,1.5);
   
-    real rhalf = getrq(b->get_root()->get_dyn_story(), "rhalf");
-    real core_dens = getrq(b->get_root()->get_dyn_story(), "core_dens");
-
+    real core_dens = density;
+    real continue_factor=1.0;
     if (core_dens > p_core_dens)
-	if (square(dx) < square(rhalf)) return;
+      {
+	continue_factor=1.0/(1+exp(10-sqrt(square(dx))/rhalf*10));
+      }
 
-    real beta = 1.6;			// calibration from N-body experiments
+    real beta = 1.6*continue_factor;	 // calibration from N-body experiments
 
     real ffac = beta*40*M_PI*p_density*mass;	// assume logLamda = 10
     real X = speed/sigma2;

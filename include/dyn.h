@@ -590,6 +590,8 @@ real get_power_law_pot(dyn *b);
 real get_external_virial(dyn * b);
 void print_external(unsigned int ext, bool shortbits = false);
 
+void set_new_rhalf(bool s = true);
+
 void set_friction_beta(real b);
 void set_friction_mass(real m);
 void set_friction_vel(vec v);
