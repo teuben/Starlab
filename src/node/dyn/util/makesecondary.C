@@ -1,0 +1,466 @@
+
+//// makesecondary:  Create binary secondary components for randomly
+////                 selected stars in the input snapshot, placing the
+////                 results in a binary tree.  Only secondary masses
+////                 are set here; orbital parameters are set by
+////                 dyn::makebinary.  No attempt is made to maintain any
+////                 existing mass or energy scaling.  Use scale after
+////                 this function is called, but before makebinary, if
+////                 it is desired to specify energies in kT units.
+////                 Dyn version is copied from the node version.
+////
+//// Options:      -C    force output data to be in 'col' format [no]
+////                     (note: loses binary data)
+////               -f    specify binary fraction [0.1]
+////                             for stars with mass >= spacified with -m
+////               -i    use (a,b) as component indices [false]
+////               -I    don't limit masses to primary mass range [false]
+////               -l    specify lower limit on mass ratio or 
+////                                               secondary mass [0]
+////               -M    specify upper limit for primaries to be binaries [inf]
+////               -m    specify lower limit for primaries to be binaries [0]
+////               -q    select choice of minimum mass ratio [false]
+////                         if true, secondary mass ratio is chosen
+////                             uniformly on [lower_limit, upper_limit]
+////                         if false, secondary mass is chosen uniformly
+////                             on [mmin, primary_mass], where mmin and
+////                             mmax are specified on the command line
+////               -S    split primary star [false]
+////               -s    specify random seed [random from system clock]
+////               -u    specify upper limit on mass ratio or 
+////                                           secondary mass [1 or m_primary]
+
+//		   Steve McMillan, July 1996
+//                 Simon Portegies Zwart, Tokyo, December 1997
+
+#ifdef TOOLBOX
+
+#include "dyn.h"
+
+#define  SEED_STRING_LENGTH  256
+char  tmp_string[SEED_STRING_LENGTH];
+
+// Yikes!  All local tions.  Should be moved to node and the essentials
+// made global (Steve, 6/03).
+
+local void name_from_components(dyn *od, dyn *yd)
+{
+    char name1[256], name[256];
+    strcpy(name1, od->format_label());
+    sprintf(name, "(%s,%s)", name1, yd->format_label());
+    od->get_parent()->set_name(name);
+    od->get_parent()->set_index(-1);
+}
+
+// add_secondary: Add a secondary component to a primary to make
+//		  a binary.  Only the mass, name and tree structure
+//		  are modified at this stage.
+//
+//		  The old default naming was for primary and secondary
+//		  components to have names "na" and "nb", respectively,
+//		  where "n" was the name of the original star.  However,
+//		  this leads to unique_id problems with worldlines, so
+//		  numeric names are now the default, with (a,b) the
+//		  alternative.  (Steve, 5/01)
+
+local real add_secondary(dyn* original, real mass_ratio,
+			 bool force_index, int &nmax,
+			 bool split)
+{
+    dyn* primary = new dyn;
+    dyn* secondary = new dyn;
+
+    // Add new links.
+
+    original->set_oldest_daughter(primary);
+
+    primary->set_parent(original);
+    secondary->set_parent(original);
+
+    primary->set_younger_sister(secondary);
+    secondary->set_elder_sister(primary);
+
+    // Set new masses.
+
+    if(!split) {
+	primary->set_mass(original->get_mass());
+	secondary->set_mass(mass_ratio*original->get_mass());
+	original->inc_mass(secondary->get_mass());
+    }
+    else {
+	real m_total = original->get_mass();
+	real m_prim = m_total / (1+mass_ratio);
+	real m_sec = m_total - m_prim;
+	if(m_prim<m_sec) {
+	    real tmp = m_sec;
+	    m_sec = m_prim;
+	    m_prim = tmp;
+	}
+
+	primary->set_mass(m_prim);
+	secondary->set_mass(m_sec);
+    }
+
+    // There are two possible naming conventions.  If force_index is
+    // false, then we take the original name and add "a" and "b" for
+    // the component names.  If force_index is true, the first component
+    // inherits the original index and the second component gets an
+    // index offset by some "resonable" amount.  In either case, the new
+    // CM name is (cpt1,cpt1), as usual.
+
+    if (force_index) {
+
+	primary->set_index(original->get_index());
+	secondary->set_index(original->get_index()+nmax);
+
+    } else {
+
+	if (original->get_name() == NULL) {
+
+	    // Make a name for use by the components.
+
+	    char tmp[128];
+	    if (original->get_index() >= 0)
+		sprintf(tmp, "%d", original->get_index());
+	    else
+		sprintf(tmp, "X");
+	    original->set_name(tmp);
+	}
+
+	if (original->get_name() != NULL) {
+
+	    // Label components "a" and "b".
+
+	    primary->set_name(original->get_name());
+	    secondary->set_name(original->get_name());
+	    strcat(primary->get_name(), "a");
+	    strcat(secondary->get_name(), "b");
+	}
+    }
+
+    // Make standard CM name.
+
+    name_from_components(primary, secondary);
+
+    return secondary->get_mass();
+}
+
+local void warning(real mmin, real lower_limit) {
+
+  cerr << "WARNING:" << endl;
+  cerr << "       local void makesecondary(dyn*, real, real, bool)" << endl;
+  cerr << "       actual minimum mass " << mmin
+       << " is larger than lower limit " << lower_limit << ";" << endl;
+  cerr << "       continuing execution with true minimum mass" << endl;
+
+}
+
+local real random_mass_ratio(const real qmin, 
+			     const real qmax) {
+
+  // For now, equal probability in q between qmin and qmax.
+
+  return randinter(qmin, qmax);
+}
+
+local void name_recursive(dyn *b)
+{
+    // Make a standard CM name, making sure that we build names
+    // from the bottom up.
+
+    dyn *od = b->get_oldest_daughter();
+    if (od) {
+	dyn *yd = od->get_younger_sister();
+	name_recursive(od);
+	name_recursive(yd);
+	name_from_components(od, yd);
+    }
+}
+
+local int check_indices(dyn *b)
+{
+    int nmax = 0;
+    bool all_ok = true;
+
+    for_all_leaves(dyn, b, bb) {
+
+	bb->set_name(NULL);
+
+	if (bb->get_index() >= 0)
+	    nmax = Starlab::max(nmax, bb->get_index());
+        else
+	    all_ok = false;
+    }
+
+    if (!all_ok) {
+
+	cerr << "    makesecondary: assigning numeric indices to dyns" << endl;
+
+	for_all_leaves(dyn, b, bb) {
+	    if (bb->get_index() <= 0)
+		bb->set_index(++nmax);
+	}
+    }
+
+    // Redetermine all center-of-mass names.
+
+    for_all_nodes(dyn, b, bb)
+	if (bb!= b && bb->is_parent())
+	    name_recursive(bb);
+
+    return nmax;
+}
+
+local void makesecondary(dyn* b, real binary_fraction,
+		       real min_mprim, real max_mprim,
+		       real lower_limit, real upper_limit, 
+		       bool force_index, bool q_flag, bool ignore_limits,
+		       bool split)
+{
+    PRI(4); PRL(binary_fraction);
+    PRI(4); PRL(min_mprim);
+    PRI(4); PRL(max_mprim);
+    PRI(4); PRL(q_flag);
+    PRI(4); PRL(lower_limit);
+    PRI(4); PRL(upper_limit);
+    PRI(4); PRL(ignore_limits);
+    PRI(4); PRL(split);
+
+    int nmax = 0;
+    if (force_index) {
+
+	// All stars will are to have numeric labels.  First check
+	// that the original labels are numeric.  If not, force all
+	// labels into numeric form.  Function check_indices() returns
+	// the maximum (corrected) index found.
+
+	nmax = check_indices(b);
+
+	// Round nmax up to something "reasonable".
+
+	nmax = (int)(pow(10., ((int)log10((real)nmax)) + 1.0) + 0.1);
+    }
+
+    // For now, use a flat distribution in secondary mass ratio.
+    // Assume that the probability of a star being the primary of
+    // a binary is independent of mass.
+
+    real sum = 0;
+    b->set_mass(0);
+
+    real m_prim, q;
+    real m_primaries=0, m_secondaries=0, m_total=0;
+
+    if (q_flag) {
+
+        // Choose the secondary mass ratio uniformly on
+	// [lower_limit, upper_limit].
+
+	for_all_daughters(dyn, b, bi) {
+	    if(!bi->is_parent()) {
+
+		m_prim = bi->get_mass();
+		m_primaries += m_prim;
+
+		if (m_prim >= min_mprim && m_prim <= max_mprim) {
+		    sum += binary_fraction;
+		    if (sum >= 0.9999999999) {	// avoid roundoff problems!
+			sum = 0;
+			q = random_mass_ratio(lower_limit, upper_limit);
+			
+			m_secondaries += add_secondary(bi, q, force_index, nmax, split);
+		    }
+		}
+	    }
+	}
+
+    } else {
+
+	// Secondary mass ratio chosen uniformly on [mmin, mmax],
+	// where mmin and mmax are the lower and upper limits
+	// specified  on the command line.
+
+	real mmin = VERY_LARGE_NUMBER, mmax = 0, qmin = 0, qmax;
+
+	if (ignore_limits) {
+
+	    mmin = lower_limit;
+	    mmax = upper_limit;
+
+	} else {
+
+	    for_all_daughters(dyn, b, bi) {
+		if (bi->is_leaf()) {
+		    mmin = Starlab::min(mmin, bi->get_mass());
+		    mmax = Starlab::max(mmax, bi->get_mass());
+		}
+	    }
+
+	    if (mmin < lower_limit) {
+		warning(mmin, lower_limit);
+		sprintf(tmp_string,
+			"         -l = %5.4f adopted", mmin); 
+		b->log_comment(tmp_string);
+	    }
+
+	    if (mmax > upper_limit) {
+		warning(mmax, upper_limit);
+		sprintf(tmp_string,
+			"         -u = %5.4f adopted", mmax); 
+		b->log_comment(tmp_string);
+	    }
+	}
+	    
+	// Note that the following loop is essentially the same code as above.
+
+	for_all_daughters(dyn, b, bi) {
+	    if(!bi->is_parent()) {
+
+		m_prim = bi->get_mass();
+		m_primaries += m_prim;
+
+		if (m_prim >= min_mprim && m_prim <= max_mprim) {
+		    sum += binary_fraction;
+		    if (sum >= 0.9999999999) {	// avoid roundoff problems!
+			sum = 0;
+			qmin = mmin/bi->get_mass();
+			qmax = Starlab::min(mmax, bi->get_mass())/bi->get_mass();
+			q = random_mass_ratio(qmin, qmax);
+			m_secondaries += add_secondary(bi, q, force_index, nmax, split);
+		    }
+		}
+	    }
+	}
+    }
+
+    real m_tot = m_primaries + m_secondaries;
+    if(split) {
+	m_tot = m_primaries;
+	m_primaries -= m_secondaries;
+    }
+    b->set_mass(m_tot);	
+    real old_mtot = b->get_starbase()->conv_m_dyn_to_star(1);
+
+    if(old_mtot>0 && old_mtot<m_tot) {
+	real old_r_vir= b->get_starbase()->conv_r_star_to_dyn(1);
+	real old_t_vir= b->get_starbase()->conv_t_star_to_dyn(1);
+	b->get_starbase()->set_stellar_evolution_scaling(m_tot,
+							 old_r_vir,
+							 old_t_vir);
+    }
+
+    if(split) {
+	sprintf(tmp_string,
+		"       total mass in primaries = %8.2f Solar", m_primaries); 
+	b->log_comment(tmp_string);
+    }
+
+    sprintf(tmp_string,
+	    "       total mass in secondaries = %8.2f Solar", m_secondaries); 
+    b->log_comment(tmp_string);
+
+    // Update mass info, if any.
+
+    if (find_qmatch(b->get_log_story(), "initial_mass"))
+	putrq(b->get_log_story(), "initial_mass", m_tot);
+}
+
+int main(int argc, char ** argv)
+{
+    bool C_flag = false;
+    bool split = false;
+    bool ignore_limits = false;
+    real binary_fraction = 0.1;
+    real lower_limit = 0.0;
+    bool u_flag = false;
+    real upper_limit = VERY_LARGE_NUMBER;
+    real max_mprim = VERY_LARGE_NUMBER;
+    real min_mprim = 0;
+    bool force_index = true;
+    real q_flag = false;	     // flag for mass-ratio selection
+    int random_seed = 0;
+    char seedlog[64];
+
+    check_help();
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "Cqf:M:m:il:nu:Ss:I";
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1)
+	switch(c) {
+
+	    case 'C': C_flag = true;
+		      break;
+	    case 'f': binary_fraction = atof(poptarg);
+		      break;
+	    case 'i': force_index = true;
+		      break;
+	    case 'I': ignore_limits = true;
+		      break;
+	    case 'l': lower_limit = atof(poptarg);
+		      break;
+	    case 'M': max_mprim = atof(poptarg);
+		      break;
+	    case 'm': min_mprim = atof(poptarg);
+		      break;
+            case 'q': q_flag = true;
+		      break;
+	    case 'S': split = true;
+		      break;
+	    case 's': random_seed = atoi(poptarg);
+		      break;
+	    case 'u': upper_limit = atof(poptarg);
+	    	      u_flag = true;
+		      break;
+            case '?': params_to_usage(cerr, argv[0], param_string);
+		      exit(1);
+	}
+
+    if (!u_flag && q_flag) upper_limit = 1;
+
+    if (binary_fraction < 0 || binary_fraction > 1)
+        err_exit("makesecondary: Illegal binary fraction");
+    if (q_flag && lower_limit > 1)
+        err_exit("makesecondary: Illegal minimum mass for secondary");
+    if (q_flag && lower_limit < 0) {
+        cerr << "Negative mass ratio not allowed; use -l 0" << endl;
+	lower_limit = 0;
+    }
+    if (q_flag && upper_limit > 1) {
+        cerr << "Maximum mass ratio > 1 not allowed; use -u 1" << endl;
+	upper_limit = 1;
+    }
+
+    if (lower_limit < 0)
+        err_exit("Invalid lower limit");
+
+    if (upper_limit < 0)
+        err_exit("Invalid upper limit");
+    else if (lower_limit > upper_limit)
+        err_exit("Invalid selection of upper and lower limits to mass-ratio");
+
+    if (max_mprim < min_mprim)
+        err_exit("Invalid upper and lower primary mass selections");
+
+    dyn *b;
+    b = get_dyn();
+
+    b->log_history(argc, argv);
+
+    int actual_seed = srandinter(random_seed);
+
+    sprintf(seedlog, "       random number generator seed = %d", actual_seed);
+    b->log_comment(seedlog);
+
+    makesecondary(b, binary_fraction, min_mprim, max_mprim, 
+		lower_limit, upper_limit, force_index, q_flag,
+		ignore_limits, split);
+
+    b->set_col_output(false);
+    if (C_flag) b->set_col_output(true);
+
+    put_dyn(b);
+    rmtree(b);
+}
+#endif
