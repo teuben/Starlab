@@ -7,22 +7,23 @@
 ////              -i     specify index of node to add to [root]
 ////              -j     specify index for new node [none]
 ////              -m     specify node mass [1]
+////              -s     specify random seed [take from system clock]
 ////              -r     specify node radial position (angle random) [0]
 ////              -v     specify node speed (direction random) [0]
 
-//   version 1:  Dec 1994   Piet Hut
-//   version 2:  Jun 2002   (dyn version) Steve McMillan
+//   version 1:  Dec 1994   (node version) Piet Hut
+//   version 2:  Jun 2002   (dyn version)  Steve McMillan
 
 #include "dyn.h"
 
-/*===========================================================================*/
+//===========================================================================
 
 #ifdef TOOLBOX
 
-/*-----------------------------------------------------------------------------
- *  main  --  driver to directly add one extra daughter node.
- *-----------------------------------------------------------------------------
- */
+//-----------------------------------------------------------------------------
+//  main  --  driver to directly add one extra daughter node.
+//-----------------------------------------------------------------------------
+
 main(int argc, char ** argv)
 {
     bool  c_flag = false;
@@ -71,8 +72,7 @@ main(int argc, char ** argv)
 		      exit(1);
 	}            
 
-    if (s_flag == FALSE)
-        input_seed = 0;                         	// default
+    if (!s_flag) input_seed = 0;                         	// default
     int actual_seed = srandinter(input_seed);
 
     char  seedlog[128];
@@ -132,6 +132,12 @@ main(int argc, char ** argv)
 	d->set_younger_sister(n);
     }
 
+    cerr << "Added daughter node " << n->format_label();
+    if (!i_flag)
+	cerr << " to root node" << endl;
+    else
+	cerr << " to node " << p->format_label() << endl;
+    
     if (e_flag) root->pretty_print_tree(cerr);
 
     put_node(cout, *root);
@@ -140,7 +146,7 @@ main(int argc, char ** argv)
 
 #endif
 
-/*===========================================================================*/
+//===========================================================================
 
-/* endof: add_daughter_node.C */
+// endof: add_daughter_node.C
 
