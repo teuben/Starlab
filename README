@@ -47,6 +47,9 @@ README:
 
 	$STARLAB_PATH/sbin
 
+
+PROGRAMMERS:
+
 - For programmers, the Starlab header files are installed in
 
         $install_dir/include/starlab
@@ -55,9 +58,14 @@ README:
 
         $install_dir/lib/starlab
 
-  If the autotools are properly installed, developers should find that
+- If the autotools are properly installed, developers should find that
   any changes made to the automake "Makefile.am" files will cause the
   relevant Makefiles to be automagically regenerated.
+
+- If you change any of the m4 macros in $STARLAB_PATH/local (e.g. to
+  use a different GRAPE library) or if you modify the configure.ac
+  script in $STARLAB_PATH, you *MUST* run autoreconf before running
+  configure again.
 
 
 COPYRIGHTS:
