@@ -137,7 +137,7 @@ local int reorder_binaries(SeBa_hist *hi, const real end_time) {
 //    cerr << i << "\t" << scenario_frequency[i] << ":  "; 
 //    put_state(scenarios[i], cerr);
     for_all_SeBa_hist(SeBa_hist, scenarios[i], ha) {
-      cerr << *ha;
+      cout << *ha;
     }
   }
 
