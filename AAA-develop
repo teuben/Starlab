@@ -1,20 +1,22 @@
-# For developers...
+# For developers...  Build the CVS release of Starlab.
+
+set echo
 
 # Require that STARLAB_PATH be defined.
 
-if (!$?STARLAB_PATH) then
-    setenv STARLAB_PATH $CWD
+if ($?STARLAB_PATH == 0) then
+    setenv STARLAB_PATH $PWD
 endif
 
-set install-dir = $STARLAB_PATH/usr
+set install_dir = $STARLAB_PATH/usr
 
-# Install autotools (place in install-dir):
+# Install autotools (place in install_dir):
 
-(cd src/packages; ./install-autotools $install-dir)
+(cd src/packages; ./install-autotools $install_dir)
 
-# Make sure that install-dir precedes system directories in search path.
+# Make sure that install_dir precedes system directories in search path.
 
-set path = ($install-dir $path)
+set path = ($install_dir/bin $path)
 rehash
 
 # First time through we need to do autoreconf.
@@ -23,9 +25,13 @@ if (! -e configure) then
     autoreconf
 endif
 
-# Perform the usual configuration process:
+if (-e configure) then
 
-./configure --prefix=$install-dir
-make make install
+#   Perform the usual configuration process:
 
-# Then test whatever...
+    ./configure --prefix=$install_dir
+    make install
+
+#   Then test whatever...
+
+endif
