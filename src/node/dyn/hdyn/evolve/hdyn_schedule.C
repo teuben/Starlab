@@ -11,7 +11,7 @@
 //  hdyn_schedule.C: scheduling routines
 //.............................................................................
 //    version 1:  Nov 1996   Jun Makino
-//    version 2:
+//    version 2:  May 1999   Steve McMillan
 //.............................................................................
 //
 //  Externally visible functions:
