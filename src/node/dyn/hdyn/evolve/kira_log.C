@@ -82,8 +82,9 @@ void set_block_check(bool b)		// default = true
 
 #define NTOP 10
 #define NBOT 10
+#define N_MISMATCH 5
 
-local void print_timestep_stats(hdyn* b)
+local void print_timestep_stats(hdyn* b, int max_count = N_MISMATCH)
 {
     // Time step statistics.
 
@@ -138,6 +139,7 @@ local void print_timestep_stats(hdyn* b)
     real delta_f_ind_tot = 0;
 
     bool print_dtb = false;
+    int count_mis = 0;
 
     for_all_nodes(hdyn, b, bb)
 	if (bb != b) {
@@ -241,20 +243,23 @@ local void print_timestep_stats(hdyn* b)
 
 		if (allow_block_check && (bb->get_kepler() || dt_a != dtb)) {
 
-		    if (!print_dtb) {
-			cerr << endl << "  Actual and block timesteps:"
-			     << endl;
-			print_dtb = true;
+		    if (++count_mis <= max_count) {
+
+		        if (!print_dtb) {
+			    cerr << endl << "  Actual and block timesteps:"
+				 << endl;
+			    print_dtb = true;
+			}
+
+			if (bb->get_kepler())
+			  cerr << "    unperturbed ";
+			else
+			  cerr << "    ***mismatch ";
+
+			cerr << bb->format_label() << ":  ";
+			PRC(kb), PRC(dt_a); PRL(dtb);
+			
 		    }
-
-		    if (bb->get_kepler())
-			cerr << "    unperturbed ";
-		    else
-			cerr << "    ***mismatch ";
-
-		    cerr << bb->format_label() << ":  ";
-		    PRC(kb), PRC(dt_a); PRL(dtb);
-
 		}
 
 		if (kb > 29) kb = 29;
@@ -299,6 +304,15 @@ local void print_timestep_stats(hdyn* b)
 		ni++;
 	    }
 	}
+
+    if (count_mis > max_count) {
+	if (max_count > 0)
+	    cerr << "  .\n  .\n  (plus "
+		 << count_mis-max_count
+		 << " more mismatches)" << endl;
+	else
+	    cerr << "  *** " << count_mis << " timestep mismatches" << endl;
+    }
 
     //
     //----------------------------------------------------------------------
