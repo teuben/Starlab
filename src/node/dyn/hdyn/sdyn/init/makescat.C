@@ -393,8 +393,7 @@ sdyn* mkscat(int argc, char **argv) {
     // Establish standard configuration and names:
 
     sdyn* root = mksdyn(2);	// Top-level (unbound) scattering orbit.
-    put_sdyn(cout, *root);
-
+    
     root->set_name("r");
     root->set_index(-1);	// Undo indexing effect of mksdyn...
 

@@ -15,7 +15,7 @@
 ##.............................................................................
 ##
 
-DIRS = evolve init io starclass util stardyn
+DIRS = evolve init io starclass stardyn $(STARLAB_DSTARUTIL)
 
 include $(STARLAB_PATH)/inc/Makefile.driver.inc
 
