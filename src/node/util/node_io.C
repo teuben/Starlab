@@ -27,7 +27,7 @@ void node::print_static(ostream& s)		// default = cerr
     s << "root = " << root << endl;
 }
 
-bool node::check_and_correct_node(bool verbose)	// default = true
+bool node::check_and_correct_node(bool verbose)	// default = false
 {
     // cerr << "node::check_and_correct_node: "; PRL(this);
 

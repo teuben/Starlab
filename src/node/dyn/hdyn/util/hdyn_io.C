@@ -133,7 +133,9 @@ void hdyn::print_static(ostream& s)		// default = cerr
     s << "max_slow_perturbation_sq = " << max_slow_perturbation_sq << endl;
 }
 
-// Note that we inherit the dyn version of check_and_correct_node().
+
+// *** NOTE: check_and_correct_node() is inherited from the dyn class. ***
+
 
 // Allow user to turn off timestep checking...
 

@@ -452,7 +452,7 @@ node *get_node(istream& s,		// default = cin
 	n = get_node_init(s, the_npfp, the_hbpfp, the_sbpfp, use_stories);
 
     if (n)
-	n->check_and_correct_node(true);	// action depends strongly on
+	n->check_and_correct_node();		// action depends strongly on
 						// which class is involved
 
     return n;

@@ -91,7 +91,7 @@ void dyn::print_static(ostream& s)		// default = cerr
 
 static bool read_xreal = false;
 
-bool dyn::check_and_correct_node(bool verbose)	// default = true
+bool dyn::check_and_correct_node(bool verbose)	// default = false
 {
     // cerr << "dyn::check_and_correct_node: "; PRL(this);
 
