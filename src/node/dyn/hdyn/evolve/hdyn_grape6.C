@@ -634,10 +634,10 @@ local INLINE int force_by_grape(xreal xtime,
              }
              if (inn[i] >= nj) {
                  inn[i] = 0;
-                 cerr << "warning: NN forced to zero for particle " << endl;  
-                 PRI(4); PRC(i); PRC(iindex[i]);
-                 PRL(nodes[i]->format_label());
-                 PRL(nodes[i]->get_pos());
+                 cerr << "warning: NN forced to zero for particle"
+		      << " at time " << xtime << endl;
+                 PRI(4); PRC(i); PRC(iindex[i]); PRL(nodes[i]->format_label());
+                 PRI(4); PRL(nodes[i]->get_pos());
 	     }
 
 #ifdef T_DEBUG
