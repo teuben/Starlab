@@ -1,3 +1,4 @@
+#include <math.h>
 typedef double real;
 
 /* External variables defined in mtime.c: */
