@@ -497,9 +497,9 @@ local void adjust_parent_and_sister(hdyn * node,
 	    adjust_relative_something_of_sister(d_parent, dm, node,
 						inc_something);
 	    if (node->get_parent() != ancestor)
-	    adjust_parent_and_sister(node->get_parent(), ancestor,
-				     d_parent, dm,
-				     get_something, inc_something, 1);
+		adjust_parent_and_sister(node->get_parent(), ancestor,
+					 d_parent, dm,
+					 get_something, inc_something, 1);
 	}
     } else {
 	d_parent = 0;
@@ -577,6 +577,11 @@ void remove_node_and_correct_upto_ancestor(hdyn * ancestor, hdyn * node)
 	sister->set_acc(parent->get_acc());
 	sister->set_jerk(parent->get_jerk());
 	sister->store_old_force();
+
+	// Sister pred_xxx may be needed before the next step.
+	// Not currently correct -- fix that here.
+
+	sister->init_pred();
 
 	detach_node_from_binary_tree(*node);
 

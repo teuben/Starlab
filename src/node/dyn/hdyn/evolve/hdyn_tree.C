@@ -999,6 +999,14 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 
     bi->get_kira_counters()->low_level_combine++;
 
+    // Make sure that all CM node names are up to date.
+
+    hdyn *bn = bi->get_parent();
+    while (bn != bi->get_root()) {
+	label_binary_node(bn);
+	bn = bn->get_parent();
+    }
+
     if (full_dump) {
 
 	// Dump out the "after" system (new top-level), for use in 4tree

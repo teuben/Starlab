@@ -363,6 +363,7 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	    put_real_number(s, "  m  =  ", mass);
 	    put_real_vector(s, "  r  =  ", pred_pos);
 	    put_real_vector(s, "  v  =  ", pred_vel);
+
 	    if (kep) put_integer(s, "  kep  =  ", 1);
 
 	    // put_real_vector(s, "  a  =  ",			// not used in
