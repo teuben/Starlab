@@ -3,7 +3,9 @@
 ////         Note that if the required Q implies E > 0, no additional
 ////         energy scaling is applied.
 ////
-//// Options:    -e    specify softening parameter [0]
+//// Options:    -c    zero the center of mass position and velocity [no]
+////             -d    debug mode [off]
+////             -e    specify softening parameter [0]
 ////             -E    specify total energy [don't scale]
 ////             -m/M  specify total mass [don't scale]
 ////             -q/Q  specify virial ratio [don't scale]
@@ -13,7 +15,6 @@
 ////         NOTE that only top-level nodes are considered in scale_virial
 ////         and scale_energy.
 ////
-////         The center of mass of the system is set to zero.
 ////         Option "-s" is equivalent to "-M 1 -R 1 -Q 0.5".
 ////
 ////         As of 7/01, systems with embedded tidal or other external fields
@@ -49,16 +50,18 @@ void scale_mass(dyn* b, real mscale)
 	bb->scale_mass(mscale);
 }
 
-void scale_pos(dyn* b, real rscale)
+void scale_pos(dyn* b, real rscale,
+	       vector com_pos)			// default = 0
 {
     for_all_nodes(dyn, b, bb)
-	bb->scale_pos(rscale);
+	bb->set_pos(com_pos + rscale*(bb->get_pos()-com_pos));
 }
 
-void scale_vel(dyn* b, real vscale)
+void scale_vel(dyn* b, real vscale,
+	       vector com_vel)			// default = 0
 {
     for_all_nodes(dyn, b, bb)
-	bb->scale_vel(vscale);
+	bb->set_vel(com_vel + vscale*(bb->get_vel()-com_vel));
 }
 
 real get_top_level_kinetic_energy(dyn *b)	// top-level nodes only
@@ -84,7 +87,8 @@ real get_kinetic_energy(dyn *b)			// all nodes
     return kinetic_energy;
 }
 
-// NOTE: get_top_level_energies does *not* resolve binaries.
+// NOTE: get_top_level_energies does *not* resolve binaries, and
+// does not include any external fields.
 
 void get_top_level_energies(dyn *b, real eps2,
 			    real& potential_energy,
@@ -96,7 +100,10 @@ void get_top_level_energies(dyn *b, real eps2,
 		       true);		// ==> CM approximation
 }
 
-void scale_virial(dyn *b, real q, real potential_energy, real& kinetic_energy)
+void scale_virial(dyn *b, real q,
+		  real potential_energy,		// internal
+		  real& kinetic_energy,			// internal
+		  vector com_vel)			// default = 0
 {
     // Set the virial ratio by scaling the velocities.
     // Also rescale the kinetic energy.
@@ -104,11 +111,14 @@ void scale_virial(dyn *b, real q, real potential_energy, real& kinetic_energy)
     if (q > 0) q = -q;  	// only need specify |Q|
 
     real vscale = sqrt(q*potential_energy/kinetic_energy);
-    scale_vel(b, vscale);
+    scale_vel(b, vscale, com_vel);
     kinetic_energy = q*potential_energy;
 }
 
-real scale_energy(dyn * b, real e, real& energy)
+real scale_energy(dyn * b,
+		  real e, real& energy,			// internal
+		  vector com_pos,			// default = 0
+		  vector com_vel)			// default = 0
 {
     // Set the energy by scaling positions and velocities, keeping
     // the virial ratio fixed.  Note that eps = 0 is implicit.
@@ -119,20 +129,20 @@ real scale_energy(dyn * b, real e, real& energy)
     real xscale = energy/e;
     real vscale = sqrt(1./xscale);
 
-    for_all_daughters(dyn, b, bi) {
-	bi->scale_pos(xscale);
-	bi->scale_vel(vscale);
-    }
+    scale_pos(b, xscale, com_pos);
+    scale_vel(b, vscale, com_vel);
 
     energy = e;
     return xscale;
 }
 
 void scale(dyn *b, real eps,
+	   bool c_flag,
 	   bool e_flag, real e,
 	   bool m_flag, real m,
 	   bool q_flag, real q,
 	   bool r_flag, real r,
+	   bool debug,				     // default = false
 	   void (*top_level_energies)(dyn*, real,    // default =
 				      real&, real&)) // get_top_level_energies()
 {
@@ -143,9 +153,12 @@ void scale(dyn *b, real eps,
 	q_flag = false;
     }
 
-    // Always transform to the center of mass frame.
+    // Optionally transform to the center of mass frame.
 
-    b->to_com();
+    if (c_flag) {
+	cerr << "scale: transforming to com frame" << endl;
+	b->to_com();
+    }
 
     // Define various relevant quantities.  Trust the data in the input
     // snapshot, if current.
@@ -160,6 +173,9 @@ void scale(dyn *b, real eps,
     else
 	mass = get_mass(b);
 
+    if (debug) {
+	cerr << "debug: "; PRL(mass);
+    }
 
     // Need to know some energies if the E, Q, or R flags are set.
     // Note that the definition of r_virial now includes *only* the
@@ -177,14 +193,15 @@ void scale(dyn *b, real eps,
 	    pot_int = -0.5*mass*mass/r_virial;
 	    kin = get_top_level_kinetic_energy(b);
 
-#if 0
-	    // Check:
+	    if (debug) {
 
-	    real pe, ke;
-	    top_level_energies(b, eps*eps, pe, ke);
-	    PRC(pot_int); PRL(pe);
-	    PRC(kin); PRL(ke);
-#endif
+		// Basic checks:
+
+		real pe_int, ke_tot;
+		top_level_energies(b, eps*eps, pe_int, ke_tot);
+		cerr << "debug: "; PRC(pot_int); PRC(pe_int);
+		cerr << "debug: "; PRC(kin); PRL(ke_tot);
+	    }
 
 	} else {
 
@@ -200,7 +217,10 @@ void scale(dyn *b, real eps,
 
 	check_set_external(b);
 	pot_ext = get_external_pot(b);
-	// PRL(pot_ext);
+
+	if (debug) {
+	    cerr << "debug: "; PRL(pot_ext);
+	}
 
 	// Variable kira_initial_jacobi_radius is set by check_set_external,
 	// but it will be rescaled, so just remove it.
@@ -215,6 +235,18 @@ void scale(dyn *b, real eps,
 
 	if (e_flag && pot_ext != 0)
 	    err_exit("Can't set energy in case of external field.");
+    }
+
+    // The relevant kinetic energy for scaling should be in the center
+    // of mass frame.  Compute the CM velocity here and correct.
+
+    vector com_pos, com_vel;
+    compute_com(b, com_pos, com_vel);
+
+    real com_kin = 0.5*mass*square(com_vel);
+
+    if (debug) {
+	cerr << "debug: "; PRC(com_vel); PRL(com_kin);
     }
 
     // First do the mass scaling, if any.  NOTE: Scaling the total mass
@@ -232,8 +264,12 @@ void scale(dyn *b, real eps,
 	pot_int *= mfac*mfac;
 	pot_ext *= mfac;
 	kin *= mfac;
+	com_kin *= mfac;
 
 	cerr << "scale:  "; PRL(mass);
+	if (debug) {
+	    cerr << "debug: "; PRL(com_kin);
+	}
     }
 
     // Simplest choice now is r_flag; e_flag is more complicated,
@@ -246,41 +282,59 @@ void scale(dyn *b, real eps,
 
 	real oldvir = pot_int + get_external_virial(b);	  // denominator of
 							  // virial ratio
+	if (debug) {
+	    cerr << "debug: "; PRL((kin-com_kin)/oldvir);
+	}
 
 	real rfac =  r/r_virial;
-	// PRL(rfac);
-
-	scale_pos(b, rfac);
+	if (debug) {
+	    cerr << "debug: "; PRL(rfac);
+	}
+	scale_pos(b, rfac, com_pos);
 
 	r_virial = r;
 	pot_int /= rfac;
+
 	pot_ext = get_external_pot(b);
-
-	// Rescale all velocities to preserve the virial ratio.
-	// Scaling is already OK in case of a tidal field, so
-	// get_external_virial() includes only non-tidal terms.
-
-	real vfac = sqrt((pot_int + get_external_virial(b))/oldvir);
-	// PRL(vfac);
-
-	scale_vel(b, vfac);
-	kin *= vfac*vfac;
+	if (debug) {
+	    cerr << "debug: "; PRL(pot_ext);
+	}
 
 	cerr << "scale:  "; PRL(r_virial);
 
-#if 0
-	// Check:
+	// Rescale all internal velocities to preserve the virial
+	// ratio.  Scaling is already OK in case of a tidal field,
+	// so get_external_virial() includes only non-tidal terms.
 
-	real pe, ke;
-	top_level_energies(b, eps*eps, pe, ke);
-	real pext = get_external_pot(b);
-	real vir = get_external_virial(b);
+	if (debug) {
+	    cerr << "debug: "; PRC(pot_int); PRL(get_external_virial(b));
+	}
+	real vfac = (pot_int + get_external_virial(b))/oldvir;
+	if (vfac <= 0)
+	    cerr << "scale: unable to preserve virial ratio" << endl;
+	else {
+	    vfac = sqrt(vfac);
+	    if (debug) {
+		cerr << "debug: "; PRL(vfac);
+	    }
+	    scale_vel(b, vfac, com_vel);
+	    kin = com_kin + vfac*vfac*(kin - com_kin);
+	}
 
-	PRC(pot_int); PRL(pe);
-	PRC(kin); PRL(ke);
-	PRL(ke/(pe+vir));
-	PRL(-0.5*mass*mass/pe);
-#endif
+	if (debug) {
+
+	    // Check:
+
+	    real pe_int, ke;
+	    top_level_energies(b, eps*eps, pe_int, ke);
+	    real p_ext = get_external_pot(b);
+	    real vir = get_external_virial(b);
+
+	    cerr << "debug: "; PRC(pot_int); PRL(pe_int);
+	    cerr << "debug: "; PRC(kin); PRL(ke);
+	    cerr << "debug: "; PRC(p_ext); PRL((ke-com_kin)/(pe_int+vir));
+	    cerr << "debug: "; PRL(-0.5*mass*mass/pe_int);
+	}
     }
 
     if (e_flag) {
@@ -291,13 +345,14 @@ void scale(dyn *b, real eps,
 	// of a tidal field.
 
 	if (q_flag) {
-	    scale_virial(b, q, pot_int, kin);	// scales kin
+	    kin -= com_kin;
+	    scale_virial(b, q, pot_int, kin, com_vel);	// scales kin
+	    kin += com_kin;
 
 	    // NOTE: Changing the virial ratio changes the total kinetic
 	    // energy of the system, but preserves the potential energy
 	    // and total mass.
 
-	    // kin = q*pot_int;
 	    q_flag = false;
 
 	    cerr << "scale:  "; PRL(q);
@@ -307,12 +362,13 @@ void scale(dyn *b, real eps,
 	//	 and preserves the value of the virial ratio in that case.
 	//	 The total mass is always left unchanged.
 
-	real ee = kin+pot_int;
-	real fac = scale_energy(b, e, ee);
+	real ee = kin - com_kin + pot_int;		// internal energy
+	real fac = scale_energy(b, e, ee, com_pos, com_vel);
+	ee += com_kin;					// total_energy
 
 	// Update all relevant quantities.
 
-	kin /= fac;
+	kin = com_kin + (kin - com_kin)/fac;
 	pot_int /= fac;
 	r_virial *= fac;
 
@@ -327,14 +383,16 @@ void scale(dyn *b, real eps,
 	// Scale the velocities to set q and preserve r_virial.
 
 	real vir = get_external_virial(b);
-	real qvir = -kin/(pot_int + vir);
+	real qvir = -(kin - com_kin) / (pot_int + vir);
 	real vfac = sqrt(q/qvir);
-	// PRC(vir); PRC(qvir); PRL(vfac);
 
-	scale_vel(b, vfac);
-	kin *= vfac*vfac;
+	scale_vel(b, vfac, com_vel);
+	kin = com_kin + vfac*vfac*(kin - com_kin);
 
 	cerr << "scale:  "; PRL(q);
+	if (debug) {
+	    cerr << "debug: "; PRL((kin-com_kin)/(pot_int+vir));
+	}
     }
 
     // Update the root log story -- probably best to do this only if
@@ -348,14 +406,17 @@ void scale(dyn *b, real eps,
 }
 
 bool parse_scale_main(int argc, char *argv[],
-		      real& eps,
+		      real& eps, bool& c_flag,
 		      bool& e_flag, real& e,
 		      bool& m_flag, real& m,
 		      bool& q_flag, real& q,
-		      bool& r_flag, real& r)
+		      bool& r_flag, real& r,
+		      bool& debug)
 {
     // Defaults:
 
+    debug = false;
+    c_flag = false;
     e_flag = false;
     m_flag = false;
     q_flag = false;
@@ -368,11 +429,15 @@ bool parse_scale_main(int argc, char *argv[],
 
     extern char *poptarg;
     int c;
-    char* param_string = "m:M:q:Q:e:E:r:R:sS";
+    char* param_string = "cdm:M:q:Q:e:E:r:R:sS";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
 
+	    case 'c': c_flag = true;
+		      break;
+	    case 'd': debug = true;
+		      break;
 	    case 'E': e_flag = true;
 	    	      r_flag = false;
 		      e = atof(poptarg);
@@ -421,14 +486,18 @@ main(int argc, char ** argv)
     real m = 0, q = -1, e = 0, r = 0;
     real eps = 0;
 
+    bool debug = false;
+    bool c_flag = false;
     bool e_flag = false;
     bool m_flag = false;
     bool q_flag = false;
     bool r_flag = false;
 
     if (!parse_scale_main(argc, argv, eps,
+			  c_flag,
 			  e_flag, e, m_flag, m,
-			  q_flag, q, r_flag, r)) {
+			  q_flag, q, r_flag, r,
+			  debug)) {
 	get_help();
 	exit(1);
     }
@@ -436,7 +505,7 @@ main(int argc, char ** argv)
     dyn *b = get_dyn(cin);
     b->log_history(argc, argv);
 
-    scale(b, eps, e_flag, e, m_flag, m, q_flag, q, r_flag, r);
+    scale(b, eps, c_flag, e_flag, e, m_flag, m, q_flag, q, r_flag, r, debug);
 
     put_node(cout, *b);
 }
