@@ -820,11 +820,17 @@ bool low_n3_evolve(sdyn3* b,	   // sdyn3 array
 	if (dt_out < VERY_LARGE_NUMBER)
 	    max_dt = Starlab::min(max_dt, t_out - t);
 
+	// BAD: choice of dt_snap affects dynamics.
+	// Suppressed by Steve, 4/05.
+
+#if 0
 	if (dt_snap < VERY_LARGE_NUMBER) {
 	    if (t + max_dt >= t_snap
 		&& system_in_cube(b, 1.2*snap_cube_size))
 	    max_dt = Starlab::min(max_dt, t_snap - t);
 	}
+#endif
+
 	if (print)
 	    max_dt = Starlab::min(max_dt, t_print - t);
 
@@ -915,7 +921,9 @@ bool low_n3_evolve(sdyn3* b,	   // sdyn3 array
 
 		// Too early for clean_up info?
 
-		while (t >= t_snap) t_snap += dt_snap;
+		if (dt_snap > 0) {
+		    while (t >= t_snap) t_snap += dt_snap;
+		}
 	    }
 	}
 
@@ -1021,6 +1029,8 @@ main(int argc, char **argv)
 		      break;
 	    case 'D': D_flag = TRUE;
 		      dt_snap = atof(poptarg);
+		      if (dt_snap == 0) dt_snap = VERY_LARGE_NUMBER;
+	    	      if (dt_snap < 0) dt_snap = pow(2.0, dt_snap);
 		      break;
 	    case 'e': e_flag = TRUE;
 		      eps = atof(poptarg);
