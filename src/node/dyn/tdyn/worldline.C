@@ -164,9 +164,11 @@ void print_id(void *id, char *s = NULL, int offset = 0)
     fprintf(stderr, "%.16lf = %qu = %qx\n", rr, uu, uu);
 }
 
-void worldline::dump(int offset)	// default = 0
+void worldline::dump(int offset,	// default = 0
+		     real t1,		// default = 0
+		     real t2)		// default = VERY_LARGE_NUMBER
 {
-    // Print a worldline, start to finish.
+    // Print a worldline, from time t1 to time t2.
 
     PRI(offset+4); PRC(start_esc_flag); PRC(end_esc_flag); PRL(t_esc);
 
@@ -175,21 +177,28 @@ void worldline::dump(int offset)	// default = 0
     while (s) {
 	real t_start = s->get_t_start();
 	real t_end = s->get_t_end();
-	PRI(offset+4); cerr << "segment " << is << ": ";
-		PRC(t_start); PRL(t_end);
-	print_id(&id, "id", offset+8);
+	if (t_start <= t2 && t_end >= t1) { 
+	    PRI(offset+4); cerr << "segment " << is << " (" << s << "): ";
+	    PRC(t_start); PRL(t_end);
+	    print_id(&id, "id", offset+8);
+	}
 	tdyn *b = s->get_first_event();
 	int ie = 0;
 	while (b) {
 	    real t = b->get_time();
-	    PRI(offset+8);
-	    cerr << "event " << ie << ": name = " << b->format_label() << ", ";
-	    PRL(t);
+	    if (t >= t1 && t <= t2) {
+		PRI(offset+8);
+		cerr << "event " << ie << ": name = "
+		     << b->format_label() << ", ";
+		PRL(t);
+	    }
 	    b = b->get_next();
 	    ie++;
 	}
-	if (ie == 1) {
-	    PRI(offset+8); cerr << "*** single event ***" << endl;
+	if (t_start <= t2 && t_end >= t1) { 
+	    if (ie == 1) {
+		PRI(offset+8); cerr << "*** single event ***" << endl;
+	    }
 	}
 	s = s->get_next();
 	is++;
@@ -493,12 +502,28 @@ void worldbundle::attach(tdyn *bn,
 		real t = b->get_time();
 		int loc = find_index(id);
 
+//  		int p;
+//  		bool deb = false;
+//  		if (t >= 13.275 && t <= 13.313) {
+//  		    if (node_contains(b, "(12,25)")) {
+//  			deb = true;
+//  			p = cerr.precision(HIGH_PRECISION);
+//  			PRC(b->format_label()); PRL(b->is_defunct());
+//  		    }
+//  		}
+
 		if (loc >= 0) {
 
 		    // Extend an existing worldline.
 
 		    worldline *w = bundle[loc];
 		    segment *s = w->get_last_segment();	// "last" = "current"
+
+//  		    if (deb) {
+//  			PRC(s); PRL(t);
+//  			PRC(b->format_label()); PRL(id);
+//  			w->dump(0, 13.25);
+//  		    }
 
 		    // Check case (2) for previous instance of b.
 
@@ -514,7 +539,11 @@ void worldbundle::attach(tdyn *bn,
 			// Create a new segment starting at b.
 
 			s = new segment(b);
-			w->add_segment(s);
+			w->add_segment(s, true);  // "true" ==> skip id check
+						  // (see comments below...)
+
+			if (verbose)
+			    cerr << "new segment = " << s << endl;
 
 		    } else {
 
@@ -522,20 +551,23 @@ void worldbundle::attach(tdyn *bn,
 
 			s->add_event(b, true);	  // "true" ==> skip id check
 
-			// Note from Steve (8/01):  For unknown reasons, the id
-			// check in add_event may cause errors when optimization
-			// is turned on.  Problems arise in multiple systems
-			// (so we are working near the last significant digit),
-			// where the ids may return unequal even though the
-			// bits are identical.  Didn't occur in the July 29,
-			// 2001 version of the code.  Does occur in the August
-			// 2 version!
+			// Note from Steve (8/01):  For unknown reasons,
+			// the id checks in add_event() and add_segment()
+			// may cause errors when optimization is turned on.
+			// Problems arise in multiple systems (so we are
+			// working near the last significant digit), where
+			// the ids may return unequal even though the bits
+			// are identical.  Didn't occur in the July 29,
+			// 2001 version of the code.  Does occur in the
+			// August 2 version!
 			//
 			// Workaround for now: skip the check, which is
-			// redundant here anyway.  Longer-term: improve the
-			// handling of unique_id.
-
+			// redundant here anyway.  Longer-term: improve
+			// the handling of unique_id.  Comparing reals is
+			// probably always a bad idea...
 		    }
+
+//		    if (deb) cerr.precision(p);
 
 		    w->set_t_end(t);
 
@@ -933,11 +965,15 @@ local inline bool check_and_initialize(tdyn *p,
 
 	    cerr << "interpolate_pos: error 2: next node not found: ";
 	    PRC(p->format_label()); PRL(t);
+	    int pr = cerr.precision(HIGH_PRECISION);
+	    PRL(unique_id(p)); cerr.precision(pr);
 	    PRI(26); PRC(bn); PRL(bn->get_time());
 	    PRI(26); PRC(p); PRL(p->get_time());
 	    PRI(26); PRL(p->get_time()-t);
 	    if (bn) {
 		PRI(26); PRL(bn->format_label());
+		pr = cerr.precision(HIGH_PRECISION);
+		PRL(unique_id(bn)); cerr.precision(pr);
 	    }
 	    // print_details(wb, p, t);
 
@@ -1055,11 +1091,15 @@ vector interpolate_pos(tdyn *p, real t,
     if (!n) {
 	cerr << "interpolate_pos: error 2: next node not found: ";
 	PRC(p->format_label()); PRL(t);
+	int pr = cerr.precision(HIGH_PRECISION);
+	PRL(unique_id(p)); cerr.precision(pr);
 	PRI(26); PRC(bn); PRL(bn->get_time());
 	PRI(26); PRC(p); PRL(p->get_time());
 	PRI(26); PRL(p->get_time()-t);
 	if (bn) {
 	    PRI(26); PRL(bn->format_label());
+	    pr = cerr.precision(HIGH_PRECISION);
+	    PRL(unique_id(bn)); cerr.precision(pr);
 	}
 	// print_details(wb, p, t);
 

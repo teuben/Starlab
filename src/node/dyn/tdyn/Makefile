@@ -26,10 +26,9 @@ NON_CCC_EXECUTABLES =
 DEPEND_LIBS	= $(LIB)/libtdyn.a $(LIB)/libdyn.a $(LIB)/libnode.a \
 		  $(LIB)/libstd.a
 
-CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC) $(STARLAB_GFX_CFLAGS) -g
+CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC) $(STARLAB_GFX_CFLAGS)
 
-# -DNEW_INTERP
-
+#-g -DNEW_INTERP
 # -g -pg
 
 CPPFLAGS = 

@@ -64,5 +64,7 @@ main(int argc, char** argv)
     int nh = 0;
     while (nh < 1024 && (wb = read_bundle(s, true))) wh[nh++] = wb;
 
+    for (int i = 0; i < 5; i++) cerr << endl;
+
     print_worldline_stats(wh, nh);
 }
