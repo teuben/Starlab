@@ -1460,7 +1460,17 @@ void sys_stats(dyn* b,
 	kT = top_level_kinetic_energy(b) / (1.5*nd);
 
     real vrms = sqrt(3*nd*kT/b->get_mass());
-    PRI(4); PRC(vrms); PRL(kT);
+
+//  Hmmm.  Better print out (top-level) vmax too.
+
+    real v_max = 0;
+    for_all_daughters(dyn, b, bb) {
+	real v2 = square(bb->get_vel() - com_vel);
+	if (v2 > v_max) v_max = v2;
+    }
+
+    v_max = sqrt(v_max);
+    PRI(4); PRC(vrms); PRC(v_max); PRL(kT);
 
     vector center = com_pos;
     real rcore = 0, rhalf = 0;
