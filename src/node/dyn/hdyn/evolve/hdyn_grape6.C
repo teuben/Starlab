@@ -1154,7 +1154,7 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 
 
 
-local INLINE swap(hdynptr ilist[], int i, int j)
+local INLINE void swap(hdynptr ilist[], int i, int j)
 {
     hdyn *tmp = ilist[i];
     ilist[i] = ilist[j];
