@@ -15,7 +15,7 @@
 ////                            frames, but jerkier movies)              [true]
 ////           -H           toggle Herzsprung-Russel diagram or positional
 ////                            plot                                 [position]
-////           -i index     specify (real) color index for all stars
+////           -i index     specify (real) color index (0-1) for all stars
 ////                                                       [use internal index]
 ////           -l scale     specify width of field of view (+/- scale)      [3]
 ////           -L loop      specify number of loops in animation           [10]
@@ -27,7 +27,7 @@
 ////                            0:  as is (don't adjust)
 ////                            1:  initial center of mass
 ////                            2:  modified center of mass of each frame
-////           -p psize     specify star radius/scale, in pixels
+////           -p psize     specify (maximum) star radius/scale, in pixels
 ////                        (psize < 0 ==> lower limit on pixel size = 0,
 ////                        otherwise, limit = 1)
 ////                                          [0 (single image), 1 (animation)]
@@ -39,6 +39,8 @@
 ////           -s nx ny     specify image size, in pixels                 [256]
 ////           -S nskip     specify snaps to skip between images            [0]
 ////           -t           test the color map [don't test]
+////           -T           specify precedence scheme for points in the image
+////                            (c = color, r = radius, z = depth)          [z]
 ////           -x           specify right (log effective temparature) edge
 ////                            of HRD (-H only)                            [3]
 ////           -X           specify left (log effective temparature) edge
@@ -48,11 +50,14 @@
 ////           -Y           specify maximum (log luminosity/Lsun) limit
 ////                            of HRD (-H only)                            [3]
 ////
-//// Note: 1. If animations are specified, an MNG or animated GIF file will
-////          be created, but the individual frames will be retained unless
-////          the "-d" option is set.
-////       2. If PNG output is requested and the PNG libraries are unavailable,
-////          GIF output is produced instead.
+//// Notes: 1. If animations are specified, an MNG or animated GIF file will
+////           be created.  The individual frames will be retained unless
+////           the "-d" option is set.
+////        2. If PNG output is requested and the PNG libraries are unavailable,
+////           then GIF output is produced instead.
+////        3. The "T" option determines which attribute is favored in
+////           displaying a particle in the image.  The default is depth,
+////           but we can also raise particles based on color or radius.
 //.............................................................................
 //
 //    version 1:  Nov 1998   Steve McMillan	 email: steve@zonker.drexel.edu
@@ -224,27 +229,39 @@ local void make_local_small_n_colormap(unsigned char* red,
 
 
 
-local void initialize_arrays(unsigned char *a, float *zarray, int n)
+local void initialize_arrays(unsigned char *a,
+			     float *zarray, float *rarray,
+			     int n)
 {
     for (int i = 0; i < n; i++) {
 	a[i] = 0;
 	zarray[i] = -1.e10;
+	rarray[i] = -1.e10;
     }
 }
+
+int precedence = 0;
 
 local void add_point(unsigned char *a, int nx, int ny,
 		     real x, real y, int i, int j,
 		     bool grid,
-		     real r, float color,
-		     real z, float *zarray)
+		     real r, float color, real z,
+		     float *zarray, float *rarray)
 {
-    // The actual position of the particle in pixel coordinates
-    // is (x,y).  The central pixel is (i,j).  We expect i <= x,
-    // j <= y.  The desired radius is r.
+    // Do the actual work of adding a particle to the image grid (a).
 
-    // With our new scheme, the color specified should actually be
-    // at the bright end of the colormap, in the range 255*(0.667-1.0).
-    // May get around to cleaning up the color specification...
+    // The true position of the particle in pixel coordinates
+    // is (x,y).  The central pixel is (i,j).  We expect i <= x,
+    // j <= y.  The desired radius is r pixels.  On input, color is
+    // a number between 0 and 1 -- it will be rescaled to fit the
+    // color map when added to the array.
+
+    // With our new scheme, the color used should actually be at
+    // the bright end of the colormap, in the range 0.667-1.0.  The
+    // calling function need not know that, so expect color in the
+    // range 0 to 1 and rescale it here before continuing.
+
+    color = 0.68 + 0.31*color;
 
     real xref = x;
     real yref = y;
@@ -281,23 +298,50 @@ local void add_point(unsigned char *a, int nx, int ny,
 	    if ((ii == 0 && jj == 0) || dx2 <= r2a)
 		; 				// "color 1" -- do nothing
 	    else if (dx2 < r2b)
-		c -= 0.3333;			// "color 2" (index - 85)
+		c -= 0.33;			// "color 2" (index - 85)
 	    else if (dx2 < r2c)
-		c -= 0.6667;			// "color 3" (index - 170)
+		c -= 0.67;			// "color 3" (index - 170)
 	    else
 		c = 0;				// black
 
-	    if (c > 0) {
+	    if (c > 0.0039) {			// 0.0039 = 1/256
 
-//		cerr << "adding " << c << " to ("
-//		     << i+ii << "," << j+jj << ")" << endl;
+#if 0
+		cerr << "adding " << c << " to ("
+		     << i+ii << "," << j+jj << ")" << endl;
+#endif
 
-		real zcur = *(zarray+(j+jj)*nx+(i+ii));
-		if (z > zcur) {
-		    *(a+(j+jj)*nx+(i+ii)) = (unsigned char)(255.999*c);
-		    *(zarray+(j+jj)*nx+(i+ii)) = z;
+		if (precedence == 0) {
+
+		    // Placement is determined by z.
+
+		    real zcur = *(zarray+(j+jj)*nx+(i+ii));
+		    if (z > zcur) {
+			*(zarray+(j+jj)*nx+(i+ii)) = z;
+			*(a+(j+jj)*nx+(i+ii)) = (unsigned char)(255.999*c);
+		    }
+		
+		} else if (precedence == 1) {
+
+		    // Placement is determined by color.
+
+		    unsigned char cc = (unsigned char)(255.999*c);
+
+		    if (cc >= *(a+(j+jj)*nx+(i+ii)))
+			*(a+(j+jj)*nx+(i+ii)) = cc;
+
+		} else if (precedence == 2) {
+
+		    // Placement is determined by radius.
+
+		    real rcur = *(rarray+(j+jj)*nx+(i+ii));
+		    if (r > rcur) {
+			*(rarray+(j+jj)*nx+(i+ii)) = r;
+			*(a+(j+jj)*nx+(i+ii)) = (unsigned char)(255.999*c);
+		    }
 		}
 	    }
+
 	}
 }
 
@@ -439,7 +483,7 @@ main(int argc, char** argv)
 
     extern char *poptarg, *poparr[];
     int c;
-    char* param_string = "1acC:df:F:gGi:Hl:L:X:x:Y:y:mn:N:o:O:p:P:qrRs:.S:t";
+    char* param_string = "1acC:df:F:gGi:Hl:L:X:x:Y:y:mn:N:o:O:p:P:qrRs:.S:tT:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1) {
@@ -488,7 +532,6 @@ main(int argc, char** argv)
 	    case 'O':	origin = atoi(poptarg);
 	    		break;
 	    case 'p':   psize = atoi(poptarg);
-	    		// if (psize < 1) psize = 1;
 	    		if (psize < 0) {
 			    psize = -psize;
 			    minpixel = 0;
@@ -514,6 +557,13 @@ main(int argc, char** argv)
 	    case 'S':   nskip = atoi(poptarg);
 		        break;
 	    case 't':	testmap = true;
+			break;
+	    case 'T':	if (poptarg[0] == 'z')
+			    precedence = 0;
+			else if (poptarg[0] == 'c')
+			    precedence = 1;
+			else if (poptarg[0] == 'r')
+			    precedence = 2;
 			break;
 	    case 'X':	xright = atof(poptarg);
 			xlim_set = true;
@@ -591,8 +641,9 @@ main(int argc, char** argv)
     //
     //     - a single index (index_all > 0: -i), use the grey map for now
     //
-    //	   - the particle mass (mass: -m), use the (local) alternate colormap
-    //       (note that mass supercedes index for color, if specified)
+    //	   - the particle mass (mass: -m), use the (local) alternate colormap,
+    //	     which runs from red to blue to better mimic the mass (note that
+    //	     mass supercedes index for color, if specified)
     //
     // Particle radii may be determined by
     //
@@ -630,7 +681,8 @@ main(int argc, char** argv)
 
     unsigned char *a = new unsigned char[nx*ny];
     float *zarray = new float[nx*ny];
-    if (!a || !zarray) exit(1);
+    float *rarray = new float[nx*ny];
+    if (!a || !zarray || !rarray) exit(1);
 
     if (testmap) {
 
@@ -701,7 +753,7 @@ main(int argc, char** argv)
 	}
 	
 	float color_all = 1;
-	if (index_all >= 0) color_all = 0.6667 + 0.3333*index_all; // !!
+	if (index_all >= 0) color_all = index_all;
 
 	if (nskip <= 0 || count % (nskip+1) == 0) {
 
@@ -842,7 +894,7 @@ main(int argc, char** argv)
 
 		    // Initialize work arrays.
 
-		    initialize_arrays(a, zarray, nx*ny);
+		    initialize_arrays(a, zarray, rarray, nx*ny);
 
 		    // Define the output file name.
 
@@ -870,7 +922,7 @@ main(int argc, char** argv)
 	    }
 
 	    if (!combine)
-		initialize_arrays(a, zarray, nx*ny);
+		initialize_arrays(a, zarray, rarray, nx*ny);
 
 	    hdyn *root = b->get_root();
 	    for_all_daughters(hdyn, b, bb) {
@@ -925,35 +977,37 @@ main(int argc, char** argv)
 		if (x > xmin && x < xmax && y > ymin && y < ymax) {
 
 		    // Set color (by mass or index) and radius (fixed, by mass,
-		    // or by radius):
+		    // or by radius).  Color is a float between 0 and 1.
 
 		    float color = 1;
 		    real r = psize;
 
-		    if (HRD) {
+		    if (HRD)
 
-			real fac = Starlab::max(0.0,		  // ~arbitrary
-						Starlab::min(1.0,
-							     x - 3.5));
-			color = 0.7 + 0.3 * fac;
+			color = Starlab::max(0.0,		  // ~arbitrary
+					     Starlab::min(1.0,
+							  x - 3.5));
 
-		    } else if (mass && bb->get_mass() > 0) {
+		    else if (mass && bb->get_mass() > 0) {
 
 			// Mass scaling is logarithmic.
 
-			real fac = log10(bb->get_mass()/mmin) * logfac;
+			color = log10(bb->get_mass()/mmin) * logfac;
 
-			color = 0.6667 + 0.3333*fac;
-
-			// Minimum size is 1 pixel (r=0), maximum radius
+			// Minimum size is 1 pixel (r = 0), maximum radius
 			// is psize.
 
-			r *= fac;
+			r *= color;
+
+			// PRC(bb->get_mass()); PRC(mmin); PRC(color); PRL(r);
 
 		    } else if (index_all < 0 && bb->get_index() > 0)
-			color = 0.3*(bb->get_index() - cmin) * color_scale
-					+ 0.7;	// note offset !!!
+
+			color = (bb->get_index() - cmin)
+					* color_scale;	    // note offset !!!
+
 		    else if (index_all >= 0)
+
 			color = color_all;
 
 		    if (radius || (HRD && bb->get_radius() > 0))
@@ -976,7 +1030,7 @@ main(int argc, char** argv)
 		    int j = (int) y;
 
 		    add_point(a, nx, ny, x, y, i, j,
-			      grid, r, color, z, zarray);
+			      grid, r, color, z, zarray, rarray);
 		}
 	    }
 
