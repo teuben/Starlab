@@ -327,20 +327,35 @@ bool evolve_stars(hdyn* b,
 			// pp3(bi->get_top_level_node(), cerr);
 		    }
 
-		    // Set the new unperturbed timestep (must extend at least
-		    // as far as system_time and preferably past apocenter).
+		    if (bi->get_kepler()) {
 
-		    real usteps = bi->get_unperturbed_steps();
+			// Kepler structure still exists.  Set the new
+			// unperturbed timestep (must extend at least as
+			// far as system_time and preferably past apocenter).
 
-//		    cerr << "in kira_stellar..." << endl;
-//		    PRL(usteps);
+			real usteps = bi->get_unperturbed_steps();
 
-		    if (usteps > 0) {
-			usteps *= bi->get_timestep();
-			bi->set_unperturbed_timestep(usteps);
-			bi->get_binary_sister()
-			  ->set_unperturbed_timestep(usteps);
+#if 0
+			cerr << "in evolve_stars for "
+			     << bi->format_label() << "  ";
+			PRL(usteps);
+#endif
+
+			if (usteps > 0) {
+			    usteps *= bi->get_timestep();
+			    bi->set_unperturbed_timestep(usteps);
+			    bi->get_binary_sister()
+			      ->set_unperturbed_timestep(usteps);
+			}
+
+		    } else {
+
+#if 0
+			cerr << "evolve_stars: no kepler for "
+			     << bi->format_label() << endl;
+#endif
 		    }
+			    
 
 		    if (b->get_kira_diag()->report_stellar_evolution &&
 			abs(dm_slow) >= MINIMUM_REPORT_MASS_LOSS &&
@@ -360,9 +375,16 @@ bool evolve_stars(hdyn* b,
 
 		    if (dm_fast != 0) {
 			if (b->get_kira_diag()->report_stellar_evolution) {
-			    cerr << "SN in binary: ";
+			    cerr << "evolve_stars: SN in binary: ";
 			    PRL(dm_fast);
 			}
+
+			// Note that we always dissociate a binary following
+			// fast mass loss (unperturbed motion may subsequently
+			// restart).  Phase is effectively randomized, so
+			// we shouldn't trust acc, jerk, or dt...  Other
+			// than merger, this is the only way a kepler can
+			// be deleted in this function.
 
 			b->get_kira_counters()->step_dmfast++;
 			dissociate_binary(bi);
@@ -375,11 +397,14 @@ bool evolve_stars(hdyn* b,
 		    // that the dstar has already been deleted...
 
 		    if (b->get_kira_diag()->report_stellar_evolution)
-			cerr << "SN in non-dstar binary "
+			cerr << "evolve_stars: SN in non-dstar binary "
 			     << bi->format_label() << endl;
 		    dissociate_binary(bi);
 		}
-	    }
+
+
+	    }	// end if (bb->get_kepler()) { ...
+
 
 	    // Deal with mass loss (single stars or binary CM).
 
@@ -389,7 +414,7 @@ bool evolve_stars(hdyn* b,
 	    // its stellar mass should reflect the effects of mass loss,
 	    // just as with other single stars.
 
-	    if (bi->is_valid()) {
+	    if (bi->is_valid()) {		     // (just in case...)
 
 		vector dv = anomalous_velocity(bi);  // |dv| > 0 <==> supernova
 		real dv_sq = square(dv);
@@ -412,6 +437,9 @@ bool evolve_stars(hdyn* b,
 		// (Slow mass loss was completely accounted for in the
 		// preceding loop.)  Check for a kepler to avoid applying
 		// rounding error corrections to binary component masses.
+		// (Note that we now delete the kepler structure in the
+		// case of fast mass loss, so the second check should
+		// always return true.)
 
 		if (abs(dm) > MINIMUM_MASS_LOSS && bi->get_kepler() == NULL) {
 		
@@ -468,8 +496,13 @@ bool evolve_stars(hdyn* b,
 		    PRL(dv);
 		    pp3(bi->get_top_level_node(), cerr);
 		}
-	    }
-	}
+
+		// See if we need to recompute acc
+
+	    }	// end if (bi->is_valid()) { ...
+
+	}	// end for_all_leaves(hdyn, b, bi) { ...
+
 
 	// *Don't* reset center of mass; recompute accs and jerks
 	// on top-level nodes (latter not needed?).
@@ -500,15 +533,23 @@ bool evolve_stars(hdyn* b,
 	predict_loworder_all(b, b->get_system_time());
 
 	if (b->get_kira_diag()->report_stellar_evolution)
-	    cerr << "initialize_system_phase2 called from evolve_stars\n";
+	    cerr << endl << "initialize_system_phase2 called from evolve_stars"
+		 << endl;
+
+	// ALWAYS reinitialize the system following stellar evolution...
+
        	initialize_system_phase2(b, 5);		// default set_dt
 
        	b->set_mass(total_mass(b));
 
 	// print_recalculated_energies(b);
-    }
+
+    }	// end if (correct_dynamics) { ...
 
     // test_kepler(b);
+
+//    pp3("(21,100021)");
+//    pp3("(23,100023)");
 
     if (b->get_kira_diag()->report_stellar_evolution) {
 	cerr << "\nEnd of evolve_stars: "; PRL(correct_dynamics);
