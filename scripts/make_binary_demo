@@ -1,0 +1,28 @@
+#!/bin/tcsh
+
+# Make a standard Plummer model, with 100% binaries.  Command-line
+# options are:
+#
+#	number of binaries	random seed
+#
+# Other parameter choices are made automatically.  Standard units
+# are used; all binary energies are 2 kT, eccentricities are thermal.
+#
+# The resulting model is written to stdout.
+
+# Defaults:
+
+set N = 16
+set seed = ""
+
+if ($#argv > 0) then
+    set N = $1
+    if ($#argv > 1) then
+	set seed = "-s $2"
+    endif
+endif
+
+makeplummer -n $N $seed -i \
+	| makesecondary -i -f 1 \
+	| scale -s \
+	| makebinary -l 2 -u 2

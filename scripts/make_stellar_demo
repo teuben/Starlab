@@ -1,0 +1,34 @@
+#!/bin/tcsh
+
+# Make a standard King model with 25% binaries and stellar evolution.
+# Command-line options are:
+#
+#	length scale, in pc	number of binaries	random seed
+#
+# Other parameter choices are made automatically.  Standard units are
+# used; all binary energies are 1-100 kT, eccentricities are thermal.
+#
+# The resulting model is written to stdout.
+
+# Defaults:
+
+set R = 1
+set N = 16
+set seed = ""
+
+if ($#argv > 0) then
+    set R = $1
+    if ($#argv > 1) then
+	set N = $2
+	if ($#argv > 2) then
+	    set seed = "-s $3"
+	endif
+    endif
+endif
+
+makeking -n $N $seed -w 6 -i \
+	| makemass -f 3 -u 100 -l 1 \
+	| makesecondary -f 0.25 -l 1 \
+	| addstar -R $R \
+	| scale -s \
+	| makebinary -f 3 -l 1 -u 100 -o 1
