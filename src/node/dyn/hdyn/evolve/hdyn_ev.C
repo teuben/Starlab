@@ -365,6 +365,35 @@ void hdyn::set_first_timestep(real additional_step_limit) // default = 0
 }
 
 
+
+real kepler_step(hdyn *b,
+		 real correction_factor)	// default = 1
+{
+    // Simple "kepler" time step criterion for elder binary component.
+    // Used at low level, so minimal checks -- be careful!!
+
+    hdyn* s = b->get_younger_sister();
+
+    if (s) {					// excessively cautious?
+
+	real dist, dtff2, dtv2;
+
+	dist = abs(b->get_pos() - s->get_pos());
+	dtff2 = dist*dist*dist / (2*b->get_parent()->get_mass());
+	dtv2  = square(b->get_pos()) / square(b->get_vel());
+
+	// PRC(dist); PRC(square(b->get_vel())); PRC(dtff2); PRL(dtv2);
+
+	return 0.5 * correction_factor		// 0.5 is empirical
+	    	   * b->get_eta()
+		   * sqrt(Starlab::min(dtff2, dtv2));
+
+    } else
+
+	return 0;
+
+}
+
 //-----------------------------------------------------------------------------
 // new_timestep:  Calculate the next timestep following the Aarseth
 //                formula (Aarseth 1985), including necessary adjustments
@@ -393,8 +422,6 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 		     && b->is_low_level_node()
 		     && b->get_kira_options()->allow_keplstep);
 
-    real dist, dtff2, dtv2;
-
     bool timestep_check = false;
 
 #ifdef KIRA_DEBUG
@@ -407,25 +434,9 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 	// Use a simple "kepler" time step criterion if b is a binary
 	// and the perturbation is fairly small.
 
-	hdyn* s = b->get_younger_sister();
+	newstep = altstep = kepler_step(b, correction_factor);
 
-	if (s) {				// excessively cautious?
-
-	    dist = abs(b->get_pos() - s->get_pos());
-	    dtff2 = dist*dist*dist / (2*b->get_parent()->get_mass());
-	    dtv2  = square(b->get_pos()) / square(b->get_vel());
-
-	    newstep =
-		altstep = 0.5 * correction_factor	// 0.5 is empirical
-		    	      * b->get_eta()
-			      * sqrt(Starlab::min(dtff2, dtv2));
-
-	    // PRC(dist); PRC(square(b->get_vel())); PRC(dtff2); PRL(dtv2);
-
-	} else
-
-	    keplstep = false;
-
+	if (newstep == 0) keplstep = false;
     }
 
     real a2, j2, k2, l2;
@@ -567,7 +578,7 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 	    int p = cerr.precision(HIGH_PRECISION);
 	    cerr << endl << "in new_timestep:" << endl;
 
-	    PRC(b->format_label()); PRC(dist);
+	    PRC(b->format_label());
 	    PRC(b->get_posvel()); PRL(pert_sq);
 	    PRC(newstep); PRC(altstep); PRL(altstep/newstep);
 
@@ -648,7 +659,7 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 //-----------------------------------------------------------------------------
 
 void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
-					      // avoid recomputation
+					       // avoid recomputation
 {
     time += timestep;
     real dt = timestep;
@@ -1333,8 +1344,21 @@ bool hdyn::correct_and_update()
 
 	correct_slow(sb->slow, dt, acc, jerk, bt2, at3, 2);
 
+
     vector new_pos = pred_pos + (0.05 * at3 + ONE12 * bt2) * dt * dt;
     vector new_vel = pred_vel + (0.25 * at3 + ONE3 * bt2) * dt;
+
+
+//    if (name_is("11") && system_time > 1.48 && system_time < 1.484377) {
+//  	PRL(pred_pos);
+//  	PRL(pred_vel);
+//  	PRL(at3);
+//  	PRL(bt2);
+//  	PRL(dt);
+//  	PRL(new_pos);
+//  	PRL(new_vel);
+//    }
+
 
 #if defined(STARLAB_HAS_GRAPE4) || defined(STARLAB_HAS_GRAPE4)
 
