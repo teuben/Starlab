@@ -4072,22 +4072,40 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	// an unperturbed or lightly perturbed multiple).  Check for that
 	// here.  May be better to do all this in the calling function,
 	// as the unperturbed motion is over in any case.  We can recheck
-	//for unperturbed motion once the special treatment is over.
-
-	real keplstep = kepler_step(this, timestep_correction_factor(this));
+	// for unperturbed motion once the special treatment is over.
 
 	// keplstep is the natural time step for the binary.  It most
 	// likely exceeds timestep (step near periastron) by a substantial
 	// factor.  Estimate the time step at periastron.
 
-	// Want to pick up special cases after termination of fully
-	// unperturbed motion, not after periastron.
-
+	real keplstep = kepler_step(this, timestep_correction_factor(this));
 	real peristep = keplstep*pow(binary_peri/binary_sep, 1.5);
-	real ttmp = time+100*peristep;
 
-	if (binary_type != NOT_APPROACHING
-	     && (peristep < 1.e-12 || ttmp-(real)time == 0)) {
+	PRC(binary_type); PRL(NOT_APPROACHING);
+	PRC(keplstep); PRL(peristep);
+
+	// Really want to pick up special cases after termination of
+	// fully unperturbed motion, not after periastron.  However,
+	// if the time step after periastron passage is also small
+	// enough to trigger the criterion, then we probably want to
+	// pick that up too.  (Steve, 11/04)
+	//
+	// Time step limits here are completely empirical.  We could
+	// decide to do this for all sufficiently isolated and close
+	// encounters, or we could go this route only when we
+	// anticipate numerical problems.  Choose the latter for now.
+
+	real ttmp1 = time + 0.001*keplstep;
+	real ttmp2 = time + 0.01*peristep;
+
+	int p = cerr.precision(HIGH_PRECISION);
+	PRC(time); PRC(ttmp1); PRL(ttmp2);
+	cerr.precision(p);
+
+	if (	// binary_type != NOT_APPROACHING &&
+	    (	// peristep < 1.e-11 || keplstep < 1.e10 ||
+	      ttmp1-(real)time == 0 || ttmp2-(real)time == 0
+	     )) {
 
 	    int prec = cerr.precision(HIGH_PRECISION);
 	    cerr << endl << "short time step: "; PRL(time);
@@ -4127,7 +4145,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		    if (bi != this) pertlist[np++] = bi;
 	    }
 
-	    real gamma_top = 5.e-4;		// effective top-level gamma
+	    real gamma_top = 5.e-4;		// acceptable top-level gamma
 	    real gamma_top_inv_23 = pow(gamma_top, -0.666667);
 	    real pert_radius_factor
 		= define_perturbation_radius_factor(top, gamma_top_inv_23);
@@ -4171,14 +4189,15 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		cerr << endl;
 
 		// We have just perturbed the inner component of a hard
-		// multiple system, and we expect time step problems near
+		// multiple system and we expect time step problems near
 		// periastron.  Hand off to smallN, which will return when
 		// unperturbed inner motion is once again established, using
 		// the same criteria as in is_unperturbed_and_approaching.
 		// By construction, the top-level node is sufficiently
 		// isolated that we can neglect the rest of the system.
 
-#if 0
+#if 0		// (Set to zero to suppress integrate_multiple.)
+
 		// Make sure the entire multiple tree is synchronized.
 
 		kira_synchronize_tree(top, true);

@@ -102,6 +102,18 @@ real get_total_energy(dyn* bi, dyn* bj)
     return mu*(0.5*dv*dv - M / abs(dx));
 }
 
+real get_semi_major_axis(dyn* bi, dyn* bj)
+{
+    real M = bi->get_mass() + bj->get_mass();
+    vec dx = bj->get_pos() - bi->get_pos();
+    vec dv = bj->get_vel() - bi->get_vel();
+    real E = 0.5*dv*dv - M / abs(dx);
+    if (E == 0)
+	return VERY_LARGE_NUMBER;
+    else
+	return -0.5*M/E;
+}
+
 real get_period(dyn* bi, dyn* bj)
 {
     real M = bi->get_mass() + bj->get_mass();

@@ -511,6 +511,7 @@ real print_binary_params(kepler* k, real m1, real kT,
 			 int indent = BIN_INDENT);
 
 real get_total_energy(dyn* bi, dyn* bj);
+real get_semi_major_axis(dyn* bi, dyn* bj);
 real get_period(dyn* bi, dyn* bj);
 void get_total_energy_and_period(dyn* bi, dyn* bj, real& E, real& P);
 
