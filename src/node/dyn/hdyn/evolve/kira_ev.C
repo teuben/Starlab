@@ -1,4 +1,9 @@
 
+#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
+#ifndef T_DEBUG_kira_ev
+#   undef T_DEBUG
+#endif
+
        //=======================================================//    _\|/_
       //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
@@ -24,21 +29,25 @@
 
 //#define TIME_INTERNAL
 
-void calculate_acc_and_jerk_for_list(hdyn *b,
-				     hdyn **next_nodes,
-				     int  n_next,
-				     xreal time,
-				     bool exact,
-				     bool tree_changed,
-				     bool &reset_force_correction, // no longer
-								   // used...
-				     bool &restart_grape)
+int calculate_acc_and_jerk_for_list(hdyn *b,
+				    hdyn **next_nodes,
+				    int  n_next,
+				    xreal time,
+				    bool exact,
+				    bool tree_changed,
+				    bool &reset_force_correction, // no longer
+								  // used...
+				    bool &restart_grape)
 {
     // Note that this function uses the same function calls as
     // calculate_acc_and_jerk_on_top_level_node, but in a different
     // order: all prologue calls are performed first, then all
     // top-level (i.e. GRAPE) force calculations, then all epilogue
     // calls.
+
+    // Return the number of top-level nodes on the list.
+
+    int n_list_top_level = 0;
 
     bool ignore_internal = next_nodes[0]->get_ignore_internal();
 
@@ -91,20 +100,29 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
 
     xreal sys_t = next_nodes[0]->get_system_time();
 
-    if (time > sys_t) {
+    // Note that time and system_time should be the same...
 
-	for (int i = 0; i < n_next; i++) {
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 1 << endl;
+	int p = cerr.precision(HIGH_PRECISION);
+	PRI(7); PRC(n_next); PRC(exact); PRC(time); PRL(time - sys_t);
+	cerr.precision(p);
+    }
+#endif
 
-	    hdyn *bi = next_nodes[i];
+    for (int i = 0; i < n_next; i++) {
 
-	    // Predict the entire clump containing node bi (Steve, 8/98):
+	hdyn *bi = next_nodes[i];
 
-	    predict_loworder_all(bi->get_top_level_node(), sys_t);
+	// Predict the entire clump containing node bi (Steve, 8/98):
 
-	    if (bi->is_top_level_node()) {
-		bi->clear_interaction();
-		bi->top_level_node_prologue_for_force_calculation(exact);
-	    }
+	predict_loworder_all(bi->get_top_level_node(), sys_t);
+
+	if (bi->is_top_level_node()) {
+	    bi->clear_interaction();
+	    bi->top_level_node_prologue_for_force_calculation(exact);
+	    n_list_top_level++;
 	}
     }
 
@@ -120,6 +138,13 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
     for (int k = 0; k < kmax; k++) {
 #endif
 
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 2
+	     << endl << flush;
+    }
+#endif
+
     if (!exact) {
 
 	if (!ignore_internal)
@@ -128,6 +153,13 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
 
 	// (Uses grape_calculate_acc_and_jerk or
 	//  top_level_node_real_force_calculation, as appropriate.)
+
+#ifdef T_DEBUG
+	if (IN_DEBUG_RANGE(sys_t)) {
+	    cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 3
+		 << endl << flush;
+	}
+#endif
 
 	int n = get_n_top_level();
 
@@ -160,6 +192,21 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
     for (int k = 0; k < kmax; k++) {
 #endif
 
+    bool print = kd->kira_ev;
+
+#ifdef T_DEBUG
+	if (IN_DEBUG_RANGE(sys_t)) {
+	    cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 4
+		 << endl << flush;
+#if 0
+	    pp3("(21,100021)");
+	    pp3("(23,100023)");
+	    print = true;
+#endif
+	}
+	int ppp = cerr.precision(HIGH_PRECISION);
+#endif
+
     for (int i = 0; i < n_next; i++) {
 	hdyn *bi = next_nodes[i];
 
@@ -167,15 +214,22 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
 
 	if (bi->is_low_level_node() && bi->get_kepler() == NULL) {
 
-	    if (kd->kira_ev) {
+	    if (print) {
 	        cerr << "\nComputing force on low-level node "
 		     << bi->format_label() << endl;
+		pp3(bi);
+		PRC(bi->get_system_time());
+		PRC(bi->get_time()); PRL(bi->get_t_pred());
+		PRL(bi->get_pred_pos());
+		PRL(bi->get_pred_vel());
 	    }
 
 	    bi->clear_interaction();
 	    bi->calculate_acc_and_jerk(exact);
 
-	    if (kd->kira_ev) {
+	    if (print) {
+		cerr << "after..."<<endl;
+		pp3(bi);
 		PRL(bi->get_acc());
 		PRL(bi->get_binary_sister()->get_acc());
 		PRL(bi->get_pos());
@@ -197,6 +251,18 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
 #ifdef TIME_INTERNAL
     }
     if (kmax > 1) cpu3 = cpu_time();
+#endif
+
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 5
+	     << endl << flush;
+#if 0
+	pp3("(21,100021)");
+	pp3("(23,100023)");
+#endif
+    }
+    cerr.precision(ppp);
 #endif
 
     // Complete calculation of accs and jerks by correcting for C.M.
@@ -243,6 +309,13 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
 
     }
 
+#ifdef T_DEBUG
+	if (IN_DEBUG_RANGE(sys_t)) {
+	    cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 6
+		 << endl << flush;
+	}
+#endif
+
 #ifdef TIME_INTERNAL
     }
     if (kmax > 1) cpu4 = cpu_time();
@@ -279,6 +352,8 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
 	exit(0);
     }
 #endif
+
+    return n_list_top_level;
 }
 
 void calculate_acc_and_jerk_on_all_top_level_nodes(hdyn * b)
