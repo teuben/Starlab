@@ -14,7 +14,7 @@ istream & single_star::scan_star_story(istream& s)
 
     while(get_line(s,input_line), strcmp(END_STAR, input_line)){
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char *val = getequals(input_line, keyword);
+	const char *val = getequals(input_line, keyword);
 
         real number;
     	if(0){   // trick to keep the if() statement, for the else below
@@ -27,36 +27,36 @@ istream & single_star::scan_star_story(istream& s)
             sscanf(val,"%s",str_cls);
 
         }else if(!strcmp("T_cur",keyword)){
-            set_current_time( strtod(val,&val) );
+            set_current_time( strtod(val,NULL) );
 
         }else if(!strcmp("T_rel",keyword)){
-            set_relative_age( strtod(val,&val) );
+            set_relative_age( strtod(val,NULL) );
 
         }else if(!strcmp("M_rel",keyword)){
-            set_relative_mass( strtod(val,&val) );
+            set_relative_mass( strtod(val,NULL) );
 
         }else if(!strcmp("M_env",keyword)){
-            set_envelope_mass( strtod(val,&val) );
+            set_envelope_mass( strtod(val,NULL) );
 
         }else if(!strcmp("M_core",keyword)){
-            set_core_mass( strtod(val,&val) );
+            set_core_mass( strtod(val,NULL) );
 
         }else if(!strcmp("M_COcore",keyword)){
-            set_COcore_mass( strtod(val,&val) );
+            set_COcore_mass( strtod(val,NULL) );
 
         }else if(!strcmp("T_eff",keyword)){
-            number = strtod(val,&val);
+            number = strtod(val,NULL);
 	    /* XXX ignore value?? */
 
         }else if(!strcmp("L_eff",keyword)){
-            set_luminosity( strtod(val,&val) );
+            set_luminosity( strtod(val,NULL) );
 
         }else if(!strcmp("P_rot",keyword)){       // Experimental extra 
 	  					  // information for 
-	  set_rotation_period( strtod(val,&val) );// radio pulsars.
+	  set_rotation_period( strtod(val,NULL) );// radio pulsars.
 
         } else if(!strcmp("B_fld",keyword)){
-	  set_magnetic_field( strtod(val,&val) );
+	  set_magnetic_field( strtod(val,NULL) );
 
 	}else{
 	    add_story_line(star_story, input_line);
@@ -127,26 +127,26 @@ void extract_line_text(stellar_type& type, real& t_cur, real& t_rel,
             sscanf(val,"%s",type_string); 
 	    type = extract_stellar_type_string(type_string);
         }else if(!strcmp("T_cur",keyword)){
-            t_cur = strtod(val,&val);
+            t_cur = strtod(val,NULL);
         }else if(!strcmp("T_rel",keyword)){
-            t_rel = strtod(val,&val);
+            t_rel = strtod(val,NULL);
         }else if(!strcmp("M_rel",keyword)){
-            m_rel = strtod(val,&val);
+            m_rel = strtod(val,NULL);
         }else if(!strcmp("M_env",keyword)){
-            m_env = strtod(val,&val);
+            m_env = strtod(val,NULL);
         }else if(!strcmp("M_core",keyword)){
-            m_core = strtod(val,&val);
+            m_core = strtod(val,NULL);
         }else if(!strcmp("M_COcore",keyword)){
-            co_core = strtod(val,&val);
+            co_core = strtod(val,NULL);
         }else if(!strcmp("T_eff",keyword)){
-            t_eff = strtod(val,&val);
+            t_eff = strtod(val,NULL);
         }else if(!strcmp("L_eff",keyword)){
-            l_eff = strtod(val,&val);
+            l_eff = strtod(val,NULL);
         }else if(!strcmp("P_rot",keyword)){       // Experimental extra 
-	    p_rot = strtod(val,&val);     	  // information for 
+	    p_rot = strtod(val,NULL);     	  // information for 
 						  // radio pulsars
         }else if(!strcmp("B_fld",keyword)){       // Only for neutron stars
-  	    b_fld = strtod(val,&val);
+  	    b_fld = strtod(val,NULL);
         }
 
     }

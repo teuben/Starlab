@@ -11,7 +11,7 @@ istream & hydrobase::scan_hydro_story(istream& s)
 
     while(get_line(s,input_line), !matchbracket(END_HYDRO, input_line)) {
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char *val = getequals(input_line, keyword);
+	getequals(input_line, keyword);		// demand "="
     	add_story_line(hydro_story, input_line);
     }
     return s;

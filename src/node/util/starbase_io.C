@@ -13,7 +13,7 @@ istream & starbase::scan_star_story(istream& s, int level)
     while (get_line(s,input_line), !matchbracket(END_STAR, input_line)) {
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char *val = getequals(input_line, keyword);
+	const char *val = getequals(input_line, keyword);
 
 	// NOTE: The code below is significantly different from the old
 	// version, which used is_root() and appears to have been wrong.
@@ -24,13 +24,13 @@ istream & starbase::scan_star_story(istream& s, int level)
 //	cerr << "node: " << the_node->format_label() << "  "; PRL(level);
 
         if (level == 0 && !strcmp("mass_scale", keyword)) {
-            m_conv_star_to_dyn = strtod(val, &val);
+            m_conv_star_to_dyn = strtod(val, NULL);
 
         } else if (level == 0 && !strcmp("size_scale", keyword)) {
-            r_conv_star_to_dyn = strtod(val, &val);
+            r_conv_star_to_dyn = strtod(val, NULL);
 
         } else if (level == 0 && !strcmp("time_scale", keyword)) {
-            t_conv_star_to_dyn = strtod(val, &val);
+            t_conv_star_to_dyn = strtod(val, NULL);
 
         } else {
 //	    cerr << "Adding " << input_line << " to star story for "

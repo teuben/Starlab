@@ -19,12 +19,12 @@ istream& node::scan_dyn_story(istream& s)
     while (get_line(s,input_line), !matchbracket(END_DYNAMICS, input_line)) {
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char *val = getequals(input_line, keyword);
+	const char *val = getequals(input_line, keyword);
 
     	if (0) {   // trick to keep the else if() statements homogeneous
 
     	    }else if(!strcmp("m",keyword)){
-		mass = strtod(val, &val);
+		mass = strtod(val, NULL);
 	    }else{
 		add_story_line(dyn_story, input_line);
 	    }

@@ -251,15 +251,14 @@ void put_real_number(ostream & s, char * label, xreal x)
 
 void put_real_number(ostream & s, char * label, real x)
 {
-    static char format[40];
-    static int  local_precision = -1;
-
     int old_precision = set_starlab_precision(s);
 
 #ifndef BAD_GNU_IO
     s << label << x << endl;
 #else
     if (s == cout) {
+	static char format[40];
+	static int local_precision = -1;
 	int precision = get_starlab_precision();
 	if (local_precision != precision) {
 	    local_precision = precision;
@@ -280,15 +279,14 @@ void put_real_number(ostream & s, char * label, real x)
 
 void put_real_vector(ostream & s, char * label, vector v)
 {
-    static char format[40];
-    static int  local_precision = -1;
-
     int old_precision = set_starlab_precision(s);
 
 #ifndef BAD_GNU_IO
     s << label << v << endl;
 #else
     if (s == cout){
+	static char format[40];
+	static int local_precision = -1;
 	int precision = get_starlab_precision();
 	if (local_precision != precision) {
 	    local_precision = precision;
@@ -334,7 +332,7 @@ void put_string(ostream & s, char * label, char * str)
 void write_unformatted_real( ostream & s, real v )
 {
 #if WORDS_BIGENDIAN
-    s.write( &v, 8 );
+    s.write( (char *)&v, 8 );
 #else
     unsigned long long lv = *(unsigned long long *)&v;
     lv = (lv>>32) | (lv<<32);
@@ -342,7 +340,7 @@ void write_unformatted_real( ostream & s, real v )
        | (lv>>16)&0x0000FFFF0000FFFFLL;
     lv = (lv&0x00FF00FF00FF00FFLL)<<8
        | (lv>>8)&0x00FF00FF00FF00FFLL;
-    s.write( &lv, 8 );
+    s.write( (char *)&lv, 8 );
 #endif
 }
 
@@ -350,12 +348,12 @@ void write_unformatted32_real( ostream & s, real v )
 {
     float f = v;
 #if WORDS_BIGENDIAN
-    s.write( &f, 4 );
+    s.write( (char *)&f, 4 );
 #else
     unsigned int l = (*(unsigned int *)&f)>>16 | (*(unsigned int *)&f)<<16;
     l = (l&0x00FF00FF)<<8
       | (l>>8)&0x00FF00FF;
-    s.write( &l, 4 );
+    s.write( (char *)&l, 4 );
 #endif
 }
 
@@ -377,11 +375,11 @@ real read_unformatted_real( istream & s )
 {
 #if WORDS_BIGENDIAN
     real r;
-    s.read( &r, 8 );
+    s.read( (char *)&r, 8 );
     return r;
 #else
     unsigned long long lv;
-    s.read( &lv, 8 );
+    s.read( (char *)&lv, 8 );
     lv = (lv>>32) | (lv<<32);
     lv = (lv&0x0000FFFF0000FFFFLL)<<16
        | (lv>>16)&0x0000FFFF0000FFFFLL;
@@ -395,11 +393,11 @@ real read_unformatted32_real( istream & s )
 {
 #if WORDS_BIGENDIAN
     float f;
-    s.read( (void *)&f, 4 );
+    s.read( (char *)&f, 4 );
     return f;
 #else
     unsigned int iv;
-    s.read( &iv, 4 );
+    s.read( (char *)&iv, 4 );
     iv = (iv>>16) | (iv<<16);
     iv = (iv&0x00FF00FF)<<8
 	| (iv>>8)&0x00FF00FF;

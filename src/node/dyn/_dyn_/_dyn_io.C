@@ -34,7 +34,7 @@ istream & _dyn_::scan_dyn_story(istream & s)
     while (get_line(s, input_line), strcmp(END_DYNAMICS, input_line)) {
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char *val = getequals(input_line, keyword);
+	const char *val = getequals(input_line, keyword);
 
 	// See xreal notes in dyn_io.C...
 
@@ -58,7 +58,7 @@ istream & _dyn_::scan_dyn_story(istream & s)
 	    } else {
 		cerr << "_dyn_::scan_dyn_story: reading real time data"
 		     << endl; 
-		real_system_time = system_time = strtod(val, &val);
+		real_system_time = system_time = strtod(val, NULL);
 		cerr << "system_time = " << system_time << " ";
 	    }
 
@@ -71,13 +71,13 @@ istream & _dyn_::scan_dyn_story(istream & s)
 		if (read_xreal)
 		    time = get_xreal_from_input_line(input_line);
 		else {
-		    time = strtod(val, &val);
+		    time = strtod(val, NULL);
 		}
 
 	    } else if (!strcmp("dt", keyword))
-		timestep = strtod(val, &val);
+		timestep = strtod(val, NULL);
 	    else if (!strcmp("m", keyword))
-		mass = strtod(val, &val);
+		mass = strtod(val, NULL);
 	    else if (!strcmp("r", keyword))
 		set_vector_from_input_line(pos, input_line);
 	    else if (!strcmp("v", keyword))
@@ -85,9 +85,9 @@ istream & _dyn_::scan_dyn_story(istream & s)
 	    else if (!strcmp("a", keyword))
 		set_vector_from_input_line(acc, input_line);
 	    else if (!strcmp("pot", keyword))
-		pot = strtod(val, &val);
+		pot = strtod(val, NULL);
 	    else if (!strcmp("R_eff", keyword))
-		radius = strtod(val, &val);
+		radius = strtod(val, NULL);
 	    else
 		add_story_line(dyn_story, input_line);
 	}

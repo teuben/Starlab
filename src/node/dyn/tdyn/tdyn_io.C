@@ -61,7 +61,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 	    real last_real = false;
 
 	    char keyword[MAX_INPUT_LINE_LENGTH];
-	    char *val = getequals(input_line, keyword);
+	    const char *val = getequals(input_line, keyword);
 
 	    // See xreal notes in dyn_io.C...
 
@@ -82,7 +82,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 
 		} else {
 
-		    real_system_time = system_time = strtod(val, &val);
+		    real_system_time = system_time = strtod(val, NULL);
 
 		}
 
@@ -95,11 +95,11 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    if (read_xreal)
 			time = get_xreal_from_input_line(input_line);
 		    else {
-			time = strtod(val, &val);
+			time = strtod(val, NULL);
 		    }
 
 		} else if (!strcmp("m", keyword))
-		    mass = strtod(val, &val);
+		    mass = strtod(val, NULL);
 		else if (!strcmp("r", keyword))
 		    set_vector_from_input_line(pos, input_line);
 		else if (!strcmp("v", keyword))
@@ -110,7 +110,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    set_vector_from_input_line(jerk, input_line);
 		else if (!strcmp("kep", keyword)) {
 		    int i;
-		    i = strtol(val, &val, 10);
+		    i = strtol(val, NULL, 10);
 		    kep = (kepler*)1;		// just use as a flag for now
 		}
 		else if (!strcmp("defunct", keyword))

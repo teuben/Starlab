@@ -36,7 +36,7 @@ istream & dyn::scan_dyn_story(istream& s)
     while (get_line(s,input_line), !matchbracket(END_DYNAMICS, input_line)) {
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char *val = getequals(input_line, keyword);
+	const char *val = getequals(input_line, keyword);
 
     	if (!strcmp("real_system_time", keyword)) {
 
@@ -73,14 +73,14 @@ istream & dyn::scan_dyn_story(istream& s)
 		cerr << "dyn::scan_dyn_story: input "
 		     << "time data type is real"
 		     << endl; 
-		real_system_time = system_time = strtod(val, &val);
+		real_system_time = system_time = strtod(val, NULL);
 	    }
 	} else {
 
 	    last_real = false;
 
 	    if (!strcmp("m", keyword))
-		mass = strtod(val, &val);
+		mass = strtod(val, NULL);
 	    else if (!strcmp("r", keyword))
 		set_vector_from_input_line(pos, input_line);
 	    else if (!strcmp("v", keyword))

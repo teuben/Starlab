@@ -442,8 +442,9 @@ local real top_level_kinetic_energy(dyn* b)
     cmv /= mass;
 
     real kin = 0;
-    for_all_daughters(dyn, b, bb)
+    { for_all_daughters(dyn, b, bb)
         kin += bb->get_mass()*square(bb->get_vel()-cmv);
+    }
 
     return 0.5*kin;
 }
@@ -1000,7 +1001,6 @@ local bool double_fn(dyn * b)
 local real print_lagrangian_radii(dyn* b, int which_lagr,
 				  bool verbose = true, int which_star = 0)
 {
-    char tmp[3];
     bool nonlin = false;
 
     real rhalf = 1;
@@ -1129,8 +1129,9 @@ local void print_dominated_lagrangian_radii(dyn* b, dyn* b_dom)
     if (!b_dom) return;
 
     int n = 0;
-    for_all_daughters(dyn, b, bi)
+    { for_all_daughters(dyn, b, bi)
 	if (bi != b_dom) n++;
+    }
 
     // Set up an array of (radius, mass) pairs.  Also find the total
     // mass of all nodes under consideration.
