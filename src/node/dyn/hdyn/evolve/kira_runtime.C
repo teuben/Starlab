@@ -814,6 +814,7 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 
 	    else if ((s = strstr(line, "report_pericenter_reflection"))
 		     || (s = strstr(line, "report_peri_unpert"))
+		     || (s = strstr(line, "report_peri"))
 		     || (s = strstr(line, "unpert_peri")))
 
 		b->get_kira_diag()->report_pericenter_reflection
