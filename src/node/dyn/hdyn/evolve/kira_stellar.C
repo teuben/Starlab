@@ -190,7 +190,9 @@ bool evolve_stars(hdyn* b,
 	// binaries (handles only top-level nodes.)
 
 	predict_loworder_all(b, b->get_system_time());	    // unnecessary??
-	synchronize_tree(b);
+
+	// synchronize_tree(b);
+	kira_synchronize_tree(b, true);
 
 	if (b->get_kira_diag()->report_stellar_evolution)
 	    cerr << "After synchronize_tree" << endl;
