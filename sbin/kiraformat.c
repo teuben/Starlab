@@ -84,7 +84,7 @@ float getfloat32( FILE *f ) {
     static int one = 1;
     float v;
     if(fread(&v, sizeof(v), 1, f) <= 0) {
-	fprintf(stderr, "Error reading double!\n");
+	fprintf(stderr, "Error reading float!\n");
 	exit(1);
     }
     if(*(char *)&one == 1) {
@@ -289,6 +289,14 @@ With -a option, converts to (indented) ASCII form instead.\n", argv[0]);
 	    if(val) {
 		at += fprintf(stdout, "%s%.*s%s%s", prefix, slen, s, equals, val);
 	    } else {
+		if((s[0] == '(' || s[0] == ')') && s[2] == '\n') {
+		    switch(s[1]) {
+		    case 'P': strcpy(s+1, "Particle\n"); break;
+		    case 'S': strcpy(s+1, "Star\n"); break;
+		    case 'D': strcpy(s+1, "Dynamics\n"); break;
+		    case 'H': strcpy(s+1, "Hydro\n"); break;
+		    }
+		}
 		at += fprintf(stdout, "%s%s", prefix, s);
 	    }
 	} else {
@@ -301,6 +309,19 @@ With -a option, converts to (indented) ASCII form instead.\n", argv[0]);
 		putc('=', stdout);
 		fputs(val, stdout);		/* includes trailing newline */
 	    } else {
+		if(s[0] == '(' || s[0] == ')') {
+		    int trunc = 0;
+		    switch(s[1]) {
+		    case 'P': if(!memcmp(s+1, "Particle", 8)) trunc = 1; break;
+		    case 'S': if(!memcmp(s+1, "Star", 4)) trunc = 1; break;
+		    case 'D': if(!memcmp(s+1, "Dynamics", 8)) trunc = 1; break;
+		    case 'H': if(!memcmp(s+1, "Hydro", 5)) trunc = 1; break;
+		    }
+		    if(trunc) {
+			s[2] = '\n';
+			s[3] = '\0';
+		    }
+		}
 		at += strlen(s);
 		fputs(s, stdout);
 	    }
