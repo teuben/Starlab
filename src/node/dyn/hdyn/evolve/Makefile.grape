@@ -42,7 +42,7 @@
 #..............................................................................
 
 OBJECT_FILES = hdyn_unpert.o hdyn_ev.o hdyn_tree.o hdyn_merge.o \
-	       hdyn_debug.o hdyn_external.o hdyn_grape.o \
+	       hdyn_grape.o \
 	       hdyn_schedule.o hdyn_schedule2.o hdyn_slow.o \
 	       kira_init.o kira_runtime.o \
 	       perturbed_list.o correct_perturbers.o kira_check.o \

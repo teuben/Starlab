@@ -75,7 +75,7 @@ DEPEND_LIBS	= $(LIB)/libhdyn.a $(LIB)/libdyn.a $(LIB)/libnode.a \
 EXECUTABLES =  dstar_kira # flat_hermite
 
 OBJECT_FILES = hdyn_unpert.o hdyn_ev.o hdyn_flat.o hdyn_tree.o \
-               hdyn_debug.o hdyn_harp3.o hdyn_schedule.o hdyn_schedule2.o \
+               hdyn_harp3.o hdyn_schedule.o hdyn_schedule2.o \
 	       kira_init.o kira_runtime.o
 
 LIBRARY = libhdyn.a
