@@ -242,9 +242,9 @@ local char* string_header(char* string)
     static char header[1024];
     strcpy(header, string);
 
-    char *c = index(header, '<');	// seek "a<+n>"
+    char *c = strchr(header, '<');	// seek "a<+n>"
     if (!c) {
-	c = index(header, '+');		// seek "a+b"
+	c = strchr(header, '+');		// seek "a+b"
 	if (!c) return header;
     }
 
@@ -260,9 +260,9 @@ local int string_count(char* string)
     static char header[1024];
     strcpy(header, string);
 
-    char* c1 = index(header, '<');
+    char* c1 = strchr(header, '<');
     if (!c1) {
-	if (index(header, '+')) {
+	if (strchr(header, '+')) {
 
 	    // return 1;
 
@@ -282,7 +282,7 @@ local int string_count(char* string)
 	    return 0;
     }
 
-    char* c2 = index(header, '>');
+    char* c2 = strchr(header, '>');
     if (!c2) return 0;			// (actually an error)
     *c2 = '\0';
 
