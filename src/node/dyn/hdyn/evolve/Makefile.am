@@ -16,8 +16,8 @@
 ##..............................................................................
 ##
 
+bin_PROGRAMS = kira kira_smallN
 noinst_LTLIBRARIES = libhdyn-2.la
-bin_PROGRAMS = kira
 
 libhdyn_2_la_SOURCES = hdyn_unpert.C hdyn_ev.C hdyn_tree.C hdyn_merge.C \
     hdyn_schedule.C hdyn_schedule2.C hdyn_slow.C kira_init.C kira_config.C \
@@ -26,16 +26,17 @@ libhdyn_2_la_SOURCES = hdyn_unpert.C hdyn_ev.C hdyn_tree.C hdyn_merge.C \
     kira_stellar.C kira_approx.C kira_encounter.C kira_top_level.C kira_int.C \
     kira_density.C hdyn_grape4.C hdyn_grape6.C kira.C
 
+kira_SOURCES = kira.C
 kira_CPPFLAGS = -DTOOLBOX
-
 kira_LDADD = ../libhdyn.la ../xutil/libxhdyn.la \
 	     ../../../../star/dstar/libdstar.la
-
-kira_SOURCES = kira.C
-
 if HAVE_GRAPE
   kira_LDADD += $(GRAPE_LIBS)
   AM_LDFLAGS = $(GRAPE_LDFLAGS)
 endif
-
 kira_LDADD += ../stubs/libstubs.la
+
+kira_smallN_SOURCES = kira_smallN.C
+kira_smallN_LDADD = ../libhdyn.la ../xutil/libxhdyn.la \
+		    ../../../../star/dstar/libdstar.la \
+		    ../stubs/libstubs.la
