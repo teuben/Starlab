@@ -348,7 +348,8 @@ dyn* get_col(istream& s,
     double m, x[3], v[3];
     if (sscanf(line, "%i %lg %lg %lg %lg %lg %lg %lg\n", &id, &m, &x[0], &x[1],
                &x[2], &v[0], &v[1], &v[2]) != 8)
-      cerr << "Malformed input on line #" << lineno << '\n', exit(1);
+      cerr << "Malformed input on line #" << lineno << " at `" << line << "'\n",
+	exit(1);
     dyn* const b = (dyn*)the_npfp(the_hbpfp, the_sbpfp, use_stories);
     b->set_index(id);
     b->set_mass(m);
