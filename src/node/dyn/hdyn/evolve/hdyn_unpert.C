@@ -4170,10 +4170,34 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		put_node(top, cerr);
 		cerr << endl;
 
-		// Make sure multiple tree is synchronized.
-		// Call integrate_multiple(top).
-		// Reinstate new multiple configuration and continue
-		// unperturbed motion if necessary.
+		// We have just perturbed the inner component of a hard
+		// multiple system, and we expect time step problems near
+		// periastron.  Hand off to smallN, which will return when
+		// unperturbed inner motion is once again established, using
+		// the same criteria as in is_unperturbed_and_approaching.
+		// By construction, the top-level node is sufficiently
+		// isolated that we can neglect the rest of the system.
+
+#if 0
+		// Make sure the entire multiple tree is synchronized.
+
+		kira_synchronize_tree(top, true);
+
+		// Force time step list rescheduling, just in case.
+
+		bool resched = false;
+		rmq(root->get_dyn_story(), "resched");
+		
+		// Integrate the multiple motion in isolation.  On return,
+		// the tree is properly set up with unperturbed motion
+		// ready to continue.  Better return immediately, as the
+		// internal structure may have changed.
+
+		real t_mult = integrate_multiple(top);
+		cerr << "multiple integration time = " << t_mult << endl;
+
+		unpert = true;
+#endif
 	    }
 
 	    if (np > 0) delete [] pertlist;

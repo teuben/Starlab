@@ -878,12 +878,342 @@ local real take_a_step(hdyn *b,		// root node
 
 
 
+local void set_tag(hdyn *b, char *s)
+{
+    putiq(b->get_log_story(), s, 1);
+}
+
+local bool check_tag(hdyn *b, char *s)
+{
+    return (find_qmatch(b->get_log_story(), s) != NULL);
+}
+
+local void clear_tag(hdyn *b, char *s)
+{
+    rmq(b->get_log_story(), s);
+}
+
+local void merge_nodes(hdyn *bi, hdyn *bj)
+{
+    // Merge bi and bj into bi, and call the node (bi, bj).
+
+    real mi = bi->get_mass(), mj = bj->get_mass(), m = mi + mj;
+    mi /= m;
+    mj /= m;
+    bi->set_mass(m);
+    bi->set_pos(mi*bi->get_pos()+mj*bj->get_pos());
+    bi->set_vel(mi*bi->get_vel()+mj*bj->get_vel());
+    bi->set_name(construct_binary_label(bi, bj));
+    detach_node_from_general_tree(bj);
+    delete bj;
+    set_tag(bi, "merged");
+}
+
+local void search_for_multiples(hdyn* b,
+				real energy_cutoff = 0)	// positive ==> bound!
+{
+    // Recursively search for bound binary pairs among top-level nodes.
+    // After each pass, merge bound systems and repeat the search.
+
+    int n = b->n_leaves();
+    if (n <= 2) return;
+
+    hdynptr *imerge = new hdynptr[n];
+    hdynptr *jmerge = new hdynptr[n];
+    real *emerge = new real[n];
+    int nmerge = 0;
+
+    bool found = false;
+
+    for_all_daughters(hdyn, b, bi) {
+// 	PRL(bi);
+// 	PRL(bi->format_label());
+// 	PRL(bi->get_log_story());
+// 	PRL(find_qmatch(bi->get_log_story(), "printed"));
+	clear_tag(bi, "printed");
+	bi->set_d_nn_sq(VERY_LARGE_NUMBER);
+    }
+
+    for_all_daughters(hdyn, b, bi)
+	for (hdyn *bj = bi->get_younger_sister();
+	     bj != NULL; bj = bj->get_younger_sister()) {  // now bi precedes bj
+
+	    vec dx = bj->get_pos() - bi->get_pos();
+	    real dr2 = square(dx);
+
+	    if (dr2 < bi->get_d_nn_sq()) {
+		bi->set_d_nn_sq(dr2);
+		bi->set_nn(bj);
+	    }
+	    if (dr2 < bj->get_d_nn_sq()) {
+		bj->set_d_nn_sq(dr2);
+		bj->set_nn(bi);
+	    }
+
+	    real M = bi->get_mass() + bj->get_mass();
+	    vec dv = bj->get_vel() - bi->get_vel();
+	    real E = 0.5*dv*dv - M / abs(dx);		  // energy/reduced mass
+
+	    // Convention: energy_cutoff is in terms of E.
+
+	    if (E < -energy_cutoff) {
+
+		// Note: pair will be identified as (bi, bj).
+
+		print_binary_from_dyn_pair(bi, bj,
+					   0, vec(0), true,
+					   true);
+		found = true;
+		set_tag(bi, "printed");
+		set_tag(bj, "printed");
+
+		imerge[nmerge] = bi;
+		jmerge[nmerge] = bj;
+		emerge[nmerge++] = E;
+
+		// Until we figure out the problem with stories and
+		// copies of the system, content ourselves here with
+		// printing out the nearest-neighbor distance.
+
+		vec cmpos = (bi->get_mass()*bi->get_pos()
+		    		+ bj->get_mass()*bj->get_pos())
+		    	    / (bi->get_mass()+bj->get_mass());
+		real dnn2 = VERY_LARGE_NUMBER;
+		hdyn *nn = NULL;
+
+		for_all_daughters(hdyn, b, bk)
+		    if (bk != bi && bk != bj) {
+			real dr2 = square(bk->get_pos() - cmpos);
+			if (dr2 < dnn2) {
+			    dnn2 = dr2;
+			    nn = bk;
+			}
+		    }
+
+		if (nn)
+		    cerr << "    nearest neighbor is " << nn->format_label()
+			 << " at distance " << sqrt(dnn2) << endl;
+		cerr << endl;
+	    }
+	}
+
+    for_all_daughters(hdyn, b, bi)
+	if (check_tag(bi, "merged") && !check_tag(bi, "printed")) {
+
+	    // Want info on the nearest neighbor, even if unbound.
+
+	    if (bi->get_nn())
+		print_binary_from_dyn_pair(bi, bi->get_nn(),
+					   0, vec(0), true,
+					   true);
+	}
+
+#if 0
+
+    // Merge bound pair(s) and repeat.
+
+    PRL(nmerge);
+
+    if (found) {
+
+	// Take care to merge to most tightly bound pairs first.
+	// Sort by energy and remove duplicates.
+
+	// Use a simple insertion sort (small N!).
+
+//	for (int i = 0; i < nmerge; i++) {PRC(i); PRL(emerge[i]);}
+
+	for (int j = 1; j < nmerge; j++) {
+	    hdyn *bi = imerge[j];
+	    hdyn *bj = jmerge[j];
+	    real e = emerge[j];
+	    int i = j - 1;
+	    while (i >= 0 && emerge[i] > e) {
+		imerge[i+1] = imerge[i];
+		jmerge[i+1] = jmerge[i];
+		emerge[i+1] = emerge[i];
+		i--;
+	    }
+	    imerge[i+1] = bi;
+	    jmerge[i+1] = bj;
+	    emerge[i+1] = e;
+	}
+
+//	PRL(nmerge);
+//	for (int i = 0; i < nmerge; i++) {PRC(i); PRL(emerge[i]);}
+
+	// Check for duplicates (keep first instance).  There should be
+	// at most one instance of any node on either list.  Work backwards
+	// through the list, eliminating pairs which share a component with
+	// a more tightly bound pair.
+
+	for (int i = nmerge-2; i >= 0; i--) {
+	    int joff = 0;
+	    for (int j = i+1; j < nmerge; j++) {
+		if (joff > 0) {
+		    imerge[j] = imerge[j+joff];
+		    jmerge[j] = jmerge[j+joff];
+		    emerge[j] = emerge[j+joff];
+		}
+		if (imerge[j] == imerge[i] || imerge[j] == jmerge[i]
+		    || jmerge[j] == imerge[i] || jmerge[j] == jmerge[i]) {
+		    joff++;
+		    nmerge--;
+		}
+	    }
+	}
+
+	PRL(nmerge);
+//	for (int i = 0; i < nmerge; i++) PRL(emerge[i]);
+
+	// Do the mergers, in order.
+
+	for (int i = 0; i < nmerge; i++) {
+	    cerr << "merging " << imerge[i]->format_label();
+	    cerr << " and " << jmerge[i]->format_label() << endl;
+	    merge_nodes(imerge[i], jmerge[i]);
+	}
+
+//	search_for_multiples(b, energy_cutoff);
+    }
+
+#endif
+
+    delete [] imerge;
+    delete [] jmerge;
+    delete [] emerge;
+}
+
+
+local void copy_hdyn(hdyn *b, hdyn *c)
+{
+    // Copy hdyn contents of b to c.
+
+    c->set_mass(b->get_mass());
+    c->set_pos(b->get_pos());
+    c->set_vel(b->get_vel());
+    c->set_index(b->get_index());
+    c->set_name(b->get_name());
+}
+
+local hdyn *copy_tree(hdyn *b)
+{
+    // Make a local hdyn copy of the (flat) tree under hdyn node b.
+
+    cerr << "in copy_tree..." << endl << flush;
+    hdyn *c = new hdyn();
+    PRL(c);
+    copy_hdyn(b, c);
+    c->set_name("copytop");
+
+    hdyn *pcc = NULL;
+    for_all_daughters(hdyn, b, bb) {
+
+	//PRL(bb->format_label());
+	put_node(bb, cerr);
+
+	// Pointers:
+
+	hdyn *cc = new hdyn();
+	cc->set_parent(c);
+	if (!c->get_oldest_daughter()) c->set_oldest_daughter(cc);
+
+	if (pcc) {
+	    cc->set_elder_sister(pcc);
+	    pcc->set_younger_sister(cc);
+	}
+	pcc = cc;
+	PRL(cc);
+
+	// Content:
+
+	copy_hdyn(bb, cc);
+	//put_node(cc, cerr);
+    }
+
+    return c;
+}
+
 local bool is_fully_unperturbed(hdyn *bi, hdyn *bk)
 {
     // Check if the binary whose elder component is bi is perturbed by bk.
     // Use the same criteria as in the rest of kira.  To come...
 
     return false;
+}
+
+static bool local_sys_stats = false;
+static real local_energy = 0;
+
+local void sys_stats(hdyn *b)
+{
+    if (local_sys_stats) {
+
+	// A local, minimal version of the sys_stats function.
+
+	cerr << endl << "Time = " << b->get_time() << endl;
+	pp(b); cerr << endl;
+	print_recalculated_energies((dyn*)b, 1);
+
+	// Numbers:
+
+	int N = b->n_leaves();
+	int N_top_level = b->n_daughters();
+	cerr << "    N = " << N << "  N_top_level = " << N_top_level << endl;
+
+	// Masses and averages:
+
+	real total_mass_nodes = 0;
+	for_all_daughters(hdyn, b, bi)
+	    total_mass_nodes += bi->get_mass();
+
+	real total_mass_leaves = 0;
+	real m_min = VERY_LARGE_NUMBER, m_max = -m_min;
+	for_all_leaves(hdyn, b, bj) {
+	    total_mass_leaves += bj->get_mass();
+	    m_min = Starlab::min(m_min, bj->get_mass());
+	    m_max = Starlab::max(m_max, bj->get_mass());
+	}
+	real m_av = total_mass_leaves / Starlab::max(1, N);
+
+	cerr << "    total_mass = " << b->get_mass();
+	cerr << "  nodes: " << total_mass_nodes;
+	cerr << "  leaves: " << total_mass_leaves << endl;
+
+	cerr << "    m_min = " << m_min << "  m_max = " << m_max
+	     << "  m_av = " << m_av << endl;
+
+	// Center of mass:
+
+	vec com_pos = 0, com_vel = 0;
+//	cerr << "to compute_com" << endl << flush;
+	compute_com(b, com_pos, com_vel);
+//	cerr << "back" << endl << flush;
+
+	cerr << "    center of mass position = " << com_pos << endl
+	     << "                   velocity = " << com_vel << endl;
+
+	// Basic structure:
+
+//	hdyn *c = copy_tree(b);
+
+	// For unknown reasons, the combination of copying the system
+	// and using search_for_multiples leads to problems with the
+	// story mechanism.  Apparently related to memory management,
+	// but not clear what the interaction is.  Need both copy_tree
+	// *and* search_for_multiples for the failure to occur...
+
+//	if (c) {
+	    cerr << endl << "Bound pairs:" << endl;
+	    search_for_multiples(b, local_energy);
+//	    rmtree(c);
+//	}
+
+    } else
+
+	// The usual version.
+
+	sys_stats(b, 1, true, true, false, 2, true, true, true);
 }
 
 // Evolve the system to time t_end, using the input data and settings
@@ -920,7 +1250,7 @@ real smallN_evolve(hdyn *b,
 	int p = cerr.precision(HIGH_PRECISION);
 	cerr << b->get_time() << " (" << n_steps << "): ";
 	cerr.precision(p);
-	print_recalculated_energies((dyn*)b);
+	print_recalculated_energies((dyn*)b, 0);
 	if (dt_energy > 0) t_energy += dt_energy;
     } else
 	initialize_print_energies(b);
@@ -931,7 +1261,7 @@ real smallN_evolve(hdyn *b,
 	real t_sys = b->get_system_time();
 	b->set_system_time(b->get_time());
 	if (dt_log > 0) {
-	    sys_stats(b, 1, true, true, false, 2, true, true, true);
+	    sys_stats(b);
 	    t_log += dt_log;
 	}
 	if (dt_snap > 0) {
@@ -1097,7 +1427,7 @@ real smallN_evolve(hdyn *b,
 	if (dt_log > 0 && b->get_time() >= t_log) {
 	    real t_sys = b->get_system_time();
 	    b->set_system_time(b->get_time());
-	    sys_stats(b, 1, true, true, false, 2, true, true, true);
+	    sys_stats(b);
 	    t_log += dt_log;
 	    b->set_system_time(t_sys);
 	}
@@ -1134,21 +1464,157 @@ local void restore_binary_tree(hdyn *b)
     // To come...  Needed for the kira interface.
 }
 
+local real get_multiple_params(hdyn *b, real& period, real& rnn)
+{
+    // Clump b is a binary tree describing an isolated multiple system.
+    // We expect that it contains at least one very close pair of leaves.
+    // Find the closest such pair and set time and length scales.  Use
+    // both minimum distance and maximum potential criteria in the search.
+    // Return true iff the closest pair is bound.
+
+    hdyn *bimin, *bjmin;
+    real rmin = VERY_LARGE_NUMBER;
+    hdyn *bipot, *bjpot;
+    real pmax = 0;
+
+    for_all_leaves(hdyn, b, bi)
+	if (bi->get_elder_sister() == NULL) {
+	    hdyn *bj = bi->get_younger_sister();
+	    if (bj && bj->is_leaf()) {
+		real r = abs(bi->get_pos() - bj->get_pos());
+		if (r < rmin) {
+		    bimin = bi;
+		    bjmin = bj;
+		    rmin = r;
+		}
+		real pot = bi->get_mass()*bj->get_mass()/r;
+		if (pot > pmax) {
+		    bipot = bi;
+		    bjpot = bj;
+		    pmax = pot;
+		}
+	    }
+	}
+
+    PRC(rmin); PRC(bimin->format_label()); PRL(bjmin->format_label());
+    PRC(pmax); PRC(bipot->format_label()); PRL(bjpot->format_label());
+
+    if (bimin != bipot)
+	cerr << "get_multiple_params: closest and max. potential pair "
+	     << "are different.  Using the latter." << endl;
+
+    // Use bipot and bjpot as the closest pair.
+
+    kepler k;
+    initialize_kepler_from_dyn_pair(k, bipot, bjpot, true);
+    // k.print_all();
+
+    period = k.get_period();
+
+    hdyn *par = bipot->get_parent();
+    hdyn *sis = par->get_binary_sister();
+    rnn = abs(par->get_pos() - sis->get_pos());
+    if (rnn < 2*k.get_semi_major_axis()) rnn = 2*k.get_semi_major_axis();
+
+    return k.get_energy();
+}
+
+local real get_diameter(hdyn *b)
+{
+    // Return the diameter of the *flat* tree under b.
+
+    real diameter2 = 0;
+    for_all_daughters(hdyn, b, bi)
+	for (hdyn *bj = bi->get_younger_sister(); bj != NULL;
+	     bj = bj->get_younger_sister()) {
+	    real rij2 = abs(bi->get_pos() - bj->get_pos());
+	    if (rij2 > diameter2) diameter2 = rij2;
+	}
+    return sqrt(diameter2);
+}
+
 real integrate_multiple(hdyn *b)
 {
-    // Only termination condition for now is unperturbed motion
-    // with a receding nearest neighbor.
+    // Determine some properties of the multiple, for use in setting the
+    // termination condisions in smallN_evolve.
+
+    real period, rnn;
+    local_energy = -get_multiple_params(b, period, rnn)/30;
+    bool bound = (local_energy > 0);
+
+    // For a bound innermost system, the preferred termination condition
+    // is unperturbed approaching motion with a receding nearest neighbor.
 
     // b is the top-level node of the clump in question.  Begin
-    // by flattening everything to a single-level tree.
+    // by flattening everything to a single-level tree.  Note that
+    // all center of mass nodes will vanish, so the integration list
+    // must check for invalid nodes.  Maybe we need a better way of
+    // cleaning up the list -- this is rather messy...
 
     int n_mult = b->flatten_node();
     cerr << "integrate_multiple: "; PRC(n_mult); PRL(b->n_daughters());
+    cerr << "flattening tree to a single level" << endl;
+
+    real diameter = get_diameter(b);
+    PRC(local_energy); PRC(period); PRL(bound);
+    PRC(rnn); PRL(diameter);
+    cerr << endl;
+
+    // Save, set, and restore at the end the root node time and system time.
+    // Appears that the root node really has to have a NULL parent...
+    // *Might* be necessary to suppress GRAPE use too (not clear).
+
+    hdyn *save_root = b->get_root();
+    b->set_root(b);
+    b->set_parent(NULL);
+
+    xreal save_system_time = b->get_system_time();
+    b->set_system_time(0);
+    b->set_time(0);
+    set_all_times(b);
+
+    char tmp[1024];
+    strcpy(tmp, b->get_name());
+    b->set_name("top");
+
+    // Move to the center of mass frame.
+
+    vec cmpos, cmvel;
+    compute_com(b, cmpos, cmvel);
+    b->inc_pos(-cmpos);
+    b->inc_vel(-cmvel);
 
     // Optionally set integration parameters before calling smallN_evolve.
-    // Also, probably should save, set, and restore root and system time.
 
-    real t = smallN_evolve(b);
+    real t_end = VERY_LARGE_NUMBER, r_end = VERY_LARGE_NUMBER;
+    // if (bound) t_end = 1000*period;
+    if (!bound) r_end = 10*rnn;
+
+    local_sys_stats = true;
+
+    // Integrate the clump.
+
+    real t = smallN_evolve(b, t_end, r_end, bound, period);
+
+    exit(0);
+
+    // Restore saved global data.
+
+    b->set_root(save_root);
+    b->set_parent(save_root);
+    b->set_system_time(save_system_time);
+    b->set_time(save_system_time);
+    set_all_times(b);
+
+    b->set_name(tmp);
+
+    // Restore the proper center of mass position and velocity.
+
+    b->inc_pos(cmpos);
+    b->inc_vel(cmvel);
+
+    // Restore the binary tree structure.
+
     restore_binary_tree(b);
 
     return t;
@@ -1231,7 +1697,7 @@ main(int argc, char *argv[])
     if (dt_log == 0 && !d_set) {
 	real t_sys = b->get_system_time();
 	b->set_system_time(b->get_time());
-	sys_stats(b, 1, true, true, false, 2, true, true, true);
+	sys_stats(b);
 	b->set_system_time(t_sys);
     }
 
