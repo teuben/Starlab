@@ -758,7 +758,7 @@ bool kira_initialize(int argc, char** argv,
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"0*:a:Ab.Bc:C:d:D:e:E:f:F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvVW:xX:y:z:Z:";
+"*:0a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvVW:xX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
@@ -918,7 +918,10 @@ bool kira_initialize(int argc, char** argv,
 			break;
 	    case 'E':	if (atoi(poptarg)) exact = true;
 			break;
-	    case 'f':	fric_int = atoi(poptarg);
+	    case 'f':	if (poptarg)
+			    fric_int = atoi(poptarg);
+			else
+			    fric_int = 1;
 			break;
 	    case 'F':	// err_exit("kira: -F option removed: use add_tidal");
 			if (poptarg)
@@ -1040,7 +1043,7 @@ bool kira_initialize(int argc, char** argv,
     initialize_index(b, verbose);
 
     set_friction_beta(friction_beta);
-    cerr << "dynamical friction beta = " << friction_beta << endl;
+    cerr << "external dynamical friction beta = " << friction_beta << endl;
 
     check_set_ignore_internal(b, verbose);
     bool snap_ignore_internal = b->get_ignore_internal();
