@@ -672,6 +672,13 @@ local inline real new_timestep(hdyn *b,			// this node
     }
 
 
+    // EXPERIMENTAL:  Reduce the time step of a strongly perturbed binary component.
+    // Exponent in the pow() comes from a simple comparison of time scales...
+
+    if (b->is_low_level_node() && b->get_perturbation_squared() > 1)
+	newstep *= pow(b->get_perturbation_squared(), -0.25);
+
+
     // Arbitrarily reduce low-level steps by some factor,
     // to facilitate timing checks of low-level steps.
     //
