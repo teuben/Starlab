@@ -53,7 +53,7 @@ local inline void update_node(worldbundle *wb,
 
     // See if we need to deal with unperturbed motion.
 
-    // The kepler flag is attached once the motion is unperturbed,
+    // The kepler flag (1) is attached once the motion is unperturbed,
     // but unperturbed motion doesn't start a new segment.
 
     // Assume that the unperturbed approximation is OK even if only
@@ -70,8 +70,9 @@ local inline void update_node(worldbundle *wb,
     //		  (pert) -----x--- (unpert)	not OK -- motion perturbed
     //						throughout the step
 
-    if (b->get_kepler()) {
-
+    if (b->get_kepler() == (kepler*)1) {	// 2 now reserved for lightly
+						// perturbed binary motion
+						// -- not yet implemented
 	if (!curr->get_kepler()) {
 
 	    // Default placeholder:

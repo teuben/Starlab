@@ -406,12 +406,12 @@ istream & tdyn::scan_dyn_story(istream & s)
 	    
 	    case 'k':
 
-		// Kepler flag:
+		// Kepler flag (1 = unperturbed, 2 = lightly perturbed):
 
 		if (!strcmp("kep", keyword)) {
 		    int i;
-		    i = strtol(val, NULL, 10);	// ignore value, always 1
-		    kep = (kepler*)1;		// just use as a flag for now
+		    i = strtol(val, NULL, 10);
+		    kep = (kepler*)i;
 		    break;
 		}
 		goto other;

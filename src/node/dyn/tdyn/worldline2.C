@@ -31,6 +31,9 @@
 
 #define NEW 1
 
+#define INLINE 
+//#define INLINE inline
+
 #ifndef TOOLBOX
 
 //----------------------------------------------------------------------
@@ -51,7 +54,7 @@
 #include "update_node.C"	// avoid repeating local functions
 //----------------------------------------------------------------------
 
-local inline void clean_up_subtree(worldbundle *wb, pdyn *old, bool debug)
+local INLINE void clean_up_subtree(worldbundle *wb, pdyn *old, bool debug)
 {
     if (old) {
 	old = old->get_top_level_node();	    // should be OK, as
@@ -94,7 +97,7 @@ local inline void clean_up_subtree(worldbundle *wb, pdyn *old, bool debug)
     }
 }
 
-local inline void update_interpolated_tree(worldbundle *wb,
+local INLINE void update_interpolated_tree(worldbundle *wb,
 					   worldline *w, segment *s,
 					   pdyn *root, real t, real t_int,
 					   bool vel, bool debug)

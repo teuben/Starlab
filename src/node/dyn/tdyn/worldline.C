@@ -59,6 +59,9 @@
 
 #define NEW 0
 
+#define INLINE 
+//#define INLINE inline
+
 #ifndef TOOLBOX
 
 // Functions to define unique identification for particles.
@@ -1026,7 +1029,7 @@ void worldbundle::print_worldline(char *name,
 #include "update_node.C"	// avoid repeating local functions
 //----------------------------------------------------------------------
 
-local inline void add_to_interpolated_tree(worldbundle *wb,
+local INLINE void add_to_interpolated_tree(worldbundle *wb,
 					   worldline *w, segment *s,
 					   pdyn *root, real t, bool vel,
 					   bool debug)
