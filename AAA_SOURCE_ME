@@ -1,0 +1,13 @@
+
+# Source this file to install and build Starlab from scratch.
+# All command-line arguments are given to 'make config_new'
+
+if (! -e starlab_start) then
+    configure
+    make config_new $*
+endif
+source starlab_start
+
+echo Sending make output to make.log
+make all >&! make.log
+
