@@ -362,18 +362,19 @@ void set_friction_acc(dyn *b,			// root node
 	real a2 = b->get_pl_scale_sq();
 
 	// Binney & Tremaine expression needs a 1-D velocity dispersion
-	// sigma for the background stars. (Not really well defined unless
-	// the power-law exponent is < 2...)  Note that sigma2 here is
+	// sigma for the background stars.  Note that sigma2 here is
 	// sqrt(2) * sigma.
 
-	// The value of sigma2 is defined in terms of the circular orbit speed.
+	// Define sigma2 in terms of the circular orbit speed vc.
 
-	real vc2, sigma2;
+	real vc2;
 
 	if (r*r > a2)
 	    vc2 = vcirc2(b, r);
 	else
 	    vc2 = vcirc2(b, sqrt(a2));		// use value at r = a
+
+	real sigma2;
 
 	if (alpha < 2)
 	    sigma2 = sqrt(vc2/(2-alpha));	// see McM & SPZ 2003
@@ -384,23 +385,28 @@ void set_friction_acc(dyn *b,			// root node
 	real X = V/sigma2;			// scaled velocity; BT p. 425
 
 	real coeff = 4*M_PI*beta*logLambda(b, r);
-	Afric = -coeff * Mfric * Vcm * density(b, r);
+	real ffac = coeff * Mfric * density(b, r);
 
 	if (X > 0.1)
 
-	    Afric *= (erf(X) - 2*X*exp(-X*X)/sqrt(M_PI)) * pow(V, -3);
+	    ffac *= (erf(X) - 2*X*exp(-X*X)/sqrt(M_PI)) * pow(V, -3);
+
 	else
 
 	    // Expand for small X:
 
-	    Afric *= 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
+	    ffac *= 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
+
+	Afric = -ffac * Vcm;
 
 #if 1
 	cerr << endl << "set_friction_acc: "; PRL(Afric);
-	PRC(beta); PRC(coeff); PRC(Mfric); PRL(density(b, r));
-	PRL(Vcm);
+	PRC(A); PRC(a2); PRL(beta);
+	PRC(coeff); PRC(Mfric); PRL(density(b, r));
 	PRC(r); PRC(sigma2); PRC(V); PRL(X);
-	PRL(erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
+	PRL((erf(X) - 2*X*exp(-X*X)/sqrt(M_PI)) * pow(V, -3));
+	PRL(4 / (3*sqrt(M_PI)*pow(sigma2, 3)));
+	PRC(ffac); PRL(Vcm);
 #endif
 
     }
