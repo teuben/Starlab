@@ -325,6 +325,7 @@ local void update_sort_counters(int n)
     if (ic >= NC) ic = NC - 1;
     counter[ic]++;
     total_count[ic]++;
+
 }
 
 void print_sort_counters()
@@ -649,3 +650,4 @@ void dump_node_list_for(char *s)
     cerr << endl << flush;
     cerr.precision(p);
 }
+
