@@ -1429,6 +1429,11 @@ bool kira_initialize(int argc, char** argv,
 
     //----------------------------------------------------------------------
 
+    // Identify the xreal type in use.
+
+    cerr << endl;
+    identify_xreal();
+
     // Finally, check for GRAPE or other acceleration.
 
     unsigned int config = kira_config(b);	// default settings
