@@ -187,26 +187,33 @@ void plot_stars(dyn * bi,
 
 	// Make a list of all nodes and leaves involved.
 
-	int nnodes = 0;
-	for (m = 0; m <= n; m++) {
+	int nnodes = 1000;
+
+	while (nnodes > 10) {
+	  for (m = 0; m <= n; m++) {
 	    if (list[m]) {
-		for_all_nodes(dyn, list[m], bb) nnodes++;
+	      for_all_nodes(dyn, list[m], bb) nnodes++;
 	    }
+	  }
+	  if (nnodes > 10) n--;
+	  if (n <= 0) break;
 	}
 
-	PRL(nnodes);
+	if (n > 0) {
 
-	dyn ** nodes = new dynptr[nnodes];
+	  PRL(nnodes);
 
-	int i = 0;
-	for (m = 0; m <= n; m++) {
+	  dyn ** nodes = new dynptr[nnodes];
+
+	  int i = 0;
+	  for (m = 0; m <= n; m++) {
 	    if (list[m]) {
-		for_all_nodes(dyn, list[m], bb) nodes[i++] = bb;
+	      for_all_nodes(dyn, list[m], bb) nodes[i++] = bb;
 	    }
-	}
+	  }
 
-	PRI(14);
-	for (i = 0; i < nnodes; i++) {
+	  PRI(14);
+	  for (i = 0; i < nnodes; i++) {
 
 	    // Label placement is Steve's aesthetic judgement (6/00)...
 
@@ -218,10 +225,10 @@ void plot_stars(dyn * bi,
 	    PRI(ind);
 	    fprintf(stderr, "%*s", len, nodes[i]->format_label());
 	    PRI(10-ind-len);
-	}
-	cerr << endl;
+	  }
+	  cerr << endl;
 
-	for (int j = 0; j < nnodes; j++) {
+	  for (int j = 0; j < nnodes; j++) {
 	    fprintf(stderr, "%13s ", nodes[j]->format_label());
 	    for (i = 0; i < nnodes; i++)
 		if (i == j)
@@ -231,8 +238,9 @@ void plot_stars(dyn * bi,
 		      abs(something_relative_to_root(nodes[i], &dyn::get_pos) -
 			  something_relative_to_root(nodes[j], &dyn::get_pos)));
 	    cerr << endl;
+	  }
+	  cerr << endl;
 	}
-	cerr << endl;
     }
 }
 
