@@ -19,6 +19,7 @@
 ////           -m           use mass to determine star color and/or size   [no]
 ////           -n nmax      specify maximum number of images to produce   [Inf]
 ////           -N nbody     color using a (small-N) colormap               [no]
+////           -o filename  same as -f (more standard name)
 ////           -p psize     specify star radius, in pixels
 ////                                          [0 (single image), 1 (animation)]
 ////           -P axis      specify projection axis                         [z]
@@ -290,15 +291,13 @@ local void add_point(unsigned char *a, int nx, int ny,
 
 
 local void write_image_file(unsigned char *a, int nx, int ny,
-			    char *fn, char *filename,
+			    char *output_file_name,
 			    bool compress, int format,
 			    bool colormap_set, char *colormap,
 			    unsigned char *red,
 			    unsigned char *green,
 			    unsigned char *blue)
 {
-    char command[1024];
-
     // Note that write_xxx will write the image left to right,
     // top to bottom.
 
@@ -311,13 +310,15 @@ local void write_image_file(unsigned char *a, int nx, int ny,
 //  	cerr << endl;
 //      }
 
-    FILE *dst = stdout;
-    if (fn) {
-	dst = fopen(fn, "w");
+    FILE *dst = stdout;			// NULL file name ==> stdout
+
+    if (output_file_name) {
+	dst = fopen(output_file_name, "w");
 	if (!dst) {
-	    cerr << "Can't open file " << fn << "; using stdout" << endl;
+	    cerr << "Can't open file " << output_file_name
+		 << "; using stdout" << endl;
 	    dst = stdout;
-	    fn = NULL;
+	    output_file_name = NULL;
 	}
     }
     
@@ -341,12 +342,19 @@ local void write_image_file(unsigned char *a, int nx, int ny,
 
     }
 
-    if (fn && format == 1 && compress) {
+    if (output_file_name) {
 
-	// Runtime compression of Sun rasterfile:
+	fclose(dst);
 
-	sprintf(command, "gzip -f -q %s.sun &", filename);
-	system(command);
+	if (compress) {
+
+	    // Runtime compression of Sun rasterfile (output_file_name
+	    // includes the frame number):
+
+	    char command[256];
+	    sprintf(command, "gzip -f -q %s&", output_file_name);
+	    system(command);
+	}
     }
 }
 
@@ -358,14 +366,14 @@ local void write_image_file(unsigned char *a, int nx, int ny,
 #define NX	256
 #define NY	256
 
+#define FILE_NAME_LEN	128
+
 main(int argc, char** argv)
 {
-    int count = 0, count1 = 0;
-    char filename[64], im_filename[64], command[1024];
-    char* fn;
+    char output_file_id[FILE_NAME_LEN];
+    strcpy(output_file_id, "-");
 
-    char file[64];
-    strcpy(file, "-");
+    int count = 0, count1 = 0;
 
     bool combine = true;
     bool compress = false;
@@ -391,7 +399,7 @@ main(int argc, char** argv)
 
     int axis = 3;		// 1 = x, 2 = y, 3 = z
 
-    char colormap[64];
+    char colormap[FILE_NAME_LEN];
     bool colormap_set = false;
 
     bool testmap = false;
@@ -410,7 +418,7 @@ main(int argc, char** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "1acC:f:F:gGi:Hl:X:x:Y:y:mn:N:p:P:qrs:S:t";
+    char* param_string = "1acC:f:F:gGi:Hl:X:x:Y:y:mn:N:o:p:P:qrs:S:t";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
@@ -424,8 +432,9 @@ main(int argc, char** argv)
 			colormap[63] = '\0';	// just in case
 	    		colormap_set = true;
 			break;
-	    case 'f':	strncpy(file, poptarg, 63);
-			file[63] = '\0';	// just in case
+	    case 'f':
+	    case 'o':	strncpy(output_file_id, poptarg, 63);
+			output_file_id[63] = '\0';	// just in case
 			break;
 	    case 'F':	format = atoi(poptarg);
 			break;
@@ -505,6 +514,16 @@ main(int argc, char** argv)
 #endif
 
     if (format != 1) compress = false;
+
+    // At this point, output_file_id is the "root" name for the image file(s).
+    // It is "-" for stdout.  Otherwise, the actual image file will be of the
+    // form "output_file_id.png" or "output_file_id.nnn.png".  The string
+    // output_file_name passed to write_image_file will be NULL for output
+    // to stdout, or else it will contain the actual name of the file currently
+    // being written, including frame number (if any) and extension.  Declare
+    // it here so the name doesn't vanish!
+
+    char *output_file_name = NULL;
 
     if (HRD) {
 	if (!xlim_set) {
@@ -592,7 +611,7 @@ main(int argc, char** argv)
 	for (int j = 0; j < ny; j++)
 	    for (int i = 0; i < nx; i++)
 		*(a+j*nx+i) = (i%256);
-	write_image_file(a, nx, ny, NULL, NULL,
+	write_image_file(a, nx, ny, NULL,		// NULL ==> stdout
 			 0, format, false, NULL,
 			 red, green, blue);
 	exit(0);
@@ -681,18 +700,26 @@ main(int argc, char** argv)
 
 		    // Define the output file name.
 
-		    if (streq(file, "-"))
-			fn = NULL;
-		    else {
-			sprintf(filename, "%s", file);
-			if (format == 0)
-			    sprintf(im_filename, "%s.png", file);
-			else if (format == 1)
-			    sprintf(im_filename, "%s.sun", file);
-			else if (format == 2)
-			    sprintf(im_filename, "%s.gif", file);
-			fn = im_filename;
+		    if (strcmp(output_file_id, "-")) {
+
+			if (output_file_name) delete [] output_file_name;
+			output_file_name = new char[FILE_NAME_LEN+4];
+
+			if (output_file_name) {
+			    if (format == 0)
+				sprintf(output_file_name, "%s.png",
+					output_file_id);
+			    else if (format == 1)
+				sprintf(output_file_name, "%s.sun",
+					output_file_id);
+			    else if (format == 2)
+				sprintf(output_file_name, "%s.gif",
+					output_file_id);
+			} else
+			    cerr << "Can't create filename string! "
+				 << "Output will go to stdout." << endl;
 		    }
+
 		}
 	    }
 
@@ -800,25 +827,31 @@ main(int argc, char** argv)
 	    }
 
 	    // For separate frames, create and write the image file.
-
+	    
 	    if (!combine) {
 
 		// Image file name counts output images, not input snaps.
 
-		if (streq(file, "-"))
-		    fn = NULL;
-		else {
-		    sprintf(filename, "%s.%3.3d", file, count1);
-		    if (format == 0)
-			sprintf(im_filename, "%s.%3.3d.png", file, count1);
-		    else if (format == 1)
-			sprintf(im_filename, "%s.%3.3d.sun", file, count1);
-		    else if (format == 2)
-			sprintf(im_filename, "%s.%3.3d.gif", file, count1);
-		    fn = im_filename;
+		if (strcmp(output_file_id, "-")) {
+
+		    if (output_file_name) delete [] output_file_name;
+		    output_file_name = new char[FILE_NAME_LEN+8];
+
+		    if (output_file_name) {
+			if (format == 0)
+			    sprintf(output_file_name, "%s.%3.3d.png",
+				    output_file_id, count1);
+			else if (format == 1)
+			    sprintf(output_file_name, "%s.%3.3d.sun",
+				    output_file_id, count1);
+			else if (format == 2)
+			    sprintf(output_file_name, "%s.%3.3d.gif",
+				    output_file_id, count1);
+		    }
 		}
 
-		write_image_file(a, nx, ny, fn, filename, compress, format,
+		write_image_file(a, nx, ny, output_file_name,
+				 compress, format,
 				 colormap_set, colormap, red, green, blue);
 	    }
 	}
@@ -839,8 +872,19 @@ main(int argc, char** argv)
 
 	// Write the output file.
 
-	write_image_file(a, nx, ny, fn, filename, compress, format,
+	write_image_file(a, nx, ny, output_file_name,
+			 compress, format,
 			 colormap_set, colormap, red, green, blue);
 
+    } else if (format == 2) {
+
+	// Apply gifsicle to create the movie, but retain individual frames.
+
+	char command[1024];
+	sprintf(command, "gifsicle %s.*.gif -o %s.gif&",
+		output_file_id, output_file_id);
+	cerr << "Creating animated gif in " << output_file_id << ".gif"
+	     << endl;
+	system(command);
     }
 }
