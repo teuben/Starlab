@@ -653,7 +653,7 @@ void process_inline_command(char *input_line,
 	strcpy(xlabel, params->xlabel);
 	strcpy(ylabel, params->ylabel);
 
-/* 	if (!params->quiet) */
+ 	if (!params->quiet)
 	    fprintf(stderr, "Read inline command \"%s\"\n", input_line);
 
 	parse_inline_command(input_line, params);
