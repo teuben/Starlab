@@ -96,6 +96,9 @@ local real minimum_semi_major_axis(dyn* b1, dyn* b2)
 {
     real ms_prim = b1->get_starbase()->conv_m_dyn_to_star(b1->get_mass());
     real ms_sec  = b2->get_starbase()->conv_m_dyn_to_star(b2->get_mass());
+
+    // Use stellar mass as radius indicater.
+    // mkbinary known little about stars
     real rs_prim = b1->get_starbase()->conv_r_star_to_dyn(ms_prim);
     real rs_sec  = b2->get_starbase()->conv_r_star_to_dyn(ms_sec);
   
