@@ -2,7 +2,7 @@
 
 # Starlab installation script for "developers" (who get Starlab from CVS).
 # The extra layers are necessary to ensure that the correct autotools
-# are always available when needed.
+# are always available when needed. 
 
 # Require that STARLAB_PATH be defined.
 
