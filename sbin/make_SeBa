@@ -1,0 +1,16 @@
+#!/bin/csh -f
+echo 'Updating single_star and double_star libraries and compiling SeBa'
+echo ' => /src/star/sstar/starclass'
+cd $STARLAB_PATH/src/star/sstar/starclass/
+echo 'make lib'
+make lib
+echo ' => /src/star/dstar/starclass'
+cd $STARLAB_PATH/src/star/dstar/starclass/
+echo 'make lib'
+make lib
+echo ' => /src/star/sstar/evolve'
+cd $STARLAB_PATH/src/star/dstar/evolve
+echo 'rm -f SeBa'
+rm -f SeBa
+echo 'make SeBa'
+make SeBa
