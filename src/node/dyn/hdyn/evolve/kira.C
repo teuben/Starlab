@@ -568,7 +568,10 @@ local void merge_and_correct(hdyn* b, hdyn* bi, hdyn* bcoll, int full_dump)
     cerr << " with node " << bcoll->format_label() 
 	 << " at time " << bi->get_system_time() << endl;
 
-    PRC(bi), PRC(bcoll), PRC(bi->get_parent()); PRL(cpu_time());
+    PRC(bi), PRC(bcoll), PRL(bi->get_parent());
+    PRL(bi->get_parent()->format_label());
+    PRL(cpu_time());
+    pp3(bcoll);
 
     // Note from Steve (9/01): Modified merge_nodes() to accept the
     // full_dump flag.  For a simple merger, could place the put_node()
@@ -602,7 +605,8 @@ local hdyn* check_and_merge(hdyn* bi, int full_dump)
     hdyn * bcoll;
     if ((bcoll = bi->check_merge_node()) != NULL) {
 
-	// cerr << "check_and_merge: "; PRL(bcoll);
+	cerr << "check_and_merge: "; PRL(bcoll);
+	pp3(bcoll);
 
 	hdyn* b = bi->get_root();
 
@@ -2415,6 +2419,20 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	}
 #endif
 
+
+#if 0
+	for (int ii = 0; ii < n_next; ii++) {
+	    hdyn *bb = next_nodes[ii];
+	    if (bb && (bb->name_is("25140") || bb->name_is("32223"))) {
+		cerr << endl << "PRE..." << endl;
+		pp3((hdyn*)node_with_name("32223", b));
+		pp3((hdyn*)node_with_name("25140", b));
+		break;
+	    }
+	}
+#endif
+
+
 	// Take the block step.
 
 	int n_list_top_level = 0;
@@ -2458,6 +2476,64 @@ local void evolve_system(hdyn * b,	       // hdyn array
   	    }
 //  	}
 #endif
+
+
+#if 0
+	for (int ii = 0; ii < n_next; ii++) {
+	    hdyn *bb = next_nodes[ii];
+	    if (bb && (bb->name_is("25140") || bb->name_is("32223"))) {
+		cerr << "POST..." << endl;
+		pp3((hdyn*)node_with_name("32223", b));
+		pp3((hdyn*)node_with_name("25140", b));
+		break;
+	    }
+	}
+#endif
+
+
+
+#if 1
+
+	// Check for and repair timestep disparities in near neighbors.
+	// Code should eventually move to integrate_list...
+
+	for (int ii = 0; ii < n_next; ii++) {
+	    hdyn *bb = next_nodes[ii];
+	    if (bb && bb->is_top_level_node()) {
+
+		// Check for a close NN.
+
+		hdyn *nn = bb->get_nn();
+
+		if (nn && nn != bb
+		    && bb->get_d_nn_sq() < 0.01*bb->get_d_min_sq()) {
+
+		    // Check and possibly reduce its time step.
+
+		    if (nn->is_top_level_node()
+			&& nn->get_timestep() > 16*bb->get_timestep()) {
+
+			cerr << "NN check: synchronized NN "
+			     << nn->format_label() << " to time "
+			     << bb->get_system_time() << endl;
+			cerr << "after step for " << bb->format_label()
+			     << endl;
+
+			// Synchronize_node should do the right thing,
+			// but may be better to use integrate_list, which
+			// will use GRAPE if available.  However, will
+			// have to add flags to avoid tree updates, etc.
+			// in that case.
+
+			nn->synchronize_node();
+		    }
+		}
+	    }
+	}
+
+#endif
+
+
 
 
 #ifdef CPU_COUNTERS
