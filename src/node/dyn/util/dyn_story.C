@@ -83,7 +83,7 @@ real get_initial_mass(dyn* b,
 
 	} else {
 
-	    if (b->get_system_time() <= 0)
+	    if ((real)b->get_system_time() <= 0)
 
 		// Simply compute the mass if t <= 0.
 
