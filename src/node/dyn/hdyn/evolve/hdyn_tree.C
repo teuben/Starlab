@@ -97,7 +97,7 @@ local inline real max_mass(hdyn* b)
     if (b->is_parent()) {
 	for_all_daughters(hdyn, b, bb)
 	    if (bb->get_mass() > m_max)
-		m_max = max(m_max, max_mass(bb));
+		m_max = Starlab::max(m_max, max_mass(bb));
     } else
 	m_max = b->get_mass();
 
@@ -501,8 +501,8 @@ local void check_merge_esc_flags(hdyn *bi, hdyn *bj)
 
 	// Both components are flagged as escapers.
 
-	real t_esc = max(getrq(bi->get_dyn_story(), "t_esc"),
-			 getrq(bj->get_dyn_story(), "t_esc"));
+	real t_esc = Starlab::max(getrq(bi->get_dyn_story(), "t_esc"),
+			          getrq(bj->get_dyn_story(), "t_esc"));
 	putrq(bi->get_parent()->get_dyn_story(), "esc", 1);
 	putrq(bi->get_parent()->get_dyn_story(), "t_esc", t_esc);
 

@@ -256,8 +256,8 @@ local void add_point(float *a, int nx, int ny,
 
     // PRC(x); PRC(i); PRC(y); PRL(j);
 
-    for (int ii = max(-ir, -i); ii <= min(ir, nx-i-1); ii++)
-	for (int jj = max(-ir, -j); jj <= min(ir, ny-j-1); jj++) {
+    for (int ii = Starlab::max(-ir, -i); ii <= Starlab::min(ir, nx-i-1); ii++)
+	for (int jj = Starlab::max(-ir, -j); jj <= Starlab::min(ir, ny-j-1); jj++) {
 
 	    // Get distance from pixel center to reference point.
 
@@ -550,10 +550,10 @@ main(int argc, char** argv)
     real lx = xright - xleft;
     real ly = ytop - ybot;
 
-    real xmin = min(xleft, xright);
-    real xmax = max(xleft, xright);
-    real ymin = min(ybot, ytop);
-    real ymax = max(ybot, ytop);
+    real xmin = Starlab::min(xleft, xright);
+    real xmax = Starlab::max(xleft, xright);
+    real ymin = Starlab::min(ybot, ytop);
+    real ymax = Starlab::max(ybot, ytop);
 
     // PRC(xleft); PRC(xright); PRL(lx);
     // PRC(ybot); PRC(ytop); PRL(ly);
@@ -676,18 +676,17 @@ main(int argc, char** argv)
 		    }
 
 		    for_all_leaves(hdyn, b, bb) {
-			if (ncolor == 0 && index_all < 0
-			      && bb->get_index() >= 0) {
-			    cmin = min(cmin, bb->get_index());
-			    cmax = max(cmax, bb->get_index());
+			if (ncolor == 0 && index_all < 0 && bb->get_index() >= 0) {
+			    cmin = Starlab::min(cmin, bb->get_index());
+			    cmax = Starlab::max(cmax, bb->get_index());
 			}
 			if (mass && bb->get_mass() > 0) {
-			    mmin = min(mmin, bb->get_mass());
-			    mmax = max(mmax, bb->get_mass());
+			    mmin = Starlab::min(mmin, bb->get_mass());
+			    mmax = Starlab::max(mmax, bb->get_mass());
 			}
 			if (radius) {
-			    rmin = min(mmin, bb->get_radius());
-			    rmax = max(mmax, bb->get_radius());
+			    rmin = Starlab::min(mmin, bb->get_radius());
+			    rmax = Starlab::max(mmax, bb->get_radius());
 			}
 		    }
 
@@ -779,7 +778,7 @@ main(int argc, char** argv)
 
 		    if (HRD) {
 
-			real fac = max(0.0, min(1.0, x - 3.5));	// arbitrary
+			real fac = Starlab::max(0.0, Starlab::min(1.0, x - 3.5));	// arbitrary
 			color = 0.7 + 0.3 * fac;
 
 		    } else if (mass && bb->get_mass() > 0) {
@@ -806,7 +805,7 @@ main(int argc, char** argv)
 
 		    // Single pixels are too small for an animation.
 
-		    if (!combine) r = max(r, 1.0);
+		    if (!combine) r = Starlab::max(r, 1.0);
 
 		    // Coordinates in the frame:
 

@@ -38,7 +38,7 @@ real semi_to_period(real semi,
 
 #else
 
-void main(int argc, char ** argv) {
+int main(int argc, char ** argv) {
 
     bool P_flag = false;
     bool q_flag = false;
@@ -87,6 +87,7 @@ void main(int argc, char ** argv) {
 	   << semi << "; " << m_prim << ", " << m_sec << ")";
       cerr << "  ===>  P = " << period << " [Days]." << endl;
     }
+    return 0;
 }
 
 #endif

@@ -60,7 +60,7 @@ real tf2_energy_diss(const real eta, const stellar_type type) {
 */
 
       real y = log10(eta);
-      y = min(1.0, max(y, 0.0));
+      y = Starlab::min(1.0, Starlab::max(y, 0.0));
       real logT = ((((coeff2[5]*y + coeff2[4])*y + coeff2[3])*y
                    + coeff2[2])*y + coeff2[1])*y + coeff2[0];
 //      logT = min(0, max(logT, -10));
@@ -121,7 +121,7 @@ real tf3_energy_diss(const real eta, const stellar_type type) {
 */
 
       real y = log10(eta);
-      y = min(1.0, max(y, 0.0));
+      y = Starlab::min(1.0, Starlab::max(y, 0.0));
       real logT = ((((coeff3[5]*y + coeff3[4])*y + coeff3[3])*y
                    + coeff3[2])*y + coeff3[1])*y + coeff3[0];
 //      logT = min(0, max(logT, -10));
@@ -377,7 +377,7 @@ real maxwellian_distribution() {
 real maxwellian(const real velocity, const real v_disp) {
 
 
-      real Mxwmax = 4/(sqrt(cnsts.mathematics(pi))*exp(1));
+      real Mxwmax = 4/(sqrt(cnsts.mathematics(pi))*exp(1.0));
       real u2 = pow(velocity/v_disp, 2);
       real prob = (4./sqrt(cnsts.mathematics(pi))) * u2 / exp(u2);
       prob /= Mxwmax;

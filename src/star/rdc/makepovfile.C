@@ -524,19 +524,19 @@ cerr << "Add collisions"<<endl;
 
 //	RM100 = -16; RM01 = 14;
 	RM100 = -6; RM01 = 11.4;
-	R = max(0., min(1., (R-RM100)/(RM01-RM100)));
+	R = Starlab::max(0., Starlab::min(1., (R-RM100)/(RM01-RM100)));
 //	R = (R-RM100)/(RM01-RM100);
 //	PRC(R);
 
 	VM100 = -5.8; VM01 = 13;
-	G = 1 - min(1., max(0., sqrt(abs((V-VM01)/(VM01-VM100)))));
-//	G = 1 - min(1., max(0., sqrt(abs((V-VM1)/(VM01-VM100)))));
+	G = 1 - Starlab::min(1., Starlab::max(0., sqrt(abs((V-VM01)/(VM01-VM100)))));
+//	G = 1 - Starlab::min(1., Starlab::max(0., sqrt(abs((V-VM1)/(VM01-VM100)))));
 //	G = 1 - sqrt(abs((V-VM1)/(VM01-VM100)));
 //	PRC(G);
 
 //	BM100 = -7; BM01 = 17;
 	BM100 = -7; BM01 = 15;
-	B = pow(max(0., min(1., (BM01-B)/(BM01-BM100))), 2);
+	B = pow(Starlab::max(0., Starlab::min(1., (BM01-B)/(BM01-BM100))), 2);
 //	B = (BM01-B)/(BM01-BM100);
 //	PRL(B);
 
@@ -552,13 +552,13 @@ cerr << "Add collisions"<<endl;
           case Carbon_Star:  
           case Helium_Star:  
           case Helium_Giant: R = 0; B=0; // green
-	    G = 1 - min(1., max(0., sqrt(abs((V-VM1)/(VM01-VM100)))));
+	    G = 1 - Starlab::min(1., Starlab::max(0., sqrt(abs((V-VM1)/(VM01-VM100)))));
 	    apparent_size = 0.1 * scale_L * (VM01-V)/(VM01-VM100);
 	                      break;
           case Carbon_Dwarf: 
           case Helium_Dwarf: 
           case Oxygen_Dwarf: G=0; B=0; // Red
-	    R = 1 - min(1., max(0., sqrt(abs((V-VM1)/(VM01-VM100)))));
+	    R = 1 - Starlab::min(1., Starlab::max(0., sqrt(abs((V-VM1)/(VM01-VM100)))));
 	    apparent_size = 0.1 * scale_L * (VM01-V)/(VM01-VM100);
 	                      break;
           case Thorn_Zytkow: R = 1; G=0; B=0;
@@ -567,7 +567,7 @@ cerr << "Add collisions"<<endl;
           case Xray_Pulsar:  
           case Radio_Pulsar: 
           case Neutron_Star: R = 1; G=0; B=0; // Blue
-	                       B = -0.3 * log10(min(1., p_rot));
+	                       B = -0.3 * log10(Starlab::min(1., p_rot));
 			       apparent_size = 0.1 * scale_L * B;
  	                       break;
           case Black_Hole:   R = 1; G=1; B=1;
@@ -1268,7 +1268,7 @@ main(int argc, char ** argv)
 
     dyn *b;
 
-    int GOP_size = min(1000, nsteps);
+    int GOP_size = Starlab::min(1000, nsteps);
     remove(mpeg_paramfile);
     ofstream os(mpeg_paramfile, ios::app|ios::out);
     if (!os) cerr << "\nerror: couldn't create file "
@@ -1300,7 +1300,7 @@ main(int argc, char ** argv)
 
       if(nsnap==0)
 	for_all_leaves(dyn, b, bi) {
-	  mmax = max(mmax, bi->get_mass());
+	  mmax = Starlab::max(mmax, bi->get_mass());
 	}
 
     if(Stellar) {

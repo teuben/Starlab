@@ -256,8 +256,8 @@ void adddouble(hdyn *b,					// b is binary CM
 //            extract_story_chapter(local_type, sma, ecc, *old_story);
             b->get_starbase()->set_star_story(NULL);
 //            delete old_story;
-
-	    binary_age = max(bi->get_oldest_daughter()->get_starbase()
+	    
+	    binary_age = Starlab::max(bi->get_oldest_daughter()->get_starbase()
 			       ->get_current_time(),
 			     bi->get_oldest_daughter()->get_binary_sister()
 			       ->get_starbase()->get_current_time());

@@ -499,7 +499,7 @@ main(int argc, char **argv)
 
 	    int i_total = rescale_physical(sma, v_rel_th, v_unit,
 					   total_sigma, total_err_sq);
-	    real print_factor = pow(10, -i_total); 
+	    real print_factor = pow(10., -i_total); 
 	
 	    cerr << "<v sigma> (unit = 10^"
 		 << i_total << " pc^3/Gyr):\n\n";

@@ -418,7 +418,7 @@ void hdyn::setup_binary_node()
     // Note that pot is not set -- must be recalculated.
 
     time = older_daughter->time;
-    timestep = min(older_daughter->timestep, younger_daughter->timestep);
+    timestep = Starlab::min(older_daughter->timestep, younger_daughter->timestep);
 
     mass = older_daughter->mass + younger_daughter->mass;
 

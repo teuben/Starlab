@@ -581,10 +581,16 @@ void ltm_to_ubvri(const real logl_prim,
 		   U,  B,  V,  R,  I); 
 }
 
-local inline real exp10(real x)	// sorry Simon -- no such function!  (Steve)
+
+#ifdef HAVE_EXP10
+#error we would like to get this autodetected via configure.in, and not use myexp10, but use exp10
+#else
+
+local inline real myexp10(real x)	// sorry Simon -- no such function!  (Steve)
 {
     return pow(10.0, x);
 }
+#endif
 
 void get_Lubvri_star(dyn *bi, stellar_type& stype,
 		     real& Lu, real& Lb, real& Lv, real& Lr, real& Li) {
@@ -595,11 +601,11 @@ void get_Lubvri_star(dyn *bi, stellar_type& stype,
     get_ubvri_star(bi, stype, u, b, v, r, i);
 
     real ln10g25 = 2.3025851/2.5;
-    Lu = exp10(-ln10g25*u);
-    Lb = exp10(-ln10g25*b);
-    Lv = exp10(-ln10g25*v);
-    Lr = exp10(-ln10g25*r);
-    Li = exp10(-ln10g25*i);
+    Lu = myexp10(-ln10g25*u);
+    Lb = myexp10(-ln10g25*b);
+    Lv = myexp10(-ln10g25*v);
+    Lr = myexp10(-ln10g25*r);
+    Li = myexp10(-ln10g25*i);
 }
 
 void get_ubvri_star(dyn *bi, stellar_type& stype,

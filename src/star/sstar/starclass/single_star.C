@@ -204,7 +204,7 @@ void single_star::initialize(int id, real t_cur,
   luminosity = 0.01;
   current_time = t_cur;
   relative_age = t_rel;
-  relative_mass = max(m_rel, m_env+m_core);
+  relative_mass = Starlab::max(m_rel, m_env+m_core);
   previous.envelope_mass = envelope_mass = m_env;
   core_mass = m_core;
   COcore_mass = co_core;
@@ -249,7 +249,7 @@ real single_star::helium_core_radius() {
   real fraction =1.; // But gives unrealistic mass transfer after spiral-in
   r_he_core = fraction*33.45*sqrt(lum)/pow(tmp, 2);
  
-  return min(radius, r_he_core);
+  return Starlab::min(radius, r_he_core);
 }
 
 real single_star::main_sequence_time(const real mass) {
@@ -434,7 +434,7 @@ real single_star::helium_giant_luminosity(const real mass) {
   real l_HeI = base_agb_luminosity(l_g, mass);
   real l_He = 49*pow(mass, 0.364) + 0.86*pow(mass, 4.);
 
-  return min(l_He, l_HeI);
+  return Starlab::min(l_He, l_HeI);
 }
 
 real single_star::helium_giant_luminosity() {
@@ -450,7 +450,7 @@ real single_star::helium_giant_luminosity() {
   real l_He = 49*pow(relative_mass, 0.364)
             +  0.86*pow(relative_mass, 4.);
 
-  return min(l_He, l_HeI);
+  return Starlab::min(l_He, l_HeI);
 
 }
 
@@ -502,9 +502,9 @@ real single_star::base_agb_luminosity(const real l_g) {
   real l_agb=2454.7;
   if (relative_mass >
       cnsts.parameters(upper_ZAMS_mass_for_degenerate_core)) 
-    l_agb = 6.5*pow(min(relative_mass, 20.), 3.25);
+    l_agb = 6.5*pow(Starlab::min(relative_mass, 20.), 3.25);
   
-  return max(l_agb, l_g);
+  return Starlab::max(l_agb, l_g);
 }
 
 real single_star::base_agb_luminosity(const real l_g,
@@ -513,9 +513,9 @@ real single_star::base_agb_luminosity(const real l_g,
   real l_agb=2454.7;
   if (mass >
       cnsts.parameters(upper_ZAMS_mass_for_degenerate_core)) 
-    l_agb = 6.5*pow(min(mass, 20.), 3.25);
+    l_agb = 6.5*pow(Starlab::min(mass, 20.), 3.25);
   
-  return max(l_agb, l_g);
+  return Starlab::max(l_agb, l_g);
 }
 
 real single_star::agb_luminosity(const real mass) {
@@ -944,11 +944,11 @@ real single_star::accretion_limit(const real mdot, const real dt) {
   real accretion = log10(r_rl/effective_radius)
                  / pow(10, expansionB(relative_mass));
 
-  accretion = max(accretion, 0.);
+  accretion = Starlab::max(accretion, 0.);
   real mdot_max = mdot_kh*pow(accretion, 1./expansionA(relative_mass));
-  mdot_max = max(mdot_max, 0.);	
+  mdot_max = Starlab::max(mdot_max, 0.);	
 
-  return min(mdot, mdot_max);
+  return Starlab::min(mdot, mdot_max);
 
   // (SPZ+GN: 26 Jul 2000) Test Kelvin Helmholtz accretion
   // (GN Jul 28 1999) test non conservative Algol evolution
@@ -1002,7 +1002,7 @@ void single_star::adjust_accretor_radius(const real mdot, const real dt) {
 //    effective_radaius = radius = radius*pow(10, pow(10, r_fr));
 
     real r_l = get_binary()->roche_radius(this);
-    effective_radius = max(min(r_l, effective_radius), 
+    effective_radius = Starlab::max(Starlab::min(r_l, effective_radius), 
 			   radius*pow(10, pow(10, r_fr)));
              
   }
@@ -1055,7 +1055,7 @@ real single_star::expansionB(const real m) {
 
   real value = inc + rc*m;
 
-  return min(1., value);
+  return Starlab::min(1., value);
 }
 
 // Merges cores and envelopes of two stars.
@@ -1354,7 +1354,7 @@ void single_star::update() {
 
 // (GN+SPZ Apr 28 1999)
 // effective_radius can be larger than  radius
-  effective_radius = max(radius,effective_radius);
+  effective_radius = Starlab::max(radius,effective_radius);
 
 
   // last update age is set after stellar expansion timescale is set.
@@ -1407,8 +1407,8 @@ real single_star::accrete_from_stellar_wind(const real mdot, const real dt) {
 
 //  PRC(v_wind);PRC(acc_radius);PRC(wind_acc);PRL(v_factor);
 //  PRL(mass_fraction);PRL(mdot);
-
-  mass_fraction = min(0.9, mass_fraction);
+  
+  mass_fraction = Starlab::min(0.9, mass_fraction);
 
   return add_mass_to_accretor(mass_fraction*mdot, dt);
 }
@@ -1482,7 +1482,7 @@ real single_star::angular_momentum() {
 
 // (GN+SPZ May  5 1999) effective_radius may increase when rl shrinks
   if (is_binary_component()) {
-    r = min(r, 
+    r = Starlab::min(r, 
 	    get_binary()->roche_radius(this)*cnsts.parameters(solar_radius));
   }
 
@@ -1633,7 +1633,7 @@ void single_star::update_wind_constant() {
     wind_constant = 0;
   }
 
-  wind_constant = max(wind_constant, 0.0);
+  wind_constant = Starlab::max(wind_constant, 0.0);
 
 
 }
@@ -1673,7 +1673,7 @@ real single_star::get_evolve_timestep() {
 // growth of giants at end phase 0.0001 seems to be OK (?)
 //  return max(next_update_age - relative_age - (0.5*0.001), 0.001);
 
-  return max(next_update_age - relative_age, 0.0001);
+  return Starlab::max(next_update_age - relative_age, 0.0001);
 
 }
 

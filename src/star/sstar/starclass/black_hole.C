@@ -199,7 +199,7 @@ void black_hole::adjust_initial_star() {
   }
   
   if (relative_age<=0) 
-    relative_age = max(current_time, 0.0);
+    relative_age = Starlab::max(current_time, 0.0);
   effective_radius = core_radius = radius
                    = cnsts.parameters(kanonical_neutron_star_radius);
 
@@ -297,7 +297,7 @@ real black_hole::black_hole_mass() {
     //approximation to Fryer & Kalogera 2001
     real m = get_total_mass();
     if(m<40) {
-	m = min(m, core_mass);
+	m = Starlab::min(m, core_mass);
     }
 
     return m;
@@ -328,7 +328,7 @@ real black_hole::add_mass_to_accretor(const real mdot) {
 
 //		Increase envelope_mass of black hole.
       envelope_mass += mdot;
-      relative_mass = max(relative_mass, get_total_mass());
+      relative_mass = Starlab::max(relative_mass, get_total_mass());
 
       return mdot;
    }
@@ -338,7 +338,7 @@ real black_hole::add_mass_to_accretor(real mdot, const real dt) {
       mdot = accretion_limit(mdot, dt);
 
       envelope_mass += mdot;
-      relative_mass = max(relative_mass, get_total_mass());
+      relative_mass = Starlab::max(relative_mass, get_total_mass());
 
       return mdot;
    }
@@ -350,7 +350,7 @@ real black_hole::accretion_limit(const real mdot, const real dt) {
       if (cnsts.parameters(hyper_critical))
 	eddington *= 1.e8;
       
-      return min(eddington, mdot);
+      return Starlab::min(eddington, mdot);
 }
 
 // A black hole is generally not a donor.
@@ -378,7 +378,7 @@ star* black_hole::merge_elements(star* str) {
 	  core_mass += merger_core + merger_env;
       }
       
-      relative_mass = max(relative_mass, get_total_mass());
+      relative_mass = Starlab::max(relative_mass, get_total_mass());
 
       spec_type[Merger]=Merger;
       instantaneous_element();

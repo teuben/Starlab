@@ -170,10 +170,10 @@ ostream& operator<<(ostream& s, scatter_exp& hi) {
 
   int i;
   s << hi.id_scenario;
-  for(i=0; i<3-floor(log10(hi.id_scenario)+1); i++)
+  for(i=0; i<3-floor(log10((real)hi.id_scenario)+1); i++)
     s << " ";
   s << hi.n_found;
-  for(i=0; i<2-floor(log10(hi.n_found+1)); i++)
+  for(i=0; i<2-floor(log10((real)hi.n_found+1)); i++)
     s << " ";
   s << type_string(hi.sd);
   for(i=0; i<8-strlen(type_string(hi.sd)); i++)
@@ -192,12 +192,12 @@ ostream& operator<<(ostream& s, scatter_exp& hi) {
   
   int n_space = 0;
   for(i=0; i<N_RHO_ZONE_MAX; i++) 
-    n_space += (int)floor(log10(hi.get_nhits(i)+1));
+    n_space += (int)floor(log10((real)hi.get_nhits(i)+1));
   for(i=0; i<max(0,N_RHO_ZONE_MAX-n_space-15); i++) 
     s << ".";
 
   for(i=0; i<N_RHO_ZONE_MAX; i++) {
-    for(int j=0; j<1-floor(log10(hi.get_nhits(i)+1)); j++)
+    for(int j=0; j<1-floor(log10((real)hi.get_nhits(i)+1)); j++)
       s << " ";
     s << hi.get_nhits(i);
   }

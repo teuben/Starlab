@@ -249,7 +249,8 @@ void print_id(void *id, char *s = NULL, int offset = 0)
     else
 	cerr << "    ";
 
-    fprintf(stderr, "%.16lf = %qu = %qx\n", rr, uu, uu);
+    // PJT: this should be done with cerr.... else gcc3 problems
+    //    fprintf(stderr, "%.16lf = %qu = %qx\n", rr, uu, uu);
 }
 
 void worldline::dump(int offset,	// default = 0
@@ -399,8 +400,8 @@ worldbundle::worldbundle(tdyn *b)
 
 	bundle[nw++] = w;
 
-	t_min = min(t_min, t);
-	t_max = max(t_max, t);
+	t_min = Starlab::min(t_min, t);
+	t_max = Starlab::max(t_max, t);
     }
 
     // Sort the list by ID.
@@ -701,7 +702,7 @@ void worldbundle::attach(tdyn *bn,
 			     << endl;
 		}
 
-		t_max = max(t_max, t);
+		t_max = Starlab::max(t_max, t);
 	    }
 	}
     }

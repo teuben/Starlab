@@ -69,8 +69,8 @@ void  addstar(node * b, real t_current, stellar_type type, bool verbose)
 	    if (verbose) {
 		real m = bi->get_starbase()
 			   ->conv_m_dyn_to_star(bi->get_mass());
-		m_min = min(m_min, m);
-		m_max = max(m_max, m);
+		m_min = Starlab::min(m_min, m);
+		m_max = Starlab::max(m_max, m);
 		m_av += m;
 		n_star++;		
 	    }

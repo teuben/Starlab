@@ -91,7 +91,7 @@ local void get_mass_dist(node* b, int num_of_bins, bool verbose)
     delete n_in_bin;
 }
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     node* b;
     int num_of_bins = 25;
@@ -119,6 +119,7 @@ void main(int argc, char ** argv)
         get_mass_dist(b, num_of_bins, verbose); 
         delete b;
     }
+    return 0;
 }
 #endif   
 

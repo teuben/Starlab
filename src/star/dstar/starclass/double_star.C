@@ -88,12 +88,12 @@ real double_star::get_evolve_timestep() {
   if (bin_type != Merged) {
     if (get_primary()->get_evolve_timestep() <
 	get_secondary()->get_evolve_timestep())
-      return min(delta_t, get_primary()->get_evolve_timestep());
+      return Starlab::min(delta_t, get_primary()->get_evolve_timestep());
     else
-      return min(delta_t, get_secondary()->get_evolve_timestep());
+      return Starlab::min(delta_t, get_secondary()->get_evolve_timestep());
   }
   else {
-    return min(delta_t, get_primary()->get_evolve_timestep());
+    return Starlab::min(delta_t, get_primary()->get_evolve_timestep());
   }
 
 }
@@ -457,7 +457,7 @@ void double_star::circularize() {
 	            * get_secondary()->get_effective_radius())      &&
         (eccentricity>0 && eccentricity<1.)) /*safety*/         {
             real peri_new = cnsts.parameters(tidal_circularization_radius)
-	                  * max(get_primary()->get_effective_radius(),
+	                  * Starlab::max(get_primary()->get_effective_radius(),
 				    get_secondary()->get_effective_radius());
             real circ_semi = semi*(1-eccentricity*eccentricity);
             real new_ecc = circ_semi/peri_new - 1;
@@ -541,23 +541,23 @@ real double_star::determine_dt(const real ageint, const real time_done) {
      real dtime_ev = internal_time_step(get_primary()->get_evolve_timestep());
 
      if (bin_type != Merged) {
-       dtime_ev = min(dtime_ev, internal_time_step(
+       dtime_ev = Starlab::min(dtime_ev, internal_time_step(
 		                get_secondary()->get_evolve_timestep()));
 
-       dtime = min(dtime, dtime_ev);
+       dtime = Starlab::min(dtime, dtime_ev);
 
        if(bin_type != Disrupted) {
 
 	 real dt_orbit = orbital_timescale();
 
-	 dtime = min(dtime, dt_orbit);
+	 dtime = Starlab::min(dtime, dt_orbit);
 	 
 //	 if(dtime>minimal_timestep && bin_type==Semi_Detached) 
 //	   dtime = minimal_timestep;
        }
      }
      else 
-       dtime = min(dtime, dtime_ev);
+       dtime = Starlab::min(dtime, dtime_ev);
 
      if(dtime>cnsts.safety(maximum_timestep))
        dtime = cnsts.safety(maximum_timestep);
@@ -779,7 +779,7 @@ bool  double_star::stable(star* st) {	// default = NULL
     real J_prim = get_primary()->angular_momentum();
     real J_sec  = get_secondary()->angular_momentum();
 
-    J_star = max(J_prim, J_sec);
+    J_star = Starlab::max(J_prim, J_sec);
 
   }
   
@@ -1137,7 +1137,7 @@ void double_star::recursive_binary_evolution(real dt,
 
     if (binary_age>=end_time) return;
     
-    dt = min(dt, determine_dt(end_time, binary_age));
+    dt = Starlab::min(dt, determine_dt(end_time, binary_age));
     binary_age += dt;
 
      // Angular momentum loss must be computed here: binary can merge!
@@ -1642,7 +1642,7 @@ void double_star::double_spiral_in() {
 	 real semi_s = src                         // was s->get_core_radius()
 		     / roche_radius(1, mcore_s, mcore_p);
 	 
-	 real post_ce_semi = max(semi_p, semi_s);
+	 real post_ce_semi = Starlab::max(semi_p, semi_s);
 
 	 // the mass lost before the two stars merge is computed from
 	 // change in orbital energy assuming that
@@ -1691,9 +1691,9 @@ void double_star::double_spiral_in() {
 
 	  // Only envelope mass may be removed to prevent
 	  // helium star formation.
-	  real mlost_p = min(mass_loss_fr*mtot_p, 0.99*menv_p);
+	  real mlost_p = Starlab::min(mass_loss_fr*mtot_p, 0.99*menv_p);
 	  p->reduce_mass(mlost_p);
-	  real mlost_s = min(mass_loss_fr*mtot_s, 0.99*menv_s);
+	  real mlost_s = Starlab::min(mass_loss_fr*mtot_s, 0.99*menv_s);
 	  s->reduce_mass(mlost_s);
 
 	  cerr << "Merger double_star::double_spiral_in()"<<endl;
@@ -1769,7 +1769,7 @@ void double_star::spiral_in(star* larger,
 					       smaller->get_total_mass());
 	  real sma_smaller = ser / roche_radius(1, smaller->get_total_mass(),
 						larger->get_core_mass());
-	  real sma_post_ce = max(sma_larger, sma_smaller);
+	  real sma_post_ce = Starlab::max(sma_larger, sma_smaller);
 
 	  real mass_lost = (mtot_l*mtot_s/(2*sma_post_ce) 
                              - mtot_l*mtot_s/(2*semi))
@@ -1978,7 +1978,7 @@ void double_star::gravrad(const real dt) {
                    * get_total_mass()/5.;
            c0 = pow(semi*cnsts.parameters(solar_radius), 4.)
 	      - c0*dt*cnsts.physics(Myear);
-           c0 = max(c0, 0.);
+           c0 = Starlab::max(c0, 0.);
            a_new = pow(c0, 0.25)/cnsts.parameters(solar_radius);
         }
     
@@ -2184,7 +2184,7 @@ void double_star::angular_momentum_envelope_ejection(star* larger,
 	real J_i = sqrt(semi) * (M_tot  * m_new)/sqrt(M_tot  + m_new);
 	real J_f_over_sqrt_af = (M_core * m_new)/sqrt(M_core + m_new);
 	real J_lost           = gamma * M_env * J_i/ (M_tot  + m_new);
-	real sqrt_a_f         = max(0.,(J_i - J_lost)/J_f_over_sqrt_af);
+	real sqrt_a_f         = Starlab::max(0.,(J_i - J_lost)/J_f_over_sqrt_af);
 	real a_f              = pow(sqrt_a_f, 2);
 
 	if(REPORT_BINARY_EVOLUTION) {
@@ -2412,7 +2412,7 @@ real double_star::zeta(star * donor,
 #endif
 
        // Use total mass here as md_dot is only used to determine zeta
-       real md_dot = min(donor->get_total_mass(), 
+       real md_dot = Starlab::min(donor->get_total_mass(), 
        			 cnsts.safety(minimum_mass_step));
        //       real md_dot = min(donor->get_envelope_mass(), 
        //			 cnsts.safety(minimum_mass_step));

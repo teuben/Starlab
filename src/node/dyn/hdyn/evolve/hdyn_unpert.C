@@ -992,7 +992,7 @@ bool hdyn::is_stable(int& status,
 	    binary_fac = pow(inner_semi1, 5) / pow(mass, 2);
 
 	if (inner_semi2 > 0)
-	    binary_fac = max(binary_fac, pow(inner_semi2, 5)
+	    binary_fac = Starlab::max(binary_fac, pow(inner_semi2, 5)
 			     			/ pow(sister->mass, 2));
 
 	if (binary_fac > 0)
@@ -2379,7 +2379,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	// Include perturber crossing time in pdt...
 
 	real pert_dt = dt_perturbers(this);
-	if (pert_dt > 0) pdt2 = max(pdt2, 0.25*pert_dt);	// conservative
+	if (pert_dt > 0) pdt2 = Starlab::max(pdt2, 0.25*pert_dt);	// conservative
     }
 
     // Goal: to advance the binary by as great a time as possible,
@@ -2491,7 +2491,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	if (mean_anomaly > 0.9*M_PI
 	    && kep->get_period() < pdt2) apo_time += kep->get_period();
 
-	pert_steps = ceil( (max(0.0, orb - 1) * kep->get_period() + apo_time)
+	pert_steps = ceil( (Starlab::max(0.0, orb - 1) * kep->get_period() + apo_time)
 		     						/ timestep
 		     + 1);	// extra "1" to try to overcome
 				// possible problems with roundoff
@@ -2661,7 +2661,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	    // if t_next > t_min.
 
 	    xreal t_next = t_min;
-	    real dtblock = min(unpert_step_limit, 2*pdt);
+	    real dtblock = Starlab::min(unpert_step_limit, 2*pdt);
 	    int kb = get_effective_block(dtblock);
 
 #ifdef DEBUG_SCHEDULE

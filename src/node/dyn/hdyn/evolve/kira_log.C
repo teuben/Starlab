@@ -153,9 +153,9 @@ local void print_timestep_stats(hdyn* b)
 
 		// Basic stats (all steps):
 
-		dt_mean += dt_a;
-		dt_min = min(dt_min, dt_a);
-		dt_max = max(dt_max, dt_a);
+	        dt_mean += dt_a;
+		dt_min = Starlab::min(dt_min, dt_a);
+		dt_max = Starlab::max(dt_max, dt_a);
 
 		n_dt += 1;
 		real steps = rint(1/dt);
@@ -301,7 +301,7 @@ local void print_timestep_stats(hdyn* b)
     // First print the timestep histograms...
 
     cerr << endl << "  Timesteps (younger binary components excluded,"
-	 << endl << "             mean = " << dt_mean/max((int)rint(n_dt), 1)
+	 << endl << "             mean = " << dt_mean/Starlab::max((int)rint(n_dt), 1)
 	 << "  min = " << dt_min << "  max = " << dt_max << "):"
 	 << endl;
 
@@ -642,11 +642,11 @@ void log_output(hdyn * b,
 
     fprintf(stderr, "          block steps = %8.2e", count);
     fprintf(stderr, "  total steps = %8.2e", steps);
-    fprintf(stderr, "  steps/block = %6.1f\n", steps/max(1.0, count));
+    fprintf(stderr, "  steps/block = %6.1f\n", steps/Starlab::max(1.0, count));
     fprintf(stderr, "          top-level:    %8.2e", count_top_level);
     fprintf(stderr, "                %8.2e", steps_top_level);
     fprintf(stderr, "                %6.1f\n",
-	    			steps_top_level/max(1.0, count_top_level));
+	    			steps_top_level/Starlab::max(1.0, count_top_level));
 
     if (b->get_use_sstar())
 	print_sstar_time_scales(b);

@@ -387,7 +387,7 @@ local void mkmass(node* b, mass_function mf,
 
 }
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     bool F_flag   = false;                        // Input mf via string
     mass_function mf = mf_Power_Law;             // Default = Power-law
@@ -482,7 +482,7 @@ void main(int argc, char ** argv)
     }
     put_node(cout, *b);
     rmtree(b);
-
+    return 0;
 }
 #endif
 

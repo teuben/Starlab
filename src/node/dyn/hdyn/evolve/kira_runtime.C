@@ -372,7 +372,7 @@ local void modify_params(hdyn * b, char * name,
 
 		int tmp = atoi(s+2);
 		if (tmp > 0) {
-		    int kappa_max = (int) pow(2, tmp);
+		    int kappa_max = (int) pow(2.0, tmp);
 		    b->set_max_slow_factor(kappa_max);
 		    cerr << "Setting maximum slowdown factor = "
 			 << kappa_max << endl;

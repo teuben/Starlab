@@ -44,7 +44,7 @@ local void set_mass_by_label(node* b, char* label, real mass)
 
 }
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     char label[64];
     label[0] = '\0';
@@ -73,6 +73,7 @@ void main(int argc, char ** argv)
 	    }
 
     put_node(cout, *b);
+    return 0;
 }
 
 #endif

@@ -652,7 +652,7 @@ local void get_composition(dyn* b,
 
       T_eff = getrq(bi->get_star_story(), "T_eff");
       L_eff = getrq(bi->get_star_story(), "L_eff");
-      R_eff = sqrt(max(0.1, (1130.*L_eff)/pow(T_eff, 4)));
+      R_eff = sqrt(Starlab::max(0.1, (1130.*L_eff)/pow(T_eff, 4)));
 	    
       r_total += R_eff;
     }
@@ -684,7 +684,7 @@ local real encounter_rate(int im, real ni, real mi, real ri, real vi,
     real r_tot  = ri + rj;
     real m_tot  = mi + mj;
     real v_rel  = sqrt(pow(vi, 2) + pow(vj, 2));
-    real rcore = min(rci, rcj);
+    real rcore = Starlab::min(rci, rcj);
 
     real geometric = 6.31e-15 * v_rel * pow(r_tot, 2);
     real grav_foc = 3.61e-9 * m_tot * r_tot / v_rel;
@@ -824,8 +824,8 @@ main(int argc, char **argv)
 	m_max = -m_min;
 	for_all_daughters(dyn, b, bi) {
 	  n++;
-	  m_min = min(m_min, bi->get_mass());
-	  m_max = max(m_max, bi->get_mass());
+	  m_min = Starlab::min(m_min, bi->get_mass());
+	  m_max = Starlab::max(m_max, bi->get_mass());
 	}
       }
       else {
@@ -1045,11 +1045,11 @@ main(int argc, char **argv)
 	    //      km = int((log10(new_mass) - log10(mmin))/dmass);
 	    //km = int(1 + log(new_mass - mmin + 1)/dmass);
 	    //km = 1 + int(new_mass - mmin/dmass);
-	    km = min(2*nzones, im + jm);
+	    km = Starlab::min(2*nzones, im + jm);
 	    //m_mean[km] = pow(10, (km-1)*dmass) -1 + mmin;
 	    
-	    real ncoll = max(0., min(rate * dt,
-				 min(new_nstars[im]-loss[im],
+	    real ncoll = Starlab::max(0., Starlab::min(rate * dt,
+				 Starlab::min(new_nstars[im]-loss[im],
 				     new_nstars[jm]-loss[im])));
 
 	    //PRC(new_mass);PRC(km);PRC(rate);PRL(ncoll);

@@ -1049,7 +1049,7 @@ local void print_most_massive_stars(dyn *b,
     for (ns = 0; ns < nl; ns++)
 	if (md_list[ns].mass < mass_limit) break;
 
-    if (ns < rint(number_limit)) ns = min(nl, (int)rint(number_limit));
+    if (ns < rint(number_limit)) ns = Starlab::min(nl, (int)rint(number_limit));
 
     print_massive_star_header(cod);
 

@@ -385,7 +385,7 @@ local void print_binary_diagnostics(hdyn* bi)
 	real r = kep->get_separation();
 	real E = kep->get_energy();
 	real a = r;
-	if (E < 0) a = min(r, kep->get_semi_major_axis());
+	if (E < 0) a = Starlab::min(r, kep->get_semi_major_axis());
 
 	cerr << ", -E/mu = " << -E
 	     << "  P = " << 2*M_PI * sqrt(a*a*a/M)
@@ -1771,10 +1771,10 @@ local void evolve_system(hdyn * b,	       // hdyn array
     // step_limit data, the "dt" data never propagate beyond this function,
     // so there is no particular reason to make them part of the hdyn class.
 
-    real dt_max = min(dt_log, dt_sstar);	// system will be synchronized
+    real dt_max = Starlab::min(dt_log, dt_sstar);	// system will be synchronized
 						// for stellar evolution occur
-    dt_max = min(dt_max, dt_reinit);
-    dt_max = min(dt_max, dt_fulldump);
+    dt_max = Starlab::min(dt_max, dt_reinit);
+    dt_max = Starlab::min(dt_max, dt_fulldump);
     b->set_unpert_step_limit(dt_max);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1831,10 +1831,10 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     // Complete the setup of static class data:
 
-    real initial_step_limit = min(INITIAL_STEP_LIMIT, dt_max);
-    initial_step_limit = min(initial_step_limit, dt_snap);
+    real initial_step_limit = Starlab::min(INITIAL_STEP_LIMIT, dt_max);
+    initial_step_limit = Starlab::min(initial_step_limit, dt_snap);
 
-    real step_limit = min(dt_max, dt_snap); 	// no initial_step_limit, note
+    real step_limit = Starlab::min(dt_max, dt_snap); 	// no initial_step_limit, note
 
     b->set_mbar(b->get_mass()/b->n_leaves());	// mass scale
     b->set_initial_step_limit(initial_step_limit);
@@ -1897,7 +1897,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     // Frequency of internal escaper checks (write to story only):
 
-    real dt_esc_check = min(dt_sync, 1.0/16);
+    real dt_esc_check = Starlab::min(dt_sync, 1.0/16);
     real t_esc_check = tt + dt_esc_check;
 
     // Time of next complete system dump (Steve, 9/01).
@@ -2595,7 +2595,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 				 << curr->get_parent()->format_label()
 				 << " is lightly perturbed; get_steps = "
 				 << curr->get_steps() << endl;
-			    PRL(sqrt(max(0.0,
+			    PRL(sqrt(Starlab::max(0.0,
 					 curr->get_perturbation_squared())));
 			    real ratio = curr->get_parent()->get_timestep()
 					   / curr->get_timestep();

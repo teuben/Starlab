@@ -467,10 +467,10 @@ local void determine_semi_major_axis_limits(real m_prim, real m_sec, real ecc,
     }
 //    PRC(a_prim);PRL(a_sec);
 
-    a_min = max(a_min, max(a_prim, a_sec));
+    a_min = Starlab::max(a_min, Starlab::max(a_prim, a_sec));
 
     if (ecc>0)
-	a_min = max(a_min, (r_prim+r_sec)/(1-ecc));
+	a_min = Starlab::max(a_min, (r_prim+r_sec)/(1-ecc));
 
     return;
 }
@@ -506,7 +506,7 @@ void mkrandom_binary( real m_min,  real m_max,
     real r_prim = zero_age_main_sequnece_radius(m_prim);
 
     if(e_max>=1 && ef!=Equal_ecc) 
-	e_max = max(e_min, min(1., 1 - r_prim/a_max));
+	e_max = Starlab::max(e_min, Starlab::min(1., 1 - r_prim/a_max));
 
     ecc = get_random_eccentricity(e_min, e_max, ef, m_prim+m_sec);
     //    PRL(ecc);

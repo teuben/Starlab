@@ -34,7 +34,7 @@ local real solve3(real a, real b, real c)
     // Proceed by Newton-Raphson iteration.  Since a > 0, b > 0, so
     // there are are no turning points to complicate the logic.
 
-    real z = 2*max(pow(abs(c/a), 1.0/3), sqrt(abs(b/a)));
+    real z = 2*Starlab::max(pow(abs(c/a), 1.0/3), sqrt(abs(b/a)));
     real g = c + z * (b + a*z*z);
     real gpr = b + 3*a*z*z;		// always > 0
 
@@ -150,11 +150,11 @@ void refine_cluster_mass(dyn *b,
 			    < phi_J) {
 		    N_inside++;
 		    M_inside += bb->get_mass();
-		    r_max_inside = max(r, r_max_inside);
+		    r_max_inside = Starlab::max(r, r_max_inside);
 		}
 
 	    }
-	    r_max = max(r, r_max);
+	    r_max = Starlab::max(r, r_max);
 
 	    // Count projected masses and numbers.
 

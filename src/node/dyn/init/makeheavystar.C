@@ -47,7 +47,7 @@ local void mkheavystar(node* b, real fraction_doubled, real lower_limit,
     }
 }
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     real fraction_doubled = 0.1;
     real lower_limit = 1;
@@ -96,6 +96,6 @@ void main(int argc, char ** argv)
     mkheavystar(b, fraction_doubled, lower_limit, mass_ratio);
 
     put_node(cout, *b);
-
+    return 0;
 }
 #endif

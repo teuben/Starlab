@@ -59,7 +59,7 @@ local void set_radius(_dyn_* b, real radius)
 
 }
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     char label[64];
     label[0] = '\0';
@@ -91,6 +91,7 @@ void main(int argc, char ** argv)
 	    }
 
     put__dyn_(cout, *b);
+    return 0;
 }
 
 #endif

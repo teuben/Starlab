@@ -51,7 +51,7 @@ void proto_star::instantaneous_element() {
 
     // proto stars are real big!
     radius = 10000*core_radius;
-    effective_radius = max(effective_radius, radius);
+    effective_radius = Starlab::max(effective_radius, radius);
 
     dump(cerr, false);
 
@@ -126,7 +126,7 @@ real proto_star::helium_core_mass() {
 
   real m_core = envelope_mass * cnsts.parameters(star_formation_efficiency);
       
-  m_core = min(m_core, get_total_mass());
+  m_core = Starlab::min(m_core, get_total_mass());
 
   return m_core;
 }

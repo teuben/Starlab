@@ -66,7 +66,7 @@ local dyn * initialize_dyn(istream &in, int n, int i_flag,
   return root;
 }
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     bool F_flag = false;
     int i_flag = -1;
@@ -126,6 +126,7 @@ void main(int argc, char ** argv)
     root->log_history(argc, argv);
     put_dyn(cout, *root);
     rmtree(root);
+    return 0;
 }
 
 #endif

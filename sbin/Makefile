@@ -28,3 +28,4 @@ show_exe:
 
 clean:
 	@/bin/rm -f $(EXECUTABLES)
+	@/bin/rm -f *.o

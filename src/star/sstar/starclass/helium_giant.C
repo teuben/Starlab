@@ -18,7 +18,7 @@ helium_giant::helium_giant(super_giant & g) : single_star(g) {
   last_update_age = next_update_age;
 
     real second_dredge_up_time = next_update_age 
-                          * min(1., relative_mass
+                          * Starlab::min(1., relative_mass
 			  / cnsts.parameters(super_giant2neutron_star));
 
     real remaining_time = second_dredge_up_time - relative_age;
@@ -273,7 +273,7 @@ real helium_giant::add_mass_to_accretor(const real mdot) {
 
         adjust_accretor_age(mdot);
         envelope_mass += mdot;
-	relative_mass = max(relative_mass, get_total_mass());
+	relative_mass = Starlab::max(relative_mass, get_total_mass());
 
 	// next_update_age should nog be altered here (SPZ+GN: 3 Oct 1998)
 
@@ -304,7 +304,7 @@ real helium_giant::add_mass_to_accretor(real mdot, const real dt) {
 // not current
 //	update_wind_constant();
 	wind_constant += mdot;
-	relative_mass = max(relative_mass, get_total_mass());
+	relative_mass = Starlab::max(relative_mass, get_total_mass());
 
 	set_spec_type(Accreting);
 	
@@ -378,7 +378,7 @@ real helium_giant::CO_core_mass() {
 //  m_core = max(core_mass,m_core);
 //    return min(m_core, get_total_mass());
 
-  return min(core_mass, get_total_mass());
+  return Starlab::min(core_mass, get_total_mass());
 }
 
 void helium_giant::stellar_wind(const real dt) {
@@ -390,8 +390,8 @@ void helium_giant::stellar_wind(const real dt) {
 //  PRL(dt);
 // (GN+SPZ Apr 28 1999) wind for low mass stars per phase
     real end_time = next_update_age - last_update_age;
-    real prev_rel_time = max(0.,previous.relative_age - last_update_age);
-    real relative_time = min(relative_age - last_update_age, end_time);
+    real prev_rel_time = Starlab::max(0.,previous.relative_age - last_update_age);
+    real relative_time = Starlab::min(relative_age - last_update_age, end_time);
 
 //    PRL(end_time);
 //    PRL(relative_time);

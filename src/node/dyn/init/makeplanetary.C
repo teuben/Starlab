@@ -94,7 +94,7 @@ local real minimum_semi_major_axis(dyn* b1, dyn* b2)
     real sma_sec  = 2.2*rs_sec*pow(ms_tot/ms_sec, ONE_THIRD);
     // a_min is Roche-lobe limited.
 
-    return min(sma_prim, sma_sec);
+    return Starlab::min(sma_prim, sma_sec);
 }
 
 local void add_secondary(node* original, real mass_ratio)
@@ -332,7 +332,7 @@ PRL(scale);
     e2 *= scale;
 }
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     real lower = 1.0, upper = 1.0;
     real emax = 1;
@@ -422,6 +422,6 @@ void main(int argc, char ** argv)
 
     put_dyn(cout, *b);
     rmtree(b);
-
+    return 0;
 }
 #endif

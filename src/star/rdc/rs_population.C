@@ -123,8 +123,8 @@ local real contribution_to_population(real current_time,
 				      real t_start, real t_end,
 				      real tau, real cnst) {
 
-  real t_int_start = max(0., current_time - t_end);
-  real t_int_end = max(0., current_time - t_start);
+  real t_int_start = Starlab::max(0., current_time - t_end);
+  real t_int_end = Starlab::max(0., current_time - t_start);
 
   return integrate_birthrate(t_int_start, t_int_end, tau, cnst);
 

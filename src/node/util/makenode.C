@@ -22,7 +22,7 @@ node * mknode_mass(int n, real m)
 
 #else
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     int  n = 1;
     real m = 1.0;
@@ -54,6 +54,7 @@ void main(int argc, char ** argv)
 
     put_node(cout, *root);
     rmtree(root);
+    return 0;
 }
 
 #endif

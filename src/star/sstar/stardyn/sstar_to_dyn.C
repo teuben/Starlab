@@ -80,7 +80,7 @@ local void evolve_the_stars(node* bi, const real end_time) {
     while (end_time>current_time+time_step) {
        bi->get_starbase()->evolve_element(current_time+time_step);
        bi->get_starbase()->evolve_element(
-             min(current_time+time_step+EPSILON, end_time));
+             Starlab::min(current_time+time_step+EPSILON, end_time));
        current_time = ((star*)bi->get_starbase())->get_current_time();
        time_step    =  bi->get_starbase()->get_evolve_timestep();
 

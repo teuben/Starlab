@@ -1,6 +1,29 @@
 Some issues for starlab4   (*'s have been done, -'s are to be done)
 ------------------------
 
+
+=== GCC3 issues ================================================================================
+
+    - C++ include files should be without the .h ending (see the new stdinc.h) file
+      We are now using Starlab namespace, though defaulting to std
+    * namespace is now an issue, we should be using it, by default
+      starlab will be in namespace 'std' (so that we can keep using
+      e.g. cout, cerr etc.)
+
+      notably min() and max() were all edited to Starlab::min and Starlab::max
+	(in retrospect the statement
+		using Starlab::min;
+		using Starlab::max;
+	 may have saved us from this problem.....)
+    * starlab_vector.h needed a patch (two operators) that may seem redundant, but seem
+      to leave the gcc3 compiler less confused
+    * void main() is now illegal, needs to be int main()
+    * exp10 seems to exist now, i renamed it to myexp10, but autoconf should figure this out
+    * pow(int,) or pow(,int) seems to be confusing, so a few explicit 2.0 and 3.0 were needed
+    - 'typedef bool int' : can't do that in C++, bool is internally defined
+
+================================================================================================
+
 * various "configure" related things have been added, notably
 
                         step1                step2

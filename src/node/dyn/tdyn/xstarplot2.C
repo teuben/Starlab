@@ -166,14 +166,14 @@ local float get_point_size(DYN* bi)
     // supergiants don't just vanish!
 
     if (point_scale_mode == 1)
-	return max(SMALL_DOT_SIZE,
+	return Starlab::max(SMALL_DOT_SIZE,
 		   base_point_size * sqrt(bi->get_mass()));
     else if (point_scale_mode == 2)
-	return max(SMALL_DOT_SIZE,
-		   base_point_size * min(20., bi->get_radius()));
+	return Starlab::max(SMALL_DOT_SIZE,
+		   base_point_size * Starlab::min(20., bi->get_radius()));
     else if (point_scale_mode == 3)
-	return max(SMALL_DOT_SIZE,
-		   base_point_size * min(20., sqrt(bi->get_radius())));
+	return Starlab::max(SMALL_DOT_SIZE,
+		   base_point_size * Starlab::min(20., sqrt(bi->get_radius())));
     else
 	return base_point_size;
 }
@@ -408,9 +408,9 @@ local void plot_star(DYN *bi, float r, float s,
 
 	    // Place limits on point size.
 
-	    if (sma2 > max_cm) sma2 = max(dr, max_cm);
+	    if (sma2 > max_cm) sma2 = Starlab::max(dr, max_cm);
 
-	    psize = max(psize, 1.2*sma2);
+	    psize = Starlab::max(psize, 1.2*sma2);
 	    //PRC(bi->format_label()); PRC(dr); PRC(dv2); PRL(sma2);
 	}
 
@@ -936,7 +936,7 @@ local void show_static_rotation(DYN* b, bool f_flag)
 					      0.0, 360.0);
 		    }
 		}
-		update_with_delay(win, max(MIN_DELAY, delay_time));
+		update_with_delay(win, Starlab::max(MIN_DELAY, delay_time));
 
 		if (lux_check_keypress(win,'p')) 
 		    while(!lux_check_keypress(win,'c'));
@@ -1023,7 +1023,7 @@ local char check_for_input(unsigned long win, DYN* b,
 
 		    for_all_leaves(DYN, b, bi)
 			for (int kk = 0; kk < 3; kk++)
-			    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]
+			    lmax3d = Starlab::max(lmax3d, abs(bi->get_pos()[kk]
 						     - local_offset[kk]));
 		
 		    // Round lmax3d up to something reasonable:
@@ -1637,7 +1637,7 @@ void xstarplot2(DYN* b, float scale, int k, int d, float lmax,
 
 	    for_all_leaves(DYN, b, bi)
 		for (int kk = 0; kk < 3; kk++)
-		    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]));
+		    lmax3d = Starlab::max(lmax3d, abs(bi->get_pos()[kk]));
 
 	    // Round lmax3d up to something reasonable:
 
@@ -1757,7 +1757,7 @@ void xstarplot2(DYN* b, float scale, int k, int d, float lmax,
 
     // Update the display.
 
-    update_with_delay(win, max(MIN_DELAY, delay_time));
+    update_with_delay(win, Starlab::max(MIN_DELAY, delay_time));
 
     // Deal with user input.  In step mode, wait for
     // 'b', 'c', or 's' before continuing.

@@ -69,7 +69,7 @@ local void mkblack_hole(dyn* b, int id, real m_bh) {
     cerr << "Black hole mass is " << m_bh << endl;
 }
 
-void main(int argc, char ** argv) {
+int main(int argc, char ** argv) {
 
     real m_bh = 0;
     int id = -1;    // most central particle is selected
@@ -117,6 +117,6 @@ void main(int argc, char ** argv) {
 
     put_dyn(cout, *b);
     rmtree(b);
-
+    return 0;
 }
 #endif

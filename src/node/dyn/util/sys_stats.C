@@ -133,10 +133,10 @@ local void print_numbers_and_masses(dyn* b, bool& mass_spectrum)
     real m_min = VERY_LARGE_NUMBER, m_max = -m_min;
     for_all_leaves(dyn, b, bj) {
 	total_mass_leaves += bj->get_mass();
-	m_min = min(m_min, bj->get_mass());
-	m_max = max(m_max, bj->get_mass());
+	m_min = Starlab::min(m_min, bj->get_mass());
+	m_max = Starlab::max(m_max, bj->get_mass());
     }
-    real m_av = total_mass_leaves / max(1, N);
+    real m_av = total_mass_leaves / Starlab::max(1, N);
 
     cerr << "    total_mass = " << b->get_mass();
     cerr << "  nodes: " << total_mass_nodes;
@@ -264,8 +264,8 @@ local void print_numbers_and_masses_by_radial_zone(dyn* b, int which)
 		}
 
 		total_mass_nodes[i] += bi->get_mass();
-		m_min[i] = min(m_min[i], bi->get_mass());
-		m_max[i] = max(m_max[i], bi->get_mass());
+		m_min[i] = Starlab::min(m_min[i], bi->get_mass());
+		m_max[i] = Starlab::max(m_max[i], bi->get_mass());
 	    }
 
 	if (N_total > 0) {
@@ -274,7 +274,7 @@ local void print_numbers_and_masses_by_radial_zone(dyn* b, int which)
 	    for (i = 0; i <= n_lagr; i++) {
 	        cerr << "    zone " << i << "  N = " << N[i];
 	        if (N[i] > 0)
-		    cerr << "  m_av = " << total_mass_nodes[i] / max(N[i], 1)
+		    cerr << "  m_av = " << total_mass_nodes[i] / Starlab::max(N[i], 1)
 		         << "  m_min = " << m_min[i]
 		         << "  m_max = " << m_max[i];
 		cerr << endl;
@@ -290,11 +290,11 @@ local void print_numbers_and_masses_by_radial_zone(dyn* b, int which)
 	    for (i = 0; i <= n_lagr; i++) {
 	        Nc += N[i];
 		m_totc += total_mass_nodes[i];
-		m_minc = min(m_minc, m_min[i]);
-		m_maxc = max(m_maxc, m_max[i]);
+		m_minc = Starlab::min(m_minc, m_min[i]);
+		m_maxc = Starlab::max(m_maxc, m_max[i]);
 		cerr << "    zone " << i << "  N = " << Nc;
 		if (Nc > 0)
-		    cerr << "  m_av = " << m_totc / max(Nc, 1)
+		    cerr << "  m_av = " << m_totc / Starlab::max(Nc, 1)
 		         << "  m_min = " << m_minc
 		         << "  m_max = " << m_maxc;
 		cerr << endl;

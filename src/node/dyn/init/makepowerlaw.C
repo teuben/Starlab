@@ -130,7 +130,7 @@ local void  makepowerlaw(dyn * root, int n,
 		vrms = sqrt(3*A*pow(radius, x-1)/(3-x));
 	    else
 		// vrms = sqrt(mass/radius);
-		vrms = max(sqrt(mass/radius), vc);
+		vrms = Starlab::max(sqrt(mass/radius), vc);
 	}
 
 	// Play with orbital orientations.  At present, orbits become more
@@ -157,7 +157,7 @@ local void  makepowerlaw(dyn * root, int n,
 	    real lim = sqrt(radius/cutoff);
 	    real rfrac = randinter(-lim, lim);
 	    real zfrac = randinter(-lim, lim);
-	    real tfrac = sqrt(max(0.0, 1-rfrac*rfrac-zfrac*zfrac));
+	    real tfrac = sqrt(Starlab::max(0.0, 1-rfrac*rfrac-zfrac*zfrac));
 
 	    bi->set_vel(vrms*(rfrac*rhat+tfrac*xyhat+zfrac*zhat));
 	}
@@ -168,7 +168,7 @@ local void  makepowerlaw(dyn * root, int n,
 
 #define  SEED_STRING_LENGTH  60
 
-main(int argc, char ** argv) {
+int main(int argc, char ** argv) {
     int  i, n;
     int  input_seed, actual_seed;
 
@@ -327,6 +327,7 @@ main(int argc, char ** argv) {
     }
 
     put_node(cout, *b);
+    return 0;
 }
 
 #endif

@@ -39,7 +39,7 @@ local void evolve_star_until_next_time(node* bi, const real out_time) {
           while (out_time>current_time+time_step) {
              bi->get_starbase()->evolve_element(current_time+time_step);
              bi->get_starbase()->evolve_element(
-                 min(current_time+time_step+EPSILON, out_time));
+                 Starlab::min(current_time+time_step+EPSILON, out_time));
              current_time = ((star*)bi->get_starbase())->get_current_time();
              time_step    =  bi->get_starbase()->get_evolve_timestep();
 
@@ -171,7 +171,7 @@ int main(int argc, char ** argv)
     for_all_daughters(node, root, bi) {
        out_time = 0;
        do {
-          out_time = min(out_time+delta_t, t_end);
+          out_time = Starlab::min(out_time+delta_t, t_end);
           evolve_star_until_next_time(bi, out_time);
 	  bi->get_starbase()->dump(cerr, false);
        }
@@ -188,6 +188,7 @@ int main(int argc, char ** argv)
     }
 //    put_node(cout, *root);
     delete root;
+    return 0;
 }
 
 #endif

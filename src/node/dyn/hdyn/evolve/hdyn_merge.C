@@ -393,7 +393,7 @@ hdyn* hdyn::check_merge_node()
 	    if (get_parent() == coll->get_parent()) {
 		coll->synchronize_node();
 		initialize_kepler_from_dyn_pair(k, this, coll, false);
-		sep_sq = min(sep_sq, k.get_periastron() * k.get_periastron()
+		sep_sq = Starlab::min(sep_sq, k.get_periastron() * k.get_periastron()
 						- sum_of_radii_sq);
 	    }
 

@@ -59,7 +59,7 @@ void thorne_zytkow::adjust_initial_star() {
     real t_giant = t_ms + hertzsprung_gap_time(t_ms)
       + base_giant_branch_time(t_ms);
     real t_he = helium_giant_time(t_ms);
-    relative_age = max(t_giant + t_he, relative_age);
+    relative_age = Starlab::max(t_giant + t_he, relative_age);
   }
 }
 #endif
@@ -73,11 +73,11 @@ void thorne_zytkow::instantaneous_element() {
 
   luminosity = l_g*pow(t_gs/(next_update_age
 			     + t_b - relative_age), 1.17);
-  luminosity = min(luminosity, maximum_luminosity());
+  luminosity = Starlab::min(luminosity, maximum_luminosity());
 
   radius = (0.25*pow(luminosity, 0.4)
 	 + 0.8*pow(luminosity, 0.67))/pow(relative_mass, 0.27);
-  radius = min(radius, 100.);
+  radius = Starlab::min(radius, 100.);
 
   // (SPZ+GN:  1 Aug 2000)
   // coming from previous type the effective readius should 
@@ -116,11 +116,11 @@ void thorne_zytkow::evolve_element(const real end_time) {
 
          luminosity = l_g*pow(t_gs/(next_update_age
                     + t_b - relative_age), 1.17);
-         luminosity = min(luminosity, maximum_luminosity());
+         luminosity = Starlab::min(luminosity, maximum_luminosity());
          radius = (0.25*pow(luminosity, 0.4)
                 + 0.8*pow(luminosity, 0.67))/pow(relative_mass, 0.27);
 
-	 radius = min(radius, 100.);
+	 radius = Starlab::min(radius, 100.);
       }
       else {
 
@@ -161,7 +161,7 @@ void thorne_zytkow::accrete_from_envelope(const real dt) {
       if (cnsts.parameters(hyper_critical))
 	  mdot_edd *= 1.e+8; 
 
-      real mdot = min(mdot_edd, envelope_mass); 
+      real mdot = Starlab::min(mdot_edd, envelope_mass); 
 
       core_mass += mdot;
       envelope_mass -= mdot;
@@ -171,7 +171,7 @@ void thorne_zytkow::accrete_from_envelope(const real dt) {
 void thorne_zytkow::stellar_wind(const real dt) {
 
       real wind_mass = 5.5e-7*dt*radius*luminosity/get_total_mass();
-      wind_mass = min(wind_mass, envelope_mass);
+      wind_mass = Starlab::min(wind_mass, envelope_mass);
 
       if (is_binary_component())
          get_binary()->adjust_binary_after_wind_loss(this, wind_mass, dt);
@@ -181,7 +181,7 @@ void thorne_zytkow::stellar_wind(const real dt) {
 
 real thorne_zytkow::helium_core_mass() {
 
-      real m_core = min(cnsts.parameters(kanonical_neutron_star_mass), get_total_mass());
+      real m_core = Starlab::min(cnsts.parameters(kanonical_neutron_star_mass), get_total_mass());
 
       return m_core;
    }
@@ -285,7 +285,7 @@ void thorne_zytkow::adjust_accretor_age(const real mdot,
 					const bool rejuvenate) {
 
       real m_tot_new = get_total_mass() + mdot;
-      real m_rel_new = max(m_tot_new, relative_mass);
+      real m_rel_new = Starlab::max(m_tot_new, relative_mass);
 
       real t_ms = main_sequence_time();
       real t_hg = hertzsprung_gap_time(t_ms);
@@ -332,7 +332,7 @@ real thorne_zytkow::stellar_radius(const real mass, const real age) {
       real t_b  = base_giant_time(t_ms);
 
       real l_agb = l_g*pow(t_gs/(t_nuc + t_b - age), 1.17);
-      l_agb = min(l_agb, maximum_luminosity(mass));
+      l_agb = Starlab::min(l_agb, maximum_luminosity(mass));
 
       real r_agb = (0.25*pow(l_agb, 0.4)
              + 0.8*pow(l_agb, 0.67))/pow(mass, 0.27);

@@ -122,7 +122,7 @@ real brown_dwarf::add_mass_to_accretor(const real mdot) {
     }
 	  
     envelope_mass += mdot;
-    relative_mass = max(relative_mass, get_total_mass());
+    relative_mass = Starlab::max(relative_mass, get_total_mass());
 
     set_spec_type(Accreting);
 	
@@ -143,7 +143,7 @@ real brown_dwarf::add_mass_to_accretor(real mdot, const real dt) {
         mdot = accretion_limit(mdot, dt);
  
         envelope_mass += mdot;
-	relative_mass = max(relative_mass, get_total_mass());
+	relative_mass = Starlab::max(relative_mass, get_total_mass());
 
 	set_spec_type(Accreting);
 	

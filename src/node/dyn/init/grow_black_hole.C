@@ -192,7 +192,7 @@ local void grow_black_hole(dyn* b, real m_bh) {
     putiq(bh->get_log_story(), "black_hole", 1);
   }
 
-void main(int argc, char ** argv) {
+int main(int argc, char ** argv) {
 
     real m_bh = 0;
 
@@ -219,6 +219,6 @@ void main(int argc, char ** argv) {
 
     put_dyn(cout, *b);
     rmtree(b);
-
+    return 0;
 }
 #endif

@@ -238,7 +238,7 @@ void print_sigma3_counts(int n_hits[N_INTER][N_FINAL][N_RHO_ZONE_MAX],
 
 	    // Use exactly 6 chars (+ 1 space) unless integer is very large.
 
-	    for (int i = 0; i < max(0, 6 - strlen(dummy_string)); i++)
+	    for (int i = 0; i < max(0, 6 - (int)strlen(dummy_string)); i++)
 		cerr << " ";
 	    
 	    cerr << dummy_string;
@@ -258,7 +258,7 @@ local void print_formatted(real x)
 
 	// Use exactly 7 characters unless integer is very large.
 
-	for (int i = 0; i < max(1, 6 - strlen(dummy_string)); i++)
+	for (int i = 0; i < max(1, 6 - (int)strlen(dummy_string)); i++)
 	    cerr << " ";
 
 	// Truncate the string, if x large (max = 999999).
@@ -511,7 +511,7 @@ real zone_area(sigma_out& out, int i)	// (without the PI)
 {
     real rho_sq_min = 0, rho_sq_max;
 
-    rho_sq_max = out.rho_sq_init * pow(RHO_SQ_FACTOR, i);
+    rho_sq_max = out.rho_sq_init * pow((real)RHO_SQ_FACTOR, i);
     if (i > 0) rho_sq_min = rho_sq_max / RHO_SQ_FACTOR;
 
     return rho_sq_max - rho_sq_min;

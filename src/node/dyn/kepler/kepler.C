@@ -147,7 +147,7 @@ local int check_trig_limit(kepler* k, real &c, char *s)
 		cerr << "warning: " << s << ": c = " << c << endl;
 		cerr.precision(p);
 	    }
-	    c = max(-1.0, min(1.0, c));
+	    c = Starlab::max(-1.0, Starlab::min(1.0, c));
 	}
 
 	forced = 1;
@@ -702,7 +702,7 @@ void kepler::to_pred_rel_pos_vel(real cos_true_an, real sin_true_an)
 
     real rel_vel_squared = 2 * (energy + total_mass / pred_separation);
     real v_t = angular_momentum / pred_separation;
-    real v_r = sqrt(max(0.0, rel_vel_squared - v_t * v_t));
+    real v_r = sqrt(Starlab::max(0.0, rel_vel_squared - v_t * v_t));
                // It is assumed here that negative values for the argument
                // arise from round-off errors, and can be replaced by zero.
     if (sin_true_an < 0) v_r = -v_r;
@@ -717,7 +717,7 @@ void kepler::to_pred_rel_pos_vel_linear(real true_an) // Special case.
     pred_rel_pos = -pred_separation * longitudinal_unit_vector;
 
     if (pred_separation > 0) {
-        real v_r = sqrt(max(0.0, 2 * (energy + total_mass / pred_separation)));
+        real v_r = sqrt(Starlab::max(0.0, 2 * (energy + total_mass / pred_separation)));
 	if (true_an < 0) v_r = -v_r;
 	pred_rel_vel = -v_r * longitudinal_unit_vector;
     } else {
@@ -792,7 +792,7 @@ void kepler::fast_to_pred_rel_pos_vel(real r_cos_true_an,	// r cos f
 
     real rel_vel_squared = 2 * (energy + total_mass * ri);
     real v_t = angular_momentum * ri;
-    real v_r = sqrt(max(0.0, rel_vel_squared - v_t * v_t));
+    real v_r = sqrt(Starlab::max(0.0, rel_vel_squared - v_t * v_t));
                // It is assumed here that negative values for the argument
                // arise from round-off errors, and can be replaced by zero.
     if (r_sin_true_an < 0) v_r = -v_r;
@@ -1432,7 +1432,7 @@ real kepler::pred_transform_to_radius(real r, int direction)
 
 	if (angular_momentum > 0) {
 
-	    pred_true_anomaly = 2*acos(sqrt(min(1.0, periastron/r)));
+	    pred_true_anomaly = 2*acos(sqrt(Starlab::min(1.0, periastron/r)));
 	    cos_true_an = cos(pred_true_anomaly);
 	    sin_true_an = sin(pred_true_anomaly);
 

@@ -73,7 +73,7 @@ void hertzsprung_gap::instantaneous_element() {
 void hertzsprung_gap::adjust_initial_star() {
 
   if(relative_age<=0)
-    relative_age = max(main_sequence_time(), relative_age);
+    relative_age = Starlab::max(main_sequence_time(), relative_age);
 }
 #endif
 
@@ -231,7 +231,7 @@ void hertzsprung_gap::adjust_accretor_age(const real mdot, const bool rejuvenate
       if (rejuvenate)
          relative_age *= rejuvenation_fraction(mdot/m_tot_new); 
 
-      relative_age = max(relative_age, 
+      relative_age = Starlab::max(relative_age, 
 			 last_update_age + cnsts.safety(minimum_timestep)); 
       
       // next_update_age should not be reset here
@@ -306,7 +306,7 @@ real hertzsprung_gap::stellar_radius(const real mass, const real age_max) {
 
       real alpha, beta, gamma, delta;
       real t_ms   = main_sequence_time(mass);
-      real age = max(t_ms, age_max);            // Safety
+      real age = Starlab::max(t_ms, age_max);            // Safety
       real t_hg   = hertzsprung_gap_time(t_ms);
 
       real log_mass = log10(mass);
@@ -370,7 +370,7 @@ real hertzsprung_gap::TAMS_helium_core_mass() {
   // (SPZ+GN: 31 Jul 2000)
   // TAMS core mass must be smaller than get_total_mass to 
   // assure that it becomes a helium star decently.
-  return min(max(mc,core_mass), 
+  return Starlab::min(Starlab::max(mc,core_mass), 
 	     get_total_mass()-cnsts.safety(minimum_mass_step));
 
 }
@@ -383,7 +383,7 @@ void hertzsprung_gap::evolve_core_mass(const real dt) {
                    / (X * cnsts.parameters(energy_to_mass_in_internal_units));
 
 // (GN+SPZ Apr 29 1999) no type change by core growth
-  delta_mcore = min(delta_mcore, envelope_mass);
+  delta_mcore = Starlab::min(delta_mcore, envelope_mass);
   //(SPZ+GN: 31 Jul 2000)
   // removed the safety, nothing against type change by core growth.
   //  delta_mcore = min(delta_mcore, 
@@ -425,5 +425,5 @@ void hertzsprung_gap::update_wind_constant() {
     wind_constant = 0.01*relative_mass;
   }
 
-  wind_constant = max(wind_constant, 0.0);
+  wind_constant = Starlab::max(wind_constant, 0.0);
 }

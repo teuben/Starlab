@@ -681,7 +681,7 @@ static int    graph3d = 1;
 static int    nodes = 0, links = 0, root = 0;
 static char   track = 0, cenergy = 0;
 static char   c = 0;
-static char   rotate = 0;
+static char   myrotate = 0;
 static float  delay_time;
 static unsigned long c_energy[10], c_index[N_COLORS+1];
 
@@ -1105,7 +1105,7 @@ void  xstarplot(dyn* b, float r_factor, int& k, int d, float lmax,
 
 	    for_all_leaves(dyn, b, bi)
 		for (int kk = 0; kk < 3; kk++)
-		    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]));
+		    lmax3d = Starlab::max(lmax3d, abs(bi->get_pos()[kk]));
 
 	    // Round lmax3d up to something reasonable:
 
@@ -1422,7 +1422,7 @@ void  xstarplot(dyn* b, float r_factor, int& k, int d, float lmax,
 
 		    for_all_leaves(dyn, b, bi)
 			for (int kk = 0; kk < 3; kk++)
-			    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]
+			    lmax3d = Starlab::max(lmax3d, abs(bi->get_pos()[kk]
 						     - local_offset[kk]));
 		
 		    // Round lmax3d up to something reasonable:
@@ -1531,7 +1531,7 @@ void  xstarplot(dyn* b, float r_factor, int& k, int d, float lmax,
 			    show_instructions(instr, r_factor,
 		      "Rotate... p: pause, c: continue, c: exit rotation     ",
 					      0);
-			    rotate = 1;
+			    myrotate = 1;
 
 			    do {
 				theta = theta + dtheta;
@@ -1601,9 +1601,9 @@ void  xstarplot(dyn* b, float r_factor, int& k, int d, float lmax,
 			    while(lux_check_keypress(win,'c'));
 			}
 		    } while(!lux_check_keypress(win,'p')
-			    && !lux_check_keypress(win,'c') && !rotate);
+			    && !lux_check_keypress(win,'c') && !myrotate);
 
-		    rotate = 0;
+		    myrotate = 0;
 		    lux_set_color(win,c_energy[default_color]);
 
 		    // *** End of static rotation loop. ***

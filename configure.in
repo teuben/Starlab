@@ -200,6 +200,8 @@ AC_FUNC_SETVBUF_REVERSED
 AC_FUNC_UTIME_NULL
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(gethostname gettimeofday select strdup strstr strtod strtol strtoul strtoll strtoull)
+AC_CHECK_LIB(m,exp10)
+
 
 AC_C_BIGENDIAN
 

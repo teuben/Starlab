@@ -570,7 +570,7 @@ void initialize_system_phase2(hdyn * b,
 
 	    }
 
-	    min_dt = min(min_dt, b4->get_timestep());
+	    min_dt = Starlab::min(min_dt, b4->get_timestep());
 	}
     }
 

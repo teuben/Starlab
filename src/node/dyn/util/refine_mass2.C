@@ -238,8 +238,8 @@ void refine_cluster_mass2(dyn *b,
 	real phi_L2 = ext_pot(b, ext_center + r_L2*Rhat) - M/(r_L2-R);
 	// PRC(phi_L1); PRC(phi_L2);
 
-	phi_lim = max(phi_L1, phi_L2);		// maximize the cluster mass
-	r_L = max(R-r_L1, r_L2-R);
+	phi_lim = Starlab::max(phi_L1, phi_L2);		// maximize the cluster mass
+	r_L = Starlab::max(R-r_L1, r_L2-R);
 
 	if (verbose > 1) PRL(r_L);
 

@@ -103,7 +103,7 @@ local void write_stoa() {
   
 }
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     check_help();
 
@@ -135,7 +135,7 @@ void main(int argc, char ** argv)
       root->log_history(argc, argv);
       put_node(cout, *root);
     }
-
+    return 0;
 }
 
 #endif

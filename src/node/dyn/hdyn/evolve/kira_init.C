@@ -37,7 +37,7 @@ local void initialize_index(node * b, bool verbose)
     for_all_nodes(node, b, bb)
 	if (bb != b)
 	    if (bb->get_index() > 0)
-		index = max(index, bb->get_index());
+		index = Starlab::max(index, bb->get_index());
 
     // Start numbering at some well-separated value.
 
@@ -236,7 +236,7 @@ local void set_runtime_params(hdyn *b, bool verbose,
 
     choose_param(b, verbose, max_slow, max_slow_flag, "log_max_slow", true);
     if (max_slow >= 0) {
-	int kappa_max = (int) pow(2, max_slow);
+	int kappa_max = (int) pow(2.0, max_slow);
 	cerr << "setting maximum slowdown factor = " << kappa_max << endl;
 	b->set_max_slow_factor(kappa_max);
 	if (kappa_max > 1)
@@ -892,7 +892,7 @@ bool kira_initialize(int argc, char** argv,
 			     << endl;
 			break;
 	    case 'b':	if (poptarg)
-			   long_binary_out = max(0, atoi(poptarg));
+			   long_binary_out = Starlab::max(0, atoi(poptarg));
 			else
 			   long_binary_out = 0;
 			break;

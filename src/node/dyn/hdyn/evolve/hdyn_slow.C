@@ -273,7 +273,7 @@ local int get_slowdown_factor(hdyn* bi, real P = 0)
 	    k2 *= 2;
 	}
 
-	kappa = min(kappa, k2/2);
+	kappa = Starlab::min(kappa, k2/2);
 	if (kappa < 2) break;	
     }
 

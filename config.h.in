@@ -74,6 +74,9 @@
 /* Define if you have the strtoull function.  */
 #undef HAVE_STRTOULL
 
+/* Define if you have the exp10 function.  */
+#undef HAVE_EXP10
+
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
 

@@ -74,7 +74,7 @@ void hyper_giant::evolve_element(const real end_time) {
 	real t_end = next_update_age - last_update_age;
 	radius = 
 	  effective_radius = 
-	     max(radius, 1000*relative_time/t_end);
+	     Starlab::max(radius, 1000*relative_time/t_end);
 //	PRL(radius);
 
 	
@@ -93,7 +93,7 @@ real hyper_giant::hyper_giant_core_mass() {
   real m_core_TY = 0.066*pow(relative_mass, 1.54);
   real m_core_max = 20 + 0.27*relative_mass;
 
-  real m_core = min(m_core_TY, m_core_max);
+  real m_core = Starlab::min(m_core_TY, m_core_max);
   if (relative_mass >= cnsts.parameters(maximum_main_sequence))
       m_core = get_total_mass();
 
@@ -186,7 +186,7 @@ real hyper_giant::add_mass_to_accretor(real mdot, const real dt) {
 
 	  // Mass loss constant in time.
 	  wind_constant = envelope_mass/(next_update_age-relative_age);
-	  wind_constant = max(wind_constant, 0.);
+	  wind_constant = Starlab::max(wind_constant, 0.);
 
 	  cerr << type_string(get_element_type())
 	       << " wind treatment for stars with M >="
@@ -282,7 +282,7 @@ void hyper_giant::adjust_accretor_age(const real mdot,
 	if (rejuvenate)
 	   new_relative_age *= rejuvenation_fraction(mdot/m_tot_new); 
 
-	relative_age = max(relative_age, new_relative_age);
+	relative_age = Starlab::max(relative_age, new_relative_age);
                        
 
      }
@@ -351,7 +351,7 @@ void hyper_giant::adjust_next_update_age() {
 	t_wind_stripped += 0.001;
 
 //	PRC(t_wind_stripped);PRL(end_time);
-	next_update_age = min(end_time, t_wind_stripped);
+	next_update_age = Starlab::min(end_time, t_wind_stripped);
      }
 
 real hyper_giant::gyration_radius_sq() {

@@ -143,7 +143,7 @@ local bool  evolve_binary(dyn * bi,
     do {
 
       dt = ds->get_evolve_timestep() + cnsts.safety(minimum_timestep);
-      time = min(time+dt, end_time);
+      time = Starlab::min(time+dt, end_time);
 
       ds->evolve_element(time);
 
@@ -165,7 +165,7 @@ local bool  evolve_binary(dyn * bi,
 
 }
 
-void main(int argc, char ** argv) {
+int main(int argc, char ** argv) {
 
     bool e_flag = false;
     bool R_flag = false;
@@ -435,6 +435,7 @@ void main(int argc, char ** argv) {
     root->log_comment(paramlog);
     root->print_log_story(cout);
 //    rmtree(root, false);
+    return 0;
 }
 
 #endif

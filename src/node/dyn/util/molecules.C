@@ -465,7 +465,7 @@ local bool  is_isolated_tuple(int tuple[NBODY_MAX], dyn * b, int nnode,
 	    bi = bi->get_younger_sister();
 	distance_to_com = abs(bi->get_pos() - com_pos);
 	radius_i = Radius(struct_table, visible_non_tuple[i]);
-	if (distance_to_com < radius + radius_i + 2.0 * max(radius, radius_i))
+	if (distance_to_com < radius + radius_i + 2.0 * Starlab::max(radius, radius_i))
 	    return(FALSE);
 	}
 
@@ -1080,7 +1080,7 @@ local void get_binary_parameters(dyn *g1, dyn *g2, real * aptr, real * eptr)
     r_out_v = r_rel ^ v_rel;
     r_out_v_squared = r_out_v * r_out_v;
 
-    *eptr = sqrt(max(0.0, 1.0 - (r_out_v_squared / (m_sum * *aptr))));
+    *eptr = sqrt(Starlab::max(0.0, 1.0 - (r_out_v_squared / (m_sum * *aptr))));
     }
 
 /*-----------------------------------------------------------------------------
@@ -1187,7 +1187,7 @@ local void  swap_nodes(dyn * b, int nnode, int i1, int i2,
     Stability(admin_table, i1) = Stability(admin_table, i2);
     Stability(admin_table, i2) = tmp_int;
     
-    j = max(Ndaughter(admin_table, i1), Ndaughter(admin_table, i2));
+    j = Starlab::max(Ndaughter(admin_table, i1), Ndaughter(admin_table, i2));
     while (j-- > 0)           /* this swaps also unused numbers, if the two  */
 	{                     /* Ndaughter values are unequal, but who cares */
 	tmp_int = Daughter(admin_table, i1, j);

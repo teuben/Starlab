@@ -150,7 +150,7 @@ helium_star::helium_star(horizontal_branch & h) : single_star(h) {
     real t_giant = t_ms + hertzsprung_gap_time(t_ms)
                  + base_giant_branch_time(t_ms);
     real t_he = helium_giant_time(t_ms);
-    real t_frac = min(0.9,(relative_age - t_giant)/t_he);
+    real t_frac = Starlab::min(0.9,(relative_age - t_giant)/t_he);
 
 
     adjust_next_update_age();
@@ -184,7 +184,7 @@ void helium_star::adjust_initial_star() {
   update_wind_constant();
 
   if(relative_age<=0)
-    relative_age = max(current_time, 0.0);
+    relative_age = Starlab::max(current_time, 0.0);
 }
 #endif
 
@@ -532,9 +532,9 @@ real helium_star::final_CO_core_mass(const real initial_mass) {
 real helium_star::CO_core_mass() {
 
   real m_core = final_core_mass * relative_age/next_update_age;
-  m_core = max(core_mass, m_core);
+  m_core = Starlab::max(core_mass, m_core);
 
-  return min(m_core, get_total_mass());
+  return Starlab::min(m_core, get_total_mass());
 }
 
 void helium_star::stellar_wind(const real dt) {

@@ -160,7 +160,7 @@ local real binary_scale(hdyn* cm)
 
     last_cm = cm;
     last_time = time;
-    last_scale = max(sma, sep);
+    last_scale = Starlab::max(sma, sep);
 
     //  =  max(2*sma, sep);	// Better? -- more conservative, and also
 				// avoids discontinuous changes in perturber
@@ -298,7 +298,7 @@ local inline real crit_separation_cubed(hdyn *b,	// binary CM node
     real d_min_sq = b->get_d_min_sq();
     int  perturber_criterion = b->get_kira_options()->perturber_criterion;
 
-    real d2 = min(d_min_sq, r_bin * r_bin);
+    real d2 = Starlab::min(d_min_sq, r_bin * r_bin);
     real d3 = d2 * sqrt(d2) / gamma;
 
     if (perturber_criterion == 0
@@ -331,7 +331,7 @@ local inline real time_to_radius(real dr,	// distance to cover
     real dt = VERY_LARGE_NUMBER;
 
     if (vr < 0) dt = -dr / vr;
-    if (ar < 0) dt = min(dt, sqrt (-2 * dr / ar));
+    if (ar < 0) dt = Starlab::min(dt, sqrt (-2 * dr / ar));
 
     return dt;
 }

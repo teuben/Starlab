@@ -370,7 +370,7 @@ local real* the_whole_cluster(dyn* b, star_table_ptr table, int n,
     n = b->n_daughters();
   real *bin_param = new real[1];
 
-  cerr << "\t" << max(0.0, b->get_system_time()) << "\t" << 1 << endl;
+  cerr << "\t" << Starlab::max(0.0, b->get_system_time()) << "\t" << 1 << endl;
 
   int i=n-1;
   while(!visible_object(table[i--], l_min));
@@ -415,7 +415,7 @@ local real* put_lagrangian_number_radii(dyn* b, star_table_ptr table,
     // read back from *dyn the lagrangian parameter.
   char scratch_pad[SCRATCH_PAD_LINE_LENGTH];
   sprintf(scratch_pad, "n_number_zones = %d", nzones);
-  cerr << "\t" << max(0.0, b->get_system_time()) << "\t" << nzones << endl;
+  cerr << "\t" << Starlab::max(0.0, b->get_system_time()) << "\t" << nzones << endl;
 
   real cumulative = 0;
   i = 0;
@@ -470,7 +470,7 @@ local real* put_lagrangian_mass_radii(dyn* b, star_table_ptr table,
     // read back from *dyn the lagrangian radii.
   char scratch_pad[SCRATCH_PAD_LINE_LENGTH];
   sprintf(scratch_pad, "n_mass_zones = %d", nzones);
-  cerr << "\t" << max(0.0, b->get_system_time()) << "\t" << nzones << endl;
+  cerr << "\t" << Starlab::max(0.0, b->get_system_time()) << "\t" << nzones << endl;
 
   real cumulative = 0;
   i = 0;
@@ -527,7 +527,7 @@ local real* put_lagrangian_lumi_radii(dyn* b, star_table_ptr table,
     // read back from *dyn the lagrangian radii.
   char scratch_pad[SCRATCH_PAD_LINE_LENGTH];
   sprintf(scratch_pad, "n_lumi_zones = %d", nzones);
-  cerr << "\t" << max(0.0, b->get_system_time()) << "\t" << nzones << endl;
+  cerr << "\t" << Starlab::max(0.0, b->get_system_time()) << "\t" << nzones << endl;
 
   real cumulative = 0.0;
   i = 0;

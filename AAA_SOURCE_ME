@@ -69,6 +69,10 @@ if ($stat == 0) then
     kira --help >& /dev/null
     if ($status == 0) then
         echo 'OK :-)'
+	if (! -e tmp) mkdir tmp
+	time scripts/kira_test >& tmp/kira_test.log
+        cat tmp/kira_test.log >> install.log
+        echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
     else
         echo 'failed :-('
     endif
@@ -83,6 +87,8 @@ if ($stat == 0) then
 else
     echo Install failed: stat = $stat
 endif
+
+echo Number of executables found: `ls bin|wc -l`
 
 
 

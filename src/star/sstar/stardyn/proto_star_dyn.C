@@ -160,8 +160,8 @@ void proto_star::create_binary_from_proto_star() {
 
     real a_min   = pow(am, 2)/m_tot;
     real two_r   = 2*core_radius;
-    real ecc_min = max(0., 1 - pow(am/(two_r*m_tot), 2));
-    real ecc_max = min(1., 1 - two_r/a_min);
+    real ecc_min = Starlab::max(0., 1 - pow(am/(two_r*m_tot), 2));
+    real ecc_max = Starlab::min(1., 1 - two_r/a_min);
 
     //	angular_momentum = sqrt(abs(1 - eccentricity * eccentricity)
     //	                         * total_mass * semi_major_axis);

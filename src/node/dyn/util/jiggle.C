@@ -22,7 +22,7 @@ local void jiggle(dyn * b, real f)
 
 	while(1) {
 	    real costh = randinter(-1, 1);
-	    real sinth = sqrt(max(0.0, 1-costh*costh));
+	    real sinth = sqrt(Starlab::max(0.0, 1-costh*costh));
 	    real phi = randinter(0, 2*M_PI);
 	    vector rvec = vector(sinth*cos(phi), sinth*cos(phi), costh);
 	    norm = rvec ^ vel;

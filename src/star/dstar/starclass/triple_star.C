@@ -251,7 +251,7 @@ cerr<<"real double_star::add_mass_to_accretor(mdot="<<mdot
       real mdot_left = mdot - (mdot_p + mdot_s);
 
 //              Spiral in anyway (temporary treatment)
-       real r_lobe = min(get_primary()->get_effective_radius()/semi,
+       real r_lobe = Starlab::min(get_primary()->get_effective_radius()/semi,
                          get_secondary()->get_effective_radius()/semi);
        real a_spi = semi*(get_primary()->get_total_mass()
                           /(get_primary()->get_total_mass()+mdot))

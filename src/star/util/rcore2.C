@@ -646,7 +646,7 @@ local void get_composition(dyn* b,
 
       T_eff = getrq(bi->get_star_story(), "T_eff");
       L_eff = getrq(bi->get_star_story(), "L_eff");
-      R_eff = sqrt(max(0.1, (1130.*L_eff)/pow(T_eff, 4)));
+      R_eff = sqrt(Starlab::max(0.1, (1130.*L_eff)/pow(T_eff, 4)));
 	    
       r_total += R_eff;
     }
@@ -750,8 +750,8 @@ main(int argc, char **argv)
 	m_max = -m_min;
 	for_all_daughters(dyn, b, bi) {
 	  n++;
-	  m_min = min(m_min, bi->get_mass());
-	  m_max = max(m_max, bi->get_mass());
+	  m_min = Starlab::min(m_min, bi->get_mass());
+	  m_max = Starlab::max(m_max, bi->get_mass());
 	}
       }
       else {
@@ -892,7 +892,7 @@ main(int argc, char **argv)
 	    m_tot  = m_mean[im] + m_mean[jm];
 	    v_rel  = sqrt(pow(vc_disp[im], 2) + pow(vc_disp[jm], 2));
 
-	    rcore = min(core_radius[im], core_radius[jm]);
+	    rcore = Starlab::min(core_radius[im], core_radius[jm]);
 
 	    //PRC(vc_disp[im]);PRC(vc_disp[jm]);PRL(v_rel);
 
@@ -934,12 +934,12 @@ main(int argc, char **argv)
 	      
 	      if (core_radius[jm]>0) {
 		n_rhoj = 1./(to_volume * pow(core_radius[jm], 3));
-		rcore = min(core_radius[im], core_radius[jm]);
+		rcore = Starlab::min(core_radius[im], core_radius[jm]);
 		v_rel  = sqrt(pow(vc_disp[im], 2) + pow(vc_disp[jm], 2));
 	      }
 	      else {
 		n_rhoj = 1./(to_volume * pow(core_radius[0], 3));
-		rcore = min(core_radius[im], core_radius[0]);
+		rcore = Starlab::min(core_radius[im], core_radius[0]);
 		v_rel  = sqrt(pow(vc_disp[im], 2) + pow(v_disp[jm], 2));
 	      }
 	    }
@@ -948,7 +948,7 @@ main(int argc, char **argv)
 	      
 	      if (core_radius[jm]>0) {
 		n_rhoj = 1./(to_volume * pow(core_radius[jm], 3));
-		rcore = min(core_radius[0], core_radius[jm]);
+		rcore = Starlab::min(core_radius[0], core_radius[jm]);
 		v_rel  = sqrt(pow(v_disp[jm], 2) + pow(vc_disp[jm], 2));
 	      }
 	      else {

@@ -22,7 +22,7 @@ super_giant::super_giant(horizontal_branch & h) : single_star(h) {
 //    PRL(COcore_mass);
     second_dredge_up_time = last_update_age 
                           + (next_update_age-last_update_age) 
-                          * min(1., relative_mass
+                          * Starlab::min(1., relative_mass
 			  / cnsts.parameters(super_giant2neutron_star));
 //    PRL(second_dredge_up_time);
 
@@ -39,7 +39,7 @@ void super_giant::adjust_initial_star() {
     real t_giant = t_ms + hertzsprung_gap_time(t_ms)
       + base_giant_branch_time(t_ms);
     real t_he = helium_giant_time(t_ms);
-    relative_age = max(t_giant + t_he, relative_age);
+    relative_age = Starlab::max(t_giant + t_he, relative_age);
    }
 }
 #endif
@@ -57,7 +57,7 @@ void super_giant::instantaneous_element() {
     luminosity = l_g*pow(t_gs/(next_update_age 
 			     + t_b - relative_age), 1.17);
 
-  luminosity = min(luminosity, maximum_luminosity());
+  luminosity = Starlab::min(luminosity, maximum_luminosity());
 
   // (SPZ+GN:  1 Aug 2000)
   // coming from previous type the effective readius should 
@@ -69,7 +69,7 @@ void super_giant::instantaneous_element() {
   if(second_dredge_up_time<=0) 
     second_dredge_up_time = last_update_age 
                           + (next_update_age-last_update_age) 
-                          * min(1., relative_mass
+                          * Starlab::min(1., relative_mass
 			  / cnsts.parameters(super_giant2neutron_star));
 
 }
@@ -94,7 +94,7 @@ void super_giant::evolve_element(const real end_time) {
 	              / (next_update_age + t_b - (relative_age-dt));
 		
          luminosity = l_g*pow(tau, 1.17);
-         luminosity = min(luminosity, maximum_luminosity());
+         luminosity = Starlab::min(luminosity, maximum_luminosity());
 
          radius = (0.25*pow(luminosity, 0.4)
                 + 0.8*pow(luminosity, 0.67))/pow(relative_mass, 0.27);
@@ -139,7 +139,7 @@ void super_giant::evolve_element(const real end_time) {
 	 //(SPZ+GN: 31 Jul 2000)
 	 // removed the safety, nothing against type change by core growth.
 	 // core_mass = min(m_tot-cnsts.safety(minimum_mass_step), new_mcore);
-	 core_mass = min(m_tot, new_mcore);
+	 core_mass = Starlab::min(m_tot, new_mcore);
 	 envelope_mass = m_tot - core_mass;
 
 #if 0 // (SPZ+GN: 27 Jul 2000)
@@ -160,9 +160,9 @@ void super_giant::evolve_element(const real end_time) {
 	   }
 	 }
 
-	 new_mcore = max(new_mcore, core_mass);
+	 new_mcore = Starlab::max(new_mcore, core_mass);
 	 
-	 core_mass = min(m_tot-cnsts.safety(minimum_mass_step), new_mcore);
+	 core_mass = Starlab::min(m_tot-cnsts.safety(minimum_mass_step), new_mcore);
 	 envelope_mass = m_tot - core_mass;
 #endif
 
@@ -264,7 +264,7 @@ real super_giant::helium_core_mass() {
       real m2_core = 0.058*(1 + cnsts.parameters(core_overshoot))
 	           * pow(relative_mass, 1.57);
 
-      m_core = max(max(m_core, m1_core), m2_core);
+      m_core = Starlab::max(Starlab::max(m_core, m1_core), m2_core);
 
 // 		Dewey, R.J., Cordes, J.M., 1987, ApJ 321, 780.
 //		Used a minimum helium core mass of \sim 3 M_\odot.
@@ -276,9 +276,9 @@ real super_giant::helium_core_mass() {
 	  m_core<cnsts.parameters(minimum_helium_star))
 	m_core = m_core<cnsts.parameters(minimum_helium_star);
       
-      m_core = min(m_core, get_total_mass());
+      m_core = Starlab::min(m_core, get_total_mass());
 
-      return max(m_core, core_mass);
+      return Starlab::max(m_core, core_mass);
    }
 #endif
 
@@ -458,7 +458,7 @@ star* super_giant::subtrac_mass_from_donor(const real dt, real& mdot) {
 void super_giant::adjust_accretor_age(const real mdot, const bool rejuvenate=true) {
 
       real m_tot_new = get_total_mass() + mdot;
-      real m_rel_new = max(m_tot_new, relative_mass);
+      real m_rel_new = Starlab::max(m_tot_new, relative_mass);
 
       real t_ms = main_sequence_time();
       real t_hg = hertzsprung_gap_time(t_ms);
@@ -485,7 +485,7 @@ void super_giant::adjust_accretor_age(const real mdot, const bool rejuvenate=tru
       if (rejuvenate)
          relative_age *= rejuvenation_fraction(mdot/m_tot_new);
 
-       relative_age = max(relative_age, 
+       relative_age = Starlab::max(relative_age, 
 			  last_update_age + cnsts.safety(minimum_timestep));
       
 
@@ -535,7 +535,7 @@ real super_giant::stellar_radius(const real mass, const real age) {
       real t_b  = base_giant_time(t_ms);
 
       real l_agb = l_g*pow(t_gs/(t_nuc + t_b - age), 1.17);
-      l_agb = min(l_agb, maximum_luminosity(mass));
+      l_agb = Starlab::min(l_agb, maximum_luminosity(mass));
 
       real r_agb = (0.25*pow(l_agb, 0.4)
              + 0.8*pow(l_agb, 0.67))/pow(mass, 0.27);
@@ -572,6 +572,6 @@ void super_giant::update_wind_constant() {
     wind_constant = 0.8*(relative_mass - final_core_mass());
   }
   
-  wind_constant = max(wind_constant, 0.0);
+  wind_constant = Starlab::max(wind_constant, 0.0);
 
 }

@@ -26,7 +26,7 @@ local real encounter_rate(int im, real ni, real mi, real ri, real vi,
     real r_tot  = ri + rj;
     real m_tot  = mi + mj;
     real v_rel  = sqrt(pow(vi, 2) + pow(vj, 2));
-    real rcore = min(rci, rcj);
+    real rcore = Starlab::min(rci, rcj);
 
     real geometric = 6.31e-15 * v_rel * pow(r_tot, 2);
     real grav_foc = 3.61e-9 * m_tot * r_tot / v_rel;
@@ -154,11 +154,11 @@ main(int argc, char **argv)
 				vdsp[jm], rcore);
 	  total_rate += rate;
 
-	  ncoll = max(0., min(rate * dt,
-			      min(cmf[im]-loss[im],
+	  ncoll = Starlab::max(0., Starlab::min(rate * dt,
+			  Starlab::min(cmf[im]-loss[im],
 				  cmf[jm]-loss[jm])));
 
-	  km = min(n*nzones, im + jm); // Conserve mass
+	  km = Starlab::min(n*nzones, im + jm); // Conserve mass
 	  loss[im] += ncoll;
 	  loss[jm] += ncoll;
 	  gain[km] += ncoll;

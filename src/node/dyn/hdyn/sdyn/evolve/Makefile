@@ -35,7 +35,8 @@ OBJECT_FILES = low_n_evolve.o sdyn_ev.o tree_evolve.o sdyn_ev.o \
 	       scatter_exp.o scatter_hist.o \
 	       multiscatter.o tree_evolve.o sig_helper.o \
 	       scatter_merge.o extend_or_end.o \
-	       specific_function.o scatter.o 
+	       specific_function.o scatter.o \
+		multiscatter_MPI.o MPI_sigma.o
 
 BIN = .
 STARLAB_LIB = $(STARLAB_PATH)/lib

@@ -997,7 +997,7 @@ local void set_grape4_neighbour_radius(hdyn * b, int nj_on_grape)
 		// Radius information included here to allow coll
 		// criterion to be applied elsewhere.
 
-		b->set_grape_rnb_sq(max(b->get_d_nn_sq(),
+		b->set_grape_rnb_sq(Starlab::max(b->get_d_nn_sq(),
 					4*b->get_radius()*b->get_radius()));
 
 		// In this case, if the actual value set is zero,
@@ -1069,7 +1069,7 @@ local void set_grape4_neighbour_radius(hdyn * b, int nj_on_grape)
 
 	hdyn *nn = b->get_nn();
 	if (nn && nn != b && b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
-	    r_pert2 = max(r_pert2, b->get_d_nn_sq());
+	    r_pert2 = Starlab::max(r_pert2, b->get_d_nn_sq());
 
 	// Note that this may cause overflow...
 
@@ -1275,7 +1275,7 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
     while (i < n_top) {
 
 	int inext = i;
-	int ip = min(nimax, n_top - i);
+	int ip = Starlab::min(nimax, n_top - i);
 
 	force_by_grape4(time, ip, next_top+i, nj_on_grape4);
 
@@ -1430,7 +1430,7 @@ local inline void set_grape4_density_radius(hdyn * b, real rnn_sq)
 	// Node does not know its nearest neighbor.  Value of d_nn_sq
 	// is where the neighbor search stopped.
 
-	rnn_sq = 4*max(rnn_sq, b->get_d_nn_sq());
+	rnn_sq = 4*Starlab::max(rnn_sq, b->get_d_nn_sq());
 
 	if (DEBUG)
 	    cerr << "no nn for " << b->format_label() << ",  ";
@@ -1519,7 +1519,7 @@ local bool count_neighbors_and_adjust_h2(int chip, hdyn *b)
 	if (nnb < 2) fac *= 1.6;
 #endif
 
-	real fac = min(2.0, pow(15.0/(1.0+nnb), 1.5));
+	real fac = Starlab::min(2.0, pow(15.0/(1.0+nnb), 1.5));
 
 	// About to increase rnb.  Take steps to ensure that we don't
 	// undo a decrease from last time around...
@@ -1612,7 +1612,7 @@ local bool count_neighbors_and_adjust_h2(int chip, hdyn *b)
 		    d_min = d2;
 		    bmin = bb;
 		}
-		d_max = max(d_max, d2);
+		d_max = Starlab::max(d_max, d2);
 	    }
 	}
     }
@@ -1798,7 +1798,7 @@ local int get_densities_for_list(xreal time, int ni, hdynptr list[],
 
 			// Modify GRAPE neighbor radius.
 
-			real fac = min(2.0, pow(15.0/(1.0+nnb), 1.5));
+			real fac = Starlab::min(2.0, pow(15.0/(1.0+nnb), 1.5));
 
 			// About to increase rnb_sq.  Take steps to ensure that
 			// we don't undo a decrease from last time around...
@@ -2025,7 +2025,7 @@ void grape_calculate_densities(hdyn* b,
     while (i < n_top) {
 
 	int inext = i;
-	int ip = min(nimax, n_top - i);
+	int ip = Starlab::min(nimax, n_top - i);
 
 #ifdef NEW_DENSITY_ALGORITHM
 

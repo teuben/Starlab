@@ -175,7 +175,7 @@ neutron_star::neutron_star(white_dwarf & w) : single_star(w) {
       suddenly_lost_mass = 0;
 
       real m_tot = get_total_mass();
-      core_mass = birth_mass = max(0.0, m_tot - aic_binding_energy());
+      core_mass = birth_mass = Starlab::max(0.0, m_tot - aic_binding_energy());
       envelope_mass = m_tot - core_mass;
       relative_age = 0;
 
@@ -478,7 +478,7 @@ star* neutron_star::subtrac_mass_from_donor(const real dt, real& mdot) {
 real neutron_star::add_mass_to_accretor(const real mdot) {
 
       envelope_mass += mdot;
-      relative_mass = max(relative_mass, get_total_mass());
+      relative_mass = Starlab::max(relative_mass, get_total_mass());
       
       return mdot;
 }
@@ -494,7 +494,7 @@ real neutron_star::add_mass_to_accretor(real mdot, const real dt) {
 
      mdot = accretion_limit(mdot, dt);
      envelope_mass += mdot;
-     relative_mass = max(relative_mass, get_total_mass());
+     relative_mass = Starlab::max(relative_mass, get_total_mass());
 
      return mdot;
 }
@@ -505,16 +505,16 @@ real neutron_star::accretion_limit(const real mdot, const real dt) {
      real eddington = eddington_limit(radius, dt); 
 
    if (cnsts.parameters(hyper_critical))
-      return min(mdot, (1.e+8)*eddington); 
+      return Starlab::min(mdot, (1.e+8)*eddington); 
 
-   return min(mdot, eddington);
+   return Starlab::min(mdot, eddington);
 
 }
 
 #if 0 // Old stuff
 real neutron_star::add_mass_to_accretor(const real mdot) {
 
-      relative_mass = max(relative_mass, get_total_mass() + mdot);
+      relative_mass = Starlab::max(relative_mass, get_total_mass() + mdot);
       envelope_mass += mdot;
 
       return mdot;
@@ -527,7 +527,7 @@ real neutron_star::add_mass_to_accretor(const real mdot) {
 real neutron_star::add_mass_to_accretor(real mdot, const real dt) {
 
       mdot = accretion_limit(mdot, dt);
-      relative_mass = max(relative_mass, get_total_mass() + mdot);
+      relative_mass = Starlab::max(relative_mass, get_total_mass() + mdot);
       envelope_mass += mdot;
 
       return mdot;
@@ -539,7 +539,7 @@ real neutron_star::accretion_limit(const real mdot, const real dt) {
      real eddington = eddington_limit(radius, dt); 
 //      real eddington = 1.5e-08*cnsts.parameters(solar_radius)*radius*dt;
 
-      return min(mdot, eddington);
+      return Starlab::min(mdot, eddington);
    }
 #endif // End old stuff
 
@@ -549,7 +549,7 @@ star* neutron_star::merge_elements(star* str) {
       real merger_core = str->get_core_mass();
 
       add_mass_to_accretor(str->get_envelope_mass());
-      relative_mass = max(relative_mass, get_total_mass() + merger_core);
+      relative_mass = Starlab::max(relative_mass, get_total_mass() + merger_core);
       core_mass += merger_core;
 
       set_spec_type(Merger);
@@ -634,9 +634,9 @@ real neutron_star::neutron_star_mass(stellar_type stp) {
     e =  7.48965E-06;
     real mass = a + m*(b + m*(c + m*(d + m*e)));
 
-  mass = min(mass, cnsts.parameters(maximum_neutron_star_mass));
+  mass = Starlab::min(mass, cnsts.parameters(maximum_neutron_star_mass));
 
-  return min(mass, get_total_mass());
+  return Starlab::min(mass, get_total_mass());
 }
 
 //Assuming a Newtonian Polytrope with n= 3/2
@@ -764,9 +764,9 @@ real neutron_star::fastness_parameter(const real dmdt) {
                  / (rotation_period*pow(dmdt, 3./7.)*pow(core_mass, 5./7.));
 
     if (DEBUG)
-      cerr<< min(1-0.01, max(0.1, omega_s))<<endl;
+      cerr<< Starlab::min(1-0.01, Starlab::max(0.1, omega_s))<<endl;
 
-    return min(1-0.01, max(0.1, omega_s));
+    return Starlab::min(1-0.01, Starlab::max(0.1, omega_s));
 }
 
 real neutron_star::dimension_less_accretion_torque(const real dmdt) {
@@ -806,7 +806,7 @@ real neutron_star::pulsar_propeller_torque(const real dm,
 
     real Pdot = -7.2 * n_omega * pow(mu30, 2./7.)
               * pow(dmEdd, 6./7.) * pow(rotation_period, 2); // [s/Myr]
-    Pdot = max(0., Pdot);
+    Pdot = Starlab::max(0., Pdot);
 
     real delta_P = rotation_period + Pdot*dt;
     
@@ -832,7 +832,7 @@ real neutron_star::magnetic_field_decay(const real log_B,
 					const real dt_tau=0) {
   
      real B0 = pow(10., log_B);
-     real B1 = max(1.,  B0 / exp(dt_tau));
+     real B1 = Starlab::max(1.,  B0 / exp(dt_tau));
 
      return log10(B1);
 }
@@ -855,7 +855,7 @@ real neutron_star::magnetic_field_decay(const real delta_m,
      
      real B1 = magnetic_field_strength(core_mass, dmEdd);
      real B2 = magnetic_field_strength(core_mass+delta_m, dmEdd);
-     real delta_B = min(0.0, B2-B1);
+     real delta_B = Starlab::min(0.0, B2-B1);
 
      return log_B + delta_B;
 }
@@ -872,7 +872,7 @@ real neutron_star::magnetic_field_strength(const real ns_mass,
 
       real delta_BBo = -0.2 * log10(dmEdd);
       real log_dm    = log10(ns_mass - birth_mass + 1.0e-10);
-      log_dm        -= max(0.0, -0.5*(1+log10(dmEdd)));
+      log_dm        -= Starlab::max(0.0, -0.5*(1+log10(dmEdd)));
 
       real log_dm_min  = -8.0;
       real log_dm_max  = -2;
@@ -880,7 +880,7 @@ real neutron_star::magnetic_field_strength(const real ns_mass,
       real log_BBo_max =  0.0;
 
       if (log_dm>-3)
-	        return max(0.0, log_BBo_min + delta_BBo);
+	        return Starlab::max(0.0, log_BBo_min + delta_BBo);
       if (log_dm<-7.5)
 	        return log_BBo_max;
 
@@ -936,7 +936,7 @@ real neutron_star::magnetic_field_strength(const real ns_mass,
                                                log_BBo_min, log_BBo_max);
       log_B += delta_BBo;
 
-      return min(0.0, log_B);
+      return Starlab::min(0.0, log_B);
 }
 
 real neutron_star::pulsar_spin_up(const real dm, const real dt) {
@@ -955,7 +955,7 @@ real neutron_star::pulsar_spin_up(const real dm, const real dt) {
      real P_eq = 0.0019*pow(B/1.e+9, 6./7.)
                / (pow(core_mass/1.4, 5./7.)*pow(dmEdd, 3./7.));  // seconds
 
-     return min(rotation_period, P_eq);
+     return Starlab::min(rotation_period, P_eq);
 }
 
 real neutron_star::pulsar_spin_down(const real dt) {

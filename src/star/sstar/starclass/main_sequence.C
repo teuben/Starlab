@@ -69,7 +69,7 @@ void main_sequence::update_wind_constant() {
 
     real m_core = 0.073 * (1 + cnsts.parameters(core_overshoot))
                         * pow(relative_mass, 1.42);
-    m_core = min(m_core, cnsts.parameters(massive_star_mass_limit));
+    m_core = Starlab::min(m_core, cnsts.parameters(massive_star_mass_limit));
     
     // extra enhanced mass loss for stars with M>80 Msun.
     // to make low-mass compact objects. (SPZ+GN:24 Sep 1998)
@@ -120,7 +120,7 @@ void main_sequence::update_wind_constant() {
     wind_constant = 0;
   }
 
-  wind_constant = max(wind_constant, 0.0);
+  wind_constant = Starlab::max(wind_constant, 0.0);
 
 }
 
@@ -163,7 +163,7 @@ void main_sequence::instantaneous_element() {
       * pow(10., (ff*(ff*lambda + kappa)));
 
     radius = delta*pow(10., (ff*(ff*(ff*gamma + beta) + alpha)));
-    effective_radius = max(effective_radius, radius);
+    effective_radius = Starlab::max(effective_radius, radius);
 
 }
 
@@ -224,7 +224,7 @@ void main_sequence::evolve_element(const real end_time) {
 	    		* pow(10., (ff*(ff*lambda + kappa)));
 	radius     = delta*pow(10., (ff*(ff*(ff*gamma + beta) + alpha)));
 
-	effective_radius = max(effective_radius, radius);
+	effective_radius = Starlab::max(effective_radius, radius);
 
     } else {
 
@@ -273,7 +273,7 @@ real main_sequence::bolometric_correction()
 real main_sequence::main_sequence_core_mass()
 {
     real m_core = 0.01;
-    m_core = max(core_mass, m_core);
+    m_core = Starlab::max(core_mass, m_core);
     if (m_core > get_total_mass()) m_core = get_total_mass();
    
     return m_core;
@@ -281,7 +281,7 @@ real main_sequence::main_sequence_core_mass()
 
 real main_sequence::main_sequence_core_radius()
 {
-    return min(0.01, radius);
+    return Starlab::min(0.01, radius);
 }
 
 #if 0

@@ -153,11 +153,11 @@ local float get_point_size(hdyn* bi)
     // Also, impose a lower limit on the point size.
 
     if (point_scale_mode == 1)
-	return max(SMALL_DOT_SIZE, base_point_size * sqrt(bi->get_mass()));
+	return Starlab::max(SMALL_DOT_SIZE, base_point_size * sqrt(bi->get_mass()));
     else if (point_scale_mode == 2)
-	return max(SMALL_DOT_SIZE, base_point_size * bi->get_radius());
+	return Starlab::max(SMALL_DOT_SIZE, base_point_size * bi->get_radius());
     else if (point_scale_mode == 3)
-	return max(SMALL_DOT_SIZE, base_point_size * sqrt(bi->get_radius()));
+	return Starlab::max(SMALL_DOT_SIZE, base_point_size * sqrt(bi->get_radius()));
     else
 	return base_point_size;
 }
@@ -849,7 +849,7 @@ local void show_static_rotation(hdyn* b, bool f_flag)
 					      0.0, 360.0);
 		    }
 		}
-		update_with_delay(win, max(MIN_DELAY, delay_time));
+		update_with_delay(win, Starlab::max(MIN_DELAY, delay_time));
 
 		if (lux_check_keypress(win,'p')) 
 		    while(!lux_check_keypress(win,'c'));
@@ -935,7 +935,7 @@ local char check_for_input(unsigned long win, hdyn* b,
 
 		    for_all_leaves(hdyn, b, bi)
 			for (int kk = 0; kk < 3; kk++)
-			    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]
+			    lmax3d = Starlab::max(lmax3d, abs(bi->get_pos()[kk]
 						     - local_offset[kk]));
 		
 		    // Round lmax3d up to something reasonable:
@@ -1510,7 +1510,7 @@ void xstarplot(hdyn* b, float scale, int k, int d, float lmax,
 
 	    for_all_leaves(hdyn, b, bi)
 		for (int kk = 0; kk < 3; kk++)
-		    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]));
+		    lmax3d = Starlab::max(lmax3d, abs(bi->get_pos()[kk]));
 
 	    // Round lmax3d up to something reasonable:
 
@@ -1625,7 +1625,7 @@ void xstarplot(hdyn* b, float scale, int k, int d, float lmax,
 
     // Update the display.
 
-    update_with_delay(win, max(MIN_DELAY, delay_time));
+    update_with_delay(win, Starlab::max(MIN_DELAY, delay_time));
 
     // Deal with user input.  In step mode, wait for
     // 'b', 'c', or 's' before continuing.

@@ -19,7 +19,7 @@ local real get_primary_mass(dyn *b, bool S_flag) {
   }
   else if(!S_flag) {
     for_all_leaves(dyn, b, bi) {
-      m = max(m, bi->get_mass());
+      m = Starlab::max(m, bi->get_mass());
     }
   }
 
@@ -91,7 +91,7 @@ local dyn* cut_randomsample(dyn * b, int nd, real mmin, bool S_flag) {
   return d;
 }
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     bool S_flag = false;
     bool s_flag = false;
@@ -161,6 +161,7 @@ void main(int argc, char ** argv)
 
 
     put_dyn(cout, *d);
+    return 0;
 }
 
 #endif

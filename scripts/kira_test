@@ -7,13 +7,33 @@
 #
 # The resulting model is written to stdout.
 
-# Defaults:
+# Defaults ( can be modified via a commandline ``key=val'')
 
-set N = 50
+
+set N    = 50
 set seed = 12345
-set fb = 0.1
-set eb = 5
+set fb   = 0.1
+set eb   = 5
 
+set recompile=0
+
+#		   			a simple command line processor
+foreach arg ($*)
+  set $arg
+end
+
+#					remove binaries used in this test, and recompile only them
+if ($recompile) then
+  cd $STARLAB
+  foreach t (src/node/dyn/init/makeplummer src/node/util/makesecondary src/node/dyn/util/scale src/node/dyn/init/makebinary src/node/dyn/hdyn/evolve/kira)
+    rm bin/$t:t
+    echo "(cd $t:h ; make $t:t)"
+    (cd $t:h ; make $t:t)
+  end
+  exit
+endif
+
+#					run the test
 makeplummer -n $N -s $seed -i \
 	| makesecondary -i -f $fb \
 	| scale -s \

@@ -220,7 +220,7 @@ int  pgetopt(int argc, char ** argv, char * optstr)
 
 #else
 
-void main(char argc, char ** argv)
+int main(char argc, char ** argv)
 {
     extern char *poptarg;
     extern char *poparr[];				// new (8/99)
@@ -275,6 +275,7 @@ void main(char argc, char ** argv)
 
 	}
     }
+    return 0;
 }
 
 #endif

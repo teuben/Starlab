@@ -15,7 +15,7 @@
 
 #ifdef TOOLBOX
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     check_help();
 
@@ -82,6 +82,7 @@ void main(int argc, char ** argv)
     if (c_flag) root->log_comment(comment);
 
     put_node(cout, *root);
+    return 0;
 }
 
 #endif

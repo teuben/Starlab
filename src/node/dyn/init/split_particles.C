@@ -228,7 +228,7 @@ local void check_and_initialize(dyn* b, char* label,
 #define DEFAULT_SMA		 0.1
 #define DEFAULT_Q		 1.0
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
     real energy = DEFAULT_ENERGY;
     real eccentricity = DEFAULT_ECC;
@@ -318,6 +318,7 @@ void main(int argc, char ** argv)
 			     iname);
 
     put_dyn(cout, *b);
+    return 0;
 }
 
 #endif

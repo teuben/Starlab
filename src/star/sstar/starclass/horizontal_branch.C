@@ -48,7 +48,7 @@ void horizontal_branch::adjust_initial_star() {
     real t_ms = main_sequence_time();
     real t_giant = t_ms + hertzsprung_gap_time(t_ms)
                  + base_giant_branch_time(t_ms);
-    relative_age = max(t_giant, relative_age);
+    relative_age = Starlab::max(t_giant, relative_age);
   }
 }
 #endif
@@ -56,7 +56,7 @@ void horizontal_branch::adjust_initial_star() {
 
 void horizontal_branch::instantaneous_element() {
 
-    luminosity = min(helium_giant_luminosity(), 
+    luminosity = Starlab::min(helium_giant_luminosity(), 
 		     maximum_luminosity());
 
     radius = (0.25*pow(luminosity, 0.4)
@@ -88,7 +88,7 @@ void horizontal_branch::evolve_element(const real end_time) {
       relative_age += dt;
 
       if (relative_age<=next_update_age) {
-         luminosity = min(helium_giant_luminosity(), 
+         luminosity = Starlab::min(helium_giant_luminosity(), 
                           maximum_luminosity());
 
 	 evolve_core_mass(dt);
@@ -195,7 +195,7 @@ void horizontal_branch::adjust_accretor_age(const real mdot, const bool rejuvena
       if (rejuvenate)
          relative_age *= rejuvenation_fraction(mdot/m_tot_new);
 
-      relative_age = max(relative_age, 
+      relative_age = Starlab::max(relative_age, 
 			 last_update_age + cnsts.safety(minimum_timestep));
 
       // next_update_age should not be reset here
@@ -238,7 +238,7 @@ void horizontal_branch::evolve_core_mass(const real dt) {
   // removed the safety, nothing against type change by core growth.
   //  delta_mcore = min(delta_mcore, 
   //		    envelope_mass-cnsts.safety(minimum_mass_step));
-  delta_mcore = min(delta_mcore, envelope_mass);
+  delta_mcore = Starlab::min(delta_mcore, envelope_mass);
 
   if (delta_mcore<0) {
       PRC(luminosity);PRC(dt);PRL(delta_mcore);
@@ -277,6 +277,6 @@ void horizontal_branch::update_wind_constant() {
     wind_constant = 0.05*(relative_mass - final_core_mass());
   }
   
-  wind_constant = max(wind_constant, 0.0);
+  wind_constant = Starlab::max(wind_constant, 0.0);
 
 }

@@ -776,7 +776,7 @@ void mkking(dyn * b, int n, real w0, bool n_flag, bool u_flag, int test)
 		    setvel(bi, psi[zone]);
 		    real vsq = bi->get_vel()*bi->get_vel();
 		    v2sum += vsq;
-		    v2max = max(v2max, vsq);
+		    v2max = Starlab::max(v2max, vsq);
 		}
 
 		cerr << "zone " << zone << "  r = " << rr[zone]

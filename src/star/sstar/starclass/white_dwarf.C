@@ -14,7 +14,7 @@ white_dwarf::white_dwarf(super_giant & g) : single_star(g) {
       delete &g;
 
       real m_tot    = get_total_mass();
-      core_mass     = min(0.99*cnsts.parameters(kanonical_neutron_star_mass),
+      core_mass     = Starlab::min(0.99*cnsts.parameters(kanonical_neutron_star_mass),
 			  core_mass); 
       envelope_mass = m_tot - core_mass;
       accreted_mass = 0;
@@ -37,7 +37,7 @@ white_dwarf::white_dwarf(sub_giant & s) : single_star(s) {
       delete &s;
 
       real m_tot    = get_total_mass();
-      core_mass     = min(0.99*cnsts.parameters(Chandrasekar_mass),
+      core_mass     = Starlab::min(0.99*cnsts.parameters(Chandrasekar_mass),
 			  core_mass); 
       envelope_mass = m_tot - core_mass;
       accreted_mass = 0;
@@ -61,7 +61,7 @@ white_dwarf::white_dwarf(hertzsprung_gap & s) : single_star(s) {
       delete &s;
 
       real m_tot    = get_total_mass();
-      core_mass     = min(0.99*cnsts.parameters(Chandrasekar_mass),
+      core_mass     = Starlab::min(0.99*cnsts.parameters(Chandrasekar_mass),
 			  core_mass); 
       envelope_mass = m_tot - core_mass;
       accreted_mass = 0;
@@ -86,7 +86,7 @@ white_dwarf::white_dwarf(helium_star & h) : single_star(h) {
         delete &h;
 
 	real m_tot    = get_total_mass();
-	core_mass     = min(0.99*cnsts.parameters(Chandrasekar_mass),
+	core_mass     = Starlab::min(0.99*cnsts.parameters(Chandrasekar_mass),
 			    core_mass); 
 	envelope_mass = m_tot - core_mass;
 	accreted_mass = 0;
@@ -111,7 +111,7 @@ white_dwarf::white_dwarf(helium_giant & h) :  single_star(h) {
         delete &h;
 
 	real m_tot    = get_total_mass();
-	core_mass     = min(0.99*cnsts.parameters(Chandrasekar_mass),
+	core_mass     = Starlab::min(0.99*cnsts.parameters(Chandrasekar_mass),
 			    core_mass); 
 	envelope_mass = m_tot - core_mass;
 	accreted_mass = 0;
@@ -143,7 +143,7 @@ void white_dwarf::adjust_initial_star() {
   }
         
   if(relative_age<=0)
-    relative_age = max(current_time, nucleair_evolution_time());
+    relative_age = Starlab::max(current_time, nucleair_evolution_time());
 
       if (relative_mass>cnsts.parameters(super_giant2neutron_star)) {
          cerr<<"White_dwarf with high mass!"
@@ -213,7 +213,7 @@ void white_dwarf::evolve_element(const real end_time) {
         }
         else {
 	  // (GN May  4 1999) fit to Driebe et al 1999
-	  real fit_mass = min(0.6, max(0.18, get_total_mass()));
+	  real fit_mass = Starlab::min(0.6, Starlab::max(0.18, get_total_mass()));
 	  real l_max = pow(10, (3.83 - 4.77* fit_mass));
 	  luminosity = l_max/pow((relative_age - t_nuc), 1.4);
 	}
@@ -251,7 +251,7 @@ void white_dwarf::update() {
         detect_spectral_features();
 // (GN+SPZ May  4 1999) last_update_age now used as time of last type change
 //  last_update_age = relative_age;
-        effective_radius = max(effective_radius, radius);
+        effective_radius = Starlab::max(effective_radius, radius);
 
 }
 
@@ -284,13 +284,13 @@ real white_dwarf::white_dwarf_radius(real mass, real time) {
      //		Nauenberg, M, 1972, Apj 175, 417
      //		mu=4.039 is the mean molecular weight.
      real mu = 2.;
-     real m_rel = min(0.99, mass / cnsts.parameters(Chandrasekar_mass));
+     real m_rel = Starlab::min(0.99, mass / cnsts.parameters(Chandrasekar_mass));
      r = (0.0225/mu) 
        * sqrt(1./pow(m_rel, cnsts.mathematics(two_third))
  	     - pow(m_rel, cnsts.mathematics(two_third)));
    }
  
-   return min(0.1, r);
+   return Starlab::min(0.1, r);
 }
 
 void white_dwarf::accrete_from_envelope(const real dt) {
@@ -392,7 +392,7 @@ real white_dwarf::add_mass_to_accretor(const real mdot) {
 
         adjust_accretor_age(mdot);
         envelope_mass += mdot;
-	relative_mass = max(relative_mass, get_total_mass());
+	relative_mass = Starlab::max(relative_mass, get_total_mass());
 
 	set_spec_type(Accreting);
 	
@@ -419,7 +419,7 @@ real white_dwarf::add_mass_to_accretor(real mdot, const real dt) {
 	
 
 	if (mdot >= eddington_limit(radius, dt, mu)) {
-	  effective_radius = min(10., get_binary()->roche_radius(this));
+	  effective_radius = Starlab::min(10., get_binary()->roche_radius(this));
 	}
 
 
@@ -445,7 +445,7 @@ real white_dwarf::add_mass_to_accretor(real mdot, const real dt) {
  
         adjust_accretor_age(mdot);
         envelope_mass += mdot;
-	relative_mass = max(relative_mass, get_total_mass());
+	relative_mass = Starlab::max(relative_mass, get_total_mass());
 
 	set_spec_type(Accreting);
 
@@ -466,7 +466,7 @@ real white_dwarf::accretion_limit(const real mdot, const real dt) {
 
 real  white_dwarf::accretion_limit(const real mdot, const real dt) {
 
-  return min(maximum_steady_burning(dt), mdot);  
+  return Starlab::min(maximum_steady_burning(dt), mdot);  
 
 }
 

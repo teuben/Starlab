@@ -330,14 +330,14 @@ void hdyn::set_first_timestep(real additional_step_limit) // default = 0
     if (j2 > 0) dt_adot = a2 / j2;
     if (pot < 0 && a2 > 0) dt_ff = -pot / a2;
 
-    real dt = eta_init * sqrt(min(dt_adot, dt_ff));
+    real dt = eta_init * sqrt(Starlab::min(dt_adot, dt_ff));
 
     // Apply an upper limit to the time step:
 
-    dt = min(dt, step_limit);
+    dt = Starlab::min(dt, step_limit);
 
-    real true_limit = min(initial_step_limit, step_limit);
-    if (additional_step_limit > 0) true_limit = min(true_limit,
+    real true_limit = Starlab::min(initial_step_limit, step_limit);
+    if (additional_step_limit > 0) true_limit = Starlab::min(true_limit,
 						    additional_step_limit);
 
     timestep = adjust_number_to_power(dt, true_limit);
@@ -371,7 +371,7 @@ void hdyn::set_first_timestep(real additional_step_limit) // default = 0
 //                for the hierarchical timestep scheme.
 //-----------------------------------------------------------------------------
 
-static int count = 0;
+static int mycount = 0;
 
 local inline real new_timestep(vector& at3,		// 3rd order term
 			       vector& bt2,		// 2nd order term
@@ -418,7 +418,7 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 	    newstep =
 		altstep = 0.5 * correction_factor	// 0.5 is empirical
 		    	      * b->get_eta()
-			      * sqrt(min(dtff2, dtv2));
+			      * sqrt(Starlab::min(dtff2, dtv2));
 
 	    // PRC(dist); PRC(square(b->get_vel())); PRC(dtff2); PRL(dtv2);
 
@@ -571,7 +571,7 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 	    PRC(b->get_posvel()); PRL(pert_sq);
 	    PRC(newstep); PRC(altstep); PRL(altstep/newstep);
 
-	    if (count > 0 || altstep/newstep > 10) {
+	    if (mycount > 0 || altstep/newstep > 10) {
 		PRL(b->format_label());
 		PRC(b->get_system_time()); xprint(b->get_system_time());
 		PRC(b->get_time()); xprint(b->get_time());
@@ -589,8 +589,8 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 		PRC(k2); PRL(l2);
 		PRC(tmp1); PRL(tmp2);
 		PRC(tmp3); PRL(tmp4);
-		if (altstep/newstep > 10) count++;
-		if (count > 100) exit(1);
+		if (altstep/newstep > 10) mycount++;
+		if (mycount > 100) exit(1);
 	    }
 	    cerr.precision(p);
 	}

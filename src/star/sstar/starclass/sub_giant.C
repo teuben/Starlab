@@ -29,7 +29,7 @@ void sub_giant::adjust_initial_star() {
 
   if(relative_age<=0) {
     real t_ms = main_sequence_time();
-    relative_age = max(t_ms + hertzsprung_gap_time(t_ms), relative_age);
+    relative_age = Starlab::max(t_ms + hertzsprung_gap_time(t_ms), relative_age);
   }
 }
 #endif
@@ -48,7 +48,7 @@ void sub_giant::instantaneous_element() {
 //  PRC(luminosity);
 
   luminosity = l_g*pow(tau, 1.17);
-  luminosity = min(luminosity, maximum_luminosity());
+  luminosity = Starlab::min(luminosity, maximum_luminosity());
 
   // (SPZ+GN:  1 Aug 2000)
   // coming from the hertzsprung-gap the effective readius should 
@@ -77,7 +77,7 @@ void sub_giant::evolve_element(const real end_time) {
 	              / (tend_hg + t_gs - (relative_age-dt));
 	 
          luminosity = l_g*pow(tau, 1.17);
-         luminosity = min(luminosity, maximum_luminosity());
+         luminosity = Starlab::min(luminosity, maximum_luminosity());
 
          radius = (0.25*pow(luminosity, 0.4) + 0.8*pow(luminosity, 0.67))
                 / pow(relative_mass, 0.27);
@@ -88,7 +88,7 @@ void sub_giant::evolve_element(const real end_time) {
 	 real new_mcore;
          if (relative_mass < // but not <= see white_dwarf::get_element_type()
 	     cnsts.parameters(upper_ZAMS_mass_for_degenerate_core)) {
-	   new_mcore = max(core_mass, 0.146*pow(luminosity, 0.143));
+	   new_mcore = Starlab::max(core_mass, 0.146*pow(luminosity, 0.143));
 	 }
 	 else {
            // (GN Oct 11 1999) correct for hydrogen fraction envelope: X = 0.7
@@ -103,7 +103,7 @@ void sub_giant::evolve_element(const real end_time) {
 	 //(SPZ+GN: 31 Jul 2000)
 	 // removed the safety, nothing against type change by core growth.
 	 //core_mass = min(m_tot-cnsts.safety(minimum_mass_step), new_mcore);
-	 core_mass = min(m_tot, new_mcore);
+	 core_mass = Starlab::min(m_tot, new_mcore);
 	 envelope_mass = m_tot - core_mass;
 
 				    
@@ -183,7 +183,7 @@ void sub_giant::adjust_accretor_age(const real mdot,
      real t_bgb_old = base_giant_branch_time(t_ms);
 
      real m_tot_new = get_total_mass() + mdot;
-     real m_rel_new = max(m_tot_new, relative_mass);
+     real m_rel_new = Starlab::max(m_tot_new, relative_mass);
 
      t_ms = main_sequence_time(m_rel_new);
      real tend_hg_new = t_ms + hertzsprung_gap_time(m_rel_new, t_ms);
@@ -208,7 +208,7 @@ void sub_giant::adjust_accretor_age(const real mdot,
 	  //	   PRL(relative_age);
        }
 
-       relative_age = max(relative_age, 
+       relative_age = Starlab::max(relative_age, 
 			  last_update_age  + cnsts.safety(minimum_timestep));
      }
      else {
@@ -258,7 +258,7 @@ real sub_giant::stellar_radius(const real mass, const real new_age) {
       real t_gs = 0.15*t_ms;
 
       real l_sg = l_g*pow(t_gs/(tend_hg + t_gs - age), 1.17);
-           l_sg = min(l_sg, maximum_luminosity(mass));
+           l_sg = Starlab::min(l_sg, maximum_luminosity(mass));
 
       real r_sg = (0.25*pow(l_sg, 0.4) + 0.8*pow(l_sg, 0.67))
                 / pow(mass, 0.27);
@@ -341,7 +341,7 @@ void sub_giant::update_wind_constant() {
     // (SPZ+GN: 26 Jul 2000) see Nelemans, YPZV 2000 (A&A Submitted)
     // wind_constant = 0.2; is a slight improvement on
     // Though a minimum of 0.0 is somewhat on the low side.
-    wind_constant = max(0., (2.5 - relative_mass)/7.5);
+    wind_constant = Starlab::max(0., (2.5 - relative_mass)/7.5);
 
 // (GN+SPZ May  4 1999) not needed: single_star::stellar_wind changed
 //                  /(1 - 
@@ -350,7 +350,7 @@ void sub_giant::update_wind_constant() {
 //                     cnsts.parameters(massive_star_mass_loss_law)));
   }
   
-  wind_constant = max(wind_constant, 0.0);
+  wind_constant = Starlab::max(wind_constant, 0.0);
 
 }
 

@@ -145,7 +145,7 @@ local real minimum_semi_major_axis(dyn* b1, dyn* b2)
     real sma_prim = rs_prim/roche_radius(ms_prim, ms_sec);
     real sma_sec = rs_sec/roche_radius(ms_sec, ms_prim);
 
-    return max(sma_prim, sma_sec);
+    return Starlab::max(sma_prim, sma_sec);
 }
 
 local bool dyn_present(dyn* bi) {
@@ -226,7 +226,7 @@ local void mkbinary(dyn* b, real lower, real upper,
 		      PRC(upper);PRL(a_min*m_total*(1-pow(ecc, 2)));
 		      err_exit("mkbinary: Illegal limits on angular momentum");
 		    }
-		    a_min = max(lower, a_min);
+		    a_min = Starlab::max(lower, a_min);
 		    real frac = upper/lower;
 
 		    do {
@@ -265,14 +265,14 @@ local void mkbinary(dyn* b, real lower, real upper,
 		    real min_binding_energy = 10; // [kT] -- arbitrary!
 		    real a_max = 0.5 * m_total/min_binding_energy;
 		    if(upper>a_min) {
-		      a_max = min(a_max, upper);
+		      a_max = Starlab::min(a_max, upper);
 		    }
 
 		    if(a_max<=a_min) {
 		      PRC(a_max);PRL(a_min);
 		      err_exit("mkbinary: Illegal limits on semi major axis");
 		    }
-		    a_min = max(lower, a_min);
+		    a_min = Starlab::max(lower, a_min);
 
 		    if (option == 3) {// limits between peri- and apocenter.
 			real pericenter, apocenter;
@@ -368,7 +368,7 @@ local void scale_limits(real& e1, real& e2, int option,
     e2 *= scale;
 }
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
   real lower = 1.0, upper = 1.0;   //Units depends on -o and -f
     real emax = 1;
@@ -482,6 +482,6 @@ void main(int argc, char ** argv)
 
     put_dyn(cout, *b);
     rmtree(b);
-
+    return 0;
 }
 #endif
