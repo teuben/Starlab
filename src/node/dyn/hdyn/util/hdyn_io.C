@@ -133,13 +133,7 @@ void hdyn::print_static(ostream& s)		// default = cerr
     s << "max_slow_perturbation_sq = " << max_slow_perturbation_sq << endl;
 }
 
-bool hdyn::check_and_correct_node(bool verbose)	// default = true
-{
-    // Annoying that we have to add this.  Maybe there is a way
-    // to avoid it...?
-
-    return dyn::check_and_correct_node(verbose);
-}
+// Note that we inherit the dyn version of check_and_correct_node().
 
 // Allow user to turn off timestep checking...
 
