@@ -226,9 +226,11 @@ local bool too_big(hdyn * bi, real limit_sq)
     // not actually unperturbed.  May need other checks on nn distance,
     // timestep, etc...  (Steve, 12/12/01)
 
-    real pert2 = od->get_perturbation_squared();
-    // if (pert2 >= 0 && pert2 <= od->get_gamma2()) return false;
-    if (pert2 >= 0 && pert2 <= 1.e-10) return false;
+    if (od->get_valid_perturbers()) {
+	real pert2 = od->get_perturbation_squared();
+	// if (pert2 >= 0 && pert2 <= od->get_gamma2()) return false;
+	if (pert2 >= 0 && pert2 <= 1.e-10) return false;
+    }
 
     bool big = !too_close(od, od->get_younger_sister(), limit_sq, false);
 
