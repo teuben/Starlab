@@ -246,6 +246,9 @@ void pp2(node *b, ostream & s,  int level)
 	pp2(daughter, s, level + 1);	
 }
 
+//------------------------------------------------------------------------
+
+
 local node *get_node_recursive(istream& s,
 			       npfp the_npfp,
 			       hbpfp the_hbpfp,
@@ -253,6 +256,12 @@ local node *get_node_recursive(istream& s,
 			       bool use_stories,
 			       int level)
 {
+    // Functions the_hbpfp and the_sbpfp allow the possibility that the
+    // hydrobase and starbase pointers point to something more complex
+    // than the (default) simple base classes.
+    //
+    // As of 1/04, only the default is used (SLWM).
+
     node *b = (*the_npfp)(the_hbpfp, the_sbpfp, use_stories);
     char line[MAX_INPUT_LINE_LENGTH];
 
@@ -268,16 +277,41 @@ local node *get_node_recursive(istream& s,
 
     while (!matchbracket(END_PARTICLE, line)) {
 	if (matchbracket(START_DYNAMICS, line)) {
-	    b->scan_dyn_story(s);			// virtual
+
+	    // Virtual function scan_dyn_story() allows the calling
+	    // class to control handling of Dyn data format.
+
+	    b->scan_dyn_story(s);
+
 	} else if (matchbracket(START_HYDRO, line)) {
+
+	    // Virtual function scan_hydro_story() allows the calling
+	    // class to control handling of Hydro data.  As of 1/04,
+	    // all classes inherit the node version defined above, and
+	    // hence use the hydrobase version of scan_hydro_story(),
+	    // which simply saves all data as story text.
+
 	    b->scan_hydro_story(s);
+
 	} else if (matchbracket(START_STAR, line)) {
-	    b->scan_star_story(s, level);		// virtual (for tdyn)
+
+	    // Virtual function scan_star_story() allows the calling
+	    // class to control handling of Star data.  As of 1/04, all
+	    // classes except pdyn (and tdyn) inherit the node version
+	    // defined above, and hence use the starbase version of
+	    // scan_star_story(), which simply saves all data as story
+	    // text.
+	    //
+	    // The pdyn version reads Star data, but saves it as pdyn
+	    // data, without using a star pointer.
+
+	    b->scan_star_story(s, level);
+
 	} else if (matchbracket(START_LOG, line)) {
 
-                // bug: every node gets a log story, but when you see
-                // one from input, you set this to be the new one
-                // and thus never dealloc the old one ???
+	    // bug: every node gets a log story, but when you see
+	    // one from input, you set this to be the new one
+	    // and thus never dealloc the old one ???
 
 	    b->scan_log_story(s, line);
 
@@ -331,6 +365,47 @@ local node *get_node_init(istream& s,
     root->set_root(root);
     return root;
 }
+
+#ifdef HAS_GZIP
+#include <pfstream.h>	// (May not exist on all systems...)
+#endif
+
+node *get_node(istream& s,		// default = cin
+	       npfp the_npfp,		// default = new_node
+	       hbpfp the_hbpfp,		//	     etc.
+	       sbpfp the_sbpfp,	 	//
+	       bool use_stories)	// default = true
+{
+    // If STARLAB_USE_GZIP is defined, the input will be decompressed
+    // by gzip first.  This is accomplished by redefining the stream s.
+
+    // Note that, for compression to be carried out, we must (1) compile
+    // HAS_GZIP set, then (2) run with STARLAB_USE_GZIP defined.
+
+    node *n = NULL;
+
+#ifdef HAS_GZIP
+    if (char * zip = getenv("STARLAB_USE_GZIP")) {
+	ipfstream sz("|gzip -d -f");
+	if (sz) {
+	    n = get_node_init(sz, the_npfp, the_hbpfp, the_sbpfp,
+			      use_stories);
+	}
+    }
+#endif
+
+    if (!n)
+	n = get_node_init(s, the_npfp, the_hbpfp, the_sbpfp, use_stories);
+
+    if (n)
+	n->check_and_correct_node();		// action depends strongly on
+						// which class is involved
+
+    return n;
+}
+
+//----------------------------------------------------------------------
+
 
 static bool first_log = true;
 
@@ -420,44 +495,6 @@ void put_single_node(node *b,
     put_story_footer(s, PARTICLE_ID);
 }
 
-#ifdef HAS_GZIP
-#include <pfstream.h>	// (May not exist on all systems...)
-#endif
-
-node *get_node(istream& s,		// default = cin
-	       npfp the_npfp,		// default = new_node
-	       hbpfp the_hbpfp,		//	     etc.
-	       sbpfp the_sbpfp,	 	//
-	       bool use_stories)	// default = true
-{
-    // If STARLAB_USE_GZIP is defined, the input will be decompressed
-    // by gzip first.  This is accomplished by redefining the stream s.
-
-    // Note that, for compression to be carried out, we must (1) compile
-    // HAS_GZIP set, then (2) run with STARLAB_USE_GZIP defined.
-
-    node *n = NULL;
-
-#ifdef HAS_GZIP
-    if (char * zip = getenv("STARLAB_USE_GZIP")) {
-	ipfstream sz("|gzip -d -f");
-	if (sz) {
-	    n = get_node_init(sz, the_npfp, the_hbpfp, the_sbpfp,
-			      use_stories);
-	}
-    }
-#endif
-
-    if (!n)
-	n = get_node_init(s, the_npfp, the_hbpfp, the_sbpfp, use_stories);
-
-    if (n)
-	n->check_and_correct_node();		// action depends strongly on
-						// which class is involved
-
-    return n;
-}
-
 // put_node: the function that does all the work of outputting nodes
 //	     of all sorts...
 
@@ -482,6 +519,9 @@ void put_node(node *b,
 #endif
     put_node_recursive(b, s, print_xreal, short_output);
 }
+
+//----------------------------------------------------------------------
+
 
 local void forget_node_recursive(istream& s)
 {
