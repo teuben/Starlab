@@ -708,7 +708,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
     // Default mass-radius relation:
 
-    cm->set_radius(radius + bcoll->radius);
+    cm->set_radius(get_radius() + bcoll->get_radius());
     PRL(cm->format_label());
 
     // pp3(cm->get_root(), cerr);
@@ -727,7 +727,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	real sinth = sqrt(1 - costh*costh);
 	if (randinter(0, 1) < 0.5) sinth = -sinth;
 	real phi = TWO_PI*randinter(0, 1);
-	dv = KICK_VELOCITY * sqrt(cm->mass/cm->radius)
+	dv = KICK_VELOCITY * sqrt(cm->mass/cm->get_radius())
 			   * vec(sinth*cos(phi),
 				    sinth*sin(phi),
 				    costh);
@@ -742,8 +742,9 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	    //	    M_cm / R_cm^3 = 0.5 * (M1 / R1^3 + M2 / R2^3)
 
 	    real rho1 = 0, rho2 = 0;
-	    if (radius > 0) rho1 = mass/pow(radius, 3);
-	    if (bcoll->radius > 0) rho2 = bcoll->mass/pow(bcoll->radius, 3);
+	    if (get_radius() > 0) rho1 = mass/pow(get_radius(), 3);
+	    if (bcoll->get_radius() > 0)
+		rho2 = bcoll->mass/pow(bcoll->get_radius(), 3);
 
 	    if (rho1+rho2 > 0)
 		cm->set_radius(pow(2*(1-MASS_LOSS)*cm->mass

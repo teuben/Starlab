@@ -670,7 +670,7 @@ bool hdyn::is_close_pair()
     if (kep->get_energy() >= 0) return false;
 
     real rp = kep->get_periastron();
-    real sum_radius = radius + get_binary_sister()->radius;
+    real sum_radius = get_radius() + get_binary_sister()->get_radius();
 
     if (rp < 5 * sum_radius) {
 
