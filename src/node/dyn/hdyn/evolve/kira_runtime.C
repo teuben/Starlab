@@ -506,8 +506,7 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 	    if (line[0] == '\n' || line[0] == '\0' || line[0] == '#')
 		continue;
 
-	    if (count++ == 0) cerr << endl;
-	    cerr << "read runtime option " << line << endl;
+	    bool print = true;
 
 	    // First option is to change the general Starlab "precision"
 	    // setting that controls format of real output from put_node().
@@ -664,7 +663,14 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 
 		b->set_max_slow_perturbation(get_value(s,
 					     DEFAULT_MAX_SLOW_PERTURBATION));
+	    else
 
+		print = false;
+
+	    if (print) {
+		if (count++ == 0) cerr << endl;
+		cerr << "read runtime option " << line << endl;
+	    }
 	}
 
 	file.close();
@@ -707,8 +713,7 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 	    if (line[0] == '\n' || line[0] == '\0' || line[0] == '#')
 		continue;
 
-	    if (count++ == 0) cerr << endl;
-	    cerr << "read runtime diag option " << line << endl;
+	    bool print = true;
 
 	    if (s = strstr(line, "print"))
 
@@ -920,6 +925,14 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 		b->get_kira_diag()->ev
 		    = get_value(s, 1);
 
+	    else
+
+		print = false;
+
+	    if (print) {
+		if (count++ == 0) cerr << endl;
+		cerr << "read runtime diag option " << line << endl;
+	    }
 	}
 
 	file.close();
@@ -1024,6 +1037,7 @@ void check_kira_init(hdyn *b)
     strcat(file, "/.kira");
 
     if (check_file(file, false)) {
+	cerr << "Reading init file " << getenv("HOME") << "/.kira" << endl;
 	modify_diag(b, file, false);
 	modify_options(b, file, false);
     }
@@ -1033,6 +1047,7 @@ void check_kira_init(hdyn *b)
     strcpy(file, "./.kira");
 
     if (check_file(file, false)) {
+	cerr << "Reading init file " << "./.kira" << endl;
 	modify_diag(b, file, false);
 	modify_options(b, file, false);
     }

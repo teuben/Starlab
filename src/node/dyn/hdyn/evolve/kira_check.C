@@ -37,7 +37,7 @@ bool check_allowed(bool allow_kira_override,
 	if (verbose) {
 	    cerr << endl
 		 << "*** Turning on " << what_is_allowed
-		 << endl;
+		 << " (input snapshot) ***" << endl;
 	    need_skip = true;
 	}
 	return true;
