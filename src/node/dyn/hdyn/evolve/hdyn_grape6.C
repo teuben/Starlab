@@ -90,6 +90,7 @@ static real grape_time_offset = 0;	// offset time to maintain precision
 
 static hdyn **node_list = NULL;		// "reverse index pointers":
 					// node_list[i]->get_grape_index() = i
+static int n_node_list = 0;
 
 static hdyn **current_nodes = NULL;	// current top-level nodes
 static hdyn **previous_nodes = NULL;	// previous top-level nodes
@@ -328,6 +329,8 @@ local int initialize_grape_arrays(hdyn *b,		// root node
 	if (reset_counters)
 	    bb->set_grape_nb_count(0);
     }
+
+    n_node_list = nj;
 
 #ifdef T_DEBUG
     if (in_debug_range) {
@@ -604,24 +607,23 @@ local INLINE int force_by_grape(xreal xtime,
 #endif
 
     // Clear neighbor radii for unused pipes (added by SPZ, May 8 2001).
-    // Should we also fill the pipeline with copies of the last element,
-    // just in case (Steve, 7/04)?
 
     for (int i = ni; i < n_pipes; i++) {
         ih2[i] = 0;
 
 	// Should we also fill the pipeline with copies of the last
 	// element, just in case (Steve, 7/04)?
-
-	// ipos[i] = ipos[ni-1];
-	// ivel[i] = ivel[ni-1];
-	// iacc[i] = iacc[ni-1];
-	// ijerk[i] = ijerk[ni-1];
-	// ipot[i] = ipot[ni-1];
+#if 1
+	ipos[i] = ipos[ni-1];
+	ivel[i] = ivel[ni-1];
+	iacc[i] = iacc[ni-1];
+	ijerk[i] = ijerk[ni-1];
+	ipot[i] = ipot[ni-1];
+#endif
     }
     
-    // Enabling DMA on the Athlon according to Jun's documentation (sect. 4.3)
-    // Ernie, 01/31/'05.  Test added by Steve, 2/05.
+    // Enabling DMA on the Athlon according to Jun's documentation (sec. 4.3)
+    // Ernie, 01/31/05.  Test added by Steve, 2/05.
 
     if (init_jp_dma)
 	g6_flush_jp_buffer_(&cluster_id);
@@ -786,8 +788,37 @@ local INLINE int force_by_grape(xreal xtime,
 	// condition.
 
 	cerr << "*** " << func << "(" << level << "):  hardware error "
-	     << error << " at time " << time << ",  ni = " << ni << endl;
-	PRC(nodes[0]); PRL(nodes[0]->format_label());
+	     << error << " at time " << xtime << ",  ni = " << ni << endl;
+
+	for (int ii = 0; ii < ni; ii++) {
+	    PRC(ii); PRL(iindex[ii]);
+	    PRI(4); PRC(nodes[ii]); PRL(nodes[ii]->format_label());
+#if 0
+	    PRI(4); PRL(ipos[ii]);
+	    PRI(4); PRL(ivel[ii]);
+	    PRI(4); PRL(ih2[ii]);
+	    PRI(4); PRL(iacc[ii]);
+	    PRI(4); PRL(ijerk[ii]);
+	    PRI(4); PRC(ipot[ii]); PRL(inn[ii]);
+#endif
+	}
+#if 0
+	cerr << "-----" << endl;
+	for (int ii = ni; ii < n_pipes; ii++) {
+	    PRC(ii); PRL(iindex[ii]);
+	    if (nodes[ii] && nodes[ii]->is_valid()) {
+		PRI(4); PRC(nodes[ii]); PRL(nodes[ii]->format_label());
+	    }
+	    PRI(4); PRL(ipos[ii]);
+	    PRI(4); PRL(ivel[ii]);
+	    PRI(4); PRL(ih2[ii]);
+	    PRI(4); PRL(iacc[ii]);
+	    PRI(4); PRL(ijerk[ii]);
+	    PRI(4); PRC(ipot[ii]); PRL(inn[ii]);
+	}
+
+	exit(1);
+#endif
 
 	if (level < NRETRY) {
 
@@ -1982,10 +2013,10 @@ local INLINE int get_force_and_neighbors(xreal xtime,
 
 	    // An error has occurred.  Flag it and take appropriate action...
 
-	    cerr << endl << func << ":  error getting GRAPE neighbor data: ";
-	    PRL(status);
-
-
+	    cerr << endl << func << ":  error getting GRAPE neighbor data"
+		 << endl;
+	    PRI(strlen(func)+3);
+	    cerr << "at time " << (real)xtime << ", "; PRL(status);
 	    PRC(ni); PRC(nj_on_grape); PRL(n_pipes);
 	    for (int i = 0; i < ni; i++) {
 		cerr << i << " " << nodes[i] << " "; PRL(nodes[i]->is_valid());
@@ -1996,7 +2027,6 @@ local INLINE int get_force_and_neighbors(xreal xtime,
 			<< nodes[i]->get_grape_rnb_sq() << endl << flush;
 	    }
 	    
-
 	    if (status > 0) {
 
 		// Hardware perturber lists on the GRAPE have overflowed.
@@ -2023,16 +2053,27 @@ local INLINE int get_force_and_neighbors(xreal xtime,
 
 		    cerr << "Resetting GRAPE and retrying...";
 		    PRC(level); PRL(NRETRY);
-		    reset_grape(nodes[0]->get_root());
 
+		    reset_grape(nodes[0]->get_root());
 		    error = get_force_and_neighbors(xtime, nodes, ni,
 						    nj_on_grape, n_pipes,
 						    need_neighbors,
 						    level+1);
-		} else
+		    cerr << "Returning with error = " << error
+			 << endl << endl << flush;
+
+		} else {
 
 		    error = 2;
+		    cerr << "Returning with error = " << error
+			 << endl << endl << flush;
 		    // hw_err_exit(func, 2, nodes[0]);
+
+		    // Probably want simply to do the computation on
+		    // the front end here (and assume that the problem
+		    // won't persist next time around?).
+
+		}
 	    }
 	}
     }
@@ -2268,7 +2309,27 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
 	for (int j = 0; j < n_neighbors; j++) {
 
-	    hdyn *bb = node_list[neighbor_list[j]];
+	    hdyn *bb = b;
+	    int nbj = neighbor_list[j];
+
+	    // This should lie in the range [0, n_node_list), but
+	    // it has been known to return out of range.  Check this
+	    // explicitly here and flag problems -- they indicate an
+	    // error in the GRAPE or (more likely) the I/O system.
+
+	    if (nbj < 0 || nbj >= n_node_list) {
+		cerr << func
+		     << ": warning: GRAPE neighbor index out of range"
+		     << endl;
+		PRC(n_neighbors); PRC(j); PRL(nbj);
+		cerr << "skipping" << endl << flush;
+
+		// Just skip for now (bb = b).  An alternative might
+		// be to recompute the entire list on the front end.
+
+	    } else
+
+		bb = node_list[nbj];
 
 	    // bb is the j-th neighbor of b (list not ordered).
 

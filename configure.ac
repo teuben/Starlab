@@ -397,6 +397,10 @@ fi
 echo -n "    "						>> CONFIGURE_HOST
 if test "x$grape" = "xyes"; then
     echo with GRAPE					>> CONFIGURE_HOST
+    echo "        LDFLAGS = $GRAPE_LDFLAGS"		>> CONFIGURE_HOST
+    echo "        LIBS = $GRAPE_LIBS"			>> CONFIGURE_HOST
+    echo "        OLD_READ_NEIGHBOUR_LIST" \
+		= $OLD_READ_NEIGHBOUR_LIST		>> CONFIGURE_HOST
 else
     echo without GRAPE					>> CONFIGURE_HOST
 fi
