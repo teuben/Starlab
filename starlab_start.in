@@ -1,11 +1,25 @@
 #   
+#  don't echo if this STARLAB had already been loaded, or if we're an interactive shell
+if ("$STARLAB_PATH" == "@STARLAB_PATH@" || $?TERM==0) then
+  set _do_echo=0
+else
+  set _do_echo=1
+endif
+
 if ($?STARLAB_PATH == 0) then
   setenv STARLAB_PATH @STARLAB_PATH@
 endif
 source $STARLAB_PATH/local/starlab_setup
 
-if ($?TERM) then
-    echo Starlab version `cat $STARLAB_PATH/VERSION` loaded
+# for now, set STARLAB_VERSION, a few too many things in old .cshrc type files
+# would break with this variable not set
+
+setenv STARLAB_VERSION `cat $STARLAB_PATH/VERSION` 
+
+if ($_do_echo) then
+    echo Starlab version `cat $STARLAB_PATH/VERSION` loaded with STARLAB_PATH=$STARLAB_PATH
 endif
 
+
+unset _do_echo
 
