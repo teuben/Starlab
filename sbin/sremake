@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Rebuild the first command-line argument by deleting the local executable
+# of that name and any object file associated with it, running make, and
+# copying the new executable to the install directory.
+
+if [ $# -lt 1 ]; then
+    echo "$0: One make argument required." >&2
+    exit 1
+fi
+
+echo Rebuilding $1
+
+rm -f $1 $1-$1*.o
+make -s $1
+cp -p $1 $STARLAB_PATH/usr/bin
+
