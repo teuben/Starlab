@@ -45,6 +45,9 @@ pkginclude_HEADERS = include/bound3.h include/chydro.h include/config.h \
     include/story.h include/tdyn.h include/util_io.h include/util_math.h \
     include/worldline.h include/xreal.h
 
+# Extra material for inclusion in the tarball, not explicitly mentioned
+# in the various Makefiles.
+
 EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		scripts/kira_test scripts/kira_xdemo scripts/make_binary_demo \
 		scripts/make_stellar_demo \
