@@ -27,7 +27,7 @@ vec  total_angular_momentum(dyn *b, vec x, vec v)	// vec defaults = 0
 {
     vec J = 0;
     for_all_daughters(dyn, b, bb)
-	J += ang_mom(bb, x, v);
+	J += angular_momentum(bb, x, v);
     return J;
 }
 
