@@ -304,9 +304,11 @@ real get_initial_jacobi_radius(dyn* b,
 		    cerr << "got r_jacobi_over_r_virial = "
 			 << r_jacobi_over_r_virial
 			 << " from input snapshot"
-			 << endl
-			 << "    setting ";
-		    PRL(initial_r_jacobi);
+			 << endl;
+		    if (initial_r_jacobi > 0) {
+			cerr << "    setting ";
+			PRL(initial_r_jacobi);
+		    }
 		}
 
 	    } else {

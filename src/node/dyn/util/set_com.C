@@ -112,7 +112,7 @@ main(int argc, char ** argv)
 	// If phys, we are using physical units.  Mass, length, and time are
 	// the physical equivalents of 1 N-body unit, in Msun, pc, and Myr.
 
-	check_set_external(b, true);
+	check_set_external(b, false);
 	bool ext = (b->get_external_field() != 0);
 
 	// If ext, we have an external field, assumed attractive.  Note
@@ -129,7 +129,12 @@ main(int argc, char ** argv)
 
 	if (phys && !n_flag) {
 
-	    cerr << "set_com:  input  "; PRC(r); PRL(v);
+	    cerr << "set_com:  converting input physical parameters"
+		 << " to N-body units" << endl;
+	    cerr << "          r = (" << r << ") pc,  v = ("
+		 << v << ") v_circ" << endl;
+	    cerr << "          N-body length scale = " << length << " pc"
+		 << endl;
 
 	    // Convert r and v to N-body units.
 
@@ -142,23 +147,32 @@ main(int argc, char ** argv)
 		real vunit = 0.978*length/time;
 		v /= vunit;
 	    }
-	}
+
+	} else
+
+	    cerr << "set_com:  interpreting input parameters"
+		 << " as N-body units" << endl;
 
 	if (ext) {
 
 	    // Convert v from units of vcirc into N-body units.
 
 	    real vc = vcirc(b, r);
+
 	    if (vc > 0) {
 		v *= vc;
-		cerr << "set_com:  t_circ = " << 2*M_PI*abs(r)/vc;
+		cerr << "          circular orbit speed = " << vc;
+		if (phys && !n_flag) cerr << " (N-body)";
+		cerr << ",  period = " << 2*M_PI*abs(r)/vc
+		     << endl;
 	    }
 	}
 
 	// Now r and v are in N-body units, appropriately scaled.
 
         b->set_com(r, v);
-	cerr << "set_com:  "; PRC(r); PRL(v);
+	cerr << "          r = (" << r << "),  v = (" << v << ")"
+	     << endl;
 
 	put_dyn(cout, *b);	
 	rmtree(b);

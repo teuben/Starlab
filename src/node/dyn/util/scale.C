@@ -17,6 +17,14 @@
 ////
 ////         Option "-s" is equivalent to "-M 1 -R 1 -Q 0.5".
 ////
+////         For systems in which stellar data have been specified, the
+////         physical mass, length, and time scales are already defined.
+////         Normally those will correspond to the cluster mass, length,
+////         and time units, so the "-s" option is probably most appropriate
+////         in most cases.  This tool completes the connection between
+////         properties and physical units.  In all cases, command-line
+////         parameters are specified in N-body units.
+////
 ////         As of 7/01, systems with embedded tidal or other external fields
 ////         are also properly scaled (assuming that the Jacobi radius scales
 ////         with the virial radius).  Note that the virial radius is defined
@@ -159,10 +167,32 @@ void scale(dyn *b, real eps,
 	q_flag = false;
     }
 
+    // Check for physical parameters.
+
+    real phys_mass, phys_length, phys_time;
+    bool phys = get_physical_scales(b, phys_mass, phys_length, phys_time);
+
+    // If phys, we are using physical units.  Phys_mass, length, and time
+    // are the equivalents of 1 N-body unit, in Msun, pc, and Myr.
+
+    if (phys) {
+
+	// Flag a non-standard choice of units if physical units have
+	// been specified (see note in --help text).
+
+
+	if ((m_flag && !twiddles(m, 1))
+	     || (r_flag && !twiddles(r, 1))
+	     || (q_flag && !twiddles(q, 0.5))
+	     || (e_flag && !twiddles(abs(e), 0.25)))
+	    cerr << "scale:  non-standard choice of units for system"
+		 << " with physical data" << endl;
+    }
+
     // Optionally transform to the center of mass frame.
 
     if (c_flag) {
-	cerr << "scale: transforming to com frame" << endl;
+	cerr << "scale:  transforming to com frame" << endl;
 	b->to_com();
     }
 

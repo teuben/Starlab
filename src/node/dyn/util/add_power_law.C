@@ -10,11 +10,6 @@
 
 //// add_power_law.C:  Add power-law parameters to an input snapshot and
 ////                   write it out again.  Do not change the input data.
-////                   Parameters are interpreted in physical units if they
-////                   have been specified with add_star, are converted to
-////                   N-body units if necessary, and are written to the
-////                   root log story for subsequent use by set_com, scale,
-////                   kira, etc.
 ////
 //// External field is basically that of a power-law mass distribution
 ////
@@ -31,7 +26,13 @@
 ////               -a/R  specify scale [1]
 ////               -G    select parameters (physical units) appropriate
 ////                     for the Galactic center (Mezger et al. 1999) [no]
-////               -n    force interpretation of parameters in N-body units [no]
+////               -n    force interpretation of all parameters in
+////                         N-body units [no]
+////
+//// Parameters are interpreted in physical units if they have been
+//// specified with add_star, are converted to N-body units if necessary,
+//// and are written to the root log story for subsequent use by set_com,
+//// scale, kira, etc.
 ////
 //// Note that -e 0 gives a Plummer field, and is flagged as such.
 
@@ -91,17 +92,20 @@ void add_power_law(dyn *b,
 
     if (phys && !n_flag) {
 
-	cerr << "add_" << id << ":  scaling physical parameters" << endl;
+	cerr << "add_" << id
+	     << ":  converting input physical parameters to N-body units"
+	     << endl;
 	PRI(ind);
 	if (exponent == 0)
 	    cerr << "M";
 	else
 	    cerr << "A";
-	cerr << " = " << coeff << " Msun,  R = " << scale
+	cerr << " = " << coeff << " Msun,  a = " << scale
 	     << " pc" << endl;
-	PRI(ind); cerr << "center = (" << center << ") pc" << endl
-	     << "mass scale = " << mass << " Msun,  length scale = "
-	     << length << " pc" << endl;
+	PRI(ind); cerr << "center = (" << center << ") pc" << endl;
+	PRI(ind); cerr << "N-body mass scale = " << mass
+	               << " Msun,  length scale = " << length
+		       << " pc" << endl;
 
 	// Convert to N-body units.
 
@@ -109,17 +113,27 @@ void add_power_law(dyn *b,
 	scale /= length;
 	center /= length;
 
-    } else if (G_flag) {		// won't happen in Plummer case
+    } else {
 
-	// Warn if physical parameters are not set or are being ignored.
+	cerr << "add_" << id
+	     << ":  interpreting input parameters as N-body units"
+	     << endl;
 
-	cerr << "add_power_law:  warning:  -G but ";
-	if (phys)
-	    cerr << "ignoring";
-	else
-	    cerr << "no";
-	cerr << " physical scaling" << endl;
+	if (G_flag) {		// won't happen in Plummer case
+
+	    // Warn if physical parameters are not set or are being ignored.
+
+	    PRI(ind); cerr << "warning:  -G but ";
+	    if (phys)
+		cerr << "ignoring";
+	    else
+		cerr << "no";
+	    cerr << " physical scaling" << endl;
+	}
     }
+
+    PRI(ind);
+    if (phys && !n_flag) cerr << "N-body ";
 
     if (exponent != 0) {
 
@@ -128,7 +142,8 @@ void add_power_law(dyn *b,
 	putrq(b->get_log_story(), "kira_pl_scale", scale);
 	putvq(b->get_log_story(), "kira_pl_center", center);
 
-	cerr << "add_power_law:  A = " << coeff << ",  a = " << scale
+	
+	cerr << "A = " << coeff << ",  a = " << scale
 	     << ",  x = " << exponent << endl;
 
     } else {
@@ -137,7 +152,7 @@ void add_power_law(dyn *b,
 	putrq(b->get_log_story(), "kira_plummer_scale", scale);
 	putvq(b->get_log_story(), "kira_plummer_center", center);
 
-	cerr << "add_plummer:  M = " << coeff << ", a = " << scale << endl;
+	cerr << "M = " << coeff << ", a = " << scale << endl;
     }
 
     PRI(ind); cerr << "center = (" << center << ")" << endl;
