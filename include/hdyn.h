@@ -482,7 +482,7 @@ class  hdyn : public _dyn_ {
 
         virtual istream& scan_dyn_story(istream&);
 
-//	Note that we inherit the dyn version of check_and_correct_node().
+	virtual bool check_and_correct_node(bool verbose = true);
 
         virtual ostream& print_dyn_story(ostream &s,
 					 bool print_xreal = true,

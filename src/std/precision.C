@@ -47,6 +47,14 @@ local void get_default_precision()
 	// to try to guarantee the correctness of the
 	// last bit (not thoroughly tested).
 
+	// Note by SLWM, 7/04: The "precision" setting
+	// in C++ doesn't always mean the same thing.
+	// Often it simply sets the number of digits
+	// after the decimal point.  Ideally (as in pcc,
+	// icc, and g++ after 3.2), the precision would
+	// translate into actual significant digits, but
+	// we apparently cannot rely on that...
+
 	precision = 18;
 }
 

@@ -15,7 +15,7 @@
 #include "story.h"
 #include <ctype.h>
 
-#undef isalnum		/* Hacks for Irix 6.5 <ctype.h> backward compatibility */
+#undef isalnum		// hacks for Irix 6.5 <ctype.h> backward compatibility
 #undef isspace
 
 int get_line(istream & s, char * line)
@@ -257,28 +257,96 @@ void put_real_number(ostream & s, char * label, xreal x)
 // variable is set, the first call to set_starlab_precision will use
 // its value (whatever it may be).  Subsequent calls will return the
 // same value originally read from the environment.  If no environment
-// variable is set, a default value (currently 18) is used.
+// variable is set, a default value (currently 18 -- see precision.C)
+// is used.
 
 void put_real_number(ostream & s, char * label, real x)
 {
+    // Note from Steve (7/04).  The precision of a stream isn't
+    // exactly what we need here.  It simply determines the number
+    // of digits printed after the desimal point, *including*
+    // non-significant leading zeroes.  In many cases, we want
+    // precision to set the number of significant digits printed
+    // (especially in put_node).  The C printf "g" format seems
+    // to do this properly, while it is unclear if there is an
+    // equivalent state function in C++.  For now, use sprinf to
+    // write a string which is then written to stream s.  The code
+    // is essentially that used with the obsolete BAD_GNU_IO macro,
+    // but this has *nothing* to do with that ancient G++ bug.
+
     int old_precision = set_starlab_precision(s);
 
-#ifndef BAD_GNU_IO
-    s << label << x << endl;
-#else
-    if (s == cout) {
-	static char format[40];
+#ifdef BAD_GNU_IO
+
+    // Weird g++ bug means that we have to use fprintf instead of <<.
+    // The problem is that we have no way to associate a steam with
+    // a FILE pointer.  Deal with cout and cerr and simply use the
+    // untrustworthy code for other streams.
+
+    static FILE *f = NULL;
+    if (s == cout)
+	f = stdout;
+    else
+	f = stderr;
+
+    if (f) {
 	static int local_precision = -1;
 	int precision = get_starlab_precision();
+	static char format[64];
 	if (local_precision != precision) {
 	    local_precision = precision;
 	    int p = precision;
 	    if (p < 0) p = 5;
 	    sprintf(format, "%%s%%.%dg\n", p);
 	}
-	fprintf(stdout, format, label, x);
+	fprintf(f, format, label, x);
     } else
 	s << label << x << endl;
+
+#else
+
+# if 1
+
+    // Even if the I/O is OK, we still have to deal with the precision
+    // problem described above.  Code repeats much of the "BAD_GNU" code.
+
+    static char format[64], *outstring = NULL;
+    static int local_precision = -1, p = 0, nout = 0;
+
+    int precision = get_starlab_precision();
+    if (local_precision != precision) {
+
+	// Recreate the format string.
+
+	local_precision = precision;
+	p = precision;
+	if (p < 0) p = 5;
+	sprintf(format,"%%.%dg", p);
+    }
+
+    // See if we need to resize.
+
+    if (outstring && nout < p+10) delete [] outstring;
+
+    // (Re)create outstring if necessary.
+
+    if (!outstring) {
+	nout = p+10;
+	outstring = new char[nout];
+    }
+
+    // Finally, create the string...
+
+    sprintf(outstring, format, x);
+
+    // ...and print it along with the label.
+
+    s << label << outstring << endl;
+    
+# else
+    s << label << x << endl;
+# endif
+
 #endif
 
     // Restore the current precision.
@@ -289,15 +357,22 @@ void put_real_number(ostream & s, char * label, real x)
 
 void put_real_vector(ostream & s, char * label, vec v)
 {
+    // See various notes in put_real_number above...
+
     int old_precision = set_starlab_precision(s);
 
-#ifndef BAD_GNU_IO
-    s << label << v << endl;
-#else
-    if (s == cout){
-	static char format[40];
+#ifdef BAD_GNU_IO
+
+    static FILE *f = NULL;
+    if (s == cout)
+	f = stdout;
+    else
+	f = stderr;
+
+    if (f){
 	static int local_precision = -1;
 	int precision = get_starlab_precision();
+	static char format[64];
 	if (local_precision != precision) {
 	    local_precision = precision;
 	    int p = precision;
@@ -305,8 +380,50 @@ void put_real_vector(ostream & s, char * label, vec v)
 	    sprintf(format,"%%s%%.%dg %%.%dg %%.%dg\n", p, p, p);
 	}
 	fprintf(stdout, format,	label, v[0], v[1], v[2]);
-    } else
+    } else 
 	s << label << v << endl;
+
+#else
+
+# if 1
+
+    static char format[64], *outstring = NULL;
+    static int local_precision = -1, p = 0, nout = 0;
+
+    int precision = get_starlab_precision();
+    if (local_precision != precision) {
+
+	// Recreate the format string.
+
+	local_precision = precision;
+	p = precision;
+	if (p < 0) p = 5;
+	sprintf(format,"%%.%dg %%.%dg %%.%dg", p, p, p);
+    }
+
+    // See if we need to resize.
+
+    if (outstring && nout < 3*p+30) delete [] outstring;
+
+    // (Re)create outstring if necessary.
+
+    if (!outstring) {
+	nout = 3*p+30;
+	outstring = new char[nout];
+    }
+
+    // Finally, create the string...
+
+    sprintf(outstring, format, v[0], v[1], v[2]);
+
+    // ...and print it along with the label.
+
+    s << label << outstring << endl;
+    
+# else
+    s << label << v << endl;
+# endif
+
 #endif
 
     // Restore the current precision.
