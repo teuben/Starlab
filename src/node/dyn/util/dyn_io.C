@@ -26,6 +26,8 @@ xreal dyn::system_time          = 0.0;
 real dyn::real_system_time      = 0.0;
 bool dyn::use_sstar	        = false;
 
+bool dyn::ignore_internal	= false;
+
 unsigned int  dyn::external_field	= 0;
 
 int  dyn::tidal_type	= 0;
@@ -43,6 +45,10 @@ real dyn::pl_coeff = 0;
 real dyn::pl_scale_sq = 0;
 real dyn::pl_exponent = 0;
 vector dyn::pl_center = vector(0,0,0);
+real dyn::pl_cutoff = 0;
+real dyn::pl_cutoff_sq = 0;
+real dyn::pl_mass = 0;
+real dyn::pl_softening_sq = 0;
 
 static bool read_xreal = false;
 
