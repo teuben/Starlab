@@ -1585,6 +1585,13 @@ void sys_stats(dyn* b,
 	rhalf = print_lagrangian_radii(b, which_lagr, verbose, 0);
 	PRI(4); PRL(rhalf);
 
+	if (rhalf > 0) {
+	    real density = 1.5*nd / (4*M_PI*pow(rhalf, 3));
+	    putrq(b->get_root()->get_dyn_story(), "half_density", density);
+	    real density = getrq(b->get_root()->get_dyn_story(),
+				 "half_density");
+	}
+
 	// PRL(heavy_stars);
 
 	if (heavy_stars && verbose) {
