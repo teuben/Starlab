@@ -17,23 +17,14 @@
 
 # GRAPE options are nothing, STARLAB_HAS_GRAPE4, or STARLAB_HAS_GRAPE6:
 
-GRAPE	= 
-
-# Set GRAPELIB = nothing if we don't have GRAPE hardware.
-
-# For GRAPE-4 on merlot@drexel:
-
-#GRAPELIB =	-L/usr/users/makino/src/harplibs -lg4a -lrt
-
-# For GRAPE-6 on bourgogne@hongo:
-
-#GRAPELIB = -L/usr2/makino/src/g6hib -lg6 -L/usr2/makino/src/grape6 -lg6sim2
+GRAPE	= -DSTARLAB_HAS_GRAPE6
+#GRAPE	= -DSTARLAB_HAS_GRAPE4
 
 CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) $(GRAPE)
 
 LIBFLAGS	= -L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
 		  -ldstar -lsstar -lhdyn -l_dyn_ -ldyn -lnode \
-		  $(GRAPELIB) -lstd  -lm
+		  -lstd  -lm
 
 # (Libraries dstar and sstar are needed because of sys_stats...
 # The repeated searches are needed because hdyn references dstar,
@@ -57,6 +48,13 @@ LIBRARY = libhdyn.a
 #..............................................................................
 
 include $(STARLAB_PATH)/inc/Makefile.worker.inc
+
+# Note that we use quite different ways of constructing the two
+# GRAPE functions in this drectory!  To be cleaned up...
+
+sys_stats_grape.C : sys_stats.C
+	echo "#define USE_GRAPE" > sys_stats_grape.C
+	cat sys_stats.C >> kira_grape.C
 
 #..............................................................................
 #..............................................................................
