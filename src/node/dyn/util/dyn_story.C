@@ -824,13 +824,53 @@ void check_set_power_law(dyn *b,
 }
 
 void check_set_external(dyn *b,
-			bool verbose)		// default = false
+			bool verbose,		// default = false
+			int fric_int)		// default = -1
 {
     // Check for and set parameters for all known external fields.
 
     check_set_tidal(b, verbose);
     check_set_plummer(b, verbose);
     check_set_power_law(b, verbose);
+
+    // See whether or not to apply dynamical friction.  This really only
+    // applies to Plummer models, for now, but check here because the
+    // setting is controlled by a command-line argument.
+    // Specifying fric_int on the command line will override any settings
+    // found in the root log story, so long as the option is legal.
+
+    if (find_qmatch(b->get_log_story(), "kira_plummer_friction")) {
+
+	// A friction flag exists in the input data.  Use it unless
+	// the command line supercedes it.
+
+	int fric_int_snap = getiq(b->get_log_story(), "kira_plummer_friction");
+	if (fric_int < 0)
+	    fric_int = fric_int_snap;
+	else
+	    cerr << "command-line internal friction flag " << fric_int
+		 << (fric_int == fric_int_snap ? "is identical to"
+		     			     : "overrides")
+		 << " value found in input snapshot";
+    }
+
+    if (fric_int > 0) fric_int = 1;
+
+    if (fric_int > 0 && !b->get_plummer()) {
+	cerr << "check_set_external: ignoring '-f' option"
+	     << " -- no Plummer field" << endl;
+	fric_int = -1;
+    }
+
+    if (fric_int >= 0) {
+
+	// Set the log story friction flag and dyn static data.
+
+	cerr << "turning " << (fric_int == 0 ? "off" : "on")
+	     << " internal dynamical friction " << endl;
+	putiq(b->get_log_story(), "kira_plummer_friction", fric_int);
+	b->set_p_friction(fric_int);
+    }
 }
 
 void check_set_ignore_internal(dyn *b,

@@ -163,6 +163,19 @@ local inline void add_plummer(dyn *b,
     pot -= M/r1;
 }
 
+// Add dynamical friction term.
+
+local inline void add_friction(dyn *b,
+		  vec pos, 
+		  vec vel, 
+		  real& pot, 
+		  vec& acc, 
+		  vec& jerk, 
+		  bool pot_only) 
+{
+    // (Not implemented.)
+}
+
 local inline real plummer_pot(dyn *b,
 			      void (*pot_func)(dyn *, real) = NULL)
 {
@@ -659,8 +672,11 @@ void get_external_acc(dyn *b,
 	// are added, as *all* accs should be computed before jerks are
 	// updated).
 
-	if (GETBIT(ext, 1))
+	if (GETBIT(ext, 1)) {
 	    add_plummer(b, pos, vel, pot, acc, jerk, pot_only);
+	    if (b->get_p_friction())
+		add_friction(b, pos, vel, pot, acc, jerk, pot_only);
+	}
 
 	if (GETBIT(ext, 2))
 	    add_power_law(b, pos, vel, pot, acc, jerk, pot_only);

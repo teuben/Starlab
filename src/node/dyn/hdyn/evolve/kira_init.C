@@ -729,6 +729,7 @@ bool kira_initialize(int argc, char** argv,
     real q_vir = 0.5;           // virial ratio (instead of time scaling)
     real T_start = 0;
 
+    int fric_int = -1;
     real friction_beta = 0;	// "BT" value = 1
 
     real sec = 0, smc = 0, stc = 0;
@@ -757,7 +758,7 @@ bool kira_initialize(int argc, char** argv,
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"0*:a:Ab.Bc:C:d:D:e:E:f:F.g:G:h:iI:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvVW:xX:y:z:Z:";
+"0*:a:Ab.Bc:C:d:D:e:E:f:F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvVW:xX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
@@ -816,9 +817,9 @@ bool kira_initialize(int argc, char** argv,
     // writing data to disk to maintain the external representation.
     //
     // (From Steve, 7/04.)  Previously, we transformed the root node to lie
-    // at the origin here, by explicitly calling offset_com().  However, we
-    // now do this in get_hdyn(), so *all* internal hdyn data follow the
-    // kira convention of having the root node at rest at (0,0,0).
+    // at the origin here, by explicitly calling offset_com().  We now do
+    // this in get_hdyn(), so that *all* internal hdyn data follow the kira
+    // convention of having the root node at rest at (0,0,0).
     //
     // ======================================================================
 
@@ -917,8 +918,7 @@ bool kira_initialize(int argc, char** argv,
 			break;
 	    case 'E':	if (atoi(poptarg)) exact = true;
 			break;
-	    case 'f':	d_min = atof(poptarg);
-			d_min_flag = true;
+	    case 'f':	fric_int = atoi(poptarg);
 			break;
 	    case 'F':	// err_exit("kira: -F option removed: use add_tidal");
 			if (poptarg)
@@ -950,6 +950,9 @@ bool kira_initialize(int argc, char** argv,
 			break;
 	    case 'K':	max_slow = atoi(poptarg);
 			max_slow_flag = true;
+			break;
+	    case 'l':	d_min = atof(poptarg);
+			d_min_flag = true;
 			break;
 	    case 'L':	cpu_time_limit = atof(poptarg);
 			break;
@@ -1228,15 +1231,15 @@ bool kira_initialize(int argc, char** argv,
     //----------------------------------------------------------------------
 
     // Check for external fields, including tidal fields.
-    // Note that there are NO command-line options -- fields can be
+    // Note that there are NO command-line options, except for enabling
+    // or disabling internal dynamical friction -- fields can be
     // specified *only* via the initial snapshot.
 
-    check_set_external(b, verbose);
+    check_set_external(b, verbose, fric_int);
 
     if (friction_beta > 0 && !b->get_pl())
-	cerr << "warning: dynamical friction, but "
-	     << "no external power-law field set."
-	     << endl;
+	cerr << "warning: external dynamical friction specified, but "
+	     << "no external power-law field set." << endl;
 
     //----------------------------------------------------------------------
 

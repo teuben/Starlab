@@ -221,13 +221,17 @@ class  dyn : public node
 	inline real get_p_scale_sq()		{return p_scale_sq;}
 	inline void set_p_scale_sq(real r2)	{p_scale_sq = r2;}
 	inline void set_p_center(vec c) 	{p_center = c;}
-	inline vec get_p_center()		{return p_center;}
+	inline vec  get_p_center()		{return p_center;}
+	inline bool get_p_friction()		{return p_friction;}
+	inline void set_p_friction(bool f)	{p_friction = f;}
 
-	inline void set_plummer(real m, real r2, vec c = 0.0) {  // all in one
+	inline void set_plummer(real m, real r2,
+				vec c = 0.0, bool f = false) {  // all in one
 	    set_plummer();
 	    p_mass = m;
 	    p_scale_sq = r2;
 	    p_center = c;
+	    p_friction = f;
 	}
 
 	// Power-law field (external field #3, bit 2):
@@ -631,7 +635,7 @@ void test_tidal_params(dyn* b,
 int check_set_tidal(dyn *b, bool verbose = false);
 void check_set_plummer(dyn *b, bool verbose = false);
 void check_set_power_law(dyn *b, bool verbose = false);
-void check_set_external(dyn *b, bool verbose = false);
+void check_set_external(dyn *b, bool verbose = false, int fric_int = -1);
 void check_set_ignore_internal(dyn *b, bool verbose = false);
 
 //----------------------------------------------------------------------

@@ -60,9 +60,9 @@
 ////                                    B: track binary changes (unformatted)
 ////              -e    specify softening length [0][*]
 ////              -E    use exact calculation [false]
-////              -f    specify close-encounter distance [0.25 --> 0.25/N][*]
-////              -F    turn on dynamical friction and specify the
-////                                     rescaling coefficient [none]
+////              -f    turn on/off internal dynamical friction on stars [0][*]
+////              -F    turn on external dynamical friction on the cluster,
+////                        and optionally specify a scaling coefficient [none]
 ////              -g    specify hysteresis factor [2.5][*]
 ////              -G    specify initial stripping radius [none][*]
 ////              -h    specify stellar-evolution time step [0.015625 = 1/64][*]
@@ -70,6 +70,8 @@
 ////              -I    specify (re)initialization timescale [1][*]
 ////              -k    specify perturbation factor [1.e-7][*]
 ////              -K    specify log2(maximum slowdown factor) (integer): [0][*]
+////              -l    specify close-encounter distance [0.25 --> 0.25/N][*]
+////                        [**** option renamed from -f, 7/04 ****]
 ////              -L    specify CPU time limit, in seconds [none]
 ////              -n    stop at specified number of particles [5]
 ////              -N    specify frequency of CPU check output [50000]
@@ -164,11 +166,11 @@
 //++
 //++      -r    specify initial virial radius in code units
 //++                          [1; take from input snap if present]
-
-//	J. Makino, S. McMillan, P. Hut, S. Portegies Zwart	12/92-6/04
-//
-//	Major top-level reorganization to remove compile-time
-//	GRAPE selection, S. McMillan				6/04
+////
+////	J. Makino, S. McMillan, P. Hut, S. Portegies Zwart	12/92-6/04
+////
+////	Major top-level reorganization to remove compile-time
+////	GRAPE selection, S. McMillan				6/04
 
 
 
