@@ -17,7 +17,7 @@
 // Main compile-time switch is the definition of T_DEBUG, which also
 // sets a start time.
 
-#define T_DEBUG 215.33
+#define T_DEBUG 0
 #undef  T_DEBUG
 
 // Debugging time range is [T_DEBUG, T_DEBUG_END].

@@ -1760,9 +1760,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
     int snaps = 0;
 
     next_nodes = new hdyn *[2 * b->n_daughters()];	// Overkill?
-
-    // bool next_flag[2 * b->n_daughters()];		// fails on SGI
-    bool *next_flag = new bool[2 * b->n_daughters()];	// equivalent?
+    bool *next_flag = new bool[2 * b->n_daughters()];
     real *last_dt = new real[2 * b->n_daughters()];
 
     set_n_top_level(b);
@@ -1771,8 +1769,8 @@ local void evolve_system(hdyn * b,	       // hdyn array
     // step_limit data, the "dt" data never propagate beyond this function,
     // so there is no particular reason to make them part of the hdyn class.
 
-    real dt_max = Starlab::min(dt_log, dt_sstar);	// system will be synchronized
-						// for stellar evolution occur
+    real dt_max = Starlab::min(dt_log, dt_sstar); // system will be synchronized
+						  // for stellar evolution
     dt_max = Starlab::min(dt_max, dt_reinit);
     dt_max = Starlab::min(dt_max, dt_fulldump);
     b->set_unpert_step_limit(dt_max);
@@ -1834,9 +1832,9 @@ local void evolve_system(hdyn * b,	       // hdyn array
     real initial_step_limit = Starlab::min(INITIAL_STEP_LIMIT, dt_max);
     initial_step_limit = Starlab::min(initial_step_limit, dt_snap);
 
-    real step_limit = Starlab::min(dt_max, dt_snap); 	// no initial_step_limit, note
+    real step_limit = Starlab::min(dt_max, dt_snap); // no initial_step_limit
 
-    b->set_mbar(b->get_mass()/b->n_leaves());	// mass scale
+    b->set_mbar(b->get_mass()/b->n_leaves());	     // mass scale
     b->set_initial_step_limit(initial_step_limit);
     b->set_step_limit(step_limit);
 
@@ -1891,7 +1889,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     // Changes by Steve (7/01):
 
-    real t_esc = tt; // + dt_esc;	// time of next escaper check
+    real t_esc = tt;    // + dt_esc;	// time of next escaper check
 					// 	note: apply IMMEDIATE check
     real t_reinit = tt; // + dt_reinit;	// time of next reinitialization
 
@@ -1903,7 +1901,6 @@ local void evolve_system(hdyn * b,	       // hdyn array
     // Time of next complete system dump (Steve, 9/01).
 
     real t_fulldump = tt;
-
 
     //----------------------------------------------------------------------
     // Frequencies of "other" (episodic) output.  Idea is that we will
@@ -1979,7 +1976,6 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	fast_get_nodes_to_move(b, next_nodes, n_next, ttmp, tree_changed);
 
-
 #ifdef T_DEBUG
 	if (IN_DEBUG_RANGE(ttmp)) {
 	    cerr << "DEBUG: evolve_system " << 1 << endl << flush;
@@ -1999,22 +1995,22 @@ local void evolve_system(hdyn * b,	       // hdyn array
 #endif
 
 #ifndef TMP_SUPPRESS
-    bool quit_now = false;
-    hdyn *bad = NULL;
-    for (int ii = 0; ii < n_next; ii++) {
-	if (!next_nodes[ii]->is_valid()) {
-	    cerr << "next_node[" << ii << "] = " << next_nodes[ii]
-		 << " is invalid" << endl << flush;
-	    bad = next_nodes[ii];
-	    quit_now = true;
+	bool quit_now = false;
+	hdyn *bad = NULL;
+	for (int ii = 0; ii < n_next; ii++) {
+	    if (!next_nodes[ii]->is_valid()) {
+		cerr << "next_node[" << ii << "] = " << next_nodes[ii]
+		     << " is invalid" << endl << flush;
+		bad = next_nodes[ii];
+		quit_now = true;
+	    }
 	}
-    }
-    if (quit_now) {
-	for_all_nodes(hdyn, b, bb)
-	    if (bb == bad) cerr << "invalid node contained within the tree"
-				<< endl;
-	err_exit("invalid node(s) on timestep list.");
-    }
+	if (quit_now) {
+	    for_all_nodes(hdyn, b, bb)
+		if (bb == bad) cerr << "invalid node contained within the tree"
+				    << endl;
+	    err_exit("invalid node(s) on timestep list.");
+	}
 #endif
 
 	// New order of actions (Steve, 7/01):
