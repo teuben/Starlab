@@ -34,6 +34,8 @@
 //// and are written to the root log story for subsequent use by set_com,
 //// scale, kira, etc.
 ////
+//// Note: NO provision for embedded masses yet...
+////
 //// Note that -e 0 gives a Plummer field, and is flagged as such.
 
 //   version 1:  Aug/Sep 2001   Steve McMillan
