@@ -514,6 +514,9 @@ main(int argc, char **argv)
 
 	if (!q_flag) print_scatter3_report(init, inter, final,
 					   cpu, b_flag, cerr);
+
+	// PRL(final.descriptor);
+	exit(100+final.descriptor);
     }
 }
 
