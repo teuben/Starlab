@@ -23,7 +23,7 @@
 
 #include "worldline.h"
 
-#define EXP
+#define NEW 1
 
 #ifndef TOOLBOX
 
@@ -165,9 +165,41 @@ local inline void update_interpolated_tree(worldbundle *wb,
 		// Delete the old subtree.  The tree_node() pointer
 		// still points into the old tree if not NULL, so use
 		// this to locate and delete the out-of-date structure.
+		// Note that the old "subtree" may consist of two
+		// separate pieces (e.g. in a binary-binary interaction).
 
-		clean_up_subtree(wb, ww->get_tree_node(), debug);
-		attach_new_node(wb, ww, root, top, bb, debug);
+		// For efficiency, binary components are now handled
+		// together, rather than separately.  Attach the younger
+		// component of a binary too when we create the elder
+		// one, because update_node will expect it to exist.
+
+		if (bb == top || !bb->get_elder_sister()) {
+
+		    // Function clean_up_subtree will check whether or
+		    // not there is any work to be done.
+
+		    clean_up_subtree(wb, ww->get_tree_node(), debug);
+		    attach_new_node(wb, ww, root, top, bb, debug);
+
+		    if (debug)
+			cerr << "attached " << bb->format_label()
+			     << " at time " << t << endl;
+
+		    if (bb != top) {
+
+			// Clean up and attach the binary sister too.
+
+			tdyn *bbsis = bb->get_younger_sister();
+			worldline *wwsis = wb->find_worldline(bbsis);
+
+			clean_up_subtree(wb, wwsis->get_tree_node(), debug);
+			attach_new_node(wb, wwsis, root, top, bbsis, debug);
+
+			if (debug)
+			    cerr << "attached " << bbsis->format_label()
+				 << " at time " << t << endl;
+		    }
+		}
 	    }
 
 	    // Update the tree entry: copy or interpolate all relevant

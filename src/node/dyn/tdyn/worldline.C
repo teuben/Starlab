@@ -49,6 +49,8 @@
 
 #include "worldline.h"
 
+#define NEW 0
+
 #ifndef TOOLBOX
 
 // Functions to define unique identification for particles.
