@@ -3383,9 +3383,32 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		 << "  (" << bt[init_binary_type] << ")"
 		 << endl;
 
-	    if (diag->unpert_report_level > 0)
+	    if (diag->unpert_report_level > 0) {
+
 		print_unperturbed_binary_params();
 
+		if (diag->unpert_report_level > 1) {
+
+		    // Detailed (excessive?) output on perturbers:
+
+		    hdyn *pnode = find_perturber_node();
+		    if (pnode) {
+			PRL(pnode->format_label());
+			int np = pnode->get_n_perturbers();
+			hdyn **plist = pnode->get_perturber_list();
+
+			cerr << np << " perturber(s):" << endl;
+			int pr = cerr.precision(HIGH_PRECISION);
+
+			for (int j = 0; j < np; j++) {
+			    hdyn *p = plist[j];
+			    cerr << p->format_label() << " " << p->get_pos()
+				<< endl;
+			}
+			cerr.precision(pr);
+		    }
+		}
+	    }
 	}
 
     } else {

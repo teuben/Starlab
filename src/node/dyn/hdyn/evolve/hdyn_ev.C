@@ -1794,6 +1794,14 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 				    d_pos, d_vel,
 				    eps2, acc, jerk, pot, distance_squared);
 
+//	    if (time > 252 && time < 252.1 && name_is("3")) {
+//		cerr << "after " << bi->format_label() << endl;
+//		int pr = cerr.precision(HIGH_PRECISION);
+//		PRL(acc);
+//		PRL(jerk);
+//		cerr.precision(pr);
+//	    }
+
 	    // Note that the nn and coll passed to update_nn_coll here
 	    // are the actual pointers, so this update changes the
 	    // data in b.

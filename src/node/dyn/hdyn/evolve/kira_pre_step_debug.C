@@ -3,6 +3,23 @@
 
 
 #if 0
+    if (t > 252 && t < 252.1) {
+	cerr << endl;
+	int ppre = cerr.precision(20);
+	for (int ii = 0; ii < n_next; ii++) {
+	    hdyn *n = next_nodes[ii];
+	    if (n && n->is_valid() && n->name_is("3")) {
+		PRC(n->format_label());
+		PRL(n->get_next_time());
+		pp3(n);
+	    }
+	}
+	cerr.precision(ppre);
+    }
+#endif
+
+
+#if 0
     if (t > 82.16960 && t < 82.1696256 && fmod(steps, 1) == 0) {
 
 	cerr << "pre..." << endl;
