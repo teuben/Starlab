@@ -1,6 +1,24 @@
 Some issues for starlab4
 ------------------------
 
+* various "configure" related things have been added, notably
+
+                        step1                step2
+	config.h.in         -> config.h         -> inc/config.h
+	cshrc.starlab.in    -> cshrc.starlab    -> local/cshrc.starlab
+        
+  so running configure again (step1) won't overwrite your configuration,
+  since that is step2 which has to be done separately
+
+* there will be a VERSION file, that will be updated at each version blessing
+  (which precedes each code freeze). VERSION should contain one word, no
+  space, e.g. 4.1, or 4.0.2 etc.. 
+
+- inc/version.h (a new file) should be created automatically whenever VERSION
+  has been updated
+
+* 'make dist'   will make a snapshot of the current CVS release in a tarball
+  with directory name starlab_VERSION
 
 - use flags in a consistent way, such that -I and -L additions are not needed
   in the makefiles. In particular, linking X11 application in starlab3 has:
@@ -24,6 +42,13 @@ Some issues for starlab4
   Or is the -E or -P flag the trick here. At any rate,need to figure out a consistent
   syntax.
 
+- Makefile will be removed, and called Makefile.in, since configure should create
+  it.
+
 - remove redundancies in Makefile's by using a 'makedefs' file that can be
   included
 
+- right now environment variables are used galore, which means it is always a bit
+  confusing what to do when something has been modified. The best is still to open
+  a new shell. If everything is done through a makedefs type solution, changes are
+  immediate.
