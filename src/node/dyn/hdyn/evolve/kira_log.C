@@ -649,8 +649,15 @@ void log_output(hdyn * b,
 
     real cpu = cpu_time();
     cerr << endl << "Computing densities..." << flush;
-    kira_calculate_densities(b, cod_pos, cod_vel);	// does nothing unless
-							// GRAPE is present
+
+    // Possible that the density calculation will fail, in which case
+    // we delete the "density_time" entry from the root dyn story.
+
+    if (!kira_calculate_densities(b, cod_pos, cod_vel)) { // does nothing unless
+	cerr << "(densities unavailable)" << endl;	  // GRAPE is present
+	rmq(b->get_dyn_story(), "density_time");
+    }
+
     cpu = cpu_time() - cpu;
     if (cpu < 0) cpu = 0;
     PRL(cpu);

@@ -882,9 +882,9 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 				  xreal time,
 				  bool restart);
 
-void grape4_calculate_densities(hdyn *root,
+bool grape4_calculate_densities(hdyn *root,
 				real h2_crit = 4);
-void grape6_calculate_densities(hdyn *root,
+bool grape6_calculate_densities(hdyn *root,
 				real h2_crit = 4);
 
 // ----- In util/hdyn_io.C: -----
@@ -955,7 +955,7 @@ void print_counters(kira_counters* kc,
 
 // ----- In kira_density.C: -----
 
-void kira_calculate_densities(hdyn* b, vec& cod_pos, vec& cod_vel);
+bool kira_calculate_densities(hdyn* b, vec& cod_pos, vec& cod_vel);
 
 // ----- In kira_energy.C: -----
 

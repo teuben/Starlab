@@ -24,7 +24,7 @@
 //	void check_release_grape4
 //	void grape4_calculate_energies
 //	void grape4_calculate_acc_and_jerk
-//	void grape4_calculate_densities
+//	bool grape4_calculate_densities
 //	void clean_up_hdyn_grape4
 //
 //.............................................................................
@@ -1964,8 +1964,8 @@ local int recount_nblist(int ip)	// ip = number of chips in use
     return total;
 }
 
-void grape4_calculate_densities(hdyn* b,
-			       real h2_crit)	// default = 4
+bool grape4_calculate_densities(hdyn* b,
+				real h2_crit)	// default = 4
 {
     if (!grape_is_open) {
 
@@ -2154,6 +2154,7 @@ void grape4_calculate_densities(hdyn* b,
     grape_was_used_to_calculate_potential = true;
     delete [] top_nodes;
 
+    return true;
 }
 
 

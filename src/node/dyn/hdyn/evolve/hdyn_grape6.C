@@ -19,7 +19,7 @@
 //	void check_release_grape6
 //	void grape6_calculate_energies
 //	void grape6_calculate_acc_and_jerk
-//	void grape6_calculate_densities
+//	bool grape6_calculate_densities
 //	void clean_up_hdyn_grape6
 //
 //.............................................................................
@@ -72,7 +72,7 @@
 #define ONE2	0.5
 #define ONE6	0.16666666666666666667
 
-#define NRETRY	10
+#define NRETRY	5
 
 // Certain GRAPE functions will call themselves up to NRETRY times in
 // the event of a hardware error, to try to fix the problem.  A nonzero
@@ -739,10 +739,12 @@ local INLINE int force_by_grape(xreal xtime,
     if (error) {
 
 	// Make NRETRY attempts (recursively) to reset and correct the
-	// error before returning a "true" error condition.
+	// error for this group of nodes before returning a "true" error
+	// condition.
 
 	cerr << "*** " << func << "(" << level << "):  hardware error "
 	     << error << " at time " << time << ",  ni = " << ni << endl;
+	PRC(nodes[0]); PRL(nodes[0]->format_label());
 
 	if (level < NRETRY) {
 
@@ -1841,24 +1843,25 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 
 
-local INLINE bool get_force_and_neighbors(xreal xtime,
-					  hdyn *nodes[], int ni,
-					  int nj_on_grape, int n_pipes,
-					  bool need_neighbors,
-					  int level = 0)
+local INLINE int get_force_and_neighbors(xreal xtime,
+					 hdyn *nodes[], int ni,
+					 int nj_on_grape, int n_pipes,
+					 bool need_neighbors,
+					 int level = 0)
 
 // Calculate the forces on the specified i-list of nodes, then read the
 // GRAPE neighbor list if needed.   Deal with hardware neighbor list
-// problems before returning.  Return true iff neighbor list overflow
-// occurs.
+// problems before returning.  Return 1 if neighbor list overflow
+// occurs, 2 for a more severe hardware problem, 0 otherwise.
 
 // Called by:	get_coll_and_perturbers				// local
 //		grape6_calculate_acc_and_jerk			// global
+//		get_densities					// local
 
 {
     static char *func = "get_force_and_neighbors";
 
-    if (ni <= 0) return false;
+    if (ni <= 0) return 2;
 
 #ifdef T_DEBUG
     real sys_t = xtime;
@@ -1888,7 +1891,7 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 	hw_err_exit(func, 1, nodes[0]);
     }
 
-    bool error = false;
+    bool error = 0;
 
 #ifdef T_DEBUG
     if (in_debug_range) {
@@ -1901,15 +1904,15 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 	// At least one i-particle needs coll or perturber information.
 	// Bring all neighbor lists from the GRAPE to the front end.
 
-      int status = 0;
+	int status = 0;
 #ifndef NO_G6_NEIGHBOUR_LIST
-      status = g6_read_neighbour_list_(&cluster_id);
+	status = g6_read_neighbour_list_(&cluster_id);
 #endif
 
 #ifdef T_DEBUG
-    if (in_debug_range) {
-	cerr << "DEBUG: " << func << " " << 3 << endl << flush;
-    }
+	if (in_debug_range) {
+	    cerr << "DEBUG: " << func << " " << 3 << endl << flush;
+	}
 #endif
 
 	if (status) {
@@ -1925,7 +1928,7 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 		// Calling function must reduce neighbor radii and repeat
 		// this group of particles.
 
-		error = true;
+		error = 1;
 
 	    } else {
 
@@ -1937,8 +1940,9 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 		// before giving up.
 
 		cerr << "*** " << func << "(" << level
-		     << "):  hardware error " << error << " at time "
+		     << "):  hardware error at time "
 		     << xtime << ",  ni = " << ni << endl;
+		PRC(nodes[0]); PRL(nodes[0]->format_label());
 
 		if (level < NRETRY) {
 
@@ -1951,7 +1955,8 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 						    level+1);
 		} else
 
-		    hw_err_exit(func, 2, nodes[0]);
+		    error = 2;
+		    // hw_err_exit(func, 2, nodes[0]);
 	    }
 	}
     }
@@ -2651,11 +2656,19 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 		    pipe = 0;
 		    ip = ni;			// force exit from "for" loop
 
-		    while (get_force_and_neighbors(xtime,
-						   &bb,
-						   1,
-						   nj_on_grape, n_pipes,
-						   true)) {
+		    int stat;
+		    while (stat = get_force_and_neighbors(xtime,
+							  &bb,
+							  1,
+							  nj_on_grape, n_pipes,
+							  true)) {
+
+			if (stat == 2) {
+
+			    // Severe hardware error -- quit.
+
+			    hw_err_exit(func, 1, bb);
+			}
 
 			// The GRAPE neighbor list has overflowed; we must
 			// decrease the neighbor radius.  Jun says that
@@ -2921,8 +2934,17 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
     }
 #endif
 
-	if (get_force_and_neighbors(xtime, current_nodes + i, ni,
-				    nj_on_grape, n_pipes, need_neighbors)) {
+	int stat;
+	if (stat = get_force_and_neighbors(xtime,current_nodes + i, ni,
+					   nj_on_grape, n_pipes,
+					   need_neighbors)) {
+
+	    if (stat == 2) {
+
+		// Severe hardware error -- quit.
+
+		hw_err_exit(func, 1, current_nodes[0]);
+	    }
 
 	    // Hardware neighbor list overflow.  Restructure the list,
 	    // reduce neighbor radii, and retry starting with those nodes
@@ -3370,6 +3392,13 @@ local INLINE bool old_get_densities(xreal xtime, hdyn *nodes[],
 					 nj_on_grape, n_pipes, true);
     if (status) {
 
+	if (status == 2) {
+
+	    // Severe hardware error -- quit.
+
+	    hw_err_exit(func, 1, nodes[0]);
+	}
+
 	// Neighbor list overflow.  Return with error = true to force
 	// the calling function to reduce all neighbor radii and retry.
 
@@ -3475,7 +3504,15 @@ local INLINE bool old_get_densities(xreal xtime, hdyn *nodes[],
 
 			int status = 0;
 			if (status = get_force_and_neighbors(xtime, nodes, ni,
-						nj_on_grape, n_pipes, true)) {
+							     nj_on_grape,
+							     n_pipes, true)) {
+
+			    if (status == 2) {
+
+				// Severe hardware error -- return an error.
+
+				return error;
+			    }
 
 			    cerr << func << ": "
 				 << "error 2 getting GRAPE neighbor data: "; 
@@ -3502,20 +3539,21 @@ local INLINE bool old_get_densities(xreal xtime, hdyn *nodes[],
     return error;
 }
 
-local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
-				int ni, real h2_crit,
-				int nj_on_grape, int n_pipes)
+local INLINE int get_densities(xreal xtime, hdyn *nodes[],
+			       int ni, real h2_crit,
+			       int nj_on_grape, int n_pipes)
 {
     // Compute the densities of the ni particles in nodes[].
 
-    // Return true iff an neighbor-list overflow occurred and the densities
-    // could not be determined.  The calling function should then reduce
-    // all neighbor radii and retry.
+    // Return 1 if a neighbor-list overflow occurred and the densities
+    // could not be determined, 2 if a more serious hardware has occurred.
+    // In the former case, the calling function should reduce all neighbor
+    // radii and retry.  In the latter, the caller should give up.
 
     static char *func = "get_densities";
-    bool error = false;
+    int error = 0;
 
-    if (ni <= 0) return error;			// should never happen
+    if (ni <= 0) return 0;			// should never happen
 
 #ifdef T_DEBUG
     real sys_t = xtime;
@@ -3562,7 +3600,7 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 		}
 	    }
 
-	    break;		// error = false, note
+	    break;		// error = 0, note
 	}		    
 
 #ifdef T_DEBUG
@@ -3577,10 +3615,18 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 	}
 #endif
 
-	if (get_force_and_neighbors(xtime, nodes, ni,
-				    nj_on_grape, n_pipes, true)) {
+	int status;
+	if (status = get_force_and_neighbors(xtime, nodes, ni,
+					     nj_on_grape, n_pipes, true)) {
 
-	    // Neighbor list overflow.  Return with error = true to force
+	    if (status == 2) {
+
+		// Severe hardware error -- return with error = 2.
+
+		return status;
+	    }
+
+	    // Neighbor list overflow.  Return with error = 1 to force
 	    // the calling function to reduce all neighbor radii and retry.
 
 	    cerr << func << ": " << "error getting GRAPE neighbor data"
@@ -3604,7 +3650,7 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 	    }
 #endif
 
-	    error = true;
+	    error = 1;
 	    break;		// return, but possibly write
 				// a debugging message first.
 
@@ -3697,8 +3743,8 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 //						*****************************
 
 
-void grape6_calculate_densities(hdyn* b,			// root node
-			       real h2_crit)		// default = 4
+bool grape6_calculate_densities(hdyn* b,		// root node
+				real h2_crit)		// default = 4
 {
     static char *func = "grape6_calculate_densities";
 
@@ -3712,7 +3758,7 @@ void grape6_calculate_densities(hdyn* b,			// root node
 
 #ifdef NO_G6_NEIGHBOUR_LIST
     cerr << "No hardware neighbor list available..." << endl;
-    return;
+    return false;
 #endif
 
     static int max_neighbors = MAX_PERTURBERS;
@@ -3760,6 +3806,7 @@ void grape6_calculate_densities(hdyn* b,			// root node
     // Compute the densities in chunks of maximum size n_pipes.
 
     int i = 0;
+    bool status = true;
 
     while (i < n_top) {
 
@@ -3788,9 +3835,19 @@ void grape6_calculate_densities(hdyn* b,			// root node
 	// be significantly more complicated.  May even be possible to
 	// combine the two functions...  (Steve, 3/03)
 
-	if (get_densities(b->get_system_time(),
-			  top_nodes + i, ni, h2_crit,
-			  nj_on_grape, n_pipes)) {
+	int stat;
+	if (stat = get_densities(b->get_system_time(),
+				 top_nodes + i, ni, h2_crit,
+				 nj_on_grape, n_pipes)) {
+
+	    if (stat == 2) {
+
+		// Serious hardware error associated with the neighbor lists.
+		// Stop the density calculation and return false;
+
+		status = false;
+		break;
+	    }
 
 	    // The neighbor list overflowed.  Reduce all current neighbor
 	    // radii and try again.
@@ -3832,7 +3889,8 @@ void grape6_calculate_densities(hdyn* b,			// root node
 
     // Timestamp the root node.
 
-    putrq(b->get_dyn_story(), "density_time", (real)b->get_system_time());
+    if (status)
+	putrq(b->get_dyn_story(), "density_time", (real)b->get_system_time());
 
     if (n_retry > 10) {
 	cerr << func << ":  ";
@@ -3848,6 +3906,8 @@ void grape6_calculate_densities(hdyn* b,			// root node
 
     grape_was_used_to_calculate_potential = true;
     delete [] top_nodes;
+
+    return status;
 }
 
 

@@ -14,7 +14,7 @@
 //
 // Externally visible function:
 //
-//	void kira_calculate_densities
+//	bool kira_calculate_densities
 //
 // Major reorganization to remove compile-time GRAPE selection.
 //					      Steve 6/04
@@ -26,10 +26,12 @@
 //
 // If other schemes are added (e.g. treecode), add them HERE.
 
-void kira_calculate_densities(hdyn* b, vec& cod_pos, vec& cod_vel)
+bool kira_calculate_densities(hdyn* b, vec& cod_pos, vec& cod_vel)
 {
     // Density computation (currently limited to GRAPE systems).
     // Called only by log_output() in kira_log.C.
+
+    bool status = false;
 
     if (b->has_grape()) {
 
@@ -42,10 +44,11 @@ void kira_calculate_densities(hdyn* b, vec& cod_pos, vec& cod_vel)
 	// costly repeat GRAPE calls.
 
 	if (b->has_grape6())
-	    grape6_calculate_densities(b, 0.1);	// (densities are saved in
-						//  particle dyn stories)
+	    status = grape6_calculate_densities(b, 0.1);  // (densities are
+							  //  saved in particle
+							  //  dyn stories)
 	else
-	    grape4_calculate_densities(b, 0.1);
+	    status = grape4_calculate_densities(b, 0.1);
 
 	real cpu1 = cpu_time();
 	compute_mean_cod(b, cod_pos, cod_vel);
@@ -61,4 +64,6 @@ void kira_calculate_densities(hdyn* b, vec& cod_pos, vec& cod_vel)
 
 	cerr << "Skipping density calculation..." << endl;
     }
+
+    return status;
 }
