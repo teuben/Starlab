@@ -1730,6 +1730,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 		     short_output);	// short output (uses STARLAB_PRECISION)
 
 	    set_complete_system_dump(false);
+
 	    cerr << "Full dump (";
 	    if (short_output == 1) cerr << "t";
 	    else cerr << "h";
@@ -1831,9 +1832,11 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	// Second full_dump output marks the start of a new worldbundle.
 
 	if (full_dump_now) {
+
 	    set_complete_system_dump(true);
 	    put_node(cout, *b, false, 1);
 	    set_complete_system_dump(false);
+
 	    cerr << endl << "Full dump (tdyn format) at time " << t << endl;
 	}
 
@@ -1916,46 +1919,52 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	count += 1;
 
 	if (full_dump) {
-	    for (int i = 0; i < n_next; i++)
-		if (next_nodes[i] && next_nodes[i]->is_valid()) {
+	    for (int i = 0; i < n_next; i++) {
+
+		hdyn *curr = next_nodes[i];
+
+		if (curr && curr->is_valid()) {
 
 		    // Always dump new tree information (see hdyn_tree.C),
 		    // but allow the possibility of fewer dumps during
 		    // normal integration.
 
+		    // Ordinarily, dump every n_dump steps.
+
+		    bool dump_now = (fmod(curr->get_steps(), n_dump) == 0);
+
 		    // Force dump if node's unperturbed status has changed.
 
-		    bool force_dump =
-			(next_flag[i] && !next_nodes[i]->get_kepler()
-			 || (!next_flag[i] && next_nodes[i]->get_kepler()));
+		    dump_now |=
+			(next_flag[i] && !curr->get_kepler()
+			 || (!next_flag[i] && curr->get_kepler()));
 
-		    if (force_dump
-			|| fmod(next_nodes[i]->get_steps(), n_dump) == 0) {
+		    if (dump_now) {
 
-//			cerr << "kira: time " << b->get_system_time();
-//			cerr << "  put_node " << i << "/" << n_next << "  "
-//			     << next_nodes[i]->format_label() << endl;
+			// cerr << "kira: time " << b->get_system_time();
+			// cerr << "  put_node " << i << "/" << n_next << "  "
+			//      << curr->format_label() << endl;
 
-			put_single_node(cout, *next_nodes[i], false, 1);
+			put_single_node(cout, *curr, false, 1);
 
 			// Note that we have to use binary_sister here, not
 			// younger_sister, because this node may become the
 			// younger sister in a new binary.
 
-			if (next_nodes[i]->is_low_level_node()) {
+			if (curr->is_low_level_node()) {
 
-//			    cerr << "      put_node for sister "
-//				 << next_nodes[i]->get_binary_sister()
-//				     		 ->format_label()
-//				 << endl;
+			    // cerr << "      put_node for sister "
+			    //	    << curr->get_binary_sister()
+			    //	                    ->format_label()
+			    //	    << endl;
 
 			    put_single_node(cout,
-					    *(next_nodes[i]
-					        ->get_binary_sister()),
+					    *(curr->get_binary_sister()),
 					    false, 1);
 			}
 		    }
 		}
+	    }
 	}
 
 #ifdef DUMP_DATA
