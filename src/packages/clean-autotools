@@ -1,4 +1,4 @@
-#!/bin/tcsh -f
+#!/bin/csh -f
 
 # Clean the autotools.  Could do distclean in each (not quite standard...),
 # but little extra effort in rebuilding from scratch, so just delete the

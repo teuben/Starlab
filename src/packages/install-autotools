@@ -1,4 +1,4 @@
-#!/bin/tcsh -f
+#!/bin/csh -f
 
 # Set the prefix, or use a default (option x or default).  Note that
 # STARLAB_PATH must be set for the default option to work.
