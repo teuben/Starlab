@@ -744,7 +744,9 @@ int integrate_list(hdyn * b,
 		bool pert = bi->is_perturbed_cpt();   // false iff bi is
 						      // fully unperturbed
 
-		if (!bi->integrate_unperturbed_motion(reinitialize)) {
+		int unpert = bi->integrate_unperturbed_motion(reinitialize);
+
+		if (unpert == 0) {
 
 		    // Unperturbed motion is over.  Either the binary
 		    // containing bi has become perturbed or it has merged.
@@ -802,11 +804,16 @@ int integrate_list(hdyn * b,
 			    parent->remove_from_perturbed_list(1);
 
 		    }
-		}
+
+		} else if (unpert == 2)
+
+		    // Still unperturbed, but rescheduling is needed.
+
+		    tree_changed = true;
 
 		// Note that it is possible for integrate_unperturbed_motion
-		// to delete bi.  Must take this possibility into account
-		// below.
+		// to delete bi, or to rearrange the clump containing bi.
+		// Must take these possibilities into account below.
 
 		if (!bi->is_valid())
 		    next_nodes[i] = NULL;

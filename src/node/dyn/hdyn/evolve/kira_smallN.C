@@ -120,6 +120,7 @@ static real dt_crit = 1.e-4;
 static real r2_crit = 1.e-6;
 
 static real smallN_energy_scale = 0;
+static real smallN_time_scale = 0;
 
 void set_smallN_eta(real a)	{eta = a;}
 void set_smallN_gamma(real g)	{gamma2_unpert = g*g;}
@@ -149,7 +150,13 @@ local inline real kepler_step_sq(real distance2, real distance3,
 				 real mass, real vel2)
 {
     real dtff2 = 0.5 * distance3 / mass;
-    real dtv2  = distance2 / vel2;
+
+    // When this function is called from integrate_multiple to set
+    // scales, the velocity may be unrealistic, or even negative.
+    // Small velocities are OK, but make sure negative ones don't
+    // mess us up...
+
+    real dtv2 = distance2 / abs(vel2);
 
     return Starlab::min(dtff2, dtv2);
 }
@@ -1176,7 +1183,11 @@ local void sys_stats(hdyn *b)
 
 	// A local, minimal version of the sys_stats function.
 
-	cerr << endl << "Time = " << b->get_time() << endl;
+	cerr << endl << "Time = " << b->get_time();
+	if (smallN_time_scale > 0)
+	    cerr << " = " << b->get_time()/smallN_time_scale << " smallN units";
+
+	cerr << endl;
 	pp(b); cerr << endl;
 	print_recalculated_energies((dyn*)b, 1);
 
@@ -1292,7 +1303,6 @@ local bool fully_unperturbed(hdyn *b)
 		        + nnn->get_mass()*nnn->get_pos()) / M;
 	    nn_vel = (bk_nn->get_mass()*bk_nn->get_vel()
 		        + nnn->get_mass()*nnn->get_vel()) / M;
-	    cerr << "nn is CM" << endl;
 	}
     }
 
@@ -1623,6 +1633,23 @@ local void restore_binary_tree(hdyn *b)
 					// to require no unpert motion
     int n = b->n_daughters();
 
+#if 0
+
+    // Special care because energy functions expect low-level
+    // nodes to be binary nodes.
+
+    hdyn *tmp1 = b->get_parent();
+    hdyn *tmp2 = b->get_root();
+    b->set_parent(NULL);
+    b->set_root(b);
+    pp(b);
+    print_recalculated_energies((dyn*)b);
+    b->set_parent(tmp1);
+    b->set_root(tmp2);
+    pp3(b);
+
+#endif
+
     hdynptr *list = new hdynptr[n];
 
     list[0] = bi_min;
@@ -1665,13 +1692,17 @@ local void restore_binary_tree(hdyn *b)
 	     << " != n = " << n << endl;
 
     PR(n); cerr << ": ";
-    for (i = 0; i < n; i++) cerr << list[i]->format_label() << " ";
+    for (i = 0; i < n; i++) {
+	cerr << list[i]->format_label() << " ";
+//	PRL(list[i]->get_pos());
+    }
     cerr << endl;
 
     // Now combine the elements of the list.  Each element becomes the
-    // binary sister of the current node bcurr.
+    // binary sister of the current node bcurr, and bcurr becomes the
+    // center of mass node.
 
-    hdyn *bcurr = list[0];		// = bi_min
+    hdyn *bcurr = list[0];				// = bi_min
     cerr << "start with " << bcurr->format_label() << endl;
     for (i = 1; i < n; i++) {
 
@@ -1690,31 +1721,52 @@ local void restore_binary_tree(hdyn *b)
 	insert_node_into_binary_tree(bi, bj, bcurr);	// --> (bi, bj)
 
 	label_binary_node(bi->get_parent());
-	bi->get_parent()->setup_binary_node();
+
+	// Above operations only handle the tree structure.
+	// Must also reorganize pos, vel, acc, and jerk, and reset
+	// all pred_ and old_ quantities.  Handle these using
+	// existing tool in hdyn_tt.C.
+
+	bcurr->setup_binary_node();
+
+	// Set pred times also.  This probably should be done in
+	// setup_binary_node(), as the operations there only make
+	// sense if the pred times are the same in any case.
+
+	bcurr->set_t_pred(b->get_time());
+	bi->set_t_pred(b->get_time());
+	bj->set_t_pred(b->get_time());
 
 	cerr << "add " << list[i]->format_label() << ": ";
 	pp(bcurr); cerr << endl;
     }
 
-    // Note: the final bcurr is the entire clump, and must be copied
-    // into b or installed in place of b.  In either case, care must
-    // be taken with neighbor and coll pointers and perturber lists,
-    // which may contain leaves or unperturbed CMs.
+    // Note: the final bcurr is the entire clump, but the dynamical data
+    // it contains should all be zero (within rounding error).  Check this,
+    // and then connect bcurr's daughters directly to b.
 
+    PRL(bcurr->get_pos());
+    PRL(bcurr->get_vel());
+    PRL(bcurr->get_acc());
+    PRL(bcurr->get_jerk());
 
-    // To replace:
+    hdyn *od = bcurr->get_oldest_daughter();
+    b->set_oldest_daughter(od);
+    od->set_parent(b);
+    od->get_younger_sister()->set_parent(b);
 
-    hdyn *par = b->get_parent();
-    if (par->get_oldest_daughter() == b) par->set_oldest_daughter(bcurr);
+    bcurr->set_oldest_daughter(NULL);
+    delete bcurr;    
 
-
-
+//    pp3(b);
+//    print_recalculated_energies((dyn*)b);
     cerr << "leaving restore_binary_tree()" << endl;
 }
 
 
 
 local real get_multiple_params(hdyn *b,
+			       hdynptr &inner,
 			       real& mass,
 			       real& period,
 			       real& sma, 
@@ -1759,6 +1811,8 @@ local real get_multiple_params(hdyn *b,
 
     // Use bipot and bjpot as the closest pair.
 
+    inner = bipot->get_parent();
+
     kepler k;
     initialize_kepler_from_dyn_pair(k, bipot, bjpot, true);
     // k.print_all();
@@ -1794,25 +1848,126 @@ real integrate_multiple(hdyn *b)
     // Determine some properties of the multiple, for use in setting the
     // output energy scale and termination conditions in smallN_evolve.
 
+    hdyn *inner;
     real mass, period, sma, rnn;
-    real energy = get_multiple_params(b, mass, period, sma, rnn);
+    real energy = get_multiple_params(b, inner, mass, period, sma, rnn);
     PRC(mass); PRL(sma);
     bool bound = (energy < 0);
 
     smallN_energy_scale = -energy/100;
+    smallN_time_scale = period;
 
-    // For a bound innermost system, the preferred termination condition
-    // is unperturbed approaching motion with a receding nearest neighbor.
+    // Correct all nodes potentially affected by the multiple integration
+    // -- those having an nn, coll, or perturber which is a node (not a
+    // leaf, since those are preserved) under b.  Most likely these are
+    // already pointers to leaves, but check and correct that here (i.e.
+    // replaced pointers to nodes by pointers to leaves before proceeding).
+    // By construction, the inner binary is now perturbed, so it should
+    // also appear as components on all lists.  Thus it is sufficiently
+    // unlikely that any centers of mass appear that we should print a
+    // warning message flag when we encounter one.  We also flag nodes
+    // with pointers to the innermost components of the clump, as these
+    // will soon become pointers to the newly unperturbed center of mass
+    // (implemented at the end).
+
+    int ntot = b->get_root()->n_daughters();
+    hdynptr *nlist = new hdynptr[ntot];
+    int ilist = 0;
+
+    for_all_nodes(hdyn, b->get_root(), bb)
+	if (!is_descendent_of(bb, b, 1)) {	// bb is not part of the clump
+	    int add = 0;
+
+	    hdyn *nn = bb->get_nn();
+	    if (nn && nn->is_parent()
+		&& is_descendent_of(nn, b, 0)) {
+
+		// Replace nn by a component.
+
+		real minr2 = VERY_LARGE_NUMBER;
+		hdyn *nncpt = NULL;
+		vec bbpos = hdyn_something_relative_to_root(bb, &hdyn::get_pos);
+		for_all_leaves(hdyn, nn, cpt) {
+		    real r2 =
+			square(bbpos -
+			       hdyn_something_relative_to_root(cpt,
+							       &hdyn::get_pos));
+		    if (r2 < minr2) {
+			minr2 = r2;
+			nncpt = cpt;
+		    }
+		}
+
+		cerr << "integrate_multiple: replacing nn "
+		     << nn->format_label();
+		cerr << " by component " << nncpt->format_label();
+		cerr << " for node " << bb->format_label() << endl;
+
+		bb->set_nn(nncpt);
+		nn = nncpt;
+	    }
+
+	    // Replace coll by nn if a change is needed.
+
+	    hdyn *coll = bb->get_coll();
+	    if (coll && coll != nn && coll->is_parent()
+		&& is_descendent_of(coll, b, 0)) bb->set_coll(nn);
+
+	    bool flag = false;
+	    if (bb->is_parent() && bb->get_n_perturbers() > 0) {
+		int np = bb->get_n_perturbers();
+		for (int i = 0; i < np; i++) {
+		    hdyn *pert = bb->get_perturber_list()[i];
+
+		    if (is_descendent_of(pert, inner, 1)) flag = true;
+
+		    if (pert && pert->is_valid() && pert->is_parent()
+			&& is_descendent_of(pert, b, 0)) {
+
+			// Split pert into components (if possible: if
+			// overflow would occur, don't expand the list
+			// -- fix this soon!).
+
+			cerr << "integrate_multiple: expanding perturber "
+			     << pert->format_label() << " into components";
+			cerr << " for node " << bb->format_label() << endl;
+
+			int np1 = bb->get_n_perturbers();   // NB: np unchanged
+			int j = 0;
+			for_all_leaves(hdyn, pert, pp) {
+			    if (j == 0)
+				bb->get_perturber_list()[i] = pp;
+			    else
+				if (np1 < MAX_PERTURBERS)
+				    bb->get_perturber_list()[np1++] = pp;
+			}
+			bb->set_n_perturbers(np1);
+		    }
+		}
+		if (flag) nlist[ilist] = bb;
+	    }
+	}
+    PRL(ilist);
+
+    // By construction, there should not be any kepler structures attached
+    // to any of the nodes under b.  Make sure this is the case.
+
+    for_all_nodes(hdyn, b, bb)
+	if (bb->get_kepler())
+	    if (bb->get_elder_sister() == NULL) {
+		delete bb->get_kepler();
+		bb->set_kepler(NULL);
+		bb->get_younger_sister()->set_kepler(NULL);
+	    }
 
     // b is the top-level node of the clump in question.  Begin
     // by flattening everything to a single-level tree.  Note that
     // all center of mass nodes will vanish, so the integration list
-    // must check for invalid nodes.  Maybe we need a better way of
-    // cleaning up the list -- this is rather messy...
+    // must check for invalid nodes.
 
     int n_mult = b->flatten_node();
     cerr << "integrate_multiple: "; PRC(n_mult); PRL(b->n_daughters());
-    cerr << "flattening tree to a single level" << endl;
+    cerr << "flattened tree to a single level" << endl;
 
     real diameter = get_diameter(b);
     PRC(smallN_energy_scale); PRC(period); PRL(bound);
@@ -1837,14 +1992,18 @@ real integrate_multiple(hdyn *b)
 
     // Move to the center of mass frame.
 
-    b->set_system_time(-1);
     vec cmpos, cmvel;
+    b->set_system_time(-1);
     compute_com(b, cmpos, cmvel);
-    b->set_system_time(0);
     b->inc_pos(-cmpos);
     b->inc_vel(-cmvel);
+    cerr << "moved to CM frame" << endl;
+
+    b->set_system_time(0);
 
     // Set integration parameters before calling smallN_evolve.
+    // For a bound innermost system, the preferred termination condition
+    // is unperturbed approaching motion with a receding nearest neighbor.
 
     real r_end = VERY_LARGE_NUMBER, t_end = VERY_LARGE_NUMBER;
     if (!bound) r_end = 10*rnn;
@@ -1857,6 +2016,14 @@ real integrate_multiple(hdyn *b)
     // May need fine-tuning...
 
     real rcrit = 2*sma;
+
+    PRL(eta);
+    PRL(rcrit);
+    PRL(mass);
+    PRL(energy);
+    PRL(energy + mass/rcrit);
+    PRL(kepler_step_sq(rcrit, mass, 2*(energy + mass/rcrit)));
+    
     set_smallN_dtcrit(sqrt(eta*kepler_step_sq(rcrit, mass,
 					      2*(energy + mass/rcrit))));
     set_smallN_rcrit(rcrit);
@@ -1869,7 +2036,8 @@ real integrate_multiple(hdyn *b)
     // Integrate the clump.
 
     cerr << endl << "entering smallN_evolve()" << endl;
-    real t = smallN_evolve(b, t_end, r_end, bound, period);
+    smallN_evolve(b, t_end, r_end, bound, 10*period);
+    real t = b->get_time();
     cerr << "exiting smallN_evolve()" << endl;
 
     //-----------------------------------------------------------------
@@ -1884,11 +2052,6 @@ real integrate_multiple(hdyn *b)
 
     b->set_name(tmp);
 
-    // Restore the proper center of mass position and velocity.
-
-    b->inc_pos(cmpos);
-    b->inc_vel(cmvel);
-
     // Set an appropriate time step that fits the block structure.
 
     real dt = b->get_timestep();
@@ -1901,7 +2064,38 @@ real integrate_multiple(hdyn *b)
 
     restore_binary_tree(b);
 
-    exit(0);
+    // Restore the proper center of mass position and velocity.
+
+    b->inc_pos(cmpos);
+    b->inc_vel(cmvel);
+
+    // Officially restart unperturbed motion.
+
+    bi_min->startup_unperturbed_motion();
+
+    //  Replace bi_min and bj_min by CM on perturber lists listed in nlist.
+
+    for (int i = 0; i < ilist; i++) {
+	hdyn *bb = nlist[ilist];
+	int np = bb->get_n_perturbers();
+	int count = 0;
+	for (int ip = 0; ip < np; ip++) {
+	    hdyn *pert = bb->get_perturber_list()[ip];
+	    if (pert == bi_min || pert == bj_min) {
+		pert = bi_min->get_parent();
+		count++;
+	    }
+	    if (count > 1 && ip+count-1 < np) {
+		bb->get_perturber_list()[ip]
+		    	= bb->get_perturber_list()[ip+count-1];
+		ip--;
+	    }
+	}
+	np -= count-1;
+	bb->set_n_perturbers(np);
+    }
+
+    delete [] nlist;
     return t;
 }
 

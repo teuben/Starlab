@@ -17,7 +17,7 @@
 //	bool hdyn::is_close_pair
 //	bool hdyn::is_unperturbed_and_approaching
 //	void hdyn::startup_unperturbed_motion
-//	bool hdyn::integrate_unperturbed_motion
+//	int  hdyn::integrate_unperturbed_motion
 //	real hdyn::set_unperturbed_timestep
 //	real hdyn::get_unperturbed_steps
 //	bool hdyn::is_weakly_perturbed
@@ -34,6 +34,7 @@
 
 #include "hdyn.h"
 #include <star/dstar_to_kira.h>
+#include <float.h>	// for tests of significance below
 
 #define USE_DT_PERTURBERS		true
 
@@ -3194,11 +3195,13 @@ local void rotate_kepler(kepler *k)
 #define ENERGY_LIMIT_2		VERY_LARGE_NUMBER
 #endif
 
-bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
-					bool force_time)   // default = false
+int hdyn::integrate_unperturbed_motion(bool& reinitialize,
+				       bool force_time)   // default = false
 {
     // Update unperturbed binary motion and check for continuation.
-    // Return true iff binary is still unperturbed at end of step.
+    // Return true (>0) iff binary is still unperturbed at end of step.
+    // Normal return is 0 or 1.  A return value of 2 means that some
+    // nodes may now be invalid, and a new scheduling list is needed.
     //
     // Flag reinitialize is set true if a reinitialization of the system
     // is needed on return (e.g. after binary mass loss).
@@ -3216,10 +3219,10 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	     << format_label() << " at time " << system_time << endl;
     }
 
-    bool unpert = true;
+    int unpert = 1;
     reinitialize = false;
 
-    if (!kep) return false;
+    if (!kep) return 0;
 
     hdyn *sister = get_binary_sister();
     time += unperturbed_timestep;
@@ -3415,7 +3418,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 	// Time to end the unperturbed motion.
 
-	unpert = false;
+	unpert = 0;
 
 	bool verbose = diag->report_end_unperturbed
 			    || (is_multiple(this) && diag->report_multiple);
@@ -3981,7 +3984,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 	    if (!is_valid()) {
 		reinitialize = true;
-		return false;
+		return 0;
 	    }
 
 	    // If the final orbit is radically different from the
@@ -4064,7 +4067,8 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    }
 	}
 
-	// Unperturbed motion is over.
+	// Unperturbed motion is over.  Set this #if to 0 to avoid even
+	// testing for short time steps and isolated multiples.
 
 #if 1
 	// If the new perturbed time step is short, it may be desirable
@@ -4081,9 +4085,6 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	real keplstep = kepler_step(this, timestep_correction_factor(this));
 	real peristep = keplstep*pow(binary_peri/binary_sep, 1.5);
 
-	PRC(binary_type); PRL(NOT_APPROACHING);
-	PRC(keplstep); PRL(peristep);
-
 	// Really want to pick up special cases after termination of
 	// fully unperturbed motion, not after periastron.  However,
 	// if the time step after periastron passage is also small
@@ -4095,17 +4096,20 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	// encounters, or we could go this route only when we
 	// anticipate numerical problems.  Choose the latter for now.
 
-	real ttmp1 = time + 0.001*keplstep;
-	real ttmp2 = time + 0.01*peristep;
-
-	int p = cerr.precision(HIGH_PRECISION);
-	PRC(time); PRC(ttmp1); PRL(ttmp2);
-	cerr.precision(p);
+	// Hmmm.  Looks like the compiler may be too smart to let me
+	// just do:
+	//
+	// real ttmp1 = time + 0.001*keplstep;
+	// real ttmp2 = time + 0.01*peristep;
+	//
+	// if (ttmp1-(real)time == 0 || ttmp2-(real)time == 0) {...}
+	//
+	// Use the values in float.h instead.  (Steve, 12/04)
 
 	if (	// binary_type != NOT_APPROACHING &&
-	    (	// peristep < 1.e-11 || keplstep < 1.e10 ||
-	      ttmp1-(real)time == 0 || ttmp2-(real)time == 0
-	     )) {
+	     0.001*keplstep < DBL_EPSILON*time
+	     || 0.01*peristep < DBL_EPSILON*time
+	    ) {
 
 	    int prec = cerr.precision(HIGH_PRECISION);
 	    cerr << endl << "short time step: "; PRL(time);
@@ -4149,7 +4153,6 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    real gamma_top_inv_23 = pow(gamma_top, -0.666667);
 	    real pert_radius_factor
 		= define_perturbation_radius_factor(top, gamma_top_inv_23);
-	    PRL(pert_radius_factor);
 
 	    int count_pert = 0;
 	    real max_pert = 0;
@@ -4157,7 +4160,6 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    real top_mass = top->get_mass();
 	    vec top_pos = top->get_pos();	// pred_pos not necessary
 	    real scale = binary_scale(top);
-	    PRL(scale);
 
 	    for (int i = 0; i < np; i++) {
 		real r2 = square(top_pos - pertlist[i]->pos);
@@ -4177,16 +4179,30 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		// PRC(rpert3); PRL(pert);
 	    }
 
-	    if (count_pert) {
-		PRC(count_pert); PRL(max_pert);
-		cerr << endl;
-	    } else {
-		cerr << "top-level node is unperturbed "
-		     << "-- candidate for special treatment." << endl;
-		PRL(max_pert); cerr << endl;
+	    PRC(count_pert); PR(max_pert);
 
-		put_node(top, cerr);
-		cerr << endl;
+	    if (count_pert) {
+
+		cerr << " -- too large" << endl;
+
+		// Note: if the timestep is in danger of becoming too short,
+		// but the multiple is too strongly perturbed, then it may
+		// be necessary to add the perturber(s) to the clump sent
+		// to integrate_multiple().  Defer this for now -- probably
+		// most important for small systems.  (Steve, 12/04)
+		//
+		// Note that this whole procedure as it stands depends
+		// strongly on d_min_sq, as this defines the multiples and
+		// we only work with top-level clumps.  A better approach
+		// would be to ascend the tree to the top level looking for
+		// suffieiently unperturbed CMs, and to allow the possibility
+		// of incorporating other top-level nodes into the multiple.
+		// To be done.  (Steve, 12.04)
+
+	    } else {
+
+		cerr << endl << "top-level node is effectively unperturbed "
+		     << "-- candidate for special treatment." << endl;
 
 		// We have just perturbed the inner component of a hard
 		// multiple system and we expect time step problems near
@@ -4196,26 +4212,37 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		// By construction, the top-level node is sufficiently
 		// isolated that we can neglect the rest of the system.
 
-#if 0		// (Set to zero to suppress integrate_multiple.)
+#if 1		// (Set to zero to suppress integrate_multiple.)
+
+		cerr << endl;
+		for (int i = 0; i < 75; i++) cerr << "=";
+		cerr << endl;
 
 		// Make sure the entire multiple tree is synchronized.
 
 		kira_synchronize_tree(top, true);
 
-		// Force time step list rescheduling, just in case.
-
-		bool resched = false;
-		rmq(root->get_dyn_story(), "resched");
-		
 		// Integrate the multiple motion in isolation.  On return,
 		// the tree is properly set up with unperturbed motion
 		// ready to continue.  Better return immediately, as the
 		// internal structure may have changed.
 
+		print_recalculated_energies(get_root());
 		real t_mult = integrate_multiple(top);
 		cerr << "multiple integration time = " << t_mult << endl;
+		print_recalculated_energies(get_root());
 
-		unpert = true;
+		// Note that we currently do NOT correct the small tidal
+		// error that probably resulted from the multiple motion.
+		// Could absorb it into the top-level motion, or simply
+		// keep track of it -- NB likely to have a cumulative
+		// effect if multiple outer passes take place.
+
+		cerr << endl;
+		for (int i = 0; i < 75; i++) cerr << "=";
+		cerr << endl;
+
+		unpert = 2;	// will force time step list rescheduling.
 #endif
 	    }
 

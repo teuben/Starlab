@@ -648,8 +648,8 @@ class  hdyn : public _dyn_ {
 	void recompute_unperturbed_step();
 	void recompute_unperturbed_steps();
 
-        bool integrate_unperturbed_motion(bool& reinitialize,
-					  bool force_time = false);
+        int integrate_unperturbed_motion(bool& reinitialize,
+					 bool force_time = false);
 
 	// ----- In hdyn_slow.C: -----
 

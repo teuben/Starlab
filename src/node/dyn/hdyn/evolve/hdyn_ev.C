@@ -4193,8 +4193,15 @@ void synchronize_tree(hdyn * b)		// update all top-level nodes
     // cerr << "synchronize_tree for " << b->format_label()
     //      << " at time " << b->get_system_time() << endl;
 
+
+    // Added by Steve (11/04) to avoid losing perturber list information
+    // when a multiple clump is synched.  Not clear if exact = true was
+    // ever necessary -- watch this!!
+
+    bool exact = false;
+
     if (!b->is_root())
-	b->synchronize_node();
+	b->synchronize_node(exact);
 
     for_all_daughters(hdyn, b, bb)
 	synchronize_tree(bb);
