@@ -18,6 +18,9 @@
 
 #include "dyn.h"
 
+// In the following "ext" functions, b is any dyn, used simply to access
+// the global class data.  The vector pos is relative to the root node.
+
 local inline vec ext_acc(dyn *b, vec pos)
 {
     vec v = 0, acc, j;
@@ -36,18 +39,20 @@ local inline real ext_pot(dyn *b, vec pos)
 
 // Handy, for now...
 
-static vec ext_center, Rhat, acc_CM;
+static vec ext_center, Rhat, acc_CM;	// ext_center is the absolute position
+					// of the external center
+							
 static real R;
 
 local real g1(dyn *b, real r)
 {
-    vec pos = ext_center + r*Rhat;
+    vec pos = ext_center + r*Rhat - b->get_root()->get_pos();
     return (ext_acc(b, pos) - acc_CM) * Rhat + pow(r-R, -2);
 }
 
 local real g2(dyn *b, real r)
 {
-    vec pos = ext_center + r*Rhat;
+    vec pos = ext_center + r*Rhat - b->get_root()->get_pos();
     return (ext_acc(b, pos) - acc_CM) * Rhat - pow(r-R, -2);
 }
 
@@ -104,7 +109,7 @@ local inline real solve(real (*g)(dyn*, real), dyn *b, real r1, real r2)
 
 local void get_rL(dyn *b,		// root node
 		  real M,		// current mass estimate
-		  vec center,	// current center estimate
+		  vec center,		// current center estimate (relative)
 		  real& r_L1,
 		  real& r_L2)
 {
@@ -112,10 +117,15 @@ local void get_rL(dyn *b,		// root node
     // Construction of the external field functions is such that
     // it is just as easy to work directly with 3-D vectors...
 
+    // Note that on entry center is relative to the root node.
+
+    acc_CM = ext_acc(b, center);
+
+    center += b->get_pos();		// center now in absolute coordinates
     ext_center = b->get_external_center();
+
     R = abs(center - ext_center);
     Rhat = (center - ext_center)/(R*M);	// factor of M avoids passing M to g
-    acc_CM = ext_acc(b, center);
 
     r_L1 = solve(g1, b, sqrt(b->get_external_scale_sq()), R);
     r_L2 = solve(g2, b, R, 10*R);
@@ -134,7 +144,7 @@ local int bitcount(unsigned int i)
 #define M_TOL 1.e-4
 #define M_ITER_MAX 20
 
-void refine_cluster_mass2(dyn *b,
+void refine_cluster_mass2(dyn *b,		// root node
 			  int verbose)		// default = 0
 {
     unsigned int ext = b->get_external_field();
@@ -166,11 +176,18 @@ void refine_cluster_mass2(dyn *b,
 		== b->get_system_time())
 	return;
 
+    // Function may be called repeatedly for a series of systems.
+    // Make sure the root node is correctly set for this one.
+
+    b->set_root(b);
+    vec bpos = b->get_pos();
+
     // Use the standard center as our starting point.  The center will be
     // redetermined self-consistently, along with the mass.
 
     vec center, vcenter;
-    get_std_center(b, center, vcenter);
+    get_std_center(b, center, vcenter);			// std_center quantities
+							// include the root node
 
     // Choose the initial mass to include only the volume between the
     // standard center and the center of the external potential.
@@ -178,16 +195,20 @@ void refine_cluster_mass2(dyn *b,
     real M_inside = 0;
     R = abs(center - b->get_external_center());		// global R
 
-    center -= b->get_pos();			// std_center quantities
-    vcenter -= b->get_vel();			// include the root node
+    center -= bpos;					// remove the root from
+    vcenter -= b->get_vel();				// "center" quantities
 
     for_all_daughters(dyn, b, bb)
 	if (abs(bb->get_pos() - center) <= R)
 	    M_inside += bb->get_mass();
 
+    // Hmmm.  Note that the starting quantities for the loop are not
+    // determined in the same way as those calculated within the loop.
+    // -- Possible room for inconsistency?
+
     real M = -1;					// (to start the loop)
     int N_inside;
-    vec cen = center, vcen = vcenter;
+    vec cen = center, vcen = vcenter;			// relative to root
 
     if (verbose) {
 	cerr << endl << "  refine_cluster_mass2: getting mass by iteration"
@@ -205,14 +226,14 @@ void refine_cluster_mass2(dyn *b,
     // a convenient measure of the cluster center in this case.
 
     real M0 = M_inside;
-    vec cen50 = center, vcen50 = vcenter;
+    vec cen50 = center, vcen50 = vcenter;		// relative to root
     bool set50 = false;
 
     while (iter++ < M_ITER_MAX
 	   && M_inside > 0
 	   && abs(M_inside/M - 1) > M_TOL) {
 
-	// Set current mass and center:
+	// Set current mass and center (relative to root):
 
 	M = M_inside;
 	center = cen;
@@ -229,17 +250,17 @@ void refine_cluster_mass2(dyn *b,
 	// equipotential.
 
 	real r_L1, r_L2;
-	get_rL(b, M, center, r_L1, r_L2);
-
+	get_rL(b, M, center, r_L1, r_L2);		// NB relative center
+							// needed here
 	if (verbose > 1) {
 	    cerr << endl;
 	    PRC(R); PRC(r_L1); PRC(r_L2);
 	}
 
-	// Limiting potential:
+	// Limiting potential (ext pot takes absolute position):
 
-	real phi_L1 = ext_pot(b, ext_center + r_L1*Rhat) - M/(R-r_L1);
-	real phi_L2 = ext_pot(b, ext_center + r_L2*Rhat) - M/(r_L2-R);
+	real phi_L1 = ext_pot(b, ext_center + r_L1*Rhat - bpos) - M/(R-r_L1);
+	real phi_L2 = ext_pot(b, ext_center + r_L2*Rhat - bpos) - M/(r_L2-R);
 	// PRC(phi_L1); PRC(phi_L2);
 
 	phi_lim = Starlab::max(phi_L1, phi_L2);    // maximize the cluster mass
@@ -305,8 +326,8 @@ void refine_cluster_mass2(dyn *b,
 	    center = cen50;
 	    vcenter = vcen50;
 	} else {
-	    center = ext_center;
-	    vcenter = 0;
+	    center = ext_center - bpos;
+	    vcenter = -b->get_vel();		// so v = 0...
 	}
 
 	if (verbose) {
@@ -323,10 +344,11 @@ void refine_cluster_mass2(dyn *b,
     // Now center and vcenter should be usable, even if M_inside and
     // N_inside aren't very meaningful.
 
-    // Write our best estimate of the center to the dyn story.
+    // Convert the center to absolute coordinates (add root quantities)
+    // and write our best estimate to the dyn story.
 
-    vec bc_pos = b->get_pos()+center;
-    vec bc_vel = b->get_vel()+vcenter;
+    vec bc_pos = bpos + center;
+    vec bc_vel = b->get_vel() + vcenter;
 
     putrq(b->get_dyn_story(), "bound_center_time", (real)b->get_system_time());
     putvq(b->get_dyn_story(), "bound_center_pos", bc_pos);
@@ -337,8 +359,8 @@ void refine_cluster_mass2(dyn *b,
     // keep as is for now.
 
     set_friction_mass(M_inside);
-    set_friction_vel(b->get_vel()+vcenter);
-    set_friction_acc(b, abs(b->get_pos()+center));
+    set_friction_vel(bc_vel);
+    set_friction_acc(b, abs(bc_pos - b->get_external_center()));
 
     // Repeat the inner loop above and flag stars as escapers or not.
 
