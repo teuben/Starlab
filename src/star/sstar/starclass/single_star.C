@@ -1,7 +1,7 @@
 // 
 // single_star.C
 //
-#include <fstream.h>
+#include <fstream>
 #include "single_star.h"
 #include "proto_star.h"
 //#include "main_sequence.h"
@@ -161,12 +161,19 @@ void single_star::post_constructor() {
 	 refresh_memory();
 //    refresh_memory();
     
-    if (is_binary_component() && get_binary()->get_bin_type()==Detached)
-      get_binary()->set_first_contact(false);
+//    if (is_binary_component() && get_binary()->get_bin_type()==Detached)
+      if (is_binary_component()) {
+	 get_binary()->set_bin_type(Detached);
+	 get_binary()->set_first_contact(false);
+      }
 
-    if (is_binary_component())
-      get_binary()->dump("SeBa.data", true);
-    else 
+      // only dump if star is binary and NOT filling Roche lobe
+      //if (is_binary_component() && !get_spec_type(Rl_filling))
+      if (is_binary_component() && 
+	  get_binary()->roche_radius(this) > radius) {
+      	get_binary()->dump("SeBa.data", true);
+	}
+      //else 
 // (GN May 12 1999) skrews up output
 //    {
 //      dump("SeBa.data", true);

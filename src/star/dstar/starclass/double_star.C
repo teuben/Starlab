@@ -147,8 +147,9 @@ real double_star::roche_radius(star * str) {
     / str->get_companion()->get_total_mass();
   real q1_3 = pow(mr, cnsts.mathematics(one_third));
   real q2_3 = pow(q1_3, 2);                  //pow(mr, TWO_THIRD);
-  
-  return semi*0.49*q2_3/(0.6*q2_3 + log(1 + q1_3));
+
+  real Rl = semi*0.49*q2_3/(0.6*q2_3 + log(1 + q1_3));
+  return Rl;
 }
 
 real double_star::roche_radius(const real a, const real m1, const real m2) {
