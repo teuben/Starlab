@@ -48,8 +48,10 @@ if (-e configure) then
     # Perform the usual configuration process:
 
     echo Running configure
+    echo ./configure $Qt --prefix=$install_dir
     echo 						>>& $log
     echo Running configure				>>& $log
+    echo ./configure $Qt --prefix=$install_dir		>>& $log
     ./configure $Qt --prefix=$install_dir		>>& $log
 
     # Build the package.
