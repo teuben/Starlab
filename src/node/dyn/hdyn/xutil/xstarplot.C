@@ -1451,6 +1451,7 @@ void xstarplot(hdyn* b, float scale, int k, int d, float lmax,
 	       bool r_flag, bool f_flag, bool t_flag,
 	       int init_flag, int& step_mode, bool eod)
 {
+    b->set_system_time(getrq(b->get_dyn_story(), "time"));
     r_factor = scale;
 
     if (!eod && init_flag == 0) {
@@ -1787,8 +1788,8 @@ main(int argc, char** argv)
 
 		// Read in a new snapshot from stdin.
 
-		hdyn* bbb;
-		bbb = get_hdyn();
+		set_hdyn_check_timestep(false);
+		hdyn* bbb = get_hdyn();
 
 		if (bbb == NULL) {
 
@@ -1803,6 +1804,18 @@ main(int argc, char** argv)
 		    if (o_flag) cout << "End of data\n" << flush;
 
 		} else {
+
+		    // Save system time in the story (static, and hence will
+		    // be overwritten).
+
+		    story *s = bbb->get_dyn_story();
+		    putrq(s, "time", bbb->get_system_time());
+
+		    // Rest of xstarplot doesn't take root pos into account.
+		    // Offset the system to the root pos here.
+
+		    for_all_daughters(hdyn, bbb, b4)
+			b4->inc_pos(bbb->get_pos());
 
 		    // Place the new snapshot on the list.
 
