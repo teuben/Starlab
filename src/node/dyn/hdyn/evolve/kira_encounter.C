@@ -140,12 +140,13 @@ void check_print_close_encounter(hdyn *bi)
 	// multiple output in bound hierarchical systems).
 
 #if 0
-	PRC(nn);PRC(bi->is_leaf());PRC(bi->get_parent()->is_top_level_node());PRC(bi->get_kepler());
-PRC(bi->get_nn());PRC(nn->is_valid());PRC(nn->is_leaf());
-PRC(bi->is_top_level_node());PRC(nn->is_top_level_node());
-PRC(nn->get_parent()->is_top_level_node());PRC(nn->get_kepler());
-PRC(bi->get_d_nn_sq());
-PRL(bi->get_stellar_encounter_criterion_sq());
+	PRC(nn); PRC(bi->is_leaf());
+	PRC(bi->get_parent()->is_top_level_node()); PRC(bi->get_kepler());
+	PRC(bi->get_nn()); PRC(nn->is_valid()); PRC(nn->is_leaf());
+	PRC(bi->is_top_level_node()); PRC(nn->is_top_level_node());
+	PRC(nn->get_parent()->is_top_level_node()); PRC(nn->get_kepler());
+	PRC(bi->get_d_nn_sq());
+	PRL(bi->get_stellar_encounter_criterion_sq());
 #endif
 	if (nn && bi->is_leaf()
 	    && (bi->is_top_level_node()
