@@ -227,11 +227,12 @@ AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
 # But it doesn't, so just link to the csh version (which is consistent with
 # previous usage in any case.)
 
+echo linking starlab_start to starlab_start.$shell
+
 shell=csh
 
 cd $STARLAB_SOURCE_PATH
 ln -f -s starlab_start.$shell starlab_start
-echo linked starlab_start to starlab_start.$shell
 
 # Also from Steve, 09/03/04:  The newly created version of sremake doesn't
 # have execute permission.  To be fixed.  Following workaround doesn't
