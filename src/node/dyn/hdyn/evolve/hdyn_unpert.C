@@ -3422,6 +3422,23 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 	// PRL(verbose);
 
+#if 0
+	// Note from Steve (10/04): The new time step is just the perturbed
+	// time step at the moment the unperturbed motion started, in which
+	// case we are guaranteed to be in a consistent block, as we have
+	// taken an integran number of such steps during the unperturbed
+	// motion.  However, the separation now may be larger than the
+	// initial value, in which in case we could try to increase the
+	// time step, subject to the constraints that it
+	// 	(1) be less than the kepler step, and
+	//	(2) remain in a block consistent with the current time.
+	// The kepler step is computed exactly as in hdyn_ev.C.
+	// In practice, this does not seem to be a major issue...
+
+	real keplstep = kepler_step(this, timestep_correction_factor(this));
+	PRC(timestep); PRL(keplstep);
+#endif
+
 #ifdef CORRECT_TIDAL
 
 	// The following lengthy workarounds are fixes for unperturbed
@@ -3874,7 +3891,8 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			    && (diag->unpert_report_level > 1
 				|| diag->end_unpert_report_level > 1)) {
 
-			    pp3_minimal(get_top_level_node(), cerr);
+			    pp3(get_top_level_node(), cerr);
+//			    pp3_minimal(get_top_level_node(), cerr);
 
 			    // Attempt to estimate the work required to get
 			    // past this encounter.
@@ -4000,7 +4018,14 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	}
 
 	// Finish up the termination of unperturbed motion (cf hdyn
-	// constructor).
+	// constructor).  Save some key orbital elements for possible
+	// use at the end.
+
+	real binary_sep = kep->get_separation();
+	real binary_sma = kep->get_semi_major_axis();
+	real binary_ecc = kep->get_eccentricity();
+	real binary_peri = kep->get_periastron();
+	real binary_period = kep->get_period();
 
 	delete kep;
 	kep = NULL;
@@ -4038,6 +4063,119 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		get_binary_sister()->timestep = timestep;
 	    }
 	}
+
+	// Unperturbed motion is over.
+
+#if 1
+	// If the new perturbed time step is short, it may be desirable
+	// to try to identify a subsystem for special treatment (e.g. as
+	// an unperturbed or lightly perturbed multiple).  Check for that
+	// here.  May be better to do all this in the calling function,
+	// as the unperturbed motion is over in any case.  We can recheck
+	//for unperturbed motion once the special treatment is over.
+
+	real keplstep = kepler_step(this, timestep_correction_factor(this));
+
+	// keplstep is the natural time step for the binary.  It most
+	// likely exceeds timestep (step near periastron) by a substantial
+	// factor.  Estimate the time step at periastron.
+
+	// Want to pick up special cases after termination of fully
+	// unperturbed motion, not after periastron.
+
+	real peristep = keplstep*pow(binary_peri/binary_sep, 1.5);
+	real ttmp = time+100*peristep;
+
+	if (binary_type != NOT_APPROACHING
+	     && (peristep < 1.e-12 || ttmp-time == 0)) {
+
+	    int prec = cerr.precision(HIGH_PRECISION);
+	    cerr << endl << "short time step: "; PRL(time);
+	    cerr.precision(prec);
+	    PRC(timestep); PRC(keplstep); PRL(peristep);
+
+	    // Timestep is close to being insignificant.  The short timestep
+	    // (presumably) indicates that we have a very close perturbed
+	    // binary.  It is likely that all or part of the multiple system
+	    // in which the binary resides may reasonably be regarded as
+	    // unperturbed, providing a means of rapidly integrating the
+	    // interaction.
+
+	    // Use either the top-level perturber list (if it exists) or the
+	    // entire system as a means of estimating if any other particle
+	    // is too close to the clump.  For now, consider only the top-
+	    // level node of the binary whose unperturbed motion has just
+	    // ended.
+
+	    hdyn *top = get_top_level_node();
+	    PRL(top->format_label());
+	    hdyn **pertlist;
+	    int np;
+
+	    if (top->valid_perturbers) {
+		np = top->n_perturbers;
+		if (np > 0) {
+		    pertlist = new hdynptr[np];
+		    for (int i = 0; i < np; i++)
+			pertlist[i] = top->perturber_list[i];
+		}
+	    } else {
+		np = get_root()->n_daughters();
+		pertlist = new hdynptr[np];
+		np = 0;
+		for_all_daughters(hdyn, get_root(), bi)
+		    if (bi != this) pertlist[np++] = bi;
+	    }
+
+	    real gamma_top = 5.e-4;		// effective top-level gamma
+	    real gamma_top_inv_23 = pow(gamma_top, -0.666667);
+	    real pert_radius_factor
+		= define_perturbation_radius_factor(top, gamma_top_inv_23);
+	    PRL(pert_radius_factor);
+
+	    int count_pert = 0;
+	    real max_pert = 0;
+
+	    real top_mass = top->get_mass();
+	    vec top_pos = top->get_pos();	// pred_pos not necessary
+	    real scale = binary_scale(top);
+	    PRL(scale);
+
+	    for (int i = 0; i < np; i++) {
+		real r2 = square(top_pos - pertlist[i]->pos);
+		bool is_pert;
+		if (is_pert = is_perturber(top, pertlist[i]->mass,
+				 r2, pert_radius_factor))	  // (inlined)
+		    count_pert++;
+
+		// A rather roundabout way of getting the perturbation!
+
+		real rpert3 = crit_separation_cubed(top, pertlist[i]->mass,
+						    scale, gamma_top);
+		real pert = gamma_top * rpert3 / (r2*sqrt(r2));
+		if (pert > max_pert) max_pert = pert;
+
+		// PRC(r2); PRL(is_pert);
+		// PRC(rpert3); PRL(pert);
+	    }
+
+	    if (count_pert) {
+		PRC(count_pert); PRL(max_pert);
+		cerr << endl;
+	    } else {
+		cerr << "top-level node is unperturbed "
+		     << "-- candidate for special treatment." << endl;
+		PRL(max_pert); cerr << endl;
+
+		put_node(top, cerr);
+		cerr << endl;
+	    }
+
+	    if (np > 0) delete [] pertlist;
+	}
+
+#endif
+
     }
 
 #if 0

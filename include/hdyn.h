@@ -836,6 +836,7 @@ void expand_perturber_lists(hdyn * b,
 // ----- In hdyn_ev.C: -----
 
 real kepler_step(hdyn *b, real correction_factor = 1);
+real timestep_correction_factor(hdyn *b);
 
 void update_binary_sister(hdyn* bi);
 

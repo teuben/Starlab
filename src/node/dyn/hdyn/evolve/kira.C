@@ -1442,9 +1442,11 @@ local void evolve_system(hdyn * b,		// hdyn array
 		&& fmod(count, kd->n_check_heartbeat) == 0)) {
 	    PRC(count), PRC(t), PRC(t-t_prev), PRL(cpu_time());
 	    for (int i = 0; i < n_next && i < 5; i++)
-		if (next_nodes[i] && next_nodes[i]->is_valid())
+		if (next_nodes[i] && next_nodes[i]->is_valid()) {
 		    cerr << i << " " << next_nodes[i]->format_label()
 			 << " " << next_nodes[i]->get_timestep() << endl;
+		    pp3_minimal(next_nodes[i]);
+		}
 	    if (fmod(count, 4*kd->n_check_heartbeat) == 0)
 		print_recalculated_energies(b);
 	}

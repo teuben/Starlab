@@ -498,6 +498,21 @@ local inline real new_timestep(hdyn *b,			// this node
 	newstep = altstep = kepler_step(b, correction_factor);
 
 	if (newstep == 0) keplstep = false;
+
+
+
+#if 0
+if (newstep < 1.e-11) { // && name_is(b, "14")) {
+    PRL(11111);
+    PRL(b->format_label());
+    PRL(newstep);
+    PRL(correction_factor);
+    PRL(abs(b->get_pos()));
+}
+#endif
+
+
+
     }
 
     real a2, j2, k2, l2;
@@ -726,6 +741,48 @@ local inline real new_timestep(hdyn *b,			// this node
 	else
 	    return timestep;
     }
+}
+
+real timestep_correction_factor(hdyn *b)
+{
+    // Compute a correction factor to reduce the timestep
+    // in a close binary, in order to improve energy errors.
+
+    real m = b->get_mass()/b->get_mbar();
+    real pot_sq = m*m*b->get_d_min_sq()/square(b->get_pos());
+
+    // Steve 8/98:  1. 0.125 here is conservative -- expect *cumulative*
+    //			   energy error to be ~fourth order.
+    //		    2. Could rewrite to replace pow() if necessary...
+    //			   *** see kira_approx.C ***
+
+    // Hmmm...  This pow() seems to fall victim to the strange math.h
+    // bug in Red Hat Linux 5.  In that case, use Steve's approximate
+    // version instead.
+
+    real correction_factor = 1;
+
+    // correction_factor = pow(pot_sq, -0.1);
+
+    if (pot_sq > 1)
+	// correction_factor = pow(pot_sq, -0.125);
+	correction_factor = pow_approx(pot_sq);	// -0.125 is built in!
+
+    // correction_factor = pow(square(b->get_pos())/b->get_d_min_sq(), 0.025);
+
+    // May be desirable to place limits on the correction...
+
+    if (correction_factor > 1.0) correction_factor = 1.0;
+    if (correction_factor < 0.2) correction_factor = 0.2;
+
+#if 0
+    if (b->get_perturbation_squared() < 0.0001 && pot_sq > 1
+	&& timestep < 1.e-11) {
+	PRC(b->format_label()); PRL(correction_factor);
+    }
+#endif
+
+    return correction_factor;
 }
 
 //-----------------------------------------------------------------------------

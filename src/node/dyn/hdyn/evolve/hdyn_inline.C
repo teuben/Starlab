@@ -272,7 +272,7 @@ local inline real perturber_rescale(hdyn *b, real fac)
 
 // is_perturber: check the perturbation criterion.
 
-local inline bool is_perturber(hdyn *b,			     // 'this' node
+local inline bool is_perturber(hdyn *b,			     // 'this' CM node
 			       real m_pert,		     // perturber mass
 			       real distance_squared,
 			       real perturbation_radius_factor)
@@ -318,10 +318,11 @@ local inline real crit_separation_cubed(hdyn *b,	// binary CM node
 					real gamma)	// perturbation
 {
     real m_bin = b->get_mass();
-    real d_min_sq = b->get_d_min_sq();
     int  perturber_criterion = b->get_kira_options()->perturber_criterion;
 
-    real d2 = Starlab::min(d_min_sq, r_bin * r_bin);
+    // real d_min_sq = b->get_d_min_sq();
+    // real d2 = Starlab::min(d_min_sq, r_bin * r_bin);
+    real d2 = r_bin * r_bin;
     real d3 = d2 * sqrt(d2) / gamma;
 
     if (perturber_criterion == 0
