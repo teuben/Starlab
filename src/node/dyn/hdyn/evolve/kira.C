@@ -936,6 +936,50 @@ local int integrate_list(hdyn * b,
 			if (top_level && !pert)
 			    parent->add_to_perturbed_list(1);
 
+			//--------------------------------------------------
+			//
+			// New (Steve, 9/03): the end of unperturbed motion
+			// may have caused the parent or the parent nn node
+			// to have been synchronized out of order.  Check
+			// for and correct this, if necessary.  Correction
+			// entails recomputing the scheduling list...
+			//
+			// Indicator: par and pnn are up to date, but one
+			// or both aren't on the integration list.
+
+			if (!pert) {
+
+			    hdyn *par = bi->get_parent(), *pnn = par->get_nn();
+
+			    if (par && pnn
+				&& par->get_time() == sys_t
+				&& pnn->get_time() == sys_t) {
+
+				// Parent and pnn are both up to date.
+				// See if they were on the scheduler list.
+
+				bool par_sched = false, pnn_sched = false;
+
+				for (int ii = 0; ii < n_next; ii++) {
+				    hdyn *bii = next_nodes[ii];
+				    if (bii && bii->is_valid()) {
+					if (bii == par) par_sched = true;
+					if (bii == pnn) pnn_sched = true;
+				    }
+				}
+
+				if (!par_sched || !pnn_sched) {
+				    tree_changed = true;	// force a new
+								// timestep list
+
+				    cerr << "kira: recomputing scheduling list "
+					 << "at time " << sys_t << endl;
+				}
+			    }
+			}
+
+			//--------------------------------------------------
+
 		    } else {
 
 			// Seem to have had a merger.  Remove binary from
