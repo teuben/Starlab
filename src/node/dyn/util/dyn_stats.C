@@ -268,7 +268,7 @@ real print_structure_recursive(dyn* bi,
 			       vec center,		// default = (0,0,0)
 			       bool verbose,		// default = true
 			       bool long_binary_output,	// default = true
-			       int indent)		// default = 0
+			       int indent)		// default = 2
 {
     // Simpler interface onto print_structure_recursive()
 

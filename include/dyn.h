@@ -538,7 +538,7 @@ real print_structure_recursive(dyn* b,
 			       vec center = vec(0,0,0),
 			       bool verbose = true,
 			       bool long_output = true,
-			       int indent = 0);
+			       int indent = 2);
 
 void compute_core_parameters(dyn*, int, bool, vec&, real&, int&, real&);
 
