@@ -27,7 +27,9 @@ endif
 
 echo Package prefix flag is \"$pre\"
 
-# Build the autotools (isn't standardization wonderful?):
+# (Re)build the autotools (isn't standardization wonderful?):
+
+./clean-autotools
 
 foreach tool (autoconf automake libtool)
 
