@@ -39,6 +39,8 @@ local void mkblack_hole(dyn* b, real m_bh) {
     else 
 	err_exit("mkblack_hole: central star not found");
 
+    putiq(bh->get_log_story(), "black_hole", 1);
+
     real m_sum = 0;
     for_all_leaves(dyn, b, bi) {
 	m_sum += bi->get_mass();
@@ -46,8 +48,10 @@ local void mkblack_hole(dyn* b, real m_bh) {
 
     b->set_mass(m_sum);
 
-
-    putiq(bh->get_log_story(), "black_hole", 1);
+    sprintf(tmp_string,
+	    "         black hole added, total mass = %8.2f", m_sum); 
+    b->log_comment(tmp_string);
+    cerr << "Black hole mass is " << m_bh << endl;
 }
 
 void main(int argc, char ** argv) {
@@ -74,6 +78,21 @@ void main(int argc, char ** argv) {
     b->log_history(argc, argv);
 
     mkblack_hole(b, m_bh);
+
+    real initial_mass = getrq(b->get_dyn_story(), "initial_mass");
+
+    if (initial_mass > -VERY_LARGE_NUMBER)
+        putrq(b->get_dyn_story(), "initial_mass", b->get_mass());
+
+    real m_sum = b->get_mass();
+    real old_mtot = b->get_starbase()->conv_m_dyn_to_star(1);
+    if(old_mtot!=m_sum) {
+	real old_r_vir= b->get_starbase()->conv_r_star_to_dyn(1);
+	real old_t_vir= b->get_starbase()->conv_t_star_to_dyn(1);
+	b->get_starbase()->set_stellar_evolution_scaling(m_sum,
+							 old_r_vir,
+							 old_t_vir);
+    }
 
     put_dyn(cout, *b);
     rmtree(b);

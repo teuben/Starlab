@@ -343,6 +343,23 @@ main(int argc, char ** argv)
 	addstar(b, T_start, type, false);
     }
 
+#if 0
+    real m_sum = 0;
+    for_all_daughters(node, b, bi) {
+      m_sum += bi->get_mass();
+    }
+    b->set_mass(m_sum);
+    
+    real old_mtot = b->get_starbase()->conv_m_dyn_to_star(1);
+    if(old_mtot!=m_sum) {
+      real old_r_vir= b->get_starbase()->conv_r_star_to_dyn(1);
+      real old_t_vir= b->get_starbase()->conv_t_star_to_dyn(1);
+      b->get_starbase()->set_stellar_evolution_scaling(m_sum,
+						       old_r_vir,
+						       old_t_vir);
+    }
+#endif
+
     put_node(cout, *b);	
     delete b;
 }
