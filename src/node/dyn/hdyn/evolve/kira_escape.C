@@ -17,9 +17,9 @@
 #include "hdyn.h"
 #include <star/dstar_to_kira.h>
 
-local bool remove_escapers(hdyn* b,
-			   real rmax,
-			   vec center_pos,
+local bool remove_escapers(hdyn* b,		// root node
+			   real rmax,		// maximum allowed distance
+			   vec center_pos,	// relative to root
 			   vec center_vel)
 {
     bool correct_dynamics = false;
@@ -31,7 +31,7 @@ local bool remove_escapers(hdyn* b,
 	    n_esc++;
 
     if (n_esc <= 0) {
-	cerr << "\n  No escapers\n";
+	cerr << endl << "  No escapers" << endl;
 	return false;
     }
 
@@ -95,6 +95,11 @@ local bool remove_escapers(hdyn* b,
     // to correct here.
 
     // b->to_com();
+
+    // However, the root node is now always at the center of mass of the
+    // particles in the system, so correct the particles and root here.
+
+    b->reset_com();
 
     // Correct all perturber lists.
 
