@@ -91,17 +91,20 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
 
     xreal sys_t = next_nodes[0]->get_system_time();
 
-    for (int i = 0; i < n_next; i++) {
+    if (time > sys_t) {
 
-	hdyn *bi = next_nodes[i];
+	for (int i = 0; i < n_next; i++) {
 
-	// Predict the entire clump containing node bi (Steve, 8/98):
+	    hdyn *bi = next_nodes[i];
 
-	predict_loworder_all(bi->get_top_level_node(), sys_t);
+	    // Predict the entire clump containing node bi (Steve, 8/98):
 
-	if (bi->is_top_level_node()) {
-	    bi->clear_interaction();
-	    bi->top_level_node_prologue_for_force_calculation(exact);
+	    predict_loworder_all(bi->get_top_level_node(), sys_t);
+
+	    if (bi->is_top_level_node()) {
+		bi->clear_interaction();
+		bi->top_level_node_prologue_for_force_calculation(exact);
+	    }
 	}
     }
 
@@ -300,6 +303,28 @@ void calculate_acc_and_jerk_on_all_top_level_nodes(hdyn * b)
     delete [] list;
 }
 
+void calculate_acc_and_jerk_on_top_level_binaries(hdyn * b)
+{
+    int n_top = b->n_daughters();
+    hdynptr * list = new hdynptr[n_top];
+
+    int i_top = 0;
+    for_all_daughters(hdyn, b, bb)
+	if (bb->is_parent()) list[i_top++] = bb;
+
+    bool reset_force_correction = true; 	// (no longer used)
+    bool restart_grape = true;
+
+    calculate_acc_and_jerk_for_list(b, list, i_top,
+				    b->get_system_time(),
+				    false,	// usually what we want...
+				    true,
+				    reset_force_correction, // no longer used
+				    restart_grape);
+
+    delete [] list;
+}
+
 
 
 // initialize_system_phase2:  Calculate acc, jerk, timestep, etc for all nodes.
@@ -318,9 +343,11 @@ void clean_up_kira_ev() {if (nodes) delete [] nodes;}
 
 void initialize_system_phase2(hdyn * b,
 			      int call_id,	// default = 0
-			      bool set_dt)	// default = true
+			      int set_dt)	// 0 ==> set only if zero
+						// 1 ==> set with limit (def)
+						// 2 ==> always set
 {
-//    cerr << "initialize_system_phase2: "; PRL(call_id);
+//    cerr << "initialize_system_phase2: "; PRC(call_id), PRL(set_dt);
 
     dbg_message("initialize_system_phase2", b);
 
@@ -356,7 +383,6 @@ void initialize_system_phase2(hdyn * b,
 	    cerr.precision(p);
 
 	    b2->update_kepler_from_hdyn();
-
 	}
     }
 
@@ -389,9 +415,15 @@ void initialize_system_phase2(hdyn * b,
 
     for_all_nodes(hdyn, b, b4) {
 	if ((b4 != b) && (!b4->get_kepler())) {
+
 	    b4->store_old_force();
+
 	    if (set_dt || (b4->get_time() <= 0 || b4->get_timestep() <= 0) ) {
+
+		real dtlim = b4->get_timestep()/2;
 		b4->set_first_timestep();
+		if (set_dt == 1 && b4->get_timestep() < dtlim)
+		    b4->set_timestep(dtlim);
 
 		if (b4->get_time() + b4->get_timestep()
 		    < b->get_system_time()) {
