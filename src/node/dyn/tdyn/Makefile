@@ -19,7 +19,7 @@ OBJECT_FILES = tdyn_io.o tdyn_tt.o worldline.o worldline2.o
 LIBRARY = libtdyn.a
 
 EXECUTABLES = tdyn_io test_tdyn worldline worldlines xstarplot2 xstarplot22 \
-	      dump_worldlines readbundle scanbundle
+	      dump_worldlines readbundle scanbundle scanbinary
 
 NON_CCC_EXECUTABLES = 
 
@@ -28,8 +28,8 @@ DEPEND_LIBS	= $(LIB)/libtdyn.a $(LIB)/libdyn.a $(LIB)/libnode.a \
 
 CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC) $(STARLAB_GFX_CFLAGS)
 
-#-g -DNEW_INTERP
-# -g -pg
+# -g -DNEW_INTERP
+# -pg
 
 CPPFLAGS = 
 
