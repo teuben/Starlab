@@ -291,17 +291,66 @@ istream & tdyn::scan_dyn_story(istream & s)
 		}
 		goto other;
 	    
-	    case 'c':
+	    case 'b':
 
-		// Center tracking (root node only):
+		// Alternate center tracking (root node only).  Save all
+		// "center" quantities as stories for possible future use.
 
 		if (reading_root) {
-		    if (!strcmp("center_pos", keyword)) {
-			set_vector_from_input_line(pos, input_line);
+
+		    vector tmp;
+
+		    if (!strcmp("bound_center_pos", keyword)) {
+			set_vector_from_input_line(tmp, input_line);
+
+			// Create a dyn story if none exists...
+
+			if (!dyn_story)
+			    dyn_story = mk_story_chapter(DYNAMICS_ID);
+
+			putvq(dyn_story, "bound_center_pos", tmp);
 			break;
 		    }
+
+		    if (!strcmp("bound_center_vel", keyword)) {
+			set_vector_from_input_line(tmp, input_line);
+
+			if (!dyn_story)
+			    dyn_story = mk_story_chapter(DYNAMICS_ID);
+
+			putvq(dyn_story, "bound_center_vel", tmp);
+			break;
+		    }
+		}
+		goto other;
+
+	    case 'c':
+
+		// Center tracking (root node only).  We will save any
+		// "center" quantities to the root node pos and vel, and
+		// save all such quantities as stories too.
+
+		if (reading_root) {
+
+		    if (!strcmp("center_pos", keyword)) {
+			set_vector_from_input_line(pos, input_line);
+
+			// Create a dyn story if none exists...
+
+			if (!dyn_story)
+			    dyn_story = mk_story_chapter(DYNAMICS_ID);
+
+			putvq(dyn_story, "center_pos", pos);
+			break;
+		    }
+
 		    if (!strcmp("center_vel", keyword)) {
 			set_vector_from_input_line(vel, input_line);
+
+			if (!dyn_story)
+			    dyn_story = mk_story_chapter(DYNAMICS_ID);
+
+			putvq(dyn_story, "center_vel", vel);
 			break;
 		    }
 		}
@@ -317,6 +366,21 @@ istream & tdyn::scan_dyn_story(istream & s)
 		}
 		goto other;
 
+	    case 'e':
+
+		// Cluster escaper flag:
+
+		if(!strcmp("esc", keyword)) {
+
+		    // Use the prev pointer for temporary storage.
+		    // Note: NULL means that esc is false.  Careful!!
+
+		    int esc = strtol(val, NULL, 10);
+		    if (esc == 1) prev = (tdyn*) 42;
+		    break;
+		}
+		goto other;
+	    
 	    case 'j':
 
 		// Jerk:
@@ -355,6 +419,18 @@ istream & tdyn::scan_dyn_story(istream & s)
 
 		if(!strcmp("m", keyword)) {
 		    mass = strtod(val, NULL);
+		    break;
+		}
+
+		// Cluster member flag:
+
+		if(!strcmp("mem", keyword)) {
+
+		    // Use the prev pointer for temporary storage.
+		    // Note: NULL means that mem is true.  Careful!!
+
+		    int mem = strtol(val, NULL, 10);
+		    if (mem != 1) prev = (tdyn*) 42;
 		    break;
 		}
 		goto other;
