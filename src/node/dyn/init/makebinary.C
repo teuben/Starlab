@@ -20,7 +20,8 @@
 ////                              2    angular momentum, detached binary
 ////                      -f 2:        [in Rsun]
 ////                              1    semi-major axis 
-////                              2    semi-major axis, detached
+////                              2    semi-major axis, detached and hard
+////                                   note: -u gives an upper limit on sma
 ////                              3    -l ==> peri, -u ==> apo, and detached
 ////                      -f 3:        [in N-body units]
 ////                              1    |binary energy|
@@ -238,8 +239,12 @@ local void mkbinary(dyn* b, real lower, real upper,
 		    real a_min = minimum_semi_major_axis(primary, secondary);
 		    a_min = b->get_starbase()->conv_r_star_to_dyn(a_min);
 
-		    if(upper<=a_min) {
-		      PRC(upper);PRL(a_min);
+		    //binding energy = 0.5 * m_total / sma;
+		    real a_max = 0.5 * m_total;
+		    a_max = max(a_max, upper);
+
+		    if(a_max<=a_min) {
+		      PRC(a_max);PRL(a_min);
 		      err_exit("mkbinary: Illegal limits on semi major axis");
 		    }
 		    a_min = max(lower, a_min);
@@ -249,8 +254,8 @@ local void mkbinary(dyn* b, real lower, real upper,
 			do {
 			    ecc = sqrt(randinter(0, emax));
 			    pericenter = a_min*(1-ecc);
-			    apocenter = upper*(1+ecc);
-			    a_const = log(upper) - log(a_min);
+			    apocenter = a_max*(1+ecc);
+			    a_const = log(a_max) - log(a_min);
 			    semi_major_axis = a_min
 			                    * exp(randinter(0., a_const));
 			    if (semi_major_axis*(1-ecc) > a_min  &&
@@ -264,7 +269,7 @@ local void mkbinary(dyn* b, real lower, real upper,
 
 			do {
 			    ecc = sqrt(randinter(0, emax));
-			    a_const = log(upper) - log(a_min);
+			    a_const = log(a_max) - log(a_min);
 			    semi_major_axis = a_min
 			                    * exp(randinter(0., a_const));
 			    // if(semi_major_axis*(1-ecc)>a_min)
@@ -365,7 +370,7 @@ void main(int argc, char ** argv)
 		      exit(1);
 	}
 
-    if (lower < 0 || upper <= 0 || lower > upper)
+    if (lower < 0 || upper < 0 || lower > upper)
 	err_exit("mkbinary: Illegal limits");
 
     dyn* b;
