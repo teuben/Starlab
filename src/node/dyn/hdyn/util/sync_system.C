@@ -9,15 +9,14 @@
 //=======================================================//              /|\ ~
 
 //// sync_system:  Synchronize system to the system time.
-////               This rather dumb function postulates that the times 
-////               of all nodes are forced to be equals the system time.
-////               It solves the non-restartability ofter having run with
-////               slow KS (-K option in kira).
+////               This rather dumb function forces the times of all nodes
+////               to the system time.
+////               It solves the problem of non-restartability ffter having
+////               run with slow KS (-K option in kira).
 ////               The problem with this solution is that it randomly shifts
 ////               the orbital phase of KS binaries.
-////               On the other hand, it allows to restarts kira.
+////               On the other hand, it allows us to restarts kira.
 ////               It is recommended to use this function sparsely.
-////
 
 //   version 1:  March 2002   Simon Portegies Zwart
 
@@ -27,15 +26,30 @@
 
 void sync_system(hdyn *b, xreal time) {
 
+    real dtmax = 1;
+    real ttime = (real)time;
+    b->set_system_time(ttime);
+
+    PRC(dtmax);PRC(ttime);PRL(b->get_system_time());
+    cerr << "checking timestep consistency...";
+    while(fmod(ttime, dtmax) != 0) {
+	dtmax /= 2;
+	PRC(dtmax);
+	if(dtmax<VERY_SMALL_NUMBER) 
+	    err_exit("sync_system: timestep too small");
+    }
+    cerr << "OK,  "; PRL(dtmax);
+
     xreal ct;
     for_all_nodes(hdyn, b, bb) {
-      ct = bb->get_time();
-      if(ct != time) {
-	cerr << "Time of particle " << bb->get_name() 
-	     << " ("<<ct<<" != "<< time <<")"
-	     << " system time." << endl;
-	bb->set_time(time);
-      }
+	ct = bb->get_time();
+	if(ct != time) {
+	    cerr << "Time of particle " << bb->format_label()
+		 << " not equal to system time (" << ct << " != "
+		 << time << ")" << endl;
+	    bb->set_time(time);
+	    bb->set_timestep(Starlab::min(bb->get_timestep(), dtmax));
+	}
     }
 }
 
@@ -66,7 +80,7 @@ main(int argc, char ** argv)
 
     hdyn *b;
 
-    while (b = get_hdyn()) {
+    while (b = get_hdyn(cin)) {
 
         if (c_flag == TRUE)
             b->log_comment(comment);
@@ -74,11 +88,10 @@ main(int argc, char ** argv)
 
 	time = b->get_system_time();
 
-	cerr << "Synchronize system to t = " << time << endl;
-
+	cerr << "Synchronizing system to time " << time << endl;
 	sync_system(b, time);
 
-	put_hdyn(b);	
+	put_hdyn(b);
 	rmtree(b);
     }
 }
