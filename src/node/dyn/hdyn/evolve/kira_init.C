@@ -784,7 +784,7 @@ bool kira_initialize(int argc, char** argv,
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"*:a:b.Bc:C:d:D:e:E:f:g:G:h:I:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvxX:y:z:Z:";
+"*:a:b.Bc:C:d:D:e:E:f:F:g:G:h:I:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvxX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
