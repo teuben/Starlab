@@ -2003,7 +2003,9 @@ local INLINE int get_force_and_neighbors(xreal xtime,
     }
 #endif
 
-    cerr << "returning "; PRL(error);
+    if (error) {
+	cerr << "returning "; PRL(error);
+    }
     return error;
 }
 
