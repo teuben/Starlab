@@ -60,10 +60,11 @@ istream & pdyn::scan_star_story(istream & s, int level)
     return s;
 }
 
-bool tdyn::check_and_correct_node(bool verbose)		// default = true
+bool tdyn::check_and_correct_node(bool verbose)		// default = false
 {
-    return node::check_and_correct_node(verbose);	// undo inherited dyn,
-							// revert to node
+    // Undo inherited dyn version; revert to node (just check masses).
+
+    return node::check_and_correct_node(verbose);
 }
 
 istream & pdyn::scan_dyn_story(istream & s)

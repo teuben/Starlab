@@ -9,6 +9,7 @@
 //=======================================================//              /|\ ~
 
 //// worldline2:  New functions to manage and manipulate 4-D trees
+////              NEW interpolation functions.
 ////
 ////              First argument is input data file.
 ////              No options.

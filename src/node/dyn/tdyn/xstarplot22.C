@@ -1,5 +1,6 @@
 
 //// xstarplot2:  plot an N-body system in an X environment.
+////              This version uses the NEW interpolation routines.
 ////
 //// Options:    -a    specify viewing axis [1/2/3 = x/y/z]
 ////             -b    allow backward steps [no]

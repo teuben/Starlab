@@ -15,8 +15,10 @@ main(int argc, char *argv[])
     if (argc <= 1) exit(1);
 
     unique_id_t id = unique_id(argv[1]);
+
     cerr.precision(HIGH_PRECISION);
     cerr << "unique id of \"" << argv[1] << "\" is " << id << endl;
+
     PRC((id>>20)); PRL(id-((id>>20)<<20));
     PRL(id_n_clump(id));
 }

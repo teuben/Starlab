@@ -8,24 +8,26 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// worldlines: returns n worldlines from worldbundles 
+////    worldlines:  Create output snapshots from input worldbundles.
+////                 Produce a snapshot or diagnostic starting at time t,
+////                 optionally with time step dt.
 ////
-////    options:
-////          -B starting  worldbundle [0]
-////          -b ending worldbundle [all]
-////          -d output timestep [-6]
-////             (Use negative integer for power of 1/2^[-d])
-////          -t output worldline at time t [not specified]
+////    options:     -d    output interval (negative integer ==> 2^[-d])   [0]
+////                 -D    diagnostic: no snapshsot                       [no]
+////                 -F    specify input file                          [stdin]
+////                       *** file input is much faster (why?) ***
+////                 -t    initial output time                 [start of data]
+////                 -v    verbosity level                                 [1]
 ////
-////     input: worldbundle output file from kira
+////    Snapshots are generated as soon as the data are available
+////    -- i.e. we don't read in the entire dataset first.
+////    Only one snapshot is produced if the time step is 0 (default).
 ////
-////    output: worldlines of selected worldbundles 
+////    Note: Output is in pdyn format, which currently cannot be used
+////    directly as input to kira.
 ////
-////    Problem: The output worldline can presently not be used
-///              as an input for kira...
-////
-////    SPZ at MIT in Dec 2000
-////
+////    Created by  SPZ at MIT in Dec 2000
+////    Modified by SLWM at DU in Dec 2003
 //
 //----------------------------------------------------------------------
 
@@ -33,17 +35,43 @@
 
 #ifdef TOOLBOX
 
-local void create_and_print_interpolated_tree(ostream & s, 
-					      worldbundle *wb,
-					      real t_world, 
-					      bool vel = true,
-					      bool brief = false) {
+worldbundle *get_next_worldbundle(bool file, char *filename, int verbose)
+{
+    static int nh = 0;
+    static ifstream *s = NULL;
+    worldbundle *wb;
 
-    dyn* b = create_interpolated_tree(wb, t_world, vel);
-    if (b) {
-	put_dyn(b, s, brief);
-	rmtree(b);
+    if (file) {
+	if (!s) {
+	    s = new ifstream(filename);
+	    if (!s) {
+		cerr << "Data file " << filename << " not found." << endl;
+		exit(1);
+	    }
+	}
+	wb = read_bundle(*s, verbose>2);
+
+    } else
+	wb = read_bundle(cin, verbose>2);
+
+    nh++;
+
+    if (verbose > 1) {
+
+	// Brief info on the new worldline.
+
+	real t = wb->get_t_min();
+	int nw = wb->get_nw(), ns = count_segments(wb),
+	ne = count_events(wb);
+	cerr << "worldbundle " << nh << ": "
+	     << nw << " worldlines, "
+	     << ns << " segments, "
+	     << ne << " events, t = "
+	     << wb->get_t_min() << " to " << wb->get_t_max()
+	     << endl;
     }
+
+    return wb;
 }
 
 local void convert_relative_to_absolute(dyn* b)
@@ -52,117 +80,86 @@ local void convert_relative_to_absolute(dyn* b)
     for_all_daughters(dyn, b, bb) convert_relative_to_absolute(bb);
 }
 
-main(int argc, char *argv[]) {
-
-    bool c_flag = false;
-
-    real dt = 0.015625;	  // powers of 2 are preferred, but not essential  
-    int b_start = 0;      // starting bundle
-    int b_end   = 32767;  // all files in the worldbundle
+main(int argc, char *argv[])
+{
     bool t_flag = false;
-    real t_world;         // output worldline at time = t
+    real t;			// first output time
+
+    real dt = 0;
+
+    bool file = false;
+    char infile[128];
+
+    bool diag = false;
+    int verbose = 1;
 
     extern char *poptarg;
-    char *comment;
     int c;
-    char* param_string = "B:b:d:f:t:c:";
+    char* param_string = "d:DF:t:v:";
   
     check_help();
   
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
       
-	    case 'B': b_start = atoi(poptarg);
-		      break;
-	    case 'b': b_end = atoi(poptarg);
-		      break;
 	    case 'd': dt = atof(poptarg);
 	    	      if (dt < 0) dt = pow(2.0, dt);
 		      break;
+	    case 'D': diag = true;
+	    	      break;
+	    case 'F': file = true;
+	    	      strcpy(infile, poptarg);
+	    	      break;
 	    case 't': t_flag = true;
-		      t_world = atof(poptarg);
+		      t = atof(poptarg);
 		      break;
-	    case 'c': c_flag = TRUE;
-		      comment = poptarg;
+	    case 'v': verbose = atoi(poptarg);
 		      break;
 	    case '?': params_to_usage(cerr, argv[0], param_string);
 	    	      get_help();
 		      exit(1);
 	}
 
-    if (t_flag) {
-	b_start = 0;     
-	b_end   = 32767; 
-    }
-    else if (b_end <= b_start)
-	err_exit("begin worldbunlde <= end worldbundle");
+    // Verbosity levels:	0	no output
+    //				1	print time when writing snapshot
+    //				2	1+brief info on worldlines
+    //				3	1+long info on worldlines
 
-  
-    real time, t_min, t_max;
-    dyn *b;
-    worldbundle *wb;
-    int itot=0, iw=0;
-    if(b_start>0) {
-	for (int i=0; i<b_start; i++)  {
-      	    cerr << "Skip worldbundle " << i << endl;
-	    if (!(wb = read_bundle(cin)))
-		err_exit("Not that many worldbundles");
-	}
+
+    worldbundle *wb = get_next_worldbundle(file, infile, verbose);
+    if (!wb) {
+	cerr << "No data!" << endl;
+	exit(0);
     }
 
-    int ib = b_start;
-    while (ib < b_end  && (wb = read_bundle(cin))) {
+    if (!t_flag) t = wb->get_t_min();
 
-	time = wb->get_t_min();
-	t_max = wb->get_t_max();
+    while (1) {
+	if (t >= wb->get_t_min() && t <= wb->get_t_max()) {
 
-	ib++;
-	cerr << "Time= " << time << " N_bundle= " << ib << endl; 
+	    pdyn *b = create_interpolated_tree2(wb, t, true);
 
-	if (t_flag) {
-
-	    if (t_world>=time && t_world<=t_max) {
-		cerr << "Time= " << t_world
-		     << " N (b, w, tot)= " << ib << " "
-		     << iw <<" " << itot << endl;
-
-		create_and_print_interpolated_tree(cout, wb, t_world);
-
-		delete wb;
-		exit(1);
-	    }
-
-	} else {
-
-	    iw = 0;
-	    do {
-	
-		itot++;
-		iw++;
-		create_and_print_interpolated_tree(cout, wb, time);
-		cerr << "Time= " << time
-		     << " N (b, w, tot)= " << ib << " " << iw
-		     <<" " << itot << endl; 
-#if 0
-		create_and_print_interpolated_tree(cout, wb, t_world);
-		b = create_interpolated_tree(wb, time, true);
-		// b = create_interpolated_tree(wb, time);
-		if (b) {
-		    // convert_relative_to_absolute(b);
-		    cerr << "Time= " << time 
-		 	 << " N (b, w, tot)= " << ib << " " << iw
-			 <<" " << itot << endl; 
-		    put_dyn(b, cout, false);
-		    rmtree(b);
+	    if (b) {
+		if (diag) {
+		    vec com_pos, com_vel;
+		    compute_com(b, com_pos, com_vel);
+		    PRC(t); PRL(com_pos);
+		    PRL(b->get_pos());
+		} else {
+		    if (verbose) {
+			cerr << "Writing snapshot at "; PRL(t);
+		    }
+		    put_pdyn(b);
 		}
-#endif	
-		time += dt;
 	    }
-	    while(time<=t_max);
-	}
 
-	delete wb;
-    };
+	    if (dt == 0) break;
+	    t += dt;
+
+	} else
+	    if (!(wb = get_next_worldbundle(file, infile, verbose)))
+		break;
+    }
 }
 
 #endif

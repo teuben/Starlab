@@ -13,6 +13,8 @@
 ////             Defines worldbundle, worldline, and segment
 ////             classes and member functions.
 ////
+////             OLD interpolation scheme.
+////
 ////             First argument is input data file.
 ////             No options.
 //
@@ -946,6 +948,54 @@ int count_events(worldbundle *wb)
 	}
     }
     return ne;
+}
+
+void read_bundles(istream &s,
+		  worldbundleptr wh[], int& nh,
+		  int verbose)				     // default = 0
+{
+    // Read a collection of worldlines and optionally provide
+    // statistics on them.
+
+    int nhmax = nh;
+    int nwtot = 0, nstot = 0, netot = 0;
+    worldbundleptr wb;
+
+    nh = 0;
+
+    while (nh < nhmax && (wb = read_bundle(s, (verbose > 1)))) {
+
+	wh[nh++] = wb;
+
+	// Could print out all the stats at the end, but probably better
+	// to give some basic info after each successful read.
+
+	if (verbose) {
+	    real t = wb->get_t_min();
+	    int nw = wb->get_nw(), ns = count_segments(wb),
+	        ne = count_events(wb);
+	    cerr << "worldbundle " << nh << ": "
+		 << nw << " worldlines, "
+		 << ns << " segments, "
+		 << ne << " events, t = "
+		 << wb->get_t_min() << " to " << wb->get_t_max()
+		 << endl;
+	    nwtot += nw;
+	    nstot += ns;
+	    netot += ne;
+	}
+	
+    }
+
+    if (verbose) {
+	cerr << endl << "read " << nh << " worldbundle";
+	if (nh != 1) cerr << "s";
+	cerr << ":  ";
+	cerr << nwtot << " worldlines, "
+	     << nstot << " segments, "
+	     << netot << " events"
+	     << endl << endl;
+    }
 }
 
 //======================================================================

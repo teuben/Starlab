@@ -1,6 +1,7 @@
 //// scanbinary:  read and print binary statistics on a series of worbundles.
 ////
-//// Options:    -F    input file [run.out]
+//// Options:    -F    input file                                    [stdin]
+////                   *** file input is much faster (why?) ***
 ////
 //// Program reads a collection of worldbundles, then repeatedly prompts
 //// for the name of a particle or node and prints out the interaction
@@ -9,6 +10,8 @@
 ////                 time: top-level node name
 ////
 //// End with exit, quit, or ^D.
+////
+//// Created by Steve, 9/2001.
 
 #include "worldline.h"
 
@@ -99,33 +102,41 @@ main(int argc, char** argv)
 {
     check_help();
 
+    bool file = false;
     char infile[128];
-    strcpy(infile, "run.out");
+    int verbose = 0;
 
     extern char *poptarg;
-    char* params = "F:";
+    char* params = "F:v";
     int   c;
 
     while ((c = pgetopt(argc, argv, params)) != -1)
 	switch(c) {
 
-	    case 'F': strcpy(infile, poptarg);
+	    case 'F': file = true;
+	    	      strcpy(infile, poptarg);
+	    	      break;
+	    case 'v': verbose = 1;
 	    	      break;
             case '?': params_to_usage(cerr, argv[0], params);
 	              get_help();
 		      exit(0);
 	}
 
-    ifstream s(infile);
-    if (!s) {
-	cerr << "Data file " << infile << " not found." << endl;
-	exit(1);
-    }
+    int nh = 1024;
+    worldbundleptr *wh = new worldbundleptr[nh];
 
-    worldbundleptr wb, wh[1024];
+    if (file) {
+	ifstream s(infile);
+	if (!s) {
+	    cerr << "Data file " << infile << " not found." << endl;
+	    exit(1);
+	}
+	read_bundles(s, wh, nh, verbose);
 
-    int nh = 0;
-    while (nh < 1024 && (wb = read_bundle(s, false))) wh[nh++] = wb;
+    } else
+	read_bundles(cin, wh, nh, verbose);
+
 
     preload_pdyn(wh, nh, false, false);
 

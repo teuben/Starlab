@@ -1,70 +1,55 @@
-//// scanbundle:  read and print statistics on a series of worbundles.
+//// scanbundle:  read and print statistics on a series of worldbundles.
 ////
-//// Options:    -F    input file [run.out]
+//// Options:    -F    specify input file                        [stdin]
+////                   *** file input is much faster (why?) ***
+////             -v    more (too?) detailed output                  [no]
 
 #include "worldline.h"
-
-local void print_worldline_stats(worldbundleptr wh[], int nh)
-{
-    cerr << endl << "statistics on " << nh << " worldbundle";
-    if (nh != 1) cerr << "s";
-    cerr << ":" << endl;
-
-    int nwtot = 0, nstot = 0, netot = 0;
-    for (int ih = 0; ih < nh; ih++) {
-	worldbundleptr wb = wh[ih];
-	real t = wb->get_t_min();
-	int nw = wb->get_nw(), ns = count_segments(wb), ne = count_events(wb);
-	cerr << "worldbundle " << ih << ": "
-	     << nw << " worldlines, "
-	     << ns << " segments, "
-	     << ne << " events, t = "
-	     << wb->get_t_min() << " to " << wb->get_t_max()
-	     << endl;
-	nwtot += nw;
-	nstot += ns;
-	netot += ne;
-    }
-    cerr << "totals: " << nwtot << " worldlines, "
-	 << nstot << " segments, " << netot << " events"
-	 << endl << endl;
-
-    for (int ih = 0; ih < nh; ih++)
-	wh[ih]->check();
-}
 
 main(int argc, char** argv)
 {
     check_help();
 
+    bool file = false;
     char infile[128];
-    strcpy(infile, "run.out");
+    int verbose = 0;
 
     extern char *poptarg;
-    char* params = "F:";
+    char* params = "F:v";
     int   c;
 
     while ((c = pgetopt(argc, argv, params)) != -1)
 	switch(c) {
-	    case 'F': strcpy(infile, poptarg);
+	    case 'F': file = true;
+	    	      strcpy(infile, poptarg);
+	    	      break;
+	    case 'v': verbose = 1;
 	    	      break;
             case '?': params_to_usage(cerr, argv[0], params);
 	              get_help();
 		      exit(0);
 	}
 
-    ifstream s(infile);
-    if (!s) {
-	cerr << "Data file " << infile << " not found." << endl;
-	exit(1);
+    int nh = 1024;
+    worldbundleptr *wh = new worldbundleptr[nh];
+
+    if (file) {
+	ifstream s(infile);
+	if (!s) {
+	    cerr << "Data file " << infile << " not found." << endl;
+	    exit(1);
+	}
+	read_bundles(s, wh, nh, verbose+1);
+
+    } else
+	read_bundles(cin, wh, nh, verbose+1);
+
+
+    for (int ih = 0; ih < nh; ih++) {
+	if (verbose) {
+	    cerr << "worldbundle " << ih << ":" << endl;
+	    wh[ih]->dump(4);
+	} else
+	    wh[ih]->check();
     }
-
-    worldbundleptr wb, wh[1024];
-
-    int nh = 0;
-    while (nh < 1024 && (wb = read_bundle(s, 1))) wh[nh++] = wb;
-
-    for (int i = 0; i < 5; i++) cerr << endl;
-
-    print_worldline_stats(wh, nh);
 }

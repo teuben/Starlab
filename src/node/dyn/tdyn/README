@@ -1,0 +1,34 @@
+
+* The tools in this directory as of Dec 2003 were very redundant in
+  operation, and not obvious in their naming.  They can be found in
+  subdirectory dec-2003.  The (modified) survivors are listed in the
+  Makefile, and are described below:
+
+    print_id		print out the standard worldline ID
+			corresponding to the command-line argument
+
+    scanbinary		read a collection of worldbundles, then prompt
+			for the name of a particle or node and print
+			out its interaction history (as defined by
+			changes in the tree structure)
+
+    scanbundle		read and print statistics on a series of
+			worldbundles
+
+    xstarplot22		graphical display of worldbundle data (uses
+			the NEW	interpolation functions)
+
+    worldlines		read a worldbundle and print snapshots at
+			selected times
+
+* Also:
+
+    tdyn_io		test driver for library functions; not for use
+			as a tool
+
+    worldline2		read in a worldbundle, output a pdyn snapshot
+			at some time; new interpolation scheme; not
+			for use as a tool -- functionality superceded
+			by worldlines
+
+
