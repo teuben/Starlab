@@ -536,20 +536,18 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
     // Combine two top-level nodes into a binary.  Original node names
     // and addresses are retained, so neighboring perturber lists are
     // unaffected.  bi is the node whose step caused the change; bj is
-    // its nearest neighbor.  For obscure reasons, the new CM node
-    // will be (bj, bi).
+    // its nearest neighbor.  The new CM node will be (bj, bi).
 
-    if (bi->get_kira_diag()->tree) {
+    if (bj->get_kira_diag()->tree) {
 
         cerr << endl << "combine_top_level_nodes: attaching ",
 	bj->pretty_print_node(cerr);
 	cerr << " to ", bi->pretty_print_node(cerr);
-	cerr << " at time " << bi->get_system_time();
+	cerr << " at time " << bj->get_system_time();
 
 	if (bj->get_kira_diag()->tree_level > 0) {
 
 	    cerr << endl;
-	    pp2(bi, cerr);
 	    print_binary_from_dyn_pair(bj, bi);
 	    cerr << endl;
 	    if (bj->is_parent()) {
@@ -686,11 +684,11 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 	bb->set_perturbation_squared(-1);
     }
 
-    // Parent step was set equal to the minimum leaf step in function
-    // create_binary_from_toplevel_nodes().  Reduce it here to make
-    // it less than the daughter steps, but consistent with the current
-    // time, so that the parent perturber list will be computed before
-    // the internal motion is advanced.
+    // Parent step was set equal to the minimum daughter step in function
+    // create_binary_from_toplevel_nodes().  Reduce it here to make it
+    // less than the daughter steps, but consistent with the current time,
+    // so that the parent perturber list will be computed before the
+    // internal motion is advanced.
     //
     // Note that this almost certainly starts the CM off with a step
     // far shorter than necessary.  Assume that it is OK to let the
@@ -733,7 +731,8 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
       //           << "Can't reduce parent timestep sufficiently..." << endl;
     }
 
-    // PRC(dt_par); PRL(dt_min);
+    // PRC(dt_par); PRC(dt_min); PRL(par->get_timestep());
+    // pp3(par);
 
     bi->init_pred();
     bj->init_pred();
