@@ -46,6 +46,7 @@ kira_diag::kira_diag() {		    // (Steve's 6/00
     ev_function_id				= false;
     ev						= false;
     grape					= true;
+    grape_level					= 0;
     timestep_check				= true;
     correct					= false;
     slow_perturbed				= false;
@@ -111,6 +112,7 @@ void kira_diag::print(ostream &s)
     PRS(ev_function_id);
     PRS(ev);
     PRS(grape);
+    PRS(grape_level);
     PRS(timestep_check);
     PRS(correct);
     PRS(slow_perturbed);

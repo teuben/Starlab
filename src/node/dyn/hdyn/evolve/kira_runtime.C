@@ -809,7 +809,15 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 		b->get_kira_diag()->ev_function_id
 		    = get_value(s, 1);
 
-	    else if (s = strstr(line, "grape"))
+	    else if ((s = strstr(line, "grape_level"))
+		     || (s = strstr(line, "grape_"))) {
+
+		b->get_kira_diag()->grape_level
+		    = get_value(s, 0);
+		if (b->get_kira_diag()->grape_level < 0)
+                    b->get_kira_diag()->grape = false;
+
+	    } else if (s = strstr(line, "grape"))
 
 		b->get_kira_diag()->grape
 		    = get_value(s, 1);

@@ -731,13 +731,16 @@ local int integrate_list(hdyn * b,
 
 		if (!bi->correct_and_update()) {
 
-		    // A problem has occurred during the step.
+		    // A problem has occurred during the step, presumably
+		    // because of a hardware error on the GRAPE.
 
 		    // Recompute acc and jerk on the front end (no bookkeeping
 		    // yet) and retry once.  (Steve 9/98)
 
-		    cerr << "retrying force calculation for "
-			 << bi->format_label() << endl;
+		    if (bi->get_kira_diag()->grape
+			&& bi->get_kira_diag()->grape_level > 0)
+			cerr << "retrying force calculation for "
+			     << bi->format_label() << endl;
 
 		    // Better do an exact calculation, as we can't (yet) call
 		    // correct_acc_and_jerk() to correct a single particle...
@@ -761,16 +764,37 @@ local int integrate_list(hdyn * b,
 		    }
 
 		    if (!bi->correct_and_update()) {
-			cerr << "failed to correct error for "
+
+			cerr << endl
+			     << "Failed to correct hardware error for "
 			     << bi->format_label() << " at time "
 			     << bi->get_system_time() << endl << endl;
 			err_exit("Run terminated in integrate_list");
+
 		    } else {
-			cerr << "recomputed  "; PRL(bi->get_acc());
-			PRI(12); PRL(bi->get_jerk());
-			// PRI(12); PRL(bi->get_pos());
-			// PRI(12); PRL(bi->get_vel());
-			cerr << endl;
+
+			// Should we always print a message here, or only
+			// if GRAPE diagnostics are enabled...?
+
+			if (bi->get_kira_diag()->grape) {
+			    if (bi->get_kira_diag()->grape_level == 0) {
+				cerr << endl
+				     << "Corrected apparent GRAPE"
+				     << " error for "
+				     << bi->format_label() << " at time "
+				     << bi->get_system_time();
+#if defined(STARLAB_HAS_GRAPE4)
+				cerr << " (chip " << get_grape_chip(bi) << ")";
+#endif
+				cerr << endl;
+			    } else {
+				cerr << "recomputed  "; PRL(bi->get_acc());
+				PRI(12); PRL(bi->get_jerk());
+				// PRI(12); PRL(bi->get_pos());
+				// PRI(12); PRL(bi->get_vel());
+				cerr << endl;
+			    }
+			}
 			return_fac = -1;
 		    }
 		}

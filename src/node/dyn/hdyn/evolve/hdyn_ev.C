@@ -428,6 +428,9 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 
 	real aarsethstep = 0;
 
+	// Not completely clear why this option should be tied to
+	// diag->grape...
+
 	if (!b->get_kira_diag()->grape) {
 
 	    // The simple way:
@@ -1338,23 +1341,26 @@ bool hdyn::correct_and_update()
 	if (abs1(acc-old_acc) > abs1(old_acc)
 	    || abs1(jerk-old_jerk) > 5*abs1(old_jerk)) {
 
-	    cerr << endl << "correct: possible hardware error at time "
-		 << get_system_time() << endl;
+	    if (diag->grape && diag->grape_level > 0) {
+
+		cerr << endl << "correct: possible hardware error at time "
+		     << get_system_time() << endl;
 
 #if defined(STARLAB_HAS_GRAPE4)
-	    PRL(get_grape_chip(this));			// direct access to data
-							// in hdyn_grape4.C
+		PRL(get_grape_chip(this));	// direct access to data
+						// in hdyn_grape4.C
 #endif
 
 #if 0
-	    cerr << endl << "pp3 with old pos and vel:" << endl;
-	    pp3(this);
+		cerr << endl << "pp3 with old pos and vel:" << endl;
+		pp3(this);
 #else
-	    PRL(old_acc);
-	    PRL(old_jerk);
-	    PRL(acc);
-	    PRL(jerk);
+		PRL(old_acc);
+		PRL(old_jerk);
+		PRL(acc);
+		PRL(jerk);
 #endif
+	    }
 
 	    // cerr << endl << endl << "System dump:" << endl << endl;
 	    // pp3(get_root());
@@ -1366,7 +1372,7 @@ bool hdyn::correct_and_update()
 	    //		    old acc and jerk and continue
 	    //		flag, recompute acc and jerk, and continue  <--
 
-	    // Flag the problem.
+	    // Flag the problem internally.
 
 	    char tmp[128];
 	    sprintf(tmp, "runaway in correct at time %f", time);
@@ -1377,7 +1383,8 @@ bool hdyn::correct_and_update()
 		n_runaway = getiq(get_log_story(), "n_runaway");
 
 	    n_runaway++;
-	    PRL(n_runaway);
+	    if (diag->grape && diag->grape_level > 0)
+		PRL(n_runaway);
 
 	    if (n_runaway > 10)
 		exit(0);		// pretty liberal, as errors are
