@@ -502,8 +502,9 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     // kira_synchronize_tree() in kira_grape_include.C to switch between
     // GRAPE (if available) and non-GRAPE code.
 
-    cerr << "merge_nodes: calling synchronize_tree..." << flush;
+   cerr << "merge_nodes: calling synchronize_tree..." << flush;
     PRL(cpu_time());
+    pp3("(1,10001)");
 //    pp3("(21,100021)");
 //    pp3("(23,100023)");
 
@@ -511,6 +512,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
     cerr << "back" << endl << flush;
     PRL(cpu_time());
+    pp3("(1,10001)");
 //    pp3("(21,100021)");
 //    pp3("(23,100023)");
 
