@@ -17,4 +17,4 @@ case "$site" in
   kyohou.c.u-tokyo.ac.jp) cmd=komaba_get_tar ;;
 esac
 
-ssh -l starlab $site "setenv STARLAB_PATH ~starlab/$STARLAB_VERSION ; source $STARLAB_VERSION/local/starlab_setup ; cd $STARLAB_VERSION ; sbin/$cmd"
+ssh -l starlab $site "setenv STARLAB_PATH ~/starlab ; source $STARLAB_PATH/starlab_start ; cd $STARLAB_PATH ; sbin/$cmd"
