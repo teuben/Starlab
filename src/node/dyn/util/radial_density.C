@@ -25,8 +25,10 @@
 
 //-----------------------------------------------------------------------------
 //   version 1:  Apr 2003   Steve McMillan
+//   version 2:  Apr 2004   Ernest Mamikonyan
 //-----------------------------------------------------------------------------
 
+#include <vector>
 #include "dyn.h"
 
 #ifndef TOOLBOX
@@ -40,82 +42,57 @@
 typedef struct {
     real r_sq;
     real mass;
-} rm_pair, *rm_pair_ptr;
+} rm_pair;
 
 //-----------------------------------------------------------------------------
 //  compare_radii  --  compare the radii of two particles
 //-----------------------------------------------------------------------------
 
-local int compare_radii(const void * pi, const void * pj)  // increasing radius
+// essentially, bool rm_pair::operator<(const rm_pair&)
+local bool compare_radii(const rm_pair& rm1, const rm_pair& rm2)
 {
-    if (((rm_pair_ptr) pi)->r_sq > ((rm_pair_ptr) pj)->r_sq)
-        return +1;
-    else if (((rm_pair_ptr)pi)->r_sq < ((rm_pair_ptr)pj)->r_sq)
-        return -1;
-    else
-        return 0;
+    return rm1.r_sq < rm2.r_sq;
 }
 
-int get_radial_densities(dyn *b, vec cpos,
-			 int n_zones, real r[], real rho[])
+vector<real>& get_radial_densities(dyn *b, vec cpos, vector<real>& r,
+				   bool (*filter)(dyn*))
 {
-    if (n_zones < 2) return 1;
+    //if (r.size() < 2) return 0;
 
     // Set up an array of (r_sq, mass) pairs.
+    vector<rm_pair>* table = new vector<rm_pair>;
 
-    int n = b->n_daughters();	// (NB implicit loop through the entire system)
-
-    // Would be possible to determine n and set up the array simultaneously
-    // using malloc and realloc.  Not so easy with new...
-    
-    rm_pair_ptr table = new rm_pair[n];
-
-    if (!table) {
-	cerr << "get_radial_densities: insufficient memory for table"
-	     << endl;
-	return 1;
-    }
-
-    int i = 0;
-    for_all_daughters(dyn, b, bi) {
-	table[i].r_sq = square(bi->get_pos() - cpos);
-	table[i].mass = bi->get_mass();
-	i++;
-    }
+    for_all_daughters(dyn, b, bi)
+        if (!filter || filter(bi))
+	    table->push_back((rm_pair)
+			     {square(bi->get_pos()-cpos), bi->get_mass()});
 
     // Sort the array by radius (may repeat work done elsewhere...).
-
-    qsort((void *)table, (size_t)i, sizeof(rm_pair), compare_radii);
-
-    // Initialize the density array.
-
-    int j;
-    for (j = 0; j < n_zones; j++) rho[j] = 0;
+    sort(table->begin(), table->end(), compare_radii);
 
     // Bin the (ordered) data.
+    vector<real>& rho = *(new vector<real>(r.size()));
+    real rj2 = r[0]*r[0];
 
-    j = 0;
-    real rj2 = r[j]*r[j];
-
-    for (i = 0; i < n; i++) {
-	real ri_sq = table[i].r_sq;
+    for (int i = 0, j = 0; i < table->size(); i++) {
+	real ri_sq = (*table)[i].r_sq;
 	while (ri_sq > rj2) {
-	    j++;
-	    if (j >= n_zones) break;
+	    if (++j >= r.size()) break;
 	    rj2 = r[j]*r[j];
 	}
-	if (j >= n_zones) break;
-	rho[j] += table[i].mass;
+	if (j >= r.size()) break;
+	rho[j] += (*table)[i].mass;
     }
-
+    delete table;
     // Convert from mass to density.
 
     real v0 = 0;	// assume that the first zone extends in to r = 0
-    for (j = 0; j < n_zones; j++) {
+    for (int j = 0; j < r.size(); j++) {
 	real v1 = pow(r[j], 3);
 	rho[j] /= (4*M_PI/3) * (v1 - v0);	// dM --> dM/dV
 	v0 = v1;
     }
+    return rho;
 }
 
 #else
@@ -154,11 +131,10 @@ main(int argc, char ** argv)
     if (n_zones <= 1) n_zones = N_DEFAULT;
     PRC(r_max); PRL(n_zones);
 
-    dyn *b;
+    vector<real> r(n_zones);
 
-    while (b = get_dyn()) {
 
-	real r[n_zones], rho[n_zones];
+    while (dyn* b = get_dyn()) {
 
 	// Use the density center if known and up to date (preferred).
 	// Otherwise, use modified center of mass, if known and up to date.
@@ -187,7 +163,7 @@ main(int argc, char ** argv)
 
 	// Compute and print the density array.
 
-	get_radial_densities(b, cpos, n_zones, r, rho);
+	vector<real>& rho = get_radial_densities(b, cpos, r);
 
 	real r0 = 0;
 	for (int i = 0; i < n_zones; i++) {
@@ -197,6 +173,7 @@ main(int argc, char ** argv)
 	}
 
 	rmtree(b);
+	delete &rho;
     }
 }
 
