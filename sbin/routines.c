@@ -53,7 +53,7 @@ int saxpy2(int n)	{for_all(i) v1[i] = s1*v2[i] + v3[i];}
 int saxpy3(int n)	{for_all(i) v1[i] = v2[i]*v3[i] + v4[i];}
 
 int vsqrt(int n)	{for_all(i) v1[i] = sqrt(v2[i]);}
-int vabs(int n)	{for_all(i) v1[i] = abs(v3[i]);}
+int vabs(int n)	{for_all(i) v1[i] = fabs(v3[i]);}
 int vsin(int n)	{for_all(i) v1[i] = sin(v3[i]);}
 int vexp(int n)	{for_all(i) v1[i] = exp(v2[i]);}
 int vpow(int n)	{for_all(i) v1[i] = pow(v2[i], s2);}
