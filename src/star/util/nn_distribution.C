@@ -52,10 +52,10 @@ void nn_distribution(dyn * b) {
 
     if(indexA[0]==-1)
       for(int j=0; j<n; j++) 
-	cerr << nn[j] << endl;
+	cout << nn[j] << endl;
     else
       for(int j=0; j<n; j++)
-	cerr << indexA[j] << "\t" 
+	cout << indexA[j] << "\t" 
 	     << indexB[j] << "\t" << nn[j] << endl;
 
     delete [] nn;
@@ -89,12 +89,17 @@ main(int argc, char ** argv)
 		      exit(1);
 	    }    
 
-    dyn* b = get_dyn(cin);
-    b->log_history(argc, argv);
+    dyn* b;
+    while (b = get_dyn(cin)) {
 
-    nn_distribution(b);
+      if (c_flag == TRUE)
+	b->log_comment(comment);
 
-    rmtree(b);
+      b->log_history(argc, argv);
+
+      nn_distribution(b);
+      rmtree(b);
+    }
 }
 
 #endif
