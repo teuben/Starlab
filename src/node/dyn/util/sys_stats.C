@@ -1047,141 +1047,6 @@ local void print_king_parameters(const real rc_rvir) {
 
 #endif
 
-
-local bool testnode(dyn * b)
-{
-    return (b->is_top_level_node());
-}
-
-local bool binary_fn(dyn * b)
-{
-    return (b->get_oldest_daughter());
-}
-
-local bool single_fn(dyn * b)
-{
-    return (getiq(b->get_log_story(), "mass_doubled") == 0);
-}
-
-local bool double_fn(dyn * b)
-{
-    return (getiq(b->get_log_story(), "mass_doubled") == 1);
-}
-
-static real cutoff_mass = 0;
-
-#include <vector>
-#include <algorithm>
-
-local void set_cutoff_mass(dyn *b, real frac)
-{
-    // Determine a cutoff for the "most massive" single stars, as follows.
-    // Start with the 90th percentile mass, then move up the list toward
-    // the more massive end until an increase in mass occurs, and use
-    // that new mass.  This will choose a mass very close to the 90th in
-    // case of a continuous mass function, and should pick out the next
-    // group up if have discrete mass groups.
-
-    vector<real> *m = new vector<real>;
-    for_all_daughters (dyn, b, bb)
-	if (bb->is_leaf()) m->push_back(bb->get_mass());
-    sort(m->begin(), m->end());
-
-    int n90 = (int)frac*m->size(), i = n90;
-    while ((*m)[i] == (*m)[n90]) i++;
-
-    cutoff_mass = (*m)[i];
-}
-
-local bool massive_fn(dyn * b)
-{
-    return (b->get_mass() >= cutoff_mass);
-}
-
-real print_lagrangian_radii(dyn* b,
-			    int which_lagr,	// default = 2 (nonlinear)
-			    bool verbose,	// default = true
-			    int which_star,	// default = 0 (all stars)
-			    bool noprint)	// default = false (print!)
-{
-    bool nonlin = false;
-
-    real rhalf = 1;
-    int ihalf;
-
-    int nl, indent;
-    if (which_lagr == 0) {
-	nl = 4;
-	indent = 15;
-	ihalf = 1;
-    } else if (which_lagr == 1) {
-	nl = 10;
-	indent = 20;
-	ihalf = 4;
-    } else {
-	nl = 10;
-	indent = 26;
-	nonlin = true;
-	ihalf = 6;
-    }
-
-    if (which_star == 0)
-	compute_general_mass_radii(b, nl, nonlin);
-    else if (which_star == 1)
-	compute_general_mass_radii(b, nl, nonlin, binary_fn);
-    else if (which_star == 2)
-	compute_general_mass_radii(b, nl, nonlin, single_fn);
-    else if (which_star == 3)
-	compute_general_mass_radii(b, nl, nonlin, double_fn);
-    else if (which_star == 4)
-	compute_general_mass_radii(b, nl, nonlin, massive_fn);
-
-    if (find_qmatch(b->get_dyn_story(), "n_lagr")
-	&& getrq(b->get_dyn_story(), "lagr_time") == b->get_system_time()) {
-
-	// Assume that lagr_pos has been properly set if n_lagr is set
-	// and lagr_time is current.
-
-	vec lagr_pos = getvq(b->get_dyn_story(), "lagr_pos");
-
-	if (verbose && !noprint) {
-	    cerr << endl << "  Lagrangian radii relative to ("
-		 << lagr_pos << "):" << endl;
-	    if (find_qmatch(b->get_dyn_story(), "pos_type"))
-		cerr << "                               ( = "
-		     << getsq(b->get_dyn_story(), "pos_type")
-		     << ")" << endl;
-	    if (which_lagr == 0)
-		cerr << "    quartiles: ";
-	    else if (which_lagr == 1)
-		cerr << "    10-percentiles: ";
-	    else
-		cerr << "    selected percentiles: ";
-	}
-
-        int n_lagr = getiq(b->get_dyn_story(), "n_lagr");  // should be nl - 1
-	real *r_lagr = new real[n_lagr];
-
-	getra(b->get_dyn_story(), "r_lagr", r_lagr, n_lagr);
-
-	for (int k = 0; k < n_lagr; k += 5) {
-	    if (!noprint) {
-		if (k > 0) {
-		    cerr << endl;
-		    for (int kk = 0; kk < indent; kk++) cerr << " ";
-		}
-		for (int i = k; i < k+5 && i < n_lagr; i++)
-		    cerr << " " << r_lagr[i];
-	    }
-	    cerr << endl << flush;
-	}
-
-	rhalf = r_lagr[ihalf];
-	delete [] r_lagr;
-    }
-    return rhalf;
-}
-
 //-----------------------------------------------------------------------------
 //
 // Local functions for dominated ("disk") motion:
@@ -1607,13 +1472,13 @@ void sys_stats(dyn* b,
 
 	if (mass_spectrum) {
 
-	    set_cutoff_mass(b, 0.90);
+	    set_lagr_cutoff_mass(b, 0.90);	// 90th percentile
 
 	    // Print out Lagrangian radii of the most massive stars, as
-	    // defined by set_cutoff_mass() above.
+	    // defined by set_lagr_cutoff_mass() above.
 
 	    cerr << endl << "  Most massive stars (cutoff_mass = "
-		 << cutoff_mass << "):";
+		 << get_lagr_cutoff_mass() << "):";
 	    real rhalf_massive = print_lagrangian_radii(b, which_lagr,
 							verbose, 4);
 	    PRI(4); PRL(rhalf_massive);
