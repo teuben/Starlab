@@ -815,7 +815,7 @@ main(int argc, char** argv)
 		else {
 		    sprintf(filename, "%s.%3.3d", file, count1);
 		    if (format == 0)
-			sprintf(im_filename, "%s.%3.3d.PNG", file, count1);
+			sprintf(im_filename, "%s.%3.3d.png", file, count1);
 		    else
 			sprintf(im_filename, "%s.%3.3d.sun", file, count1);
 		    fn = im_filename;
