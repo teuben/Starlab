@@ -15,6 +15,8 @@
 // S. McMillan  93-04-02:  Cleaned up and modified command-line interface.
 // J. Makino    96-07-xx:  Seems not to work... Energy conservation looks bad.
 
+// Could easily GRAPE-enable this program as described in kira_README.txt.
+
 void hdyn::flat_set_first_timestep(real eta_for_firststep, real max_step_size)
 {
     real a1scaled2 = jerk * jerk;

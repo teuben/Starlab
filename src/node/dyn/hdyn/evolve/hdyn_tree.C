@@ -1401,7 +1401,7 @@ int hdyn::adjust_tree_structure(int full_dump)		// default = 0
 	if (oldest_daughter) cm = true;
 
 	if (nn == NULL) {
-            pretty_print_node(cerr); cerr << " nn is NULL " << endl;
+            // pretty_print_node(cerr); cerr << " nn is NULL " << endl;
 	    return 0;
         }
 

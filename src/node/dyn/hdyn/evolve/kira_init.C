@@ -621,15 +621,15 @@ local void kira_system_id(int argc, char** argv)
 {
     // Identify the Starlab version.
 
-    cerr << "Starlab version " << STARLAB_VERSION;
-
+    cerr << "Starlab version " << VERSION;
+    /*
     char* s = stredit(_COMPILE_DATE_, '_', ' ');
     if (s) {
 	cerr << "; kira created on " << s;
 	delete s;
     }
     cerr << endl;
-
+    */
     // Attempt to identify the user and host.
 
     cerr << "kira run by user ";
@@ -820,13 +820,15 @@ bool kira_initialize(int argc, char** argv,
     bool r_virial_set = false;
     real input_r_virial;
 
+    bool force_nogrape = false;
+
     char seedlog[SEED_STRING_LENGTH];
 
     extern char *poptarg, *poparr[];	// multiple arguments are allowed
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"*:a:Ab.Bc:C:d:D:e:E:f:F.g:G:h:iI:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvVW:xX:y:z:Z:";
+"0*:a:Ab.Bc:C:d:D:e:E:f:F.g:G:h:iI:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvVW:xX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
@@ -904,6 +906,8 @@ bool kira_initialize(int argc, char** argv,
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
+	    case '0':	force_nogrape = true;
+			break;
 	    case 'a':	eta = atof(poptarg);
 			eta_flag = true;
 			break;
@@ -1489,7 +1493,17 @@ bool kira_initialize(int argc, char** argv,
 
     //----------------------------------------------------------------------
 
+    // Finally, check for GRAPE or other acceleration.
+
+    unsigned int config = kira_config(b);	// default settings
+    kira_print_config(config);
+
+    if (config && force_nogrape) {
+        kira_config(b, 0);
+        cerr << "GRAPE suppressed" << endl;
+    }
+
+    //----------------------------------------------------------------------
+
     return true;
 }
-
-

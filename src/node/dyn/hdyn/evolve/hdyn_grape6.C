@@ -14,14 +14,13 @@
 //    version 2:  Dec 2001   Steve McMillan
 //.............................................................................
 //
-//	Externally visible functions (note that the GRAPE version
-//	is not specified):
+//	Externally visible functions:
 //
-//	void check_release_grape
-//	void grape_calculate_energies
-//	void grape_calculate_acc_and_jerk
-//	void grape_calculate_densities
-//	void clean_up_hdyn_grape
+//	void check_release_grape6
+//	void grape6_calculate_energies
+//	void grape6_calculate_acc_and_jerk
+//	void grape6_calculate_densities
+//	void clean_up_hdyn_grape6
 //
 //.............................................................................
 
@@ -96,7 +95,7 @@ static hdyn **current_nodes = NULL;	// current top-level nodes
 static hdyn **previous_nodes = NULL;	// previous top-level nodes
 
 // Arrays current_nodes and previous_nodes are used only in
-// grape_calculate_acc_and_jerk().
+// grape6_calculate_acc_and_jerk().
 
 static int grape_nj_max = 0;		// maximum size of static j-arrays
 static int n_previous_nodes = 0;	// number of "previous" nodes
@@ -127,9 +126,9 @@ local void reattach_grape(real time, char *id, kira_options *ko)
 
 // Reattach the GRAPE-6.
 
-// Called by:	grape_calculate_energies()			// global
-//		grape_calculate_acc_and_jerk()			// global
-//		grape_calculate_densities()			// global
+// Called by:	grape6_calculate_energies()			// global
+//		grape6_calculate_acc_and_jerk()			// global
+//		grape6_calculate_densities()			// global
 
 {
     static char *func = "reattach_grape";
@@ -162,7 +161,7 @@ local INLINE void send_j_node_to_grape(hdyn *b,
 
 // Called by:	initialize_grape_arrays				// local
 //		send_all_leaves					// local
-//		grape_calculate_acc_and_jerk			// global
+//		grape6_calculate_acc_and_jerk			// global
 
 // The flag computing_energy will be used only in the energy calculation,
 // to ensure that no hardware prediction is done on the GRAPE during the
@@ -245,8 +244,8 @@ local int initialize_grape_arrays(hdyn *b,		// root node
 // Initialize arrays associated with GRAPE-6 j-particles.
 // Return the total number of j-particles sent to the GRAPE.
 
-// Called by:	grape_calculate_acc_and_jerk()			// global
-//		grape_calculate_densities()			// global
+// Called by:	grape6_calculate_acc_and_jerk()			// global
+//		grape6_calculate_densities()			// global
 
 {
     static char *func = "initialize_grape_arrays";
@@ -406,7 +405,7 @@ local INLINE int force_by_grape(xreal xtime,
 
 // Called by:	force_by_grape_on_all_leaves			// local
 //		get_force_and_neighbors				// local
-//		grape_calculate_densities()			// global
+//		grape6_calculate_densities()			// global
 
 // Flag pot_only = true means that we are calculating the total energy.
 // As of 11/02, we ignore the value of xtime in this case, although it may
@@ -771,9 +770,9 @@ local void hw_err_exit(char *func, int id, hdyn *b)
 
 // Exit following a serious hardware error...
 
-// Called by:	grape_calculate_energies()			// global
-//		grape_calculate_acc_and_jerk()			// global
-//		grape_calculate_densities()			// global
+// Called by:	grape6_calculate_energies()			// global
+//		grape6_calculate_acc_and_jerk()			// global
+//		grape6_calculate_densities()			// global
 
 {
     char buf[256];
@@ -806,12 +805,12 @@ local void hw_err_exit(char *func, int id, hdyn *b)
 
 //  **********************************************************************
 //  *                                                                    *
-//  *  check_release_grape:  Accessor for GRAPE release/attach.          *
+//  *  check_release_grape6:  Accessor for GRAPE release/attach.          *
 //  *                                                                    *
 //  **********************************************************************
 
 
-void check_release_grape(kira_options *ko, xreal time, bool verbose)
+void check_release_grape6(kira_options *ko, xreal time, bool verbose)
 {
 #ifdef SHARE_GRAPE
 
@@ -846,7 +845,7 @@ void check_release_grape(kira_options *ko, xreal time, bool verbose)
 
 //  *********************************************************************
 //  *                                                                   *
-//  *  grape_calculate_energies:  Calculate total energy of the system  *
+//  *  grape6_calculate_energies:  Calculate total energy of the system  *
 //  *			          (requires GRAPE reset after use).     *
 //  *                                                                   *
 //  *********************************************************************
@@ -953,7 +952,7 @@ local inline bool use_cm_approx(hdyn *bb, real d_crit)
 //*************************************************************************
 //*************************************************************************
 //
-// Experimental code for grape_calculate_energies().
+// Experimental code for grape6_calculate_energies().
 //
 // Basic compile-time options:
 //
@@ -1003,7 +1002,7 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 // compute the potentials) of all leaves to GRAPE j-particle memory.
 // Return the total number of leaves sent to the GRAPE.
 
-// Called by:	grape_calculate_energies()			// global
+// Called by:	grape6_calculate_energies()			// global
 
 {
     static char *func = "send_all_xxx_to_grape";
@@ -1113,7 +1112,7 @@ local bool force_by_grape_on_all_e_nodes(hdyn **e_nodes,    // node list
 // Compute the forces on all e_nodes due to all other e_nodes.
 // Only interested in determining the potential energies.
 
-// Called by:	grape_calculate_energies()			// global
+// Called by:	grape6_calculate_energies()			// global
 
 {
     static char *func = "force_by_grape_on_all_e_nodes";
@@ -1170,7 +1169,7 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 // Compute the forces on all particles due to all other particles.
 // Only interested in determining the potential energies.
 
-// Called by:	grape_calculate_energies()			// global
+// Called by:	grape6_calculate_energies()			// global
 
 {
     static char *func = "force_by_grape_on_all_leaves";
@@ -1256,7 +1255,7 @@ local inline real critical_sep(hdyn *b)
 }
 
 
-void grape_calculate_energies(hdyn *b,			// root node
+void grape6_calculate_energies(hdyn *b,			// root node
 			      real &epot,
 			      real &ekin,
 			      real &etot,
@@ -1266,13 +1265,13 @@ void grape_calculate_energies(hdyn *b,			// root node
     // nodes.  If cm = false, then still use the CM approximation for
     // sufficiently close binaries to avoid roundoff errors on the GRAPE.
 
-    static char *func = "grape_calculate_energies";
+    static char *func = "grape6_calculate_energies";
 
 #ifdef T_DEBUG
     real sys_t = b->get_real_system_time();
     bool in_debug_range = IN_DEBUG_RANGE(sys_t);
     if (in_debug_range) {
-	cerr << endl << "entering grape_calculate_energies... ";
+	cerr << endl << "entering grape6_calculate_energies... ";
 	PRL(cm);
     }
 #endif
@@ -1313,7 +1312,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 
 #endif
 
-	cerr << "grape_calculate_energies: "
+	cerr << "grape6_calculate_energies: "
 	     << "error on return from force_by_grape_on_all_xxx()"
 	     << endl;
 
@@ -1385,7 +1384,7 @@ void grape_calculate_energies(hdyn *b,			// root node
     grape_was_used_to_calculate_potential = true;	// trigger a reset
 							// next time around
 
-//    cerr << "CPU time for grape_calculate_energies() = "
+//    cerr << "CPU time for grape6_calculate_energies() = "
 //	 << cpu_time() - cpu0 << endl;
 
 #ifdef T_DEBUG
@@ -1416,7 +1415,7 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 // compute the potentials) of all leaves to GRAPE j-particle memory.
 // Return the total number of leaves sent to the GRAPE.
 
-// Called by:	grape_calculate_energies()			// global
+// Called by:	grape6_calculate_energies()			// global
 
 {
     static char *func = "send_all_leaves_to_grape";
@@ -1517,7 +1516,7 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 // Compute the forces on all particles due to all other particles.
 // Only interested in determining the potential energies.
 
-// Called by:	grape_calculate_energies()			// global
+// Called by:	grape6_calculate_energies()			// global
 
 {
     static char *func = "force_by_grape_on_all_leaves";
@@ -1588,7 +1587,7 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 //						*****************************
 
 
-void grape_calculate_energies(hdyn *b,			// root node
+void grape6_calculate_energies(hdyn *b,			// root node
 			      real &epot,
 			      real &ekin,
 			      real &etot,
@@ -1598,7 +1597,7 @@ void grape_calculate_energies(hdyn *b,			// root node
     // nodes.  If cm = false, then still use the CM approximation for
     // sufficiently close binaries to avoid roundoff errors on the GRAPE.
 
-    static char *func = "grape_calculate_energies";
+    static char *func = "grape6_calculate_energies";
 
 #ifdef T_DEBUG
      real sys_t = b->get_real_system_time();
@@ -1610,7 +1609,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 
     if (!grape_is_open)
 	reattach_grape(b->get_real_system_time(),
-		       "grape_calculate_energies", b->get_kira_options());
+		       "grape6_calculate_energies", b->get_kira_options());
 
     real cpu0 = cpu_time();
 
@@ -1626,7 +1625,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 
     if (force_by_grape_on_all_leaves(b, nj, cm)) {
 
-	cerr << "grape_calculate_energies: "
+	cerr << "grape6_calculate_energies: "
 	     << "error on return from force_by_grape_on_all_leaves()"
 	     << endl;
 
@@ -1677,7 +1676,7 @@ void grape_calculate_energies(hdyn *b,			// root node
     grape_was_used_to_calculate_potential = true;	// trigger a reset
 							// next time around
 
-//    cerr << "CPU time for grape_calculate_energies() = "
+//    cerr << "CPU time for grape6_calculate_energies() = "
 //	 << cpu_time() - cpu0 << endl;
 
 #ifdef T_DEBUG
@@ -1698,7 +1697,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 
 //  ***********************************************************************
 //  *                                                                     *
-//  *  grape_calculate_acc_and_jerk: Use the GRAPE hardware to compute    *
+//  *  grape6_calculate_acc_and_jerk: Use the GRAPE hardware to compute    *
 //  *				     accs and jerks on a list of nodes.   *
 //  *                                                                     *
 //  ***********************************************************************
@@ -1708,7 +1707,7 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 // Adjust the GRAPE neighbor radius to some reasonable value.
 
-// Called by:	grape_calculate_acc_and_jerk()			// global
+// Called by:	grape6_calculate_acc_and_jerk()			// global
 
 {
     static char *func = "set_grape_neighbor_radius";
@@ -1854,7 +1853,7 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 // occurs.
 
 // Called by:	get_coll_and_perturbers				// local
-//		grape_calculate_acc_and_jerk			// global
+//		grape6_calculate_acc_and_jerk			// global
 
 {
     static char *func = "get_force_and_neighbors";
@@ -1981,7 +1980,7 @@ local INLINE int sort_nodes_and_reduce_rnb(hdynptr ilist[], int ni)
 // Reduce rnb for the remaining nodes and return the location on the
 // new list of the first node with rnb > 0.
 
-// Called by:	grape_calculate_acc_and_jerk()			// global
+// Called by:	grape6_calculate_acc_and_jerk()			// global
 
 {
     static char *func = "sort_nodes_and_reduce_rnb";
@@ -2525,7 +2524,7 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 // i-list that require them.  Return the location following the last
 // node successfully treated.
 
-// Called by:	grape_calculate_acc_and_jerk()			// global
+// Called by:	grape6_calculate_acc_and_jerk()			// global
 
 {
     static char *func = "get_coll_and_perturbers";
@@ -2715,7 +2714,7 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 //						*****************************
 
 
-int grape_calculate_acc_and_jerk(hdyn **next_nodes,
+int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 				 int n_next,
 				 xreal xtime,
 				 bool restart)
@@ -2724,7 +2723,7 @@ int grape_calculate_acc_and_jerk(hdyn **next_nodes,
 //  which is called only from calculate_acc_and_jerk_for_list.
 
 {
-    static char *func = "grape_calculate_acc_and_jerk";
+    static char *func = "grape6_calculate_acc_and_jerk";
 
     static int n_pipes = 0;		// number of pipelines to use
 
@@ -3052,7 +3051,7 @@ int grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
 //  **********************************************************************
 //  *                                                                    *
-//  * grape_calculate_densities:  Determine particle densities, giving	 *
+//  * grape6_calculate_densities:  Determine particle densities, giving	 *
 //  *				  zero density to particles with no	 *
 //  *				  neighbor within sqrt(h2_crit).	 *
 //  *                                                                    *
@@ -3068,7 +3067,7 @@ local INLINE void set_grape_density_radius(hdyn *b, real rnn_sq)
 // For a single particle, try to adjust the initial radius so that
 // it will contain just ~10-20 neighbors (set r = 3*d_nn, if known).
 
-// Called by:	grape_calculate_densities()			// global
+// Called by:	grape6_calculate_densities()			// global
 
 {
     static char *func = "set_grape_density_radius";
@@ -3167,7 +3166,7 @@ local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 // Determine density for a single particle from the GRAPE neighbor list,
 // or modify the radius of its neighbor sphere.
 
-// Called by:	grape_calculate_densities()			// global
+// Called by:	grape6_calculate_densities()			// global
 
 // Return values:	 0	success, density has been set
 //			-1	neighbor list overflow, radius decreased
@@ -3452,7 +3451,7 @@ local INLINE bool old_get_densities(xreal xtime, hdyn *nodes[],
 			// If this becomes an issue, can do better by setting
 			// neighbor radii for successfully handled particles
 			// to zero.  Also, we could restart after those
-			// particles, as in grape_calculate_acc_and_jerk().
+			// particles, as in grape6_calculate_acc_and_jerk().
 			//					[Steve, 6/01]
 
 			// Presently, we stop after too many retries.
@@ -3698,10 +3697,10 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 //						*****************************
 
 
-void grape_calculate_densities(hdyn* b,			// root node
+void grape6_calculate_densities(hdyn* b,			// root node
 			       real h2_crit)		// default = 4
 {
-    static char *func = "grape_calculate_densities";
+    static char *func = "grape6_calculate_densities";
 
 #ifdef T_DEBUG
     real sys_t = b->get_real_system_time();
@@ -3724,7 +3723,7 @@ void grape_calculate_densities(hdyn* b,			// root node
 
     // Copy all top-level nodes to the GRAPE hardware.
     // We will compute the forces, etc. using the same functions
-    // as grape_calculate_acc_and_jerk.
+    // as grape6_calculate_acc_and_jerk.
 
     int nj_on_grape = initialize_grape_arrays(b);
 
@@ -3785,7 +3784,7 @@ void grape_calculate_densities(hdyn* b,			// root node
 	// version represents a substantial speedup over its predecessor,
 	// and is quite simple to debug.  If more speed is needed, could
 	// modify the procedure again to follow the "rolling window"
-	// approach used in grape_calculate_acc_and_jerk, but that may
+	// approach used in grape6_calculate_acc_and_jerk, but that may
 	// be significantly more complicated.  May even be possible to
 	// combine the two functions...  (Steve, 3/03)
 
@@ -3859,12 +3858,12 @@ void grape_calculate_densities(hdyn* b,			// root node
 //  *                                                                    *
 //  **********************************************************************
 
-void clean_up_hdyn_grape()
+void clean_up_hdyn_grape6()
 
 // Explicitly delete static local data.
 
 {
-    // From initialize_grape_arrays()/grape_calculate_acc_and_jerk():
+    // From initialize_grape_arrays()/grape6_calculate_acc_and_jerk():
 
     if (node_list) delete [] node_list;
     if (current_nodes) delete [] current_nodes;

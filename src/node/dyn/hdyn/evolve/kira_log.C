@@ -649,7 +649,7 @@ void log_output(hdyn * b,
 
     real cpu = cpu_time();
     cerr << endl << "Computing densities..." << flush;
-    kira_compute_densities(b, cod_pos, cod_vel);	// does nothing unless
+    kira_calculate_densities(b, cod_pos, cod_vel);	// does nothing unless
 							// GRAPE is present
     cpu = cpu_time() - cpu;
     if (cpu < 0) cpu = 0;

@@ -49,7 +49,7 @@ local void clean_up_file(char* name)
     }
 }
 
-#define N_FILES 13
+#define N_FILES 14
 
 void clean_up_files()
 {
@@ -66,6 +66,7 @@ void clean_up_files()
 			     "OPTIONS",
 			     "PARAMS",
 			     "PP",
+			     "QT",
 			     "SCHED",
 			     "STOP"};
 
@@ -1023,6 +1024,27 @@ local void pp(hdyn * b, char * name)
     }
 }
 
+local void qt(hdyn * b, char * name)
+{
+    ifstream file(name);
+    if (file) {
+	cerr << endl << "kira_runtime: launching Qt browser at time "
+	     << b->get_system_time();
+	char display[1024];
+	int ret;
+	if (file.get(display, 1023, '\n')) {
+	    cerr << " with X display " << display << endl;
+	    ret = Qt_pp3(b, display);
+	} else {
+	    cerr << " with default X display" << endl;
+	    ret = Qt_pp3(b);
+	}
+	file.close();
+	clean_up_file(name);
+	cerr << "...continuing with return value " << ret << endl;
+    }
+}
+
 local void dump_to_file(hdyn* b, char* name)
 {
     ifstream file(name);
@@ -1124,6 +1146,9 @@ bool check_kira_runtime(hdyn* b,
 
     if (check_file("PP", false))
 	pp(b, "PP");
+
+    if (check_file("QT", false))
+	qt(b, "QT");
 
     if (check_file("DUMP", false)) {
 	cerr << endl

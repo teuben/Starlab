@@ -8,18 +8,102 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
+
 // Functions associated with calculating the energy of the system.
 //
 // Externally visible functions:
 //
+//	void kira_calculate_internal_energies
+//	void kira_calculate_energies
+//	void kira_top_level_energies
+//	void calculate_energies_with_external
 //	void print_recalculated_energies
+//
+// Major reorganization to remove compile-time GRAPE selection.
+//					      Steve 6/04
 
 #include "hdyn.h"
 
-#define MAX_EKIN	1.0e15		// Assume a hardware error if ekin
-					// is greater than this value
-					// -- beware of runaway neutron
-					// stars!
+// The following function is a switch between the various energy-
+// computation means available -- currently, front-end and GRAPE.
+// Only referenced from kira_calculate_energies, so should perhaps
+// become a local function.
+//
+// If other schemes are added (e.g. treecode), add them HERE.
+
+void kira_calculate_internal_energies(hdyn *b,
+				      real& epot, real& ekin, real& etot,
+				      bool cm,		// default = false
+				      bool use_grape)	// default = true
+{
+    // Compute the total internal energy; also compute the "pot"
+    // class datum.
+
+    // Notes from Steve (8/99):
+    //
+    //	- grape_calculate_energies recomputes hdyn::pot, but does
+    //	  *not* include the tidal terms.
+    //
+    //  - new code uses the hdyn version of calculate_energies() (see
+    //    ../util/hdyn_tt.C), which sets the hdyn::pot member data,
+    //    and also omits the tidal terms.
+    //
+    // The cm flag specifies that we should use the center-of-mass
+    // approximation, i.e. compute the top-level energies only.
+    // This is what we want for scale.  Implemented for GRAPE by
+    // Steve, 7/01.
+
+    // This function is called by hdyn::merge_nodes() and kira routine
+    // calculate_energies_with_external().
+
+    if (b->has_grape() && use_grape) {
+
+	if (b->has_grape6())
+	    grape6_calculate_energies(b, epot, ekin, etot, cm);
+	else
+	    grape4_calculate_energies(b, epot, ekin, etot, cm);
+
+    } else
+
+	calculate_energies(b, b->get_eps2(), epot, ekin, etot, cm);
+}
+
+
+
+// The following functions simply repackage the functionality of
+// kira_calculate_internal_energies.
+
+void kira_calculate_energies(dyn *b, real eps2, 
+			     real &potential, real &kinetic, real &total,
+			     bool cm)
+{
+    // Provide an hdyn function with a calling sequence that can be
+    // substituted for the dyn function dyn::calculate_energies when
+    // called by sys_stats...  Discard eps2 (--> 0).
+
+    // Called by hdyn/evolve/kira_log.C (kira function print_statistics())
+    // and hdyn/util/sys_stats.C (standalone tool), in each case as an
+    // argument to the dyn version of sys_stats.
+
+    kira_calculate_internal_energies((hdyn*)b, potential, kinetic, total, cm);
+}
+
+void kira_top_level_energies(dyn *b, real eps2,
+			     real& potential_energy,
+			     real& kinetic_energy)
+{
+    // Another lookalike, this time to perform the operation of
+    // dyn::get_top_level_energies() using the GRAPE if possible.
+    // Used only in the standalone tool hdyn/util/scale.C as an argument
+    // to the dyn function scale.
+
+    real energy;
+    kira_calculate_energies(b, eps2,
+			    potential_energy, kinetic_energy, energy,
+			    true);
+}
+
+
 
 local void inc_pot(dyn *b, real dpot)	// allow dyn function to access set_pot
 {
@@ -28,7 +112,7 @@ local void inc_pot(dyn *b, real dpot)	// allow dyn function to access set_pot
     bb->set_pot(pot+dpot);
 }
 
-void calculate_energies_with_external(hdyn* b,
+void calculate_energies_with_external(hdyn *b,
 				      real& epot, real& ekin, real& etot,
 				      bool cm,		// default = false
 				      bool use_grape)	// default = true
@@ -52,7 +136,14 @@ void calculate_energies_with_external(hdyn* b,
     }
 }
 
-void print_recalculated_energies(hdyn* b,
+
+
+#define MAX_EKIN	1.0e15		// Assume a hardware error if ekin
+					// is greater than this value
+					// -- beware of runaway neutron
+					// stars!
+
+void print_recalculated_energies(hdyn *b,
 				 bool print_dde,	// default = false
 				 bool save_story)	// default = false
 {

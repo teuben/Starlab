@@ -630,7 +630,7 @@ void dump_node_list2(int n) // default = 1000000000
 }
 
 
-void dump_node_list_for(char *s)
+void dump_node_list_for2(char *s)
 {
     int p = cerr.precision(HIGH_PRECISION);
     cerr << "Current node list entry for " << s << endl;

@@ -1468,115 +1468,112 @@ bool hdyn::correct_and_update()
 //  	PRL(new_vel);
 //    }
 
+    if (has_grape4()) {					// GRAPE-4 only
 
-#if defined(STARLAB_HAS_GRAPE4) || defined(STARLAB_HAS_GRAPE4)
+	// Note from Steve (10/01):
+	//
+	// Need to check for possible hardware errors (at least on the GRAPE-4).
+	// By construction, no quantity should change much from one step to the
+	// next.  Thus, a large change in acc or jerk (on in new_vel relative to
+	// vel, which combines the two in a natural way) probably indicates a
+	// problem.  One difficulty with checking new_vel is that supernovae may
+	// result in legal but large kick velocities.  However, these should
+	// be applied *after* the dynamical step, in which case both the old and
+	// the new velocities should be large.
+	//
+	// The GRAPE-4 error of 10/01 occurs exclusively in acc and in only one
+	// component, usually (but not always) z.  Thus, another possible check
+	// might be to see if the velocity, acc, or jerk (whichever is "large")
+	// is directed predominantly along one coordinate axis.
+	//
+	// Probably best to use vel as an indicator, then apply successively
+	// finer criteria before declaring a problem.  Once a problem is found,
+	// we simply quit this function, returning false.  It is up to the
+	// calling function to take corrective action.  Currently, this normally
+	// consists of recomputing the acc and jerk on the front end and calling
+	// this function again (just one retry, so we should be sure not to flag
+	// high-speed neutron stars...).
+	//
+	// Note also that, if the acc/jerk error is sufficiently small that it
+	// doesn't register significantly in vel, then there is no need to take
+	// action, as the problem seems to disappear from one GRAPE call to the
+	// next.
 
-    // Note from Steve (10/01):
-    //
-    // Need to check for possible hardware errors (at least on the GRAPE-4).
-    // By construction, no quantity should change much from one step to the
-    // next.  Thus, a large change in acc or jerk (on in new_vel relative to
-    // vel, which combines the two in a natural way) probably indicates a
-    // problem.  One difficulty with checking new_vel is that supernovae may
-    // result in legal but large kick velocities.  However, these should
-    // be applied *after* the dynamical step, in which case both the old and
-    // the new velocities should be large.
-    //
-    // The GRAPE-4 error of 10/01 occurs exclusively in acc and in only one
-    // component, usually (but not always) z.  Thus, another possible check
-    // might be to see if the velocity, acc, or jerk (whichever is "large")
-    // is directed predominantly along one coordinate axis.
-    //
-    // Probably best to use vel as an indicator, then apply successively
-    // finer criteria before declaring a problem.  Once a problem is found,
-    // we simply quit this function, returning false.  It is up to the
-    // calling function to take corrective action.  Currently, this normally
-    // consists of recomputing the acc and jerk on the front end and calling
-    // this function again (just one retry, so we should be sure not to flag
-    // high-speed neutron stars...).
-    //
-    // Note also that, if the acc/jerk error is sufficiently small that it
-    // doesn't register significantly in vel, then there is no need to take
-    // action, as the problem seems to disappear from one GRAPE call to the
-    // next.
+	real old_v = abs1(vel);
 
-    real old_v = abs1(vel);
+	// Numbers here are somewhat arbitrary (but see above note).
 
-    // Numbers here are somewhat arbitrary (but see above note).
+	// real new_v = abs1(new_vel);
+	// if (new_v/old_v > 1000 || new_v > 1.e6) {	// too loose...
 
-    // real new_v = abs1(new_vel);
-    // if (new_v/old_v > 1000 || new_v > 1.e6) {	// too loose...
+	real dv = abs1(new_vel-vel);
+	if (dv > old_v && dv > 0.5) {
 
-    real dv = abs1(new_vel-vel);
-    if (dv > old_v && dv > 0.5) {
+	    // Possible runaway -- speed has changed significantly.
 
-	// Possible runaway -- speed has changed significantly.
+	    // Refine the possibilities before flagging an error.
+	    // Neutron star shouldn't show a large delta(vel), and the acc
+	    // or jerk should be good indicators of problems in any case.
 
-	// Refine the possibilities before flagging an error.
-	// Neutron star shouldn't show a large delta(vel), and the acc
-	// or jerk should be good indicators of problems in any case.
+	    if (abs1(acc-old_acc) > abs1(old_acc)
+		|| abs1(jerk-old_jerk) > 5*abs1(old_jerk)) {
 
-	if (abs1(acc-old_acc) > abs1(old_acc)
-	    || abs1(jerk-old_jerk) > 5*abs1(old_jerk)) {
+	      	if (diag->grape && diag->grape_level > 0) {
 
-	    if (diag->grape && diag->grape_level > 0) {
+		    cerr << endl << "correct: possible hardware error at time "
+		         << get_system_time() << endl;
 
-		cerr << endl << "correct: possible hardware error at time "
-		     << get_system_time() << endl;
-
-#if defined(STARLAB_HAS_GRAPE4)
-		PRL(get_grape_chip(this));	// direct access to data
-						// in hdyn_grape4.C
-#endif
+		    if (has_grape4())
+		        PRL(get_grape4_chip(this));	// direct access to data
+							// in hdyn_grape4.C
 
 #if 0
-		cerr << endl << "pp3 with old pos and vel:" << endl;
-		pp3(this);
+		    cerr << endl << "pp3 with old pos and vel:" << endl;
+		    pp3(this);
 #else
-		PRL(old_acc);
-		PRL(old_jerk);
-		PRL(acc);
-		PRL(jerk);
+		    PRL(old_acc);
+		    PRL(old_jerk);
+		    PRL(acc);
+		    PRL(jerk);
 #endif
-	    }
+		}
 
-	    // cerr << endl << endl << "System dump:" << endl << endl;
-	    // pp3(get_root());
+		// cerr << endl << endl << "System dump:" << endl << endl;
+		// pp3(get_root());
 
-	    // Options:	quit
-	    //		restart
-	    //		flag and continue
-	    //		discard new_pos and new_vel, retain
-	    //		    old acc and jerk and continue
-	    //		flag, recompute acc and jerk, and continue  <--
+		// Options:	quit
+		//		restart
+		//		flag and continue
+		//		discard new_pos and new_vel, retain
+		//		    old acc and jerk and continue
+		//		flag, recompute acc and jerk, and continue  <--
 
-	    // Flag the problem internally.
+		// Flag the problem internally.
 
-	    char tmp[128];
-	    sprintf(tmp, "runaway in correct at time %f", time);
-	    log_comment(tmp);
+		char tmp[128];
+		sprintf(tmp, "runaway in correct at time %f", time);
+		log_comment(tmp);
 
-	    int n_runaway = 0;
-	    if (find_qmatch(get_log_story(), "n_runaway"))
-		n_runaway = getiq(get_log_story(), "n_runaway");
+		int n_runaway = 0;
+		if (find_qmatch(get_log_story(), "n_runaway"))
+		    n_runaway = getiq(get_log_story(), "n_runaway");
 
-	    n_runaway++;
-	    if (diag->grape && diag->grape_level > 0)
-		PRL(n_runaway);
+		n_runaway++;
+		if (diag->grape && diag->grape_level > 0)
+		    PRL(n_runaway);
 
-	    if (n_runaway > 10)
-		exit(0);		// pretty liberal, as errors are
+		if (n_runaway > 10)
+		    exit(0);		// pretty liberal, as errors are
 					// usually associated with pipes,
 					// not stars...
 
-	    putiq(get_log_story(), "n_runaway", n_runaway);
+		putiq(get_log_story(), "n_runaway", n_runaway);
 
-	    return false;		// trigger a retry on return; don't
+		return false;		// trigger a retry on return; don't
 					// even bother with update
+	    }
 	}
     }
-
-#endif
 
     pos = new_pos;
     vel = new_vel;
@@ -3104,7 +3101,7 @@ int hdyn::top_level_node_real_force_calculation()
     int n_top = flat_calculate_acc_and_jerk(root, is_parent());
 
     if (nn == NULL) {
-        pretty_print_node(cerr); cerr << " nn NULL after flat " << endl;
+        // pretty_print_node(cerr); cerr << " nn NULL after flat " << endl;
     }
 
     return n_top;
@@ -3136,7 +3133,7 @@ void hdyn::top_level_node_epilogue_force_calculation()
     // Exclude the case of nn = this (possible when GRAPE is used.)
     // (Sep 9, 1998, SLWM)
 
-    if (nn != this) {
+    if (nn && nn != this) {
 	while (nn->is_parent()) {
 	    // cerr << "nn correction for "; pretty_print_node(cerr);
 	    // cerr << "and  "; nn->pretty_print_node(cerr);
@@ -3482,7 +3479,7 @@ void hdyn::calculate_acc_and_jerk(bool exact)
     //           lists it lies.
 
     if (nn == NULL) {
-         pretty_print_node(cerr); cerr << " nn NULL after calc " << endl;
+         // pretty_print_node(cerr); cerr << " nn NULL after calc " << endl;
     }
 }
 

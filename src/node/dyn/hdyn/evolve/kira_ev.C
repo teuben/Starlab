@@ -8,12 +8,14 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-// Functions associated with integration within kira.
+
+// Functions associated with force evaluations within kira.
 //
 // Externally visible functions:
 //
 //	void calculate_acc_and_jerk_for_list
 //	void calculate_acc_and_jerk_on_all_top_level_nodes
+//	void kira_synchronize_tree
 //	void initialize_system_phase2
 //	void clean_up_kira_ev
 
@@ -21,6 +23,9 @@
 // debugging #ifdefs -- too confusing, and no longer relevant
 // after the rewrite.
 //					      Steve 4/03, 8/03
+//
+// Major reorganization to remove compile-time GRAPE selection.
+//					      Steve 6/04
 
 #include "hdyn.h"
 #include "kira_timing.h"
@@ -29,6 +34,102 @@
 #ifndef T_DEBUG_kira_ev
 #   undef T_DEBUG
 #endif
+
+
+//-------------------------------------------------------------------------
+//
+// NOTE:  Currently, kira_calculate_top_level_acc_and_jerk() is a simple
+// compile-time switch between the various (GRAPE and non-GRAPE) methods
+// available to compute the acc and jerk (due to internal forces only)
+// on the particles listed in next_nodes[].
+//
+// Alternatively, it could be replaced by a function pointer leading
+// directly to the functions involved, set at startup based on the
+// configuration of the system.  Implemented and then removed, but
+// most of the commented-out code can still be found...
+//
+// The function declaration is:
+//
+//	int kira_calculate_top_level_acc_and_jerk(hdyn **next_nodes,
+//						  int n_next,
+//					  	  xreal time,
+//					  	  bool restart_grape);
+//
+// where restart_grape may be ignored or used for other purposes in future
+// applications.  It indicates a change in top-level tree structure that
+// requires an internal reset in the GRAPE arrays.  The functions's return
+// value is simply the number of top-level nodes in the system.
+//
+// Currently, the list of possible functions that can be used is
+//
+//	top_level_acc_and_jerk_for_list()	below
+//	grape4_calculate_acc_and_jerk()		in hdyn_grape4.C
+//	grape6_calculate_acc_and_jerk()		in hdyn_grape6.C
+//
+// Note the acc_function_ptr typedef in hdyn.h.
+//
+// Currently, the only call comes from calculate_acc_and_jerk_for_list(),
+// and restart_grape is always set false there after the call.
+//
+//-------------------------------------------------------------------------
+
+
+local inline int _kira_calculate_top_level_acc_and_jerk(hdyn **next_nodes,
+							int n_next,
+							xreal time,
+							bool restart_grape)
+{
+    if (n_next <= 0) return 0;
+
+    int n_top = 0;
+    unsigned int config = next_nodes[0]->get_config();
+
+    switch (config) {
+
+	case 0:	n_top = top_level_acc_and_jerk_for_list(next_nodes, n_next,
+							time, restart_grape);
+		break;
+
+	case 1:	n_top = grape4_calculate_acc_and_jerk(next_nodes, n_next,
+						      time, restart_grape);
+		break;
+
+	case 2:	n_top = grape6_calculate_acc_and_jerk(next_nodes, n_next,
+						      time, restart_grape);
+		break;
+    }
+
+    return n_top;
+}
+
+// (Use the inline version within this file...)
+
+int kira_calculate_top_level_acc_and_jerk(hdyn **next_nodes,
+					  int n_next,
+					  xreal time,
+					  bool restart_grape)
+{
+    return _kira_calculate_top_level_acc_and_jerk(next_nodes, n_next,
+						  time, restart_grape);
+}
+
+int top_level_acc_and_jerk_for_list(hdyn **next_nodes,
+				    int n_next,
+				    xreal time,
+				    bool restart_grape)
+{
+    int n_top = 0;
+
+    for (int i = 0; i < n_next; i++) {
+	hdyn *bi = next_nodes[i];
+	if (bi->is_top_level_node())
+	    n_top = bi->top_level_node_real_force_calculation();
+    }
+
+    return n_top;
+}
+
+
 
 int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 				    int  n_next,
@@ -158,20 +259,36 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 	// Calculate top-level forces.  Note new return value from
 	// kira_calculate_top_level_acc_and_jerk() (Steve, 4/03).
 
-	// Top_level force calculation uses
+	// Top_level force calculation actually uses
 	//
-	//	grape_calculate_acc_and_jerk()
+	//	grape*_calculate_acc_and_jerk()
 	//
 	// or
 	//
-	//	top_level_node_real_force_calculation()
+	//	top_level_node_real_force_calculation(), via
+	//	top_level_acc_and_jerk_for list()
 	//
 	// as appropriate.
 
-	if (!exact && !ignore_internal)
-	    n_force = kira_calculate_top_level_acc_and_jerk(next_nodes,
-							    n_top, time,
-							    restart_grape);
+	if (!exact && !ignore_internal) {
+
+
+// 	    acc_function_ptr get_acc_and_jerk
+// 		= b->get_kira_calculate_top_level_acc_and_jerk();
+//
+// 	    n_force = get_acc_and_jerk(next_nodes,
+// 				       n_top, time,
+// 				       restart_grape);
+
+
+	    n_force = _kira_calculate_top_level_acc_and_jerk(next_nodes,
+							     n_top, time,
+							     restart_grape);
+
+	    // Note that we now clear restart_grape explicitly here.
+
+	    restart_grape = false;
+	}
 
 //	if (sys_t >= 44.15329 && sys_t <= 44.1533) {
 //	    cerr << "after top-level acc_and_jerk" << endl;
@@ -378,8 +495,180 @@ void calculate_acc_and_jerk_on_top_level_binaries(hdyn * b)
 
 
 
-// initialize_system_phase2:  Calculate acc, jerk, timestep, etc for all nodes.
+void kira_synchronize_tree(hdyn *b,
+			   bool sync_low_level)		// default = false
+{
+    // GRAPE replacement for synchronize_tree().  Synchronize all
+    // top-level nodes.  Called from integrate_list() in kira_ev.C and
+    // hdyn::merge_nodes().  For now, at least, the entire algorithm
+    // from hdyn_ev.C is repeated here.
 
+    if (b->has_grape()) {
+
+	// Code is similar to that in integrate_list(), but only top-level
+	// nodes are considered and we don't check for errors in function
+	// correct_and_update.  Possibly should merge this with (part of)
+	// integrate_list() and drop synchronize_tree() completely.
+	//						     (Steve, 1/02)
+
+	// Make a list of top-level nodes in need of synchronization.
+	// Generally interested in recomputation of acc and jerk, so
+	// probably don't need to treat low-level nodes.  Default is
+	// not to touch them.  Note that, even if sync_low_level is
+	// true, we still won't synchronize unperturbed binaries.
+
+	xreal sys_t = b->get_system_time();
+
+	cerr << endl
+	     << "synchronizing tree using GRAPE at time " << sys_t
+	     << endl << flush;
+
+	// Note: no need to set time steps here, and in fact GRAPE will
+	// complain if j-particle times and timesteps are not consistent.
+
+	int n_next = 0, n_top = 0;
+	for_all_daughters(hdyn, b, bi) {
+	    n_top++;
+	    if (bi->get_time() < sys_t) {
+		// unnecessary and bad:
+		// bi->set_timestep(sys_t - bi->get_time());
+		n_next++;
+	    }
+	}
+
+	hdyn **next_nodes = new hdynptr[n_next];
+	n_next = 0;
+	for_all_daughters(hdyn, b, bi)
+	    if (bi->get_time() < sys_t) next_nodes[n_next++] = bi;
+
+	// Integrate all particles on the list.  Start by computing forces.
+	// (Assume exact = false and ignore_internal = false.)
+
+	for (int i = 0; i < n_next; i++) {
+	    hdyn *bi = next_nodes[i];
+	    predict_loworder_all(bi, sys_t);
+	    bi->clear_interaction();
+	    bi->top_level_node_prologue_for_force_calculation(false);
+	}
+
+	bool restart_grape = false;
+
+//	b->get_kira_calculate_top_level_acc_and_jerk()(next_nodes, n_next,
+//						       sys_t, restart_grape);
+
+	kira_calculate_top_level_acc_and_jerk(next_nodes, n_next,
+					      sys_t, restart_grape);
+
+	for (int i = 0; i < n_next; i++) {
+	    hdyn *bi = next_nodes[i];
+	    bi->inc_direct_force(n_top-1);
+	    bi->top_level_node_epilogue_force_calculation();
+	    bi->inc_steps();
+	}
+
+	// Complete calculation of accs and jerks by correcting for C.M.
+	// interactions and applying external fields.
+
+	kira_options *ko = b->get_kira_options();
+
+	for (int i = 0; i < n_next; i++)
+	    next_nodes[i]->set_on_integration_list();
+
+	if (ko->use_old_correct_acc_and_jerk || !ko->use_perturbed_list) {
+	    bool reset = false;
+	    correct_acc_and_jerk(b, reset);		// old version
+	} else
+	    correct_acc_and_jerk(next_nodes, n_next);	// new version
+
+	for (int i = 0; i < n_next; i++)
+	    next_nodes[i]->clear_on_integration_list();
+
+	if (b->get_external_field() > 0) {
+
+	    // Add external forces.
+
+	    for (int i = 0; i < n_next; i++) {
+		hdyn *bi = next_nodes[i];
+		real pot;
+		vec acc, jerk;
+		get_external_acc(bi, bi->get_pred_pos(), bi->get_pred_vel(),
+				 pot, acc, jerk);
+		bi->inc_pot(pot);
+		bi->inc_acc(acc);
+		bi->inc_jerk(jerk);
+	    }
+	}
+
+	// Apply corrector and redetermine timesteps.
+
+	real st = sys_t;
+
+	for (int i = 0; i < n_next; i++) {
+	    hdyn *bi = next_nodes[i];
+	    bi->correct_and_update();
+	    bi->init_pred();
+	    bi->store_old_force();
+
+	    // As in synchronize_tree, make sure time step is consistent with
+	    // system_time (= time).
+
+	    real timestep = bi->get_timestep();
+
+	    int iter = 0;
+	    while (fmod(st, timestep) != 0) {
+		if (iter++ > 30) break;
+		timestep *= 0.5;
+	    }
+
+	    if (iter > 20) {
+		cerr << "kira_synchronize_tree: " << bi->format_label() << " ";
+		PRL(iter);
+		PRI(4); PRC(fmod(st, timestep)); PRL(timestep);
+	    }
+
+	    bi->set_timestep(timestep);
+	}
+
+	delete [] next_nodes;
+
+	// Top-level nodes are all synchronized.  Deal with low-level nodes.  
+
+	if (sync_low_level) {
+	    for_all_daughters(hdyn, b, bi) {
+		hdyn *od = bi->get_oldest_daughter();
+		if (od && !od->get_kepler()) {
+
+		    // Synchronizing od will also synchronize its sister,
+		    // but call synchronize_tree explicitly to ensure that
+		    // substructure is properly handled.
+
+		    synchronize_tree(od);
+
+		    hdyn *yd = od->get_younger_sister();
+		    if (yd) synchronize_tree(yd);		// else error?
+
+		}
+	    }
+	}
+
+	cerr << endl
+	     << "end of synchronization"
+	     << endl << flush;
+
+    } else {
+
+	cerr << endl
+	     << "synchronizing tree without GRAPE at time "
+	     << b->get_system_time() << endl;
+
+	synchronize_tree(b);
+    }
+}
+
+
+
+// initialize_system_phase2:  Calculate acc, jerk, timestep, etc for all nodes.
+//
 // NOTE: System should be synchronized prior to calling this function.
 
 // Static data:

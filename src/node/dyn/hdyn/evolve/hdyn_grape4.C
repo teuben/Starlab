@@ -19,27 +19,27 @@
 //    version 2:  Aug 1998   Steve McMillan
 //.............................................................................
 //
-//	Externally visible functions (note that GRAPE number is unspecified):
+//	Externally visible functions:
 //
-//	void check_release_grape
-//	void grape_calculate_energies
-//	void grape_calculate_acc_and_jerk
-//	void grape_calculate_densities
-//	void clean_up_hdyn_grape
+//	void check_release_grape4
+//	void grape4_calculate_energies
+//	void grape4_calculate_acc_and_jerk
+//	void grape4_calculate_densities
+//	void clean_up_hdyn_grape4
 //
 //.............................................................................
 //
 //  This file includes:
 //
-//    -     grape_calculate_acc_and_jerk(next_nodes, n_next)
+//    -     grape4_calculate_acc_and_jerk(next_nodes, n_next)
 //          A single function which takes care of everything...
 //
-//    -     check_release_grape()
+//    -     check_release_grape4()
 //          Releases the GRAPE hardware so that someone else can use it
 //          after a prescribed amount of CPU time has passed)
 //
 //    -	    Routines to determine neighbor lists (called from within
-//	    grape_calculate_acc_and_jerk)
+//	    grape4_calculate_acc_and_jerk)
 //
 //  When called, it performs the following:
 //
@@ -108,9 +108,9 @@
 
 // Note from Steve to Steve (7/9/97):
 //
-// force_by_grape4()	     is called only from grape_calculate_acc_and_jerk()
+// force_by_grape4()	     is called only from grape4_calculate_acc_and_jerk()
 // force_by_grape4_on_leaves()		"	 force_by_grape4_on_all_leaves()
-// force_by_grape4_on_all_leaves()	"	 grape_calculate_energies()
+// force_by_grape4_on_all_leaves()	"	 grape4_calculate_energies()
 
 // force_by_grape4 computes forces between TOP-LEVEL NODES in the
 // POINT-MASS approximation (like flat_calculate_acc_and_jerk).
@@ -227,7 +227,7 @@ local void initialize_node_lists()
 
 // Specific accessor:
 
-int get_grape_chip(hdyn *b)
+int get_grape4_chip(hdyn *b)
 {
     int i = b->get_grape_index() - 1;
     if (i >= 0 && i < grape_n_max)
@@ -242,8 +242,8 @@ local void jpdma_nodes(int nnodes, hdyn * nodelist[], bool predicted,
 // Load the j-nodes on the list into the GRAPE.
 //
 // Called by:	initialize_array()				local
-//		grape_calculate_acc_and_jerk() [twice]		global
-//		grape_calculate_densities()			global
+//		grape4_calculate_acc_and_jerk() [twice]		global
+//		grape4_calculate_densities()			global
 
 {
     int jpmax;
@@ -309,8 +309,8 @@ local void force_by_grape4(real time, int ni, hdyn * nodes[], int nj)
 
 // Calculate the force on top-level nodes.
 //
-// Called by:	grape_calculate_acc_and_jerk()			global
-//		grape_calculate_densities()			global
+// Called by:	grape4_calculate_acc_and_jerk()			global
+//		grape4_calculate_densities()			global
 
 {
     int npipe;
@@ -471,8 +471,8 @@ local int put_grape_index_to_top_level_nodes(hdyn* b)
 
 local int initialize_array(hdyn * root)
 
-// Called by:	grape_calculate_acc_and_jerk()			global
-//		grape_calculate_densities()			global
+// Called by:	grape4_calculate_acc_and_jerk()			global
+//		grape4_calculate_densities()			global
 
 {
     // Make list of and index top-level nodes.
@@ -501,10 +501,10 @@ local int initialize_array(hdyn * root)
 //  **********************************************************************
 
 //========================================================================
-// check_release_grape:  Accessor for GRAPE release/attach.
+// check_release_grape4:  Accessor for GRAPE release/attach.
 //========================================================================
 
-void check_release_grape(kira_options *ko, xreal time,
+void check_release_grape4(kira_options *ko, xreal time,
 			 bool verbose)		// default = true
 {
 #ifdef SHARE_GRAPE
@@ -528,7 +528,7 @@ void check_release_grape(kira_options *ko, xreal time,
 
 
 //======================================================================
-// grape_calculate_energies:  Calculate total energy of the system
+// grape4_calculate_energies:  Calculate total energy of the system
 //			      (requires GRAPE reset after use).
 //======================================================================
 
@@ -626,7 +626,7 @@ local int jpdma_all_leaves(hdyn *root,
 			   real predicted_time,
 			   bool cm = false)		// use CM approximation
 
-// Called by:	grape_calculate_energies()
+// Called by:	grape4_calculate_energies()
 
 {
     int jpmax = h3jpmax_();
@@ -736,7 +736,7 @@ static hdyn ** allnodes = NULL;
 local void force_by_grape4_on_all_leaves(real time, hdyn * b, int nj,
 					 bool cm = false)	// CM approx
 
-// Called by:	grape_calculate_energies()
+// Called by:	grape4_calculate_energies()
 
 {
     int npipe = h3npipe_();
@@ -781,7 +781,7 @@ local void force_by_grape4_on_all_leaves(real time, hdyn * b, int nj,
 //  *****************************
 //  *****************************
 
-void grape_calculate_energies(hdyn * b,
+void grape4_calculate_energies(hdyn * b,
 			      real &epot,
 			      real &ekin,
 			      real &etot,
@@ -789,7 +789,7 @@ void grape_calculate_energies(hdyn * b,
 {
     if (!grape_is_open) {
 
-	cerr << endl << "grape_calculate_energies: ";
+	cerr << endl << "grape4_calculate_energies: ";
 	if (!grape_first_attach) cerr << "re";
 	cerr << "attaching GRAPE" << endl;
 	h3open_();
@@ -842,7 +842,7 @@ void grape_calculate_energies(hdyn * b,
 
 
 //======================================================================
-// grape_calculate_acc_and_jerk: Use the GRAPE hardware to compute the
+// grape4_calculate_acc_and_jerk: Use the GRAPE hardware to compute the
 //				  accs and jerks on a list of nodes.
 //======================================================================
 
@@ -853,7 +853,7 @@ local bool get_neighbors_and_adjust_h2(int chip, hdyn * b)
 // As in the case of flat_calculate_..., these values overwrite
 // previous ones.  Previously set values are ignored.
 
-// Called by:	grape_calculate_acc_and_jerk()
+// Called by:	grape4_calculate_acc_and_jerk()
 
 {
     int nnb;
@@ -974,7 +974,7 @@ local bool get_neighbors_and_adjust_h2(int chip, hdyn * b)
 
 local void set_grape4_neighbour_radius(hdyn * b, int nj_on_grape)
 
-// Called by:	grape_calculate_acc_and_jerk()
+// Called by:	grape4_calculate_acc_and_jerk()
 
 {
     int hindex = b->get_grape_index()-1;
@@ -1104,7 +1104,7 @@ local void set_grape4_neighbour_radius(hdyn * b, int nj_on_grape)
 //  This function is called from kira_calculate_top_level_acc_and_jerk,
 //  which is called only from calculate_acc_and_jerk_for_list.
 
-int grape_calculate_acc_and_jerk(hdyn ** next_nodes,
+int grape4_calculate_acc_and_jerk(hdyn ** next_nodes,
 				 int n_next,
 				 xreal time,
 				 bool restart)
@@ -1135,7 +1135,7 @@ int grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 
     if (!grape_is_open) {
 
-	cerr << endl << "grape_calculate_acc_and_jerk: ";
+	cerr << endl << "grape4_calculate_acc_and_jerk: ";
 	if (!grape_first_attach) cerr << "re";
 	cerr << "attaching GRAPE" << endl;
 	h3open_();
@@ -1301,7 +1301,7 @@ int grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 
 		    // Should not happen!  About to enter an infinite loop...
 
-		    err_exit("grape_calculate_acc_and_jerk: rnb_sq = 0");
+		    err_exit("grape4_calculate_acc_and_jerk: rnb_sq = 0");
 
 		}
 
@@ -1386,7 +1386,7 @@ int grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 
 
 //======================================================================
-//  grape_calculate_densities:  Determine particle densities, assigning
+//  grape4_calculate_densities:  Determine particle densities, assigning
 //				zero density to particles with no
 //				neighbor within sqrt(h2_crit).
 //======================================================================
@@ -1964,12 +1964,12 @@ local int recount_nblist(int ip)	// ip = number of chips in use
     return total;
 }
 
-void grape_calculate_densities(hdyn* b,
+void grape4_calculate_densities(hdyn* b,
 			       real h2_crit)	// default = 4
 {
     if (!grape_is_open) {
 
-	cerr << endl << "grape_calculate_densities: ";
+	cerr << endl << "grape4_calculate_densities: ";
 	if (!grape_first_attach) cerr << "re";
 	cerr << "attaching GRAPE" << endl;
 	h3open_();
@@ -2123,7 +2123,7 @@ void grape_calculate_densities(hdyn* b,
 	// Work around side-effect of inefficient iteration.
 	// Silently release and reattach the GRAPE hardware.
 
-	check_release_grape(b->get_kira_options(), time, false);
+	check_release_grape4(b->get_kira_options(), time, false);
 
 	if (!grape_is_open) {
 	    // cerr << "reattaching GRAPE, i = " << i << endl;
@@ -2145,7 +2145,7 @@ void grape_calculate_densities(hdyn* b,
     putrq(b->get_dyn_story(), "density_time", (real)b->get_system_time());
 
     if (n_retry > 10) {
-	cerr << "grape_calculate_densities:  ";
+	cerr << "grape4_calculate_densities:  ";
 	PRC(n_grape); PRL(n_retry);
     }
 
@@ -2161,7 +2161,7 @@ void grape_calculate_densities(hdyn* b,
 // External cleanup -- delete local static arrays.
 //========================================================================
 
-void clean_up_hdyn_grape()
+void clean_up_hdyn_grape4()
 {
     // Set in put_grape_index_to_top_level_nodes():
 
