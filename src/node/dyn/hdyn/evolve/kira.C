@@ -641,6 +641,8 @@ local int integrate_list(hdyn * b,
     static bool restart_grape = true;
     static bool reset_force_correction = true;	// no longer used
 
+    int return_fac = 1;
+
     int i, steps = 0;
     xreal sys_t = next_nodes[0]->get_system_time();
 
@@ -766,6 +768,10 @@ local int integrate_list(hdyn * b,
 		    } else {
 			cerr << endl << "recomputed  "; PRL(bi->get_acc());
 			PRI(12); PRL(bi->get_jerk());
+			PRI(12); PRL(bi->get_pos());
+			PRI(12); PRL(bi->get_vel());
+			cerr << endl;
+			return_fac = -1;
 		    }
 		}
 
@@ -1016,7 +1022,7 @@ local int integrate_list(hdyn * b,
 			next_nodes[j] = NULL;
 		}
 
-		return steps;
+		return return_fac* steps;
 	    }
 	}
     }
@@ -1222,7 +1228,8 @@ local int integrate_list(hdyn * b,
 		    }
 		    if (cm_list) delete [] cm_list;
 
-		    return steps;	// NOTE: we currently return after
+		    return return_fac*steps;
+					// NOTE: we currently return after
 					//	 the FIRST tree rearrangement,
 					// 	 so we can only have one
 					//	 restructuring per block time
@@ -1233,7 +1240,7 @@ local int integrate_list(hdyn * b,
 	}
     }
 
-    return steps;
+    return return_fac*steps;
 }
 
 
@@ -2002,9 +2009,19 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	int ds = integrate_list(b, next_nodes, n_next, exact,
 				tree_changed, full_dump);
 
+	bool force_energy_check = false;
+	if (ds < 0) {
+	    ds = -ds;
+	    if (kd->check_heartbeat) force_energy_check = true;
+	}
+
 	steps += ds;
 	grape_steps += ds;
 	count += 1;
+
+	if (force_energy_check)
+	    count = 4*kd->n_check_heartbeat
+			* (floor(count / (4*kd->n_check_heartbeat)) + 1);
 
 	if (full_dump == 1) {
 

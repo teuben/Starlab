@@ -208,7 +208,7 @@ local void initialize_node_lists()
 	for (int i = 0; i < grape_n_max; i++)
 	    nb_check_counter[i] = 0;
 
-	// Grape chip useful for hardware debugging...
+	// Grape_chip useful for hardware debugging...
 
 	grape_chip = new int[grape_n_max];
         for (int i = 0; i < grape_n_max; i++)
@@ -442,18 +442,19 @@ local int put_grape_index_to_top_level_nodes(hdyn* b)
 //	grape_n_max = (int) (node_count * 1.5) + 10;
 	grape_n_max = (int) (node_count * 3.0) + 10;
 
-	delete nodes;
-	delete next_top;
-	delete previous_nodes;
-	delete nb_check_counter;
-	delete pxj;
-	delete pvj;
-	delete paj;
-	delete pjj;
-	delete ptj;
-	delete pmj;
-	delete ppj;
-	delete h3nb;
+	delete [] nodes;
+	delete [] next_top;
+	delete [] previous_nodes;
+	delete [] nb_check_counter;
+	delete [] grape_chip;
+	delete [] pxj;
+	delete [] pvj;
+	delete [] paj;
+	delete [] pjj;
+	delete [] ptj;
+	delete [] pmj;
+	delete [] ppj;
+	delete [] h3nb;
 	nodes = NULL;
     }
 
@@ -2170,6 +2171,7 @@ void clean_up_hdyn_grape()
     if (next_top) delete [] next_top;
     if (previous_nodes) delete [] previous_nodes;
     if (nb_check_counter) delete [] nb_check_counter;
+    if (grape_chip) delete [] grape_chip;
 
     if (pxj) delete [] pxj;
     if (pvj) delete [] pvj;
