@@ -663,16 +663,6 @@ ostream & _pdyn_::print_dyn_story(ostream & s,
     return s;
 }
 
-// Not needed (should be inherited?):
-
-//  ostream & pdyn::print_dyn_story(ostream & s,
-//  				bool print_xreal,	// default = true
-//  				int short_output)	// default = 0, ignored
-//  {
-//      _pdyn_::print_dyn_story(s, print_xreal, short_output);
-//      return s;
-//  }
-
 ostream & tdyn::print_dyn_story(ostream & s,
 				bool print_xreal,	// default = true
 				int short_output)	// default = 0, ignored
@@ -692,6 +682,31 @@ ostream & tdyn::print_dyn_story(ostream & s,
 
     return s;
 }
+
+#if 0
+
+// In progress...
+
+ostream& pdyn::print_star_story(ostream& s,
+				int short_output)	// default = 0, ignored
+{
+    // On input pdyn will read Star data directly into the pdyn class.
+    // On output, write the data into a Star segment, so the stream
+    // can be used as input to kira.
+
+    put_story_header(s, STAR_ID);
+
+    if (is_root() && sbase) {
+       put_real_number(s, "  mass_scale     =  ", sbase->conv_m_star_to_dyn(1));
+       put_real_number(s, "  size_scale     =  ", sbase->conv_r_star_to_dyn(1));
+       put_real_number(s, "  time_scale     =  ", sbase->conv_t_star_to_dyn(1));
+    }
+
+    put_story_footer(s, STAR_ID);
+    
+    return s;
+}
+#endif
 
 #else
 
