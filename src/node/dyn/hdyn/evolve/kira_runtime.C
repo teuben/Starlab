@@ -1055,14 +1055,20 @@ void check_kira_init(hdyn *b)
     char file[1024];
 
     // Look first in $HOME/.kira ...
+    // Note: may not exist if (e.g.) we are running kira in a cgi script.
 
-    strcpy(file, getenv("HOME"));
-    strcat(file, "/.kira");
+    if (getenv("HOME")) {
 
-    if (check_file(file, false)) {
-	cerr << "Reading init file " << getenv("HOME") << "/.kira" << endl;
-	modify_diag(b, file, false);
-	modify_options(b, file, false);
+	strcpy(file, getenv("HOME"));
+	strcat(file, "/.kira");
+
+	if (check_file(file, false)) {
+	    cerr << "Reading init file " << getenv("HOME") << "/.kira"
+		<< endl << flush;
+	    modify_diag(b, file, false);
+	    modify_options(b, file, false);
+	}
+
     }
 
     // ... then allow local setup in ./.kira.
@@ -1070,10 +1076,11 @@ void check_kira_init(hdyn *b)
     strcpy(file, "./.kira");
 
     if (check_file(file, false)) {
-	cerr << "Reading init file " << "./.kira" << endl;
+	cerr << "Reading init file " << "./.kira" << endl << flush;
 	modify_diag(b, file, false);
 	modify_options(b, file, false);
     }
+
 }
 
 
