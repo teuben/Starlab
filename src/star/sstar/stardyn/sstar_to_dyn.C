@@ -1,10 +1,7 @@
 //
 // sstar_to_dyn.C 
 //
-/* 	Communication between the dynamics and the single stelaar
- *	evolution.
- *
- */
+// Communication between the dynamics and the single stellar evolution.
 
 #include "sstar_to_dyn.h"
 #include "star.h"
@@ -12,7 +9,6 @@
 //#define MASS_UPDATE_LIMIT 0.01
 
 #define DEBUG false
-
 
 bool has_sstar(dyn * bi) {
 
@@ -29,15 +25,17 @@ vec conv_v_star_to_dyn(vec& v, real rf, real tf) {
 //              Internal size is solar raii
 //              Internal time is Myr.
 //              km/s to Rsun/Myr
+
       real to_Rsun_Myr = cnsts.physics(km_per_s) * cnsts.physics(Myear)
 	               / cnsts.parameters(solar_radius);
       real to_dyn      = rf/tf;
       //cerr<<"scaling: "<<to_dyn<<endl;
       //cerr <<"kick: " << v << " dyn_V: " << to_Rsun_Myr * to_dyn * v << endl;
       return to_Rsun_Myr * to_dyn * v;
-   }
+}
 
 vec anomalous_velocity(dyn* b) {
+
     //cerr << "in anomalous_velocity..." << endl;
     //PRL(b->get_starbase()->get_anomal_velocity());
 
@@ -52,23 +50,24 @@ vec anomalous_velocity(dyn* b) {
     //PRL(b->get_starbase()->get_anomal_velocity());
 
      return new_velocity;
-   }
+}
 
 real get_effective_radius(dyn *b) {
      return b->get_starbase()->conv_r_star_to_dyn( 
             b->get_starbase()->get_effective_radius());
-   }
+}
 
 real get_total_mass(dyn *b) {
       return b->get_starbase()->conv_m_star_to_dyn(
              b->get_starbase()->get_total_mass());
-   }
+}
 
 stellar_type get_element_type(dyn *b) {
       return (stellar_type)b->get_starbase()->get_element_type();
-   }
+}
 
 #define EPSILON 1.e-10
+
 local void evolve_the_stars(node* bi, const real end_time) {
 
   if(DEBUG) 
@@ -77,12 +76,15 @@ local void evolve_the_stars(node* bi, const real end_time) {
     real current_time = ((star*)bi->get_starbase())->get_current_time();
     real time_step    =  bi->get_starbase()->get_evolve_timestep();
     
-    //    PRC(end_time);PRC(current_time);PRC(time_step);
+    // PRC(end_time); PRC(current_time); PRC(time_step);
 
-    //  SPZ 20 Aug 2004: Just trying this, as it did not seem to work properly
+    // SPZ 20 Aug 2004: Just trying this, as it did not seem to work properly...
+
     while (end_time>current_time+time_step) {
+
       //  while (end_time>current_time) {
-      //      cerr << "running loop at " << time_step << " for star " << bi->get_index() << endl;
+      //      cerr << "running loop at " << time_step << " for star "
+      //           << bi->get_index() << endl;
 
        bi->get_starbase()->evolve_element(current_time+time_step);
        bi->get_starbase()->evolve_element(
@@ -91,18 +93,18 @@ local void evolve_the_stars(node* bi, const real end_time) {
        time_step    =  bi->get_starbase()->get_evolve_timestep();
 
       if(DEBUG) 
-	 cerr <<" -dt="<<current_time<<" "<<time_step<<endl;
-   }
+	  cerr <<" -dt="<<current_time<<" "<<time_step<<endl;
+  }
 
-//    bi->get_starbase()->evolve_element(end_time);
+  // bi->get_starbase()->evolve_element(end_time);
 
-    //bi->get_starbase()->get_seba_counters()->step_sstar++;
+  // bi->get_starbase()->get_seba_counters()->step_sstar++;
 
     if(DEBUG) 
-      cerr<<" and leave"<<endl;
+	cerr<<" and leave"<<endl;
 }
-#undef EPSILON
 
+#undef EPSILON
 
 bool stellar_evolution(dyn *b)
 {
@@ -111,48 +113,58 @@ bool stellar_evolution(dyn *b)
     real stellar_evolution_time = b->get_starbase()->
 		conv_t_dyn_to_star(b->get_system_time());
 
+    // Special treatment of black-hole "radii" implemented by Steve (1/05).
+    // For efficiency in the integrator, it is useful to assign a negative
+    // radius to each black hole.  The value returned by get_radius() will
+    // always be positive, but member functions that "need to know" can
+    // test the value directly and take appropriate action.
+    
     for_all_leaves(dyn, b, bi) {
 	if (! bi->is_low_level_node()
 	    || !((star*)(bi->get_starbase()))->is_binary_component()) {
 
-	  if(DEBUG) 
-		((star*)bi->get_starbase())->dump(cerr);
+	  starbase *sb = bi->get_starbase();
+
+	  if (DEBUG) ((star*)sb)->dump(cerr);
 
 //	  cerr << "Time = " << bi->get_system_time() << " "
 //	       << bi->format_label() << endl;
 //	  PRC(get_total_mass(bi) - bi->get_mass());
 
-   
-	    real old_dyn_mass = bi->get_mass();
-            evolve_the_stars(bi, stellar_evolution_time);
-//	    bi->get_starbase()->evolve_element(stellar_evolution_time);
-	    real new_dyn_mass_from_star = get_total_mass(bi);
-	    real new_radius =  b->get_starbase()->
-		conv_r_star_to_dyn(bi->get_starbase()->get_effective_radius());
-	    if (old_dyn_mass <= 0 || new_dyn_mass_from_star <= 0){
-		PRC(old_dyn_mass);PRC(new_dyn_mass_from_star);PRL(new_radius);
-		((star*)(bi->get_starbase()))->dump(cerr);
-	    }
+	  real old_dyn_mass = bi->get_mass();
+	  evolve_the_stars(bi, stellar_evolution_time);
+//	  sb->evolve_element(stellar_evolution_time);
 
-	    bi->set_radius(new_radius);
+	  real new_dyn_mass_from_star = get_total_mass(bi);
+	  real new_radius =  b->get_starbase()->
+	      conv_r_star_to_dyn(sb->get_effective_radius());
+	  if (old_dyn_mass <= 0 || new_dyn_mass_from_star <= 0) {
+	      PRC(old_dyn_mass);PRC(new_dyn_mass_from_star);PRL(new_radius);
+	      ((star*)sb)->dump(cerr);
+	  }
+
+	  // Special treatment of black hole dynamical radius.
+
+	  if (sb->get_element_type() == Black_Hole) new_radius *= -1;
+	  bi->set_radius(new_radius);
 
 //	  cerr << bi->get_system_time() << " "
 //	       << bi->format_label() << endl;
 //	  PRC(get_total_mass(bi) - bi->get_mass());
 
-	    if(DEBUG) 
-	      ((star*)bi->get_starbase())->dump(cerr);
+	  if (DEBUG) ((star*)sb)->dump(cerr);
  
-	    if (abs(new_dyn_mass_from_star-old_dyn_mass)/old_dyn_mass
-		>=cnsts.star_to_dyn(stellar_mass_update_limit)) {
-		update_all_masses = true;
-	    }
+	  if (abs(new_dyn_mass_from_star-old_dyn_mass)/old_dyn_mass
+	      >=cnsts.star_to_dyn(stellar_mass_update_limit)) {
+	      update_all_masses = true;
+	  }
 
-//	    if (abs(new_dyn_mass_from_star-old_dyn_mass)/old_dyn_mass
-//		>=MASS_UPDATE_LIMIT){
-//		update_all_masses = true;
-	}
+//	  if (abs(new_dyn_mass_from_star-old_dyn_mass)/old_dyn_mass
+//		>=MASS_UPDATE_LIMIT)
+//	      update_all_masses = true;
+      }
     }
+
     return update_all_masses;
 }
 
@@ -167,23 +179,23 @@ real sudden_mass_loss(dyn* stellar_node) {
 	  << " dm = " << dm_dyn << " (" << dm_sun << " [Msun]" << endl;
 
    return dm_dyn;
-					          
-   }
+}
 
 
 // Normally the primary (in mass) coalesces with the secondary.
 // However, this can be rather dangerous if the primary is a giant
 // and the total mass of the merger product is likely to exceed that
 // for a Wolf-Rayet star.
-// Here we check wehter or not this exception occurs.
-// Normally completley unimportand. But for 30-Doradus it can very wel
+// Here we check whether or not this exception occurs.
+// Normally completely unimportant. But for 30-Doradus it can very well
 // happen. (SPZ:02/1998).
+
 bool merge_with_primary(star* primary, star *secondary) {
 
   bool merge_with_primary = true;
   
   real m_conserved = primary->get_total_mass() 
-    + secondary->get_total_mass();
+      + secondary->get_total_mass();
 
   if (primary->get_total_mass() < secondary->get_total_mass()) {
 
@@ -204,8 +216,7 @@ bool merge_with_primary(star* primary, star *secondary) {
 	     << endl;
     }
 
-  }
-  else {
+  } else {
 
     if (m_conserved >= cnsts.parameters(massive_star_mass_limit) &&
 	!(primary->get_element_type()==Main_Sequence ||
