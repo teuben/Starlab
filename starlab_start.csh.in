@@ -85,9 +85,9 @@ set add2 = 1
 foreach dir ($path)
     @ i++
     if ($dir == .) then
-        set idot = $i
+        if ($idot == 0) set idot = $i		// save first instance
     else if ($dir == ..) then
-        set iddot = $i
+        if ($iddot == 0) set iddot = $i
     else if ($dir == $dir1) then
         set add1 = 0
     else if ($dir == $dir2) then

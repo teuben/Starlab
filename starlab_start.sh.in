@@ -67,7 +67,7 @@ fi
 
 PATH=`echo "$PATH" | tr : '\12' | \
  awk '! /starlab.*bin$/ || /^(\/(|usr|local))+\/sbin$/ { p[++n] = $0; }
-    /^\.+$/ { lastdot = n; }
+    /^\.+$/ { if (lastdot == 0) lastdot = n; }
     END {
             if(lastdot == 0) lastdot = n;
             p[lastdot] = p[lastdot] ":" spath1 ":" spath2 ;
