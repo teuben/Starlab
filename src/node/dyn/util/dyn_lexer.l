@@ -23,6 +23,8 @@
 	#include "dyn_parser.H"
 
 	extern unsigned long lineno;
+	//extern vector<char*> vals;
+	extern struct { char* s; size_t n; } story_line;
 
 %option noyywrap
 
@@ -69,6 +71,10 @@ Star		return STAR;
 
 [-+]?([[:digit:]]*\.)?[[:digit:]]+([eE][-+]?[[:digit:]]+)?	{
   yylval.real = atof(yytext);
+  //vals.push_back(strdup(yytext));
+  story_line.s =
+    static_cast<char*>(realloc(story_line.s, (story_line.n+=1+yyleng)+1));
+  strcpy(stpcpy(story_line.s+story_line.n-yyleng-1, " "), yytext);
   return NUMBER;
 }
 
