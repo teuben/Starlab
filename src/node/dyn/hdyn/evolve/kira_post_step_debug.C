@@ -3,6 +3,42 @@
 
 
 #if 0
+    if (t > 82.1421279 && t < 82.142131 && fmod(steps, 1) == 0) {
+
+	cerr << "post..." << endl;
+	hdyn *top = NULL;
+	for (int ii = 0; ii < n_next; ii++) {
+	    hdyn *n = next_nodes[ii];
+	    if (n && n->is_valid()) {
+		cerr << n->format_label() << " ";
+		if (n->name_is("(925,6)")) top = n->get_top_level_node();
+		if (n->name_is("925")) top = n->get_top_level_node();
+	    }
+	}
+	cerr << endl;
+	if (top) pp3(top);
+
+	int p = cerr.precision(HIGH_PRECISION);
+	PRL(t); 
+	cerr.precision(p);
+	print_recalculated_energies(b);
+
+    }
+#endif
+
+
+#if 0
+    if (t > 82.1420 && t < 82.1423 && fmod(steps, 100) == 0)
+	print_recalculated_energies(b);
+#endif
+
+
+#if 0
+    fmod(steps, 100) == 0) print_recalculated_energies(b);
+#endif
+
+
+#if 0
     if (((t > 81.814 && t < 81.815) || (t > 81.829 && t < 81.832))
 	 && fmod(steps, 1) == 0) {
 
