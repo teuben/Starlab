@@ -37,7 +37,10 @@
 //	      get_external uses positions and velocities passed as
 //	      arguments (may be pos or pred_pos, depending on the
 //	      application)
-//
+
+//-------------------------------------------------------------------------
+// Tidal field (quadrupole):
+//-------------------------------------------------------------------------
 
 local inline void add_tidal(dyn * b,
 			    vector pos,
@@ -82,7 +85,8 @@ local inline void add_tidal(dyn * b,
 
 local inline real tidal_pot(dyn * b)
 {
-    // Determine the tidal component of the potential of root node b.
+    // Determine the tidal component of the potential energy
+    // of root node b.
 
     // Add tidal and centrifugal terms for top-level nodes only.
     // (No potential term for the Coriolis force, note.)
@@ -103,6 +107,10 @@ local inline real tidal_pot(dyn * b)
     return 0.5*dpot;
 }
 
+//-------------------------------------------------------------------------
+// Plummer field:
+//-------------------------------------------------------------------------
+
 local inline void add_plummer(dyn * b,
 			      vector pos,
 			      vector vel,
@@ -134,8 +142,8 @@ local inline void add_plummer(dyn * b,
 
 local inline real plummer_pot(dyn * b)
 {
-    // Determine the Plummer-field component of the potential of
-    // root node b.
+    // Determine the Plummer-field component of the potential energy
+    // of root node b.
 
     real M = b->get_p_mass();
     if (M == 0) return 0;
@@ -170,8 +178,11 @@ local inline real plummer_virial(dyn * b)
     // PRL(com_pos);
 
     vector dR = com_pos - b->get_p_center();
-    vector acc_com = -M * dR * pow(square(dR)+a2, -1.5);
+    vector acc_com = dR * pow(square(dR)+a2, -1.5);
     // PRL(acc_com);
+
+    // Don't actually need the acc_com term, as it should sum to zero
+    // in the loop below...
 
     real vir = 0;
     for_all_daughters(dyn, b, bb) {
@@ -187,6 +198,121 @@ local inline real plummer_virial(dyn * b)
     return -M*vir;
 }
 
+//-------------------------------------------------------------------------
+// Power-law field, M(r) = A r^x (and note that exponent = 0 reduces to
+// a Plummer field with mass = A):
+//-------------------------------------------------------------------------
+
+local inline void add_power_law(dyn * b,
+				vector pos,
+				vector vel,
+				real& pot,
+				vector& acc,
+				vector& jerk,
+				bool pot_only)
+{
+    // Compute the power-law-field components of the acceleration, jerk,
+    // and pot of top-level node b.
+
+    real A = b->get_pl_coeff();
+    if (A == 0) return;
+
+    real a2 = b->get_pl_scale_sq();
+    real x = b->get_pl_exponent();
+
+    vector dx = pos - b->get_pl_center();
+    real r2 = square(dx) + a2;
+
+    if (x == 1)					// special case
+	pot += 0.5*A*log(r2);
+
+    if (x != 1 || !pot_only) {			// ugly logic for efficiency
+
+	real r1 = pow(r2, 0.5*(1-x));		// in analogy to Plummer case
+
+	if (!pot_only) {
+	    real r3i = 1/(r1*r2);
+	    acc -= A*dx*r3i;
+	    jerk += A*((3-x)*dx*(dx*vel)/r2 - vel)*r3i;
+	}
+
+	if (x != 1)
+	    pot -= A/(r1*(1-x));
+    }
+}
+
+local inline real power_law_pot(dyn * b)
+{
+    // Determine the power-law-field component of the potential energy
+    // of root node b.
+
+    real A = b->get_pl_coeff();
+    if (A == 0) return 0;
+
+    real a2 = b->get_pl_scale_sq();
+    real x = b->get_pl_exponent();
+
+    real dpot = 0;
+    for_all_daughters(dyn, b, bb) {
+	vector dx = bb->get_pos() - bb->get_pl_center();
+	real r2 = square(dx) + a2;
+	if (x == 1)
+	    dpot += bb->get_mass() * log(r2);
+	else
+	    dpot += bb->get_mass() * pow(r2, 0.5*(x-1));
+    }
+
+    if (x == 1)
+	dpot *= 0.5;
+    else
+	dpot /= x-1;
+
+    return A*dpot;
+}
+
+local inline real power_law_virial(dyn * b)
+{
+    // Determine the power-law-field component of the virial sum
+    // of root node b.
+
+    real A = b->get_pl_coeff();
+    if (A == 0) return 0;
+
+    real a2 = b->get_pl_scale_sq();
+    real x = b->get_pl_exponent();
+
+    // Don't make any assumptions about the locations of the
+    // center of mass of the center of the power-law field...
+
+    vector com_pos, com_vel;
+    compute_com(b, com_pos, com_vel);
+    // PRL(com_pos);
+
+    vector dR = com_pos - b->get_pl_center();
+    vector acc_com = dR * pow(square(dR)+a2, 0.5*(x-3));
+    // PRL(acc_com);
+
+    // Don't actually need the acc_com term, as it should sum to zero
+    // in the loop below...
+
+    real vir = 0;
+    for_all_daughters(dyn, b, bb) {
+	vector dr = bb->get_pos() - com_pos;
+	dR = bb->get_pos() - b->get_pl_center();
+	vector acc_ext = dR * pow(square(dR)+a2, 0.5*(x-3));
+	real dvir = bb->get_mass()*dr*(acc_ext - acc_com);
+	// PRL(dvir);
+	vir += dvir;
+    }
+    // PRL(vir);
+
+    return -A*vir;
+}
+
+//-------------------------------------------------------------------------
+// General "external" functions:
+//-------------------------------------------------------------------------
+
 void get_external_acc(dyn * b,
 		      vector pos,
 		      vector vel,
@@ -215,7 +341,10 @@ void get_external_acc(dyn * b,
 	if (GETBIT(ext, 1))
 	    add_plummer(b, pos, vel, pot, acc, jerk, pot_only);
 
-	// if (GETBIT(ext, 2))
+	if (GETBIT(ext, 2))
+	    add_power_law(b, pos, vel, pot, acc, jerk, pot_only);
+
+	// if (GETBIT(ext, 3))
 	//     add_other(b, pos, vel, pot, acc, jerk, pot_only);
 
 	if (GETBIT(ext, 0))
@@ -227,6 +356,7 @@ void get_external_acc(dyn * b,
 
 real get_tidal_pot(dyn *b) {return tidal_pot(b);}
 real get_plummer_pot(dyn *b) {return plummer_pot(b);}
+real get_power_law_pot(dyn *b) {return power_law_pot(b);}
 
 real get_external_pot(dyn * b,
 		      void (*pot_func)(dyn *, real))	// default = NULL
@@ -245,7 +375,8 @@ real get_external_pot(dyn * b,
 
 	if (GETBIT(ext, 0)) dpot += tidal_pot(b);
 	if (GETBIT(ext, 1)) dpot += plummer_pot(b);
-	// if (GETBIT(ext, 2)) dpot += other_pot(b);
+	if (GETBIT(ext, 2)) dpot += power_law_pot(b);
+	// if (GETBIT(ext, 3)) dpot += other_pot(b);
 
 	if (pot_func) (*pot_func)(b, dpot);	// used by kira to set_pot()
 
@@ -268,7 +399,8 @@ real get_external_virial(dyn * b)
 	// Loop through the known external, non-tidal fields.
 
 	if (GETBIT(ext, 1)) vir += plummer_virial(b);
-	// if (GETBIT(ext, 2)) vir += other_virial(b);
+	if (GETBIT(ext, 2)) vir += power_law_virial(b);
+	// if (GETBIT(ext, 3)) vir += other_virial(b);
     }
 
     return vir;
@@ -284,6 +416,8 @@ local void print_ext(int n)
 	case 0:		cerr << "TIDAL";
 			break;
 	case 1:		cerr << "PLUMMER";
+			break;
+	case 2:		cerr << "POWER-LAW";
 			break;
 	default:	cerr << "?";
 			break;

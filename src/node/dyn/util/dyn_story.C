@@ -25,6 +25,7 @@
 //
 //	void check_set_tidal		// check and set tidal parameters
 //	void check_set_plummer		// check and set Plummer parameters
+//	void check_set_power_law	// check and set power-law parameters
 //
 //	void check_set_external		// check and set all external fields
 
@@ -762,7 +763,8 @@ void check_set_plummer(dyn *b,
 
 	 vector center = 0;
 	 if (find_qmatch(b->get_log_story(), "kira_plummer_center"))
-	     b->set_p_center(getvq(b->get_log_story(), "kira_plummer_center"));
+	     center = getvq(b->get_log_story(), "kira_plummer_center");
+	 b->set_p_center(center);
 
 	 if (verbose) {
 	     real M = b->get_p_mass();
@@ -773,11 +775,57 @@ void check_set_plummer(dyn *b,
      }
 }
 
+void check_set_power_law(dyn *b,
+			 bool verbose)		// default = false
+{
+    // Check for power-law-field data in the input snapshot, and
+    // set kira parameters accordingly.  No coordination with the
+    // command line because these parameters can *only* be set via
+    // the input snapshot.  (Steve, 8/01)
+    //
+    // Expected fields in the input file are
+    //
+    //		kira_pl_coeff		=  A
+    //		kira_pl_scale		=  R
+    //		kira_pl_exponent	=  e
+    //		kira_pl_center		=  x y z
+
+     if (find_qmatch(b->get_log_story(), "kira_pl_coeff")
+	 && find_qmatch(b->get_log_story(), "kira_pl_scale")) {
+
+	 b->set_pl();
+
+	 b->set_pl_coeff(getrq(b->get_log_story(), "kira_pl_coeff"));
+	 b->set_pl_scale_sq(pow(getrq(b->get_log_story(),
+				      "kira_pl_scale"), 2));
+
+	 real exponent = 0;
+	 if (find_qmatch(b->get_log_story(), "kira_pl_exponent"))
+	     exponent = getrq(b->get_log_story(), "kira_pl_exponent");
+	 b->set_pl_exponent(exponent);
+
+	 vector center = 0;
+	 if (find_qmatch(b->get_log_story(), "kira_pl_center"))
+	     center = getvq(b->get_log_story(), "kira_pl_center");
+	 b->set_pl_center(center);
+
+	 if (verbose) {
+	     real A = b->get_pl_coeff();
+	     real R = sqrt(b->get_pl_scale_sq());
+	     real x = b->get_pl_exponent();
+	     vector center = b->get_pl_center();
+	     cerr << "check_set_power_law:  ";
+	     PRC(A); PRC(R); PRC(x); PRL(center);
+	 }
+     }
+}
+
 void check_set_external(dyn *b,
 			bool verbose)		// default = false
 {
-    // Check for and set parameters for all external fields.
+    // Check for and set parameters for all known external fields.
 
     check_set_tidal(b, verbose);
     check_set_plummer(b, verbose);
+    check_set_power_law(b, verbose);
 }

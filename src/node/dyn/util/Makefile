@@ -33,7 +33,7 @@ EXECUTABLES =	compute_com compute_mcom compute_density compute_max_cod \
 		plot_stars starplot snap2speck \
 		sys_stats set_com to_cod to_com jiggle \
                 lagradplotsmooth get_std_center \
-		add_plummer add_tidal
+		add_plummer add_power_law add_tidal
 
 OBJECT_FILES =	compute_com.o compute_density.o compute_max_cod.o \
 		compute_mcom.o compute_mean_cod.o \
