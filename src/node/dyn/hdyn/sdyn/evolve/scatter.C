@@ -344,9 +344,6 @@ main(int argc, char **argv)
 
   execute_scatter_experiment(input);
 
-  //    cerr << "scatter history" << flush << endl;
-  //    hi->put_scatter_hist(cerr, false);
-  //    cerr << " N done = " << n_exp << endl;
 }
 #endif
 
