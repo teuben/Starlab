@@ -1243,7 +1243,6 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose)
 			     false);			// "false" here means
 							// timesteps are only
 							// set if zero
-
     // Reset and save d_min_sq().
 
     int n = 0;
@@ -1252,8 +1251,12 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose)
     for_all_daughters(hdyn, b, bb) {
 	n++;
 	mass += bb->get_mass();
-	pot += bb->get_mass()*bb->get_pot();
+	pot += bb->get_mass()*bb->get_pot();		// total potential
     }
+
+    // Only want the internal potential, which is counted twice in pot.
+
+    pot -= get_external_pot(b);
     pot /= 2;
     PRC(mass); PRC(pot);
 
