@@ -1461,16 +1461,19 @@ void sys_stats(dyn* b,
 
     real vrms = sqrt(3*nd*kT/b->get_mass());
 
-//  Hmmm.  Better print out (top-level) vmax too.
+//  Hmmm.  Better print out (top-level) r_max and v_max, too.
 
-    real v_max = 0;
+    real r_max = 0, v_max = 0;
     for_all_daughters(dyn, b, bb) {
+	real r2 = square(bb->get_pos() - com_pos);
+	if (r2 > r_max) r_max = r2;
 	real v2 = square(bb->get_vel() - com_vel);
 	if (v2 > v_max) v_max = v2;
     }
 
+    r_max = sqrt(r_max);
     v_max = sqrt(v_max);
-    PRI(4); PRC(vrms); PRC(v_max); PRL(kT);
+    PRI(4); PRC(vrms); PRC(kT); PRC(r_max); PRL(v_max);
 
     vector center = com_pos;
     real rcore = 0, rhalf = 0;

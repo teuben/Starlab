@@ -42,6 +42,14 @@
 //                    To use their recipe, k >= 2 is required.
 //-----------------------------------------------------------------------------
 
+local void write_density(dyn *d, int k, real density)
+{
+    putrq(d->get_dyn_story(), "density_time", d->get_system_time());
+    if (k > 0)
+	putiq(d->get_dyn_story(), "density_k_level", k);
+    putrq(d->get_dyn_story(), "density", density);
+}
+
 void  compute_density(dyn * b,      	// pointer to N-body system or node
 		      int k,		// use kth nearest neighbor [12]
 		      dyn ** list,	// list of neighbor nodes to work from
@@ -54,6 +62,17 @@ void  compute_density(dyn * b,      	// pointer to N-body system or node
     real *neighbor_dist_sq;
     real *neighbor_mass;
     real  delr_sq;
+
+    // Special cases and error checks.
+
+
+    if (k == 0) {
+
+	// Just write zero density for b and quit.
+
+	write_density(b, 0, 0);
+	return;
+    }
     
     if (k <= 1) {
         cerr << "compute_density: k = " << k << " <= 1" << endl;
@@ -178,9 +197,7 @@ void  compute_density(dyn * b,      	// pointer to N-body system or node
 
 	// Store the density in d's dyn story.
 
-	putrq(d->get_dyn_story(), "density_time", b->get_system_time());
-	putiq(d->get_dyn_story(), "density_k_level", k);
-	putrq(d->get_dyn_story(), "density", density);
+	write_density(d, k, density);
 
 	// Get next d.
 
