@@ -180,7 +180,7 @@ void refine_cluster_mass2(dyn *b,		// root node
     // Make sure the root node is correctly set for this one.
 
     b->set_root(b);
-    vec bpos = b->get_pos();
+    vec bpos = b->get_pos(), bvel = b->get_vel();
 
     // Use the standard center as our starting point.  The center will be
     // redetermined self-consistently, along with the mass.
@@ -195,8 +195,8 @@ void refine_cluster_mass2(dyn *b,		// root node
     real M_inside = 0;
     R = abs(center - b->get_external_center());		// global R
 
-    center -= bpos;					// remove the root from
-    vcenter -= b->get_vel();				// "center" quantities
+    center  -= bpos;					// remove the root from
+    vcenter -= bvel;					// "center" quantities
 
     for_all_daughters(dyn, b, bb)
 	if (abs(bb->get_pos() - center) <= R)
@@ -213,7 +213,7 @@ void refine_cluster_mass2(dyn *b,		// root node
     if (verbose) {
 	cerr << endl << "  refine_cluster_mass2: getting mass by iteration"
 	     << endl << "  initial total system mass = " << M_inside
-	     << endl << "  initial center = " << center
+	     << endl << "  initial center (abs) = " << center + bpos
 	     << endl;
     }
 
@@ -297,7 +297,7 @@ void refine_cluster_mass2(dyn *b,		// root node
 
 	if (verbose > 1) {
 	    PRI(2); PRC(iter); PRC(N_inside); PRL(M_inside);
-	    PRI(2); PRL(cen);
+	    PRI(2); PRL(cen + bpos);
 	}
     }
 
@@ -309,8 +309,8 @@ void refine_cluster_mass2(dyn *b,		// root node
 
     if (verbose == 1) {
 	PRI(2); PRC(iter); PRC(N_inside); PRL(M_inside);
-	PRI(2); PRL(cen);
-	PRI(2); PRL(vcen);
+	PRI(2); PRL(cen + bpos);
+	PRI(2); PRL(vcen + bvel);
     }
 
     // Too many iterations probably means a limit cycle of some sort;
@@ -327,7 +327,7 @@ void refine_cluster_mass2(dyn *b,		// root node
 	    vcenter = vcen50;
 	} else {
 	    center = ext_center - bpos;
-	    vcenter = -b->get_vel();		// so v = 0...
+	    vcenter = -bvel;			// so v = 0...
 	}
 
 	if (verbose) {
@@ -348,7 +348,7 @@ void refine_cluster_mass2(dyn *b,		// root node
     // and write our best estimate to the dyn story.
 
     vec bc_pos = bpos + center;
-    vec bc_vel = b->get_vel() + vcenter;
+    vec bc_vel = bvel + vcenter;
 
     putrq(b->get_dyn_story(), "bound_center_time", (real)b->get_system_time());
     putvq(b->get_dyn_story(), "bound_center_pos", bc_pos);

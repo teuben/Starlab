@@ -318,6 +318,17 @@ void set_complete_system_dump(bool d)			// default = true
     complete_system_dump = d;
 }
 
+// Another (sort of) kludge...  We want the output to have the root node be
+// the center of mass of the top-level nodes.  This is standard elsewhere in
+// Starlab, but is not the case in kira, for operational reasons.  Thus we
+// do the offsetting at output time.  An extra complication is that tdyn
+// output relies on the full dump performed earlier.  We save the system
+// center of mass each time we do a complete system dump from the root node.
+// The saved data are used for every pos and vel output, defining the root
+// data and offsetting the daughters.
+
+static vec fulldump_com_pos = 0, fulldump_com_vel = 0;
+
 ostream & hdyn::print_dyn_story(ostream & s,
 				bool print_xreal,	// default = true
 				int short_output)	// default = 0
@@ -349,6 +360,14 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
     bool short_short = (short_output && short_output != 4);
 
+    // See if we need to recompute the com pos and vel.
+
+    if (complete_system_dump && is_root()) {
+	compute_com(this, fulldump_com_pos, fulldump_com_vel);
+	fulldump_com_pos -= pos;				// relative to root
+	fulldump_com_vel -= vel;
+    }
+
     if (write_unformatted && short_short) {
 
 	// In this case, we have to do everything ourselves, and we
@@ -371,6 +390,14 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	if (short_output > 1) {
 	    putpos = pred_pos;
 	    putvel = pred_vel;
+	}
+
+	if (is_root()) {
+	    putpos += fulldump_com_pos;
+	    putvel += fulldump_com_vel;
+	} else {
+	    putpos -= fulldump_com_pos;
+	    putvel -= fulldump_com_vel;
 	}
 
 	if (use_floats) {
@@ -399,7 +426,19 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	// For formatted output, we can rely on the _dyn_ output
 	// functions to start us off as usual...
 
+	vec save_pos = pos, save_vel = vel;
+	if (is_root()) {
+	    pos += fulldump_com_pos;
+	    vel += fulldump_com_vel;
+	} else {
+	    pos -= fulldump_com_pos;
+	    vel -= fulldump_com_vel;
+	}
+
 	_dyn_::print_dyn_story(s, print_xreal, short_output);
+
+	pos = save_pos;
+	vel = save_vel;
 
 	if (!short_short) {
 
@@ -498,10 +537,10 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
 	if (is_root()) {
 
-	    vec pos, vel;
-	    int which = get_std_center(this, pos, vel);
-	    put_real_vector(s, "  center_pos  =  ", pos);
-	    put_real_vector(s, "  center_vel  =  ", vel);
+	    vec center_pos, center_vel;
+	    int which = get_std_center(this, center_pos, center_vel);
+	    put_real_vector(s, "  center_pos  =  ", center_pos);
+	    put_real_vector(s, "  center_vel  =  ", center_vel);
 	    put_integer(s, "  center_type  =  ", which);
 
 	    // Add extra information on other centers:

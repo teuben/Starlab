@@ -1876,13 +1876,13 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     if (verbose) {
 	if (dt_log < dt_sync)
-	    cerr << "Warning: dt_log < dt_sync, quoted errors unpredictable."
+	    cerr << "warning: dt_log < dt_sync, quoted errors unpredictable."
 		 << endl;
 	if (dt_snap < dt_sync)
-	    cerr << "Warning: dt_snap < dt_sync, no restart possible."
+	    cerr << "warning: dt_snap < dt_sync, no restart possible."
 		 << endl;
 	else if (dt_snap < dt_reinit)
-	    cerr << "Warning: dt_snap < dt_reinit, restart unpredictable."
+	    cerr << "warning: dt_snap < dt_reinit, restart unpredictable."
 		 << endl;
     }
 

@@ -56,15 +56,15 @@ void compute_com(dyn *b, vec& com_pos, vec& com_vel)
     com_pos += b->get_pos();
     com_vel += b->get_vel();
 
-    // Use INT_PRECISION here because these quentities may be used
+    // Use HIGH_PRECISION here because these quentities may be used
     // in detailed calculations elsewhere.
 
     putrq(b->get_dyn_story(), "com_time", b->get_system_time(),
-	  INT_PRECISION);
+	  HIGH_PRECISION);
     putvq(b->get_dyn_story(), "com_pos", com_pos,
-	  INT_PRECISION);
+	  HIGH_PRECISION);
     putvq(b->get_dyn_story(), "com_vel", com_vel,
-	  INT_PRECISION);
+	  HIGH_PRECISION);
 }
 
 void compute_com(dyn *b)

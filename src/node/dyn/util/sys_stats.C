@@ -504,7 +504,7 @@ local void print_energies(dyn* b,
     real external_pot = get_external_pot(b);
     e_total = total_int_energy + external_pot;
 
-    int ppp = cerr.precision(INT_PRECISION);
+    int ppp = cerr.precision(STD_PRECISION);
 
     vec com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
@@ -1706,6 +1706,7 @@ void sys_stats(dyn* b,
     // Finally, refine estimates of the cluster mass (moved here from hdyn...)
 
     refine_cluster_mass(b, 1);
+    cerr << endl;
 }
 
 #else
