@@ -401,16 +401,22 @@ void set_friction_acc(dyn *b,			// root node
 
 	    ffac *= 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
 
-	Afric = -ffac * Vcm;
+	if (ffac < 0.2)				// arbitrary, but we expect
+	    Afric = -ffac * Vcm;		// dt ~ 1, and want Adt < v
+	else {
+	    cerr << "  Suppressing dynamical friction at time "
+		 << b->get_system_time() << endl;
+	    Afric = 0;
+	}
 
 #if 1
-	cerr << endl << "set_friction_acc: "; PRL(Afric);
-	PRC(A); PRC(a); PRL(beta);
-	PRC(coeff); PRC(Mfric); PRL(pl_density(b, r));
-	PRC(r); PRC(sigma2); PRC(V); PRL(X);
-	PRL((erf(X) - 2*X*exp(-X*X)/sqrt(M_PI)) * pow(V, -3));
-	PRL(4 / (3*sqrt(M_PI)*pow(sigma2, 3)));
-	PRC(ffac); PRL(Vcm);
+	cerr << "  set_friction_acc: "; PRL(Afric);
+	PRI(2); PRC(A); PRC(a); PRL(beta);
+	PRI(2); PRC(coeff); PRC(Mfric); PRL(pl_density(b, r));
+	PRI(2); PRC(r); PRC(sigma2); PRC(V); PRL(X);
+	PRI(2); PRL((erf(X) - 2*X*exp(-X*X)/sqrt(M_PI)) * pow(V, -3));
+	PRI(2); PRL(4 / (3*sqrt(M_PI)*pow(sigma2, 3)));
+	PRI(2); PRC(ffac); PRL(Vcm);
 #endif
 
     }
