@@ -669,7 +669,7 @@ main(int argc, char** argv)
 		    // We are coloring by mass or index and sizing by mass
 		    // or radius.
 
-		    for_all_daughters(hdyn, b, bb) {
+		    for_all_leaves(hdyn, b, bb) {
 			if (index_all < 0 && bb->get_index() >= 0) {
 			    cmin = min(cmin, bb->get_index());
 			    cmax = max(cmax, bb->get_index());
@@ -715,18 +715,26 @@ main(int argc, char** argv)
 	    if (!combine)
 		initialize_arrays(a, zarray, nx*ny);
 
-	    for_all_daughters(hdyn, b, bb) {
+	    hdyn *root = b->get_root();
+	    for_all_leaves(hdyn, b, bb) {
 
 		real x, y, z;
 		if(!HRD) {
 		    vector pos = bb->get_pos();
+
+		    hdyn *p = bb->get_parent();
+		    while (p && p != root) {
+			pos += p->get_pos();
+			p = p->get_parent();
+		    }
+
 		    x = pos[iax];
 		    y = pos[jax];
 		    z = pos[kax];
 		}
 		else {
 
-		    // Neet to be careful where we search for star data...
+		    // Need to be careful where we search for star data...
 
 		    real T_eff, L_sun, stp = -1;
 		    story *st = bb->get_star_story();
