@@ -430,7 +430,7 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
 
 	// Initialize memory management.
 
-	pdyn_init = initialize_pdyn(2*wb->get_n_daughters(),
+	pdyn_init = initialize_pdyn(wb->get_nw(),  // 2*wb->get_n_daughters(),
 				    NULL, NULL, false);
 
 	if (!pdyn_init) err_exit("unable to initialize pdyn array");
