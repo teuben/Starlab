@@ -1,0 +1,82 @@
+#!/bin/csh -f
+
+# Create a directory shadowing a specified one.  Intended application is
+# to allow multiple Starlab trees to share a single source tree, for use
+# with different architectures.
+
+if ($#argv < 1) then
+    echo Usage: shadowdir target-directory-name \[shadow-directory-name\]
+    exit
+endif
+
+# Make sure curr is a full pathname (not relative to .).
+
+set curr = `pwd`
+cd $1
+set dir = `pwd`
+cd $curr
+
+set shadow = ~/shadow_tmp
+if ($#argv > 1) set shadow = $2
+
+set dlist = (`cd $dir; find . -type d | grep -v CVS`)	# not too many, we hope!
+
+if ($#dlist > 0) then
+
+    if (-d $shadow) then
+	/bin/rm -r -f $shadow
+    endif
+
+    mkdir $shadow
+    cd $shadow
+
+#   Make shadow into a full pathname.
+
+    set shadow = `pwd`
+
+#   Create the entire shadow directory tree before making any links.
+
+    foreach sub ($dlist)
+
+#	Order of traversal by find should ensure that parent
+#	directories precede their children on the list.
+
+	if (! -d $sub) then
+	    mkdir $sub
+#	    echo Created $sub
+	endif
+
+    end
+
+    echo Created shadow directory tree of $#dlist nodes
+
+#   Now traverse the shadow tree, creating links to all
+#   source and header files.
+
+    foreach sub ($dlist)
+
+#	List relevant files in just directory $dir/$sub.
+#	(Note special Starlab cases for setup...)
+
+	if (X$sub == X.) then
+	    set flist = (starlab_start VERSION Makefile)	# Starlab...
+	else if (X$sub == X./local) then
+	    set flist = (`cd $dir/$sub; find * -prune -type f`)
+	else if (X$sub == X./sbin) then
+	    set flist = (`cd $dir/$sub; find * -prune -type f`)
+	else
+	    set flist = \
+		(`cd $dir/$sub; find * -prune -name '*.[cCfFh]' -o -name '[A-Z]*' | grep -v CVS`)
+	endif
+
+	if ($#flist > 0) then
+	    foreach file ($flist)
+		if (-e $dir/$sub/$file) then
+		    ln -s $dir/$sub/$file $shadow/$sub/$file
+		endif
+	    end
+	    echo "    " $#flist links in $sub
+	endif
+    end
+
+endif
