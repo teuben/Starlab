@@ -22,6 +22,7 @@
 ////                         if false, secondary mass is chosen uniformly
 ////                             on [mmin, primary_mass], where mmin and
 ////                             mmax are specified on the command line
+////               -S    split primary star [false]
 ////               -s    specify random seed [random from system clock]
 ////               -u    specify upper limit on mass ratio or 
 ////                                           secondary mass [1 or m_primary]
@@ -56,8 +57,9 @@ local void name_from_components(node *od, node *yd)
 //		  numeric names are now the default, with (a,b) the
 //		  alternative.  (Steve, 5/01)
 
-local void add_secondary(node* original, real mass_ratio,
-			 bool force_index, int &nmax)
+local real add_secondary(node* original, real mass_ratio,
+			 bool force_index, int &nmax,
+			 bool split)
 {
     node* primary = new node;
     node* secondary = new node;
@@ -74,9 +76,24 @@ local void add_secondary(node* original, real mass_ratio,
 
     // Set new masses.
 
-    primary->set_mass(original->get_mass());
-    secondary->set_mass(mass_ratio*original->get_mass());
-    original->inc_mass(secondary->get_mass());
+    if(!split) {
+	primary->set_mass(original->get_mass());
+	secondary->set_mass(mass_ratio*original->get_mass());
+	original->inc_mass(secondary->get_mass());
+    }
+    else {
+	real m_total = original->get_mass();
+	real m_prim = m_total / (1+mass_ratio);
+	real m_sec = m_total - m_prim;
+	if(m_prim<m_sec) {
+	    real tmp = m_sec;
+	    m_sec = m_prim;
+	    m_prim = tmp;
+	}
+
+	primary->set_mass(m_prim);
+	secondary->set_mass(m_sec);
+    }
 
     // There are two possible naming conventions.  If force_index is
     // false, then we take the original name and add "a" and "b" for
@@ -118,6 +135,8 @@ local void add_secondary(node* original, real mass_ratio,
     // Make standard CM name.
 
     name_from_components(primary, secondary);
+
+    return secondary->get_mass();
 }
 
 local void warning(real mmin, real lower_limit) {
@@ -189,7 +208,8 @@ local int check_indices(node *b)
 local void mksecondary(node* b, real binary_fraction,
 		       real min_mprim, real max_mprim,
 		       real lower_limit, real upper_limit, 
-		       bool force_index, bool q_flag, bool ignore_limits)
+		       bool force_index, bool q_flag, bool ignore_limits,
+		       bool split)
 {
     PRI(4); PRL(binary_fraction);
     PRI(4); PRL(min_mprim);
@@ -198,6 +218,7 @@ local void mksecondary(node* b, real binary_fraction,
     PRI(4); PRL(lower_limit);
     PRI(4); PRL(upper_limit);
     PRI(4); PRL(ignore_limits);
+    PRI(4); PRL(split);
 
     int nmax = 0;
     if (force_index) {
@@ -222,7 +243,7 @@ local void mksecondary(node* b, real binary_fraction,
     b->set_mass(0);
 
     real m_prim, q;
-    real m_primaries=0, m_secondaries=0;
+    real m_primaries=0, m_secondaries=0, m_total=0;
 
     if (q_flag) {
 
@@ -240,8 +261,8 @@ local void mksecondary(node* b, real binary_fraction,
 		    if (sum >= 0.9999999999) {	// avoid roundoff problems!
 			sum = 0;
 			q = random_mass_ratio(lower_limit, upper_limit);
-			add_secondary(bi, q, force_index, nmax);
-			m_secondaries += m_prim * q;
+			
+			m_secondaries += add_secondary(bi, q, force_index, nmax, split);
 		    }
 		}
 	    }
@@ -299,8 +320,7 @@ local void mksecondary(node* b, real binary_fraction,
 			qmin = mmin/bi->get_mass();
 			qmax = min(mmax, bi->get_mass())/bi->get_mass();
 			q = random_mass_ratio(qmin, qmax);
-			m_secondaries += m_prim * q;
-			add_secondary(bi, q, force_index, nmax);
+			m_secondaries += add_secondary(bi, q, force_index, nmax, split);
 		    }
 		}
 	    }
@@ -308,6 +328,10 @@ local void mksecondary(node* b, real binary_fraction,
     }
 
     real m_tot = m_primaries + m_secondaries;
+    if(split) {
+	m_tot = m_primaries;
+	m_primaries -= m_secondaries;
+    }
     b->set_mass(m_tot);	
     real old_mtot = b->get_starbase()->conv_m_dyn_to_star(1);
 
@@ -319,6 +343,12 @@ local void mksecondary(node* b, real binary_fraction,
 							 old_t_vir);
     }
 
+    if(split) {
+	sprintf(tmp_string,
+		"         total mass in primaries = %8.2f Solar", m_primaries); 
+    }
+    b->log_comment(tmp_string);
+
     sprintf(tmp_string,
 	    "         total mass in secondaries = %8.2f Solar", m_secondaries); 
     b->log_comment(tmp_string);
@@ -327,6 +357,7 @@ local void mksecondary(node* b, real binary_fraction,
 void main(int argc, char ** argv)
 {
 
+    bool split = false;
     bool ignore_limits = false;
     real binary_fraction = 0.1;
     real lower_limit = 0.0;
@@ -343,7 +374,7 @@ void main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "qf:M:m:il:nu:s:I";
+    char* param_string = "qf:M:m:il:nu:Ss:I";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -361,6 +392,8 @@ void main(int argc, char ** argv)
 	    case 'm': min_mprim = atof(poptarg);
 		      break;
             case 'q': q_flag = true;
+		      break;
+	    case 'S': split = true;
 		      break;
 	    case 's': random_seed = atoi(poptarg);
 		      break;
@@ -409,7 +442,7 @@ void main(int argc, char ** argv)
 
     mksecondary(b, binary_fraction, min_mprim, max_mprim, 
 		lower_limit, upper_limit, force_index, q_flag,
-		ignore_limits);
+		ignore_limits, split);
 
     put_node(cout, *b);
     rmtree(b);
