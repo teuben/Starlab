@@ -1747,9 +1747,13 @@ void kira_system_id(int argc, char** argv)
 
     cerr << "command line reference:  " << argv[0] << endl;
     cerr << "arguments: ";
+    int jarg = 1;
     for (int i = 1; i < argc; i++) {
 	cerr << " " << argv[i];
-	if (i%20 == 0) cerr << endl << "           ";
+	if (((jarg++ > 14 && argv[i][0] != '-') || jarg > 18) && i < argc-1) {
+	    cerr << " \\" << endl << "           ";
+	    jarg = 1;
+	}
     }
     cerr << endl;
 
