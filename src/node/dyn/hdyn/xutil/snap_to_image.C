@@ -5,6 +5,7 @@
 ////           -a           produce a series of frames for animation       [no]
 ////           -c           compress the image file(s) using gzip          [no]
 ////           -C colormap  specify a colormap file name                   [no]
+////           -d           delete frames once the animation is made       [no]
 ////           -f filename  specify root name of image files   ["-" --> stdout]
 ////           -F format    specify image file format
 ////                            (0 = PNG, 1 = SUN, 2 = GIF)                 [0]
@@ -38,8 +39,11 @@
 ////           -Y           specify maximum (log luminosity/Lsun) limit
 ////                            of HRD (-H only)                            [3]
 ////
-//// Note: If PNG output is requested and the PNG libraries are unavailable,
-////       GIF output is produced instead.
+//// Note: 1. If animations are specified, an MNG or animated GIF file will
+////          be created, but the individual frames will be retained unless
+////          the "-d" option is specified.
+////       2. If PNG output is requested and the PNG libraries are unavailable,
+////          GIF output is produced instead.
 //.............................................................................
 //
 //    version 1:  Nov 1998   Steve McMillan	 email: steve@zonker.drexel.edu
@@ -51,7 +55,7 @@
 
 #include "hdyn.h"
 #include "star/single_star.h"
-#include "../../../../gfx/util/image_fmt.h"	// clean this up!
+#include "../../../../gfx/util/image_fmt.h"	// should clean this up!
 
 // Our three-color convention now requires us to define our own standards,
 // basically the same map replicated three times at different intensities.
@@ -413,12 +417,13 @@ main(int argc, char** argv)
     real index_all = -1;
 
     bool quiet = true;
+    bool delete_frames = false;
 
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "1acC:f:F:gGi:Hl:X:x:Y:y:mn:N:o:p:P:qrs:S:t";
+    char* param_string = "1acC:df:F:gGi:Hl:X:x:Y:y:mn:N:o:p:P:qrs:S:t";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
@@ -432,6 +437,8 @@ main(int argc, char** argv)
 			colormap[63] = '\0';	// just in case
 	    		colormap_set = true;
 			break;
+	    case 'd':	delete_frames = !delete_frames;
+	    		break;
 	    case 'f':
 	    case 'o':	strncpy(output_file_id, poptarg, 63);
 			output_file_id[63] = '\0';	// just in case
@@ -876,15 +883,37 @@ main(int argc, char** argv)
 			 compress, format,
 			 colormap_set, colormap, red, green, blue);
 
-    } else if (format == 2) {
+    } else {
 
-	// Apply gifsicle to create the movie, but retain individual frames.
+	if (format == 0 || format == 2) {
 
-	char command[1024];
-	sprintf(command, "gifsicle %s.*.gif -o %s.gif&",
-		output_file_id, output_file_id);
-	cerr << "Creating animated gif in " << output_file_id << ".gif"
-	     << endl;
-	system(command);
+	    // Create the movie.
+
+	    char ext1[8], ext2[8], command[1024];
+
+	    if (format == 0) {
+		strcpy(ext1, ".png");
+		strcpy(ext2, ".mng");
+		sprintf(command, "png2mng.pl -i %s -s %d %d > %s%s",
+			output_file_id, nx, ny, output_file_id, ext2);
+	    } else {
+		strcpy(ext1, ".gif");
+		strcpy(ext2, ".gif");
+		sprintf(command, "gifsicle %s.*%s -o %s%s",
+			output_file_id, ext1, output_file_id, ext2);
+	    }
+
+	    cerr << endl
+		 << "Creating animation in " << output_file_id << ext2 << endl;
+	    int status = system(command);
+
+	    // Delete individual frames if desired.
+
+	    if (status == 0 && delete_frames) {
+		sprintf(command, "/bin/rm -f %s.*%s", output_file_id, ext1);
+		cerr << "Deleting individual frames" << endl;
+		system(command);
+	    }
+	}
     }
 }
