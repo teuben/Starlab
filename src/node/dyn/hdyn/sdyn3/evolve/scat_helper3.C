@@ -221,4 +221,7 @@ void make_standard_init(initial_state3 & init)
 
     initialize_bodies(init.system);
     init.id = get_initial_seed() + get_n_rand();
+
+    init.cpu_limit = VERY_LARGE_NUMBER;
+    init.snap_limit = -1;
 }

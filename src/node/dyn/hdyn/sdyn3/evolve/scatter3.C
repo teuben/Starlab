@@ -33,7 +33,8 @@
 ////            -D    specify snap output interval [none]
 ////            -e    specify initial eccentricity [0]
 ////            -g    specify tidal tolerance [1.e-6]
-////            -L    specify minimum initial outer separation [10]
+////            -l    specify minimum initial outer separation [10]
+////            -L    specify CPU limit and snap limit [none]
 ////            -m    specify secondary mass (binary mass = 1) [0.5]
 ////            -M    specify incomer mass [0.5]
 ////            -n    specify number of scattering experiments [1]
@@ -49,6 +50,7 @@
 ////            -S    specify separation at which to stop [none]
 ////            -U    specify maximum initial outer separation [none]
 ////            -v    specify incomer velocity at infinity [0 ==> Etot = 0]
+////            -X    specify all radii (primary, secondary, incomer) [0 0 0]
 ////            -x    specify primary radius [0]
 ////            -y    specify secondary radius [0]
 ////            -z    specify incomer radius [0]
@@ -259,8 +261,13 @@ void scatter3(initial_state3 & init,
 	int n_stars = 0;
 	for_all_daughters(sdyn3, b, bb) n_stars++;
 
-	tree3_evolve(b, CHECK_INTERVAL, dt_out, dt_snap, snap_cube_size,
-		     init.eta, cpu_time_check, dt_print, p);
+	bool status = tree3_evolve(b, CHECK_INTERVAL, dt_out,
+				   dt_snap, snap_cube_size,
+				   init.eta, cpu_time_check,
+				   dt_print, p,
+				   init.snap_limit);
+
+	if (status) init.cpu_limit = 0;
 
 	// Check the CPU time.  Note that the printed CPU time is the
 	// time since this routine was entered.
@@ -295,6 +302,8 @@ void scatter3(initial_state3 & init,
 		cout << flush;
 	    }
 	}
+
+	if (cpu_time() > init.cpu_limit) break;
 
     } while (!extend_or_end_scatter(b, init, &inter, &final));
 
@@ -333,7 +342,11 @@ void scatter3(initial_state3 & init,
 
     //  Check for integration errors (relax tolerance in the case of mergers).
 
-    if (abs(final.error) > ENERGY_TOLERANCE)
+    if (cpu_time() > init.cpu_limit)
+
+	final.descriptor = stopped;
+
+    else if (abs(final.error) > ENERGY_TOLERANCE)
 	if ((   final.descriptor != merger_binary_1
 	     && final.descriptor != merger_binary_2
 	     && final.descriptor != merger_binary_3
@@ -396,7 +409,7 @@ main(int argc, char **argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "A:bc:C:d:D:e:g:L:m:M:n:N:o:pPqQr:R:s:S:U:v:x:y:z:";
+    char* param_string = "A:bc:C:d:D:e:g:l:L::m:M:n:N:o:pPqQr:R:s:S:U:v:x:y:z:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -419,7 +432,10 @@ main(int argc, char **argv)
 		      break;
 	    case 'g': init.tidal_tol_factor = atof(poptarg);
 		      break;
-	    case 'L': init.r_init_min = atof(poptarg);
+	    case 'l': init.r_init_min = atof(poptarg);
+		      break;
+	    case 'L': init.cpu_limit = atof(poptarg);
+		      init.snap_limit = atoi(poptarg);
 		      break;
 	    case 'm': init.m2 = atof(poptarg);
 		      break;

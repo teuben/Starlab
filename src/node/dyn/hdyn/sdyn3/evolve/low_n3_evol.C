@@ -692,7 +692,9 @@ local real t_sync(sdyn3* b, real dt)
 #define PERT_OUTPUT 2
 real last_unpert = -VERY_LARGE_NUMBER;
 
-void low_n3_evolve(sdyn3* b,	   // sdyn3 array
+static int total_snaps = 0;
+
+bool low_n3_evolve(sdyn3* b,	   // sdyn3 array
 		   real delta_t,   // time span of the integration
 		   real dt_out,	   // output time interval
 		   real dt_snap,   // snapshot output interval
@@ -707,7 +709,8 @@ void low_n3_evolve(sdyn3* b,	   // sdyn3 array
 		   real cpu_time_check,
 		   real dt_print,  // external print interval
 		   sdyn3_print_fp
-		        print)	   // pointer to external print function
+		        print,	   // pointer to external print function
+		   int snap_limit)
 {
 
     // Advance the system for an interval delta_t.  Do a full restart,
@@ -859,6 +862,10 @@ void low_n3_evolve(sdyn3* b,	   // sdyn3 array
 		if (system_in_cube(b, snap_cube_size)) {
 		    put_node(cout, *b);
 		    cout << flush;
+		    total_snaps++;
+
+		    if (snap_limit > 0 && total_snaps > snap_limit)
+			return true;
 
 #if 0
 		    cerr << "snap... "; PRC(t); PRL(t-t_snap);
@@ -884,7 +891,7 @@ void low_n3_evolve(sdyn3* b,	   // sdyn3 array
 
 	    count_steps = 0;
 
-	    if (b->get_n_steps() > MAX_N_STEPS) return;
+	    if (b->get_n_steps() > MAX_N_STEPS) return true;
 
 	    if (cpu_time() - cpu_save > cpu_time_check) {
 		cpu_save = cpu_time();
@@ -910,6 +917,8 @@ void low_n3_evolve(sdyn3* b,	   // sdyn3 array
 
     cerr.precision(p);
     clean_up(b, n_steps);       // too late for snapshot?
+
+    return false;
 }
 
 #else

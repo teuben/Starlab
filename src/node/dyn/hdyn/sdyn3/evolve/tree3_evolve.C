@@ -27,15 +27,16 @@
 #define N_ITER    	     1
 #define	N_MAX		    -1
 
-void tree3_evolve(sdyn3 * b,          // sdyn3 array
-		 real delta_t,        // time span of the integration
-		 real dt_out,         // output time interval
-		 real dt_snap,        // snapshot output interval
-		 real snap_cube_size, // limit output to particles within cube
-		 real eta,            // time step parameter
-		 real cpu_time_check,
-		 real dt_print,       // external print interval
-		 sdyn3_print_fp p)    // pointer to external print function
+bool tree3_evolve(sdyn3 * b,           // sdyn3 array
+		  real delta_t,        // time span of the integration
+		  real dt_out,         // output time interval
+		  real dt_snap,        // snapshot output interval
+		  real snap_cube_size, // limit output to particles within cube
+		  real eta,            // time step parameter
+		  real cpu_time_check,
+		  real dt_print,       // external print interval
+		  sdyn3_print_fp p,    // pointer to external print function
+		  int snap_limit)
 {
     // Use offset times within the integrator to avoid roundoff.
     // Reset before returning.
@@ -47,15 +48,17 @@ void tree3_evolve(sdyn3 * b,          // sdyn3 array
     for_all_daughters(sdyn3, b, bb)
 	bb->begin_offset_time(t_offset);
 
-    low_n3_evolve(b, delta_t, dt_out, dt_snap, snap_cube_size,
-		  SOFTENING, eta, X_FLAG, TIMESTEP_CRITERION,
-		  S_FLAG, N_ITER, N_MAX,
-		  cpu_time_check, dt_print, p);
+    bool status = low_n3_evolve(b, delta_t, dt_out, dt_snap, snap_cube_size,
+				SOFTENING, eta, X_FLAG, TIMESTEP_CRITERION,
+				S_FLAG, N_ITER, N_MAX,
+				cpu_time_check, dt_print, p,
+				snap_limit);
 
     b->end_offset_time();
     for_all_daughters(sdyn3, b, bbb)
 	bbb->end_offset_time();
 
+    return status;
 }
 
 #else
