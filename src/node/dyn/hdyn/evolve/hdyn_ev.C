@@ -429,7 +429,7 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 	real aarsethstep = 0;
 
 	// Not completely clear why this option should be tied to
-	// diag->grape...  (But most likely place for a problem to
+	// diag->grape...  (But the most likely place for a problem to
 	// occur probably is in the GRAPE acc and jerk.)
 
 	if (!b->get_kira_diag()->grape) {
@@ -624,6 +624,7 @@ void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
 
 #if 0
     if (time > 0) {
+	cerr << endl;
 	PRI(4); PRC(index); PRL(dt);
 	PRI(4); PRL(old_acc);
 	PRI(4); PRL(acc);
