@@ -21,10 +21,10 @@ pkginclude_HEADERS = include/bound3.h include/chydro.h include/config.h \
     include/c_stdinc.h include/diag.h include/_dyn_.h include/dyn.h \
     include/dyn_kepler.h include/grape4.h include/grape6.h include/hdyn.h \
     include/hdyn_kepler.h include/hydrobase.h include/hydro.h include/kepler.h \
-    include/kira.h include/node.h include/pdyn.h include/scatter3.h \
-    include/scatter.h include/sdyn3.h include/sdyn.h include/sigma3.h \
-    include/slow_binary.h include/stamp-h.in include/starbase.h \
-    include/star/black_hole.h include/star/brown_dwarf.h \
+    include/kira.h include/node.h include/pdyn.h include/pp3_widget.h \
+    include/scatter3.h include/scatter.h include/sdyn3.h include/sdyn.h \
+    include/sigma3.h include/slow_binary.h include/stamp-h.in \
+    include/starbase.h include/star/black_hole.h include/star/brown_dwarf.h \
     include/star/cluster_support.h include/star/constants.h \
     include/star/constants_new.h include/star/disintegrated.h \
     include/star/double_star.h include/star/double_support.h \
@@ -45,7 +45,10 @@ pkginclude_HEADERS = include/bound3.h include/chydro.h include/config.h \
     include/story.h include/tdyn.h include/util_io.h include/util_math.h \
     include/worldline.h include/xreal.h
 
-EXTRA_DIST = doc/* etc/* sbin/* scripts/*
+EXTRA_DIST = doc/Primer.tex doc/README doc/Testing.txt local sbin/preconf \
+    scripts/kira_test scripts/kira_xdemo scripts/make_binary_demo \
+    scripts/make_stellar_demo
+
 SUBDIRS = src
 
 all-recursive: libs

@@ -17,3 +17,5 @@
 ##
 
 SUBDIRS = std gfx node star hydro harpsims
+EXTRA_DIST = packages/autoconf-2.59.tar.gz packages/automake-1.8.5.tar.gz \
+    packages/libtool-1.5.6.tar.gz

@@ -4,7 +4,7 @@
 AC_PREREQ(2.59)
 AC_INIT(Starlab, 4.3, [steve@physics.drexel.edu])
 AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_MACRO_DIR(local)
+#AC_CONFIG_MACRO_DIR(local)    # not implemented yet as of 2.59
 AC_CONFIG_SRCDIR(src/std/util_math.C)
 AM_INIT_AUTOMAKE([1.8 gnu no-exeext nostdinc std-options])
 AC_CONFIG_HEADERS(include/config.h)
