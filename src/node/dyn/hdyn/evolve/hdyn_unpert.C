@@ -603,7 +603,6 @@ void hdyn::update_dyn_from_kepler(bool need_acc_and_jerk)	// default = true
     // Compute dyn components from updated kepler values.
 
     real factor = -sister->mass / (mass + sister->mass);
-    real sfactor = 1 - factor;
     pos = kep->get_rel_pos() * factor;
     vel = kep->get_rel_vel() * factor;
     pred_pos = pos;
@@ -613,10 +612,12 @@ void hdyn::update_dyn_from_kepler(bool need_acc_and_jerk)	// default = true
     posvel = pos*vel;		    // used in is_unperturbed_and_approaching
 
     sister->time = time;
-    sister->pred_pos = kep->get_rel_pos() * sfactor;
-    sister->pred_vel = kep->get_rel_vel() * sfactor;
+
+    real sfactor = 1 + factor;
     sister->pos = kep->get_rel_pos() * sfactor;
     sister->vel = kep->get_rel_vel() * sfactor;
+    sister->pred_pos = sister->pos;
+    sister->pred_vel = sister->vel;
 
     // Convenient, but possibly unnecessary, to update accelerations,
     // jerks, etc. for the binary components at the end of every
