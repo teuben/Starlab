@@ -2,8 +2,4 @@
 Starlab TO DO (v4.3)
 --------------------
 
-* Proper installation of include/star.
-
-* Automatic compilation of sbin binaries.
-
 * Suppression of all graphics if X not found.
