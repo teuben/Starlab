@@ -73,7 +73,7 @@ real get_initial_mass(dyn* b,
 
 		cerr << "setting initial mass = " << input_mass << endl;
 
-		if (b->get_system_time() > 0)
+		if ((real)b->get_system_time() > 0)
 		    cerr << endl
 			 << "Warning: setting initial mass with time > 0"
 			 << endl;
@@ -165,7 +165,7 @@ real get_initial_virial_radius(dyn* b,
 
 		cerr << "setting initial r_virial = " << input_r_virial << endl;
 
-		if (b->get_system_time() > 0)
+		if ((real)b->get_system_time() > 0)
 		    cerr << endl
 			 << "Warning: setting initial r_virial with time > 0"
 			 << endl;
