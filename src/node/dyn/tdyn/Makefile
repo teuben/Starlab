@@ -18,17 +18,14 @@ OBJECT_FILES = tdyn_io.o tdyn_tt.o worldline.o worldline2.o
 
 LIBRARY = libtdyn.a
 
-EXECUTABLES = read_tdyn sizeof tdyn_io test_tdyn worldline worldlines \
-	      xstarplot2 xstarplot22
-
-# Note from Steve (5/01): worldline2 and xstarplot22 are experimental...
+EXECUTABLES = tdyn_io test_tdyn worldline worldlines xstarplot2 xstarplot22
 
 NON_CCC_EXECUTABLES = 
 
 DEPEND_LIBS	= $(LIB)/libtdyn.a $(LIB)/libdyn.a $(LIB)/libnode.a \
 		  $(LIB)/libstd.a
 
-CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC) -O0 $(STARLAB_GFX_CFLAGS)
+CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC) $(STARLAB_GFX_CFLAGS)
 
 CPPFLAGS = 
 

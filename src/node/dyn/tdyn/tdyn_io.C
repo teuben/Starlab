@@ -10,8 +10,8 @@
 
 //// tdyn_io:  Starlab pdyn and tdyn class I/O functions.
 ////
-////           Define scan_dyn_story and print_dyn_story for
-////           the pdyn and tdyn classes.
+////           Define scan_star_story, scan_dyn_story and print_dyn_story
+////           for the pdyn and tdyn classes.
 ////
 //// Options: none
 
@@ -20,14 +20,16 @@
 
 #ifndef TOOLBOX
 
-// Initialize any static tdyn data here...
+// Initialize any static p/tdyn data here...
 //
 // ...
 
 static bool read_xreal = false;
 
-istream & tdyn::scan_star_story(istream & s, int level)
+istream & pdyn::scan_star_story(istream & s, int level)
 {
+    // (Same function is inherited by tdyn.)
+
     char input_line[MAX_INPUT_LINE_LENGTH];
 
     // In this case, simply read the Star info into the dyn variables.
@@ -55,6 +57,211 @@ istream & tdyn::scan_star_story(istream & s, int level)
 
 	// Ignore everything else -- no stories!
     }
+}
+
+istream & pdyn::scan_dyn_story(istream & s)
+{
+    char input_line[MAX_INPUT_LINE_LENGTH];
+    bool last_real = false;
+    bool reading_root = false;
+    vector tmp;
+
+    while (get_line(s, input_line), !matchbracket(END_DYNAMICS, input_line)) {
+
+	char keyword[MAX_INPUT_LINE_LENGTH];
+	const char *val = getequals(input_line, keyword);
+
+	// See xreal notes in dyn_io.C...
+
+	// PRL(keyword);
+
+	switch(keyword[0]) {
+	    case 'a':
+
+		// Acceleration:
+
+		if (!strcmp("a", keyword)) {
+		    set_vector_from_input_line(acc, input_line);
+		    break;
+		}
+		goto other;
+	    
+	    case 'L':
+
+		// Luminosity:
+
+		if (!strcmp("L", keyword)) {
+		    luminosity = strtod(val, NULL);
+		    break;
+		}
+		goto other;
+
+	    case 'm':
+
+		// Mass:
+
+		if(!strcmp("m", keyword)) {
+		    mass = strtod(val, NULL);
+		    break;
+		}
+		goto other;
+	    
+	    case 'r':
+
+		// Position:
+
+		if(!strcmp("r", keyword)) {
+		    if (!reading_root)
+			set_vector_from_input_line(pos, input_line);
+		    else
+			set_vector_from_input_line(tmp, input_line);
+		    break;
+		}
+
+		// Real system time:
+
+		if (!strcmp("real_system_time", keyword)) {
+
+		    // "real_system_time" (a) gives the root-node time in
+		    // real format and (b) serves as a flag that all other
+		    // times are given in xreal form.
+
+		    read_xreal = true;
+		    last_real = true;
+		    reading_root = true;
+		    break;
+		}
+		goto other;
+
+	    case 's':
+
+		// System time:
+
+		if (!strcmp("system_time", keyword)) {
+
+		    // Check input format before reading.
+		    // If we see "system_time" and haven't ever encountered
+		    // "real_system_time", then all our times are plain
+		    // "real"s.
+
+		    if (!last_real) read_xreal = false;
+		    reading_root = true;
+
+		    if (read_xreal) {
+
+			set_system_time(get_xreal_from_input_line(input_line));
+
+		    } else {
+
+			real_system_time = system_time = strtod(val, NULL);
+
+		    }
+		    break;
+		}
+		goto other;
+	    
+	    case 'S':
+
+		// Stellar type:
+
+		if (!strcmp("S", keyword)) {
+
+//		    char cptr[MAX_INPUT_LINE_LENGTH];
+//		    sscanf(val,"%s",cptr);
+//		    set_stellar_type(cptr);
+
+		    stellar_type = strtol(val, NULL, 10);
+		    break;
+		}
+		goto other;
+	    
+	    case 't':
+
+		if(!strcmp("tmpv", keyword)) {
+		    // Read time, mass, pos, and vel as unformatted data.
+		    // Input time will be real, independent of USE_XREAL.
+
+		    // *** Must coordinate with hdyn_io.C. ***
+		    real time = read_unformatted_real( s );
+		    mass = read_unformatted_real( s );
+
+		    if (!reading_root) {
+
+			read_unformatted_vector( s, pos );
+			read_unformatted_vector( s, vel );
+
+		    } else {
+
+			// Root pos and vel are used for center tracking.
+
+			read_unformatted_vector( s, tmp );
+			read_unformatted_vector( s, tmp );
+
+		    }
+		    break;
+		}
+
+		if(!strcmp("t64mpv32", keyword)) {
+		    real time = read_unformatted_real( s );
+		    mass = read_unformatted32_real( s );
+
+		    if (!reading_root) {
+
+			read_unformatted32_vector( s, pos );
+			read_unformatted32_vector( s, vel );
+
+		    } else {
+
+			// Root pos and vel are used for center tracking.
+
+			read_unformatted_vector( s, tmp );
+			read_unformatted_vector( s, tmp );
+
+		    }
+		    break;
+		}
+		goto other;
+	    
+	    case 'T':
+
+		if (!strcmp("TL", keyword)) {
+
+		    // Short output always uses floats for T and L.
+
+		    temperature = read_unformatted32_real( s );
+		    luminosity = read_unformatted32_real( s );
+		    break;
+		}
+
+		// Temperature:
+
+		if (!strcmp("T", keyword)) {
+		    temperature = strtod(val, NULL);
+		    break;
+		}
+		goto other;
+
+	    case 'v':
+
+		// Velocity:
+
+		if(!strcmp("v", keyword)) {
+		    if (!reading_root)
+			set_vector_from_input_line(vel, input_line);
+		    else
+			set_vector_from_input_line(tmp, input_line);
+		    break;
+		}
+		goto other;
+	    
+	    default:
+	      other:
+		// else
+		//    add_story_line(dyn_story, input_line);	// no stories!
+		;
+	}
+    }
+    return s;
 }
 
 istream & tdyn::scan_dyn_story(istream & s)
