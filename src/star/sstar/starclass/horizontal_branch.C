@@ -119,6 +119,26 @@ void horizontal_branch::evolve_element(const real end_time) {
       stellar_wind(dt);
    }
 
+// Post-evolution stellar update.
+// Makes sure age and radius are updated.
+void horizontal_branch::update() {
+
+  // New core mass determination occurs in ::evolve_element.
+  // (SPZ+GN:09/1998)
+  // real m_tot = get_total_mass();
+  // core_mass = helium_core_mass();
+  // envelope_mass = m_tot - core_mass;
+
+  core_radius = helium_core_radius();
+
+// (GN+SPZ Apr 28 1999)
+// effective_radius can not be larger than radius for horizontal branch stars
+  effective_radius = radius;
+
+  detect_spectral_features();
+
+}
+
 star* horizontal_branch::reduce_mass(const real mdot) {
 
       if (envelope_mass<=mdot) {
