@@ -62,14 +62,14 @@ void check_sanity_of_timestep(xreal & time, real & timestep)
 
 	if (fmod(time,  timestep) != 0.0) {
 
-	    cerr << " impossible timestep error \n";
+	    cerr << " unsynchronized timestep error" << endl;
 
 	    cerr.precision(HIGH_PRECISION);
 	    PRL(time);
 	    PRL(timestep);
 	    PRL(1.0/timestep);
 	    PRL(fmod(time,  timestep));
-	    cerr << " Perform correction... \n";
+	    cerr << " correcting..." << endl;
 
 	    real corrected_timestep = 1.0;
 	    while (corrected_timestep > timestep*1.1)
@@ -131,6 +131,15 @@ void hdyn::print_static(ostream& s)		// default = cerr
     s << "max_slow_factor = " << max_slow_factor << endl;
     s << "max_slow_perturbation = " << max_slow_perturbation << endl;
     s << "max_slow_perturbation_sq = " << max_slow_perturbation_sq << endl;
+}
+
+// Allow user to turn off timestep checking...
+
+static bool check_timestep = true;
+
+void set_hdyn_check_timestep(bool check)	// default = true
+{
+    check_timestep = check;
 }
 
 istream & hdyn::scan_dyn_story(istream & s)
@@ -276,7 +285,8 @@ istream & hdyn::scan_dyn_story(istream & s)
 	}
     }
 
-    check_sanity_of_timestep(time, timestep);
+    if (check_timestep)
+	check_sanity_of_timestep(time, timestep);
 
     return s;
 }

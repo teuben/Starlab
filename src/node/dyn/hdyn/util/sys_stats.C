@@ -100,6 +100,7 @@ main(int argc, char **argv)
     hdyn *b;
     int i = 0;
 
+    set_hdyn_check_timestep(false);
     while (b = get_hdyn()) {
 
 	check_addstar(b);
