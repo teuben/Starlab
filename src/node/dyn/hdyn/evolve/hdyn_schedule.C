@@ -75,7 +75,7 @@ local inline void swap(node_time a[], int i, int j)
 
 local void quicksort(node_time a[], int left, int right)
 {
-    // Sort nodes in array a, according to get_next_time().
+    // Sort nodes in array a, according to next_time().
 
     int i,j;
     xreal v;
