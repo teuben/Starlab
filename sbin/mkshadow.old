@@ -1,0 +1,81 @@
+#! /bin/csh -f
+
+# Make a shadow directory of the specified Starlab directory.
+# Make pointers to source code (*.[hcCfF]), Makefiles ([A-Z]*),
+# and the sbin and local directories, but maintain separate lib
+# and bin directories.
+
+if ($#argv < 1) then
+    echo 'Usage:  mkshadow  <Starlab directory>'
+    exit
+endif
+
+set src = $1
+if (! -d $src) then
+    echo Directory $src does not exist
+    exit
+endif
+
+set dst = {$1}_s
+if (-d $dst) then
+    echo Shadow directory $dst already exists
+    exit
+else if (-e $dst) then
+    echo Non-directory $dst already exists
+    exit
+endif
+
+set dirs   = (`cd $src; find . -type d -print`)
+set files1 = (`cd $src; find inc src -name '*.[hcCfF]'	-type f -print`)
+set files2 = (`cd $src; find . -name '[A-Z]*'		-type f -print`)
+set files3 = (`cd $src; find sbin templates		-type f -print`)
+set files4 = (`cd $src; /bin/ls config* missing mkin* *-sh *_end* *.{m4,in}`)
+
+set files = ($files1 $files2 $files3 $files4)
+
+@ nf = $#files1 + $#files2 + $#files3 + $#files4
+if ($nf != $#files) then
+    echo Too many files...	# overflow, presumably...
+    exit
+endif
+
+echo Found $#dirs directories and $#files files in directory $src
+
+mkdir $dst
+echo Making shadow directories in $dst \(1 dot per directory\):
+foreach dir ($dirs)
+
+#   Skip bin, lib, and local directories (created by configure/Starlab build).
+
+    if (X$dir != X./bin && X$dir != X./lib && X$dir != X./local) then
+	echo -n "."
+	mkdir -p $dst/$dir
+    endif
+
+end
+echo ""
+
+echo Creating links from $dst to $src \(1 dot per 10 links\):
+
+# Don't use foreach here since the number of entries in files may be large.
+
+@ i = 0
+@ n = 0
+while ($i < $#files)
+    @ i++
+    set file = $files[$i]
+    @ n++
+    if ($n == 10) then
+	echo -n "."
+	@ n = 0
+    endif
+    ln -s $cwd/$src/$file $cwd/$dst/$file >& /dev/null	# avoid errors on
+							# repeated file name
+end
+echo ""
+
+echo ""
+echo The shadow directory $dst now mirrors directory $src
+echo All source and Makefiles in $dst are symbolic links into $src
+echo Run AAA_SOURCE_ME to complete the build and create local directories.
+echo ""
