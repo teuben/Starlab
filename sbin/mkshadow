@@ -74,20 +74,45 @@ endif
 set curr = $PWD
 cd $src
 
-set dirs = (`find . -type d -print | egrep -v '/CVS$|/local$|/config$|\....s$|/tmp$|^./autom4|^./usr'`)
+# Explicit list of directories to exclude: any CVS, local, config, .deps,
+# .libs, top-level autom4te.cache, usr, anything below src/packages.
 
-# The list of files to link excludes local and config, which always copied.
+set excl = '/CVS$|/local$|/config$|\....s$|^./tmp|^./autom4|^./usr|/packages/'
+
+set p = ""
+set p = "-print"	# apparently unnecessary
+
+set dirs = (`find . -type d $p | egrep -v "$excl"`)
+
+# The list of files to link excludes local and config, which are always
+# copied.  It includes all source files and Makefile.am, together with
+# essential top-level files.  We also exclude usr, everything below
+# src/packages, any generated source files (e.g. moc_pp3_widget.C),
+# anything in CVS, and executables in sbin.
+
+# Some definitions to limit the lengths of some following lines.
+
+set x = config.h
+xset sbin_ex = "`make -s -C sbin exelist1`"
+alias gr egrep
+
+# (Not clear just how likely we are to run into a limit here in the length
+#  of of a word or a wordlist...)
 
 set files = ( \
-  `find include src -name '*.[hcCfF]' -print -o -name '*.[ly][ly]' -print` \
-  `find doc etc sbin scripts src/packages -name CVS -prune -o -type f -print` \
-  `/bin/ls -d [A-Z]* *.ac install-* *.{m4,in} | egrep -v 'Makefile|CVS|HOST'` \
-  `find . -name Makefile.am -print` `/bin/ls include/stamp-h.in` \
+  `find include src -name packages -prune -o -name '*.[hcfF]' $p | gr -v $x` \
+  `find include src -name '*.C' $p | gr -v moc_pp3_widget` \
+  `find src -name '*.[ly][ly]' $p` \
+  `/bin/ls -d [A-U,W-Z]* *.ac install-* v*.m4 *.in | gr -v 'Make|CVS|HOST'` \
+  `find doc etc scripts -name CVS -prune -o -type f $p` \
+  `find src/packages/* -type d -prune -o -type f $p | gr -v '\.log$'` \
+  `find . -name packages -prune -o -name Makefile.am $p ` \
+  `find sbin -name CVS -prune -o -type f $p | gr -v $sbin_ex` \
+  `/bin/ls include/stamp-h.in` \
 )
 
-cd $curr
-
 echo Found $#dirs directories and $#files files in directory $src
+cd $curr
 
 #--------------------------------------------------------------------------
 
@@ -152,7 +177,7 @@ foreach dir (local config)
     if (! -e $dstdir) then
 	mkdir $dstdir
     endif
-    foreach file (`find $src/$dir -name CVS -prune -o -type f -print`)
+    foreach file (`find $src/$dir -name CVS -prune -o -type f $p`)
 	cp -p $file $dstdir
     end
 end

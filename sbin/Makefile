@@ -11,6 +11,12 @@ mytime:	routines.c mytime.c
 	$(CC) -c -O routines.c -g3
 	$(CC) -O0 mytime.c routines.o -lm -o mytime -g
 
+exelist:
+	@echo $(EXECUTABLES) routines.o
+
+exelist1:
+	@echo $(EXECUTABLES) routines.o | tr ' ' '|'
+
 distclean:
 clean:
 	@/bin/rm -f $(EXECUTABLES)
