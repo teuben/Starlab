@@ -292,24 +292,15 @@ real black_hole::black_hole_mass() {
 // (GN+SPZ May 12 1999) was nice try, but seemt to be a bit unrealistic
 // Try simple MBH = frac * MHe with frac = 0.5
 
-  real m = 0.5 * get_total_mass();
+//  real m = 0.5 * get_total_mass();
 
-  return m;
-#if 0
-  real m = 2;
-  if (core_mass >= cnsts.parameters(helium2black_hole))
-    m = 0.6 * (core_mass-cnsts.parameters(helium2black_hole)) + 2;
-  
-    //  if (core_mass>=cnsts.parameters(helium2black_hole))
-    //    m = 0.6 * (core_mass-cnsts.parameters(helium2black_hole)) + 2;
-    //  else if (core_mass>cnsts.parameters(super_giant2neutron_star))
-    //    m *= (cnsts.parameters(super_giant2neutron_star)/core_mass);
-    //  else if (core_mass>cnsts.parameters(helium2neutron_star))
-    //    m = (cnsts.parameters(helium2neutron_star)/core_mass);
-    //  else m = 0.043*pow(core_mass,1.67);
+    //approximation to Fryer & Kalogera 2001
+    real m = get_total_mass();
+    if(m<40) {
+	m = min(m, core_mass);
+    }
 
-  return min(m, core_mass);
-#endif
+    return m;
 
 }
 
@@ -413,11 +404,20 @@ bool black_hole::super_nova() {
       suddenly_lost_mass = envelope_mass;
 
       bool hit_companion = FALSE;
-      //real mass_correction =
-      //sqrt(cnsts.parameters(kanonical_neutron_star_mass)/core_mass);
+
+      // Impulse kick
+      real impulse_kick = 
+	   cnsts.parameters(kanonical_neutron_star_mass)/core_mass;
+
+      // Energy kick
+      // real energy_kick = sqrt(impulse_kick);
+  
       
-      real v_kick  = cnsts.super_nova_kick(no_velocity_kick);
-                     // mass_correction*random_kick();
+//      real v_kick  = cnsts.super_nova_kick(no_velocity_kick);
+
+      real v_kick  = impulse_kick
+                   * cnsts.super_nova_kick(Paczynski_velocity_kick);
+
       real theta_kick = acos(1-2*random_angle(0, 1));
       real phi_kick   = random_angle(0, cnsts.mathematics(two_pi));
 

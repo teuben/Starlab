@@ -94,6 +94,9 @@ real hyper_giant::hyper_giant_core_mass() {
   real m_core_max = 20 + 0.27*relative_mass;
 
   real m_core = min(m_core_TY, m_core_max);
+  if (relative_mass >= cnsts.parameters(maximum_main_sequence))
+      m_core = get_total_mass();
+
 
 //	// Extra enhanced mass loss for stars with M>80 Msun.
 //	// to make low-mass compact objects. (SPZ+GN:24 Sep 1998)

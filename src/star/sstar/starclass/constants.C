@@ -175,8 +175,8 @@ real stellar_evolution_constants::parameters(pulsar_initial_conditions pp) {
              break;                               
         case kanonical_neutron_star_mass:        return 1.34;   // [msun]
              break;                                
-	case maximum_neutron_star_mass:          return 1.5;    // [Msun]
-             break;                                
+	case maximum_neutron_star_mass:          return 2.0;    // [Msun]
+             break;                              // was 1.5
 	case minimum_neutron_star_mass:          return 0.0925; // [Msun]
              break;                              // Newtonian polytrope 
         default:

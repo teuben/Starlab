@@ -156,7 +156,10 @@ void helium_giant::create_remnant() {
      //if (get_total_mass() >= cnsts.parameters(helium2black_hole)) 
 //           type = Black_Hole;
 
-     if (core_mass >= cnsts.parameters(COcore2black_hole)) 
+     if (relative_mass >= cnsts.parameters(maximum_main_sequence) &&
+	 relative_mass < 300)
+       type = Disintegrated;
+     else if (core_mass >= cnsts.parameters(COcore2black_hole)) 
        type = Black_Hole;
      else if(core_mass >= cnsts.parameters(Chandrasekar_mass))
        type = Neutron_Star;

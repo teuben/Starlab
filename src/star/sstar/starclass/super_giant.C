@@ -284,7 +284,10 @@ void super_giant::create_remnant() {
 
      real COcore_mass = 0.65 * core_mass;
      stellar_type type;
-     if (COcore_mass >= cnsts.parameters(COcore2black_hole)) 
+     if (relative_mass >= cnsts.parameters(maximum_main_sequence) &&
+	 relative_mass < 300)
+       type = Disintegrated;
+     else if (COcore_mass >= cnsts.parameters(COcore2black_hole)) 
        type = Black_Hole;
      else if(core_mass >= cnsts.parameters(Chandrasekar_mass))
        type = Neutron_Star;

@@ -617,6 +617,8 @@ real neutron_star::neutron_star_mass(stellar_type stp) {
     e =  7.48965E-06;
     real mass = a + m*(b + m*(c + m*(d + m*e)));
 
+  mass = min(mass, cnsts.parameters(maximum_neutron_star_mass));
+
   return min(mass, get_total_mass());
 }
 

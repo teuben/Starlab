@@ -375,6 +375,27 @@ local INLINE int force_by_grape(xreal xtime,
 
 	iindex[i] = nodes[i]->get_grape_index();
 
+	//Suggested by Jun (May 8 2001) to prevent call Jun bug
+	// Implemented by SPZ
+	if (pot_only){
+
+            // Nodes in this case are leaves, not necessarily top-level.
+            ipos[i] = hdyn_something_relative_to_root(nodes[i],
+                                                      &hdyn::get_pred_pos);
+            // set some LARGE NUMBERS to acc and jerk to avoid
+            // overflow flag to be set
+            iacc[i]   = vector(1e100,0.0,0.0);
+            ijerk[i]   = vector(1e100,0.0,0.0);
+        } else{
+            ipos[i]   = nodes[i]->get_pred_pos();
+            iacc[i]   = nodes[i]->get_old_acc();
+            ijerk[i]  = ONE6*nodes[i]->get_old_jerk();
+        }
+        ivel[i]   = nodes[i]->get_pred_vel();
+        ipot[i]   = nodes[i]->get_pot();
+        ih2[i]    = nodes[i]->get_grape_rnb_sq();
+
+#if 0
 	if (pot_only)
 
 	    // Nodes in this case are leaves, not necessarily top-level.
@@ -389,6 +410,7 @@ local INLINE int force_by_grape(xreal xtime,
 	ijerk[i]  = ONE6*nodes[i]->get_old_jerk();
 	ipot[i]   = nodes[i]->get_pot();
 	ih2[i]    = nodes[i]->get_grape_rnb_sq();
+#endif
 
 	if (DEBUG > 1) {
 	    if (i > 0) cerr << endl;
@@ -398,6 +420,11 @@ local INLINE int force_by_grape(xreal xtime,
 	    PRI(4); PRL(iacc[i]);
 	    PRI(4); PRL(ijerk[i]);
 	}
+    }
+
+    // For statement added by SPZ om May 8 2001
+    for(int i = ni; i<n_pipes; i++){
+	ih2[i] = 0.0;
     }
 
     g6calc_firsthalf_(&cluster_id, &nj, &ni, iindex,
@@ -1601,10 +1628,22 @@ void grape_calculate_densities(hdyn* b,			// root node
     // Compute the densities in chunks of maximum size n_pipes.
 
     int i = 0;
+
+    // Replaces old code.
+    //Implemented by SPZ on May 8 2001
+    while (i < n_top) {
+
+        int inext = i;
+        // int ni = min(n_pipes, n_top - i);
+        // Use one pipelne only to avoid
+        // neighbourlist overflow...
+        int ni = 1;
+#if 0
     while (i < n_top) {
 
 	int inext = i;
 	int ni = min(n_pipes, n_top - i);
+#endif
 
 	// Get the forces on particles i through i + ni - 1.
 	// Function force_by_grape also sets nn pointers.

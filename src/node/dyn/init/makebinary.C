@@ -254,7 +254,8 @@ local void mkbinary(dyn* b, real lower, real upper,
 		    a_min = b->get_starbase()->conv_r_star_to_dyn(a_min);
 
 		    //binding energy = 0.5 * m_total / sma;
-		    real a_max = 0.5 * m_total;
+		    real min_binding_energy = 10; // [kT]
+		    real a_max = 0.5 * m_total/min_binding_energy;
 		    if(upper>a_min) {
 		      a_max = min(a_max, upper);
 		    }

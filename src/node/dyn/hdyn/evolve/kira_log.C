@@ -800,14 +800,14 @@ void log_output(hdyn * b, real count, real steps,
     vector cod_pos, cod_vel;
     compute_com(b, cod_pos, cod_vel);
 
-    //#if 0
+//#if 0
 
     // Suppressed for now while we are debugging other parts of
     // the GRAPE-6 interface (Steve, 7/00):
 
     compute_densities(b, cod_pos, cod_vel);	// does nothing unless
 						// GRAPE is present
-    //#endif
+//#endif
 
     int n_bound;
     real m_bound;

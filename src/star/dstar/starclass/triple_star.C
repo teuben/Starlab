@@ -73,7 +73,7 @@ cerr<<"void double_star::stellar_wind(const real "<<dt<<")"<<endl;
 
 
 real double_star::temperature() {
-cerr<<"real double_star::temperature()"<<endl;
+//cerr<<"real double_star::temperature()"<<endl;
 
       real temp = get_primary()->temperature()
                 + get_secondary()->temperature();

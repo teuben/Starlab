@@ -514,7 +514,9 @@ real helium_star::final_CO_core_mass(const real initial_mass) {
   // bases on Habets 1986 & IT85
   // (SPZ+GN: 27 Jul 2000)
   real final_coremass_fraction;
-  if(initial_mass <= 0.8) 
+  if(relative_mass >= cnsts.parameters(maximum_main_sequence))
+    final_coremass_fraction = 1;
+  else if(initial_mass <= 0.8) 
     final_coremass_fraction = 1;
   else if(initial_mass >= cnsts.parameters(helium2neutron_star)) 
     final_coremass_fraction = 0.65;
