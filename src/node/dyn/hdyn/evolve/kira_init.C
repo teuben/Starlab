@@ -96,14 +96,6 @@ local void correct_multiples(hdyn* b,
     }
 }
 
-local bool twiddles(real a, real b, real eps = 1.e-12)
-{
-    if (a == b || 2*abs(a-b)/(abs(a)+abs(b)) < eps)
-	return true;
-    else
-	return false;
-}
-
 local void choose_param(hdyn* b, bool verbose,
 			real& x, bool x_flag, char* x_id,
 			bool zero_OK = false)
