@@ -452,8 +452,24 @@ local inline real new_timestep(hdyn *b,			// this node
 			       real correction_factor,
 			       real pert_sq)
 {
-    if (dt <= 0)
+    if (dt <= 0) {
+
+	// Shouldn't happen now, as this will be caught in
+	// correct_and_update().
+
 	cerr << "new_timestep: actual time step <= 0" << endl;
+	PRC(b->format_label()); 
+	int p = cerr.precision(HIGH_PRECISION);
+	PRL(b->get_system_time());
+	PRC(time); PRL(b->get_time());
+	cerr.precision(p);
+	PRC(dt); PRL(b->get_timestep());
+
+	if (b->get_timestep() > 0)
+	    return b->get_timestep();
+	else
+	    exit(0);
+    }
 
     real timestep = b->get_timestep();
 
@@ -1125,6 +1141,14 @@ bool hdyn::correct_and_update()
     //	cerr << "correct_and_update: " << format_label() << ": ";
     // 	PRC(dt); PRL(timestep);
     // }
+
+    if (dt <= 0) {
+
+	// Nothing to be done (may happen e.g. if a low-level node
+	// forces a parent to be integrated ahead of schedule...).
+
+	return true;
+    }
 
     if (slow) dt = slow->get_dtau();
 
