@@ -95,7 +95,7 @@ static bool grape_was_used_to_calculate_potential = false;
 //		force_by_grape
 //		hw_err_exit
 
-
+
 local void reattach_grape(real time, char *id, kira_options *ko)
 
 // Reattach the GRAPE-6.
@@ -120,6 +120,7 @@ local void reattach_grape(real time, char *id, kira_options *ko)
 	}
 }
 
+
 local INLINE void send_j_node_to_grape(hdyn *b, bool predict = false)
 
 // Send node b to the GRAPE-6 j-particle list.
@@ -183,6 +184,7 @@ local INLINE void send_j_node_to_grape(hdyn *b, bool predict = false)
     }
 }
 
+
 local int initialize_grape_arrays(hdyn *b,		// root node
 				  bool reset_counters = true,
 				  bool predict = false)
@@ -258,6 +260,7 @@ local int initialize_grape_arrays(hdyn *b,		// root node
     return nj;
 }
 
+
 local hdyn *find_and_print_nn(hdyn *b)
 {
     real d2min = VERY_LARGE_NUMBER;
@@ -282,6 +285,7 @@ local hdyn *find_and_print_nn(hdyn *b)
     return bmin;
 }
 
+
 local void reset_grape(hdyn *b)					// root node
 
 // Perform a "hard" reset of the grape interface to try to recover
@@ -307,6 +311,7 @@ local void reset_grape(hdyn *b)					// root node
     initialize_grape_arrays(b, false);
 }
 
+
 // These arrays are actually local to force_by_grape, but it is convenient
 // to make them globally accessible in order to permit cleanup.
 
@@ -616,6 +621,7 @@ local INLINE int force_by_grape(xreal xtime,
     return error;
 }
 
+
 local void hw_err_exit(char *func, int id, hdyn *b)
 
 // Exit following a serious hardware error...
@@ -650,7 +656,7 @@ local void hw_err_exit(char *func, int id, hdyn *b)
 //  *									 *
 //  **********************************************************************
 
-
+
 //  **********************************************************************
 //  *                                                                    *
 //  *  check_release_grape:  Accessor for GRAPE release/attach.          *
@@ -708,6 +714,7 @@ local inline bool use_cm_approx(hdyn *bb)
     return false;
 }
 
+
 local int send_all_leaves_to_grape(hdyn *b,		// root node
 				   real& e_unpert,	// unperturbed energy
 				   bool cm = false)	// use CM approx
@@ -793,6 +800,7 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
     return nj;
 }
 
+
 local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 					int nj,
 					bool cm = false)	// CM approx
@@ -852,7 +860,7 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
     return status;
 }
 
-
+
 //  *****************************
 //  *****************************
 //  ***                       ***
@@ -1035,6 +1043,7 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
     return (b->get_grape_rnb_sq() > 0);		// NB using rnb > 0 as a flag
 }
 
+
 local INLINE bool get_force_and_neighbors(xreal xtime,
 					  hdyn *nodes[], int ni,
 					  int nj_on_grape, int n_pipes,
@@ -1122,6 +1131,7 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
     return error;
 }
 
+
 local INLINE swap(hdynptr ilist[], int i, int j)
 {
     hdyn *tmp = ilist[i];
@@ -1178,6 +1188,7 @@ local INLINE int sort_nodes_and_reduce_rnb(hdynptr ilist[], int ni)
     return inext;
 }
 
+
 // Neighbor list space is shared by get_neighbors_and_adjust_h2 (acc_and_jerk)
 // and count_neighbors_and_adjust_h2 (densities) -- will probably be merged.
 
@@ -1194,18 +1205,26 @@ static int neighbor_list[MAX_NEIGHBORS];
 // be correctly set.  The size of the neighbor sphere must be reduced
 // if overflow occurs, or else the nn pointers will be unreliable.
 
-local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
+local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
-// Set nn, coll, d_nn_sq and d_coll_sq, for all particles, and
-// compute perturber lists for parent nodes.
+// Set nn, coll, d_nn_sq and d_coll_sq, for particle b (pipe specified),
+// and compute perturber lists for parent nodes.  Possible returns are:
+//
+//	0	All OK, no further action needed.
+//	1	Array overflow, reduce grape_rnb_sq and retry.
+//	2	No neighbors or no coll, increase grape_rnb_sq and retry.
+//
+// The value of grape_rnb_sq is changed here.  Retrying is up to the
+// calling function.
 
-// Called by:	grape_calculate_acc_and_jerk()			// global
+// Called by:	get_coll_and_perturbers()			// local
 
 {
     // Get the list of neighbors from the GRAPE, if available.
 
     int n_neighbors = 0;
     int status = 0;
+
 #ifndef NO_G6_NEIGHBOUR_LIST
     status = g6_get_neighbour_list_(&cluster_id,
 				    &pipe,
@@ -1235,12 +1254,9 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    PRC(n_neighbors); PRC(max_neighbors);
 	    cerr << "new rnb = " << sqrt(b->get_grape_rnb_sq()) << endl;
 
-	    return false;
+	    return 1;
 	}
     }
-
-    bool found_neighbor = false;
-
 
 #if 1
     if (b->name_is("(5394,21337)")) {
@@ -1248,6 +1264,7 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
     }
 #endif
 
+    status = 2;
 
     if (n_neighbors > 0) {
 
@@ -1257,7 +1274,7 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	// for this particle, (possibly) overriding the result
 	// returned by the GRAPE hardware.
 
-	found_neighbor = true;
+	status = 0;
 
 	real dmin_sq = VERY_LARGE_NUMBER;
 	hdyn *bmin = NULL;
@@ -1267,13 +1284,6 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	int npl = 0;
 	hdyn **pl = NULL;
 	real rpfac = 0;
-
-
-//  	if (b->name_is("(1752,101752)")) {
-//  	  cerr << "grape6: " << endl;
-//  	  PRL(b->get_grape_rnb_sq());
-//  	}
-
 
 	if (b->is_parent() && b->get_valid_perturbers()) {
 
@@ -1291,12 +1301,6 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	for (int j = 0; j < n_neighbors; j++) {
 
 	    hdyn *bb = node_list[neighbor_list[j]];
-
-
-//  	    if (b->name_is("(1752,101752)")) {
-//  	      PRC(j); PRL(bb->format_label());
-//  	    }
-
 
 	    // bb is the j-th neighbor of b (list not ordered).
 
@@ -1324,13 +1328,6 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 			    pl[npl] = bb;
 
 			npl++;
-
-
-//  			if (b->name_is("(1752,101752)")) {
-//  			  cerr << "is perturber #" << npl << endl;
-//  			}
-
-
 		    }
 		}
 	    }
@@ -1359,25 +1356,26 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 #endif
 
 
-
 	} else
-	    found_neighbor = false;
+	    status = 2;
 
 	if (cmin) {
 	    b->set_coll(cmin);
 	    b->set_d_coll_sq(dcmin_sq);
 	} else
-	    found_neighbor = false;
+	    status = 2;
     }
 
     // If no nearest neighbor or coll is found, enlarge the neighbor-sphere
     // radius and try again.
 
-    if (!found_neighbor)
+    if (!status)
 	b->set_grape_rnb_sq(RNB_INCREASE_FAC*b->get_grape_rnb_sq());
 
-    return found_neighbor;
+    return status
 }
+
+
 
 #define MAX_FORCE_COUNT	20
 
@@ -1405,44 +1403,70 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 	if (bb->get_grape_rnb_sq() > 0) {
 
 	    int count_force = 0;
+	    int status;
 
-	    while (!get_neighbors_and_adjust_h2(bb, pipe)) {
+	    while (!(status = get_neighbors_and_adjust_h2(bb, pipe))) {
 
-		if (bb->get_grape_rnb_sq() > h2_crit
-		    || count_force > MAX_FORCE_COUNT) {
+		// Neighbor list must be recomputed:
+		//
+		//	status = 1  ==>  decrease radius
+		//	status = 2  ==>  increase radius
+
+		if (count_force > MAX_FORCE_COUNT
+		    || (status == 2 && bb->get_grape_rnb_sq() > h2_crit)) {
+
+		    // Give up -- can't find a neighbor.  Flag with nn = bb
+		    // (not really necessary, but probably harmless), and set
+		    // perturbers invalid, if relevant.
 
 		    bb->set_nn(bb);			// kira checks
 							// for nn = bb
 		    bb->set_d_nn_sq(2*h2_crit);
+
+		    if (bb->is_parent())
+			bb->set_valid_perturbers(false);
 
 
 #if 1
 		    if (streq(bb->format_label(), "(5394,21337)")) {
 			cerr << "get_coll:  setting nn = bb for ";
 			PRC(bb); PRL(bb->get_d_nn_sq());
-			PRL(count_force);
+			PRC(status); PRL(count_force);
 		    }
 #endif
 
 
-		    break;
+		    break;				// go on to next ip
 
 		} else {
 
-		    // We have expanded the neighbor sphere and must
-		    // recompute the force.  Currently, we simply
-		    // iterate until the neighbors for this particle
-		    // are found, then exit, returning the next ip on
-		    // the list.
+		    // We have modified the neighbor sphere and must
+		    // recompute the force to get the new neighbor list.
+		    // Currently, we simply iterate until the neighbors
+		    // for this particle are found (or we give up), then
+		    // exit, returning the next ip on the list.
 
-//		    cerr << "get_coll_and_perturbers: recomputing force for ";
-//		    PRC(ip); PRL(bb);
-//		    PRL(ilist[ip]);
+		    // Reducing rnb for a CM node means that we
+		    // can't construct a valid perturber list from
+		    // the neighbor information, so flag that here.
+
+		    if (status == 1 && bb->is_parent())
+			bb->set_valid_perturbers(false);
+
+
+#if 1
+		    if (streq(bb->format_label(), "(5394,21337)")) {
+			cerr << "get_coll_and_perturbers:"
+			     << " recomputing force for ";
+			PRC(ip); PRL(bb);
+			PRL(ilist[ip]);
+		    }
+#endif
+
 
 		    pipe = 1;
 		    ip = ni;	// force exit from "for" loop
 
-		    count_force++;
 		    while (get_force_and_neighbors(xtime,
 						   &bb,
 						   pipe,
@@ -1464,23 +1488,24 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 					     * bb->get_grape_rnb_sq());
 			count_force++;
 
-			// Reducing rnb for a CM node means that we
-			// can't construct a valid perturber list from
-			// the neighbor information, so flag that here.
-
 			if (bb->is_parent())
 			    bb->set_valid_perturbers(false);
 
 		    }
-		}
-	    }			// end of while (!get_...)
-	}
+
+		}		// if (count_force...) {} else
+
+	    }			// while (!get_...)
+
+	}			// if (bb->get_grape_rnb_sq()...)
+
 	inext++;
-    }				// end of for (ip...)
+    }				// for (ip...)
 
     return inext;
 }
 
+
 
 //  *****************************
 //  *****************************
@@ -1608,10 +1633,11 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
     real h2_crit = 8192 * current_nodes[0]->get_d_min_sq();
 
-    // We will stop expanding the GRAPE neighbor sphere once its size
-    // exceeds the critical value h2_crit.  However, it is OK to set
-    // grape_rnb_sq greater than h2_crit -- the neighbor sphere then
-    // simply won't be expanded if no neighbors are found.
+    // We will stop expanding the GRAPE neighbor sphere (in those cases
+    // where expansion is indicated -- finding nearest neighbors and colls)
+    // once its size exceeds the critical value h2_crit.  However, it is
+    // OK to set grape_rnb_sq greater than h2_crit -- the neighbor sphere
+    // then simply won't be expanded if no neighbors are found.
 
     // *** Should contain a factor of ~(m_max/<m>)^2, but not crucial...
 
@@ -1645,15 +1671,16 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	if (get_force_and_neighbors(xtime, current_nodes + i, ni,
 				    nj_on_grape, n_pipes, need_neighbors))
 
-	    // Neighbor list overflow.  Restructure the list, reduce
-	    // neighbor radii, and retry starting with those nodes for
-	    // which colls are needed.
+	    // Hardware neighbor list overflow.  Restructure the list,
+	    // reduce neighbor radii, and retry starting with those nodes
+	    // for which colls are actually needed.  Forces and nns are
+	    // OK at this point, but neighbor lists are not.
 
 	    i += sort_nodes_and_reduce_rnb(current_nodes+i, ni);
 
 	else if (need_neighbors) {
 
-	    // Get colls and perturber lists.
+	    // Neighbor lists are OK.  Get colls and perturber lists.
 
 	    i += get_coll_and_perturbers(xtime, current_nodes+i, ni,
 					 h2_crit, nj_on_grape, n_pipes);
@@ -1697,6 +1724,7 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	cerr << "...leaving " << func << endl << endl << flush;
     }
 }
+
 
 
 //  **********************************************************************
@@ -1768,6 +1796,7 @@ local INLINE void set_grape_density_radius(hdyn *b, real rnn_sq)
     if (DEBUG) PRL(sqrt(b->get_grape_rnb_sq()));
 }
 
+
 local void check_neighbors(hdyn *b, real rnb_sq, int indent = 0)
 
 // (The hard way...)
@@ -1782,6 +1811,8 @@ local void check_neighbors(hdyn *b, real rnb_sq, int indent = 0)
     cerr << "check:  " << nn << " neighbors within " << sqrt(rnb_sq)
 	 << " of " << b->format_label() << endl;
 }
+
+
 
 // Density is based on the 12th nearest neighbor.
 
@@ -1920,6 +1951,7 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
     return true;
 }
 
+
 local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 				int ni, real h2_crit,
 				int nj_on_grape, int n_pipes)
@@ -2038,6 +2070,8 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 
     return error;
 }
+
+
 
 //  *****************************
 //  *****************************
@@ -2182,6 +2216,7 @@ void grape_calculate_densities(hdyn* b,			// root node
     grape_was_used_to_calculate_potential = true;
     delete [] top_nodes;
 }
+
 
 
 //  **********************************************************************
@@ -2208,7 +2243,7 @@ void clean_up_hdyn_grape()
     if (ivel) delete [] ivel;
     if (iacc) delete [] iacc;
     if (ijerk) delete [] ijerk;
-    if (ipot) delete [] ipot;
+j    if (ipot) delete [] ipot;
     if (ih2) delete [] ih2;
     if (inn) delete [] inn;
 }
