@@ -46,7 +46,8 @@ DEPEND_LIBS	= $(LIB)/libhdyn.a $(LIB)/lib_dyn_.a $(LIB)/libdyn.a \
 
 EXECUTABLES = hdyn_pp3 reset_counters sys_stats scale_grape sys_stats_grape
 OBJECT_FILES = hdyn_io.o hydn_init.o hdyn_kepler.o hdyn_pp3.o hdyn_tt.o \
-	       kira_diag.o kira_options.o reset_counters.o tidal_init.o
+	       kira_diag.o kira_options.o reset_counters.o \
+	       tidal_init.o hdyn_init.o
 
 LIBRARY = libhdyn.a
 
@@ -56,7 +57,7 @@ include $(STARLAB_PATH)/inc/Makefile.worker.inc
 
 sys_stats_grape.C : sys_stats.C
 	echo "#define USE_GRAPE" > sys_stats_grape.C
-	cat sys_stats.C >> kira_grape.C
+	cat sys_stats.C >> sys_stats_grape.C
 
 #..............................................................................
 #..............................................................................
