@@ -730,6 +730,7 @@ bool kira_initialize(int argc, char** argv,
 		     bool& exact,	// no perturber list if true
 		     real& cpu_time_limit,
 		     bool& verbose,
+		     bool& snap_init,	// write immediate initial snap
 		     bool& save_snap_at_log,
 		     char* snap_save_file,
 		     int& n_stop,	// n to terminate simulation
@@ -970,7 +971,10 @@ bool kira_initialize(int argc, char** argv,
 
 			} else{
 			    dt_snap = atof(poptarg);
-			    if (dt_snap < 0) dt_snap = pow(2.0, dt_snap);
+			    if (dt_snap < 0) {
+				dt_snap = pow(2.0, dt_snap);
+				snap_init = true;
+			    }
 			}
 			snap_flag = true;
 			break;

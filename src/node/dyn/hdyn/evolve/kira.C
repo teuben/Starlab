@@ -84,7 +84,9 @@
 ////                                  [0 stellar radii][*]
 ////
 //// As a convenient shorthand, any "dt" interval specified less than zero
-//// is interpreted as a power of 2, i.e. "-d -3" sets dt_log = 0.125.
+//// is interpreted as a power of 2, i.e. "-d -3" sets dt_log = 0.125.  In
+//// the case of dt_snap, this will also cause snapshot data to be written
+//// immediately on restart (usually we wait until time dt_snap).
 
 // Level-2 help:
 
@@ -1810,6 +1812,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 			 bool exact,	       // exact force calculation
 			 real cpu_time_limit,
 			 bool verbose,
+			 bool snap_init,
 			 bool save_snap_at_log, // save snap at log output
 			 char* snap_save_file, // filename to save in
 			 int n_stop,	       // when to stop
@@ -1978,6 +1981,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
     //    	t_log += dt_log;	// uncomment to prevent initial output
 
     real t_snap = tt + dt_snap;		// time of next snapshot output
+    if (snap_init) t_snap = tt;
     real t_sync = tt + dt_sync;		// time of next system synchronization
 
     // Changes by Steve (7/01):
@@ -2988,6 +2992,7 @@ void kira(hdyn * b,	       // hdyn array
 	  bool exact,	       // exact force calculation
 	  real cpu_time_limit,
 	  bool verbose,
+	  bool snap_init,
 	  bool save_snap_at_log, // save snap at log output
 	  char* snap_save_file, // filename to save in
 	  int n_stop,	       // when to stop
@@ -3008,7 +3013,7 @@ void kira(hdyn * b,	       // hdyn array
   evolve_system(b, delta_t, dt_log, long_binary_out,
 		dt_snap, dt_sstar, dt_esc, dt_reinit, dt_fulldump,
 		exact, cpu_time_limit,
-		verbose, save_snap_at_log, snap_save_file,
+		verbose, snap_init, save_snap_at_log, snap_save_file,
 		n_stop, alt_flag);
 
 }
@@ -3044,6 +3049,7 @@ main(int argc, char **argv) {
     bool exact;			// force calculation using perturber list
     bool verbose;		// Toggle "verbose" mode
 
+    bool snap_init = false;
     bool save_snap_at_log = false;
     char snap_save_file[256];
     int  n_stop;		// n to terminate simulation
@@ -3055,14 +3061,14 @@ main(int argc, char **argv) {
 			 dt_snap, dt_sstar,
 			 dt_esc, dt_reinit, dt_fulldump,
 			 exact, cpu_time_limit, verbose,
-			 save_snap_at_log, snap_save_file,
+			 snap_init, save_snap_at_log, snap_save_file,
 			 n_stop, alt_flag))
 	get_help();
 
     kira(b, delta_t, dt_log, long_binary_out, 
 	 dt_snap, dt_sstar, dt_esc, dt_reinit, dt_fulldump,
 	 exact, cpu_time_limit,
-	 verbose, save_snap_at_log, snap_save_file,
+	 verbose, snap_init, save_snap_at_log, snap_save_file,
 	 n_stop, alt_flag);
 
     kira_finalize(b);
