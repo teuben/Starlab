@@ -375,9 +375,12 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	if (use_sstar && sbase) {
 
 	    // Print out basic stellar information.
+	    // See inc/star/star_support.h for element_type.
 
-	    put_string(s,      "  S  =  ",
-		       type_short_string(sbase->get_element_type()));
+//	    put_string(s,      "  S  =  ",
+//		       type_short_string(sbase->get_element_type()));
+	    put_integer(s,     "  S  =  ", (int)sbase->get_element_type());
+
 	    put_real_number(s, "  T  =  ", sbase->temperature());
 	    put_real_number(s, "  L  =  ", sbase->get_luminosity());
 

@@ -170,24 +170,19 @@ local int  keplerseq(real mean_an,	// mean anomaly
 		     real &true_an,	// true anomaly (returns in (-pi,pi])
 		     real &ecc_an)	// eccentric anomaly
 {
-    real  delta_ecc_an;	        	// iterative increment in ecc_an
-    real  function;			// function = 0  solves Kepler's eq.
-    real  derivative;	        	// d function / d ecc_an
-    int  i;
-
-    if (ecc < 0)			// inconsistent
-	{
+    if (ecc < 0) {			// inconsistent
 	cerr << "keplerseq: eccentricity e = " << ecc << " < 0\n";
 	exit (1);
-	}
+    }
 
-    if (ecc > 1)			// inconsistent
-	{
+    if (ecc > 1) {			// inconsistent
 	cerr << "keplerseq: eccentricity e = " << ecc << " > 1\n";
 	exit (1);
-	}
+    }
 
     mean_an = sym_angle( mean_an );	// -pi < mean_an < pi
+    int iter = 0;
+
 
     if (mean_an == 0)			// Special case.
 
@@ -195,18 +190,20 @@ local int  keplerseq(real mean_an,	// mean anomaly
 
     else {
 
-	ecc_an = mean_an;		// first guess for ecc_an
+	real  delta_ecc_an;	       	// iterative increment in ecc_an
+	real  function;			// function = 0  solves Kepler's eq.
+	real  derivative;	       	// d function / d ecc_an
 
-	i = 0;
+	ecc_an = mean_an;		// first guess for ecc_an
 	delta_ecc_an = 1;		// just to start the while loop
 
 	int counter = 2;
 
-	while ( counter > 0) {
+	while (counter > 0) {
 
 	    if (abs( delta_ecc_an ) < ITERAC ) counter--;
 
-	    if (++i > MAXITER)
+	    if (++iter > MAXITER)
 	      err_or_warn("keplerseq: convergence too slow");
 
 	    function = -mean_an + ecc_an - ecc * sin(ecc_an);
@@ -215,12 +212,16 @@ local int  keplerseq(real mean_an,	// mean anomaly
 			       // d(function) / d(ecc_an)
 	    delta_ecc_an = -function / derivative;
 			       // use Newton's method to find roots
+
 	    if ( delta_ecc_an > 1 )
 	      delta_ecc_an = 1;
 	    else if ( delta_ecc_an < -1 )
 	      delta_ecc_an = -1;	// avoid large jumps
+
 	    ecc_an += delta_ecc_an;
 	}
+
+//	PRL(iter);
     }
 
     // Note convention that true_an = ecc_an if ecc = 1.
@@ -230,7 +231,7 @@ local int  keplerseq(real mean_an,	// mean anomaly
     else
       true_an = ecc_an;
 
-    return i;
+    return iter;
 }
 
 /*----------------------------------------------------------------------------

@@ -41,9 +41,13 @@ istream & tdyn::scan_star_story(istream & s, int level)
 	const char *val = getequals(input_line, keyword);
 
 	if (!strcmp("S", keyword)) {
-	    char cptr[MAX_INPUT_LINE_LENGTH];
-	    sscanf(val,"%s",cptr);
-	    set_stellar_type(cptr);
+
+//	    char cptr[MAX_INPUT_LINE_LENGTH];
+//	    sscanf(val,"%s",cptr);
+//	    set_stellar_type(cptr);
+
+	    stellar_type = strtol(val, NULL, 10);
+
 	} else if (!strcmp("T", keyword))
 	    temperature = strtod(val, NULL);
 	else if (!strcmp("L", keyword))
@@ -148,9 +152,13 @@ istream & tdyn::scan_dyn_story(istream & s)
 		// Stellar data:
 
 		else if (!strcmp("S", keyword)) {
-		    char cptr[MAX_INPUT_LINE_LENGTH];
-		    sscanf(val,"%s",cptr);
-		    set_stellar_type(cptr);
+
+//		    char cptr[MAX_INPUT_LINE_LENGTH];
+//		    sscanf(val,"%s",cptr);
+//		    set_stellar_type(cptr);
+
+		    stellar_type = strtol(val, NULL, 10);
+
 		} else if (!strcmp("T", keyword))
 		    temperature = strtod(val, NULL);
 		else if (!strcmp("L", keyword))
@@ -193,7 +201,9 @@ ostream & pdyn::print_dyn_story(ostream & s,
 
     dyn::print_dyn_story(s, print_xreal, short_output);
 
-    if (stellar_type) put_string(s,      "  S  =  ", stellar_type);
+//    if (stellar_type) put_string(s,      "  S  =  ", stellar_type);
+
+    put_integer(s, "  S  =  ", stellar_type);
     put_real_number(s, "  T  =  ", temperature);
     put_real_number(s, "  L  =  ", luminosity);
 
