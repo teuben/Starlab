@@ -359,7 +359,7 @@ void hdyn::startup_slow_motion()
 			    s = pert_top->add_slow_perturbed(par,
 						         diag->slow_perturbed);
 
-			if (diag->slow)
+			if (diag->slow && diag->slow_level > 0)
 			    cerr << "    updated slow_perturbed list"
 				 << " of top-level node "
 				 << pert_top->format_label() << endl;
@@ -416,7 +416,7 @@ void hdyn::extend_or_end_slow_motion(real P)	// convenient to pass P (!)
 
 			    s->set_kappa(k);
 
-			    if (diag->slow)
+			    if (diag->slow && diag->slow_level > 0)
 				cerr << "    updated slow_perturbed list of"
 				     << " top-level node "
 				     << pert_top->format_label() << endl;
