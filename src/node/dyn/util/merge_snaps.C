@@ -81,9 +81,14 @@ main(int argc, char ** argv)
     }
 
     // Recompute the total mass and force the center of mass to 0.
+    // Better renumber too.
 
     real mass = 0;
-    for_all_daughters(dyn, root, bb) mass += bb->get_mass();
+    int index = 0;
+    for_all_daughters(dyn, root, bb) {
+	mass += bb->get_mass();
+	bb->set_index(++index);
+    }
     root->set_mass(mass);
 
     // Set com using set_com() to update dyn story too.
