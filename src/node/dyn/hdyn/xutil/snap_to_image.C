@@ -7,9 +7,14 @@
 ////            -f filename  specify root name of image files [snap, - = stdout]
 ////            -g           toggle forcing particles to grid (nicer single
 ////                             frames, but jerkier movies)              [true]
+////            -H           toggle Herzsprung-Russel diagram or positional plot [false]
 ////            -i index     specify (real) color index for all stars
 ////                                                        [use internal index]
 ////            -l scale     specify size of field of view (+/- scale) [3]
+////            -X           specify left (log effective temparature) edge of HRD (only with -H)
+////            -x           specify right (log effective temparature) edge of HRD  (only with -H)
+////            -Y           specify maximum (log luminosity/Lsun) limit for HRD (only with -H)
+////            -y           specify minimum (log luminosity/Lsun) limit for HRD (only with -H)
 ////            -m           use mass to determine star size [no]
 ////            -n nmax      specify maximum number of images to produce [Inf]
 ////            -p psize     specify star radius, in pixels [1]
@@ -26,6 +31,7 @@
 //.............................................................................
 
 #include "hdyn.h"
+#include "star/single_star.h"
 
 // From gfx/util/write_image.C:
 
@@ -232,6 +238,11 @@ main(int argc, char** argv)
     char* fn;
 
     real l = L;
+    bool HRD = false;
+    real xmin = 5;
+    real xmax = 3;
+    real ymin = -3;
+    real ymax = 3;
     int nx = NX, ny = NY;
     int n = 0, nskip = 0;
     int psize = 1;
@@ -255,7 +266,7 @@ main(int argc, char** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "cC:f:gi:l:mn:p:P:s:S:t";
+    char* param_string = "cC:f:gi:Hl:X:x:Y:y:mn:p:P:s:S:t";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
@@ -270,13 +281,23 @@ main(int argc, char** argv)
 			break;
 	    case 'g':	grid = !grid;
 			break;
+	    case 'H':	HRD = !HRD;
+			break;
+	    case 'l':	l = atof(poptarg);
+			break;
 	    case 'i':	index_all = atof(poptarg);
 	    		if (index_all < 0)
 			    index_all = 0;
 	    		else if (index_all > 1)
 			    index_all = 1;
 			break;
-	    case 'l':	l = atof(poptarg);
+	    case 'X':	xmax = atof(poptarg);
+			break;
+	    case 'x':	xmin = atof(poptarg);
+			break;
+	    case 'Y':	ymax = atof(poptarg);
+			break;
+	    case 'y':	ymin = atof(poptarg);
 			break;
 	    case 'm':	mass = true;
 			break;
@@ -302,6 +323,17 @@ main(int argc, char** argv)
 	    case '?':	params_to_usage(cerr, argv[0], param_string);
 			return false;
 	}
+    }
+
+    real lx=l, ly=l;
+    if(HRD) {
+      lx = xmin-xmax;
+      ly = ymax-ymin;
+    }
+    else {
+      xmax = ymin = -l;
+      xmin = ymax = l; 
+      lx = ly = 2*l;
     }
 
     // Note on color maps and conventions (Steve, 8/02):
@@ -408,17 +440,31 @@ main(int argc, char** argv)
 
 		// Should probably sort stars by coordinate along the
 		// projection axis, as in xstarplot.  NOT done yet.
-
+	
+	      real x, y, z;
+	      if(!HRD) {
 		vector pos = bb->get_pos();
-		real x = pos[iax], y = pos[jax], z = pos[kax];
+		x = pos[iax];
+		y = pos[jax];
+		z = pos[kax];
+	      }
+	      else {
+		story *st = bb->get_dyn_story();
+		real T_eff = getrq(st, "T"); 
+		real L_sun = getrq(st, "L");
+		real stp = getrq(st, "S");
+		x = log10(T_eff);
+		y = log10(L_sun);
+		z = 0;
+	      }
 
-		if (x > -l && x < l && y > -l && y < l) {
+		if (x > xmax && x < xmin && y > ymin && y < ymax) {
 
 		    // Coordinates:
 
-		    x = ((l+x) * 0.5 * nx / l);
+		    x = ((xmin-x) * 1.0 * nx / lx);
 		    int i = (int) x;
-		    y = ((l+y) * 0.5 * ny / l);
+		    y = ((y-ymin) * 1.0 * ny / ly);
 		    int j = (int) y;
 
 		    // Set color (by mass or index) and radius:
@@ -481,3 +527,8 @@ main(int argc, char** argv)
     }
     cerr << endl;
 }
+
+
+
+
+
