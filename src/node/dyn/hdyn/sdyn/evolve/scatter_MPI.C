@@ -102,7 +102,7 @@ void scatter(sdyn* b, real eta,
   bool terminate = false;
 
   real t_out = b->get_time_offset();
-  real t_end = delta_t + b->get_time_offset();
+  real t_end = delta_t + (real)b->get_time_offset();
 
   char previous_form[255];
   char current_form[255];

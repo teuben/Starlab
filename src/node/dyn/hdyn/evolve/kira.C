@@ -172,7 +172,11 @@ static bool dbg = false;
 
 // *** All GRAPE-related calls are now defined in kira_grape_include.C ***
 
-#include "kira_grape_include.C"
+#ifdef USE_TREE
+  #include "/work6/starlab/Tree++/kira_tree_include.C"
+#else
+  #include "kira_grape_include.C"
+#endif
 
 //========================================================================
 

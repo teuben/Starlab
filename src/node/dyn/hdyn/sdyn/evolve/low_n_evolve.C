@@ -311,7 +311,7 @@ bool low_n_evolve(sdyn * b,       // sdyn array
     bool terminate = false;
 
     real t = b->get_time();
-    real tr = t + b->get_time_offset();  // total real time in N-body units
+    real tr = t + (real)b->get_time_offset();  // total real time in N-body units
 
     real t_end = t + delta_t;      // final time, at the end of the integration
     real t_out = t + dt_out;       // time of next diagnostic output
