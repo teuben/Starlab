@@ -639,7 +639,7 @@ local void print_local_time(xreal time,
     adjust_starlab_precision(-1);
 }
 
-ostream & pdyn::print_dyn_story(ostream & s,
+ostream & _pdyn_::print_dyn_story(ostream & s,
 				bool print_xreal,	// default = true
 				int short_output)	// default = 0, ignored
 {
@@ -656,6 +656,16 @@ ostream & pdyn::print_dyn_story(ostream & s,
     return s;
 }
 
+// Not needed (should be inherited?):
+
+//  ostream & pdyn::print_dyn_story(ostream & s,
+//  				bool print_xreal,	// default = true
+//  				int short_output)	// default = 0, ignored
+//  {
+//      _pdyn_::print_dyn_story(s, print_xreal, short_output);
+//      return s;
+//  }
+
 ostream & tdyn::print_dyn_story(ostream & s,
 				bool print_xreal,	// default = true
 				int short_output)	// default = 0, ignored
@@ -669,7 +679,7 @@ ostream & tdyn::print_dyn_story(ostream & s,
 
     // Use pdyn::print_dyn_story() to print the pdyn stuff...
 
-    pdyn::print_dyn_story(s, print_xreal, short_output);
+    _pdyn_::print_dyn_story(s, print_xreal, short_output);
 
     if (!parent) print_local_time(time, s, print_xreal, short_output);
 

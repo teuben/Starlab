@@ -347,7 +347,17 @@ local void plot_star(DYN *bi, float r, float s,
 
 	    if (bi->n_leaves() == 2) {
 
-		if (!od->get_kepler()) {
+		// PRL(od->get_kepler());
+
+		if (od->get_kepler() == (kepler*)2) {
+
+		    // Highlight lightly perturbed top-level binaries.
+
+		    scale = 2.0;
+		    lux_set_color(win, lux_lookup_color(win, "purple"));
+		    reset_grey = true;
+
+		} else if (!od->get_kepler()) {
 
 		    // Highlight perturbed top-level binaries.
 
@@ -372,7 +382,8 @@ local void plot_star(DYN *bi, float r, float s,
 	    }
 	}
 
-	if (unperturbed && od && od->get_kepler()) {
+	if (unperturbed && od
+	    && od->get_kepler() && od->get_kepler() != (kepler*)2) {
 
 	    // Highlight all unperturbed binaries.
 

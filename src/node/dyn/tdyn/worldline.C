@@ -25,10 +25,10 @@
 //	void worldbundle::dump()
 //	int worldbundle::find_index(real id)
 //	int worldbundle::find_index(char *name)
-//	int worldbundle::find_index(pdyn *b)
+//	int worldbundle::find_index(_pdyn_ *b)
 //	worldline *worldbundle::find_worldline(real id)
 //	worldline *worldbundle::find_worldline(char *name)
-//	worldline *worldbundle::find_worldline(pdyn *b)
+//	worldline *worldbundle::find_worldline(_pdyn_ *b)
 //	void worldbundle::attach(tdyn *bn, int verbose)
 //	void worldbundle::print_worldline(char *name, real dt)
 //
@@ -43,7 +43,7 @@
 // Other externally visible functions:
 //
 //	real unique_id(char *name)
-//	real unique_id(pdyn *b)
+//	real unique_id(node *b)
 //	void print_id(void *id, char *label)
 //	worldbundle *read_bundle(istream &s, int verbose)
 //	tdyn *find_event(worldline *w, tdyn *bn, real t)
@@ -127,7 +127,7 @@ real unique_id(char *name)
     return id;
 }
 
-real unique_id(pdyn *b)
+real unique_id(node *b)
 {
     // Return a unique non-negative real number identifying this node.
     // Use the index if available (assume unique!), otherwise, construct
@@ -441,7 +441,7 @@ int worldbundle::find_index(real id)
 }
 
 int worldbundle::find_index(char *name)	{return find_index(unique_id(name));}
-int worldbundle::find_index(pdyn *b)    {return find_index(unique_id(b));}
+int worldbundle::find_index(_pdyn_ *b)    {return find_index(unique_id(b));}
 
 worldline *worldbundle::find_worldline(real id)
 {
@@ -455,7 +455,7 @@ worldline *worldbundle::find_worldline(real id)
 worldline *worldbundle::find_worldline(char *name)
 {return find_worldline(unique_id(name));}
 
-worldline *worldbundle::find_worldline(pdyn *b)
+worldline *worldbundle::find_worldline(_pdyn_ *b)
 {return find_worldline(unique_id(b));}
 
 //======================================================================

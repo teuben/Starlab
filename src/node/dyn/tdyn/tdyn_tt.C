@@ -4,7 +4,7 @@
 
 #include "tdyn.h"
 
-real pdyn::get_radius()
+real _pdyn_::get_radius()
 {
     if (oldest_daughter) return 0;
     if (temperature <= 0 || luminosity <= 0) return 0;

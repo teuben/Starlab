@@ -1,2 +1,2 @@
-//#define INLINE
-#define INLINE inline
+#define INLINE
+//#define INLINE inline
