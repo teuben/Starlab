@@ -97,8 +97,8 @@ bool dyn::check_and_correct_node(bool verbose)	// default = true
 
     bool ok = true;
 
-    if (oldest_daughter) {
-
+    if (oldest_daughter) {		// for dyn, check that masses,
+					// pos and vel are all consistent
 	real m = 0;
 	vec p = 0, v = 0;
 	bool low = false;
