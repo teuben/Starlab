@@ -827,16 +827,16 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 		b->get_kira_diag()->report_multiple
 		    = get_value(s, 1);
 
-	    else if ((s = strstr(line, "unpert_report_level"))
-		     || (s = strstr(line, "unpert_level")))
-
-		b->get_kira_diag()->unpert_report_level
-		    = get_value(s, 0);
-
 	    else if ((s = strstr(line, "end_unpert_report_level"))
 		     || (s = strstr(line, "end_unpert_level")))
 
 		b->get_kira_diag()->end_unpert_report_level
+		    = get_value(s, 0);
+
+	    else if ((s = strstr(line, "unpert_report_level"))
+		     || (s = strstr(line, "unpert_level")))
+
+		b->get_kira_diag()->unpert_report_level
 		    = get_value(s, 0);
 
 	    else if ((s = strstr(line, "multiple_report_level"))
@@ -1063,12 +1063,12 @@ void check_kira_init(hdyn *b)
 	strcat(file, "/.kira");
 
 	if (check_file(file, false)) {
-	    cerr << "Reading init file " << getenv("HOME") << "/.kira"
-		<< endl << flush;
+	    cerr << endl
+		 << "Reading init file " << getenv("HOME") << "/.kira"
+		 << endl << flush;
 	    modify_diag(b, file, false);
 	    modify_options(b, file, false);
 	}
-
     }
 
     // ... then allow local setup in ./.kira.
@@ -1076,11 +1076,12 @@ void check_kira_init(hdyn *b)
     strcpy(file, "./.kira");
 
     if (check_file(file, false)) {
-	cerr << "Reading init file " << "./.kira" << endl << flush;
+	cerr << endl
+	     << "Reading init file " << "./.kira"
+	     << endl << flush;
 	modify_diag(b, file, false);
 	modify_options(b, file, false);
     }
-
 }
 
 
