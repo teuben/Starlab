@@ -28,10 +28,14 @@
 #include "hdyn.h"
 #include "grape6.h"
 
-#include "kira_debug.h"	// (a handy way to turn on blocks of debugging)
+#include "kira_debug.h"	// A handy way to turn on blocks of debugging.
+			// Actual test below is #ifdef T_DEBUG.
+
 #ifndef T_DEBUG_hdyn_grape6
 #   undef T_DEBUG
 #endif
+
+//#define T_DEBUG 0
 
 #include "hdyn_inline.C"
 
@@ -40,6 +44,8 @@
 
 #define SORT_NODE_LIST
 //#undef SORT_NODE_LIST
+
+// Older and currently separate debugging track from the T_DEBUG route...
 
 // Set DEBUG =	0 for no debugging info
 //		1 for a substantial amount of high-level info
@@ -163,8 +169,8 @@ local INLINE void send_j_node_to_grape(hdyn *b,
     // If we are computing the energy, we may be doing it at an odd time,
     // which may cause the GRAPE to complain.  Since we never do prediction
     // in this case, just send a time of zero to avoid prediction and warning
-    // messages. Note that this convention *must* be consistent with the actions
-    // taken by force_by_grape.
+    // messages. Note that this convention *must* be consistent with the
+    // actions taken by force_by_grape.
 
     real t = 0;
     if (!computing_energy)
@@ -357,6 +363,8 @@ static real   eps2    = 0;
 
 //-------------------------------------------------------------------------
 
+static const struct timespec ts = {0, 1};
+
 local INLINE int force_by_grape(xreal xtime,
 				hdyn *nodes[], int ni,
 				int nj, int n_pipes,
@@ -425,9 +433,11 @@ local INLINE int force_by_grape(xreal xtime,
 
     for (int i = 0; i < ni; i++) {
 
-//	PRC(i); PRL(nodes[i]);
+	hdyn *ni = nodes[i];
 
-	iindex[i] = nodes[i]->get_grape_index();
+//	PRC(i); PRL(ni);
+
+	iindex[i] = ni->get_grape_index();
 
 	// New version suggested by Jun (May 8 2001) to prevent the
 	// "call Jun" message.  Implemented by SPZ.  Corrected by Steve.
@@ -439,18 +449,18 @@ local INLINE int force_by_grape(xreal xtime,
             // Nodes in this case are leaves, not necessarily top-level.
 	    // Don't extrapolate in this case (see 11/02 note below).
 
-            ipos[i] = hdyn_something_relative_to_root(nodes[i],
+            ipos[i] = hdyn_something_relative_to_root(ni,
 //						      &hdyn::get_pred_pos);
 						      &hdyn::get_pos);
 
         } else
-            ipos[i]   = nodes[i]->get_pred_pos();
+            ipos[i]   = ni->get_pred_pos();
 
-        ivel[i]   = nodes[i]->get_pred_vel();
-	iacc[i]   = nodes[i]->get_old_acc();
-	ijerk[i]  = ONE6*nodes[i]->get_old_jerk();
-        ipot[i]   = nodes[i]->get_pot();
-        ih2[i]    = nodes[i]->get_grape_rnb_sq();
+        ivel[i]   = ni->get_pred_vel();
+	iacc[i]   = ni->get_old_acc();
+	ijerk[i]  = ONE6*ni->get_old_jerk();
+        ipot[i]   = ni->get_pot();
+        ih2[i]    = ni->get_grape_rnb_sq();
 
 	// Must take care of pot, acc, and jerk.  Quite expensive to
 	// check the abs of a vector, so try more indirect tests first.
@@ -458,8 +468,10 @@ local INLINE int force_by_grape(xreal xtime,
 	// but we may also encounter this immediately after a new CM
 	// node is created.  Also, if we are calculating the energy,
 	// there may be problems with low-level nodes.
+	//
+	// Note that these tests won't catch NaN values...
 
-	if (nodes[i]->is_top_level_node()) {
+	if (ni->is_top_level_node()) {
 
 	    if (abs(ipot[i]) <= VERY_SMALL_NUMBER
 		|| abs(abs(iacc[i][0])) <= VERY_SMALL_NUMBER) {
@@ -477,11 +489,11 @@ local INLINE int force_by_grape(xreal xtime,
 		    //      << endl;
 
 		    // Small values here will cause overflow and annoying
-		    // messages from the GRAPE.  Large values will cause
+		    // messages from the GRAPE.  Large values should cause
 		    // underflow and no messages.
 
 		    iacc[i]   = vector(1);
-		    ijerk[i]  = vector(1);
+		    ijerk[i]  = vector(100);
 
 		    // Hmmm.  Increasing these numbers seems to increase
 		    // the number of error messages...
@@ -490,23 +502,24 @@ local INLINE int force_by_grape(xreal xtime,
 
 	} else {
 
+
 	    // Only interested in a low-level node during the potential
 	    // calculation.  In this case, it is quite unlikely that
 	    // any of pot, acc, or jerk is usable for scaling purposes.
 	    // Choose quantities appropriate to the nearest neighbor.
 
-	    hdyn *sis = nodes[i]->get_younger_sister();
-	    if (!sis) sis = nodes[i]->get_elder_sister();
+	    hdyn *sis = ni->get_younger_sister();
+	    if (!sis) sis = ni->get_elder_sister();
 	    real m = sis->get_mass();
 	    real r, r2;
 
-	    kepler *k = nodes[i]->get_kepler();
+	    kepler *k = ni->get_kepler();
 	    if (k) {
 		r = k->get_separation();
 		r2 = r*r;
 	    } else {
-		r2 = square(nodes[i]->get_pos() - sis->get_pos());
-		r = sqrt(r);
+		r2 = square(ni->get_pos() - sis->get_pos());
+		r = sqrt(r2);
 	    }
 
 	    real j = m/(r*r2);
@@ -516,18 +529,22 @@ local INLINE int force_by_grape(xreal xtime,
 	}
 
 	if (DEBUG > 1) {
+//	if (pot_only && i < 10) {
 	    if (i > 0) cerr << endl;
-	    PRI(4); PRC(i); PRC(iindex[i]); PRL(nodes[i]->format_label());
+	    PRI(4); PRC(i); PRC(iindex[i]); PRL(ni->format_label());
 	    PRI(4); PRL(ipos[i]);
 	    PRI(4); PRL(ivel[i]);
 	    PRI(4); PRL(iacc[i]);
 	    PRI(4); PRL(ijerk[i]);
 	}
+
     }
 
 #ifdef T_DEBUG
     if (IN_DEBUG_RANGE(sys_t)) {
-	cerr << "DEBUG: " << func << " " << 2 << endl << flush;
+	cerr << "DEBUG: " << func << " " << 2
+	     << " (g6calc_firsthalf) "
+	     << endl << flush;
     }
 #endif
 
@@ -542,7 +559,9 @@ local INLINE int force_by_grape(xreal xtime,
 
 #ifdef T_DEBUG
     if (IN_DEBUG_RANGE(sys_t)) {
-	cerr << "DEBUG: " << func << " " << 3 << endl << flush;
+	cerr << "DEBUG: " << func << " " << 3
+	     << " (g6calc_lasthalf) "
+	     << endl << flush;
     }
 #endif
 
@@ -552,7 +571,9 @@ local INLINE int force_by_grape(xreal xtime,
 
 #ifdef T_DEBUG
     if (IN_DEBUG_RANGE(sys_t)) {
-	cerr << "DEBUG: " << func << " " << 4 << endl << flush;
+	cerr << "DEBUG: " << func << " " << 4
+	     << " (back) "
+	     << endl << flush;
 	PRL(error);
     }
 #endif
@@ -1048,12 +1069,17 @@ local bool force_by_grape_on_all_e_nodes(hdyn **e_nodes,    // node list
 
 	// Compute particle forces, n_pipes at a time.
 
-	for (int ip = 0; ip < nj; ip += n_pipes)
+	for (int ip = 0; ip < nj; ip += n_pipes) {
+
+//	    PRC(ip); PRL(Starlab::min(n_pipes, nj-ip));
+
 	    status |= force_by_grape(sys_t,
-				     e_nodes+ip,Starlab:: min(n_pipes, nj-ip),
+				     e_nodes+ip, Starlab::min(n_pipes, nj-ip),
 				     nj, n_pipes,
 				     true);	// "true" ==> compute pot only
+//	    PRL(status);
 
+	}
     }
 
     if (DEBUG) {
@@ -1162,10 +1188,10 @@ void grape_calculate_energies(hdyn *b,			// root node
     // nodes.  If cm = false, then still use the CM approximation for
     // sufficiently close binaries to avoid roundoff errors on the GRAPE.
 
-//    if (DEBUG) {
+    if (DEBUG) {
 	cerr << endl << "entering grape_calculate_energies... ";
 	PRL(cm);
-//    }
+    }
 
     if (!grape_is_open)
 	reattach_grape(b->get_real_system_time(),
@@ -1187,12 +1213,17 @@ void grape_calculate_energies(hdyn *b,			// root node
     int nj =  send_all_e_nodes_to_grape(b, cm, d_crit,
 					e_nodes, e_unpert, n_leaves);
 
+//    PRC(nj); PRC(n_leaves);
+//    cerr << "entering force_by_grape_on_all_e_nodes" << endl << flush;
 
     if (force_by_grape_on_all_e_nodes(e_nodes, nj)) {
 
 #else
 
     int nj =  send_all_leaves_to_grape(b, cm, d_crit, e_unpert);
+
+//    PRC(nj); cerr << "entering force_by_grape_on_all_leaves"
+//		  << endl << flush;
 
     if (force_by_grape_on_all_leaves(b, nj, cm)) {
 
@@ -1204,6 +1235,8 @@ void grape_calculate_energies(hdyn *b,			// root node
 
 	hw_err_exit("grape_calculate_energies", 1, b);
     }
+
+//    cerr << "...back.  Computing energies." << endl << flush;
 
     epot = ekin = 0;
 
@@ -1271,11 +1304,11 @@ void grape_calculate_energies(hdyn *b,			// root node
 //    cerr << "CPU time for grape_calculate_energies() = "
 //	 << cpu_time() - cpu0 << endl;
 
-//    if (DEBUG) {
+    if (DEBUG) {
 	cerr << "...leaving grape_calculate_energies...  ";
 	PRL(etot);
 	cerr << endl;
-//    }
+    }
 
 #ifdef E_NODES
     delete [] e_nodes;
