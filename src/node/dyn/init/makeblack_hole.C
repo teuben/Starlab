@@ -14,6 +14,9 @@
 ////
 //// Options:
 ////      -M    select black hole mass; if <1 mass is read as a fraction
+////      -r    select black hole position
+////      -v    select black hole velocity
+////      -f    flag for seting black hole prameters
 ////      -i    select black hole identity
 ////
 //// Written by Simon Portegies Zwart.
@@ -29,7 +32,9 @@ char  tmp_string[SEED_STRING_LENGTH];
 
 #ifdef TOOLBOX
 
-local void makeblack_hole(dyn* b, int id, real m_bh) {
+local void makeblack_hole(dyn* b, int id, real m_bh,
+			  bool set_flag,
+			  vec r_bh, vec v_bh) {
 
     b->to_com();
 
@@ -63,7 +68,13 @@ local void makeblack_hole(dyn* b, int id, real m_bh) {
     if(bh) {
         prev_mass = bh->get_mass();
 	bh->set_mass(m_bh);
-        bh->set_vel(bh->get_vel() * sqrt(prev_mass/m_bh));
+	if(set_flag) {
+	  cerr << "Set Black hole position and velocity" << endl;
+	  bh->set_pos(r_bh);
+	  bh->set_vel(v_bh);
+	}
+	else
+	  bh->set_vel(bh->get_vel() * sqrt(prev_mass/m_bh));
     }
     else 
 	err_exit("makeblack_hole: selected star not found");
@@ -87,18 +98,37 @@ int main(int argc, char ** argv) {
 
     real m_bh = 0;
     int id = -1;    // most central particle is selected
+    vec r_bh = 0;
+    vec v_bh = 0;
+    bool set_flag = false;
+
 
     check_help();
 
     extern char *poptarg;
+    extern char *poparr[3];
+
     int c;
-    char* param_string = "i:M:";
+    char* param_string = "fi:M:r:v:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 	    case 'M': m_bh = atof(poptarg);
 		      break;
+	    case 'r':	r_bh = vec(atof(poparr[0]),
+				   atof(poparr[1]),
+				   atof(poparr[2]));
+	                set_flag = true;
+	    		break;
+	    case 'v':	v_bh = vec(atof(poparr[0]),
+				   atof(poparr[1]),
+				   atof(poparr[2]));
+	                set_flag = true;
+	    		break;
+	    case 'f': set_flag = true;
+	    		break;
+
 	    case 'i': id = atoi(poptarg);
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
@@ -112,7 +142,7 @@ int main(int argc, char ** argv) {
     if (id>b->n_leaves())
       err_exit("selected id exceeds particle number");
 
-    makeblack_hole(b, id, m_bh);
+    makeblack_hole(b, id, m_bh, set_flag, r_bh, v_bh);
 
     real initial_mass = getrq(b->get_log_story(), "initial_mass");
 
