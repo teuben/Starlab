@@ -1588,8 +1588,6 @@ void sys_stats(dyn* b,
 	if (rhalf > 0) {
 	    real density = 1.5*nd / (4*M_PI*pow(rhalf, 3));
 	    putrq(b->get_root()->get_dyn_story(), "half_density", density);
-	    real density = getrq(b->get_root()->get_dyn_story(),
-				 "half_density");
 	}
 
 	// PRL(heavy_stars);
