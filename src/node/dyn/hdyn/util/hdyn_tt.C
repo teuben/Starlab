@@ -410,9 +410,11 @@ void hdyn::setup_binary_node()
     // Check if the times of daughters are exactly the same.
 
     if (older_daughter->get_time() != younger_daughter->get_time()) {
+	cerr.precision(HIGH_PRECISION);
 	cerr << "setup_binary_node, times of daughters are different:"
+	     << endl
 	     << older_daughter->get_time() << " "
-	     << younger_daughter->get_time() << "\n";
+	     << younger_daughter->get_time() << endl;
 	exit(1);
     }
 
@@ -422,6 +424,7 @@ void hdyn::setup_binary_node()
     time = older_daughter->time;
 
     // Set the time step equal to the smallest perturbed leaf step.
+    // This is probably overkill -- only need consider components.
 
     timestep = older_daughter->timestep;
 
@@ -438,7 +441,7 @@ void hdyn::setup_binary_node()
 		    while (timestep > dt) timestep /= 2;
 
 		// Treat unperturbed CM as a leaf as far as the time
-		// step is concerned, but check its unpertubed time step
+		// step is concerned, but check its unperturbed time step
 		// and finally move to the younger daughter to fool
 		// next_node() into skipping the internal structure of
 		// the unperturbed system.
@@ -459,12 +462,18 @@ void hdyn::setup_binary_node()
 
     int count = 0;
     while (fmod((real)time, timestep) != 0) {
+
+//	PRC(time); PRL(timestep); PRL(fmod((real)time, timestep));
+
 	timestep /= 2;
+
 	if (++count >= 10)
 	    cerr << "warning: timestep = " << timestep
 		 << " for " << format_label() << endl;
-	if (++count > 20) {
+
+	if (count > 20) {
 	    cerr << "warning: breaking from while loop" << endl;
+	    // exit(1);
 	    break;
 	}
     }
@@ -515,9 +524,9 @@ void create_binary_from_toplevel_nodes(hdyn * bi, hdyn * bj)
 
     hdyn *new_n = new hdyn();
     insert_node_into_binary_tree(*bj, *bi, *new_n);
-    bj->get_parent()->setup_binary_node();
 
     label_binary_node(bj->get_parent());
+    bj->get_parent()->setup_binary_node();
 }
 
 local vector change_of_absolute_something_of_parent(hdyn * node,
