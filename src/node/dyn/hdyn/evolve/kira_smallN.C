@@ -871,9 +871,7 @@ real smallN_evolve(DYN *b,
 	b->set_system_time(t_sys);
     }
 
-#if 0
     print_recalculated_energies((dyn*)b, 0, 0);
-#endif
 
     while (b->get_time() < t_end) {
 
