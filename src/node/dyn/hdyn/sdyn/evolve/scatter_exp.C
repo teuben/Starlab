@@ -474,7 +474,7 @@ MPI_Datatype scatter_exp::initialize_data_structures_MPI() {
 
 #ifdef TOOLBOX
 
-void main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
     check_help();
     extern char *poptarg;
