@@ -31,7 +31,8 @@ EXECUTABLES =	compute_com compute_density compute_max_cod \
 		extract_snap flatten freeze lagrad lagradplot list_snap \
 		merge_low molecules reflect_velocities renumber scale \
 		plot_stars starplot snap2speck \
-		sys_stats to_cod to_com jiggle
+		sys_stats to_cod to_com jiggle \
+                lagradplotsmooth
 
 OBJECT_FILES =	compute_com.o compute_density.o compute_max_cod.o \
 		compute_mean_cod.o dyn_di.o dyn_io.o dyn_stats.o dyn_tt.o \
