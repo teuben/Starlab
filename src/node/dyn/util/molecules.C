@@ -8,9 +8,16 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// molecules:  print a hierarchical decomposition of a (small!) system.
+//// Print a hierarchical decomposition of a (small!) system.
 ////
-//// Options: none
+//// Usage: molecules [OPTIONS] < input > output
+////
+//// Options:
+//// None.
+////
+//// Written by Piet Hut.
+//// 
+//// Report bugs to starlab@sns.ias.edu.
 
 //.............................................................................
 //    version 1:  July 1989   Piet Hut               email: piet@iassns.bitnet
@@ -2029,15 +2036,19 @@ local void  wrap_string(char substring[BUFF_LENGTH],
 
 main(int argc, char ** argv)
 {
-    // silly trick to keep the compiler happy:
-    char dummy = **argv;
-
     check_help();
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "c:";
+
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {}
 
     if (argc != 1) {
 	cerr << "molecules: no arguments allowed\n";
 	exit(1);
-    } 
+    }
 
     dyn *b =  get_dyn();
 

@@ -8,9 +8,16 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// list_snap:  Print times of all snapshots in the input stream.
+//// Print times of all snapshots in the input stream.
 ////
-//// Options:    none
+//// Usage: list_snap [OPTIONS] < input > output
+////
+//// Options:
+//// None.
+////
+//// Written by the Starlab development group.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "dyn.h"
 
@@ -22,6 +29,13 @@ main(int argc, char ** argv)
 
     dyn *b = NULL;
     int count = 0;
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "c:";
+
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {}
 
     while (b = get_dyn()) {
 

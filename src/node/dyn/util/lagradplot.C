@@ -8,16 +8,22 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// lagradplot:  compute and plot Lagrangian radii for input N-body
-////              system(s), based on the coordinate center.
-////              (Probably only marginally useful to use this center
-////               -- better to use the density center or modified center
-////               of mass, as in lagrad...)
+//// Compute and plot Lagrangian radii for input N-body system(s),
+//// based on the coordinate center.  (Probably only marginally useful
+//// to use this center -- better to use the density center or modified
+//// center of mass, as in lagrad...)
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Usage: lagradplot [OPTIONS] < input > output
+////
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
 ////              -t    use ten-percentiles rather than quartiles [quartiles]
 ////              -d    use double width output, 158 rather than 79 columns
 ////              -q    use quadruple width output, 158 rather than 79 columns
+////
+//// Written by Piet Hut.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //.............................................................................
 //    version 1:  May 1989   Piet Hut               email: piet@iassns.bitnet

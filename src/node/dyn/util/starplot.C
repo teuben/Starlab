@@ -8,12 +8,19 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// starplot:  plot input N-body system(s) on a non-graphics screen.
+//// Plot input N-body system(s) on a non-graphics screen.
 ////
-//// Options:   -a    view axis [z]
-////            -c    clear the screen before each new plot [scroll screen]
-////            -l    specify plot limits [get from first snapshot]
-////            -n    number of lines to use [100]
+//// Usage: starplot [OPTIONS] < input > output
+////
+//// Options:   
+////		  -a    view axis [z]
+////              -c    clear the screen before each new plot [scroll screen]
+////              -l    specify plot limits [get from first snapshot]
+////              -n    number of lines to use [100]
+////
+//// Written by Piet Hut.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //.............................................................................
 //    version 1:  May 1989   Piet Hut               email: piet@iassns.bitnet

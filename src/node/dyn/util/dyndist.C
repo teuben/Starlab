@@ -8,13 +8,19 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// dyndist:  get statistics over N 6-dimensional particle pair separations.
-////            Compute statistics for the separations between corresponding
-////            particles in two N-body systems, using both configuration space
-////            and velocity data.  The distribution of particle separations are
-////            reported as n-tiles.
+//// Get statistics over N 6-dimensional particle pair separations.  Compute
+//// statistics for the separations between corresponding particles in two
+//// N-body systems, using both configuration space and velocity data.  The
+//// distribution of particle separations are reported as n-tiles.
 ////
-//// Options:   -n   specify number of n-tiles [4]
+//// Usage: dyndist [OPTIONS] < input > output
+////
+//// Options:   
+////		  -n   specify number of n-tiles [4]
+////
+//// Written by the Starlab development group.
+//// 
+//// Report bugs to starlab@sns.ias.edu.
 
 //.............................................................................
 //    version 1:  June 1990   Piet Hut           email: piet@iassns.bitnet

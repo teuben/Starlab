@@ -8,30 +8,33 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// lagradplotsmooth:  plot Lagrangian radii for input N-body system(s), based
-////                    on the geometric center; takes output from "lagradplot -q"
-////                    and smooths over w output lines.
+//// Plot Lagrangian radii for input N-body system(s), based on the
+//// geometric center; takes output from "lagradplot -q" and smooths
+//// over w output lines.  (Probably only marginally useful to use this
+//// center -- better to use the density center or modified center of mass,
+//// as in lagrad...)
+//// Note: This really is a terrible kluge to smooth Lagrangian radii,
+//// and in addition it is programmed in an opaque way, just to
+//// get some quick and dirty results; it works is all I can say.
+//// We really should clean this all up soon(ish) -- hope springs eternal.
 ////
-////                    (Probably only marginally useful to use this center
-////                     -- better to use the density center or modified center
-////                    of mass, as in lagrad...)
+//// Usage: lagradplotsmooth [OPTIONS] < input > output
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
 ////              -w    number of output lines to smooth over
 ////
-//// Example usage: after
+//// Examples:
 ////
-////   mkplummer -n 128 -i -s 123 | ( kira -t 1000 -d 10 -D 0.2 -n 0 |        \		~
-////   compute_density | to_cod | lagradplot -q > run128q.out ) >& run128q.log
+//// mkplummer -n 128 -i -s 123 | ( kira -t 1000 -d 10 -D 0.2 -n 0 |
+//// compute_density | to_cod | lagradplot -q > run128q.out ) >& run128q.log
 ////
-//// try:
+//// lagradplotsmooth -w 30 < run128q.out
 ////
-////   lagradplotsmooth -w 30 < run128q.out
+//// Written by Piet Hut.
 ////
-//// Note: this really is a terrible kluge to smooth Lagrangian radii,
-////       and in addition it is programmed in an opaque way, just to
-////       get some quick and dirty results; it works is all I can say.
-////       I really should clean this all up soon(ish) -- hope springs eternal.
+//// Report bugs to starlab@sns.ias.edu.
+
 
 //.............................................................................
 //    version 1:  Dec 2000   Piet Hut

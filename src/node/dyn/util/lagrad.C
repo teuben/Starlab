@@ -8,20 +8,26 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// lagrad:  Compute Lagrangian (mass) radii for an N-body system.
-////          The radii are stored in the system (root) dyn story.
+//// Compute Lagrangian (mass) radii for an N-body system.  The radii
+//// are stored in the system (root) dyn story.  If a current density
+//// center is found in the root dyn story, the Lagrangian radii are
+//// calculated relative to it.  Otherwise, if a valid center of mass
+//// is found, it is used.  If neither center is found, the geometric
+//// center is used.
 ////
-////          If a current density center is found in the root dyn story,
-////          the Lagrangian radii are calculated relative to it.
-////          Otherwise, if a valid center of mass is found, it is used.
-////          If neither center is found, the geometric center is used.
+//// Usage: lagrad [OPTIONS] < input > output
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
 ////              -n    specify number of Lagrangian zones (linear in mass) [4]
 ////              -s    use "special" nonlinear binning:
 ////                        0.005, 0.01, 0.02, 0.05,
 ////                        0.1, 0.25, 0.5, 0.75, 0.9
 ////              -t    same as -n 10
+////
+//// Written by Piet Hut, Steve McMillan, and Jun Makino.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //-----------------------------------------------------------------------------
 //   version 1:  May 1989   Piet Hut               email: piet@iassns.BITNET

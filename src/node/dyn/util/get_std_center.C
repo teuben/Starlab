@@ -8,24 +8,27 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// get_std_center: Determine the "standard" center of the input N-body
-////                 system, determined as follows:
+//// Determine the "standard" center of the input N-body system,
+//// determined as follows:
+//// (1) if densities are computed and up to date, use the density
+//// center (but *don't* recompute the densities), as determined by
+//// compute_max_cod(),
+//// (2) otherwise, use the modified center of mass, as returned by
+//// compute_mcom().
+//// Center position and velocity are written to the dyn story of the
+//// top-level node; they are also optionally returned as function
+//// arguments in the library version.
+//// Note: The computed center is defined in absolute terms, and so
+//// includes the pos and vel of the parent node.
 ////
-////                 (1) if densities are computed and up to date, use
-////                     the density center (but *don't* recompute the
-////                     densities), as determined by compute_max_cod(),
+//// Usage: get_std_center [OPTIONS] < input > output
 ////
-////                 (2) otherwise, use the modified center of mass,
-////                     as returned by compute_mcom().
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
 ////
-////               Center position and velocity are written to the dyn
-////               story of the top-level node; they are also optionally
-////               returned as function arguments in the library version.
+//// Written by the Starlab development group.
 ////
-////               Note: The computed center is defined in absolute terms,
-////               and so includes the pos and vel of the parent node.
-////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "dyn.h"
 

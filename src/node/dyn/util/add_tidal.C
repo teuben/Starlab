@@ -8,13 +8,19 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// add_tidal.C:  Add tidal parameters to an input snapshot and write
-////               it out again.  Do not change the input data.
-////               Use before scaling.
+//// Add tidal parameters to an input snapshot and write it out 
+//// again.  Do not change the input data.  Use before scaling.
 ////
-//// Options:      -c    add comment [none]
+//// Usage: add_tidal [OPTIONS] < input > output
+////
+//// Options:      
+////		   -c    add comment [none]
 ////               -F    specify tidal_field_type [1]
 ////               -J    specify Jacobi radius scaling factor [no default]
+////
+//// Written by the Starlab development group.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //		 Code moved here from kira_init.C
 
@@ -42,11 +48,6 @@ main(int argc, char *argv[])
     int c;
     char* param_string = "c:F:J:";
 
-    dyn *b = get_dyn();
-    if (b == NULL) err_exit("Can't read input snapshot");
-
-    b->log_history(argc, argv);
-
     // Parse the argument list:
 
     while ((c = pgetopt(argc, argv, param_string,
@@ -68,8 +69,11 @@ main(int argc, char *argv[])
 	}
     }
 
-    if (c_flag)
-	b->log_comment(comment);
+    dyn *b = get_dyn();
+    if (b == NULL) err_exit("Can't read input snapshot");
+
+    b->log_history(argc, argv);
+    if (c_flag)	b->log_comment(comment);
 
     if (tidal_field_type < 1) tidal_field_type = 1;
     if (tidal_field_type > 4) tidal_field_type = 4;

@@ -8,15 +8,22 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// extract_snap:  Find and print the last snapshot, or the first
-////                snapshot following a specified time.
+//// Find and print the last snapshot, or the first snapshot
+//// following a specified time.  If -n is set to 0 and -v is set,
+//// then all we do is count snapshots.
 ////
-//// Options:    -c    add a comment to the output snapshot [false]
-////             -t    specify time [last snapshot]
-////             -n    specify number of snapshots to extract [1]
-////             -v    set verbose mode [off]
+//// Usage: extract_snap [OPTIONS] < input > output
 ////
-//// If -n is set to 0 and -v is set, then all we do is count snapshots.
+//// Options:    
+////		  -c    add a comment to the output snapshot [false]
+////              -t    specify time [last snapshot]
+////              -n    specify number of snapshots to extract [1]
+////              -v    set verbose mode [off]
+////
+//// Written by the Starlab development group.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
 
 #include "dyn.h"
 

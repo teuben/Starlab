@@ -8,11 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// reflect_velocities:  multiply all velocity components by -1,
-////                      thereby effectively reversing the direction
-////                      of time in the input N-body system(s).
+//// Multiply all velocity components by -1, thereby effectively
+//// reversing the direction of time in the input N-body system(s).
 ////
-//// Options:      -c     add a comment to the output snapshot [false]
+//// Usage: reflect_velocities [OPTIONS] < input > output
+////
+//// Options:      
+////		  -c     add a comment to the output snapshot [false]
+////
+//// Written by Piet Hut.
+////
+//// Reports bugs to starlab@sns.ias.edu.
 
 //   Piet Hut, Nov. 1994
 

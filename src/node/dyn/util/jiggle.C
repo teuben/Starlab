@@ -8,12 +8,19 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// jiggle:  add a small, energy-preserving perturbation to all top-level
-////          velocities, leaving positions unchanged.
+//// Add a small, energy-preserving perturbation to all top-level
+//// velocities, leaving positions unchanged.
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Usage: jiggle [OPTIONS] < input > output
+////
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
 ////              -f    specify (fractional) scale of perturbation [0.01]
 ////              -s    specify random seed [take from system clock]
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  Jun 2000   Steve McMillan
 

@@ -223,12 +223,16 @@ void calculate_energies(dyn * root, real eps2,
     accumulate_energies(root, root, eps2, epot, ekin, etot, cm);
 }
 
-void print_recalculated_energies(dyn * b, int mode, real eps2, real e_corr)
+static real initial_etot = 0;
+
+void print_recalculated_energies(dyn * b,
+				 int mode,	// default = 0
+				 real eps2,	// default = 0
+				 real e_corr)	// default = 0
 {
     real epot = 0;
     real ekin = 0;
     real etot = 0;
-    static real initial_etot;
 
     if (!b->get_ignore_internal())
 	accumulate_energies(b, b, eps2, epot, ekin, etot);
@@ -250,4 +254,18 @@ void print_recalculated_energies(dyn * b, int mode, real eps2, real e_corr)
 	initial_etot = etot;
 	cerr << "\n";
     }	
+}
+
+void initialize_print_energies(dyn * b,
+			       real eps2)	// default = 0
+{
+    real epot = 0;
+    real ekin = 0;
+    real etot = 0;
+    static real initial_etot;
+
+    if (!b->get_ignore_internal())
+	accumulate_energies(b, b, eps2, epot, ekin, etot);
+
+    initial_etot = etot;
 }

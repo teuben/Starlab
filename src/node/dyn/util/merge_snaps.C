@@ -8,12 +8,19 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// merge_snaps:  Sequentially merge all snapshots in the input stream.
-////               Do *not* rescale masses, positions, or velocities, but
-////               always set the system center of mass to 0.
-////               Root node information is retained for all snapshots read.
+//// Sequentially merge all snapshots in the input stream.  Do *not*
+//// rescale masses, positions, or velocities, but always set the
+//// system center of mass to 0.  Root node information is retained
+//// for all snapshots read.
 ////
-//// Options:    none
+//// Usage: merge_snaps [OPTIONS] < input > output
+////
+//// Options:
+//// None.
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "dyn.h"
 
@@ -22,6 +29,13 @@
 main(int argc, char ** argv)
 {
     check_help();
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "c:";
+
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {}
 
     dyn *b, *root = NULL;
     int count = 0;

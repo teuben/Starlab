@@ -8,14 +8,20 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// compute_density:  Compute local densities around particles in the input
-////                   N-body system, based on k-th nearest neighbors.
+//// Compute local densities around particles in the input N-body
+//// system, based on k-th nearest neighbors. Save results in the 
+//// particle dyn stories.
 ////
-////                   Save results in the particle dyn stories.
+//// Usage: compute_density [OPTIONS] < input > output
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
 ////              -k    specify k [12]
 ////              -v    verbose mode [off]
+////
+//// Written by the Starlab development group.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //.............................................................................
 //    version 1:  May 1989   Piet Hut

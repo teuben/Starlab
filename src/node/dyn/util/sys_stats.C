@@ -8,50 +8,54 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// sys_stats:  Print out various diagnostic statistics on the input
-////             system.  These include:
+//// Print out various diagnostic statistics on the input system.  These
+//// include:
 ////
-////                 system time, number, mass, mass distribution
-////                 relaxation time
-////                 system energy
-////                 core parameters
-////                 lagrangian radii
-////                     for quartiles [default]
-////                     for ten-percentiles
-////                     for "special" choice of Lagrangian masses,
-////                         currently 0.005, 0.01, 0.02, 0.05,
-////                                   0.1, 0.25, 0.5, 0.75, 0.9
-////                 mass distribution by lagrangian zone
-////                 anisotropy by lagrangian zone
-////                 binary parameters
+////         system time, number, mass, mass distribution;
+////         relaxation time;
+////         system energy;
+////         core parameters;
+////         lagrangian radii for quartiles [default], for ten-percentiles,
+////         and for "special" choice of Lagrangian masses, currently 0.005,
+////         0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9;
+////         mass distribution by lagrangian zone;
+////         anisotropy by lagrangian zone;
+////         binary parameters.
 ////
-////             In addition, Lagrangian radii are written to the root
-////             dyn story.  If N^2_ops	is selected, then core parameters
-////             and particle densities are also written to the root
-////             and particle dyn stories.
+//// In addition, Lagrangian radii are written to the root dyn story.
+//// If N^2_ops	is selected, then core parameters and particle densities
+//// are also written to the root and particle dyn stories.
 ////
-////             If N^2_ops is selected, Lagrangian radii are computed
-////             relative to the density center, as are binary radial
-////             coordinates.  Otherwise, the modified center of mass
-////             (center of mass with outliers excluded)  is used.
+//// If N^2_ops is selected, Lagrangian radii are computed relative to
+//// the density center, as are binary radial coordinates.  Otherwise,
+//// the modified center of mass (center of mass with outliers excluded)
+//// is used.
+////        	
+//// If GRAPE is available, the hdyn version of this function will
+//// compute the energies even if the "-n" flag is set false.
 ////
-//// Options:    -b    specify level of binary statistics [2]
-////                       0:		  none
-////                       1 (or no arg): short binary output
-////                       2:		  full binary output
-////             -e    recalculate the total energy (even if -n is no) [yes]
-////             -l    specify percentile choice [2]
-////                       0:             quartiles (1-3)
-////                       1:             10-percentiles (10-90)
-////                       2 (or no arg): nonlinear Lagrangian masses
-////                                      (0.5, 1, 2, 5, 10, 25, 50, 75, 90%)
-////             -n    perform/don't perform actions requiring O(N^2)
-////                   operations (e.g. computation of energy and core
-////                   radius; see -e) [no]
-////             -o    pipe system to cout [no]
+//// Usage: sys_stats [OPTIONS] < input > output
 ////
-////         If GRAPE is available, the hdyn version of this function will
-////         compute the energies even if the "-n" flag is set false.
+//// Options:
+////              -b    specify level of binary statistics [2]
+////                    0: none
+////                    1 (or no arg): short binary output
+////                    2: full binary output
+////              -e    recalculate the total energy (even if -n is no) [yes]
+////              -l    specify percentile choice [2]
+////                    0: quartiles (1-3)
+////                    1: 10-percentiles (10-90)
+////                    2 (or no arg): nonlinear Lagrangian masses
+////                    (0.5, 1, 2, 5, 10, 25, 50, 75, 90%)
+////              -n    perform/don't perform actions requiring O(N^2)
+////                    operations (e.g. computation of energy and core
+////                    radius; see -e) [no]
+////              -o    pipe system to cout [no]
+////
+//// Written by the Starlab development group.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
 
 // ***  MUST make sure that the definitions of virial radius and virial  ***
 // ***  equilibrium are consistent between scale and sys_stats.          ***

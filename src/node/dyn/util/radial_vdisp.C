@@ -8,20 +8,24 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// radial_vdisp:  Compute the 1-dimensional radial velocity dispersion
-////                profile of an N-body system.  The function fills in the
-////                vdisp array corresponding to the provided radius array.
-////                The tool prints out radius and velocity dispersion in a
-////                form suitable for plotting.
+//// Compute the 1-dimensional radial velocity dispersion profile of
+//// an N-body system.  The function fills in the vdisp array
+//// corresponding to the provided radius array.  The tool prints out
+//// radius and velocity dispersion in a form suitable for plotting.
+//// If a current density center is found in the root dyn story it is
+//// used as the system center for the density computation.  Otherwise,
+//// if a valid center of mass is found, it is used.  If neither center
+//// is found, the geometric center is used.
 ////
-////                If a current density center is found in the root dyn
-////                story it is used as the system center for the density
-////                computation.  Otherwise, if a valid center of mass is
-////                found, it is used.  If neither center is found, the
-////                geometric center is used.
+//// Usage: radial_vdisp [OPTIONS] < input > output
 ////
-//// Options:     -n    specify number of radial bins [100]
+//// Options:     
+////		  -n    specify number of radial bins [100]
 ////              -r    specify maximum radius [take from data]
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //-----------------------------------------------------------------------------
 //   version 1:  Apr 2003   Steve McMillan

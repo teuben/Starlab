@@ -8,21 +8,24 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// compute_mcom:  Determine the "modified center of mass" position and
-////                velocity of the input N-body system, recursively defined
-////                as the center of mass of the f [default 90%] particles
-////                closest to the center of mass.
+//// Determine the "modified center of mass" position and velocity 
+//// of the input N-body system, recursively defined as the center 
+//// of mass of the f [default 90%] particles closest to the center
+//// of mass.  Center of mass position and velocity are written to the
+//// dyn story of the top-level node; they are also optionally returned
+//// as function arguments in the library version.
+//// Note: The computed center of mass is defined in absolute terms, 
+//// and so includes the pos and vel of the parent node.
 ////
-////                Note: The computed center of mass is defined in
-////                absolute terms, and so includes the pos and vel of
-////                the parent node.
+//// Usage: compute_mcom [OPTIONS] < input > output
 ////
-////                Center of mass position and velocity are written to the
-////                dyn story of the top-level node; they are also optionally
-////                returned as function arguments in the library version.
-////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
 ////              -f    specify the fraction of particles to retain [0.9]
+////
+//// Written by the Starlab development group.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "dyn.h"
 

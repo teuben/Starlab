@@ -8,34 +8,35 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// compute_mean_cod:  Determine the density center position and velocity
-////                    for the input N-body system.  The density center is
-////                    defined analogously to the center of mass, but instead
-////                    of a mass weighting, the weighting used is proportional
-////                    to the square of the density (the original suggestion
-////                    in the paper below(*), to use a weighting factor
-////                    linear in the density, may not converge well).
+//// Determine the density center position and velocity for the input N-body
+//// system.  The density center is defined analogously to the center of mass,
+//// but instead of a mass weighting, the weighting used is proportional to
+//// the square of the density (the original suggestion in the paper below(*),
+//// to use a weighting factor linear in the density, may not converge well).
+//// Densities are not computed here -- run compute_density before invoking
+//// compute_mean_cod.  Density center position and velocity are written to
+//// the dyn story of the top-level node; they are also optionally returned as
+//// function arguments in the library version.
 ////
-////                    Note: The computed density center is defined in
-////                    absolute terms, and so includes the pos and vel of
-////                    the parent node.
+//// (*) Stefano Casertano and Piet Hut: Astroph.J. 298,80 (1985).
+//// To use their recipe, k >= 2 is required.
 ////
-////                    Densities are not computed here -- run compute_density
-////                    before invoking compute_mean_cod.
+//// Note: The computed density center is defined in absolute terms, and so
+//// includes the pos and vel of the parent node.
 ////
-////                    Density center position and velocity are written to
-////                    the dyn story of the top-level node; they are also
-////                    optionally returned as function arguments in the
-////                    library version.
+//// Usage: compute_mean_cod [OPTIONS] < input > output
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
+////
+//// Written by Piet Hut, Steve McMilland, and Jun Makino.
+////
+//// Report bugs to starlab@sns.ias.edu.
 ////
 //-----------------------------------------------------------------------------
 //   version 1:  Nov 1994   Piet Hut
 //   version 2:  Jul 1996   Steve McMillan & Jun Makino
 //.............................................................................
-//// (*) Stefano Casertano and Piet Hut: Astroph.J. 298,80 (1985).
-////     To use their recipe, k >= 2 is required.
 //.............................................................................
 //   non-local function: 
 //      compute_mean_cod

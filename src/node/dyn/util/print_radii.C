@@ -8,10 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// print_radii:  print out indices (if any), masses, and radii (distances
-////               from the origin) for an N-body system
+//// Print out indices (if any), masses, and radii (distances from the
+//// origin) for an N-body system.
 ////
-//// Options:     -p    specify precision of output [6 sig. fig.]
+//// Usage: print_radii [OPTIONS] < input > output
+////
+//// Options:     
+////		  -p    specify precision of output [6 sig. fig.]
+////
+//// Written by the Starlab development group.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "dyn.h"
 

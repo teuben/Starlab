@@ -8,10 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// energy:  Print out the energy of an N-body system.  Does not
-////          include the effects of any external tidal field.
+//// Print out the energy of an N-body system.  Does not include 
+//// the effects of any external tidal field.
 ////
-//// Options:   -e    specify softening parameter [0]
+//// Usage: energy [OPTIONS] < input > output
+////
+//// Options:   
+////		  -e    specify softening parameter [0]
+////
+//// Written by the Starlab development group.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "dyn.h"
 

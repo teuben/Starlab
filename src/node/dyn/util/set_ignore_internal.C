@@ -8,11 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// set_ignore_internal.C:  Add a flag specifying that internal
-////                         interactions should be suppressed
-////                         i.e. create a system of test particles.
+//// Add a flag specifying that internal interactions should be suppressed
+//// i.e. create a system of test particles.
 ////
-//// Options:      none
+//// Usage: set_ignore_internal [OPTIONS] < input > output
+////
+//// Options:
+//// None.
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  Dec 2001   Steve McMillan
 
@@ -27,24 +33,15 @@ main(int argc, char *argv[])
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "";
+    char* param_string = "c:";
+
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {}
 
     dyn *b = get_dyn();
     if (b == NULL) err_exit("Can't read input snapshot");
 
     b->log_history(argc, argv);
-
-    // Parse the argument list:
-
-//      while ((c = pgetopt(argc, argv, param_string,
-//			"$Revision$", _SRC_)) != -1) {
-//  	switch (c) {
-//  	    default:
-//  	    case '?':	params_to_usage(cerr, argv[0], param_string);
-//  			get_help();
-//  			return false;
-//  	}
-//      }
 
     putrq(b->get_log_story(), "ignore_internal", 1);
     put_dyn(b);

@@ -8,12 +8,18 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// flatten:  flatten a dyn tree to a single-level linked list under
-////           the root node.
+//// Flatten a dyn tree to a single-level linked list under the root node.
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Usage: flatten [OPTIONS] < input > output
+////
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
 ////              -C    force col output [take from input format]
 ////              -v    print diagnostic info [no info]
+////
+//// Written by Piet Hut
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  March 1994   Piet Hut
 

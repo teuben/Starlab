@@ -8,12 +8,18 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// dumbp:  dump out an N-body system in a dumb format suitable
-////         for digestion by NBODY1-5 and starcluster.
-////         This is the inverse function to readp.
+//// Dump out an N-body system in a dumb format suitable for digestion
+//// by NBODY1-5 and starcluster.  This is the inverse function to readp.
 ////
-//// Options:     -p    specify precision of output [6 sig. fig.]
+//// Usage: dumbp [OPTIONS] < input > output
+////
+//// Options:     
+////		  -p    specify precision of output [6 sig. fig.]
 ////              -t    include time in output [no]
+////
+//// Written by the Starlab development group.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "dyn.h"
 

@@ -8,16 +8,21 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// add_power_law.C:  Add power-law parameters to an input snapshot and
-////                   write it out again.  Do not change the input data.
-////
-//// External field is basically that of a power-law mass distribution
-////
+//// Add power-law parameters to an input snapshot and write it out
+//// again.  Do not change the input data.  External field is basically
+//// that of a power-law mass distribution
 ////                 M(r)  =  A r^x
+//// except that the density is constant for r < a.  Parameters are 
+//// interpreted in physical units if they have been specified with 
+//// add_star, are converted to N-body units if necessary, and are 
+//// written to the root log story for subsequent use by set_com,
+//// scale, kira, etc.  Note that -e 0 is currently implemented as a 
+//// Plummer field, and is flagged as such.
 ////
-//// except that the density is constant for r < a.
+//// Usage: add_power_law [OPTIONS] < input > output
 ////
-//// Options:      -A/M  specify coefficient [1]
+//// Options:      
+////               -A/M  specify coefficient [1]
 ////               -c    add comment [none]
 ////               -C    specify center [(0,0,0)]
 ////               -e/E/x/X  specify exponent [0]
@@ -25,15 +30,12 @@
 ////               -G    select parameters (physical units) appropriate
 ////                     for the Galactic center (Mezger et al. 1999) [no]
 ////               -n    force interpretation of all parameters in
-////                         N-body units [no]
+////                     N-body units [no]
 ////
-//// Parameters are interpreted in physical units if they have been
-//// specified with add_star, are converted to N-body units if necessary,
-//// and are written to the root log story for subsequent use by set_com,
-//// scale, kira, etc.
+//// Written by Steve McMillan.
 ////
-//// Note that -e 0 is currently implemented as a Plummer field, and is
-//// flagged as such.
+//// Report bug to starlab@sns.ias.edu.
+
 
 //   version 1:  Aug/Sep 2001   Steve McMillan
 
@@ -178,11 +180,6 @@ main(int argc, char *argv[])
     int c;
     char* param_string = "A:a:c:C:::e:E:GM:nR:x:X:";
 
-    dyn *b = get_dyn();
-    if (b == NULL) err_exit("Can't read input snapshot");
-
-    b->log_history(argc, argv);
-
     // Parse the argument list:
 
     while ((c = pgetopt(argc, argv, param_string,
@@ -223,8 +220,11 @@ main(int argc, char *argv[])
 	}
     }
 
-    if (c_flag)
-	b->log_comment(comment);
+    dyn *b = get_dyn();
+    if (b == NULL) err_exit("Can't read input snapshot");
+
+    b->log_history(argc, argv);
+    if (c_flag)	b->log_comment(comment);
 
     if (G_flag) {
 

@@ -8,12 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// dyn_io:  test Starlab dyn class I/O functions.
+//// Test Starlab dyn class I/O functions.  Define scan_dyn_story and
+//// print_dyn_story for the dyn class.
 ////
-////          Define scan_dyn_story and print_dyn_story for
-////          the dyn class.
+//// Usage: dyn_io [OPTIONS] < input > output
 ////
-//// Options: none
+//// Options:
+//// None.
+////
+//// Written by the Starlab development group.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "dyn.h"
 #include "util_io.h"
@@ -487,6 +492,13 @@ main(int argc, char** argv)
 {
     dyn *b;
     check_help();
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "c:";
+
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {}
 
     while (b = get_dyn()) {
 	cout << "TESTING put_dyn:" << endl;

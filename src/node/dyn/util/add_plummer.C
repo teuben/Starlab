@@ -8,16 +8,22 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// add_plummer.C:  Add Plummer parameters to an input snapshot and write
-////                 it out again.  Do not change the input data.
-////                 See add_power_law.
+//// Add Plummer parameters to an input snapshot and write it out again.
+//// Do not change the input data. See add_power_law.
 ////
-//// Options:      -c    add comment [none]
+//// Usage: add_plummer [OPTIONS] < input > output
+////
+//// Options:      
+////		   -c    add comment [none]
 ////               -C    specify center [(0,0,0)]
 ////               -f    turn on/off friction [false]
 ////               -m/M  specify mass [1]
 ////               -a/R  specify scale [1]
 ////               -n    force interpretation of parameters in N-body units [no]
+////
+//// Written by Steve McMillan
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  Aug/Sep 2001   Steve McMillan
 
@@ -71,11 +77,6 @@ main(int argc, char *argv[])
     int c;
     char* param_string = "a:c:C:::fm:M:nR:";
 
-    dyn *b = get_dyn();
-    if (b == NULL) err_exit("Can't read input snapshot");
-
-    b->log_history(argc, argv);
-
     // Parse the argument list:
 
     while ((c = pgetopt(argc, argv, param_string,
@@ -106,6 +107,12 @@ main(int argc, char *argv[])
 			return false;
 	}
     }
+
+    dyn *b = get_dyn();
+    if (b == NULL) err_exit("Can't read input snapshot");
+
+    b->log_history(argc, argv);
+    if (c_flag)	b->log_comment(comment);
 
     add_plummer(b, mass, scale, center, n_flag, true, fric_flag);
     put_dyn(b);

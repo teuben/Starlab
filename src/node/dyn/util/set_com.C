@@ -8,20 +8,26 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// set_com:  Modify positions and velocities to set the center-of-mass
-////           position and velocity.  Write com_pos and com_vel to the root
-////           dyn story.
+//// Modify positions and velocities to set the center-of-mass position
+//// and velocity.  Write com_pos and com_vel to the root dyn story.  If an
+//// external field has been specified, the velocity is taken to be in units
+//// of the circular orbit speed at the specified location.  Otherwise, the
+//// velocity is taken as is.  Positions and velocities are in physical units
+//// (parsecs and km/s, if relevant) if physical stellar parameters are known,
+//// and N-body units otherwise (or if -n is specified).
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Usage: set_com [OPTIONS] < input > output
+////
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
 ////              -n    force interpretation of r and v in N-body units [no]
 ////              -r    specify center of mass position [(0,0,0)]
 ////              -v    specify center of mass velocity [(0,0,0)]
 ////
-//// If an external field has been specified, the velocity is taken to be in
-//// units of the circular orbit speed at the specified location.  Otherwise,
-//// the velocity is taken as is.  Positions and velocities are in physical
-//// units (parsecs and km/s, if relevant) if physical stellar parameters
-//// are known, and N-body units otherwise (or if -n is specified).
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
 
 //   version 1:  Aug/Sep 2001   Steve McMillan
 

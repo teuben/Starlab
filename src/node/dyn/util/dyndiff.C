@@ -8,13 +8,20 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// dyndiff:  compute the rms distance in phase space between two
-////           (flat) N-body systems.
+//// Compute the rms distance in phase space between two (flat)
+//// N-body systems.
 ////
-//// Options:  -r    use spatial differences only.
+//// Usage: dyndiff [OPTIONS] < input > output
+////
+//// Options:  
+////		  -r    use spatial differences only.
+////
+//// Written by the Starlab development group.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //.............................................................................
-//    version 1:  Nov 1993   Piet Hut              email: piet@guinness.ias.edu
+//    version 1:  Nov 1993   Piet Hut            email: piet@guinness.ias.edu
 //                           Institute for Advanced Study, Princeton, NJ, USA
 //.............................................................................
 //  non-local function: 

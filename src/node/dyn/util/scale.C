@@ -8,39 +8,42 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
  
-//// scale:  (re)scale an N-body system to specified M, Q (=T/U), and E.
-////         Note that if the required Q implies E > 0, no additional
-////         energy scaling is applied.
+//// (re)scale an N-body system to specified M, Q (=T/U), and E.  Note
+//// that if the required Q implies E > 0, no additional energy scaling
+//// is applied.
 ////
-//// Options:    -c    zero the center of mass position and velocity [no]
-////             -d    debug mode [off]
-////             -e    specify softening parameter [0]
-////             -E    specify total energy [don't scale]
-////             -m/M  specify total mass [don't scale]
-////             -q/Q  specify virial ratio [don't scale]
-////             -r/R  specify virial radius [don't scale]
-////             -s/S  scale to "standard" units [not set]
+//// Note: Only top-level nodes are considered in scale_virial and 
+//// scale_energy.  Also, only internal positions and velocities
+//// are modified -- the root pos and vel are left untouched.
+//// Option "-s" is equivalent to "-M 1 -R 1 -Q 0.5".
+//// For systems in which stellar data have been specified, the
+//// physical mass, length, and time scales are already defined.
+//// Normally those will correspond to the cluster mass, length,
+//// and time units, so the "-s" option is probably most appropriate
+//// in most cases.  This tool completes the connection between
+//// properties and physical units.  In all cases, command-line
+//// parameters are specified in N-body units.  As of 7/01, systems
+//// with embedded tidal or other external fields are also properly
+//// scaled (assuming that the Jacobi radius scales with the virial
+//// radius).  Note that the virial radius is defined in terms of the
+//// *internal* potential energy only.  For now, only allow the energy
+//// to be specified if there are no external (non-tidal) fields.
 ////
-////         NOTE that only top-level nodes are considered in scale_virial
-////         and scale_energy.  Also, only internal positions and velocities
-////         are modified -- the root pos and vel are left untouched.
+//// Usage: scale [OPTIONS] < input > output
 ////
-////         Option "-s" is equivalent to "-M 1 -R 1 -Q 0.5".
+//// Options:    
+////		  -c    zero the center of mass position and velocity [no]
+////              -d    debug mode [off]
+////              -e    specify softening parameter [0]
+////              -E    specify total energy [don't scale]
+////              -m/M  specify total mass [don't scale]
+////              -q/Q  specify virial ratio [don't scale]
+////              -r/R  specify virial radius [don't scale]
+////              -s/S  scale to "standard" units [not set]
 ////
-////         For systems in which stellar data have been specified, the
-////         physical mass, length, and time scales are already defined.
-////         Normally those will correspond to the cluster mass, length,
-////         and time units, so the "-s" option is probably most appropriate
-////         in most cases.  This tool completes the connection between
-////         properties and physical units.  In all cases, command-line
-////         parameters are specified in N-body units.
+//// Written by Steve McMillan.
 ////
-////         As of 7/01, systems with embedded tidal or other external
-////         fields are also properly scaled (assuming that the Jacobi
-////         radius scales with the virial radius).  Note that the virial
-////         radius is defined in terms of the *internal* potential energy
-////         only.  For now, only allow the energy to be specified if
-////         there are no external (non-tidal) fields.
+//// Report bugs by starlab@sns.ias.edu.
 
 // Steve McMillan, April 1993
 //

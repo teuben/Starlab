@@ -8,14 +8,21 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// merge:  merge all low-level nodes
+//// Merge all low-level nodes.
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Usage: merge_low [OPTIONS] < input > output
+////
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
 ////              -f    merge the specified fraction [1]
-////              -o    specify choice of fraction f [1]
-////                        -1:      random
-////                         0:      every 1/f-th binary
-////                         n > 0:  n-th block of size f
+////              -o    specify how fraction f is chosen. [1]
+////                    Option -1: random.
+////                    Option  0: every 1/f-th binary.
+////                    Option  n > 0: n-th block of size f.
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  September 1999		Steve McMillan
 

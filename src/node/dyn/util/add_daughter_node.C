@@ -8,10 +8,13 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// add_daughter_node:  add one extra node to the tree structure in the
-////                     input snapshot, under a specified node.
+//// Add one extra node to the tree structure in the input snapshot,
+//// under a specified node.
 ////
-//// Options:     -c     add a comment to snapshot [false]
+//// Usage: add_daughter_node [OPTIONS] < input > output
+////
+//// Options:     
+////		  -c     add a comment to snapshot [false]
 ////              -e     echo tree structure [false]
 ////              -i     specify index of node to add to [root]
 ////              -j     specify index for new node [none]
@@ -19,6 +22,10 @@
 ////              -s     specify random seed [take from system clock]
 ////              -r     specify node radial position (angle random) [0]
 ////              -v     specify node speed (direction random) [0]
+////
+//// Written by Piet Hut and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  Dec 1994   (node version) Piet Hut
 //   version 2:  Jun 2002   (dyn version)  Steve McMillan

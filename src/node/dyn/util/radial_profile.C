@@ -8,26 +8,29 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// radial_profile:  Compute the specified 1-dimensional radial profile
-////                  of an N-body system.  The function fills in a profile
-////                  array corresponding to the provided radius array,
-////                  then prints out radius and profile data in a form
-////                  suitable for plotting.
+//// Compute the specified 1-dimensional radial profile of an N-body system.
+//// The function fills in a profile array corresponding to the provided
+//// radius array, then prints out radius and profile data in a form
+//// suitable for plotting.  If a current density center is found in the root
+//// dyn story it is used as the system center for the density computation.
+//// Otherwise, if a valid center of mass is found, it is used.  If neither
+//// center is found, the geometric center is used.
 ////
-////                  If a current density center is found in the root dyn
-////                  story it is used as the system center for the density
-////                  computation.  Otherwise, if a valid center of mass is
-////                  found, it is used.  If neither center is found, the
-////                  geometric center is used.
+//// Usage: radial_profile [OPTIONS] < input > output
 ////
-//// Options:     -n    specify number of radial bins [100]
+//// Options:     
+////		  -n    specify number of radial bins [100]
 ////              -o    choose the quantity computed [0]
-////                        0 ==> density of all stars
-////                        1 ==> density of stars having mass >= average
-////                        2 ==> velocity dispersion
-////                        3 ==> radial velocity dispersion
-////                        4 ==> 2, 3, and radial velocity dispersion too
+////                    0 ==> density of all stars,
+////                    1 ==> density of stars having mass >= average,
+////                    2 ==> velocity dispersion,
+////                    3 ==> radial velocity dispersion,
+////                    4 ==> 2, 3, and radial velocity dispersion too
 ////              -r    specify maximum radius [4]
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //-----------------------------------------------------------------------------
 //   version 1:  Jun 2003   Steve McMillan

@@ -8,14 +8,20 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// freezebin:  reduce all top-level binary CM velocities, leaving
-////             positions unchanged.
+//// Reduce all top-level binary CM velocities, leaving positions unchanged.
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Usage: freezebin [OPTIONS] < input > output
+////
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
 ////              -f    specify freeze factor [0]
+////
+//// Written by Piet Hut and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  Dec 1992   Piet Hut
-//               Oct 2001   Steve McMIllan
+//               Oct 2001   Steve McMillan
 
 #include "dyn.h"
 

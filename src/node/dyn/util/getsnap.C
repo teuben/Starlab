@@ -8,10 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// getsnap:    Get specific snapshot from nonn-prined output
+//// Select a specific snapshot from the input stream.
 ////
-//// Options:    -c    add comment to snapshots [false]
-////             -t    specify time of snapshot [0]
+//// Usage: getsnap [OPTIONS] < input > output
+////
+//// Options:    
+////		  -c    add comment to snapshots [false]
+////              -t    specify time of snapshot [0]
+////
+//// Written by Simon Portieges Zwart.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  July 2002   Simon Portieges Zwart
 

@@ -8,10 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// snap2speck:  dump out an N-body system in a dumb format suitable
-////         	  for digestion by partiview.
+//// Dump out an N-body system in a dumb format suitable for digestion
+//// by partiview.
 ////
-//// Options:     -p    specify precision of output [6 sig. fig.]
+//// Usage: snap2speck [OPTIONS] < input > output
+////
+//// Options:     
+////		  -p    specify precision of output [6 sig. fig.]
+////
+//// Written by the Starlab development group.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "dyn.h"
 

@@ -8,23 +8,24 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// compute_max_cod:  Determine the max density center position and velocity
-////                   for the input N-body system.  The max density center is
-////                   defined as the position of the particle with the
-////                   highest local density.
+//// Determine the max density center position and velocity for the 
+//// input N-body system.  The max density center is defined as the 
+//// position of the particle with the highest local density.
+//// Densities are not computed here -- run compute_density before 
+//// invoking compute_max_cod.  Density center position and velocity
+//// are written to the dyn story of the top-level node; they are also
+//// optionally returned as function arguments in the library version.
+//// Note: The computed density center is defined in absolute terms,
+//// .and so includes the pos and vel of the parent node.
 ////
-////                   Note: The computed density center is defined in
-////                   absolute terms, and so includes the pos and vel of
-////                   the parent node.
+//// Usage: compute_max_cod [OPTIONS] < input > output
 ////
-////                   Densities are not computed here -- run compute_density
-////                   before invoking compute_max_cod.
+//// Options:   
+////		   -c    add a comment to the output snapshot [false]
 ////
-////                   Density center position and velocity are written to the
-////                   dyn story of the top-level node; they are also optionally
-////                   returned as function arguments in the library version.
+//// Written by the Starlab development group.
 ////
-//// Options:    -c    add a comment to the output snapshot [false]
+//// Report bugs to starlab@sns.ias.edu.
 
 //-----------------------------------------------------------------------------
 //   version 1:  May 1989   Piet Hut

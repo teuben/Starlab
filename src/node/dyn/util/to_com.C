@@ -8,14 +8,20 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// to_com:  Bring all positions and velocities to center-of-mass
-////          frame.  Forces all daughter nodes to have a CM at rest
-////          at the origin, and zeroes the root pos and vel.  Uses
-////          compute_com and writes to the root dyn story.
-////          Does not correct the virial radius in the case of a
-////          tidal field.
+//// Bring all positions and velocities to center-of-mass frame.
+//// Forces all daughter nodes to have a CM at rest at the origin,
+//// and zeroes the root pos and vel.  Uses compute_com and writes
+//// to the root dyn story.  Does not correct the virial radius in
+//// the case of a tidal field.
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Usage: to_com [OPTIONS] < input > output
+////
+//// Options:     
+////		  -c    add a comment to the output snapshot [false]
+////
+//// Written by Piet Hut and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  Dec 1992   Piet Hut
 //   version 2:  May 2003   Steve McMillan
