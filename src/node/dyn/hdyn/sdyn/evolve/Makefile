@@ -14,30 +14,30 @@
 ##    Dec 1994					Piet Hut & Steve McMillan
 ##.............................................................................
 
+CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) -O
 #CFLAGS		= -O3 $(STARLAB_CCC_FLAGS) -I$(INC_STAR) -I$(INC)
+#CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) -DUSE_MPI
 
 # Starlab libraries to link with (LIB is STARLAB_PATH/lib):
 
-#LIBFLAGS	= -L$(LIB) -L$(STARLAB_LIB) -lstd -lm -lsdyn3
-#CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) -DUSE_MPI
+LIBFLAGS	= -L$(LIB) -lsdyn -l_dyn_ -ldyn -lnode -lstd -lm
 
-CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC)
-LIBFLAGS	=  -L. -lsc4 -L$(STARLAB_LIB) -lsdyn -lhdyn -l_dyn_ -ldyn -lnode -lstd -lm 
+#LIBFLAGS	=  -L. -lsc4 -L$(STARLAB_LIB) -lsdyn -l_dyn_ -ldyn -lnode -lstd -lm 
+#LIBFLAGS	=  -L. -lsc4 -L$(STARLAB_LIB) -l_dyn_ -ldyn -lnode -lstd -lm -L$(STARLAB_LIB) -lsdyn -ldyn -lmpi
+#LIBFLAGS	=  -L. -lsc4 -L$(STARLAB_LIB) -l_dyn_ -ldyn -lnode -lstd -lm -L$(STARLAB_LIB) -lsdyn -ldyn -lmpi
 
-#LIBFLAGS	=  -L. -lsc4 -L$(STARLAB_LIB) -lhdyn -l_dyn_ -ldyn -lnode -lstd -lm -L$(STARLAB_LIB) -lsdyn -ldyn -lmpi
-#LIBFLAGS	=  -L. -lsc4 -L$(STARLAB_LIB) -lhdyn -l_dyn_ -ldyn -lnode -lstd -lm -L$(STARLAB_LIB) -lsdyn -ldyn -lmpi
-
-DEPEND_LIBS	= ./libsc4.a \
-		  $(STARLAB_LIB)/libsdyn.a \
-		  $(STARLAB_LIB)/libhdyn.a \
+DEPEND_LIBS	= $(STARLAB_LIB)/libsdyn.a \
 	          $(STARLAB_LIB)/lib_dyn_.a \
 		  $(STARLAB_LIB)/libdyn.a \
 		  $(STARLAB_LIB)/libnode.a \
 	          $(STARLAB_LIB)/libstd.a 
+#		  ./libsc4.a
 
 #EXECUTABLES = low_n_evolve tree_evolve scatter sigma \
 #		scatter_MPI sigma_MPI
 EXECUTABLES = low_n_evolve tree_evolve scatter sigma 
+
+LIBRARY = libsdyn.a
 
 OBJECT_FILES = low_n_evolve.o sdyn_ev.o tree_evolve.o sdyn_ev.o \
 	       scatter_exp.o scatter_hist.o \
@@ -49,13 +49,6 @@ OBJECT_FILES = low_n_evolve.o sdyn_ev.o tree_evolve.o sdyn_ev.o \
 #..............................................................................
 
 include $(STARLAB_PATH)/inc/Makefile.worker.inc
-
-BIN = .
-STARLAB_LIB = $(STARLAB_PATH)/lib
-LIB = .
-
-LIBRARY = libsc4.a
-LIB_DEP = .$(LIBRARY)
 
 #..............................................................................
 #..............................................................................
