@@ -54,6 +54,57 @@ char *poptarg;				// global variable
 
 char *poparr[N_POP_ARG];		// global array
 
+local inline char *get_version(char *cvs_id)
+{
+    // Extract a version string from the CVS id.
+    // CVS id format is "$Revision$".
+
+    if (!cvs_id) return NULL;
+
+    char *start = strstr(cvs_id, "Revision:");
+    if (!start) return NULL;
+
+    start += 9;
+    while (*start > 0 && *start <= ' ') start++;
+
+    if (start - cvs_id > strlen(cvs_id)) return NULL;
+
+    char *end = start;
+    while (*end > ' ') end++;
+
+    int n = end-start+1;
+    char *version = new char[n];
+    strncpy(version, start, n-1);
+    version[n-1] = 0;
+
+    return version;
+}
+
+local inline char *get_name(char *source)
+{
+    // Extract a program name from a source file specification.
+    // Source format is /a/b/c/program.[cCfF].
+
+    if (!source) return NULL;
+
+    char *start = source + strlen(source);
+    while (start >= source && *start != '/') start--;
+    if (*start == '/') start++;
+
+    char *end = start;
+    while (*end > 0 && *end != '.') end++;
+    if (*end == '.') end--;
+
+    if (end < start) return NULL;
+
+    int n = end-start+2;
+    char *name = new char[n];
+    strncpy(name, start, n-1);
+    name[n-1] = 0;
+
+    return name;
+}
+
 //-----------------------------------------------------------------------------
 //  pgetopt  --  each call to  pgetopt()  returns the next option encountered
 //               on the command line, starting from the beginning. If the 
@@ -87,12 +138,14 @@ char *poparr[N_POP_ARG];		// global array
 //
 //               NOTE: The option "-version" or "--version" to any Starlab
 //                     program is legal, and will result in the program
-//                     printing the current version number on cerr and
-//                     terminating.
+//                     printing the current Starlab and CVS versions on
+//                     cout and terminating.
 //
 //----------------------------------------------------------------------------
 
-int  pgetopt(int argc, char ** argv, char * optstr)
+int  pgetopt(int argc, char ** argv, char *optstr,
+	     char *cvs_id,		// default = NULL
+	     char *source)		// default = NULL
 {
     static int argv_counter = 1;	// argument counter
 					// skip argv[0], the command name
@@ -120,15 +173,41 @@ int  pgetopt(int argc, char ** argv, char * optstr)
 	    argv_offset++;
     }
 
-    //  We have a legal switch.  First check to see if all we want to
-    //  know is the STARLAB version number.
+    char *version = get_version(cvs_id);
+    char *name = get_name(source);
+
+    // We have a legal switch.  First check to see if all we want to
+    // know is the STARLAB version number.  New format and output to
+    // cout is for use with help2man.
 
     if (streq(argv[argv_counter], VERSION_OPTION_A)
 	|| streq(argv[argv_counter], VERSION_OPTION_B)) {
-//	cerr << "Starlab version " << VERSION << endl;
-	cout << VERSION << endl;
+
+	// cerr << "Starlab version " << VERSION << endl;
+
+	if (!version || !name)
+	    cout << VERSION << endl;
+	else {
+	    cout << name << " (Starlab " << VERSION << "/CVS) " << version
+		 << endl << endl;
+
+	    // GNU boilerplate:
+
+	    cout << "Copyright (C) 1994-2004, the Starlab development group."
+		 << endl
+		 << "This is free software; see the source for copying "
+		 << "conditions.  There is NO"
+		 << endl
+		 << "warranty; not even for MERCHANTABILITY or FITNESS FOR "
+		 << "A PARTICULAR PURPOSE."
+		 << endl;
+	}
+
 	exit(0);
     }
+
+    if (version) delete [] version;
+    if (name) delete [] name;
 
     char option_char = argv[argv_counter][argv_offset];
 
@@ -221,7 +300,6 @@ int  pgetopt(int argc, char ** argv, char * optstr)
     return option_char;
 }
 
-
 #else
 
 int main(char argc, char ** argv)
@@ -231,7 +309,8 @@ int main(char argc, char ** argv)
     int c;
     char* param_string = "ab:c::d:::e::::fg.h";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1) {
+    while ((c = pgetopt(argc, argv, param_string,
+			"$Revision$", _SRC_)) != -1) {
 	switch (c) {
 
 	    case 'a':	cerr << "option a: no arguments"

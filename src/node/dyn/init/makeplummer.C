@@ -310,12 +310,8 @@ main(int argc, char ** argv)
 
     mfrac = rfrac = VERY_LARGE_NUMBER;
 
-    static char *cvs_version = "$Revision$";
-    char id[1024], version[1024];
-    get_id(id);
-    get_version(cvs_version, version);
-
-    while ((c = pgetopt(argc, argv, param_string, id, version)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+			"$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case 'c': c_flag = true;

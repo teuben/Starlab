@@ -73,6 +73,7 @@
 
 //-------------------------------------------------------------------------
 
+#ifdef TOOLBOX
 
 // These shouldn't really be global, but keep them this way for now...
 
@@ -2073,3 +2074,5 @@ main(int argc, char** argv)
 
     }
 }
+
+#endif

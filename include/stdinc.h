@@ -337,7 +337,9 @@ void print_message(char*);
 void warning(char*);
 void err_exit(char*);
 
-int  pgetopt(int, char**, char*);
+int pgetopt(int argc, char** argv, char *optstr,
+	    char *cvs_id = NULL, char *source = NULL);
+
 void pskipopt();
 void params_to_usage(ostream&, char*, char*);
 
@@ -367,6 +369,7 @@ void check_runtime_help(int argc, char** argv,
 void get_runtime_help(char* source_file, char* date, char *time, int level = 1);
 
 // Note: assuming here that the macros __DATE__ and __TIME__ are standard...
+// Macro _SRC_ will be provided by configure/make.
 
 #define check_help() check_runtime_help(argc, argv, _SRC_, __DATE__, __TIME__);
 #define get_help() get_runtime_help(_SRC_, __DATE__, __TIME__);
