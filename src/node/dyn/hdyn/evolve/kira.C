@@ -1583,6 +1583,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	// first_full_dump Added by [SPZ Jan 2000] to assure initial dump 
 	// of snapshot to start worldbundle.
+
 	if (first_full_dump) {
 	  full_dump_now = true;
 	  first_full_dump = false;
@@ -1939,7 +1940,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	   //cerr << "pre SE at t = " << b->get_system_time() << endl;
 	   //print_recalculated_energies(b);
 
-	    tree_changed |= evolve_stars(b);
+	    tree_changed |= evolve_stars(b, full_dump);
 
 	   //cerr << "post SE at t = " << b->get_system_time() << endl;
 	   // print_recalculated_energies(b);

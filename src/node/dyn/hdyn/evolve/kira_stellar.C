@@ -125,7 +125,8 @@ local void print_end_evolution(char* s, bool correct_dynamics)
     cerr << s << " evolution end\n===============\n";
 }
 
-bool evolve_stars(hdyn* b)
+bool evolve_stars(hdyn* b,
+		  bool full_dump)	// default = false
 {
     bool correct_dynamics = false;
     
@@ -145,9 +146,7 @@ bool evolve_stars(hdyn* b)
 	if (b->get_kira_diag()->report_stellar_evolution)
 	    print_end_evolution("Stellar", correct_dynamics);
 
-
 	b->get_kira_counters()->step_stellar++;
-
     }
 
     if (b->get_use_dstar()) {
@@ -159,7 +158,6 @@ bool evolve_stars(hdyn* b)
 
 	if (b->get_kira_diag()->report_stellar_evolution)
 	    print_end_evolution("Binary", correct_dynamics);
-
     }
 
     // Evolution is over.  See if we need to correct the system for
@@ -197,7 +195,7 @@ bool evolve_stars(hdyn* b)
 	if (b->get_kira_diag()->report_stellar_evolution) 
 	    cerr << "After synchronize_tree" << endl;
 
-	predict_loworder_all(b, b->get_system_time());	// Unnecessary??
+	predict_loworder_all(b, b->get_system_time());	    // Unnecessary??
 
 	if (b->get_kira_diag()->report_stellar_evolution) 
 	    cerr << "After predict_loworder_all" << endl;
@@ -387,7 +385,19 @@ bool evolve_stars(hdyn* b)
 
 	    if (bi->is_valid()) {
 
+		vector dv = anomalous_velocity(bi);  // |dv| > 0 <==> supernova
+		real dv_sq = square(dv);
+
 		dm = get_total_mass(bi) - bi->get_mass();
+
+		hdyn *bt = NULL;
+		if (full_dump && dv_sq > 0) {
+
+		    // Print out the state of bi before the supernova.
+
+		    bt = bi->get_top_level_node();
+		    put_node(cout, *bt, false, 1);
+		}
 
 		// For single stars, dm is the total mass loss.  We draw no
 		// distinction between fast and slow evolution.
@@ -426,11 +436,16 @@ bool evolve_stars(hdyn* b)
 	    
 		// Add kick velocity, if any...
 	    
-		vector dv = anomalous_velocity(bi);
-
-		if (square(dv) > 0) {
+		if (dv_sq > 0) {
 
 		    b->get_kira_counters()->total_kick++;
+
+		    if (full_dump) {
+
+			// Print out the state of bi after the supernova.
+
+			put_node(cout, *bt, false, 1);
+		    }
 
 		    correct_leaf_for_change_of_vector(bi, dv, &hdyn::get_vel,
 							      &hdyn::inc_vel);
@@ -450,10 +465,10 @@ bool evolve_stars(hdyn* b)
 	    }
 	}
 
-	// Reset center of mass and recompute accs and jerks
+	// *Don't* reset center of mass; recompute accs and jerks
 	// on top-level nodes (latter not needed?).
 
-	b->to_com();
+	// b->to_com();
 
 	// calculate_acc_and_jerk_on_all_top_level_nodes(b);
 	// predict_loworder_all(b, b->get_system_time());

@@ -1291,6 +1291,12 @@ bool kira_initialize(int argc, char** argv,
 						       q_vir,
 						       nbody);
 
+	// Add information on the physical initial mass to the
+	// root log story.
+
+	putrq(b->get_log_story(), "physical_initial_mass",
+	      b->get_starbase()->conv_m_dyn_to_star(initial_mass));
+
 	// Add star parts to nodes.
 
 	addstar(b,                             // Note that T_start and
