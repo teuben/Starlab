@@ -46,8 +46,11 @@
 //		       center of an N-body system.
 //-----------------------------------------------------------------------------
 
-#define MAX_COUNT 5
+#define MAX_MSG_COUNT 5
 #define TTOL 1.e-6	// arbitrary tolerance
+
+static bool print_msg = true;
+static int msg_count = 0;
 
 void compute_max_cod(dyn *b, vec& pos, vec& vel)
 {
@@ -64,8 +67,6 @@ void compute_max_cod(dyn *b, vec& pos, vec& vel)
 	}
 
     real max_density = 0;
-    bool print_message = true;
-    int count = 0;
 
     pos = 0;
     vel = 0;
@@ -75,10 +76,10 @@ void compute_max_cod(dyn *b, vec& pos, vec& vel)
 
 	real dens_time = getrq(d->get_dyn_story(), "density_time");
 
-	if (dens_time != b->get_system_time() && print_message) {
+	if (dens_time != b->get_system_time() && print_msg) {
 	    warning("compute_max_cod: using out-of-date densities.");
 	    PRC(d->format_label()), PRL(dens_time);
-	    if (++count > MAX_COUNT) print_message = false;
+	    if (++msg_count > MAX_MSG_COUNT) print_msg = false;
 	}
 
 	real this_density = getrq(d->get_dyn_story(), "density");
@@ -90,9 +91,11 @@ void compute_max_cod(dyn *b, vec& pos, vec& vel)
 		vel = d->get_vel();
 	    }
 	} else if (this_density <= -VERY_LARGE_NUMBER) {
-	    warning("compute_max_cod: density not set.");
-	    PRL(d->format_label());
-	    if (++count > MAX_COUNT) print_message = false;
+	    if (print_msg) {
+		warning("compute_max_cod: density not set.");
+		PRL(d->format_label());
+	    }
+	    if (++msg_count > MAX_MSG_COUNT) print_msg = false;
 	}
     }
 

@@ -58,6 +58,8 @@ local void write_density(dyn *d, int k, real density)
     putrq(d->get_dyn_story(), "density", density);
 }
 
+static int nwarn = 0;
+
 void  compute_density(dyn * b,	      // pointer to N-body system or node
 		      int k,	      // use kth nearest neighbor [12]
 		      bool use_mass,  // use mass density [no]
@@ -84,14 +86,16 @@ void  compute_density(dyn * b,	      // pointer to N-body system or node
     }
     
     if (k <= 1) {
-        cerr << "compute_density: k = " << k << " <= 1" << endl;
+        if (nwarn++ < 5)
+	    cerr << "compute_density: k = " << k << " <= 1" << endl;
 	return;
     }
 
     if (list == NULL)
         n_list = 0;
     else if (n_list <= 0) {
-        cerr << "compute_density: n_list = " << n_list << endl;
+        if (nwarn++ < 5)
+	    cerr << "compute_density: n_list = " << n_list << endl;
 	return;
     }
 
@@ -100,7 +104,9 @@ void  compute_density(dyn * b,	      // pointer to N-body system or node
         nsys = n_list;
 
     if (k > nsys) {			// no k-th nearest neighbor exists
-        cerr << "compute_density: k = " << k << " >= nsys = " << nsys << endl;
+        if (nwarn++ < 5)
+	    cerr << "compute_density: k = " << k << " >= nsys = "
+		 << nsys << endl;
 	return;
     }
 
