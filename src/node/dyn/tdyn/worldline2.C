@@ -228,8 +228,17 @@ vector get_center_pos()	{return center_pos;}
 static vector center_vel = 0;
 vector get_center_vel()	{return center_vel;}
 
-local void update_center(worldline *w, real t)
+// For membership determination:
+
+bool is_member(worldbundle *wb, pdyn *p)
 {
+    // A node is a member if any of its children is.
+
+    for_all_leaves(pdyn, p, pp) {
+	worldline *w = wb->find_worldline(pp);
+	if (w && w->is_member()) return true;
+    }
+    return false;
 }
 
 #define EPS 1.e-12
@@ -311,10 +320,6 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
     root->set_root(root);
     bundle[0]->set_tree_node(root);
     // bundle[0]->set_t_curr(t);	// will be set in the loop below
-
-    // Update the center position and velocity.
-
-    update_center(bundle[0], t);
 
     // Loop through remaining worldlines and take action for leaves only.
     // Logic: we are really dealing with top-level nodes, but we don't know
