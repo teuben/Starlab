@@ -1,4 +1,4 @@
-#!/bin/tcsh
+#! /bin/csh -f
 
 # Make a standard Plummer model with 100 stars and 25% binaries, then
 # integrate it for 5 crossing times.  All other parameter choices are
