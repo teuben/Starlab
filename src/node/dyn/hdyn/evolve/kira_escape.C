@@ -84,10 +84,14 @@ local bool remove_escapers(hdyn* b,
 	}
     }
 
-    // MUST do this to avoid recoil eventually carrying the
-    // entire system beyond the tidal radius!
+    // Note from Steve ates (7/01):  Used to reset the CM because of
+    // the chance we might compute escapers relative to the origin of
+    // coordinates (rather than, say, the density center).  Without
+    // resetting, recoil would eventually carry the entire system
+    // beyond the tidal radius!  Now we should *never* use the
+    // coordinate origin, so no need to correct.
 
-    b->to_com();
+    // b->to_com();
 
     // Correct all perturber lists.
 
