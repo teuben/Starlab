@@ -36,6 +36,7 @@
 //	void hdyn::calculate_partial_acc_and_jerk_on_leaf
 //	void hdyn::calculate_partial_acc_and_jerk
 //	void hdyn::create_low_level_perturber_list
+//	void hdyn::create_low_level_perturber_lists
 //	void hdyn::calculate_acc_and_jerk_on_low_level_node
 //	void hdyn::calculate_acc_and_jerk_on_top_level_node
 //	void hdyn::top_level_node_prologue_for_force_calculation
@@ -234,7 +235,15 @@ void update_binary_sister(hdyn * bi)
 //
 //-----------------------------------------------------------------------------
 
-void hdyn::synchronize_node()
+void hdyn::synchronize_node(bool exact)		// default = true, so
+						// integrate_node does an
+						// exact calculation in
+						// updating positions
+
+						// Hmmm...  exact = false
+						// may not be very useful...
+						// Just added -- maybe cut?
+						// 		Steve, 8/03
 {
     bool do_diag = false;
 
@@ -282,7 +291,12 @@ void hdyn::synchronize_node()
     // NOTE: the "false" here means that we do NOT attempt to
     //	     synchronize unperturbed binaries...
 
-    integrate_node(false, true);
+    // cerr << "synchronize_node " << format_label() << endl;
+    // PRC(system_time); PRL(time);
+
+    integrate_node(exact,
+		   false,		// don't integrate unperturbed binaries
+		   false);		// don't force binary time
 
     // cerr << "Energy after "; print_recalculated_energies(get_root());
 
@@ -2303,15 +2317,18 @@ void hdyn::check_add_perturber(hdyn* p, vec& this_pos)
 {
     vec ppos = hdyn_something_relative_to_root(p, &hdyn::get_pred_pos);
 
-//     bool print = get_top_level_node()->n_leaves() >= 4;
-//     if (print) {
-// 	cerr << "check_add_perturber:  checking " << p->format_label()
-// 	     << " at time " << system_time;
-// 	cerr << " for node " << format_label() << endl;
-// 	PRL(mass);
-// 	PRL(square(this_pos - ppos));
-// 	PRL(perturbation_radius_factor);
-//    }
+     bool print = false;
+
+     // print = get_top_level_node()->n_leaves() >= 3;
+
+     if (print) {
+ 	cerr << "check_add_perturber:  checking " << p->format_label()
+ 	     << " at time " << system_time;
+ 	cerr << " for node " << format_label() << endl;
+ 	PRL(mass);
+ 	PRL(square(this_pos - ppos));
+ 	PRL(perturbation_radius_factor);
+    }
 
     // Note 1: we do *not* take the slowdown factor into account
     //	       when computing the perturber list.
@@ -2343,7 +2360,7 @@ void hdyn::check_add_perturber(hdyn* p, vec& this_pos)
 	    }
 	}
 //	if (print) cerr << "...accepted" << endl;
-    } //else
+    } // else
 //	if (print) cerr << "...rejected" << endl;
 }
 
@@ -2354,6 +2371,16 @@ void hdyn::create_low_level_perturber_list(hdyn* pnode)
     // in pnode.  Extra possibility (Steve, 3/03): pnode may not have a complete
     // perturber list, if the "low" option is set, but the list there is still
     // usable for construction of this low-level list.
+
+//   if (system_time >= 44.15328 && system_time <= 44.1533) {
+//     cerr << "create_low_level_perturber_list for " << format_label()
+// 	 << " at time " << system_time << endl;
+//     if (pnode) {
+//       PRC(pnode); PRC(pnode->format_label());
+//       PRL(pnode->valid_perturbers);
+//     } else
+//       cerr << "pnode = NULL" << endl;
+//   }
 
     valid_perturbers = false;
     if (!pnode) return;
@@ -2374,7 +2401,7 @@ void hdyn::create_low_level_perturber_list(hdyn* pnode)
 	= define_perturbation_radius_factor(this, gamma23);
 
     vec this_pos = hdyn_something_relative_to_root(this,
-						      &hdyn::get_pred_pos);
+						   &hdyn::get_pred_pos);
     // First add sisters, aunts, etc. up to pnode...
 
     hdyn* p = this;
@@ -2405,6 +2432,41 @@ void hdyn::create_low_level_perturber_list(hdyn* pnode)
 // 	    print_perturber_list();
 // 	}
 
+    }
+}
+
+void hdyn::create_low_level_perturber_lists(bool only_if_null) // default = true
+{
+  // Possible extra option might be to allow each node to construct its list
+  // from a specified pnode (e.g. the top-level), in case we don't think the
+  // parent list is good enough...
+
+    if (ALLOW_LOW_LEVEL_PERTURBERS && is_parent()) {
+
+        // Create low-level perturber lists for all nodes below this node.
+        // Create lists for daughters first, then recursively apply this
+        // function to the daughter nodes.
+
+	if (valid_perturbers || valid_perturbers_low) {
+
+	    for_all_daughters(hdyn, this, bb)
+		if (bb->is_parent()) {
+		    if (!only_if_null
+			|| !(bb->valid_perturbers || bb->valid_perturbers_low))
+			bb->create_low_level_perturber_list(this);
+		    bb->create_low_level_perturber_lists(only_if_null);
+		}
+
+	} else {
+
+	    // End the recursion and clear the perturber lists of this
+	    // node and all descendants.
+
+	    for_all_nodes(hdyn, this, bb)
+		if (bb->is_parent())
+		    bb->remove_perturber_list();
+
+	}
     }
 }
 
@@ -2457,7 +2519,8 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
     // Perturber list may not necessarily be associated with the
     // top-level node.  Any CM node above this node may have a
-    // valid perturber list.  Use the lowest-level one.
+    // valid perturber list.  Use the lowest-level one, but make
+    // sure that sisters and aunts are properly included.
 
     // Note from Steve (3/03): Don't worry about "low-only" perturber
     // lists in the perturbation calculation.  See note in function
@@ -2471,7 +2534,38 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     // remaining perturbations.
 
     hdyn* top_level = get_top_level_node();
-    hdyn* pnode = find_perturber_node();
+
+    hdyn* pnode = find_perturber_node();    // returns first valid node found
+
+    if (ALLOW_LOW_LEVEL_PERTURBERS && pnode && pnode != get_parent()) {
+
+	// Must be a gap somewhere in the pnode chain.  New formulation
+	// expects that the chain is intact, so fix that now.  Start by
+        // finding the highest-lying gap in the chain (maybe at the top).
+
+	hdyn *tmp = pnode, *start = pnode;
+
+	while (tmp != root) {
+	    if (!tmp->valid_perturbers) start = tmp;	// topmost gap
+	    tmp = tmp->get_parent();
+	}
+
+	if (start != top_level) start = start->get_parent();
+
+	// Note that start can be any node, including the top-level node,
+	// and start may or may not itself have valid perturbers (if the
+	// top-level node is invalid).
+
+	start->create_low_level_perturber_lists(false);	// all
+	pnode = find_perturber_node();			// may now be NULL
+    }
+
+//     if (system_time >= 44.15328 && system_time <= 44.1533) {
+//       PRL(pnode);
+//       for (hdyn *bb = this; bb != root; bb = bb->get_parent()) {
+// 	PRC(bb->format_label()); PRL(bb->valid_perturbers);
+//       }
+//     }
 
     hdyn *top = pnode;
     int np = -1;
@@ -2483,7 +2577,7 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     // list, specifically for the computation of low-level perturbations.
     // If the low-level list hasn't yet been constructed using that list,
     // use the top-level list here.  Perturber_acc_and_jerk() will do the
-    // right thing if sent a pnode with only low-level data available.
+    // right thing if sent a pnode with only low-only data available.
 
     // *** Flag this when it occurs? ***
 
@@ -2707,6 +2801,11 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
     valid_perturbers = false;
 
+//     if (system_time >= 44.15328 && system_time <= 44.1533) {
+//       PRC(format_label()); PRL(pnode);
+//       if (pnode) PRL(pnode->format_label());
+//     }
+
     if (ALLOW_LOW_LEVEL_PERTURBERS && pnode) {
 
 	// Create/revise the low-level perturber list(s).
@@ -2717,14 +2816,13 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	// so keep it for now.  (Steve, 8/98)
 
 	// Note that create_low_level_perturber_list() knows what to do if
-	// only low-only perturber data are found in pnode.
+	// only "low-only" perturber data are found in pnode.
 
-	if (is_parent())
-	    create_low_level_perturber_list(pnode);
+	// Also continue down the hierarchy, creating lists for nodes whose
+	// current lists are invalid.
 
-	if (get_binary_sister()->is_parent())
-	    get_binary_sister()->
-		create_low_level_perturber_list(pnode);
+        get_parent()->create_low_level_perturber_lists(false);
+
     }
 }
 
@@ -2916,7 +3014,9 @@ void hdyn::top_level_node_prologue_for_force_calculation(bool exact)
 // 	    cerr << "about to make real hdynptr array" << endl << flush;
 // 	}
 
-	new_perturber_list();
+        // new_perturber_list();	// don't do this here -- only when
+					// we are sure we will recompute the
+					// perturbers
 
 // 	if (system_time > 169.2975) {
 // 	    PRL(perturber_list);
@@ -2963,6 +3063,8 @@ int hdyn::top_level_node_real_force_calculation()
 
 	if (get_oldest_daughter()->slow)
 	    clear_perturbers_slow_perturbed(this);
+
+	new_perturber_list();		// effectively choose pert_freq = 1
 
         n_perturbers = 0;
         valid_perturbers = true;
@@ -3290,6 +3392,12 @@ void hdyn::top_level_node_epilogue_force_calculation()
     //     PRC(valid_perturbers); PRL(n_perturbers);
     // }
 
+    // Finally, if the perturber list is valid, propagate the information
+    // to lower levels.
+
+    if (ALLOW_LOW_LEVEL_PERTURBERS
+	&& (valid_perturbers || valid_perturbers_low))
+	create_low_level_perturber_lists(false);	// false ==> all
 }
 
 
@@ -3318,6 +3426,11 @@ void hdyn::calculate_acc_and_jerk(bool exact)
 //	    err_exit("calculate_acc_and_jerk_on_low_level_node: no sister!");
     }
 #endif
+
+//   if (system_time >= 44.15328 && system_time <= 44.1533) {
+//     cerr << "calculate_acc_and_jerk for " << format_label() << ",  ";
+//     PRL(exact);    
+//   }
 
     d_coll_sq = VERY_LARGE_NUMBER;
     coll = NULL;
@@ -3911,9 +4024,13 @@ void correct_acc_and_jerk(hdyn** next_nodes,	// NEW
 //                    of system_time is in correct_and_update(), in
 //                    determining the actual step.
 //
+//		      Currently, this function is called only by
+//		      synchronize_node().
+//
 //-----------------------------------------------------------------------------
 
-void hdyn::integrate_node(bool integrate_unperturbed,	// default = true
+void hdyn::integrate_node(bool exact,			// default = true
+			  bool integrate_unperturbed,	// default = true
 			  bool force_unperturbed_time)	// default = false
 
 // From Steve: force_unperturbed_time can cause an unperturbed binary
@@ -3933,8 +4050,8 @@ void hdyn::integrate_node(bool integrate_unperturbed,	// default = true
     if (kep == NULL) {
 
 	clear_interaction();
-	calculate_acc_and_jerk(true);
-	set_valid_perturbers(false);
+	calculate_acc_and_jerk(exact);
+	if (exact) set_valid_perturbers(false);
 
 	if (tidal_type && is_top_level_node()) {
 	    real dpot;
