@@ -200,8 +200,9 @@ local int rescale_physical(real sma, real v_rel_th, real v_unit,
 	    total_err_sq[ii][jj] *= scale_factor*scale_factor;
 	    if (ii + jj > 0) {
 		// (Don't include the top-left element in the array...)
-		total_max = max(total_max, total_sigma[ii][jj]);
-		total_max_err = max(total_max_err, sqrt(total_err_sq[ii][jj]));
+		total_max = Starlab::max(total_max, total_sigma[ii][jj]);
+		total_max_err = Starlab::max(total_max_err,
+					     sqrt(total_err_sq[ii][jj]));
 	    }
 	}
 

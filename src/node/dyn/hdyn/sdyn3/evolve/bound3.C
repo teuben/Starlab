@@ -173,7 +173,8 @@ void bound3(sdyn3 * b,
     for_all_daughters(sdyn3, b, bb) {
         inter.index[inter.n_stars] = bb->get_index();
         inter.r_min[inter.n_stars] = sqrt(bb->get_min_nn_dr2());
-	inter.r_min_min = min(inter.r_min_min, inter.r_min[inter.n_stars]);
+	inter.r_min_min = Starlab::min(inter.r_min_min,
+				       inter.r_min[inter.n_stars]);
         inter.n_stars++;
     }
 
