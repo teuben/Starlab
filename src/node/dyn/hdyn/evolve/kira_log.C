@@ -592,6 +592,12 @@ void refine_cluster_mass(hdyn *b)
 
     // which = 1 for density center, 2 for mcom.
 
+    // Note from Steve (7/01):  The "center" should really be the
+    // center of mass of particles within the Jacobi surface,
+    // determined self-consistently.
+    //
+    // To do...  (See also check_and_remove_escapers().)
+
     real M_inside = total_mass(b), M = -1;
     real r_J, r_x2, r_y2, r_z2, r_max_inside;
     int  N_inside, iter = 0;

@@ -158,6 +158,12 @@ void check_and_remove_escapers(hdyn* b,
     vector center_pos, center_vel;
     get_std_center(b, center_pos, center_vel);
 
+    // Note from Steve (7/01):  If we have a tidal field, we probably
+    // determine the center self-consistently as the center of mass of
+    // particles within the Jacobi surface.
+    //
+    // To do...  (See also refine_cluster_mass().)
+
     if (remove_escapers(b, stripping_radius, center_pos, center_vel)) {
 
 	PRI(2); PRC(b->get_scaled_stripping_radius());

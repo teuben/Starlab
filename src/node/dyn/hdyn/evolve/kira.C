@@ -720,7 +720,7 @@ local int integrate_list(hdyn * b,
 		    bi->calculate_acc_and_jerk(true);
 		    bi->set_valid_perturbers(false);
 
-		    if (bi->is_top_level_node() && b->get_tidal_field() > 0)
+		    if (bi->is_top_level_node() && b->get_external_field() > 0)
 			add_external(bi);
 
 		    if (!bi->correct_and_update()) {

@@ -33,7 +33,7 @@ void calculate_energies_with_external(hdyn* b,
 
     calculate_internal_energies(b, epot, ekin, etot, cm, use_grape);
 
-    if (b->get_tidal_field() > 0) {
+    if (b->get_external_field() > 0) {
 
 	// Add the external contribution to the total potential.
 
@@ -41,7 +41,7 @@ void calculate_energies_with_external(hdyn* b,
 	epot += dpot;
 	etot += dpot;
 
-	// Add tidal terms to hdyn::pot of top-level nodes.
+	// Add external terms to hdyn::pot of top-level nodes.
 
 	for_all_daughters(hdyn, b, bb)
 	    add_external(bb, true);	// "true" ==> pot only.

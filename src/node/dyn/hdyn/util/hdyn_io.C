@@ -21,6 +21,8 @@ kira_counters *hdyn::kc		= NULL;
 kira_options *hdyn::options	= NULL;    
 kira_diag *hdyn::diag		= NULL;    
 
+int  hdyn::external_field	= 0;
+
 int  hdyn::tidal_type	= 0;
 real hdyn::omega	= 0;
 real hdyn::omega_sq	= 0;

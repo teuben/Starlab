@@ -237,9 +237,9 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
     for (int k = 0; k < kmax; k++) {
 #endif
 
-    if (b->get_tidal_field() > 0) {
+    if (b->get_external_field() > 0) {
 
-        // Add coriolis, centrifugal, and tidal forces.
+        // Add external forces.
 
         for (int i = 0; i < n_next; i++)
 	    if (next_nodes[i]->is_top_level_node())
