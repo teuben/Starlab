@@ -592,23 +592,24 @@ ostream & hdyn::print_dyn_story(ostream & s,
     return s;
 }
 
-typedef struct
-{
-    hdyn* b;
+typedef struct {
+    hdyn *b;
     real  d;
 } bd_pair, *bd_pair_ptr;
 
-local int compare(const void * pi, const void * pj)
+local int compare(const void *pi, const void *pj)
 {
     if (((bd_pair_ptr) pi)->d > ((bd_pair_ptr) pj)->d)
         return 1;
-    else if (((bd_pair_ptr)pi)->d < ((bd_pair_ptr)pj)->d)
+    else if (((bd_pair_ptr) pi)->d < ((bd_pair_ptr) pj)->d)
         return -1;
     else
         return 0;
 }
 
-void hdyn::print_perturber_list(ostream & s, char* pre)
+//#define SORT_PERTURBERS
+
+void hdyn::print_perturber_list(ostream & s, char *pre)
 {
     // NOTE: 'this' is a binary center of mass.
 
@@ -627,13 +628,49 @@ void hdyn::print_perturber_list(ostream & s, char* pre)
 	return;
     }
 
-    // Sort the perturbers by distance (between top-level nodes).
+    s << "  (" << np << " perturbers):";
+    if (np > MAX_PERTURBERS) np = MAX_PERTURBERS;	// shouldn't happen
 
-    hdyn* top = get_top_level_node();
+    s << endl << pre << "    ";
 
-    // s << "creating list" << endl << flush;
+#ifndef SORT_PERTURBERS
 
-    bd_pair_ptr bd_list = new bd_pair[np];
+    // Just write out the list without sorting it.
+
+    for (int i = 0; i < np; i++) {
+        hdyn *p = perturber_list[i];
+	if (p && p->is_valid())
+	    p->print_label(s);
+	else
+	    s << "(null)";
+	if ((i+1)%10 == 0) {
+	    if (i < np-1)
+		s << endl << pre << "    ";
+	} else
+	    s << " ";
+    }
+
+#else
+
+    // Sort the perturbers by distance (between top-level nodes) before
+    // writing out the list.
+
+    // Note from Steve (8/03): for unknown reasons, the following code
+    // seems to be unstable under g++ 3.2.2 with optimization -O2 under
+    // RedHat 9.  The symptom is that subtle changes are apparently made
+    // in some members of the list...  The result is that invocation of
+    // this function affects the outcome of the simulation.  The dynamical
+    // declaration (with dimension MAX_PERTURBERS or np) causes the
+    // problem by itself.  The static declaration seems to work (note the
+    // commented-out delete statement at the end), but the code still
+    // seems to break when the qsort below is restored.  Without qsort,
+    // we may as well use the simpler code above (which is OK...).
+
+    // bd_pair_ptr bd_list = new bd_pair[MAX_PERTURBERS];
+    bd_pair bd_list[MAX_PERTURBERS];
+
+    hdyn *top = get_top_level_node();
+
     for (int i = 0; i < np; i++) {
 	bd_list[i].b = perturber_list[i];
 	if (perturber_list[i] && perturber_list[i]->is_valid()) {
@@ -644,15 +681,12 @@ void hdyn::print_perturber_list(ostream & s, char* pre)
 	    bd_list[i].d = VERY_LARGE_NUMBER;
     }
 
-    // s << "sorting list" << endl << flush;
+    // qsort((void *)bd_list, (size_t)np, sizeof(bd_pair), compare);
 
-    qsort((void *)bd_list, (size_t)np, sizeof(bd_pair), compare);
-
-    s << "  (" << np << " perturbers):";
-    s << endl << pre << "    ";
     for (int i = 0; i < np; i++) {
-	if (bd_list[i].b)
-	    bd_list[i].b->print_label(s);
+        hdyn *p = bd_list[i].b;
+	if (p && p->is_valid())
+	    p->print_label(s);
 	else
 	    s << "(null)";
 	if ((i+1)%10 == 0) {
@@ -661,9 +695,12 @@ void hdyn::print_perturber_list(ostream & s, char* pre)
 	} else
 	    s << " ";
     }
-    s << endl;
 
-    delete [] bd_list;
+    // delete [] bd_list;
+
+#endif
+
+    s << endl;
 
     // s << "leaving print_perturber_list" << endl << flush;
 }
