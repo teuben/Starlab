@@ -2939,6 +2939,22 @@ local void rotate_kepler(kepler *k)
     k->set_orientation(l, t, n);
 }
 
+// Flag to apply  tidal corrections in integrate_unperturbed_motion().
+
+#define CORRECT_TIDAL		1
+
+// Funny syntax here is to presere the if () structures below.  Removing
+// them completely may subtly alter the optimization structure of the
+// program, leading to divergences.
+
+#if 0						    // correct bound only
+#define ENERGY_LIMIT_1		0
+#define ENERGY_LIMIT_2		(-0.1*kT)
+#else						    // correct all (preferred)
+#define ENERGY_LIMIT_1		VERY_LARGE_NUMBER
+#define ENERGY_LIMIT_2		VERY_LARGE_NUMBER
+#endif
+
 bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 					bool force_time)   // default = false
 {
@@ -3144,7 +3160,8 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 	// PRL(verbose);
 
-#if 1
+#ifdef CORRECT_TIDAL
+
 	// The following lengthy workarounds are fixes for unperturbed
 	// systems that find themselves in relatively wide triple orbits.
 	//						    (Steve, 8/03)
@@ -3169,10 +3186,13 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	// significant net error if the outer orbit survives for many
 	// periods.
 	//
+	// May not necessarily be so small, even for a single pass.  Can
+	// have a significant tidal error in a hyperbolic encounter.
+	//
 	// Rather than attempting to include the quadrupole (and higher?)
 	// terms in the relative motion of the binary CM and its neighbors,
 	// for now at least we choose to correct the tidal error each time
-	// the unperturbed segment ends.
+	// an unperturbed segment ends.
 	//
 	// Fix 1: randomize the orientation of any unperturbed binary
 	//	  satisfying the criteria -- effective at eliminating the
@@ -3222,7 +3242,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 	    real E = mu123*(0.5*Vsq - m123/R);
 
-	    if (E < 0) {
+	    if (E < ENERGY_LIMIT_1) {
 
 		// We need kT for comparison.  This should be a relatively
 		// rare calculation, so just do it the hard way.  (Could
@@ -3236,7 +3256,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		}
 		real kT = 2*kin/(3*ntop);
 
-		if (E < -0.1*kT) {		// same 0.1 as in startup_...
+		if (E < ENERGY_LIMIT_2) {
 
 		    bool randomize = false;	// try Fix 2 first
 
@@ -3261,19 +3281,22 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			real de_tidal = -m3 * (m1/r13 + m2/r23 - m12/R);
 
 			if (verbose) {
-			    int p = cerr.precision(HIGH_PRECISION);
+			    int p = cerr.precision(HIGH_PRECISION+5);
 			    cerr << endl
 				 << "integrate_unperturbed_motion: "
 				 << "absorbing tidal error for "
 				 << parent->format_label()
 				 << endl
 				 << "    at time " << system_time
+//				 << endl << "    ";
 				 << ",  ";
 			    cerr.precision(p);
 			    PRC(E/kT); PRL(de_tidal);
 #if 0
 			    // Aside: Quadrupole approximation -m3*dphi seems to
 			    // be a good approximation to the exact de_tidal:
+
+			    int pp = cerr.precision(HIGH_PRECISION);
 
 			    real r12 = abs(get_pos()-sis->get_pos());
 			    real dph = m1/r13 + m2/r23 - m12/R;
@@ -3297,6 +3320,8 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			    PRI(4); PRC(mu12); PRL(costh);
 			    PRI(4); PRC(r12/R); PRL(r12*r12/pow(R,3));
 			    PRI(4); PRC(dphi), PRL(-m3*dphi/de_tidal);
+
+			    cerr.precision(pp);
 #endif
 			}
 
@@ -3353,7 +3378,10 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			    real facn = Vfac*m12/m123;
 
 			    if (verbose) {
-				PRI(4); PRC(Vfac); PRC(facp); PRL(facn);
+//				int p = cerr.precision(HIGH_PRECISION);
+				PRI(4); PRC(Vfac);
+				PRI(4); PRC(facp); PRL(facn);
+//				cerr.precision(p);
 			    }
 
 			    vec dpvel = Vcm + facp*V - pvel;
@@ -3389,6 +3417,10 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		    }
 		}
 	    }
+
+//	    pp3(par->get_top_level_node());
+//	    pp3(pnn->get_top_level_node());
+
 	}
 #endif
 

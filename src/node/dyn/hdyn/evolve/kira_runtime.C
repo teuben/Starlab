@@ -845,6 +845,12 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 		b->get_kira_diag()->multiple_report_level
 		    = get_value(s, 0);
 
+	    else if ((s = strstr(line, "tree"))
+		       || (s = strstr(line, "diag_tree")))
+
+		b->get_kira_diag()->tree
+		    = get_value(s, 1);
+
 	    else if ((s = strstr(line, "tree_level"))) {
 
 		b->get_kira_diag()->tree_level
@@ -852,12 +858,7 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 		if (b->get_kira_diag()->tree_level < 0)
 		    b->get_kira_diag()->tree = false;
 
-	    } else if (s = strstr(line, "diag_tree"))
-
-		b->get_kira_diag()->tree
-		    = get_value(s, 1);
-
-	    else if ((s = strstr(line, "ev_function_id")))
+	    } else if ((s = strstr(line, "ev_function_id")))
 
 		b->get_kira_diag()->ev_function_id
 		    = get_value(s, 1);

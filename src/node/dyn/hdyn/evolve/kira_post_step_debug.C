@@ -3,6 +3,21 @@
 
 
 #if 0
+    if (t > 81.621720 && t < 81.621785 && fmod(steps, 1) == 0) {
+	for (int ii = 0; ii < n_next; ii++) {
+	    if (next_nodes[ii] && next_nodes[ii]->is_valid())
+		cerr << next_nodes[ii]->format_label() << " ";
+	}
+	cerr << endl; 
+	int p = cerr.precision(HIGH_PRECISION);
+	PRC(t); 
+	cerr.precision(p);
+	print_recalculated_energies(b);
+    }
+#endif
+
+
+#if 0
     if (   t > 81.500675 && t < 81.502364
 	|| t > 81.508965 && t < 81.510330
 	|| t > 81.535075 && t < 81.536905
