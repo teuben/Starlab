@@ -1647,6 +1647,33 @@ local void print_energy_from_pot(hdyn* b)
     cerr.precision(p);
 }
 
+local void kira_alt_output(hdyn *b)
+{
+    ofstream alt("alt_output", ios::app|ios::out);
+
+    vector cmpos, cmvel;
+    get_std_center(b, cmpos, cmvel);	       // use CM for now (note: doesn't
+    					       // use pred quantities -- should
+					       // create a "pred" version...)
+
+    for_all_daughters(hdyn, b, bb) {	       // top-level nodes only
+
+	real sys_t = bb->get_system_time();
+	real m = bb->get_mass();
+	vector dr = bb->get_pred_pos() - cmpos;
+	vector dv = bb->get_pred_vel() - cmvel;
+	real r2 = square(dr);
+	real v2 = square(dv);
+	real vr2 = square(dr*dv)/r2;
+	
+	alt << sys_t << " "		       // wasteful -- fix soon!
+	    << m << " " << r2 << " " << v2 << " " << vr2
+	    << endl;
+    }
+
+    alt.close();
+}
+
 // evolve_system:  Main integration loop.
 
 static hdyn **next_nodes = NULL;
@@ -1846,6 +1873,28 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     real t_fulldump = tt;
 
+
+    //----------------------------------------------------------------------
+    // Frequencies of "other" (episodic) output.  Idea is that we will have
+    // data blocks of width dt_alt1, sampled at intervals dt_alt1, and
+    // separated by intervals dt_alt2.
+    //
+    // Ultimately these will become command-line options (Steve, 6/02).
+
+    real dt_alt1, dt_alt2, dt_alt3;
+    real t_alt1, t_alt2;
+
+    dt_alt1 = 0;			// default: suppress
+
+//    dt_alt1 = 1./32;
+    dt_alt2 = 1;
+    dt_alt3 = 3;
+
+    t_alt1 = 0;
+    t_alt2 = 0;
+
+    //----------------------------------------------------------------------
+
     if (verbose) {
 	cerr << endl;
 	PRC(t), PRL(t_end);
@@ -1973,6 +2022,25 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    cerr << endl; flush(cerr);
 	    update_step(ttmp, t_log, dt_log);
 	}
+
+	//=================================================================
+
+	if (dt_alt1 > 0 && ttmp > t_alt1) {	// episodic output (time
+						// intervals hardcoded)
+	    kira_alt_output(b);
+
+	    // Update t_alt1 and check for gaps.
+
+	    while (t_alt1 < ttmp) t_alt1 += dt_alt1;
+	    if (t_alt1 > t_alt2 + dt_alt2) {
+		t_alt1 += dt_alt3 - dt_alt2 - dt_alt1;
+		t_alt2 += dt_alt3;
+	    }
+
+	    // PRC(b->get_system_time()); PRC(t_alt1); PRL(t_alt2);
+	}
+
+	//=================================================================
 
 	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
