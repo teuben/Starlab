@@ -39,7 +39,7 @@
 ////              -B    turn on binary evolution [off][*]
 ////              -c    include comment [none]
 ////              -C    specify GRAPE release interval, in seconds [15]
-////              -d    specify log output interval [0.25][*]
+////              -d    specify log output interval [1][*]
 ////              -D    specify snapshot interval [end of run]
 ////                    special values:  xN: formatted full dump, frequency N
 ////                                     XN: unformatted full dump, frequency N
