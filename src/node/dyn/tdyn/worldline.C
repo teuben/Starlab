@@ -228,6 +228,9 @@ worldbundle::worldbundle(tdyn *b)
     // Create a new worldbundle from the nodes below b.
 
     nw_max = 0;
+    root = NULL;
+    t_int = -VERY_LARGE_NUMBER;
+
     for_all_nodes(tdyn, b, bb) nw_max++;
 
     nw_max *= 2;				// conservative
