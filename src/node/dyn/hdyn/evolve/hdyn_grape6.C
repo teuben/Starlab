@@ -2816,12 +2816,16 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 #endif
 
     // See which nodes need neighbors from the GRAPE and optionally sort
-    // the list to place all such nodes at the start.
+    // the list to place all such nodes at the *end.*
     //					(Experimental - Steve, 5/02)
+    //
+    // Not to be confused with the experimental code in the scheduler
+    // to try to make the entire list traversal mode cache-friendly.
+    //						       (Steve, 3/03)
 
-    int last_nbr_node = -1;
+    int last_nbr_node = n_top;
 
-    for (i = 0; i < n_top; i++) {
+    for (i = n_top-1; i >= 0; i--) {
 
 	hdyn *bb = previous_nodes[i] = current_nodes[i];
 
@@ -2841,8 +2845,8 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	}
 
 #ifdef SORT_NODE_LIST
-	if (need_nbrs) {
-	    hdyn *tmp = current_nodes[++last_nbr_node];
+	if (need_nbrs && --last_nbr_node > i) {
+	    hdyn *tmp = current_nodes[last_nbr_node];
 	    current_nodes[last_nbr_node] = current_nodes[i];
 	    current_nodes[i] = tmp;
 	}
