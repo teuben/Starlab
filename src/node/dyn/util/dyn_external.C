@@ -306,7 +306,11 @@ void set_friction_acc(dyn *b, real r)
 	real V = abs(Vcm);
 	real X = V/sigma2;			   // scaled velocity; BT p. 425
 
+#ifndef NEW_4OCT2001
+	real coeff = beta;			   // discard after current runs
+#else
 	real coeff = 4*M_PI*beta*logLambda(b, r);
+#endif
 
 	if (X > 0.1)
 
