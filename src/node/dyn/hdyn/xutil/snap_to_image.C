@@ -376,7 +376,7 @@ main(int argc, char** argv)
     int ncolor = 0;
     real index_all = -1;
 
-    bool quite = false;
+    bool quiet = false;
 
     check_help();
 
