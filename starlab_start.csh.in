@@ -28,7 +28,9 @@
 
 # See if the version of STARLAB_PATH set at configuration time differs
 # from the value (if any) now, and try to correct the environment
-# accordingly, to keep this script portable.
+# accordingly, to keep this script portable.  Note that these paths
+# are hard-coded into the automatically generated Makefiles, so we
+# will still have to rerun configure if we wish to rebuild the package.
 
 set conf_ssp = "@STARLAB_SOURCE_PATH@"
 set conf_sip = "@STARLAB_INSTALL_PATH@"

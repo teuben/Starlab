@@ -24,27 +24,37 @@ echo Writing detailed output to $log
 # Install autotools (place in install_dir):
 
 echo Installing local versions of autotools in install_dir
-echo Installing local versions of autotools in install_dir	>&! $log
-(chdir src/packages; ./install-autotools $install_dir)		>&! $log
+echo Installing local versions of autotools in install_dir		>&! $log
+(chdir src/packages; ./install-autotools $install_dir)			>>& $log
 
 # Make sure that install_dir precedes system directories in search path
 
 set path = ($install_dir/bin $path)
 rehash
 
-# First time through we need to do autoreconf
+# First time through we need to do autoreconf  Also should do it if
+# configure is older than autoconf -- delete configure in this case.
+
+if (-e configure) then
+    set tmp = `find . -name configure.ac -cnewer configure`
+    if ($#tmp > 0) then
+	rm configure
+	echo Deleted configure because it is older than configure.ac
+	echo Deleted configure because it is older than configure.ac	>>& $log
+   endif
+endif
 
 if (! -e configure) then
     echo Running autoreconf to build configure
-    echo Running autoreconf to build configure		>&! $log
-    autoreconf						>>& $log
+    echo Running autoreconf to build configure				>>& $log
+    autoreconf								>>& $log
 endif
 
 set OK = 0
 
 if (-e configure) then
 
-    # Work around temporary Qt glitch.
+    # Work around temporary Qt glitch.  May no longer be necessary...
 
     set Qt = ""
     set qt = `sbin/qt_major_version`
@@ -57,10 +67,10 @@ if (-e configure) then
 
     echo Running configure \(`date`\)
     echo ./configure $Qt --prefix=$install_dir $argv[2*]
-    echo 						>>& $log
-    echo Running configure \(`date`\)			>>& $log
-    echo ./configure $Qt --prefix=$install_dir		>>& $log
-    ./configure $Qt --prefix=$install_dir $argv[2*]	>>& $log
+    echo 								>>& $log
+    echo Running configure \(`date`\)					>>& $log
+    echo ./configure $Qt --prefix=$install_dir				>>& $log
+    ./configure $Qt --prefix=$install_dir $argv[2*]			>>& $log
 
     if ($status != 0) then
 	echo Configure error...
@@ -70,14 +80,14 @@ if (-e configure) then
     # Build the package.
 
     echo Running make \(`date`\; this may take a while...\)
-    echo 						>>& $log
-    echo Running make \(`date`\)			>>& $log
-    make						>>& $log
+    echo 								>>& $log
+    echo Running make \(`date`\)					>>& $log
+    make								>>& $log
 
     echo Running make install \(`date`\)
-    echo 						>>& $log
-    echo Running make install \(`date`\)		>>& $log
-    make install					>>& $log
+    echo 								>>& $log
+    echo Running make install \(`date`\)				>>& $log
+    make install							>>& $log
 
     # Then test whatever...
 
@@ -93,9 +103,9 @@ if (-e configure) then
     endif
 
     echo Running Testsuite \(`date`\; this may take a few minutes\)
-    echo 						>>& $log
-    echo Running Testsuite \(`date`\)			>>& $log
-    ./sbin/testsuite					>>& $log
+    echo 								>>& $log
+    echo Running Testsuite \(`date`\)					>>& $log
+    ./sbin/testsuite							>>& $log
 
     set n1 = `grep ^Working $log | grep OK       | wc -l`
     set n2 = `grep ^Working $log | grep Problems | wc -l`
