@@ -1,12 +1,14 @@
 
-README:
+README
 
-- We assume that the variable STARLAB_PATH points to the top-level
-  installation directory (i.e. the one containing this file).  GRAPE
-  users should read the GRAPE section below before starting the
-  configure/build process.
+INSTALLATION BASICS:
 
-- Installation proceeds in GNU standard way:
+- We assume here that the variable STARLAB_PATH points to the top-
+  level installation directory (i.e. the one containing this file).
+  GRAPE users should read the GRAPE section below before starting
+  the configure/build process.
+
+- Installation proceeds in GNU standard fashion:
 
 	./configure --prefix=install-dir --other-options
 	make
@@ -17,12 +19,27 @@ README:
 
 	$STARLAB_PATH/usr
 
-- However, Starlab now makes heavy use of GNU "autotools," namely
-  aucoconf, automake, and libtool.  Unless you are sure that your
+  and in normal circumstances no other options need be specified.
+
+- If you downloaded Starlab in the form of a distribution tarball
+  (named starlab-version.tar.gz), the configure script should already
+  exist in $STARLAB_PATH, and you can proceed directly to the above
+  standard installation commands.
+
+- However, if you obtained Starlab from the CVS archive, then the
+  source tree will not include the configure script.  You will have
+  to create configure (and other installation files, such as
+  "Makefile.in") using the command
+
+	autoreconf
+
+  Starlab now makes extensive use of the GNU "autotools," aucoconf,
+  autoreconf, automake, and libtool.  Unless you are sure that your
   system has versions of these tools newer than those used to build
   the package, you probably first will want to install the autotools
-  found in $STARLAB_PATH/src/packages.  You can do this by hand, or
-  run the script
+  found in $STARLAB_PATH/src/packages.  You can do this by hand
+  (unpack the tarballs and follow the installation instructions), or
+  by running the script
 
 	install-autotools
 
@@ -31,13 +48,20 @@ README:
   autotools *precedes* any system directory before proceeding with
   the Starlab installation.
 
-- If you prefer to install everything automatically, run the script
+  Once you have run autoreconf, you can again proceed to the standard
+  installation commands given above.  Note that if you are installing
+  from a tarball, you should only need autotools if you modify any of
+  the "Makefile.am" templates in the source directories.
 
-	developer-install-starlab
+- If you prefer to install everything automatically, in all cases you
+  can simply run the script
 
-  in this directory.  This script basically performs the actions just
-  described, but it also provides timing information and attempts to
-  clean up the "make" output.
+	install-starlab
+
+  in this directory.  This script performs the various actions just
+  described (including autotool installation in all cases), and in
+  addition it provides timing information and attempts to clean up the
+  "make" output.
 
 - Once the package is successfully installed, to use the Starlab tools,
   make sure that the directory
