@@ -158,6 +158,11 @@ ostream & tdyn::print_dyn_story(ostream & s,
     put_real_vector(s, "  r  =  ", pos);
     put_real_vector(s, "  v  =  ", vel);
 
+//    put_real_vector(s, "  r  =  ", something_relative_to_root(this, 
+//							      &dyn::get_pos));
+//  put_real_vector(s, "  v  =  ", something_relative_to_root(this, 
+//							      &dyn::get_vel));
+
     // Not needed:
 
     // put_real_vector(s, "  a  =  ", acc);

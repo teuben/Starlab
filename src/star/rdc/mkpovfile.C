@@ -168,7 +168,7 @@ local bool print_camera_position_recursive(dyn* b, vector cam_pos,
 
 local void print_filename_counter(int counter, ostream& s) {
 
-    if (counter>=10000) {
+    if (counter>=10000) { 
       cout << "\nToo namy filenames in print_povray_header()" << endl;
       exit(1);
     }
@@ -529,6 +529,42 @@ local void print_star(dyn *bi, vector pos,
 	    << endl;
 }
 
+local void print_node(dyn *bi, vector pos, real mass_scale,
+		      real mmax)  {
+
+  real time = bi->get_system_time();
+
+  real apparent_size = mass_scale * sqrt(bi->get_mass());
+  real mmin = 0;
+  real m = bi->get_mass();
+  real R = sqrt((mmax-m)/(mmax-mmin));
+  real G = 0.5;
+  real B = sqrt(m/(mmax-mmin));
+  if(m<0.001) {
+    R = 0.5;
+    G = 0.5;
+    B = 0.5;
+  }
+  else {
+    R = 1;
+    G = 0;
+    B = 0;
+  }
+  cout << "object { simple_star \n"
+       << "         finish { ambient <"
+       << R << ", " << G << ", " << B << ">}\n" 
+       << "         scale " << apparent_size << " translate < "
+       << pos[0] << ", " << pos[1] << ", " << pos[2] << " > }"
+       << endl;
+
+//  cout << "object { single_star \n"
+//       << "         finish { ambient <"
+//       << R << ", " << G << ", " << B << ">}\n" 
+//       << "         scale " << apparent_size << " translate < "
+//       << pos[0] << ", " << pos[1] << ", " << pos[2] << " > }"
+//       << endl;
+}
+
 local int print_povray_binary_recursive(dyn *b,
 					vector dc_pos, 
 					real mass_limit, real number_limit,
@@ -561,9 +597,13 @@ local void print_povtime(real time,
 			 real depth=0.25) {
 
     int p = cout.precision(LOW_PRECISION);
-    cout << "text { ttf \"timrom.ttf\" "
-	 << "\"Time = " << time << " Myr \" "
-	 << depth << ", 0\n"
+    cout << "text { ttf \"timrom.ttf\" ";
+    if(time>0)
+      cout << "\"Time = " << time << " Myr \" ";
+    else
+      cout << "\"Time = " << -time << " N-body \" ";
+
+    cout << depth << ", 0\n"
 	 << "       pigment { Red }\n"
          << "       translate < " << pos[0] << ", "
 	                  << pos[1] << ", "
@@ -637,11 +677,38 @@ if (!povray && ns+nb==0)
     cout << "            (none)\n";
 }
 
+local void print_povray_bodies(dyn *b, real mass_limit,
+			      real number_limit, real mmax, 
+			      real scale_M) {
+
+
+/*
+  real mmin = VERY_LARGE_NUMBER, mmax = -1;
+  for_all_leaves(dyn, b, bi) {
+    real m = bi->get_mass();
+    mmin = min(mmin, m);
+    mmax = max(mmax, m);
+  } 
+*/
+    
+  int ns=0;
+  for_all_leaves(dyn, b, bi) 
+    if(bi->get_mass() >= mass_limit) {
+	
+      print_node(bi, bi->get_pos(), scale_M, mmax);
+      ns++;
+    }
+  
+  if (ns==0) 
+    cout << "            (none)\n";
+}
+
 void print_povray_header(dyn* b, vector cam_pos,
                          int camera_on_star_id, 
 			 real aperture, real gamma, 
 			 int blur_samples,
                          int counter, real scale_L,
+			 int horizontal, int vertical,
 			 bool print_hrd) {
 
   cout << "\n\n// End of POVRay scenary." << endl;
@@ -654,8 +721,10 @@ void print_povray_header(dyn* b, vector cam_pos,
   cout << "#include \"colors.inc\"" << endl
        << "#include \"shapes.inc\"" << endl
        << "#include \"textures.inc\"" << endl
-       << "#include \"glass.inc\"" << endl
-       << "#include \"astro.inc\"" << endl << endl;
+       << "#include \"glass.inc\"" << endl;
+  cout << "#include \"astro.inc\"" << endl;
+
+  cerr<< endl;
 
   cout << "#version 3.0" << endl << endl;
 
@@ -691,19 +760,31 @@ void print_povray_header(dyn* b, vector cam_pos,
 	   << "   aperture " << aperture << endl;
     cout << "}" << endl << endl;
 
-    ////
+    //
     cout << "light_source { < " << cam_pos[0] << ", "
                                 << cam_pos[1] << ", "
                                 << cam_pos[2] << " > White }" << endl;
 
-    cout << "#object { Initial_text }\n" << endl;
-    ////
+//    cout << "#object { Initial_text }\n" << endl;
+    //
     
     real time = b->get_starbase()->conv_t_dyn_to_star(b->get_system_time());
     vector time_pos;
-    time_pos[0] = -10;
-    time_pos[1] = 6;
-    time_pos[2] = 0;
+    if(vertical<=400) {         //320x240
+      time_pos[0] = -10;
+      time_pos[1] = 6;
+    }
+    else {        //640x480
+      time_pos[0] = -16;
+      time_pos[1] = -11;
+    }
+//    time_pos[0] = -4 - vertical * 0.0188;
+//    time_pos[1] = -4 - horizontal * 0.0188;
+//    time_pos[2] = 2.5*(5+cam_pos[2]);
+    time_pos[0] = -16;
+    time_pos[1] = -12;
+    time_pos[2] = 1;
+//
     real scale = 0.2;
     real depth = 0.25;
     print_povtime(time, time_pos, scale, depth);    
@@ -727,11 +808,11 @@ void print_povray_header(dyn* b, vector cam_pos,
 }
 
 void print_mpegplayer_param_file(ostream& s,
-				 int first_frame,	// default = 1,
-				 int last_frame,	// default = 100
-				 int horizontal,	// default = 120
-				 int vertical,		// default = 90
-				 int GOP_size) {	// default = 10
+				 int first_frame = 1,
+				 int last_frame = 100,
+				 int horizontal = 120,
+				 int vertical = 90,
+				 int GOP_size = 10) {
 				 
 
      s <<"# mpeg_encode parameter file\n"
@@ -739,7 +820,7 @@ void print_mpegplayer_param_file(ostream& s,
 	  << "OUTPUT          starlab.mpg\n"
 	  << endl;
 
-     s << "YUV_SIZE        "<<horizontal<<"x"<<vertical<<"\n"
+     s << "YUV_SIZE        "<<vertical<<"x"<<horizontal<<"\n"
 	  << "BASE_FILE_FORMAT        PPM\n"
 	  << "INPUT_CONVERT   *\n"
 	  << "GOP_SIZE        "<<GOP_size<<"\n" 
@@ -751,12 +832,13 @@ void print_mpegplayer_param_file(ostream& s,
 	  << "starlab_*.ppm   [";
           print_filename_counter(first_frame, s);
       s   << "-";
-          print_filename_counter(last_frame, s);
+          print_filename_counter(last_frame-1, s);
       s   << "]\n"
 	  << "END_INPUT\n" << endl;
 
     s << "FORCE_ENCODE_LAST_FRAME\n"
-	 << "PIXEL           HALF\n"
+//	 << "PIXEL           HALF\n"
+	 << "PIXEL           WHOLE\n"
 	 << "RANGE           10\n"
 	 << endl;
 
@@ -772,11 +854,13 @@ void print_mpegplayer_param_file(ostream& s,
     s << "REFERENCE_FRAME ORIGINAL" << endl;
 }
 
-void rdc_and_wrt_movie(dyn *b, bool povray, real scale_L, char fltr) {
+void rdc_and_wrt_movie(dyn *b, bool povray, real scale_L, real mmax, 
+		       char fltr) {
 
   // Fill in the collision database.
-    collision[0].starid = 1; 
-    collision[0].time = 3.09253;
+    collision[0].starid = 2; 
+    collision[0].time = 50.8389;
+#if 0
     collision[1].starid = 2;
     collision[1].time = 3.09252;
     collision[2].starid = 3;
@@ -818,13 +902,17 @@ void rdc_and_wrt_movie(dyn *b, bool povray, real scale_L, char fltr) {
   sn_remnant[1].bh = false;
   sn_remnant[3].id = 3193;
   sn_remnant[3].time = 6.26;
+#endif
 
-     filter_type filter = get_filter_type(fltr);
-     
-     real mass_limit = 0;
-     real number_limit = VERY_LARGE_NUMBER;
-     print_povray_stars(b, mass_limit, number_limit, povray, scale_L, filter);
-
+    filter_type filter = get_filter_type(fltr);
+    
+    real mass_limit = 0;
+    real number_limit = VERY_LARGE_NUMBER;
+    if(b->get_use_sstar())
+      print_povray_stars(b, mass_limit, number_limit, povray, scale_L, filter);
+    else
+      print_povray_bodies(b, mass_limit, number_limit, mmax, scale_L);
+    
 }
 
 #else
@@ -849,6 +937,7 @@ main(int argc, char ** argv)
     real phi_rotate   = 0;
     int blur_samples = 10;
     int camera_on_star_id = -1;
+    int nstart = 0;
 
     char * mpeg_paramfile = "paramfile.mpeg";
     int horizontal =  90;
@@ -860,7 +949,7 @@ main(int argc, char ** argv)
     real gamma = 2.2;
 
     SF_base_type base_type = No_base;
-    int nsteps = 1;
+    int nsteps = 32767;
     int nskip = 0; 
     int nint_skip = 0;
     
@@ -869,7 +958,7 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "a:B:b:F:f:g:H:hI:L:N:W:X:x:Y:y:Z:z:P:T:S:s:c:";
+    char* param_string = "a:B:b:F:f:g:H:hI:L:N:n:W:X:x:Y:y:Z:z:P:T:S:s:c:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c)
@@ -904,6 +993,8 @@ main(int argc, char ** argv)
 	              break;
 	    case 'N': nsteps = atoi(poptarg);
 	              break;
+	    case 'n': nstart = atoi(poptarg);
+	              break;
 	    case 'X': first_campos[0] = atof(poptarg);
 	              break;
 	    case 'Y': first_campos[1] = atof(poptarg);
@@ -932,11 +1023,21 @@ main(int argc, char ** argv)
 
     dyn *b;
 
+    int GOP_size = min(1000, nsteps);
+    remove(mpeg_paramfile);
+    ofstream os(mpeg_paramfile, ios::app|ios::out);
+    if (!os) cerr << "\nerror: couldn't create file "
+		  << mpeg_paramfile << endl;
+
+    print_mpegplayer_param_file(os, first_frame, GOP_size,
+				horizontal, vertical, GOP_size);
+    os.close();
+
   int id;
-  real time;
+  real time, mmax = -1;
   vector pos;
     
-    int nread = 0;
+    int nread = nstart;
     int j=0;
     for (int i = 0; i < nskip; i++){
 	cerr << " skipping snapshot " << i << endl;
@@ -951,6 +1052,11 @@ main(int argc, char ** argv)
     
     int nsnap = 0;	
     while (b = get_dyn(cin)) {
+
+      if(nsnap==0)
+	for_all_leaves(dyn, b, bi) {
+	  mmax = max(mmax, bi->get_mass());
+	}
 
       //      addstar(b);                            
       //b->set_use_sstar(true); 
@@ -968,7 +1074,7 @@ main(int argc, char ** argv)
 	
 	print_povray_header(b, cam_pos, camera_on_star_id,
 			    aperture, gamma, blur_samples, nread, scale_L,
-			    print_hrd);
+			    horizontal, vertical, print_hrd);
 
        if (base_type == StTr_station) {
 	  // Plot the starbase at the origin.
@@ -978,9 +1084,8 @@ main(int argc, char ** argv)
        else if (base_type == SW_ISD) {
 	 cout << "object { StarWars_Scene }\n" << endl;
        }
-
 	
-	rdc_and_wrt_movie(b, true, scale_L, filter);
+	rdc_and_wrt_movie(b, true, scale_L, mmax, filter);
 	last_frame++;
 
 	if (v_flag)
@@ -998,12 +1103,6 @@ main(int argc, char ** argv)
 	  break;
 	
     }
-
-    ofstream os(mpeg_paramfile, ios::app|ios::out);
-    if (!os) cerr << "\nerror: couldn't create file "
-		  << mpeg_paramfile << endl;
-    print_mpegplayer_param_file(os, first_frame, last_frame,
-				horizontal, vertical);
 
 }
 

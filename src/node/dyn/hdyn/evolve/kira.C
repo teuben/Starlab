@@ -163,7 +163,7 @@
 
 #define INITIAL_STEP_LIMIT  0.0625	// Arbitrary limit on the first step
 
-#define CHECK_PERI_APO_CLUSTER          // Follow individual stellar orbits.
+//#define CHECK_PERI_APO_CLUSTER          // Follow individual stellar orbits.
 
 static kira_counters kc_prev; 
 static bool dbg = false;
@@ -1438,10 +1438,11 @@ local void evolve_system(hdyn * b,	       // hdyn array
     bool full_dump = false;
     real n_dump = 1.0;				// up to at least 50 seems OK!
 
+    bool first_full_dump = false;
     if (dt_snap < 0) {
 	n_dump = -dt_snap;
 	dt_snap = VERY_LARGE_NUMBER;
-	full_dump = true;
+	first_full_dump = full_dump = true;
 	PRL(n_dump);
     }
 
@@ -1573,6 +1574,13 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    put_node(cout, *b,
 		     false,		// don't print xreal
 		     1);		// short output (uses STARLAB_PRECISION)
+
+	// first_full_dump Added by [SPZ Jan 2000] to assure initial dump 
+	// of snapshot to start worldbundle.
+	if (first_full_dump) {
+	  full_dump_now = true;
+	  first_full_dump = false;
+	}
 
 	//------------------------------------------------------------
 

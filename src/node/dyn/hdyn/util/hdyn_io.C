@@ -302,8 +302,10 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
 	    // *** Must coordinate with tdyn_io.C. ***
 
-	    vector & putpos = pos;
-	    vector & putvel = vel;
+//  	    vector putpos = something_relative_to_root(this, &hdyn::get_pos);
+//	    vector putvel = something_relative_to_root(this, &hdyn::get_vel);
+	    vector putpos = pos;
+	    vector putvel = vel;
 
 	    if(short_output == 2) {
 		putpos = pred_pos;
@@ -357,6 +359,7 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
 	    // Use predicted quantities.
 
+
 	    put_real_number(s, "  m  =  ", mass);
 	    put_real_vector(s, "  r  =  ", pred_pos);
 	    put_real_vector(s, "  v  =  ", pred_vel);
@@ -367,9 +370,14 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
 	} else {
 
+//  	    vector putpos = something_relative_to_root(this, &hdyn::get_pos);
+//	    vector putvel = something_relative_to_root(this, &hdyn::get_vel);
+  	    vector putpos = get_pos();
+  	    vector putvel = get_vel();
+
 	    put_real_number(s, "  m  =  ", mass);
-	    put_real_vector(s, "  r  =  ", pos);
-	    put_real_vector(s, "  v  =  ", vel);
+	    put_real_vector(s, "  r  =  ", putpos);
+	    put_real_vector(s, "  v  =  ", putvel);
 
 	    if (!short_output) {
 

@@ -712,6 +712,7 @@ local void print_details(worldbundle *wb, tdyn *p, real t)
     print_events(s, t);
 }
 
+//#if 0
 vector interpolate_pos(tdyn *p, real t,
 		       tdyn *bn)		// default = NULL; specifies
 						// actual base node
@@ -817,6 +818,137 @@ vector interpolate_vel(tdyn *p, real t,
 
 	return p->get_vel();
 }
+//#endif
+
+#if 0
+vector interpolate_pos(tdyn *p, real t,
+		       tdyn *bn)		// default = NULL; specifies
+						// actual base node
+{
+    // The range (p to p->next) includes time t.
+    // Interpolate and return pos.
+
+    // Check...
+
+    if (p->get_time() > t) {
+	cerr << "interpolate_pos: error 1: ";
+	PRC(p->format_label()); PRC(t); PRL(p->get_time());
+	// print_details(wb, p, t); // wb not available here...
+
+	something_relative_to_root(p, &dyn::get_pos);
+
+//	return p->get_pos();
+    }
+
+    // Special case:
+
+    if (p->get_time() == t) return something_relative_to_root(p, &dyn::get_pos);
+//    if (p->get_time() == t) return p->get_pos();
+
+    tdyn *n = p->get_next();
+
+    if (!n) {
+	cerr << "interpolate_pos: error 2: ";
+	PRC(p->format_label()); PRL(t);
+	PRI(26); PRC(bn); PRL(bn->get_time());
+	PRI(26); PRC(p); PRL(p->get_time());
+	PRI(26); PRL(p->get_time()-t);
+	if (bn) {
+	    PRI(26); PRL(bn->format_label());
+	}
+	// print_details(wb, p, t);
+
+	return something_relative_to_root(p, &dyn::get_pos);
+//	return p->get_pos();
+    }
+
+    if (n->get_time() < t) {
+	cerr << "interpolate_pos: error 3: ";
+	PRC(p->format_label()); PRC(t); PRL(p->get_time());
+	// print_details(wb, p, t);
+
+	return something_relative_to_root(p, &dyn::get_pos);
+//	return p->get_pos();
+    }
+
+    // Time t is included in the range.
+
+    // Interpolate using pos and vel for now...
+    // Note that we overwrite acc and jerk by equivalent
+    // vectors that guarantee continuity of pos and vel.
+
+    real tp = p->get_time();
+    real dt = n->get_time() - tp;
+
+    if (dt > 0) {
+
+	// Recompute acc/2 and jerk/6 to fit pos and vel.
+
+	// *** Flag this to prevent recalculation by setting ***
+	// *** jerk = 0 as the tree is constructed.          ***
+
+        vector npos = something_relative_to_root(n, &dyn::get_pos);
+        vector nvel = something_relative_to_root(n, &dyn::get_vel);
+        vector ppos = something_relative_to_root(p, &dyn::get_pos);
+        vector pvel = something_relative_to_root(p, &dyn::get_vel);
+
+	if (p->get_jerk()[0] == 0) {
+	    real dti = 1/dt;
+
+	    p->set_acc((3*(npos-ppos)
+			- dt*(2*pvel+nvel))*dti*dti);
+	    p->set_jerk((pvel+nvel
+			 - 2*dti*(npos-ppos))*dti*dti);
+//	    p->set_acc((3*(npos-ppos)
+//			- dt*(2*p->get_vel()+n->get_vel()))*dti*dti);
+//	    p->set_jerk((p->get_vel()+n->get_vel()
+//			 - 2*dti*(n->get_pos()-p->get_pos()))*dti*dti);
+	}
+
+	dt = t - tp;
+
+	return ppos + dt * (pvel + dt * (p->get_acc() + dt * p->get_jerk()));
+//	return p->get_pos() + dt * (p->get_vel()
+//				    + dt * (p->get_acc()
+//					    + dt * p->get_jerk()));
+    } else
+
+      return something_relative_to_root(n, &dyn::get_pos);
+//	return p->get_pos();
+}
+
+vector interpolate_vel(tdyn *p, real t,
+		       tdyn *bn)		// default = NULL; specifies
+						// actual base node
+{
+    // Interpolate and return vel.  Only called after a call
+    // to interpolate_pos, so skip checks and recomputation of
+    // acc and jerk.
+
+    // Special case:
+
+    vector ppos = something_relative_to_root(p, &dyn::get_pos);
+    vector pvel = something_relative_to_root(p, &dyn::get_vel);
+
+    if (p->get_time() == t) return pvel;
+//    if (p->get_time() == t) return p->get_vel();
+
+    tdyn *n = p->get_next();
+    real tp = p->get_time();
+    real dt = n->get_time() - tp;
+
+    if (dt > 0) {
+
+	dt = t - tp;
+	return pvel + dt * (2*p->get_acc() + dt * 3*p->get_jerk());
+//	return p->get_vel() + dt * (2*p->get_acc()
+//				    + dt * 3*p->get_jerk());
+    } else
+
+	return pvel;
+//	return p->get_vel();
+}
+#endif
 
 vector get_pos(tdyn *b, tdyn *bn,
 	       real t)			// default = -VERY_LARGE_NUMBER
