@@ -115,6 +115,16 @@
 // The slow and slow_perturbed classes are defined in _dyn_.h and managed
 // in _dyn_slow.C.  The only use is in kira, accessed via this file.
 
+
+// ***********************************************************************
+// ** From Steve (3/03).  The slow binary code has no knowledge of the  **
+// ** "valid_perturbers_low" options just implemented, so low-leel slow **
+// ** binaries currently cannot take advantage of the partial top-level **
+// ** perturber list when the full perturber list is invalid.           **
+// ** To be fixed...
+// ***********************************************************************
+
+
 #include "hdyn.h"
 #include "hdyn_inline.C"
 
