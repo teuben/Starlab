@@ -1288,13 +1288,13 @@ bool hdyn::correct_and_update()
 
     real old_v = 0;
     if (diag->grape)
-	old_v = abs(vel);
+	old_v = abs1(vel);
 
     vector new_pos = pred_pos + (0.05 * at3 + ONE12 * bt2) * dt * dt;
     vector new_vel = pred_vel + (0.25 * at3 + ONE3 * bt2) * dt;
 
     if (diag->grape && old_v > 0) {
-	real new_v = abs(new_vel);
+	real new_v = abs1(new_vel);
 
 	if (new_v/old_v > 1000 || new_v > 1.e6) {   // numbers are arbitrary
 
@@ -1302,6 +1302,7 @@ bool hdyn::correct_and_update()
 
 	    cerr << endl << "correct: possible runaway at time "
 		 << get_system_time() << endl;
+	    PRL(get_grape_chip(this));
 
 	    cerr << endl << "pp3 with old pos and vel:" << endl;
 	    pp3(this);
