@@ -17,6 +17,21 @@
 #include "hdyn.h"
 #include <star/dstar_to_kira.h>
 
+local int tree_level(hdyn *b)
+{
+    int level = 0;		// root = 0
+    while (b->get_parent()) {
+	level++;
+	b = b->get_parent();
+    }
+    return level;
+}
+
+local void indent(int l)
+{
+    for (int i = 0; i < l; i++) cerr << " ";
+}
+
 local bool remove_escapers(hdyn* b,		// root node
 			   real rmax,		// maximum allowed distance
 			   vec center_pos,	// relative to root
@@ -48,13 +63,30 @@ local bool remove_escapers(hdyn* b,		// root node
 	// Escape criterion (note that we do NOT check E > 0):
 	
 	if (square(bj->get_pos()- center_pos) > rmax2) {
-	
-	    cerr << "    " << bj->format_label() << " " << bj->get_mass()
-		 << endl;
-	    cerr << "    pos: " << bj->get_pos()- center_pos << "   |pos| = "
-		 << abs(bj->get_pos()- center_pos) << endl;
-	    cerr << "    vel: " << bj->get_vel()- center_vel << "   |vel| = "
-		 << abs(bj->get_vel()- center_vel) << endl;
+
+	    // Print out hierarchical information on the escaper.
+
+	    for_all_nodes(hdyn, bj, bb) {
+
+		int level = tree_level(bb);
+
+		indent(2*level+2);
+		cerr << bb->format_label() << " " << bb->get_mass() << endl;
+
+		if (level <= 1) {
+		    indent(2*level+2);
+		    cerr << "pos: " << bb->get_pos() - center_pos
+			 << "   |pos| = " << abs(bb->get_pos() - center_pos)
+			 << endl;
+		    indent(2*level+2);
+		    cerr << "vel: " << bb->get_vel() - center_vel
+			 << "   |vel| = " << abs(bb->get_vel() - center_vel)
+			 << endl;
+		} else {
+		    indent(2*level+2); cerr << "pos: " << bb->get_pos() << endl;
+		    indent(2*level+2); cerr << "vel: " << bb->get_vel() << endl;
+		}
+	    }
 
 	    if (b->get_use_sstar())
 		if (has_sstar(bj)) {
@@ -67,8 +99,13 @@ local bool remove_escapers(hdyn* b,		// root node
 //		bj->get_starbase()->print_star_story(cerr);
 //	    }
 
+	    bool newl = true;
 	    for_all_daughters(hdyn, b, bb) {
 		if (bb->get_nn() == bj) {
+		    if (newl) {
+			cerr << endl;
+			newl = false;
+		    }
 		    cerr << "    reset NB for " << bb->format_label()<<endl;
 		    bb->set_nn(NULL);
 		}
