@@ -1,0 +1,18 @@
+#!/bin/csh -f
+
+# Reminder (to Steve) of how to greate an export tarball from CVS.
+
+set name = starlab
+if ($#argv > 0) then
+    setname = $1
+endif
+
+cd /tmp
+if (-e $name.tgz) then
+    rm -f $name.tgz
+endif
+
+cvs -q export -D tomorrow -d $name starlab
+tar zcf $name.tgz $name
+rm -rf $name
+echo Tarball saved in /tmp/$name.tgz
