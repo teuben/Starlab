@@ -82,6 +82,8 @@ local void print_id_and_time(hdyn * b, ostream & s, int level)
 				       << "  dt: " << b->get_timestep();
     if (b->get_kepler() || b->get_unperturbed_timestep() > 0)
 	s << "  dt_u: " << b->get_unperturbed_timestep();
+    else
+	s << "  tp: " << b->get_t_pred();
     s << endl;
 
 #ifdef USE_XREAL
@@ -98,6 +100,9 @@ local void print_pos_and_vel(hdyn * b, ostream & s, bool print_abs = false)
 			   << endl;
 
     skip(MAX_INDENT, s); s << " \tx: " << b->get_pos()  << endl;
+    if (!b->get_kepler()) {
+	skip(MAX_INDENT, s); s << " \t-> " << b->get_pred_pos()  << endl;
+    }
     if (print_abs && b->is_low_level_node()) {
 	skip(MAX_INDENT, s);
 	s << " \tX: "
@@ -106,6 +111,9 @@ local void print_pos_and_vel(hdyn * b, ostream & s, bool print_abs = false)
     }
 
     skip(MAX_INDENT, s); s << " \tv: " << b->get_vel()  << endl;
+    if (!b->get_kepler()) {
+	skip(MAX_INDENT, s); s << " \t-> " << b->get_pred_vel()  << endl;
+    }
     if (print_abs && b->is_low_level_node()) {
 	skip(MAX_INDENT, s);
 	s << " \tV: "
@@ -312,6 +320,38 @@ void pp3_tree(hdyn * b,					// data+links, recursive
 	for_all_daughters(hdyn, b, daughter)
 	    pp3_tree(daughter, s, level + 1);
     }
+}
+
+void pp3_maximal(char *n,
+		 ostream & s,	// default = cerr
+		 int level)	// default = 0		// -1 ==> no recursion
+{
+    hdyn tmp;
+    pp3_maximal((hdyn*)node_with_name(n, tmp.get_root()), s, level);
+}
+
+void pp3_minimal(char *n,
+		 ostream & s,	// default = cerr
+		 int level)	// default = 0		// -1 ==> no recursion
+{
+    hdyn tmp;
+    pp3_minimal((hdyn*)node_with_name(n, tmp.get_root()), s, level);
+}
+
+void pp3(char *n,
+	 ostream & s,		// default = cerr
+	 int level)		// default = 0		// -1 ==> no recursion
+{
+    hdyn tmp;
+    pp3((hdyn*)node_with_name(n, tmp.get_root()), s, level);
+}
+
+void pp3_tree(char *n,
+	      ostream & s,	// default = cerr
+	      int level)	// default = 0		// -1 ==> no recursion
+{
+    hdyn tmp;
+    pp3_tree((hdyn*)node_with_name(n, tmp.get_root()), s, level);
 }
 
 #else
