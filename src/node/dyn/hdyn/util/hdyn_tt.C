@@ -32,8 +32,10 @@ void hdyn::null_pointers()
 
     nn = coll = NULL;
     n_perturbers = 0;
+    n_perturbers_low = 0;
     perturber_list = NULL;
     valid_perturbers = false;
+    valid_perturbers_low = false;
 
     _dyn_::null_pointers();
 }
