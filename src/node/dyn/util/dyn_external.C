@@ -260,7 +260,7 @@ void set_friction_acc(dyn *b, real r)
 {
     real sigma2 = sqrt(-2*potential(b, r)/3);	// this is sqrt(2) * sigma;
 						// assume virial equilibrium
-    real V = abs(V);
+    real V = abs(Vcm);
     real X = V/sigma2;				// scaled velocity; BT p. 425
 
     if (X > 0.1) 
