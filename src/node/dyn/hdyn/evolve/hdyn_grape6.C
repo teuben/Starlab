@@ -126,7 +126,7 @@ local INLINE void send_j_node_to_grape(hdyn *b, bool predict = false)
 
 {
     if (DEBUG > 1) {
-	cerr << endl << "  send_j_node_to_grape:  ";
+	cerr << "  send_j_node_to_grape:  ";
 	PRC(b->format_label()); PRL(predict);
     }
 
@@ -175,8 +175,7 @@ local INLINE void send_j_node_to_grape(hdyn *b, bool predict = false)
 		       &pos[0]);
 
     if (DEBUG > 1) {
-	cerr << "  ...sent to GRAPE-6"
-	     << endl << flush;
+	cerr << "  ...sent to GRAPE-6" << endl << flush;
     }
 }
 
@@ -249,7 +248,7 @@ local int initialize_grape_arrays(hdyn *b,		// root node
 
     if (DEBUG) {
 	cerr << endl << "Initialized GRAPE-6 arrays, ";	PRL(nj);
-	cerr << "...leaving initialize_grape_arrays" << endl << endl;
+	cerr << "...leaving initialize_grape_arrays" << endl;
     }
 
     return nj;
@@ -375,27 +374,9 @@ local INLINE int force_by_grape(xreal xtime,
 
 	iindex[i] = nodes[i]->get_grape_index();
 
-	//Suggested by Jun (May 8 2001) to prevent call Jun bug
-	// Implemented by SPZ
-	if (pot_only){
-
-            // Nodes in this case are leaves, not necessarily top-level.
-            ipos[i] = hdyn_something_relative_to_root(nodes[i],
-                                                      &hdyn::get_pred_pos);
-            // set some LARGE NUMBERS to acc and jerk to avoid
-            // overflow flag to be set
-            iacc[i]   = vector(1e100,0.0,0.0);
-            ijerk[i]   = vector(1e100,0.0,0.0);
-        } else{
-            ipos[i]   = nodes[i]->get_pred_pos();
-            iacc[i]   = nodes[i]->get_old_acc();
-            ijerk[i]  = ONE6*nodes[i]->get_old_jerk();
-        }
-        ivel[i]   = nodes[i]->get_pred_vel();
-        ipot[i]   = nodes[i]->get_pot();
-        ih2[i]    = nodes[i]->get_grape_rnb_sq();
-
 #if 0
+	// Old version:
+
 	if (pot_only)
 
 	    // Nodes in this case are leaves, not necessarily top-level.
@@ -410,6 +391,33 @@ local INLINE int force_by_grape(xreal xtime,
 	ijerk[i]  = ONE6*nodes[i]->get_old_jerk();
 	ipot[i]   = nodes[i]->get_pot();
 	ih2[i]    = nodes[i]->get_grape_rnb_sq();
+#else
+	// New version.  Suggested by Jun (May 8 2001) to prevent
+	// "call Jun" message.  Implemented by SPZ.
+
+	if (pot_only){
+
+            // Nodes in this case are leaves, not necessarily top-level.
+
+            ipos[i] = hdyn_something_relative_to_root(nodes[i],
+                                                      &hdyn::get_pred_pos);
+
+            // Set some LARGE NUMBERS to acc and jerk to avoid
+            // overflow flag.
+
+            iacc[i]   = vector(1e100);
+            ijerk[i]   = vector(1e100);
+
+        } else{
+
+            ipos[i]   = nodes[i]->get_pred_pos();
+            iacc[i]   = nodes[i]->get_old_acc();
+            ijerk[i]  = ONE6*nodes[i]->get_old_jerk();
+        }
+
+        ivel[i]   = nodes[i]->get_pred_vel();
+        ipot[i]   = nodes[i]->get_pot();
+        ih2[i]    = nodes[i]->get_grape_rnb_sq();
 #endif
 
 	if (DEBUG > 1) {
@@ -422,10 +430,10 @@ local INLINE int force_by_grape(xreal xtime,
 	}
     }
 
-    // For statement added by SPZ om May 8 2001
-    for(int i = ni; i<n_pipes; i++){
-	ih2[i] = 0.0;
-    }
+    // Clear neighbor radii for unused pipes (added by SPZ, May 8 2001).
+
+    for(int i = ni; i < n_pipes; i++)
+        ih2[i] = 0;
 
     g6calc_firsthalf_(&cluster_id, &nj, &ni, iindex,
 		      ipos, ivel, iacc, ijerk, ipot,
@@ -724,7 +732,7 @@ void grape_calculate_energies(hdyn *b,				// root node
 			      real &etot)
 {
     if (DEBUG) {
-	cerr << "grape_calculate_energies..."
+	cerr << endl << "grape_calculate_energies..."
 	     << endl << flush;
     }
 
@@ -758,6 +766,7 @@ void grape_calculate_energies(hdyn *b,				// root node
     if (DEBUG) {
 	cerr << "...leaving grape_calculate_energies...  ";
 	PRL(etot);
+	cerr << endl;
     }
 }
 
@@ -851,7 +860,7 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
     static char *func = "get_force_and_neighbors";
     if (ni <= 0) return false;
 
-//    cerr << "get_force_and_neighbors: ";
+//    cerr << "entering " << func << ": ";
 //    PRC(ni); PRC(nj_on_grape); PRL(n_pipes);
 //    PRL(nodes[0]);
 
@@ -1003,7 +1012,7 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 {
     // Get the list of neighbors from the GRAPE.
 
-    int n_neighbors;
+    int n_neighbors = 0;
     int status = 0;
 #ifdef G6_NEIGHBOUR_LIST
     status = g6_get_neighbour_list_(&cluster_id,
@@ -1276,6 +1285,10 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     static int nj_on_grape;		// current number of j-particles
 					// in GRAPE memory
 
+    if (DEBUG) {
+	cerr << endl << func << "..." << endl << flush;
+    }
+
     if (n_pipes == 0) n_pipes = g6_npipes_();
 
     if (n_next <= 0) return;
@@ -1303,7 +1316,7 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
     if (!grape_is_open) {
 
-	reattach_grape((real)xtime, "grape_calculate_acc_and_jerk", ko);
+	reattach_grape((real)xtime, func, ko);
 
 	if (!restart) grape_reattached = true;
 
@@ -1378,7 +1391,7 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     }
 
     if (DEBUG) {
-	cerr << "grape_calculate_acc_and_jerk:  ";
+	cerr << func << ":  ";
 	PRC(xtime); PRC(n_next); PRL(n_top);
     }
 
@@ -1474,16 +1487,19 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 //	    *** If we reduce the frequency of perturber checks, then we
 //	    *** must be sure to restore the CMs on the perturber list,
 //	    *** as the correction to the CM force depends on it...
+//	    ***
+//	    *** Some care is needed if we do reduce the frequency, as
+//	    *** nodes may vanish or merge.  (However, the list contains
+//	    *** only single stars after correction, so CM changes
+//	    *** shouldn't be a problem).
 //	    ***						(Steve, 6/01)
 
 	    bb->set_grape_nb_count(0);
-
     }
 
     if (DEBUG) {
-	cerr << "...leaving grape_calculate_acc_and_jerk"
-	     << endl << endl << flush;
-}
+	cerr << "...leaving " << func << endl << endl << flush;
+    }
 }
 
 
@@ -1497,8 +1513,8 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
 local INLINE void set_grape_density_radius(hdyn *b, real h2_max)
 
-// For a single particle, adjust the radius so that it will
-// contain just ~10 neighbors (set r = 3*d_nn, if known).
+// For a single particle, try to adjust the initial radius so that
+// it will contain just ~10-20 neighbors (set r = 3*d_nn, if known).
 
 // Called by:	grape_calculate_densities()			// global
 
@@ -1515,7 +1531,7 @@ local INLINE void set_grape_density_radius(hdyn *b, real h2_max)
 
 	// Node does not know its nearest neighbor.
 
-	b->set_grape_rnb_sq(9 * pow(b->get_d_min_sq(), 1.0/3.0));
+	b->set_grape_rnb_sq(9 * pow(b->get_d_min_sq(), 1.0/3.0));  // (??)
 }
 
 // Density is based on the 12th nearest neighbor.
@@ -1582,7 +1598,7 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	return false;
     }
 
-    // Make a list of nodes to send to compute_com().
+    // Make a list of nodes to send to compute_density().
 
     dyn **dynlist = new dynptr[n_neighbors];
 
@@ -1632,6 +1648,111 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
     return true;
 }
 
+local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
+				int ni, real h2_crit,
+				int nj_on_grape, int n_pipes)
+{
+    // Compute the densities of the ni particles in nodes[].
+    // Return true iff an error occurred.
+
+    static char *func = "get_densities";
+    bool error = false;
+
+    if (DEBUG)
+	cerr << func << "..." << endl << flush;
+
+    if (ni < 0) return error;			// should never happen
+
+    // Get the force on the current group of particles.
+
+    if (force_by_grape(xtime, nodes, ni,
+		       nj_on_grape, n_pipes)) {
+
+        // Hardware error has persisted despite GRAPE reset(s).
+        // Give up...
+
+        hw_err_exit(func, 1, nodes[0]);
+    }
+
+    // Compute densities.
+
+    int status = 0;
+#ifdef G6_NEIGHBOUR_LIST
+    status = g6_read_neighbour_list_(&cluster_id);
+#endif
+
+    if (status) {
+
+        // Flag an error to force appropriate action in the
+        // calling function.
+
+        cerr << func << ": " << "error getting GRAPE neighbor data: "; 
+	PRL(status);
+
+        error = true;
+
+    } else {
+
+	// Determine densities for the present block of particles.
+
+        for (int ip = 0; ip < ni; ip++) {
+
+	    int n_retry = 0;
+	    hdyn *bb = nodes[ip];
+
+	    while (!count_neighbors_and_adjust_h2(bb, ip)) {
+
+	        if (bb->get_grape_rnb_sq() > h2_crit) {
+
+		    // Write zero density to the dyn story.
+
+		    putrq(bb->get_dyn_story(), "density_time",
+			  (real)bb->get_system_time());
+		    putrq(bb->get_dyn_story(), "density", 0.0);
+
+		    if (DEBUG > 1) {
+		        PRI(2); PR(bb->get_grape_rnb_sq());
+			cerr << " too large for "
+			     << bb->format_label() << endl;
+		    }
+		    break;
+
+		} else {
+
+		    // Changed the neighbor sphere size; recompute all
+		    // forces and neighbor lists (probably overkill).
+
+		    if (++n_retry > 20) 
+		        hw_err_exit(func, 2, nodes[0]);
+
+		    if (DEBUG > 1
+			|| (DEBUG > 0 && n_retry > 4 && n_retry%5 == 0)
+			|| (n_retry > 9 && n_retry%10 == 0) ) {
+		        cerr << func << ": recomputing forces for "
+			     << nodes[0]->format_label() << " + " << ni-1
+			     << endl;
+			cerr << "               first rnb_sq = "
+			     << nodes[0]->get_grape_rnb_sq()
+			     << ",  n_retry = " << n_retry << endl;
+		    }
+
+		    if (force_by_grape(xtime, nodes, ni,
+				       nj_on_grape, n_pipes))
+		        hw_err_exit(func, 3, nodes[0]);
+
+		}
+	    }
+	}
+    }
+
+    if (DEBUG) {
+	cerr << "leaving " << func << "...";
+	PRL(error);
+    }
+
+    return error;
+}
+
 //  *****************************
 //  *****************************
 //  ***                       ***
@@ -1645,17 +1766,18 @@ void grape_calculate_densities(hdyn* b,			// root node
 {
     static char *func = "grape_calculate_densities";
 
-    if (DEBUG) {
-	cerr << "grape_calculate_densities..."
-	     << endl << flush;
-    }
+    if (DEBUG)
+	cerr << endl << func << "..." << endl << flush;
+
+#ifndef G6_NEIGHBOUR_LIST
+    return;
+#endif
 
     static int max_neighbors = MAX_PERTURBERS;
     static int neighbor_list[MAX_PERTURBERS];
 
     if (!grape_is_open)
-	reattach_grape(b->get_real_system_time(),
-		       "grape_calculate_densities", b->get_kira_options());
+	reattach_grape(b->get_real_system_time(), func, b->get_kira_options());
 
     // Copy all (predicted pos) top-level nodes to the GRAPE hardware.
 
@@ -1677,122 +1799,84 @@ void grape_calculate_densities(hdyn* b,			// root node
 	set_grape_density_radius(top_nodes[j], h2_crit);
 
     int n_pipes = g6_npipes_();
+
     int n_retry = 0;
+    int count = 0;
 
     // Compute the densities in chunks of maximum size n_pipes.
 
     int i = 0;
 
-    // Replaces old code.
-    //Implemented by SPZ on May 8 2001
-    while (i < n_top) {
-
-        int inext = i;
-        // int ni = min(n_pipes, n_top - i);
-        // Use one pipelne only to avoid
-        // neighbourlist overflow...
-        int ni = 1;
-#if 0
     while (i < n_top) {
 
 	int inext = i;
 	int ni = min(n_pipes, n_top - i);
+
+#ifdef SPZ_GRAPE6
+
+	// Use one pipeline only to (try to) avoid neighbor list overflow...
+	// Implemented by SPZ on May 8 2001.
+
+	ni = 1;
 #endif
 
-	// Get the forces on particles i through i + ni - 1.
-	// Function force_by_grape also sets nn pointers.
+	// Get the forces on particles i through i + ni - 1, determine
+	// their neighbors and hence their densities.
 
-	if (force_by_grape(b->get_system_time(),
-			   top_nodes + i, ni,
-			   nj_on_grape, n_pipes)) {
+	// Code follows that in grape_calculate_acc_and_jerk.
+	// May be possible to combine the two...
 
-	    // Hardware error has persisted despite GRAPE reset(s).
-	    // Give up...
+	if (get_densities(b->get_system_time(),
+			  top_nodes + i, ni, h2_crit,
+			  nj_on_grape, n_pipes)) {
 
-	    hw_err_exit(func, 1, b);
-	}
+	    // The neighbor list overflowed.  Reduce all current neighbor
+	    // radii and try again.
 
-	// Compute densities.
+	    if (DEBUG) {
+	        cerr << "reducing neighbor radii: i = " << i
+		     << ", first rnb_sq = " << top_nodes[i]->get_grape_rnb_sq()
+		     << endl;
+	    }
 
-	int status = 0;
-#ifdef G6_NEIGHBOUR_LIST
-	status = g6_read_neighbour_list_(&cluster_id);
-#endif
+	    // Reduction factor is 0.9 for now...
 
-	if (status) {
+	    for (int j = i; j < i + ni; j++) {
+	        hdyn *b = top_nodes[j];
+		b->set_grape_rnb_sq(0.9 * b->get_grape_rnb_sq());
+	    }
 
-	    // Flag an error and take appropriate action...
+	    n_retry++;
+	    if (++count > 20) {
 
-	    cerr << "grape_calculate_densities: "
-		 << "error getting GRAPE neighbor data: "; 
-	    PRL(status);
+	        // Too many retries.  Quit in confusion...
 
-	    // See comments in grape_calculate_acc_and_jerk...
+	        cerr << func << ": "
+		     << "error getting GRAPE neighbor data: " << endl;
 
-	    hw_err_exit(func, 2, b);
+		hw_err_exit(func, 1, b);
+	    }
 
 	} else {
 
-	    // Code follows that in grape_calculate_acc_and_jerk.
-	    // Should be possible to combine the two...
+	    // Move on to the next block of particles.
 
-	    for (int ip = 0; ip < ni; ip++) {
-
-		int pipe = ip;
-		int icurr = i + ip;
-		hdyn *bb = top_nodes[i+ip];
-
-		while (!count_neighbors_and_adjust_h2(bb, pipe)) {
-
-		    if (bb->get_grape_rnb_sq() > h2_crit) {
-
-			// Write zero density to the dyn story.
-
-			putrq(bb->get_dyn_story(), "density_time",
-			      (real)b->get_system_time());
-			putrq(bb->get_dyn_story(), "density", 0.0);
-
-			if (DEBUG > 1) {
-			    PRI(2); PR(bb->get_grape_rnb_sq());
-			    cerr << " too large for "
-				 << bb->format_label() << endl;
-			}
-			break;
-
-		    } else {
-
-			// Changed the neighbor sphere; recompute the force.
-
-			n_retry++;
-			pipe = 1;
-			ip = ni;	// force exit from "for" loop
-
-			if (force_by_grape(b->get_system_time(),
-					   top_nodes+icurr, pipe,
-					   nj_on_grape, n_pipes))
-			    hw_err_exit(func, 3, b);
-
-		    }
-		}		// end of while (!count...)
-
-		inext++;
-	    }			// end of for (ip...)
-
-	}			// end of if (status) else ...
-
-	i = inext;
-    }				// end of while (i...)
+	    i += ni;
+	    count = 0;
+	}
+    }
 
     // Timestamp the root node.
 
     putrq(b->get_dyn_story(), "density_time", (real)b->get_system_time());
 
     if (n_retry > 10) {
-	cerr << "grape_calculate_densities:  ";
+	cerr << func << ":  ";
 	PRL(n_retry);
     }
 
-    cerr << "...leaving grape_calculate_densities." << endl << flush;
+    if (DEBUG)
+        cerr << "...leaving " << func << endl << endl << flush;
 
     // Force cleanup later.
 
