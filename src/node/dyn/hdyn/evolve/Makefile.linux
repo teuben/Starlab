@@ -47,7 +47,7 @@ OBJECT_FILES = hdyn_unpert.o hdyn_ev.o hdyn_tree.o hdyn_merge.o \
 
 LIBRARY = libhdyn.a
 
-EXECUTABLES = kira kira_grape4
+EXECUTABLES = kira kira_grape4 kira_grape6
 
 NON_CCC_EXECUTABLES = 
 
@@ -56,20 +56,34 @@ DEPEND_LIBS	= $(LIB)/libhdyn.a $(LIB)/lib_dyn_.a $(LIB)/libdyn.a \
 		  $(LIB)/libstd.a
 
 # Without GRAPE:
-#CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC)
-
-# For GRAPE-4:
-CFLAGS       =	$(STARLAB_CCC_FLAGS) -I$(INC) \
+NOGRAPE_CF	=	$(STARLAB_CCC_FLAGS) -I$(INC)
+GRAPE4_CF	=	$(STARLAB_CCC_FLAGS) -I$(INC) \
 		  -DSTARLAB_HAS_GRAPE4 -DSHARE_GRAPE -DUSE_HALF_CHIP \
 		  $(CC_EXTRA)
+GRAPE6_CF	= $(STARLAB_CCC_FLAGS) -I$(INC) \
+		  -DSTARLAB_HAS_GRAPE6 -DSHARE_GRAPE $(CC_EXTRA) \
+	          -inline -static
+
+CFLAGS  = ${GRAPE6_CF}
+
 # For GRAPE-4 in indiana
-GRAPELIB = -L/home/spz/grape -lg4a -lharp -lprometheus  
+#GRAPELIB = -L/home/spz/grape -lg4a -lharp -lprometheus  
+# For GRAPE-4 (on merlot@drexel):
+#GRAPELIB =	-L/usr/users/makino/src/harplibs -lg4a -lrt
+# For GRAPE-4 (on port@hongo)
+#GRAPELIB =      -L/usr2/makino/disk3src/harplibs/ -lg4a -lrt
+# For GRAPE-6 (on bourgogne@hongo):
+#GRAPELIB = -L/usr2/makino/src/g6hib -lg6 -L/usr2/makino/src/grape6 -lg6sim2
+# For GRAPE-6 (on alexandria@hongo EV6):
+GRAPELIB = -L/usr2/makino/disk3src/harplibs -lg6 -lg6sim2
+
+#GRAPELIB = -L/usr2/makino/src/g6hib -lg6linux 
 
 CPPFLAGS = 
 
 LIBFLAGS  =	-L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
                 -ldstar -lsstar -lstd -lm \
-	         $(GRAPELIB) \
+	         $(GRAPELIB) 
 #		~/ccmalloc-0.2.3/src/ccmalloc.o -ldl
 
 EXEFLAGS = 
