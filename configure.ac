@@ -257,7 +257,7 @@ Please set environment QTDIR or use --with-qt-dir=QTDIR.])
 #   Possible that qt_dir simply doesn't exist (bad argument or environment).
 
     if ! test -d "$qt_dir"; then
-	AC_MSG_ERROR([*** QTDIR $qt_dir does not exist.  Disabling Qt ***])
+	AC_MSG_NOTICE([*** QTDIR $qt_dir does not exist.  Disabling Qt ***])
 	good_qt=no
     fi
 
