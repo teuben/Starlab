@@ -118,11 +118,9 @@ const char *getequals(const char *input_line, char *keyword)
 
 void set_vector_from_input_line(vector & v, char * input_line)
 {
-    real vector_component[3];
-    
-    sscanf(input_line,"%*s%*s%lf%lf%lf",vector_component,
-	   vector_component+1,vector_component+2);
-    v=vector(vector_component[0],vector_component[1],vector_component[2]);
+    char *eq = strchr(input_line, '=');
+    if(eq)
+	set_vector_from_string( v, eq+1 );
 }
 
 void set_vector_from_string(vector & v, char *val)
@@ -144,15 +142,19 @@ static bool print = true;
 
 xreal get_xreal_from_input_line(char * input_line)
 {
+    char *val = strchr(input_line, '=');
+    if(val == NULL) return (xreal)0;
+    val++;
+
 #if defined USE_XREAL
 
     // "True" xreal:
 
-    long long i;
-    unsigned long long f;
-    int n = sscanf(input_line, "%*s%*s%Ld%Lu",&i, &f);
+    char *sp, *ep;
+    long long i = strtoll(val, &sp, 10);		// signed integer part
+    unsigned long long f = strtoull(sp, &ep, 10);	// unsigned fractional part
 
-    if (n < 2) {
+    if (sp == ep) {					// if we didn't get both of above,
 
 	// Hmmm... most likely we have real input data.  Try just reading
 	// a real number.  (Steve, 6/00)
@@ -165,9 +167,7 @@ xreal get_xreal_from_input_line(char * input_line)
 	    print = false;
 	}
 
-	real x;
-	sscanf(input_line, "%*s%*s%lf", &x);
-	return (xreal)x;
+	return (xreal)strtod( val, NULL );
     }
 
     return xreal(i, f);
@@ -176,9 +176,7 @@ xreal get_xreal_from_input_line(char * input_line)
 
     // xreal is really just real:
 
-    xreal x;
-    sscanf(input_line, "%*s%*s%lf", &x);
-    return x;
+    return (xreal)strtod( val, NULL );
 
 #endif
 }
