@@ -32,6 +32,9 @@ void get_runtime_help(char* source_file, char* compile_date, int level)
     // possibilities that the name has changed or the file has
     // become inaccessible.
 
+    // As of Sep 2001, source_file has the STARLAB_PATH environment
+    // removed.
+
     cerr << endl
 	 << "    Starlab version " << STARLAB_VERSION << endl;
 
@@ -41,7 +44,8 @@ void get_runtime_help(char* source_file, char* compile_date, int level)
 	delete s;
     }
 
-    // Look for the source file.
+    // Look for the source file.  First try the name verbatim, then
+    // try prepending the current STARLAB_PATH environment string.
 
     char src[1024];
     bool exists = false;
@@ -58,10 +62,8 @@ void get_runtime_help(char* source_file, char* compile_date, int level)
 
 	// See if we can construct a file name from the environment.
 
-	char *s = strstr(source_file, "/src/");
-
-	if (s && getenv("STARLAB_PATH")) {
-	    sprintf(src, "%s%s", getenv("STARLAB_PATH"), s);
+	if (getenv("STARLAB_PATH")) {
+	    sprintf(src, "%s/%s", getenv("STARLAB_PATH"), source_file);
 	    ifstream file(src);
 	    if (file) {
 		exists = true;
