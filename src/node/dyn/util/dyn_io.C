@@ -254,6 +254,31 @@ ostream& dyn::print_dyn_story(ostream& s,
 
 
 
+// Newest get_dyn() is a switch between several input formats.
+
+dyn *get_dyn(istream & s,		// default = cin
+	     hbpfp the_hbpfp,		// default = new_hydrobase,
+	     sbpfp the_sbpfp,		// default = new_starbase,
+	     bool use_stories)		// default = true
+{
+
+  // Currently the fast input fget_dyn() only uses stdin (and not cin) as
+  // its input file pointer.  Get_col() uses get_ifp().  This is a mess,
+  // which will be fixed soon...  (Steve and Ernie, 1/04)
+
+  static enum { NUL, DYN, COL } format = NUL;
+  static bool fast = false;
+  switch (format) {
+  case DYN: return fast ? fget_dyn() : get_dyn();
+  case COL: return get_col(s, new_dyn, the_hbpfp, the_sbpfp, use_stories);
+  case NUL:
+    fast = getenv("STARLAB_USE_FDYN");		// fast input off by default
+    format = ungetc(getc(stdin), stdin) == '(' ? DYN : COL;
+    fflush(stdin);
+    return get_dyn(s, the_hbpfp, the_sbpfp, use_stories);
+  }
+}
+
 // Called by get_dyn when input format is columns of numbers.
 
 dyn* get_col(istream& s,
