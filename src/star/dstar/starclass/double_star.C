@@ -1054,6 +1054,8 @@ void double_star::evolve_element(const real end_time)
 	} while (binary_age<end_time);
     else if (end_time == 0)
       try_zero_timestep();
+    else // (SPZ: 21 Mar 2001): added the circularizaton in case....
+     circularize();
 }
 
 void double_star::try_zero_timestep() {

@@ -374,7 +374,7 @@ real stellar_evolution_constants::safety(safety_parameter ps) {
           break;                                   // == 10*HubbleT*precision
     case minimum_mass_step:                  return 1.e-5;
           break;                                   // Tricky used to be 1.e-7
-    case maximum_timestep:                   return 1000;  
+    case maximum_timestep:                   return 1; // was 1000  
           break;                                   // 2.5 works fine but slow
     case maximum_recursive_calls:            return 1000;
           break;
@@ -395,7 +395,7 @@ real stellar_evolution_constants::star_to_dyn(dynamics_update_parameter dup) {
              break; 
         case semi_major_axis_update_limit:             return 0.001;
 	      break;                        
-        case binary_update_time_fraction:              return 0.05;
+        case binary_update_time_fraction:              return 0.001; //was 0.05
              break;
         default:
 	     cerr << "\nNo recognized option in "

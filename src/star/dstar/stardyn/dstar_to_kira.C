@@ -61,6 +61,30 @@ local bool need_dstar(hdyn* bi)
     }
 }
 
+// safety function, but not used in practice.
+bool other_urgent_binary_matters(hdyn *bi) {  // bi is binary CoM
+  
+    bool update_binary = false;
+     
+    starbase *cm = bi->get_starbase();
+    starbase *ps = ((star*)cm)->get_primary();
+    starbase *ss = ((star*)cm)->get_secondary();
+
+    real pericenter = cm->get_semi()*(1-cm->get_eccentricity());
+
+    real rp = ps->get_effective_radius();
+    real rs = ss->get_effective_radius();
+
+    if(pericenter <= rp * cnsts.parameters(tidal_circularization_radius) ||
+       pericenter <= rs * cnsts.parameters(tidal_circularization_radius)) {
+
+      update_binary = true;
+    }
+   
+    return update_binary;
+}
+
+
 local bool binary_wants_to_be_updated(hdyn *b)		// b is binary CM
 {
     bool update_binary = false;
@@ -76,6 +100,10 @@ local bool binary_wants_to_be_updated(hdyn *b)		// b is binary CM
     if (stellar_time >= current_age 
                       + cnsts.star_to_dyn(binary_update_time_fraction)*dt_max)
         update_binary = true;
+
+//    (SPZ: 21 Mar 2001) safety switched off.
+//    if(other_urgent_binary_matters(b))
+//      update_binary = true;
 
     return update_binary;
 }

@@ -3,6 +3,8 @@
 
 #include "stdfunc.h"
 
+#ifndef TOOLBOX
+
 // Standard functions for various implementations.
 
 // Tidal energy dissipation during close encounter.
@@ -795,3 +797,23 @@ real dynamic_timescale(const real mass,
     return 5.08e-11*sqrt(pow(radius, 3.)/mass); 
 }
 
+#else
+
+void main() {
+
+  real v_disp = 8; // km/s
+//  real v_disp = 4; // km/s
+  for(int i=0; i< 1000; i++) {
+//    real velocity = i/(4.*v_disp);
+//    real velocity = random_maxwellian_velocity(v_disp);
+//    cerr << " v= " << velocity << endl;
+//         << " p= " << maxwellian(velocity, v_disp) << endl;
+    real velocity = random_focussed_maxwellian_velocity(39.3, 15.3, 
+                                     1.,  v_disp, 4*v_disp);
+    cerr << " v= " << velocity << endl;
+
+  }
+
+}
+
+#endif
