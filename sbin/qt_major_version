@@ -1,0 +1,22 @@
+#!/bin/tcsh -f
+
+# Oddly specific code to test the existence and major version of the
+# local Qt installation.  Return 1 iff we have a version of Qt >= 3.0.
+
+if ($?QTDIR == 0) then
+    echo 0
+    exit
+endif
+
+set h = $QTDIR/include/qglobal.h
+if (! -e $h) then
+    echo 0
+    exit
+endif
+
+# Only need the major (i.e. first) version number
+
+set version = `grep QT_VERSION_STR $h | tr -d \" | tr . ' ' | awk '{print $3;}'`
+
+echo $version
+

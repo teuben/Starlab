@@ -42,7 +42,8 @@ if (-e configure) then
     # Work around temporary Qt glitch.
 
     set Qt = ""
-    if ($?QTDIR == 0) set Qt = "--without-qt-dir"
+    set qt = `sbin/qt_major_version`
+    if (x$qt == "x" || $qt < 3) set Qt = "--without-qt-dir"
 
     # Perform the usual configuration process:
 
