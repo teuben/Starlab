@@ -45,3 +45,9 @@ THINGS TO DO: (in approximate order of importance)
  - keyword file I/O (overloading << and >> for Program ?)
  - hash table or faster access for keyword searching?
 
+
+Other approaches:
+
+ - have some program parse through some comment fields,and have it
+   generate the parsing code, see e.g.
+	http://www.gnu.org/software/gengetopt/gengetopt.html
