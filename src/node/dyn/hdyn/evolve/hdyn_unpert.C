@@ -3103,7 +3103,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		}
 		real kT = 2*kin/(3*ntop);
 
-		if (E < -0.05*kT) {	// conservative -- will improve
+		if (E < -0.1*kT) {	// conservative -- will improve
 
 		    // ***** Randomize the binary orientation. *****
 
@@ -3117,7 +3117,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			     << "applied random rotation to "
 			     << parent->format_label()
 			     << endl
-			     << "    at time " << system_time << "  ";
+			     << "    at time " << system_time << ",  ";
 			cerr.precision(p);
 			PRL(E/kT);
 		    }
