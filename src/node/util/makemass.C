@@ -27,13 +27,18 @@
 ////            -u/U      upper mass limit [1]
 ////            -s        random seed
 ////
+//// If only one mass limit is set, the other is automatically forced to the
+//// same value.
+
 //++ Note: The conversion factor for scaling between dynamical and stellar masss
-//++        is properly set in the output snapshot.
+//++       is properly set in the output snapshot.
 
 //		Steve McMillan, July 1996
 //		Simon Portegies Zwart, Tokyo, December 1997
 
 // need to repair bugs, see PJT comments
+
+// Need to re-merge node and dyn versions!!  Steve, 7/04
 
 #include "node.h"
 
@@ -390,8 +395,8 @@ local void makemass(node* b, mass_function mf,
 
 int main(int argc, char ** argv)
 {
-    bool F_flag   = false;                        // Input mf via string
-    mass_function mf = mf_Power_Law;             // Default = Power-law
+    bool F_flag   = false;                      // Input mf via string
+    mass_function mf = mf_Power_Law;            // Default = Power-law
     char *mfc = new char[64];
     real m_lower  = 1, m_upper = 1;		// Default = equal masses
     bool x_flag   = false;
@@ -405,6 +410,8 @@ int main(int argc, char ** argv)
 
     int random_seed = 0;
     char seedlog[64];
+
+    bool lower_set = false, upper_set = false;
 
     check_help();
 
@@ -430,6 +437,7 @@ int main(int argc, char ** argv)
 		      break;
 	    case 'L':
 	    case 'l': m_lower = atof(poptarg);
+		      lower_set = true;
 		      break;
 	    case 'M':
 	    case 'm': m_total = atof(poptarg);
@@ -438,11 +446,15 @@ int main(int argc, char ** argv)
 		      break;
 	    case 'U':
 	    case 'u': m_upper = atof(poptarg);
+		      upper_set = true;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	    	      get_help();
 	    	      exit(1);
 	}
+
+    if (lower_set && !upper_set) m_upper = m_lower;
+    if (!lower_set && upper_set) m_lower = m_upper;
 
     if (m_lower <= 0 ||
 	m_upper <= 0 ||

@@ -190,7 +190,7 @@ local int check_indices(node *b)
 	bb->set_name(NULL);
 
 	if (bb->get_index() >= 0)
-	    nmax = Starlab::max(nmax, bb->get_index());
+	    nmax = max(nmax, bb->get_index());
         else
 	    all_ok = false;
     }
@@ -294,8 +294,8 @@ local void makesecondary(node* b, real binary_fraction,
 
 	    for_all_daughters(node, b, bi) {
 		if (bi->is_leaf()) {
-		    mmin = Starlab::min(mmin, bi->get_mass());
-		    mmax = Starlab::max(mmax, bi->get_mass());
+		    mmin = min(mmin, bi->get_mass());
+		    mmax = max(mmax, bi->get_mass());
 		}
 	    }
 
@@ -327,7 +327,7 @@ local void makesecondary(node* b, real binary_fraction,
 		    if (sum >= 0.9999999999) {	// avoid roundoff problems!
 			sum = 0;
 			qmin = mmin/bi->get_mass();
-			qmax = Starlab::min(mmax, bi->get_mass())/bi->get_mass();
+			qmax = min(mmax, bi->get_mass())/bi->get_mass();
 			q = random_mass_ratio(qmin, qmax);
 			m_secondaries += add_secondary(bi, q, force_index, nmax, split);
 		    }
