@@ -45,9 +45,9 @@ kira_diag::kira_diag() {		    // (Steve's 6/00
 
     ev_function_id				= false;
     ev						= false;
-    grape					= true;
+    grape					= false;	// SLWM 5/02
     grape_level					= 0;
-    timestep_check				= true;
+    timestep_check				= false;	// SLWM 5/02
     correct					= false;
     slow_perturbed				= false;
 
