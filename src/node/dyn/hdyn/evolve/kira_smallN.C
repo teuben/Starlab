@@ -10,27 +10,50 @@
 //=======================================================//              /|\ ~
 
 
-//// Self-contained few-body integrator, using a fourth-order Hermite scheme
-//// incorporating a modified unperturbed treatment of close approaches and
-//// time symmetrization. This version is intended ultimately to be incorporated
-//// into kira to handle multiple systems containing perturbed hard binaries.
+//// Self-contained few-body integrator, using a fourth-order Hermite
+//// scheme incorporating a modified unperturbed treatment of close
+//// approaches and time symmetrization.  The program reads a snapshot
+//// from standard input and optionally writes snapshot(s) to standard
+//// output.  Optional periodic log output is sent to standard error.
+//// This version is intended ultimately to be incorporated into kira
+//// to handle multiple systems containing perturbed hard binaries.
 ////
-//// Usage: kira_smallN [OPTIONS]
+//// Usage: kira_smallN [OPTIONS] < input > ouptut
 ////
 //// Options:
 ////	     -a    set accuracy parameter [0.03]
+////         -d    set log output interval [0 --> infinite]
+////         -D    set snap output interval [0 --> infinite]
+////         -E    set energy output interval [0 --> infinite]
 ////	     -g    set unperturbed limit [1.e-5]
 ////	     -n    set number of symmetrization iterations [1]
 ////	     -r    set termination radius [infinite]
 ////	     -t    set termination time [200]
 ////
-//// Written by Steve McMillan and Fan-Chi Lin.
+//// Written by Fan-Chi Lin and Steve McMillan.
 ////
 //// Report bugs to starlab@sns.ias.edu.
 
+// Externally visible library functions:
+//
+//	void set_smallN_eta()
+//	void set_smallN_gamma()
+//	void set_smallN_niter()
+//	void set_smallN_dtcrit()
+//	void set_smallN_rcrit()
+//
+//	real get_smallN_eta()
+//	real get_smallN_gamma()
+//	int  get_smallN_niter()
+//	real get_smallN_dtcrit()
+//	real get_smallN_rcrit()
+//
+//	real smallN_evolve()
+//	real integrate_multiple()
+//
 // As currently envisaged, on entry we will have an isolated (that is,
 // relatively unperturbed) few-body (N <~ 5) system in which a hard
-// binary has just become perturbed by a neighbor.  A typical scanario
+// binary has just become perturbed by a neighbor.  A typical scenario
 // might be that a stable triple has been perturbed into an unstable
 // orbit, and now the outer component has become a perturber of the
 // inner pair.  Fow now, we
@@ -50,9 +73,9 @@
 //	  with its own time step and internal structure that is visible
 //	  to the rest of the system.  Since predictions always go in the
 //	  same (forward) direction in time, predicting the internal
-//	  structure will cause the multiple to be integrated to the
-//	  specified time.  Correction will have no additional effect.
-//	  Need to check that the normally flat but noe binary tree used
+//	  structure will simply cause the multiple to be integrated to
+//	  the specified time.  Correction will have no additional effect.
+//	  Need to check that the normally flat but not binary tree used
 //	  here will work as is with the hdyn_ev functions, or if additional
 //	  functions need be written.
 //	* largely elimate the tidal error by these actions.
@@ -70,30 +93,49 @@
 
 #include  "hdyn.h"
 #include  "hdyn_inline.C"
-typedef	  hdyn DYN;
-#define   GET get_hdyn
 
-// Make these arguments global later...
-// Note that eta and gamma2_unpert can be set from the command line.
+#ifndef TOOLBOX
 
-real eta = 0.03;		// empirical
-real gamma2_unpert = 1.e-10;	// conservative, given first-order correction
+// Integration parameters are global to the library function, settable
+// from outside via accessor functions.
 
-const bool print = false;
-real t_snap = 0;
-const real dt_snap = 0.05;
+static real eta = 0.03;			// empirical
+static real gamma2_unpert = 1.e-10;	// conservative, given first-order
+					// correction now employed
 
-const real dt_crit = 1.e-4;
-const real r2_crit = 1.e-6;
+// Number of iterations to symmetrize(0 == > explicit, > 0 ==> implicit).
+// Default of 1 seems to work well.
 
-DYN *bi_min = NULL, *bj_min = NULL, *bk_nn = NULL;		// temporary
+static int  n_iter = 1;
 
-bool dbg_allow_binary = true;	// for debugging, set false to disable binaries
-real rbin = 0;			// use to keep track of close pair
+// These parameters simply limit the test for unperturbed motion.
+// Default values are valid only for standard units.
+
+static real dt_crit = 1.e-4;
+static real r2_crit = 1.e-6;
+
+void set_smallN_eta(real a)	{eta = a;}
+void set_smallN_gamma(real g)	{gamma2_unpert = g*g;}
+void set_smallN_niter(int n)	{n_iter = n;}
+void set_smallN_dtcrit(real dt)	{dt_crit = dt;}
+void set_smallN_rcrit(real r)	{r2_crit = r*r;}
+
+real get_smallN_eta()		{return eta;}
+real get_smallN_gamma()		{return sqrt(gamma2_unpert);}
+int  get_smallN_niter()		{return n_iter;}
+real get_smallN_dtcrit()	{return dt_crit;}
+real get_smallN_rcrit()		{return sqrt(r2_crit);}
+
+// Debugging:
+
+static bool dbg_allow_binary = true;	// set false to disable binaries
+static real rbin = 0;			// use to keep track of close pair
 
 
 
-local inline real get_pairwise_acc_and_jerk(DYN *bi, DYN *bj,
+hdyn *bi_min = NULL, *bj_min = NULL, *bk_nn = NULL;
+
+local inline real get_pairwise_acc_and_jerk(hdyn *bi, hdyn *bj,
 					    vec &force, vec &jerk)
 {
     // Compute the force and jerk on node bi due to node bj by summing
@@ -114,12 +156,12 @@ local inline real get_pairwise_acc_and_jerk(DYN *bi, DYN *bj,
 	delv += bj->get_nopred_vel();
     }
 
-    for_all_leaves(DYN, bi, bbi) {
+    for_all_leaves(hdyn, bi, bbi) {
 
 	// Compute the force and jerk on leaf bbi due to all leaves under bj.
 
 	vec iforce = 0, ijerk = 0;
-	for_all_leaves(DYN, bj, bbj) {
+	for_all_leaves(hdyn, bj, bbj) {
 
 	    // Note use of nopred to return current value of pred
 	    // quantities without prediction or setting t_pred.
@@ -157,7 +199,7 @@ local inline real get_pairwise_acc_and_jerk(DYN *bi, DYN *bj,
 
 
 
-local inline real calculate_top_level_acc_and_jerk(DYN *b)
+local inline real calculate_top_level_acc_and_jerk(hdyn *b)
 {
     // Compute the acc and jerk on all top-level nodes.  We could use the
     // hdyn functions in hdyn_ev.C to do this more simply, but they will
@@ -165,7 +207,7 @@ local inline real calculate_top_level_acc_and_jerk(DYN *b)
     // into components for purposes of computing the acc and jerk.  Return
     // the minimum time step associated with any top-level pair.
 
-    for_all_daughters(DYN, b, bi) {
+    for_all_daughters(hdyn, b, bi) {
 	bi->set_acc(0);
 	bi->set_jerk(0);
     }
@@ -173,8 +215,8 @@ local inline real calculate_top_level_acc_and_jerk(DYN *b)
     real min_timestep2 = VERY_LARGE_NUMBER;
     bi_min = bj_min = NULL;
 
-    for_all_daughters(DYN, b, bi) {
-	for (DYN *bj = bi->get_younger_sister();
+    for_all_daughters(hdyn, b, bi) {
+	for (hdyn *bj = bi->get_younger_sister();
 	     bj != NULL; bj = bj->get_younger_sister()) {
 
 	    vec force, jerk;
@@ -222,9 +264,9 @@ local inline real calculate_top_level_acc_and_jerk(DYN *b)
 //
 // Advance the components of a binary to the specified time.
 
-local inline void advance_components_to_time(DYN *bi, real t)	  // unperturbed
+local inline void advance_components_to_time(hdyn *bi, real t)	  // unperturbed
 {								  // "predictor"
-    DYN *od = bi->get_oldest_daughter();
+    hdyn *od = bi->get_oldest_daughter();
 
     if (od) {	// redundant
 
@@ -249,37 +291,37 @@ local inline void advance_components_to_time(DYN *bi, real t)	  // unperturbed
 	    od->set_pred_pos(-fac*k->get_rel_pos());
 	    od->set_pred_vel(-fac*k->get_rel_vel());
 
-	    DYN *yd = od->get_younger_sister();
+	    hdyn *yd = od->get_younger_sister();
 	    yd->set_pred_pos((1-fac)*k->get_rel_pos());
 	    yd->set_pred_vel((1-fac)*k->get_rel_vel());
 	}
     }
 }
 
-local inline void update_components_from_pred(DYN *bi)		  // unperturbed
+local inline void update_components_from_pred(hdyn *bi)		  // unperturbed
 {								  // "corrector"
     // Called after a step is completed.
 
-    DYN *od = bi->get_oldest_daughter();
+    hdyn *od = bi->get_oldest_daughter();
 
     if (od) {	// redundant
 
 	od->set_time(bi->get_time());
 	od->set_pos(od->get_nopred_pos());
 	od->set_vel(od->get_nopred_vel());
-	DYN *yd = od->get_younger_sister();
+	hdyn *yd = od->get_younger_sister();
 	yd->set_time(bi->get_time());
 	yd->set_pos(yd->get_nopred_pos());
 	yd->set_vel(yd->get_nopred_vel());
     }
 }
 
-local inline void correct_timestep_for_components(DYN *bi, real t, real &dt)
+local inline void correct_timestep_for_components(hdyn *bi, real t, real &dt)
 {
     // Reduce the time step if necessary to end at the termination
     // time for unperturbed motion.
 
-    DYN *od = bi->get_oldest_daughter();
+    hdyn *od = bi->get_oldest_daughter();
 
     if (od) {	// redundant
 
@@ -298,7 +340,7 @@ local inline void correct_timestep_for_components(DYN *bi, real t, real &dt)
     }
 }
 
-local inline bool unperturbed_and_approaching(DYN *b,DYN *bi, DYN *bj)
+local inline bool unperturbed_and_approaching(hdyn *b,hdyn *bi, hdyn *bj)
 {
     // Settle for close and approaching for now.  Eventually
     // require unperturbed motion, but add that later.  Also only
@@ -318,7 +360,7 @@ local inline bool unperturbed_and_approaching(DYN *b,DYN *bi, DYN *bj)
     bk_nn = NULL;
     real dis2, near_dis2 = VERY_LARGE_NUMBER;
     real min_dis2;
-    for_all_leaves(DYN, b, bk)
+    for_all_leaves(hdyn, b, bk)
       {
 	if( (bk != bi) && (bk != bj) )
 	  { 
@@ -363,7 +405,7 @@ local inline bool unperturbed_and_approaching(DYN *b,DYN *bi, DYN *bj)
 
 
 
-local inline bool create_binary(DYN *bi, DYN *bj)
+local inline bool create_binary(hdyn *bi, hdyn *bj)
 {
     // Combine two nodes, replacing the first by the center of mass of
     // the two, and moving both to lie below the new center of mass node.
@@ -408,7 +450,7 @@ local inline bool create_binary(DYN *bi, DYN *bj)
 
     // Create a new center of mass node.
 
-    DYN *cm = new DYN;
+    hdyn *cm = new hdyn;
     cm->set_mass(mi+mj);
     cm->set_pos((mi*bi->get_pos()+mj*bj->get_pos())/cm->get_mass());
     cm->set_vel((mi*bi->get_vel()+mj*bj->get_vel())/cm->get_mass());
@@ -418,7 +460,7 @@ local inline bool create_binary(DYN *bi, DYN *bj)
     // of the system.  Store it in bi->pot.
 
     real dphi_tidal = 0;
-    for_all_daughters(DYN, bi->get_parent(), bk)
+    for_all_daughters(hdyn, bi->get_parent(), bk)
 	if (bk != bi && bk != bj) {
 	    real dphi_k = -bi->get_mass()/abs(bi->get_pos()-bk->get_pos())
 			  -bj->get_mass()/abs(bj->get_pos()-bk->get_pos())
@@ -426,6 +468,9 @@ local inline bool create_binary(DYN *bi, DYN *bj)
 	    dphi_tidal += bk->get_mass()*dphi_k;
 	}
     bi->set_pot(dphi_tidal);
+
+    //-----------------------------------------------------------------
+    // Debugging:
 
     if (!dbg_allow_binary) {
 
@@ -439,6 +484,8 @@ local inline bool create_binary(DYN *bi, DYN *bj)
 	return true;
     }
 
+    //-----------------------------------------------------------------
+
     // Offset components to the center of mass frame.
 
     bi->inc_pos(-cm->get_pos());
@@ -449,7 +496,7 @@ local inline bool create_binary(DYN *bi, DYN *bj)
     cerr << endl << "too close: " << bi->format_label();
     cerr << " and " << bj->format_label() << endl;
 
-    DYN *p = bi->get_parent();
+    hdyn *p = bi->get_parent();
     pp(p), cerr << endl;
 
     // Restructure the tree.
@@ -487,7 +534,7 @@ local inline bool create_binary(DYN *bi, DYN *bj)
     // Make sure pos and pred_pos agree.
 
     cm->set_t_pred(time);
-    for_all_nodes(DYN, cm, bb) {
+    for_all_nodes(hdyn, cm, bb) {
 	bb->set_pred_pos(bb->get_pos());
 	bb->set_pred_vel(bb->get_vel());
     }
@@ -497,12 +544,12 @@ local inline bool create_binary(DYN *bi, DYN *bj)
 
 
 
-local inline bool terminate_binary(DYN*& bi)
+local inline bool terminate_binary(hdyn*& bi)
 {
     if (!bi) return false;
-    DYN *od = bi->get_oldest_daughter();
+    hdyn *od = bi->get_oldest_daughter();
     if (!od) return false;
-    DYN *yd = od->get_younger_sister();
+    hdyn *yd = od->get_younger_sister();
     if (!yd) return false;
 
     kepler *k = od->get_kepler();
@@ -512,7 +559,7 @@ local inline bool terminate_binary(DYN*& bi)
     k->print_all();
     PRL(od->get_t_pred());
 
-    DYN *p = bi->get_parent();
+    hdyn *p = bi->get_parent();
     pp(p), cerr << endl;
 
     // Offset the components to include the center of mass pos and vel.
@@ -530,13 +577,14 @@ local inline bool terminate_binary(DYN*& bi)
     // to the rest of the system.
 
     real dphi_tidal = 0;
-    for_all_daughters(DYN, bi->get_parent(), bk)
+    for_all_daughters(hdyn, bi->get_parent(), bk)
 	if (bk != bi) {
 	    real dphi_k = -od->get_mass()/abs(od->get_pos()-bk->get_pos())
 			  -yd->get_mass()/abs(yd->get_pos()-bk->get_pos())
 			  +bi->get_mass()/abs(bi->get_pos()-bk->get_pos());
 	    dphi_tidal += bk->get_mass()*dphi_k;
 	}
+
     PRC(dphi_tidal); PRC(od->get_pot());
     dphi_tidal -= od->get_pot();
     PRL(dphi_tidal);
@@ -589,7 +637,7 @@ local inline bool terminate_binary(DYN*& bi)
 
 
 
-local inline real acc_and_jerk_and_get_dt(DYN *b)
+local inline real acc_and_jerk_and_get_dt(hdyn *b)
 {
     // Compute acc and jerk, and return the top-level time step.
 
@@ -598,7 +646,7 @@ local inline real acc_and_jerk_and_get_dt(DYN *b)
     // Adjust dt to take unperturbed systems into account.
 
     real t = b->get_time();
-    for_all_daughters(DYN, b, bi)
+    for_all_daughters(hdyn, b, bi)
 	if (bi->is_parent()) correct_timestep_for_components(bi, t, dt);
 
     // Don't store the time steps yet, as the old time step may
@@ -607,20 +655,20 @@ local inline real acc_and_jerk_and_get_dt(DYN *b)
     return dt;
 }
 
-local inline void set_all_timesteps(DYN *b, real dt)
+local inline void set_all_timesteps(hdyn *b, real dt)
 {
     // Update all time steps (root and top-level nodes).
 
-    for_all_daughters(DYN, b, bi) bi->set_timestep(dt);
+    for_all_daughters(hdyn, b, bi) bi->set_timestep(dt);
     b->set_timestep(dt);
 }
 
-local void set_all_times(DYN *b)
+local void set_all_times(hdyn *b)
 {
     // Update times of all nodes in the system from system_time.
 
     real sys_t = b->get_time();
-    for_all_nodes(DYN, b, bi) bi->set_time(sys_t);
+    for_all_nodes(hdyn, b, bi) bi->set_time(sys_t);
 }
 
 
@@ -629,8 +677,8 @@ local void set_all_times(DYN *b)
 // that pred_pos here is new_pos there (similarly vel), old_acc here is
 // acc there, acc here is new_acc there (similarly jerk).
 
-void correct_acc_and_jerk(DYN *bi,
-			  const real new_dt, const real prev_new_dt)
+local void correct_acc_and_jerk(hdyn *bi,
+				const real new_dt, const real prev_new_dt)
 {
     // Correct the values of acc and jerk from time prev_new_dt to new_dt.
     // We simply fit a polynomial to old_acc and old_jerk at time 0 and acc
@@ -674,7 +722,7 @@ void correct_acc_and_jerk(DYN *bi,
     bi->set_jerk(jerk);
 }
 
-void correct_pos_and_vel(DYN *bi, const real new_dt)
+local void correct_pos_and_vel(hdyn *bi, const real new_dt)
 {
     // Apply a corrector in the form presented by Hut et al. (1995).
     // The "pred" quantities are those at the end of the step.
@@ -704,17 +752,18 @@ void correct_pos_and_vel(DYN *bi, const real new_dt)
 
 
 
-local void print_pred_energies(DYN *b)
+local void print_pred_energies(hdyn *b)
 {
-    // Compute and print energies based on "pred" quantities.
+    // Compute and print energies based on "pred" quantities,
+    // for debugging purposes.
 
     int n = 0;
-    for_all_nodes(DYN, b, bb) n++;
+    for_all_nodes(hdyn, b, bb) n++;
     vec *p = new vec[n];
     vec *v = new vec[n];
 
     n = 0;
-    for_all_nodes(DYN, b, bb) {
+    for_all_nodes(hdyn, b, bb) {
 	p[n] = bb->get_pos();
 	bb->set_pos(bb->get_nopred_pos());
 	v[n] = bb->get_vel();
@@ -725,24 +774,23 @@ local void print_pred_energies(DYN *b)
     int pr = cerr.precision(HIGH_PRECISION);
     cerr << b->get_time() << " (pred): ";
     cerr.precision(pr);
-    print_recalculated_energies((dyn*)b, 1, 0);
+    print_recalculated_energies((dyn*)b, 1);
 
     n = 0;
-    for_all_nodes(DYN, b, bb) {
+    for_all_nodes(hdyn, b, bb) {
 	bb->set_pos(p[n]);
 	bb->set_vel(v[n]);
 	n++;
     }
 }
 
+
+
 // Take a step to time t.  Return the actual system time at the end
 // of the step, after symmetrization if specified.
 
-local real take_a_step(DYN *b,		// root node
-		       real &dt,	// natural step at start/end
-		       int n_iter = 1)	// number of iterations to symmetrize
-					// 0 == > explicit, > 0 ==> implicit
-					// default of 1 should be adequate
+local real take_a_step(hdyn *b,		// root node
+		       real &dt)	// natural step at start/end
 {
     // Predict to time t + dt.
 
@@ -769,7 +817,7 @@ local real take_a_step(DYN *b,		// root node
 
 #endif
 
-    for_all_daughters(DYN, b, bi) {
+    for_all_daughters(hdyn, b, bi) {
 	bi->store_old_force();
 	bi->predict_loworder(t+dt);
 	if (bi->is_parent()) advance_components_to_time(bi, t+dt);
@@ -805,9 +853,9 @@ local real take_a_step(DYN *b,		// root node
 	}
 
 	// Extrapolate acc and jerk to the end of the new step, and
-	// apply the corrector for this iteraation.
+	// apply the corrector for this iteration.
 
-	for_all_daughters(DYN, b, bi) {
+	for_all_daughters(hdyn, b, bi) {
 	    if (new_dt != prev_new_dt)
 		correct_acc_and_jerk(bi, new_dt, prev_new_dt);
 	    correct_pos_and_vel(bi, new_dt);
@@ -817,7 +865,7 @@ local real take_a_step(DYN *b,		// root node
 
     // Complete the step.
 
-    for_all_daughters(DYN, b, bi) {
+    for_all_daughters(hdyn, b, bi) {
 	bi->set_pos(bi->get_pred_pos());
 	bi->set_vel(bi->get_pred_vel());
 	if (bi->is_parent())
@@ -830,7 +878,7 @@ local real take_a_step(DYN *b,		// root node
 
 
 
-bool is_fully_unperturbed(DYN *bi, DYN *bk)
+local bool is_fully_unperturbed(hdyn *bi, hdyn *bk)
 {
     // Check if the binary whose elder component is bi is perturbed by bk.
     // Use the same criteria as in the rest of kira.  To come...
@@ -838,16 +886,19 @@ bool is_fully_unperturbed(DYN *bi, DYN *bk)
     return false;
 }
 
-// Evolve the system to time t_end.  Stop if any particle gets too far
-// from the origin.
+// Evolve the system to time t_end, using the input data and settings
+// without modification.  Stop if any particle gets too far from the origin.
 
-real smallN_evolve(DYN *b,
-		   int n_iter = 1,
-		   real t_end = 200,
-		   real break_r2 = VERY_LARGE_NUMBER)
+real smallN_evolve(hdyn *b,
+		   real t_end,		// default = VERY_LARGE_NUMBER
+		   real break_r2,	// default = VERY_LARGE_NUMBER
+		   real end_on_unpert,	// default = false
+		   real dt_log,		// default = 0
+		   real dt_energy,	// default = 0
+		   real dt_snap)	// default = 0
 {
     b->init_pred();
-    for_all_daughters(DYN, b, bi) bi->init_pred();
+    for_all_daughters(hdyn, b, bi) bi->init_pred();
 
     int n_steps = 0;
 
@@ -860,25 +911,46 @@ real smallN_evolve(DYN *b,
     // update all times, as times and time steps are shared, but it is
     // convenient to keep the system coherent for output purposes.
 
+    real t_log = b->get_time();
+    real t_energy = b->get_time();
+    real t_snap = b->get_time();
+    int  n_snap = 0;
+
+    if (dt_energy > 0) {
+	int p = cerr.precision(HIGH_PRECISION);
+	cerr << b->get_time() << " (" << n_steps << "): ";
+	cerr.precision(p);
+	print_recalculated_energies((dyn*)b);
+	if (dt_energy > 0) t_energy += dt_energy;
+    } else
+	initialize_print_energies(b);
+
     // Optional output:
 
-    if (print) {
-	t_snap += dt_snap;
+    if (dt_snap > 0 || dt_log > 0) {
 	real t_sys = b->get_system_time();
 	b->set_system_time(b->get_time());
-	put_node(b);
-	sys_stats(b, 1, true, true, false, 2, true, true, true);
+	if (dt_log > 0) {
+	    sys_stats(b, 1, true, true, false, 2, true, true, true);
+	    t_log += dt_log;
+	}
+	if (dt_snap > 0) {
+	    cerr << "Snapshot " << n_snap << " output at time "
+		 << b->get_time() << " (" << n_steps << ")" << endl;
+	    put_node(b);
+	    t_snap += dt_snap;
+	}
 	b->set_system_time(t_sys);
     }
-
-    print_recalculated_energies((dyn*)b, 0, 0);
 
     while (b->get_time() < t_end) {
 
 	// Check termination criterion:
 
-	for_all_daughters(DYN, b, bi)
-	    if (square(bi->get_pos()) > break_r2) return t_end + 1;
+	for_all_daughters(hdyn, b, bi)
+	    if (square(bi->get_pos()) > break_r2) {
+		return t_end + 1;
+	    }
 
 	// Take a step.  Don't set time in advance, as the symmetrization
 	// process will determine the actual time step.  Thus, during the
@@ -888,7 +960,7 @@ real smallN_evolve(DYN *b,
 	// time step for the system at the end of the step.  The return
 	// value of the function is the new system time.
 
-	b->set_time(take_a_step(b, dt, n_iter));
+	b->set_time(take_a_step(b, dt));
 
 	// Update all times and time steps.
 
@@ -898,7 +970,7 @@ real smallN_evolve(DYN *b,
 
 #if 0
 	cerr << b->get_time() << " (" << n_steps << "): ";
-	print_recalculated_energies((dyn*)b, 1, 0);
+	print_recalculated_energies((dyn*)b, 1);
 #endif
 
 	// The step is over and all times have been advanced.
@@ -909,19 +981,21 @@ real smallN_evolve(DYN *b,
 	// Time step dt was set by bi_min and bj_min during the last acc
 	// and jerk calculation.
 
+	// Debugging:
+
 	if (rbin > 0 && abs(bi_min->get_pos()-bj_min->get_pos()) > rbin) {
 
 	    // Print debugging info on the binary we didn't actually create.
 
-	    DYN * od = bi_min;
-	    DYN * yd = bj_min;
+	    hdyn * od = bi_min;
+	    hdyn * yd = bj_min;
 	    PRL(od->format_label());
 	    PRL(yd->format_label());
 	    real mbin = od->get_mass() + yd->get_mass();
     	    vec cmpos = (od->get_mass()*od->get_pos()
 			 + yd->get_mass()*yd->get_pos())/mbin;
 	    real dphi_tidal = 0;
-	    for_all_daughters(DYN, od->get_parent(), bk)
+	    for_all_daughters(hdyn, od->get_parent(), bk)
 		if (bk != od && bk != yd) {
 		    real dphi_k =
 			-od->get_mass()/abs(od->get_pos()-bk->get_pos())
@@ -942,6 +1016,8 @@ real smallN_evolve(DYN *b,
 	    tree_changed = create_binary(bi_min, bj_min);
 	    // PRL(bk_nn->format_label());
 
+	    // Debugging:
+
 	    if (!dbg_allow_binary && tree_changed) {
 
 		// Didn't actually create a binary.  Save the separation
@@ -956,7 +1032,7 @@ real smallN_evolve(DYN *b,
 		// See if the new binary triggers the termination criterion.
 		// Nearest neighbor is bk_nn.
 
-		DYN *cm = bi_min->get_parent();
+		hdyn *cm = bi_min->get_parent();
 		kepler *k = bi_min->get_kepler();
 		PRC(cm); PRL(k);
 
@@ -988,14 +1064,14 @@ real smallN_evolve(DYN *b,
 
 	// Check for termination of unperturbed motion.
 
-	for_all_daughters(DYN, b, bi) {
-	    DYN *od = NULL;
+	for_all_daughters(hdyn, b, bi) {
+	    hdyn *od = NULL;
 	    if (od = bi->get_oldest_daughter())
 		if (od->get_t_pred() <= b->get_time()) {
 		    int p = cerr.precision(HIGH_PRECISION);
 		    cerr << b->get_time() << " (xxxxx): ";
 		    cerr.precision(p);
-		    print_recalculated_energies((dyn*)b, 1, 0);
+		    print_recalculated_energies((dyn*)b, 1);
 		    tree_changed |= terminate_binary(bi);
 		}
 	}
@@ -1013,32 +1089,44 @@ real smallN_evolve(DYN *b,
 	    int p = cerr.precision(HIGH_PRECISION);
 	    cerr << b->get_time() << " (yyyyy): ";
 	    cerr.precision(p);
-	    print_recalculated_energies((dyn*)b, 1, 0);
+	    print_recalculated_energies((dyn*)b, 1);
 	}
 
 	// Optional output:
 
-	if (print && b->get_time() > t_snap) {
+	if (dt_log > 0 && b->get_time() >= t_log) {
 	    real t_sys = b->get_system_time();
 	    b->set_system_time(b->get_time());
-	    put_node(b);
-	    t_snap += dt_snap;
-	    // sys_stats(b, 1, true, true, false, 2, true, true, true);
+	    sys_stats(b, 1, true, true, false, 2, true, true, true);
+	    t_log += dt_log;
 	    b->set_system_time(t_sys);
 	}
 
-	// Debugging: print out the energy.
+	if (dt_energy > 0 && b->get_time() >= t_energy) {
+	    int p = cerr.precision(HIGH_PRECISION);
+	    cerr << b->get_time() << " (" << n_steps << "): ";
+	    cerr.precision(p);
+	    print_recalculated_energies((dyn*)b, 1);
+	    t_energy += dt_energy;
+	}
 
-	int p = cerr.precision(HIGH_PRECISION);
-	cerr << b->get_time() << " (" << n_steps << "): ";
-	cerr.precision(p);
-	print_recalculated_energies((dyn*)b, 1, 0);
+	if (dt_snap > 0 && b->get_time() >= t_snap) {
+	    real t_sys = b->get_system_time();
+	    b->set_system_time(b->get_time());
+	    cerr << "Snapshot " << ++n_snap << " output at time "
+		 << b->get_time() << " (" << n_steps << ")" << endl;
+	    put_node(b);
+	    t_snap += dt_snap;
+	    b->set_system_time(t_sys);
+	}
     }
 
     return t_end;
 }
 
-local void restore_binary_tree(DYN *b)
+
+
+local void restore_binary_tree(hdyn *b)
 {
     // Reinstate the binary tree structure below bode b.
     // Use a simple distance/potential criterion.
@@ -1046,16 +1134,19 @@ local void restore_binary_tree(DYN *b)
     // To come...  Needed for the kira interface.
 }
 
-real integrate_multiple(DYN *b)
+real integrate_multiple(hdyn *b)
 {
     // Only termination condition for now is unperturbed motion
     // with a receding nearest neighbor.
 
-    // b is the top-level node of the clunmp in question.  Begin
+    // b is the top-level node of the clump in question.  Begin
     // by flattening everything to a single-level tree.
 
     int n_mult = b->flatten_node();
     cerr << "integrate_multiple: "; PRC(n_mult); PRL(b->n_daughters());
+
+    // Optionally set integration parameters before calling smallN_evolve.
+    // Also, probably should save, set, and restore root and system time.
 
     real t = smallN_evolve(b);
     restore_binary_tree(b);
@@ -1066,27 +1157,43 @@ real integrate_multiple(DYN *b)
 
 //----------------------------------------------------------------------
 
+#else
+
 main(int argc, char *argv[])
 {
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "a:g:n:r:t:";
+    char* param_string = "a:d:D:E:g:n:r:t:";
 
-    int n_iter = 1;
-    real t_end = 100; // VERY_LARGE_NUMBER;	// 100;
-    real break_r2 = VERY_LARGE_NUMBER;	// 400;
+    real dt_log = 0;
+    bool d_set = false;
+    real dt_snap = 0;
+    bool D_set = false;
+    real dt_energy = 0;
+    bool E_set = false;
+    real break_r2 = VERY_LARGE_NUMBER;
+    real t_end = 200;
 
     while ((c = pgetopt(argc, argv, param_string,
 			"$Revision$", _SRC_)) != -1)
 	switch(c) {
 
-	    case 'a': eta = atof(poptarg);
+	    case 'a': set_smallN_eta(atof(poptarg));
 		      break;
-	    case 'g': gamma2_unpert = pow(atof(poptarg), 2);
+	    case 'd': dt_log = atof(poptarg);
+	    	      d_set = true;
 		      break;
-	    case 'n': n_iter = atoi(poptarg);
+	    case 'D': dt_snap = atof(poptarg);
+	    	      D_set = true;
+		      break;
+	    case 'E': dt_energy = atof(poptarg);
+	    	      E_set = true;
+		      break;
+	    case 'g': set_smallN_gamma(atof(poptarg));
+		      break;
+	    case 'n': set_smallN_niter(atoi(poptarg));
 		      break;
 	    case 'r': break_r2 = pow(atof(poptarg),2);
 		      break;
@@ -1096,31 +1203,45 @@ main(int argc, char *argv[])
                       exit(1);
         }            
 
-    PRC(eta); PRC(gamma2_unpert); PRL(n_iter);
+    PRC(get_smallN_eta()); PRC(get_smallN_gamma()); PRL(get_smallN_niter());
     PRC(break_r2); PRL(t_end);
 
-    DYN *b = GET();
-    b->set_label("root");
-    b->set_root(b);			// bad!!
+    hdyn *b = get_hdyn();
+    b->log_history(argc, argv);
 
-    cerr.precision(10);
+    b->set_label("root");
+    b->set_root(b);			// bad!!  necessary??
 
     kira_options ko;
     ko.perturber_criterion = 2;
     b->set_kira_options(&ko);
 
-    b->set_time(0);
-    set_all_times(b);
+    for_all_nodes(hdyn, b, bi) bi->set_time(0);
 
-    // real t = smallN_evolve(b, n_iter, t_end, break_r2);
-    real t = integrate_multiple(b);
+    // Use smallN_evolve() as the integrator.  Later, may want to add an
+    // option to use the autoscaling features of integrate_multiple.
 
-    sys_stats(b, 1, true, true, false, 2, true, true, true);
+    cerr.precision(8);
+    real t = smallN_evolve(b, t_end, break_r2,
+			   false, dt_log, dt_energy, dt_snap);
 
+    cerr << endl;
     if (t != t_end)
 	cerr << "Interaction over!" << endl;
     else
 	cerr << "Interaction not over!" << endl;
 
-    put_node(b);
+    if (dt_log == 0 && !d_set) {
+	real t_sys = b->get_system_time();
+	b->set_system_time(b->get_time());
+	sys_stats(b, 1, true, true, false, 2, true, true, true);
+	b->set_system_time(t_sys);
+    }
+
+    if (dt_energy == 0 && !E_set)
+	print_recalculated_energies((dyn*)b, 1);
+
+    if (dt_snap == 0 && !D_set)	put_node(b);
 }
+
+#endif
