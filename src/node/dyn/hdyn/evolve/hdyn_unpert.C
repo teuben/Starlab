@@ -100,9 +100,9 @@
 //
 //#define MIN_UNPERT_STEPS		5
 //
-// FULL_MERGE_TOLERANCE:  Perturbation limit (independent of gamma2,
-// as of 1/14/02) at which we permit merging of an entire binary orbit.
-// Used once, in function is_unperturbed_and_approaching().
+// FULL_MERGE_TOLERANCE:  Limit on perturbation squared (independent of
+// gamma2, as of 1/14/02) at which we permit merging of an entire binary
+// orbit.  Used once, in function is_unperturbed_and_approaching().
 //
 //#define FULL_MERGE_TOLERANCE		1e-8
 //#define RELAX_FACTOR			10	// relaxed factor to continue
