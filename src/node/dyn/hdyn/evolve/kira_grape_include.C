@@ -193,7 +193,7 @@ void kira_synchronize_tree(hdyn *b)
     // GRAPE replacement for synchronize_tree().  Synchronize all
     // top-level nodes.  Called from integrate_list() in kira.C and
     // hdyn::merge_nodes().  Somewhat more elaborate than other
-    // functions in this file,/ as the entire algorithm is contained
+    // functions in this file, as the entire algorithm is contained
     // here.
 
 #if defined(USE_GRAPE)
@@ -205,6 +205,8 @@ void kira_synchronize_tree(hdyn *b)
     //							 (Steve, 1/02)
 
     // Make a list of top-level nodes in need of synchronization.
+    // Generally interested in recomputation of acc and jerk, so
+    // probably don't need to treat low-level nodes.
 
     xreal sys_t = b->get_system_time();
 
@@ -214,7 +216,10 @@ void kira_synchronize_tree(hdyn *b)
 
     int n_next = 0;
     for_all_daughters(hdyn, b, bi)
-	if (bi->get_time() < sys_t) n_next++;
+	if (bi->get_time() < sys_t) {
+	    bi->set_timestep(sys_t - bi->get_time());
+	    n_next++;
+	}
 
     hdyn **next_nodes = new hdynptr[n_next];
     n_next = 0;
@@ -222,7 +227,7 @@ void kira_synchronize_tree(hdyn *b)
 	if (bi->get_time() < sys_t) next_nodes[n_next++] = bi;
 
     // Integrate all particles on the list.  Start by computing forces.
-    // (Assume exact = false and ignore_internal = true.)
+    // (Assume exact = false and ignore_internal = false.)
 
     for (int i = 0; i < n_next; i++) {
 	hdyn *bi = next_nodes[i];
