@@ -2243,7 +2243,7 @@ void clean_up_hdyn_grape()
     if (ivel) delete [] ivel;
     if (iacc) delete [] iacc;
     if (ijerk) delete [] ijerk;
-j    if (ipot) delete [] ipot;
+    if (ipot) delete [] ipot;
     if (ih2) delete [] ih2;
     if (inn) delete [] inn;
 }
