@@ -3,7 +3,7 @@
 ////         for digestion by NBODY1-5
 ////
 //// Options:     -p    specify precision of output [6 sig. fig.]
-////              -t    also add the time
+////              -t    include time in output [no]
 
 #include "dyn.h"
 
@@ -20,14 +20,14 @@ main(int argc, char** argv)
     char* param_string = "p:t";
 
     int p = STD_PRECISION;
-    int t = 0;
+    bool time = false;
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c)
 	    {
 	    case 'p': p = atoi(poptarg);
 		      break;
-	    case 't': t = 1;
+	    case 't': time = !time;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
@@ -46,9 +46,12 @@ main(int argc, char** argv)
 	for (ni = root->get_oldest_daughter(); ni != NULL;
 	     ni = ni->get_younger_sister()) {
 
+	    real t = getrq(ni->get_dyn_story(), "t");
+
 #ifdef BAD_GNU_IO
 
-            if (t) printf(prec,ni->get_system_time());
+	    if (time) printf(prec, t);
+
 	    printf(prec, ni->get_mass());
 	    vector temp;
 	    temp = ni->get_pos();
@@ -57,12 +60,15 @@ main(int argc, char** argv)
 	    temp = ni->get_vel();
 	    for (k = 0; k < 3; k++) printf(prec,temp[k]);
 	    printf("\n");
+
 #else
-            if (t) cout << ni->get_system_time() << " ";
+
+	    if (time) cout << t << " ";
 	    cout << ni->get_mass() << " "
 		 << ni->get_pos()  << " "
 		 << ni->get_vel()
 		 << endl;
+
 #endif
 
 	}
