@@ -28,19 +28,16 @@ main(int argc, char ** argv)
 
     // Look for "local" command-line arguments first.  Note that the
     // dyn version is explicitly coded to accept and ignore this option.
-
-    extern char *poptarg;
-    int c;
-    char* param_string = "0";
+    // Using pgetopt seems to break the code in parse_scale_main(), so
+    // loop directly over the argument list here.
 
     bool force_nogrape = false;
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1) {
-	switch (c) {
-	    case '0':	force_nogrape = true;
-			break;
+    for (int i = 1; i < argc; i++)
+	if (streq(argv[i], "-0")) {
+	    force_nogrape = true;
+	    break;
 	}
-    }
 
     // Parse the remaining options using the dyn version parser.
 

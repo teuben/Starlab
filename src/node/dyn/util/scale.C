@@ -322,7 +322,6 @@ void scale(dyn *b, real eps,
 
     if (m_flag) {
 
-PRC(m); PRL(mass);
 
         real mfac = m/mass;
 	// PRL(mfac);
