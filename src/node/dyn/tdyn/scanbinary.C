@@ -127,7 +127,7 @@ main(int argc, char** argv)
     int nh = 0;
     while (nh < 1024 && (wb = read_bundle(s, false))) wh[nh++] = wb;
 
-    preload_pdyn(wh, nh, false);
+    preload_pdyn(wh, nh, false, false);
 
     while (1) {
 	char id[64];

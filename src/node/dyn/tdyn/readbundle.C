@@ -80,7 +80,7 @@ main(int argc, char** argv)
     for (int i = 0; i < 5; i++) cerr << endl;
 
     print_worldline_stats(wh, nh);
-    preload_pdyn(wh, nh, true);
+    preload_pdyn(wh, nh, true, false);
 
     for (int i = 0; i < 5; i++) cerr << endl;
 

@@ -75,7 +75,7 @@ main(int argc, char *argv[])
 	cin >> t;
 	if (cin.eof()) exit(0);
 
-	if (t < t_min || t > t_max) break;
+	if (t < t_min || t > t_max) continue;
 
 	int ih;
 	for (ih = 0; ih < nh; ih++)

@@ -625,10 +625,11 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
 }
 
 void preload_pdyn(worldbundleptr wh[], int nh,
-		  bool verbose)			// default = false
+		  bool verbose,			// default = false
+		  bool vel)			// default = false
 {
     for (int i = 0; i < nh; i++) {
-	create_interpolated_tree2(wh[i], wh[i]->get_t_min());
+	create_interpolated_tree2(wh[i], wh[i]->get_t_min(), vel);
 	if (verbose)
 	    cerr << "allocated memory for worldbundle " << i
 		 << ",  t_min = " << wh[i]->get_t_min() << endl;
