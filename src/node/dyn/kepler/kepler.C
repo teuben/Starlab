@@ -224,8 +224,10 @@ local int  keplerseq(real mean_an,	// mean anomaly
 
 	    if (abs( delta_ecc_an ) < ITERAC ) counter--;
 
-	    if (++iter > MAXITER)
-	      err_or_warn("keplerseq: convergence too slow");
+	    if (++iter > MAXITER) {
+		err_or_warn("keplerseq: convergence too slow");
+		break;
+	    }
 
 	    function = -mean_an + ecc_an - ecc * sin(ecc_an);
 			       // function = 0 solves Kepler's equation
@@ -307,6 +309,7 @@ local int  keplershypeq(real mean_an,	// mean anomaly
 			 << "  ecc = " << ecc << "  MAXITER = " << MAXITER
 			 << endl;
 		    err_or_warn("keplershypeq: convergence too slow");
+		    break;
 		}
 
 		function = -mean_an - ecc_an + ecc * sinh(ecc_an);
