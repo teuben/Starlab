@@ -131,6 +131,8 @@ local INLINE void update_interpolated_tree(worldbundle *wb,
     // of the previous power-of-two segment, or at the start of the next,
     // we must still rebuild.
 
+    // bool rebuild = (t_int <= s->get_t_start() || t_int >= s->get_t_end());
+
     // PROBLEM: This will cause an unnecessary rebuild if t_int happens
     // to be at the start or end of the proper segment (e.g. the start
     // or end of the worldbundle time range), which can slow the code
@@ -138,11 +140,7 @@ local INLINE void update_interpolated_tree(worldbundle *wb,
     //
     // FIX: Save and compare the previous s rather than t_int.
 
-    // bool rebuild = (t_int <= s->get_t_start() || t_int >= s->get_t_end());
-
-    // Probably only need the last part of this test...
-
-    bool rebuild = (t_int < s->get_t_start() || t_int > s->get_t_end()
+    bool rebuild = (t_int <= s->get_t_start() || t_int >= s->get_t_end()
 		    || w->get_current_segment() != s);
 
     // Rebuild/update the current subtree.  Start by finding the base
@@ -251,6 +249,23 @@ local INLINE void update_interpolated_tree(worldbundle *wb,
 		     << " t_int = " << t_int
 		     << endl;
 		PRL(rebuild);
+
+#if 0
+		// Dump a lot of non-specific info.  Didn't refine because
+		// the problem was quickly solved.  (Steve, 10/03)
+
+		cerr << "s = " << s << endl
+		     << "first event = " << bn << " "
+		     << bn->format_label() << " "
+		     << bn->get_time() << endl;
+		print_details(wb, bn, t);
+		PRC(top); PRL(top->format_label());
+
+		PRC(bb->format_label()); PRL(ww);
+
+		PRC(t_int); PRC(s->get_t_start()); PRL(s->get_t_end());
+		PRC(s); PRL(w->get_current_segment());
+#endif
 	    }
 	}
     }

@@ -60,6 +60,12 @@ istream & pdyn::scan_star_story(istream & s, int level)
     return s;
 }
 
+bool tdyn::check_and_correct_node(bool verbose)		// default = true
+{
+    return node::check_and_correct_node(verbose);	// undo inherited dyn,
+							// revert to node
+}
+
 istream & pdyn::scan_dyn_story(istream & s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];

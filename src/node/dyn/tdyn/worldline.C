@@ -799,7 +799,7 @@ worldbundle *read_bundle(istream &s,
 
 	if (stop) {
 	    if (verbose)
-		cerr << "break at t = " << b->get_time() << endl;
+		cerr << endl << "break at t = " << b->get_time() << endl;
 	    break;
 	}
     }
@@ -862,13 +862,19 @@ worldbundle *read_bundle(istream &s,
 		s = s->get_next();
 	    }
 
-	    if (verbose == 1 && n_jump > 0) {
+	    if (verbose) {
 		cerr << "worldline " << i << " (" << b->format_label()
 		     << "), id = " << w->get_id()
-		     << " has " << n_jump << " jump";
-		if (n_jump > 1) cerr << "s";
-		cerr << endl;
+		     << " has " << nseg << " segment";
+		if (nseg > 1) cerr << "s";
 	    }
+
+	    if (verbose == 1 && n_jump > 0) {
+		cerr << " with " << n_jump << " jump";
+		if (n_jump > 1) cerr << "s";
+	    }
+
+	    if (verbose) cerr << endl;
 
 	    // Then check events within each segment.
 

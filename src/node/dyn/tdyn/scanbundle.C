@@ -62,7 +62,7 @@ main(int argc, char** argv)
     worldbundleptr wb, wh[1024];
 
     int nh = 0;
-    while (nh < 1024 && (wb = read_bundle(s, true))) wh[nh++] = wb;
+    while (nh < 1024 && (wb = read_bundle(s, 1))) wh[nh++] = wb;
 
     for (int i = 0; i < 5; i++) cerr << endl;
 
