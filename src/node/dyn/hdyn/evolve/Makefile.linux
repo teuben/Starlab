@@ -47,7 +47,7 @@ OBJECT_FILES = hdyn_unpert.o hdyn_ev.o hdyn_tree.o hdyn_merge.o \
 
 LIBRARY = libhdyn.a
 
-EXECUTABLES = kira
+EXECUTABLES = kira kira_grape4
 
 NON_CCC_EXECUTABLES = 
 
@@ -55,12 +55,21 @@ DEPEND_LIBS	= $(LIB)/libhdyn.a $(LIB)/lib_dyn_.a $(LIB)/libdyn.a \
 		  $(LIB)/libnode.a $(LIB)/libdstar.a $(LIB)/libsstar.a \
 		  $(LIB)/libstd.a
 
-CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC)
+# Without GRAPE:
+#CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC)
+
+# For GRAPE-4:
+CFLAGS       =	$(STARLAB_CCC_FLAGS) -I$(INC) \
+		  -DSTARLAB_HAS_GRAPE4 -DSHARE_GRAPE -DUSE_HALF_CHIP \
+		  $(CC_EXTRA)
+# For GRAPE-4 in indiana
+GRAPELIB = -L/home/spz/grape -lg4a -lharp -lprometheus  
 
 CPPFLAGS = 
 
 LIBFLAGS  =	-L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
-                -ldstar -lsstar -lstd -lm 
+                -ldstar -lsstar -lstd -lm \
+	         $(GRAPELIB) \
 #		~/ccmalloc-0.2.3/src/ccmalloc.o -ldl
 
 EXEFLAGS = 
@@ -68,6 +77,20 @@ EXEFLAGS =
 #..............................................................................
 
 include $(STARLAB_PATH)/inc/Makefile.worker.inc
+
+#..............................................................................
+#...for GRAPE..................................................................
+
+hdyn_grape.C:	hdyn_grape4.C hdyn_grape6.C
+	@touch hdyn_grape.C
+
+kira_grape4.C : kira.C
+	echo "#define USE_GRAPE" > kira_grape4.C
+	cat kira.C >> kira_grape4.C
+
+kira_grape6.C : kira.C
+	echo "#define USE_GRAPE" > kira_grape6.C
+	cat kira.C >> kira_grape6.C
 
 #..............................................................................
 #..............................................................................
