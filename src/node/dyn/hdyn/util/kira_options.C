@@ -11,44 +11,46 @@
 // kira_options:  Starlab kira/options-specific functions.
 
 #include "hdyn.h"
+#include "../evolve/kira_defaults.h"
 
 #ifndef TOOLBOX
 
-kira_options::kira_options() {		    // (Steve's 6/00
-					    //  preferences...)
+kira_options::kira_options() {
 
-    print_xreal					= true;
+    print_xreal		=	true;
 
-    perturber_criterion				= 2;	// = hybrid
+    perturber_criterion	=	DEFAULT_PERTURBER_CRITERION;
 
-    optimize_scheduling				= true;
-    optimize_block				= false;
-    allow_unperturbed				= true;
-    allow_multiples				= false;
+    optimize_scheduling	=	DEFAULT_OPTIMIZE_SCHEDULING;
+    optimize_block	=	DEFAULT_OPTIMIZE_BLOCK;
+    allow_unperturbed	=	DEFAULT_ALLOW_UNPERTURBED;
+    allow_multiples	=	DEFAULT_ALLOW_MULTIPLES;
 
-    min_unpert_steps				= 5;
-    full_merge_tolerance			= 1.e4;
-    relax_factor				= 10;
-    partial_merge_tolerance			= 0.01;
-    full_merge_tol_for_close_binary		= 1.e-4;
-    multiple_merge_tolerance			= 1.e6;
-    unconditional_stable_fac			= 5;	// fairly conservative
-    partial_stable_fac				= 30;
+    min_unpert_steps	=	DEFAULT_MIN_UNPERT_STEPS;
+    full_merge_tolerance =	DEFAULT_FULL_MERGE_TOLERANCE;
+    relax_factor	=	DEFAULT_RELAX_FACTOR;
+    partial_merge_factor =	DEFAULT_PARTIAL_MERGE_FACTOR;
+    full_merge_tol_for_close_binary =
+				DEFAULT_FULL_MERGE_TOL_FOR_CLOSE_BINARY;
+    multiple_merge_tolerance =	DEFAULT_MULTIPLE_MERGE_TOLERANCE;
+    unconditional_stable_fac =	DEFAULT_UNCONDITIONAL_STABLE_FAC;
+    partial_stable_fac	=	DEFAULT_PARTIAL_STABLE_FAC;
 
-    use_aarseth_criterion			= true;
-    aarseth_stable_fac				= 2.8;	// don't change!
+    use_aarseth_criterion =	DEFAULT_USE_AARSETH_CRITERION;
+    aarseth_stable_fac	=	DEFAULT_AARSETH_STABLE_FAC;
 
-    close_criterion				= 2;	// = force
+    close_criterion	=	DEFAULT_CLOSE_CRITERION;
 
-    allow_keplstep				= true;
+    allow_keplstep	=	DEFAULT_ALLOW_KEPLSTEP;
 
-    use_old_correct_acc_and_jerk		= false;
+    use_old_correct_acc_and_jerk =
+				DEFAULT_USE_OLD_CORRECT_ACC_AND_JERK;
 
-    grape_check_count				= 15000;
-    grape_max_cpu				= 15;	// seconds
-    grape_last_cpu				= 0;
+    grape_check_count	=	DEFAULT_GRAPE_CHECK_COUNT;
+    grape_max_cpu	=	DEFAULT_GRAPE_MAX_CPU;
+    grape_last_cpu	=	DEFAULT_GRAPE_LAST_CPU;
 
-    use_perturbed_list				= true;
+    use_perturbed_list	=	DEFAULT_USE_PERTURBED_LIST;
 
 }
 
@@ -69,7 +71,7 @@ void kira_options::print(ostream &s)
     PRS(min_unpert_steps);
     PRS(full_merge_tolerance);
     PRS(relax_factor);
-    PRS(partial_merge_tolerance);
+    PRS(partial_merge_factor);
     PRS(full_merge_tol_for_close_binary);
     PRS(multiple_merge_tolerance);
     PRS(unconditional_stable_fac);
