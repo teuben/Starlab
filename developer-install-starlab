@@ -65,6 +65,10 @@ if (-e configure) then
     echo Running make install				>>& $log
     make install					>>& $log
 
+    # Deuglify the log file (install.log --> install.log.2)
+
+    ./beautify-install $log
+
     # Then test whatever...
 
     rehash
