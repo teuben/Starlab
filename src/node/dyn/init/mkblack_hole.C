@@ -46,11 +46,13 @@ local void mkblack_hole(dyn* b, int id, real m_bh) {
     }
 
     real prev_mass; 
-    if(bh) 
-      prev_mass = bh->get_mass();
+    if(bh) {
+        prev_mass = bh->get_mass();
 	bh->set_mass(m_bh);
+        bh->set_vel(bh->get_vel() * sqrt(prev_mass/m_bh));
+    }
     else 
-	err_exit("mkblack_hole: central star not found");
+	err_exit("mkblack_hole: selected star not found");
 
     putiq(bh->get_log_story(), "black_hole", 1);
 
@@ -60,8 +62,6 @@ local void mkblack_hole(dyn* b, int id, real m_bh) {
     }
 
     b->set_mass(m_sum);
-    // Selected black holes keeps same kinetic energy
-    b->set_vel(b->get_vel() * sqrt(prev_mass/m_sum));
 
     sprintf(tmp_string,
 	    "         black hole added, total mass = %8.2f", m_sum); 
