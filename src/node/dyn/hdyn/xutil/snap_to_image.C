@@ -246,8 +246,8 @@ local void add_point(float *a, int nx, int ny,
     int ir = (int)(r+0.0001)+1;
     real r2a = pow(r-0.1,2), r2b = pow(r+0.2,2), r2c = pow(r+0.5,2);
 
-    for (int ii = max(-ir, -i); ii <= min(ir, nx-i); ii++)
-	for (int jj = max(-ir, -j); jj <= min(ir, ny-j); jj++) {
+    for (int ii = max(-ir, -i); ii <= min(ir, nx-i-1); ii++)
+	for (int jj = max(-ir, -j); jj <= min(ir, ny-j-1); jj++) {
 
 	    // Get distance from pixel center to reference point.
 
