@@ -1,20 +1,22 @@
 
 // Place temporary post-step debugging code here, to clean up kira.C.
 
-int ppp = cerr.precision(HIGH_PRECISION);
-PRL(ds);
-for (int ii = 0; ii < n_next; ii++)
-    if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
-	hdyn *n = next_nodes[ii];
-	PRC(ii); PRL(n->format_label());
-	PRL(n->get_pos());
-	PRL(n->get_vel());
-	PRL(n->get_acc());
-	PRL(n->get_jerk());
-	PRL(n->get_timestep());
-    }
-cerr.precision(ppp);
-cerr << endl;
+#if 0
+    int ppp = cerr.precision(HIGH_PRECISION);
+    PRL(ds);
+    for (int ii = 0; ii < n_next; ii++)
+        if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
+	    hdyn *n = next_nodes[ii];
+	    PRC(ii); PRL(n->format_label());
+	    PRL(n->get_pos());
+	    PRL(n->get_vel());
+	    PRL(n->get_acc());
+	    PRL(n->get_jerk());
+	    PRL(n->get_timestep());
+	}
+    cerr.precision(ppp);
+    cerr << endl;
+#endif
 
 #if 0
     if ((t > 1250.854692 && t < 1250.854695)
