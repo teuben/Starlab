@@ -83,7 +83,7 @@ void renumber(node* b, int istart, bool mass_order,
 
     }
 
-    char tmp[128];
+    char tmp[MAX_INPUT_LINE_LENGTH];
     if(name_nodes)
       for_all_leaves(node, b, bj) {
       PRL(bj->get_index());
