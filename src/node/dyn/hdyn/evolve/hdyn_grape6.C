@@ -1372,7 +1372,7 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
     if (!status)
 	b->set_grape_rnb_sq(RNB_INCREASE_FAC*b->get_grape_rnb_sq());
 
-    return status
+    return status;
 }
 
 
