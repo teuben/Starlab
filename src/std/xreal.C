@@ -156,9 +156,14 @@ bool xreal::operator >= (const xreal y) {
     return (i > y.i || (i == y.i && f >= y.f));
 }
 
-real fmod2(xreal x, real y)	// assumes y is a power of 2 less than 1
+real fmod2(xreal x, real y)	// limited function:  assumes y is a power
+				//		      of 2 less than 1
 {
-    return fmod(x.get_frac(), y);
+    xfrac fx = x.get_f();
+    xreal xy = (xreal)y;
+    xfrac fy = xy.get_f();
+    xfrac r = fx%fy;
+    return r*TWO64I;
 }
 
 #else
