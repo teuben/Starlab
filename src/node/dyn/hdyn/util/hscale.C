@@ -55,7 +55,8 @@ main(int argc, char ** argv)
 			  c_flag,
 			  e_flag, e, m_flag, m,
 			  q_flag, q, r_flag, r,
-			  debug)) {
+			  debug,
+			  "$Revision$", _SRC_)) {
 	get_help();
 	exit(1);
     }

@@ -762,19 +762,29 @@ bool kira_initialize(int argc, char** argv,
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
-    kira_system_id(argc, argv);
-
     // Make a preliminary pass over the argument list to check for
-    // an input file:
+    // --version or an input file:
 
     char infile[256];
     bool read_from_file = false;
 
     for (int i = 0; i < argc; i++)
-	if (argv[i][0] == '-' && argv[i][1] == 'R') {
-	    strcpy(infile, argv[++i]);
-	    read_from_file = true;
+	if (argv[i][0] == '-') {
+	    if (argv[i][1] == 'R') {
+
+		strcpy(infile, argv[++i]);
+		read_from_file = true;
+
+	    } else if (strstr(argv[i], "version")) {
+
+		// Use pgetopt for a standard format.  Note that the
+		// version will actually be the version for this file.
+
+		pgetopt(argc, argv, "", "$Revision$", "kira");
+	    }
 	}
+
+    kira_system_id(argc, argv);
 
     // Read in a snapshot:
 

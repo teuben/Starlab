@@ -93,7 +93,8 @@ main(int argc, char **argv)
     if (!parse_sys_stats_main(argc, argv,
 			      which_lagr,
 			      binaries, long_binary_output, B_flag,
-			      calc_e, n_sq, out, verbose)) {
+			      calc_e, n_sq, out, verbose,
+			      "$Revision$", _SRC_)) {
 	get_help();
 	exit(1);
     }
