@@ -1,5 +1,52 @@
 
-//  pgetopt.C: portable and simplified version of getopt() in UNIX, system V
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
+//// Portable and simplified version of getopt() in UNIX, system V.
+//// This is a simple driver/test program for the library function.
+//// The length of an option is one character, and the argument
+//// has to follow the corresponding option, separated by a space (or tab).
+//// Options must start with a minus sign, but more than one option can
+//// be combined after the same minus sign.  Thus, the next four command
+//// lines all have the same effect, while the following three are illegal
+//// and will give error messages.
+////
+////              good -a -b 10 -c
+////
+////	          good -c -a -b 10
+////
+////	          good -b 10 -ca
+////
+////	          good -acb 10
+////
+////	          bad -a -b10 -c
+////
+////	          bad -ab10c 
+////
+//// 	          bad -a -c -b
+////
+//// Usage:   pgetopt
+////
+//// Options:
+////          -a        test: no argument expected
+////          -b        test: one argument expected
+////          -c        test: two arguments expected
+////          -d        test: three arguments expected
+////          -e        test: gour arguments expected
+////          -f        test: no argument expected
+////          -g        test: one optional argument
+////          -h        test: no argument expected
+////
+//// Written by Piet Hut and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
 //.............................................................................
 //    version 1:  Nov 1989   Piet Hut               email: piet@iassns.bitnet
 //                           Institute for Advanced Study, Princeton, NJ, USA
@@ -13,7 +60,7 @@
 //.............................................................................
 //
 //  Command line argument passing is done in System V UNIX style. However,
-//  instead of the function  getopt() , we use a private, portable version
+//  instead of the function  getopt(), we use a private, portable version
 //  pgetopt(), given here.  The reason for providing our own function is that
 //  there are non-system V UNIX versions, such as some Berkeley UNICES, which
 //  do not provide  getopt().  By always using our own  pgetopt() we guarantee
@@ -308,6 +355,8 @@ int main(char argc, char ** argv)
     extern char *poparr[];				// new (8/99)
     int c;
     char* param_string = "ab:c::d:::e::::fg.h";
+
+    check_help();
 
     while ((c = pgetopt(argc, argv, param_string,
 			"$Revision$", _SRC_)) != -1) {
