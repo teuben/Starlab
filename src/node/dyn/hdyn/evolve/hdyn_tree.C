@@ -613,9 +613,9 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 	// Dump out the "before" system (bi and bj), for use in 4tree
 	// applications, with "defunct" flags attached (final "3").
 
-      //cerr << "combine_top_level_nodes: time " << bi->get_system_time();
-      //cerr << "  put_node for " << endl << "    " << bi->format_label();
-      //cerr << " and " << bj->format_label() << endl;
+	// cerr << "combine_top_level_nodes: time " << bi->get_system_time();
+	// cerr << "  put_node for " << endl << "    " << bi->format_label();
+	// cerr << " and " << bj->format_label() << endl;
 
 	put_node(cout, *bi, false, 3);
 	put_node(cout, *bj, false, 3);
@@ -690,9 +690,9 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
 	predict_loworder_all(bj->get_parent(), bj->get_system_time());
 
-	cerr << "combine_top_level_nodes: time " << bi->get_system_time();
-	cerr << "  put_node for " << bj->get_parent()->format_label()
-	     << endl;
+	// cerr << "combine_top_level_nodes: time " << bi->get_system_time();
+	// cerr << "  put_node for " << bj->get_parent()->format_label()
+	//      << endl;
 
 	put_node(cout, *bj->get_parent(), false, 2);
     }
@@ -778,8 +778,8 @@ void split_top_level_node(hdyn * bi,
 	// Dump out the "before" system, for use in 4tree applications,
 	// using predicted quantities.
 
-//	cerr << "split_top_level_node: time " << bi->get_system_time();
-//	cerr << "  put_node for " << bi->format_label() << endl;
+	// cerr << "split_top_level_node: time " << bi->get_system_time();
+	// cerr << "  put_node for " << bi->format_label() << endl;
 
 	put_node(cout, *bi, false, 3);
     }
@@ -859,9 +859,9 @@ void split_top_level_node(hdyn * bi,
 	predict_loworder_all(od, od->get_system_time());
 	predict_loworder_all(yd, yd->get_system_time());
 
-//	cerr << "split_top_level_node: time " << od->get_system_time();
-//	cerr << "  put_node for " << endl << "    " << od->format_label();
-//	cerr << " and " << yd->format_label() << endl;
+	// cerr << "split_top_level_node: time " << od->get_system_time();
+	// cerr << "  put_node for " << endl << "    " << od->format_label();
+	// cerr << " and " << yd->format_label() << endl;
 
 	put_node(cout, *od, false, 2);
 	put_node(cout, *yd, false, 2);
@@ -940,9 +940,9 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 	// Dump out the "before" system (top-level), for use in 4tree
 	// applications.  
 
-//	cerr << "combine_low_level_nodes: time " << bi->get_system_time();
-//	cerr << "  put_node for " << old_top_level_node->format_label()
-//	     << endl;
+	// cerr << "combine_low_level_nodes: time " << bi->get_system_time();
+	// cerr << "  put_node for " << old_top_level_node->format_label()
+	//      << endl;
 
 	put_node(cout, *old_top_level_node, false, 3);
     }
@@ -1030,8 +1030,8 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 	    bb->set_valid_perturbers(false);
 	    bb->set_perturbation_squared(-1);
 
-	    //cerr << "cleared perturber lists for "
-	    //	 << bb->format_label() << endl;
+	    // cerr << "cleared perturber lists for "
+	    //	    << bb->format_label() << endl;
 	}
     }
 
@@ -1054,8 +1054,8 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 
 	predict_loworder_all(top_level_node, bi->get_system_time());
 
-//	cerr << "combine_low_level_nodes: time " << bi->get_system_time();
-//	cerr << "  put_node for " << top_level_node->format_label() << endl;
+	// cerr << "combine_low_level_nodes: time " << bi->get_system_time();
+	// cerr << "  put_node for " << top_level_node->format_label() << endl;
 
 	put_node(cout, *top_level_node, false, 2);
     }
@@ -1305,7 +1305,7 @@ int hdyn::adjust_tree_structure(bool full_dump)		// default = false
 
 		predict_loworder_all(get_root(), system_time);
 
-		//cerr << "\ntime = " << system_time << endl;
+		// cerr << "\ntime = " << system_time << endl;
 		// print_recalculated_energies(get_root(), 1);
 		// pp3(get_root(), cerr);
 
@@ -1314,9 +1314,9 @@ int hdyn::adjust_tree_structure(bool full_dump)		// default = false
 
 		combine_top_level_nodes(nn_top, this, full_dump);
 
-		 //cerr << "Time = " << system_time<< endl;
-		 //print_recalculated_energies(get_root(), 1);
-		 //pp3(get_root(), cerr);
+		 // cerr << "Time = " << system_time<< endl;
+		 // print_recalculated_energies(get_root(), 1);
+		 // pp3(get_root(), cerr);
 
 		status = 2;
 
