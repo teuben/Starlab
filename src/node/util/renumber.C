@@ -84,14 +84,16 @@ void renumber(node* b, int istart, bool mass_order,
 
     }
 
-    char tmp[MAX_INPUT_LINE_LENGTH];
-    if(name_nodes)
-      for_all_leaves(node, b, bj) {
-      PRL(bj->get_index());
-      if (bj->get_index() >= 0) {
-	sprintf(tmp, "%d", bj->get_index());
-	bj->set_name(tmp);
-      }
+    if(name_nodes) {				// the new option that wasted
+						// Steve's time...!
+	char tmp[MAX_INPUT_LINE_LENGTH];
+	for_all_leaves(node, b, bj) {
+	    PRL(bj->get_index());
+	    if (bj->get_index() >= 0) {
+		sprintf(tmp, "%d", bj->get_index());
+		bj->set_name(tmp);
+	    }
+	}
     }
 }
 
