@@ -270,7 +270,7 @@ local void mkmass(node* b, mass_function mf,
 		type_string(Equal_Mass), m_sum); 
     else
 	sprintf(tmp_string,
-		"         %s mass function, total mass = %8.2f Solar",
+		"       %s mass function, total mass = %8.2f Solar",
 		type_string(mf), m_sum); 
     b->log_comment(tmp_string);
     cerr << "Mass function is " << type_string(mf) <<endl;

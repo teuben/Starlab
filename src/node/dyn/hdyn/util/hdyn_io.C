@@ -259,7 +259,7 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
     // Two basic branches here:
     //
-    //		1. short_output
+    //		1. short_output (full_dump mode)
     //		2. write_unformatted
     //
     // Note that write_unformatted is only relevant when short_output > 0.
@@ -381,9 +381,18 @@ ostream & hdyn::print_dyn_story(ostream & s,
 //		       type_short_string(sbase->get_element_type()));
 	    put_integer(s,     "  S  =  ", (int)sbase->get_element_type());
 
-	    put_real_number(s, "  T  =  ", sbase->temperature());
-	    put_real_number(s, "  L  =  ", sbase->get_luminosity());
+	    if (write_unformatted) {
 
+		// Always write floats for T and L.
+
+		s << "TL =" << endl;
+		write_unformatted32_real(s, sbase->temperature());
+		write_unformatted32_real(s, sbase->get_luminosity());
+
+	    } else {
+		put_real_number(s, "  T  =  ", sbase->temperature());
+		put_real_number(s, "  L  =  ", sbase->get_luminosity());
+	    }
 	}
 
 	// Use kep as a flag here (careful!).
