@@ -1399,6 +1399,10 @@ bool kira_initialize(int argc, char** argv,
 	    // Command line specified sec in solar radii.  Convert it to
 	    // N-body units for use by check_merge_nodes (which uses d_nn_sq).
 
+	    cerr << "set stellar merger criterion in starbase (SIF= "
+		 << sec << ")" << endl; 
+	    b->get_starbase()->set_stellar_merger_criterion_in_double_star(sec);
+
 	    sec = b->get_starbase()->conv_r_star_to_dyn(sec);
 	    b->set_stellar_encounter_criterion_sq(pow(sec, 2));
 

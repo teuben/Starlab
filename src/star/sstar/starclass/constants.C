@@ -378,7 +378,7 @@ real stellar_evolution_constants::safety(safety_parameter ps) {
           break;                                   // Tricky used to be 1.e-7
     case maximum_timestep:                   return 1000; // was 1, was 1000  
           break;                                   // 2.5 works fine but slow
-    case maximum_recursive_calls:            return 1000;
+    case maximum_recursive_calls:            return 100;
           break;
         default:
 	     cerr << "\nNo recognized option in "

@@ -38,6 +38,8 @@ double_star * new_double_star(node* n, real sma, real ecc,
 
 double_star::double_star(node* n) : star(n) {
 
+  SIF = 1;
+
            semi=eccentricity=binary_age=minimal_timestep=velocity=0;
            donor_timescale=0;
            identity = donor_identity=0;
@@ -102,6 +104,9 @@ binary_type double_star::obtain_binary_type() {
 
   real rp = get_primary()->get_effective_radius();
   real rs = get_secondary()->get_effective_radius();
+
+  rp *= SIF;
+  rs *= SIF;
 
   //  cerr << "obtain_binary_type: " << identity
   //       << " rp:" <<log10(rl_p/rp)
@@ -495,13 +500,13 @@ void double_star::circularize() {
 
      if((bin_type != Merged && bin_type != Disrupted)          &&
         (pericenter<= cnsts.parameters(tidal_circularization_radius)
-	            * get_primary()->get_effective_radius()         ||
+	            * SIF*get_primary()->get_effective_radius()         ||
          pericenter<= cnsts.parameters(tidal_circularization_radius)
-	            * get_secondary()->get_effective_radius())      &&
+	            * SIF*get_secondary()->get_effective_radius())      &&
         (eccentricity>0 && eccentricity<1.)) /*safety*/         {
             real peri_new = cnsts.parameters(tidal_circularization_radius)
-	                  * max(get_primary()->get_effective_radius(),
-				       get_secondary()->get_effective_radius());
+	                  * SIF*max(get_primary()->get_effective_radius(),
+				    get_secondary()->get_effective_radius());
             real circ_semi = semi*(1-eccentricity*eccentricity);
             real new_ecc = circ_semi/peri_new - 1;
 //cerr<<"old: "<<" "<<semi<<" "<<eccentricity<<" "<<pericenter<<endl;
@@ -1084,6 +1089,9 @@ void double_star::try_zero_timestep() {
     real rp = get_primary()->get_effective_radius();
     real rs = get_secondary()->get_effective_radius();
 
+    rp *= SIF;
+    rs *= SIF;
+
     // Just for memory and output routines.
     // Primary fills Roche-lobe.
        if (rp >= rl_p) {
@@ -1210,6 +1218,9 @@ void double_star::recursive_binary_evolution(real dt,
 //       real rs = get_secondary()->get_effective_radius();
        real rp = get_primary()->get_radius();
        real rs = get_secondary()->get_radius();
+
+       rp *= SIF;
+       rs *= SIF;
 
        star* donor    = get_primary();
        star* accretor = get_secondary();
@@ -1602,8 +1613,14 @@ void double_star::double_spiral_in() {
        real rl_p = roche_radius(post_ce_semi, mcore_p, mcore_s);
        real rl_s = roche_radius(post_ce_semi, mcore_s, mcore_p);
 
-       if (p->get_core_radius() >= rl_p    ||
-	   s->get_core_radius() >= rl_s) {
+       real prc = p->get_core_radius();
+       real src = s->get_core_radius();
+
+       prc *= SIF;
+       src *= SIF;
+
+       if (prc >= rl_p    ||
+	   src >= rl_s) {
 
 #if 0       
          // see double_star::spiral_in()
@@ -1631,9 +1648,9 @@ void double_star::double_spiral_in() {
 	 
          // see double_star::spiral_in()
 
-	 real semi_p = p->get_core_radius()
+	 real semi_p = prc                         // was p->get_core_radius()
 		     / roche_radius(1, mcore_p, mcore_s);
-	 real semi_s = s->get_core_radius()
+	 real semi_s = src                         // was s->get_core_radius()
 		     / roche_radius(1, mcore_s, mcore_p);
 	 
 	 real post_ce_semi = max(semi_p, semi_s);
@@ -1743,9 +1760,14 @@ void double_star::spiral_in(star* larger,
         real rl_l = roche_radius(a_spi, mcore_l, mtot_s);
         real rl_s = roche_radius(a_spi, mtot_s, mcore_l);
 
+       real lrc = larger->get_core_radius() * SIF;
+       real sr = smaller->get_radius() * SIF;
+       real ser = smaller->get_effective_radius() * SIF;
+
+       // SPZ July 2002: why is there a difference bewteen sr and ser?
+
 	// Merger
-        if (larger->get_core_radius()>=rl_l 	||
-           smaller->get_radius()>=rl_s) 	{
+        if (lrc>=rl_l || sr>=rl_s) 	{
 
 	  // Determine the minimum separation before either the
 	  // core of the larger star or
@@ -1754,12 +1776,10 @@ void double_star::spiral_in(star* larger,
 	  // real da = semi*(1 - r_lobe) - smaller->get_effective_radius();
 	  // (SPZ+GN: 1 Oct 1998)
 	  
-	  real sma_larger = larger->get_core_radius()
-	                  / roche_radius(1, larger->get_core_mass(),
-				            smaller->get_total_mass());
-	  real sma_smaller = smaller->get_effective_radius()
-	                   / roche_radius(1, smaller->get_total_mass(),
-					     larger->get_core_mass());
+	  real sma_larger = lrc / roche_radius(1, larger->get_core_mass(),
+					       smaller->get_total_mass());
+	  real sma_smaller = ser / roche_radius(1, smaller->get_total_mass(),
+						larger->get_core_mass());
 	  real sma_post_ce = max(sma_larger, sma_smaller);
 
 	  real mass_lost = (mtot_l*mtot_s/(2*sma_post_ce) 
@@ -1904,8 +1924,8 @@ void double_star::magnetic_stellar_wind(const real dt) {
       //get_seba_counters()->aml_mergers++;
 
     }
-    else if(semi_new <= get_primary()->get_core_radius() +
-	                get_secondary()->get_core_radius() ) {
+    else if(semi_new <= SIF*(get_primary()->get_core_radius() +
+			     get_secondary()->get_core_radius()) ) {
       semi = semi_new;
 cerr << "magnetic stellar wind => ::common_envelope" << endl; 
       common_envelope();
@@ -1986,8 +2006,8 @@ void double_star::gravrad(const real dt) {
 
 	  //get_seba_counters()->gwr_mergers++;
         }
-        else if(a_new <= get_primary()->get_core_radius() +
-                         get_secondary()->get_core_radius() ) {
+        else if(a_new <= SIF*(get_primary()->get_core_radius() +
+			      get_secondary()->get_core_radius()) ) {
 	  semi=a_new;
 	  eccentricity = e_new;
 cerr << "gravrad => ::common_envelope" << endl; 
@@ -2191,10 +2211,10 @@ void double_star::dynamic_mass_transfer(star* larger, star* smaller) {
 	// Note that we hare want the equilibrium radius of the accretor
 	// The effective radius of the accretor is already used to
 	// determine how conservative mass transfer is. (SPZ: 2 Jun 1999)
-	  if (larger->get_core_radius()>=rl_l 	||
-	      smaller->get_radius()>=rl_s) 	{
+	  if (SIF*larger->get_core_radius()>=rl_l 	||
+	      SIF*smaller->get_radius()>=rl_s) 	{
 
-	    PRC(smaller->get_radius());PRC(rl_s);PRL(a_f);
+	    PRC(SIF*smaller->get_radius());PRC(rl_s);PRL(a_f);
 
 	    cerr << "Merger double_star::dynamic_mass_transfer" << endl;
 	    dump(cerr, false);

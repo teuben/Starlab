@@ -98,6 +98,8 @@ local void print_star(dyn *bi, vector pos, vector vel,
 	real &Up, real &Bp, real &Vp, real &Rp, real &Ip) { 
 
 
+  int id = bi->get_index();
+
   // To solar radii
   //  vector pos = bi->get_pos() - dc_pos;
   pos[0] = bi->get_starbase()->conv_r_dyn_to_star(pos[0]);
@@ -186,7 +188,8 @@ local void print_star(dyn *bi, vector pos, vector vel,
  	           Us, Bs, Vs, Rs, Is,
                    U, B, V, R, I);
 
-     cout << " type= " << stype << " m= " << M_tot << " R= " << R_eff
+     cout << " Time= " << time << " id= " << id
+          << " type= " << stype << " m= " << M_tot << " R= " << R_eff
           << " L= " << L_eff 
 	  << " T_eff= " << T_eff 
 	  << " r= "  << pos[0] << " " << pos[1] << " " << pos[2] 

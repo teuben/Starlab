@@ -114,7 +114,7 @@ local real mf_GdeMarchi(real m_lower, real m_upper) {
 
     real m, X;
     do {
-	X = 1-randinter(0,1);
+	X = randinter(0,1);
 	// better fit to Guido's results at low mass end, 
         // but lacks high mass component.
 	//m = 0.15 * (1 /(pow(X, 0.9) + 0.03*pow(X, 0.2)) - pow(X, 8)/1.03);
