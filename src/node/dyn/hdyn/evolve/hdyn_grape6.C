@@ -630,11 +630,6 @@ local INLINE int force_by_grape(xreal xtime,
     if (init_jp_dma)
 	g6_flush_jp_buffer_(&cluster_id);
 
-if (xtime > 0) {
-    PRL(iacc[0]);
-    PRL(ijerk[0]);
-}
-
     g6calc_firsthalf_(&cluster_id, &nj, &ni, iindex,
 		      ipos, ivel, iacc, ijerk, ipot,
 		      &eps2, ih2);
@@ -651,10 +646,11 @@ if (xtime > 0) {
 				  ipos, ivel, &eps2, ih2,
 				  iacc, ijerk, ipot, inn);
 
-if (xtime > 0) {
+//if (xtime > 0) {
+    PRC(ni); PRC(nj); PRL(nodes[0]->format_label());
     PRL(iacc[0]);
     PRL(ijerk[0]);
-}
+//}
 
 #ifdef T_DEBUG
     if (in_debug_range && T_DEBUG_LEVEL > 0) {
