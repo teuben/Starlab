@@ -562,12 +562,6 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
     cerr << "calculating energies..." << endl << flush;
     
     real epot0, ekin0, etot0;
-    calculate_energies(get_root(), eps2, epot0, ekin0, etot0);	// dyn function
-
-    cerr << "The hard way: ";
-    PRC(epot0); PRC(ekin0); PRL(etot0);
-
-    cerr << "The hard-ware way: ";
     calculate_internal_energies(get_root(), epot0, ekin0, etot0);
     PRC(epot0); PRC(ekin0); PRL(etot0);
 
@@ -578,7 +572,6 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
 			   + bcoll->mass * square(bcoll->vel));
     real etot_int = epot_int + ekin_int;
     
-    PRC(epot0); PRC(ekin0); PRL(etot0);
     PRC(epot_int); PRC(ekin_int); PRL(etot_int);
     PRL(cpu_time());
     //pp3(cm, cerr);
@@ -720,12 +713,6 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
     // causes a not so very strange error.
     
     real epot, ekin, etot;
-
-    calculate_energies(get_root(), eps2, epot, ekin, etot);	// dyn function
-    cerr << "The hard way: ";
-    PRC(epot); PRC(ekin); PRL(etot);
-
-    cerr << "The hard-ware way: ";
     calculate_internal_energies(get_root(), epot, ekin, etot);
     PRC(epot); PRC(ekin); PRL(etot);
 
