@@ -1,29 +1,54 @@
 
 # Source this file to install and build Starlab from scratch.
-# All command-line arguments are given to 'make config_new'
+# All command-line arguments are passed to 'make config_new'
 
 rm -f install.log >& /dev/null
 touch install.log
 
+set stat = 0
 echo \(Sending output to install.log\)
 
 if (! -e starlab_start) then
     echo Running configure
     configure >>& install.log
+    if ($status) then
+	@ stat++
+    endif
     echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
     echo Installing configuration files
     make config_new $* >>& install.log
+    if ($status) then
+	@ stat++
+    endif
     echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
 endif
 
 echo Initializing Starlab environment
 source starlab_start >>& install.log
+if ($status) then
+    @ stat++
+endif
 echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
 
 echo Building Starlab \(this may take a few minutes\)
 make all >>& install.log
+if ($status) then
+    @ stat++
+endif
 rehash
 echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
 
-echo Done...\ \ Run scripts/kira_test to check sample kira output.
+if ($stat == 0) then
+    echo -n Testing kira...
+    kira --help >& /dev/null
+    if ($status == 0) then
+        echo 'OK :-)'
+    else
+        echo 'failed :-('
+    endif
+
+    echo Done...\ \ Run scripts/kira_test to check sample kira output.
+else
+    echo Install failed: stat = $stat
+endif
 
