@@ -1,0 +1,23 @@
+#!/usr/local/bin/tcsh -f
+
+# build_report: helper script for use with make_dyn_select.
+#
+# First argument is the name of the log file.  Remaining arguments
+# are the files to build in the current directory.
+
+if ($#argv < 1) exit 1
+
+set log = $1
+set exe_list = "$argv[2*]"
+
+echo -n "   " `pwd`...
+set last_exe = `latest_time $exe_list`
+
+(make $exe_list |& grep -v 'make\[') >>& $log
+
+if (`latest_time $exe_list` > $last_exe) then
+    echo "(built)"
+else
+    echo "(up to date)"
+endif
+
