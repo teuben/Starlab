@@ -19,21 +19,21 @@
 //  do not provide  getopt().  By always using our own  pgetopt() we guarantee
 //  uniform behavior, independent of the UNIX version used.
 //
-//     Restrictions: the length of an option is one character, and the argument
-//                   has to follow the corresponding option, but separated by
-//                   a space (or tab).
-//                   Options have to start with a minus sign, but more than one
-//                   option can be combined after the same minus sign.
+//  Restrictions: the length of an option is one character, and the argument
+//                has to follow the corresponding option, but separated by
+//                a space (or tab).
+//                Options have to start with a minus sign, but more than one
+//                option can be combined after the same minus sign.
 //
 //  Examples: The following command lines all give the same effect:
-//  		mumble -a -b 10 -c
-//		mumble  -c -a -b 10
-//		mumble -b 10 -ca
-//		mumble -acb 10
+//                mumble -a -b 10 -c
+//	          mumble  -c -a -b 10
+//	          mumble -b 10 -ca
+//	          mumble -acb 10
 //  but the following versions are illegal, and will give error messages:      
-//		mumble -a -b10 -c
-//		mumble -ab10c
-// 		mumble -a -c -b
+//	          mumble -a -b10 -c
+//	          mumble -ab10c
+// 	          mumble -a -c -b
 //.............................................................................
 
 #include "stdinc.h"
@@ -99,6 +99,8 @@ int  pgetopt(int argc, char ** argv, char * optstr)
     static int argv_offset  = 0;	// character counter within argument
 					// (multiple switches per argument
 					//  are allowed)
+
+    static char *minus = "-";
 
     if (argv_counter >= argc)
 	return -1;			// signal that we've run out of options
@@ -202,6 +204,7 @@ int  pgetopt(int argc, char ** argv, char * optstr)
 	if (narg == 0) poptarg = argv[argv_counter];
 
 	poparr[narg++] = argv[argv_counter];
+	poparr[narg] = minus;			// in case next arg is optional
 
     }
 

@@ -98,7 +98,7 @@ bins:	.libs
 bin:	bins
 
 packages:
-	@cd src/packages; ./install; cd ../..
+	@cd src/packages; make all; cd ../..
 
 #..............................................................................
 
@@ -118,6 +118,7 @@ clean:
 	@-$(RM) -f .libs core *~ bin/* lib/* inc/*~
 	@-$(RM) -f `find . -name .make.state -print`
 	@$(MAKEWALK) clean sbin $(DIRS)
+	@cd src/packages; make clean; cd ../..
 
 #..............................................................................
 
