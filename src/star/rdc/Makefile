@@ -16,11 +16,11 @@
 ##
 
 
-CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC_STAR) -I$(INC) $(STARLAB_CFITSIOINC)
-LIBFLAGS	= -L$(LIB) -lrdc -ldstar -lsstar -lhdyn -l_dyn_ -ldyn -lnode -lstd $(STARLAB_CFITSIOLIB) -lm
+CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC_STAR) -I$(INC) -I$(STARLAB_CFITSIOINC)
+LIBFLAGS	= -L$(LIB) -L$(STARLAB_CFITSIOLIB) -lrdc -ldstar -lsstar -lhdyn -l_dyn_ -ldyn -lnode -lstd  -lcfitsio -lm
 DEPEND_LIBS	= $(LIB)/libsstar.a  $(LIB)/libdstar.a $(LIB)/librdc.a \
 	          $(LIB)/libdyn.a $(LIB)/libnode.a   $(LIB)/libstd.a \
-		  $(STARLAB_CFITSIOINC)/libcfitsio.a
+		  -L$(STARLAB_CFITSIOLIB)/libcfitsio.a
 
 EXECUTABLES = rdc_SeBa makepovfile rs_findtype rs_snapshot \
 	      rs_population rs_scenarios rs_birthrate \

@@ -47,7 +47,7 @@
 #include "sstar_to_dyn.h"
 #include "dyn.h"
 
-#include <fitsio.h>
+#include "fitsio.h"
 
 enum wavelength {X=-1, U=0, B, F, R, J};
 
@@ -180,8 +180,8 @@ local bool add_star_to_ccd(real** ccd, real luminosity,
   real norm = Kolmogorov_psf(0, beta_PSF, fwhm);
   int n_psf = int(10*fwhm/arcsec_per_pixel);
   
-  for(int ix = max(0, nx-n_psf); ix<min(XCCD_MAX, nx+n_psf); ix++) 
-    for(int iy = max(0, ny-n_psf); iy<min(YCCD_MAX, ny+n_psf); iy++) {
+  for(int ix = Starlab::max(0, nx-n_psf); ix<Starlab::min(XCCD_MAX, nx+n_psf); ix++) 
+    for(int iy = Starlab::max(0, ny-n_psf); iy<Starlab::min(YCCD_MAX, ny+n_psf); iy++) {
 
       r_locus = sqrt(pow(xpos-ix*arcsec_per_pixel, 2) 
 		     +      pow(ypos-iy*arcsec_per_pixel, 2)); 
@@ -306,7 +306,7 @@ local real get_luminosity(dyn* bi, wavelength band,
 
   real dL = gauss()*sqrt(luminosity*luminosity_norm);
   luminosity += dL/luminosity_norm;
-  PRC(luminosity);PRL(dL);
+  //  PRC(luminosity);PRL(dL);
 
   return luminosity;
 }
@@ -553,8 +553,8 @@ local void mk_ccd(dyn* b, vec dc_pos, int project, wavelength band,
 
 	if (luminosity<=0) {
 	  luminosity = 0;
-	  cerr << "Stellar luminosity = " << luminosity << endl;
-	  cerr << "        star Not added to ccd"<<endl;
+	  //	  cerr << "Stellar luminosity = " << luminosity << endl;
+	  //	  cerr << "        star Not added to ccd"<<endl;
 	}
 	else {
 	  if (verbose) {
@@ -617,7 +617,7 @@ local void mk_ccd(dyn* b, vec dc_pos, int project, wavelength band,
     real Mmax = 0;
     for(int ix = 0; ix<XCCD_MAX; ix++) 
       for(int iy = 0; iy<YCCD_MAX; iy++)  
-	Mmax = max(Mmax, ccd[ix][iy]);
+	Mmax = Starlab::max(Mmax, ccd[ix][iy]);
 
     PRC(Mmax);PRL(upper_Llimit);
 //    real upper_limit_counts = calibrate_upper_limit(beta_PSF, upper_Llimit);
@@ -627,7 +627,7 @@ local void mk_ccd(dyn* b, vec dc_pos, int project, wavelength band,
     for(int ix = 0; ix<XCCD_MAX; ix++) 
       for(int iy = 0; iy<YCCD_MAX; iy++)  {
 	ccd[ix][iy] = ccd[ix][iy]/upper_Llimit;
-	lmax = max(lmax, ccd[ix][iy]);
+	lmax = Starlab::max(lmax, ccd[ix][iy]);
       }
     PRL(lmax);
 
@@ -635,7 +635,7 @@ local void mk_ccd(dyn* b, vec dc_pos, int project, wavelength band,
     for(int ix = 0; ix<XCCD_MAX; ix++) 
       for(int iy = 0; iy<YCCD_MAX; iy++)  {
 	ccd[ix][iy] *= maximum_electrons;
-	Mmax = max(Mmax, ccd[ix][iy]);
+	Mmax = Starlab::max(Mmax, ccd[ix][iy]);
       }
     PRL(Mmax);
 
@@ -689,7 +689,7 @@ local void mk_ccd(dyn* b, vec dc_pos, int project, wavelength band,
     // cut off too low and too high values.
     for(int ix = 0; ix<XCCD_MAX; ix++) 
       for(int iy = 0; iy<YCCD_MAX; iy++)  
-	ccd[ix][iy] = min(max(0., ccd[ix][iy]), 1.*SATURATION_LIMIT);
+	ccd[ix][iy] = Starlab::min(Starlab::max(0., ccd[ix][iy]), 1.*SATURATION_LIMIT);
 
     if(add_cosmics) {
       int n_cosm = add_cosmic_rays(ccd, t_exposure, verbose);
