@@ -2,7 +2,7 @@
 #include "stdinc.h"
 #include "image_fmt.h"
 
-#ifdef HAS_PNG
+#ifdef HAVE_LIBPNG
 
 // Write_png - Write an image using libpng -- stripped-down version.
 //
@@ -150,7 +150,7 @@ int write_png(FILE *dst,
 	      unsigned char *blue)
 {
     cerr << "write_png: no PNG support available; switching to GIF" << endl;
-    return write_gif(dst, rows, cols, pixels, red, green, blue);
+    return write_gif(dst, width, height, image, red, green, blue);
 }
 #endif
 
@@ -164,10 +164,10 @@ int write_png(FILE *dst, int cols, int rows,
 
     get_colormap(red, green, blue, colormap_file);
 
-#ifdef HAS_PNG
-    return write_png(dst, rows, cols, pixels, red, green, blue);
+#ifdef HAVE_LIBPNG
+    return write_png(dst, cols, rows, pixels, red, green, blue);
 #else
     cerr << "write_png: no PNG support available; switching to GIF" << endl;
-    return write_gif(dst, rows, cols, pixels, red, green, blue);
+    return write_gif(dst, cols, rows, pixels, red, green, blue);
 #endif
 }

@@ -32,13 +32,6 @@
 #include  <math.h>
 #include  <string.h>
 
-/*=============================================================================
-**  Starlab version specification :
-**=============================================================================
-*/
-
-#define STARLAB_VERSION          "2.1"
-
 
 /*=============================================================================
 **  New naming conventions to add to or replace existing names in C :

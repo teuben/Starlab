@@ -120,7 +120,7 @@ main(int argc, char** argv)
 
     else if (streq(fmt, "png")) {
 
-#ifdef HAS_PNG
+#ifdef HAVE_LIBPNG
 	write_png(stdout, m, n, data, colormap);
 #else
 	cerr << "No PNG support; switching to GIF" << endl;
