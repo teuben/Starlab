@@ -1,0 +1,26 @@
+#!/bin/tcsh -f
+
+# Clean up the "usr" (STARLAB_INSTALL_PATH) files.
+
+set usr = ""
+if ($#argv > 1) then
+    set usr = $1
+else if ($?STARLAB_INSTALL_PATH) then
+    set usr = $STARLAB_INSTALL_PATH
+endif
+
+if ("X$usr" == "X") then
+    echo Must specify a usr directory.
+   exit
+endif
+
+if (! -d $usr) then
+    echo Must specify a valid usr directory.
+   exit
+endif
+
+set bin = $usr/bin
+set lib = $usr/lib/starlab
+set man = $usr/man/man1
+
+rm -rf $bin/* $lib/* $man/*
