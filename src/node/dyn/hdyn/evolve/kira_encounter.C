@@ -2,34 +2,44 @@
 #include "hdyn.h"
 #include <star/dstar_to_kira.h>
 #include <star/single_star.h>
+#include "hdyn_inline.C"
 
-real get_sum_of_radii(hdyn* bi, hdyn* bj) {
+// NOTE: The following function may be called repeatedly from within
+// the innermost force-evaluation loop (in hdyn_ev.C, hdyn_grape4.C, and
+// hdyn_grape6.C), so we really don't want to call find_qmatch() every time.
+// Retain the functionality of allowing story checking, but suppress it
+// by default.  If it is important to have the posibility of a black hole
+// not identifiable by using get_element_type() (e.g. for a calculation
+// without stellar evolution), then this information may have to become
+// part of the hdyn class structure.  The "get_sum..." function is now
+// just a wrapper for the inlined version.  (Rewritten by Steve, 1/05) 
 
-    // by default
-    real sum_of_radii = bi->get_radius()+bj->get_radius();
+real get_sum_of_radii(hdyn* bi, hdyn* bj,
+		      bool check_story)		// default = false
+{
+    // Interpret the radii.  Note that this code is replicated in
+    // function flat_calculate_acc_and_jerk(), in hdyn_ev.C
 
-    // For black hole use tidal horizon instead of radius
-    if(bi->get_starbase()->get_element_type() == Black_Hole ||
-       (find_qmatch(bi->get_log_story(), "black_hole") &&
-        getiq(bi->get_log_story(), "black_hole")==1)) {
+    real radi = bi->get_radius();
+    bool bi_is_bh = false;
+    if (radi < 0) {
+	bi_is_bh = true;
+	radi = -radi;
+    }
+    if (!bi_is_bh && check_story)
+	bi_is_bh = getiq(bi->get_log_story(), "black_hole");
 
-        if(!(bi->get_starbase()->get_element_type() == Black_Hole ||
-             find_qmatch(bj->get_log_story(), "black_hole"))) {
+    real radj = bj->get_radius();
+    bool bj_is_bh = false;
+    if (radj < 0) {
+	bj_is_bh = true;
+	radj = -radj;
+    }
+    if (!bj_is_bh && check_story)
+	bj_is_bh = getiq(bj->get_log_story(), "black_hole");
 
-            sum_of_radii = 2 * bj->get_radius()
-                * (pow(bi->get_mass()/bj->get_mass(), ONE_THIRD));
-	  }
-      }
-    else if(bj->get_starbase()->get_element_type() == Black_Hole ||
-            (find_qmatch(bj->get_log_story(), "black_hole") &&
-             getiq(bj->get_log_story(), "black_hole")==1)) {
-
-        sum_of_radii = 2 * bi->get_radius()
-            * (pow(bj->get_mass()/bi->get_mass(), ONE_THIRD));
-      }
-
-    return sum_of_radii;
-  }
+    return compute_sum_of_radii(bi, radi, bi_is_bh, bj, radj, bj_is_bh);
+}
 
 real print_encounter_elements(hdyn* bi, hdyn* bj,
 			      char* s, 		    // default = "Collision"
