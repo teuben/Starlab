@@ -1,5 +1,6 @@
 
-//// freeze:  reduce all top-level velocities, leaving positions unchanged.
+//// freezebin:  reduce all top-level binary CM velocities, leaving
+////             positions unchanged.
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
 ////              -f    specify freeze factor [0]
@@ -11,12 +12,12 @@
 
 #ifdef TOOLBOX
 
-local void freeze(dyn * b, real fac)
+local void freezebin(dyn * b, real fac)
 {
     dyn * bi;
 
     for_all_daughters(dyn, b, bi)
-	bi->scale_vel(fac);
+	if (bi->is_parent()) bi->scale_vel(fac);
 }
 
 main(int argc, char ** argv)
@@ -51,7 +52,7 @@ main(int argc, char ** argv)
             b->log_comment(comment);
         b->log_history(argc, argv);
 
-        freeze(b, fac);
+        freezebin(b, fac);
 	put_dyn(cout, *b);	
 	rmtree(b);
     }
