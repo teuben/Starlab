@@ -2339,21 +2339,21 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 	    // recompute the neighbor lists.  Nodes with valid lists
 	    // will use the hardware nn and skip this section.
 
-	    if (bb->is_parent()) {
-		PRL(func);
-		PRC(bb->get_time()); PRL(bb->format_label());
-		PRC(bb->get_valid_perturbers()); PRL(bb->get_grape_rnb_sq());
-	    }
+//  	    if (bb->is_parent()) {
+//  		PRL(func);
+//  		PRC(bb->get_time()); PRL(bb->format_label());
+//  		PRC(bb->get_valid_perturbers()); PRL(bb->get_grape_rnb_sq());
+//  	    }
 
 	    int count_force = 1;
 	    int status;
 
 	    while ((status = get_neighbors_and_adjust_h2(bb, pipe))) {
 
-		if (bb->is_parent()) {
-		    PRC(bb->get_time()); PRC(bb->format_label()); PRL(status);
-		    PRC(count_force); PRL(bb->get_grape_rnb_sq());
-		}
+//  		if (bb->is_parent()) {
+//  		    PRC(bb->get_time()); PRC(bb->format_label()); PRL(status);
+//  		    PRC(count_force); PRL(bb->get_grape_rnb_sq());
+//  		}
 
 		// Neighbor list must be recomputed:
 		//
