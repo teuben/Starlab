@@ -40,12 +40,17 @@ set OK = 0
 
 if (-e configure) then
 
+    # Work around temporary Qt glitch.
+
+    set Qt = ""
+    if ($?QTDIR == 0) set Qt = "--without-qt-dir"
+
     # Perform the usual configuration process:
 
     echo Running configure
     echo 						>>& $log
     echo Running configure				>>& $log
-    ./configure --prefix=$install_dir			>>& $log
+    ./configure $Qt --prefix=$install_dir		>>& $log
 
     # Build the package.
 
