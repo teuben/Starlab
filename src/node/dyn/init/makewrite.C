@@ -9,23 +9,23 @@
 //=======================================================//              /|\ ~
 
 //// makewrite:  Turn a text file into a snapshot.  Used in some
-////             demonstrations only.
+////             demonstrations only.  File may be read top to
+////             bottom or left to right.
 ////
-//// Options:  -c    add a comment to the output snapshot [false]
-////           -C    output data in 'col' format [no]
-////           -r    random velocities [0]
-////           -s    random seed
+//// Options:  -c    add a comment to the output snapshot              [false]
+////           -C    output data in 'col' format                          [no]
+////           -d    toggle direction: top-bottom/left-right      [left-right]
+////           -s    random seed                          [from system cloock]
+////           -v    random velocity scale                                 [0]
 ////
-//// Example:  /usr/games/banner -w 40 STARLAB | makewrite -c "STARLAB"
+//// Example:  banner -w 40 STARLAB | makewrite -c "STARLAB"
 
 #include "dyn.h"
 #include <ctype.h>
 
 #ifdef TOOLBOX
 
-#define  LENGTH_SCALE_FACTOR   0.1
-#define  LEFT_OFFSET           -20
-#define  TOP_OFFSET             -5
+#define  SCALE_FACTOR   0.1
 
 main(int argc, char ** argv)
 {
@@ -38,11 +38,13 @@ main(int argc, char ** argv)
     int input_seed, actual_seed;
     bool s_flag = false;
 
+    int dir = 0;
+
     check_help();
  
     extern char *poptarg;
     int c;
-    char* param_string = "c:Cv:s:";
+    char* param_string = "c:Cdv:s:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -50,6 +52,8 @@ main(int argc, char ** argv)
 		      comment = poptarg;
 		      break;
 	    case 'C': C_flag = true;
+		      break;
+	    case 'd': dir = 1 - dir;
 		      break;
 	    case 's': s_flag = true;
 		      input_seed = atoi(poptarg);
@@ -70,25 +74,42 @@ main(int argc, char ** argv)
     b->set_oldest_daughter(bo);
     bo->set_parent(b);
 
-    int j = TOP_OFFSET;		// x
-    int i = LEFT_OFFSET;	// y
+    // Traditional banner writes from top to bottom.  Starlab banner
+    // and file input writes left to right.  Want to translate into a
+    // standard format.
+
+    int i = 0;		// column number
+    int j = 0;		// line number;
+
     int indx = 0;
     int n = 0;
-
-    // Banner writes from top to bottom.  Want to translate this
-    // into left to right.
 
     c = getchar();
     while(c != EOF) {
 	while (c != '\n' && c != EOF) {
 	    if (!isspace(c)) {
- 
-		n++;
-		bo->set_pos(vec(j*LENGTH_SCALE_FACTOR,
-				   i*LENGTH_SCALE_FACTOR, 0));
+ 		n++;
+		real x, y;
+		if (dir == 0) {
+
+		    // Text reads left to right.
+
+		    x = i * SCALE_FACTOR;
+		    y = -j * SCALE_FACTOR;
+
+		} else {
+
+		    // Text reads top to bottom.
+
+		    x = j * SCALE_FACTOR;
+		    y = i * SCALE_FACTOR;
+
+		}
+
+		bo->set_pos(vec(x, y, 0));
 		bo->set_vel(v_rand*vec(randinter(-1,1),
-					  randinter(-1,1),
-					  randinter(-1,1)));
+				       randinter(-1,1),
+				       randinter(-1,1)));
 
 		bo->set_label(++indx);
 
@@ -97,11 +118,11 @@ main(int argc, char ** argv)
 		by->set_elder_sister(bo);
 		bo = by;
 	    }
-	    i++;		// i (= y) increases with each character
+	    i++;		// i increases with each character
 	    c = getchar();
 	}
-	j++;			// j (= x) increases with each new line
-	i = LEFT_OFFSET;
+	j++;			// j increases with each new line
+	i = 0;
 	if (c != EOF)
 	    c = getchar();
     }
@@ -112,12 +133,16 @@ main(int argc, char ** argv)
 
     for_all_daughters(dyn, b, bb)
 	bb->set_mass(1.0/n);
-    
+
     if (c_flag == TRUE)
         b->log_comment(comment);
     b->log_history(argc, argv);
 
     if (C_flag) b->set_col_output(true);
+
+    // Move to the center of mass frame (effectively centers the data,
+    // so we don't have to worry too much about sizing and offsetting
+    // the particles).
 
     b->to_com();
     put_dyn(b);
