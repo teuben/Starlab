@@ -1285,13 +1285,10 @@ bool hdyn::correct_and_update()
 
 	correct_slow(sb->slow, dt, acc, jerk, bt2, at3, 2);
 
-
-    real old_v = 0;
-    if (diag->grape)
-	old_v = abs1(vel);
-
     vector new_pos = pred_pos + (0.05 * at3 + ONE12 * bt2) * dt * dt;
     vector new_vel = pred_vel + (0.25 * at3 + ONE3 * bt2) * dt;
+
+#if defined(STARLAB_HAS_GRAPE4) || defined(STARLAB_HAS_GRAPE4)
 
     // Note from Steve (10/01):
     //
@@ -1322,79 +1319,79 @@ bool hdyn::correct_and_update()
     // action, as the problem seems to disappear from one GRAPE call to the
     // next.
 
-    if (diag->grape && old_v > 0) {
+    real old_v = abs1(vel);
 
-	// Numbers here are somewhat arbitrary (but see above note).
+    // Numbers here are somewhat arbitrary (but see above note).
 
-	// real new_v = abs1(new_vel);
-	// if (new_v/old_v > 1000 || new_v > 1.e6) {	// too loose...
+    // real new_v = abs1(new_vel);
+    // if (new_v/old_v > 1000 || new_v > 1.e6) {	// too loose...
 
-	real dv = abs1(new_vel-vel);
-	if (dv > old_v && dv > 0.5) {
+    real dv = abs1(new_vel-vel);
+    if (dv > old_v && dv > 0.5) {
 
-	    // Possible runaway -- speed has changed significantly.
+	// Possible runaway -- speed has changed significantly.
 
-	    // Refine the possibilities before flagging an error.
-	    // Neutron star shouldn't show a large delta(vel), and the acc
-	    // or jerk should be good indicators of problems in any case.
+	// Refine the possibilities before flagging an error.
+	// Neutron star shouldn't show a large delta(vel), and the acc
+	// or jerk should be good indicators of problems in any case.
 
-	    if (abs1(acc-old_acc) > abs1(old_acc)
-		|| abs1(jerk-old_jerk) > 5*abs1(old_jerk)) {
+	if (abs1(acc-old_acc) > abs1(old_acc)
+	    || abs1(jerk-old_jerk) > 5*abs1(old_jerk)) {
 
-		cerr << endl << "correct: possible hardware error at time "
-		     << get_system_time() << endl;
-
-		// Nasty -- need a cleaner way of implementing GRAPE calls...
+	    cerr << endl << "correct: possible hardware error at time "
+		 << get_system_time() << endl;
 
 #if defined(STARLAB_HAS_GRAPE4)
-		PRL(get_grape_chip(this));
+	    PRL(get_grape_chip(this));			// direct access to data
+							// in hdyn_grape4.C
 #endif
 
 #if 0
-		cerr << endl << "pp3 with old pos and vel:" << endl;
-		pp3(this);
+	    cerr << endl << "pp3 with old pos and vel:" << endl;
+	    pp3(this);
 #else
-		PRL(old_acc);
-		PRL(old_jerk);
-		PRL(acc);
-		PRL(jerk);
+	    PRL(old_acc);
+	    PRL(old_jerk);
+	    PRL(acc);
+	    PRL(jerk);
 #endif
 
-		// cerr << endl << endl << "System dump:" << endl << endl;
-		// pp3(get_root());
+	    // cerr << endl << endl << "System dump:" << endl << endl;
+	    // pp3(get_root());
 
-		// Options:	quit
-		//		restart
-		//		flag and continue
-		//		discard new_pos and new_vel, retain
-		//		    old acc and jerk and continue
-		//		flag, recompute acc and jerk, and continue  <--
+	    // Options:	quit
+	    //		restart
+	    //		flag and continue
+	    //		discard new_pos and new_vel, retain
+	    //		    old acc and jerk and continue
+	    //		flag, recompute acc and jerk, and continue  <--
 
-		// Flag the problem.
+	    // Flag the problem.
 
-		char tmp[128];
-		sprintf(tmp, "runaway in correct at time %f", time);
-		log_comment(tmp);
+	    char tmp[128];
+	    sprintf(tmp, "runaway in correct at time %f", time);
+	    log_comment(tmp);
 
-		int n_runaway = 0;
-		if (find_qmatch(get_log_story(), "n_runaway"))
-		    n_runaway = getiq(get_log_story(), "n_runaway");
+	    int n_runaway = 0;
+	    if (find_qmatch(get_log_story(), "n_runaway"))
+		n_runaway = getiq(get_log_story(), "n_runaway");
 
-		n_runaway++;
-		PRL(n_runaway);
+	    n_runaway++;
+	    PRL(n_runaway);
 
-		if (n_runaway > 10)
-		    exit(0);		// pretty liberal, as errors are
+	    if (n_runaway > 10)
+		exit(0);		// pretty liberal, as errors are
 					// usually associated with pipes,
 					// not stars...
 
-		putiq(get_log_story(), "n_runaway", n_runaway);
+	    putiq(get_log_story(), "n_runaway", n_runaway);
 
-		return false;		// trigger a retry on return; don't
+	    return false;		// trigger a retry on return; don't
 					// even bother with update
-	    }
 	}
     }
+
+#endif
 
     pos = new_pos;
     vel = new_vel;
