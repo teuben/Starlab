@@ -44,5 +44,6 @@ if HAVE_GRAPE
   kira_smallN_LDADD += $(GRAPE_LIBS)
   AM_LDFLAGS = $(GRAPE_LDFLAGS)
 endif
+
 kira_LDADD += ../stubs/libstubs.la
 kira_smallN_LDADD += ../stubs/libstubs.la
