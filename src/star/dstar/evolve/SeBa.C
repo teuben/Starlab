@@ -80,7 +80,7 @@
 ////                        -R the number of binaries indicated.
 ////                        oterwise one binary is simulated with
 ////                        -M, -m, -a, -e as initial conditions.
-////            -T binary end time. [35] Myr
+////            -T or -t  binary end time. [35] Myr
 ////
 //   Note:  libnode.a is referenced for the routines which produce the 
 //          mass function
@@ -192,7 +192,7 @@ int main(int argc, char ** argv) {
     real  m_prim;
     real  m_sec;
     real  sma;
-    real  ecc;
+    real  ecc = 0;
 
     real m_tot = 1;
     real r_hm = 1;
@@ -234,7 +234,7 @@ int main(int argc, char ** argv) {
 
     extern char *poptarg;
     int c;
-    char* param_string = "n:N:RDSM:m:x:F:f:A:a:y:G:g:E:e:v:U:u:Q:q:T:I:w:P:p:n:s:";
+    char* param_string = "n:N:RDSM:m:x:F:f:A:a:y:G:g:E:e:v:U:u:Q:q:T:t:I:w:P:p:n:s:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -281,6 +281,7 @@ int main(int argc, char ** argv) {
 		      break;
             case 'q': q_min = atof(poptarg);
 		      break;
+            case 't': 
             case 'T': end_time = atof(poptarg);
 		      break;
             case 'I': I_flag = true;
