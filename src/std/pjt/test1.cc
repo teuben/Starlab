@@ -1,6 +1,8 @@
 // mkplummer.C:     example of a proposed format
 
 #include "program.h"
+// #include <cstring>
+#include <cstdio>
 
 string Program::keywords[] = {
     "nbody=???\n  number of bodies in the Nbody system",
@@ -34,7 +36,7 @@ void program_main()
 
     string comment;
     int  n, seed, argc;
-    char **argv;
+    string *argv;
     double  mfrac, rfrac;
     bool  i_flag, o_flag;
     char  seedlog[128];
