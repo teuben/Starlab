@@ -10,6 +10,8 @@
 #define REPORT_FUNCTION_NAMES      false
 #define REPORT_TRANFER_STABILITY   false
 
+//#define SIF 1.0
+
 // (SPZ+GN: 28 Jul 2000) Obsolete
 //#define MAXIMUM_BINARY_UPDATE_TIMESTEP cnsts.star_to_dyn(binary_update_time_fraction) 
 // GIJS: If you want to increase the timestep for population synthesis,
@@ -38,7 +40,7 @@ double_star * new_double_star(node* n, real sma, real ecc,
 
 double_star::double_star(node* n) : star(n) {
 
-  SIF = 1;
+    SIF = 1;
 
            semi=eccentricity=binary_age=minimal_timestep=velocity=0;
            donor_timescale=0;
@@ -1906,7 +1908,7 @@ void double_star::magnetic_stellar_wind(const real dt) {
 //cerr<<"void double_star::magnetic_stellar_wind(dt="<<dt<<)"<<endl;
 
     real magnetic_braking_aml = mb_angular_momentum_loss();
-  
+
     real a_dot = 2*dt*magnetic_braking_aml;
     real semi_new = semi*(1 + a_dot);
 
