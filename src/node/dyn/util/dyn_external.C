@@ -332,35 +332,68 @@ local real potential(dyn *b, real r)		// background potential;
     real a2 = b->get_pl_scale_sq();
     real x = b->get_pl_exponent();
 
-    return -A*pow(r*r+a2, 0.5*(x-1))/(x-1);
+    return A*pow(r*r+a2, 0.5*(x-1))/(x-1);	// leading "-" removed by
+						// by Steve, 2/04
 }
 
-static vec Afric = 0;			// frictional acceleration
+local real vcirc2(dyn *b, real r)		// circular orbit speed:
+						// recall vc^2 = r d(phi)/dr
+{
+    real A = b->get_pl_coeff();
+    if (A == 0) return 0;
 
-void set_friction_acc(dyn *b,		// root node
-		      real r)		// distance from pl_center
+    real a2 = b->get_pl_scale_sq();
+    real x = b->get_pl_exponent();
+
+    return A*r*r*pow(r*r+a2, 0.5*(x-3));	// note: --> 0 as r --> 0
+}
+
+static vec Afric = 0;				// frictional acceleration
+
+void set_friction_acc(dyn *b,			// root node
+		      real r)			// distance from pl_center
 {
     if (beta > 0) {
 
-	real sigma2 = sqrt(-2*potential(b, r)/3);  // this is sqrt(2) * sigma;
-						   // assume virial equilibrium
-	real V = abs(Vcm);
+	real A = b->get_pl_coeff();
+	if (A <= 0) return;
 
-	// real X = V/sigma2;			   // scaled velocity; BT p. 425
-	real X = sqrt(2-b->get_pl_exponent());	   // (see McM & SPZ 2003)
+	real alpha = b->get_pl_exponent();
+	real a2 = b->get_pl_scale_sq();
+
+	// Binney & Tremaine expression needs a 1-D velocity dispersion
+	// sigma for the background stars. (Not really well defined unless
+	// the power-law exponent is < 2...)  Note that sigma2 here is
+	// sqrt(2) * sigma.
+
+	// The value of sigma2 is defined in terms of the circular orbit speed.
+
+	real vc2, sigma2;
+
+	if (r*r > a2)
+	    vc2 = vcirc2(b, r);
+	else
+	    vc2 = vcirc2(b, sqrt(a2));		// use value at r = a
+
+	if (alpha < 2)
+	    sigma2 = sqrt(vc2/(2-alpha));	// see McM & SPZ 2003
+	else
+	    sigma2 = sqrt(vc2);			// shouldn't happen...
+
+	real V = abs(Vcm);
+	real X = V/sigma2;			// scaled velocity; BT p. 425
 
 	real coeff = 4*M_PI*beta*logLambda(b, r);
+	Afric = -coeff * Mfric * Vcm * density(b, r);
 
 	if (X > 0.1)
 
-	    Afric = -coeff * Mfric * Vcm * density(b, r) * pow(V, -3)
-			   * (erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
+	    Afric *= (erf(X) - 2*X*exp(-X*X)/sqrt(M_PI)) * pow(V, -3);
 	else
 
 	    // Expand for small X:
 
-	    Afric = -coeff * Mfric * Vcm * density(b, r)
-			   * 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
+	    Afric *= 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
 
 #if 1
 	cerr << endl << "set_friction_acc: "; PRL(Afric);
