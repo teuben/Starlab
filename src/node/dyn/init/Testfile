@@ -3,9 +3,9 @@
 # --- standard local variables
 
 DIR  = src/node/dyn/init
-TEST = _mkplummer _mkmass
-NEED = mkmass mkplummer
-OUT  = mkplummer.test mkmass.test
+TEST = _makeplummer _makemass
+NEED = makemass makeplummer
+OUT  = makeplummer.test makemass.test
 
 # temporary variables, can be overridded
 
@@ -41,14 +41,14 @@ diff:
 
 # ---- write your individual tests below, in usual makefile language
 
-_mkplummer: mkplummer.test
+_makeplummer: makeplummer.test
 
-mkplummer.test:
-	mkplummer -n $(NBODY) -s $(SEED) > mkplummer.test
+makeplummer.test:
+	makeplummer -n $(NBODY) -s $(SEED) > makeplummer.test
 
-_mkmass:	mkmass.test
+_makemass:	makemass.test
 
-mkmass.test:
-	mkmass -l 1 -u 100 -s $(SEED) < mkplummer.test  > mkmass.test
+makemass.test:
+	makemass -l 1 -u 100 -s $(SEED) < makeplummer.test  > makemass.test
 
 # END Testfile

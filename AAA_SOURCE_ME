@@ -64,6 +64,11 @@ endif
 rehash
 echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
 
+echo Running Testsuite \(this may also take a few minutes\)...
+sbin/testsuite >>& install.log
+
+echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
+
 if ($stat == 0) then
     echo -n Testing kira...
     kira --help >& /dev/null

@@ -69,7 +69,7 @@ foreach arg ($*)
     endsw
 end
 
-mkdir $testdir
+mkdir -p $testdir
 pushd $testdir >& /dev/null
 
 onintr cleanup
