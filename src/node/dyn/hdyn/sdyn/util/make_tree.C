@@ -173,7 +173,7 @@ local real tuple_size(sdyn* list[], int k_tuple)
     vector cmpos = pos_sum(list, k_tuple) / m_sum(list, k_tuple);
 
     for (int i = 0; i < k_tuple; i++)
-	max_dist = max(max_dist, abs(list[i]->get_pos() - cmpos));
+	max_dist = Starlab::max(max_dist, abs(list[i]->get_pos() - cmpos));
 
     return max_dist;
 }
@@ -204,7 +204,7 @@ local real distance_sq(sdyn* list[], int k_tuple, sdyn* rest[], int n_rest)
 
     for (int i = 0; i < k_tuple; i++)
 	for (int j = 0; j < n_rest; j++)
-	    min_dist_sq = min(min_dist_sq,
+	    min_dist_sq = Starlab::min(min_dist_sq,
 			      square(list[i]->get_pos() - rest[j]->get_pos()));
 
     return min_dist_sq;
@@ -524,11 +524,11 @@ local int find_and_make_binaries(sdyn* b, bool dynamics, bool stability,
 			real rdotv = rel_pos * rel_vel;
 			real temp = 1 - radius / sma;
 
-			real ecc = sqrt(max(0.0, rdotv * rdotv
+			real ecc = sqrt(Starlab::max(0.0, rdotv * rdotv
 					            / (m_total * sma)
 					          + temp * temp));
 			real periastron = sma * (1 - ecc);
-			real size = max(bb->get_radius(), nn->get_radius());
+			real size = Starlab::max(bb->get_radius(), nn->get_radius());
 	
 			// Stability is based on periastron distance.
 			// Implement quarantine here too.
@@ -717,7 +717,7 @@ local int find_and_make_tuple(sdyn* b, int k_tuple, bool dynamics,
 
 		    // Check isolation (NOTE definition of tuple radius):
 
-		    real radius = max(tuple_size(list, k_tuple),
+		    real radius = Starlab::max(tuple_size(list, k_tuple),
 				      tuple_virial_radius(list, k_tuple));
 
 		    for (int i = 0; i < k_tuple; i++)
@@ -767,7 +767,7 @@ void make_tree(sdyn* b, bool dynamics, bool stability, int k_max, int debug)
     do {
 	nt = 0;
 	for (int k_tuple = 2;
-	     k_tuple < min(k_max + 1, count_daughters(b));
+	     k_tuple < Starlab::min(k_max + 1, count_daughters(b));
 	     k_tuple++) {
 
 	    // If k_tuple = 2, initialize the neighbor pointers.

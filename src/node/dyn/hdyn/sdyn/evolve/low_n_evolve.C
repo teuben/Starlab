@@ -123,13 +123,13 @@ real  dynamic_timestep(sdyn * b, real eta)
     for_all_daughters(sdyn, b, bb)
 	{
 	global_min_encounter_time_sq =
-	    min(global_min_encounter_time_sq, bb->get_min_encounter_time_sq());
+	    Starlab::min(global_min_encounter_time_sq, bb->get_min_encounter_time_sq());
 	global_min_free_fall_time_sq =
-	    min(global_min_free_fall_time_sq, bb->get_min_free_fall_time_sq());
+	    Starlab::min(global_min_free_fall_time_sq, bb->get_min_free_fall_time_sq());
 	}
 
     return  eta *
-	sqrt(min(global_min_encounter_time_sq, global_min_free_fall_time_sq));
+	sqrt(Starlab::min(global_min_encounter_time_sq, global_min_free_fall_time_sq));
     }
 
 tfp timestep_function_ptr(char * timestep_name)

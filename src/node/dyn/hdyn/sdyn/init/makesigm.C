@@ -117,7 +117,7 @@ local void initialize_root(sdyn* root, real v_inf,
     real r_unp = (target_sma + projectile_radius)
 	             * pow(TIDAL_TOL_FACTOR / m_total, -1/3.0);
 
-    real r_start = min(r_init, r_unp);
+    real r_start = Starlab::min(r_init, r_unp);
     if (k.get_separation() < r_start)
         k.return_to_radius(r_start);
     else
@@ -205,7 +205,7 @@ local void split_particle(sdyn* current, real ecc, real sma, int planar,
     if (ecc < 0 || ecc >= 1) {
 
       // factor 2 for MIN_PERI_FACTOR see sdyn/util/make_tree.C
-      real peri_min = 2*max(d1->get_radius(), d2->get_radius());
+      real peri_min = 2*Starlab::max(d1->get_radius(), d2->get_radius());
       real e_max = 1 - peri_min/sma;
 
       if(e_max<0) 

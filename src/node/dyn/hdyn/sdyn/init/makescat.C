@@ -181,7 +181,7 @@ local void initialize_root(sdyn* root, real v_inf,
     real r_unp = (target_sma + projectile_radius)
 	             * pow(TIDAL_TOL_FACTOR / m_total, -1/3.0);
 
-    real r_start = min(r_init, r_unp);
+    real r_start = Starlab::min(r_init, r_unp);
     if (k.get_separation() < r_start)
         k.return_to_radius(r_start);
     else
@@ -199,8 +199,8 @@ local void initialize_root(sdyn* root, real v_inf,
     projectile->set_pos(target_mass * k.get_rel_pos() / m_total);
     projectile->set_vel(target_mass * k.get_rel_vel() / m_total);
 
-//    cerr << "Initialized root...\n";
-//    pp(root, cerr);
+    //    cerr << "Initialized root...\n";
+    //    pp(root, cerr);
 
 //    cerr << "t: " << target->get_index()
 //	 <<" " << target->get_name() << endl;
@@ -269,7 +269,7 @@ local void split_particle(sdyn* current, real ecc, real sma, int planar,
     if (ecc < 0 || ecc >= 1) {
 
       // factor 2 for MIN_PERI_FACTOR see sdyn/util/make_tree.C
-      real peri_min = 2*max(d1->get_radius(), d2->get_radius());
+      real peri_min = 2*Starlab::max(d1->get_radius(), d2->get_radius());
       real e_max = 1 - peri_min/sma;
 
       if(e_max<0) 
@@ -393,6 +393,8 @@ sdyn* mkscat(int argc, char **argv) {
     // Establish standard configuration and names:
 
     sdyn* root = mksdyn(2);	// Top-level (unbound) scattering orbit.
+    put_sdyn(cout, *root);
+
     root->set_name("r");
     root->set_index(-1);	// Undo indexing effect of mksdyn...
 

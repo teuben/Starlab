@@ -44,7 +44,7 @@ void scatter_hist::put_scatter_hist(ostream& s, bool verbose) {
      //     int i;
      for_all_scatter_hist(scatter_hist, this->get_first(), hi) {
        // s << *hi << " \t";
-       //       for (int i = 0; i < max(0, 7 - strlen(dummy_string)); i++)
+       //       for (int i = 0; i < Starlab::max(0, 7 - strlen(dummy_string)); i++)
        //	 cerr << " ";
 
        s << *hi << endl;
@@ -84,7 +84,7 @@ void scatter_hist::add_scatter_hist(scatter_exp he, int zone) {
     if (identical_scenario == NULL) {
       int n_scenario = 0;
       for_all_scatter_hist(scatter_hist, get_first(), ho) {
-	n_scenario = max(n_scenario, ho->get_id_scenario());
+	n_scenario = Starlab::max(n_scenario, ho->get_id_scenario());
       }
 
       hi->set_id_scenario(n_scenario+1);
@@ -117,7 +117,7 @@ void scatter_hist::add_scatter_hist(istream& s) {
     if (identical_scenario == NULL) {
       int n_scenario = 0;
       for_all_scatter_hist(scatter_hist, get_first(), ho) {
-	n_scenario = max(n_scenario, ho->get_id_scenario());
+	n_scenario = Starlab::max(n_scenario, ho->get_id_scenario());
       }
       hi->set_id_scenario(n_scenario+1);
       hi->set_n_found(1);

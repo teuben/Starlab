@@ -193,7 +193,7 @@ ostream& operator<<(ostream& s, scatter_exp& hi) {
   int n_space = 0;
   for(i=0; i<N_RHO_ZONE_MAX; i++) 
     n_space += (int)floor(log10((real)hi.get_nhits(i)+1));
-  for(i=0; i<max(0,N_RHO_ZONE_MAX-n_space-15); i++) 
+  for(i=0; i<Starlab::max(0,N_RHO_ZONE_MAX-n_space-15); i++) 
     s << ".";
 
   for(i=0; i<N_RHO_ZONE_MAX; i++) {
@@ -291,7 +291,7 @@ int scatter_exp::count_multiplicity() {
       b++;
     else if(strncmp(&final[i], ")", 1)==0)
       b--;
-    bn = max(bn, b);
+    bn = Starlab::max(bn, b);
   }
   if(b!=0)
     cerr << "Not encough braces found in scatter_exp::count_mulitplicity()"
@@ -337,7 +337,7 @@ bool scatter_exp::check_for_exchange() {
   if(icnt!=fcnt) {
     cerr << "ERROR: icnt (" << icnt << ") != fcnt (" << fcnt << ")" << endl;
     cerr << "       in   bool scatter_exp::check_for_exchange()" << endl;
-    icnt = min(icnt, fcnt);
+    icnt = Starlab::min(icnt, fcnt);
   }
   if(strncmp(inames, fnames, icnt)!=0)
     exchange = true;

@@ -113,7 +113,7 @@ bool tree_is_unbound(sdyn* root, real ttf, int debug) {
 
 	    // (mij here for the same reason as in scatter3/triple_escape.)
 
-	    real rlimit = max(LARGE_SEPARATION,
+	    real rlimit = Starlab::max(LARGE_SEPARATION,
 	         bi->get_radius() * pow(mu_scale, -1/3.0));
 
 	    if (debug) cerr << "    rlimit = " << rlimit << endl;
@@ -212,7 +212,7 @@ bool tree_is_unbound(sdyn* root, int debug) {
 
 	    // (mij here for the same reason as in scatter3/triple_escape.)
 
-	    real rlimit = max(LARGE_SEPARATION,
+	    real rlimit = Starlab::max(LARGE_SEPARATION,
 	         bi->get_radius() * pow(mu_scale, -1/3.0));
 
 	    if (debug) cerr << "    rlimit = " << rlimit << endl;
@@ -538,7 +538,7 @@ local int escape(sdyn * bi, sdyn * bj, sdyn * bk, real ejk,
 
     real rlimit = (ajk + bi->get_radius())
 		      * pow(ttf * mjk / (mi + mjk), -1/3.0);
-    //    if (init.r_stop < 0) rlimit = max(rlimit, abs(init.r_stop));
+    //    if (init.r_stop < 0) rlimit = Starlab::max(rlimit, abs(init.r_stop));
 
     // PRL(rlimit);
 
@@ -813,7 +813,7 @@ local int extend_or_end_scatter4(sdyn * b) {
     for(i=0; i<5; i++) {
       rmin = VERY_LARGE_NUMBER;
       for(int j=0; j<5; j++) 
-	if(j!=i) rmin = min(rmin, rij[j]);
+	if(j!=i) rmin = Starlab::min(rmin, rij[j]);
       tescape = triple_escape(kij[i] - phi[i], rmin, mij[i], mkl[i], ttf);
       if(tescape) break;
     }
@@ -904,9 +904,9 @@ local int extend_or_end_scatter3(sdyn * b) {
 	&& r31 > LARGE_SEPARATION
 	&& k12 > phi12 && k23 > phi23 && k31 > phi31
 	&& vr12 > 0 && vr23 > 0 && vr31 > 0
-	&& triple_escape(k12 - phi12, min(r23, r31), m1 + m2, m3, ttf)
-	&& triple_escape(k23 - phi23, min(r31, r12), m2 + m3, m1, ttf)
-	&& triple_escape(k31 - phi31, min(r12, r23), m3 + m1, m2, ttf)) {
+	&& triple_escape(k12 - phi12, Starlab::min(r23, r31), m1 + m2, m3, ttf)
+	&& triple_escape(k23 - phi23, Starlab::min(r31, r12), m2 + m3, m1, ttf)
+	&& triple_escape(k31 - phi31, Starlab::min(r12, r23), m3 + m1, m2, ttf)) {
 
 	return 1;
     }
