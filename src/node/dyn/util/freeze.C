@@ -13,7 +13,7 @@
 //// Usage: freeze [OPTIONS] < input > output
 ////
 //// Options:     
-////		  -c    add a comment to the output snapshot [false]
+////              -c    add a comment to the output snapshot [false]
 ////              -f    specify freeze factor [0]
 ////
 //// Written by Piet Hut and Steve McMillan.
