@@ -10,6 +10,10 @@
 #define REPORT_FUNCTION_NAMES      false
 #define REPORT_TRANFER_STABILITY   false
 
+
+// (SPZ+GN Dec  5 2002): Common envelope is out of fashion
+#undef COMMON_ENVELOPE_PRE_DEC2002
+
 // (SPZ+GN: 28 Jul 2000) Obsolete
 //#define MAXIMUM_BINARY_UPDATE_TIMESTEP cnsts.star_to_dyn(binary_update_time_fraction) 
 // GIJS: If you want to increase the timestep for population synthesis,
@@ -655,12 +659,12 @@ void double_star::semi_detached(star* donor,
   if (!stable(donor)) {
     cerr << "semi_deatched not stable => ::common_envelope" << endl; 
     
-    common_envelope();
+    dynamic_mass_transfer();
   }
   else if (get_current_mass_transfer_type()==Dynamic) {
     cerr << "dynamic mass transfer => ::dynamic_mass_transfer" << endl; 
     
-    common_envelope();
+    dynamic_mass_transfer();
 // in common_envelope dynamic_mass_trasfer is called
 //    dynamic_mass_transfer(donor,accretor);
   }
@@ -1471,6 +1475,7 @@ void double_star::set_donor_timescale(const real t, const stellar_type st,
 }
 #endif
 
+#if COMMON_ENVELOPE_PRE_DEC2002
 // Determine in which way common_envelope systems spiral-in
 void double_star::common_envelope() {
 
@@ -1485,10 +1490,11 @@ void double_star::common_envelope() {
 	   if (get_secondary()->giant_star()) 
 	      double_spiral_in();
 	   else
-	      spiral_in(get_primary(), get_secondary());
+	     spiral_in(get_primary(), get_secondary());
 	 }
-	 else if (get_secondary()->giant_star())
-	   spiral_in(get_secondary(), get_primary());
+	 else if (get_secondary()->giant_star()) {
+	     spiral_in(get_secondary(), get_primary());
+	 }
 	 else {
 	   cerr << "Merger double_star::common_envelope" << endl;
 	   dump(cerr, false);
@@ -1501,7 +1507,12 @@ void double_star::common_envelope() {
 	     if (get_secondary()->giant_star()) 
 	       double_spiral_in();
 	     else if (get_secondary()->remnant())
-	       spiral_in(get_primary(),get_secondary());
+	   // (SPZ+GN:2002Dec4)
+	   // based on: Nelemans 2003 (to be written)
+	   if(cnsts.parameters(use_angular_momentum_gamma)) 
+	     dynamic_mass_transfer(get_primary(),get_secondary());
+	   else
+	     spiral_in(get_primary(),get_secondary());
 	     else
 	       dynamic_mass_transfer(get_primary(), get_secondary());
 	   }
@@ -1522,6 +1533,45 @@ void double_star::common_envelope() {
        //get_seba_counters()->common_envelope++;
      }
 }
+
+#else //COMMON_ENVELOPE_PRE_DEC2002
+
+// Determine in which way common_envelope systems spiral-in
+void double_star::dynamic_mass_transfer() {
+
+  //cerr << "dynamic_mass_transfer"<<endl;
+
+  if (bin_type!=Merged && bin_type!=Disrupted) {
+       
+    if (get_primary()->giant_star()) {
+      if (get_secondary()->giant_star()) 
+	double_spiral_in();
+      // (SPZ+GN:2002Dec4)
+      // based on: Nelemans 2003 (to be written)
+      else if(cnsts.parameters(use_angular_momentum_gamma))
+	angular_momentum_envelope_ejection(get_primary(), get_secondary());
+      else
+	spiral_in(get_primary(), get_secondary());
+    }
+    else if (get_secondary()->giant_star()) {
+      // (SPZ+GN:2002Dec4)
+      // based on: Nelemans 2003 (to be written)
+      if(cnsts.parameters(use_angular_momentum_gamma)) 
+	angular_momentum_envelope_ejection(get_secondary(), get_primary());
+      else
+	spiral_in(get_secondary(), get_primary());
+    }
+    else {
+      cerr << "Merger double_star::dynamic_mass_transfer" << endl;
+      dump(cerr, false);
+	   
+      merge_elements(get_primary(), get_secondary());
+    }
+    //get_seba_counters()->common_envelope++;
+  }
+}
+
+#endif //COMMON_ENVELOPE_PRE_DEC2002
 
 // common-envelope for two giant stars in contact.
 // results in spiral in of both cores in both envelopes.
@@ -1866,8 +1916,8 @@ void double_star::magnetic_stellar_wind(const real dt) {
     else if(semi_new <= get_primary()->get_core_radius() +
 			     get_secondary()->get_core_radius()) {
       semi = semi_new;
-cerr << "magnetic stellar wind => ::common_envelope" << endl; 
-      common_envelope();
+cerr << "magnetic stellar wind => ::dynamics_mas_transfer" << endl; 
+      dynamic_mass_transfer();
       //      if (get_primary()->get_effective_radius() >
       //  get_secondary()->get_effective_radius())
       //	spiral_in(get_secondary(), get_primary());
@@ -1949,8 +1999,8 @@ void double_star::gravrad(const real dt) {
 			      get_secondary()->get_core_radius()) {
 	  semi=a_new;
 	  eccentricity = e_new;
-cerr << "gravrad => ::common_envelope" << endl; 
-	  common_envelope();
+	  cerr << "gravrad => ::dynamics_mass_transfer" << endl; 
+	  dynamic_mass_transfer();
 	  //	  if (get_primary()->get_effective_radius() >
 	  //  get_secondary()->get_effective_radius())
 	  //spiral_in(get_secondary(), get_primary());
@@ -2102,7 +2152,7 @@ void double_star::contact_binary(real dt) {
 
     } else {
 
-      common_envelope();
+      dynamic_mass_transfer();
     }
 
 }
@@ -2110,9 +2160,10 @@ void double_star::contact_binary(real dt) {
 // (SPZ+GN: 28 Jul 2000)
 // Dynamic mass transfer as in Eq. 5 of Nelemans VYPZ 2000 A&A in press
 
-void double_star::dynamic_mass_transfer(star* larger, star* smaller) {
+void double_star::angular_momentum_envelope_ejection(star* larger, 
+						     star* smaller) {
   
-//  cerr << "double_star::dynamic_mass_transfer()" << endl;
+//  cerr << "double_star::angular_momentum_envelope_ejection()"<<endl;
 
   if (bin_type!=Merged && bin_type!=Disrupted) {
  
@@ -2155,7 +2206,7 @@ void double_star::dynamic_mass_transfer(star* larger, star* smaller) {
 
 	    PRC(smaller->get_radius());PRC(rl_s);PRL(a_f);
 
-	    cerr << "Merger double_star::dynamic_mass_transfer" << endl;
+	    cerr << "Merger double_star::angular_momentum_envelope_ejection(star* larger, star* smaller)" << endl;
 	    dump(cerr, false);
 	    merge_elements(larger,smaller);
 	  }

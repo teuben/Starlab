@@ -252,6 +252,8 @@ bool stellar_evolution_constants::parameters(boolean_parameter pb) {
              break;						    
         case impulse_kick_for_black_holes:             return true;
              break;						    
+        case use_angular_momentum_gamma:               return true;
+             break;						    
         default:
 	     cerr << "\nNo recognized option in "
 		     "stellar_evolution_constants::"
@@ -310,7 +312,7 @@ real stellar_evolution_constants::parameters(model_parameter pm) {
 	      break;                          // (lambda)
 	case specific_angular_momentum_loss:           return 3.;
 	      break;                          // (beta)
-        case dynamic_mass_transfer_gamma:               return 1.75;
+        case dynamic_mass_transfer_gamma:               return 1.5; //was 1.75
               break;			      // (gamma)
         case non_massive_star_envelope_fraction_lost:  return 0.03;
 	      break;                          

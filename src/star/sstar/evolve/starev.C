@@ -83,7 +83,7 @@ cerr<< "ov: " << bi->get_starbase()->get_element_type()
  *		This however should be scaled to the cluster parameters.
  *-----------------------------------------------------------------------------
  */
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
     {
     stellar_type type = Main_Sequence;
     char * star_type_string;
