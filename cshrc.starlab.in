@@ -12,7 +12,7 @@
 #  find all STARLAB environment variables, and unset them (except STARLAB_PATH :-)
 #
 set all=(`printenv | grep ^STARLAB_ | grep -v STARLAB_PATH | awk -F= '{print $1}'`)
-unsetenv $all
+if ($#all > 0) unsetenv $all
 
 #
 # Choose compilation options (***** IMPORTANT!! *****).
