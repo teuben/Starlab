@@ -180,6 +180,7 @@ main(int argc, char ** argv) {
     bool m_flag = false;
     bool n_flag = false;
     bool o_flag = false;
+    bool v_flag = false;
     bool s_flag = false;
 
     char  *comment;
@@ -196,7 +197,7 @@ main(int argc, char ** argv) {
 
     extern char *poptarg;
     int c;
-    char* param_string = "A:a:b:c:de:il:M:m:n:oR:u:s:x:";
+    char* param_string = "A:a:b:c:de:il:M:m:n:oR:u:s:x:v:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -236,6 +237,8 @@ main(int argc, char ** argv) {
 		      input_seed = atoi(poptarg);
 		      break;
 	    case 'x': exponent = atof(poptarg);
+		      break;
+	    case 'v': v_flag = atof(poptarg);
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
@@ -309,17 +312,19 @@ main(int argc, char ** argv) {
 
     // Flag actions for use by kira.
 
-    putrq(b->get_log_story(), "kira_pl_coeff", coeff);
-    putrq(b->get_log_story(), "kira_pl_exponent", exponent);
-    putrq(b->get_log_story(), "kira_pl_scale", scale);
-    putvq(b->get_log_story(), "kira_pl_center", center);
+    if(v_flag) {
+	putrq(b->get_log_story(), "kira_pl_coeff", coeff);
+	putrq(b->get_log_story(), "kira_pl_exponent", exponent);
+	putrq(b->get_log_story(), "kira_pl_scale", scale);
+	putvq(b->get_log_story(), "kira_pl_center", center);
 
-    putrq(b->get_log_story(), "kira_pl_cutoff", cutoff);
-    putrq(b->get_log_story(), "kira_pl_mass", mass);
-    putrq(b->get_log_story(), "kira_pl_softening", softening);
+	putrq(b->get_log_story(), "kira_pl_cutoff", cutoff);
+	putrq(b->get_log_story(), "kira_pl_mass", mass);
+	putrq(b->get_log_story(), "kira_pl_softening", softening);
 
-    putiq(b->get_log_story(), "ignore_internal", 1);
-    putrq(b->get_log_story(), "r_reflect", r_max);
+	putiq(b->get_log_story(), "ignore_internal", 1);
+	putrq(b->get_log_story(), "r_reflect", r_max);
+    }
 
     put_node(cout, *b);
 }
