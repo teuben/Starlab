@@ -62,6 +62,11 @@ if (-e configure) then
     echo ./configure $Qt --prefix=$install_dir		>>& $log
     ./configure $Qt --prefix=$install_dir $argv[2*]	>>& $log
 
+    if ($status != 0) then
+	echo Configure error...
+	exit
+    endif
+
     # Build the package.
 
     echo Running make \(`date`\; this may take a while...\)
