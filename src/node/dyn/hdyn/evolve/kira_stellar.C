@@ -328,12 +328,19 @@ bool evolve_stars(hdyn* b,
 		    }
 
 		    // Set the new unperturbed timestep (must extend at least
-		    // as far as system_time).
+		    // as far as system_time and preferably past apocenter).
 
-		    // Assume that the binary is still unperturbed and
-		    // approaching.
+		    real usteps = bi->get_unperturbed_steps();
 
-		    bi->set_unperturbed_timestep(false);
+//		    cerr << "in kira_stellar..." << endl;
+//		    PRL(usteps);
+
+		    if (usteps > 0) {
+			usteps *= bi->get_timestep();
+			bi->set_unperturbed_timestep(usteps);
+			bi->get_binary_sister()
+			  ->set_unperturbed_timestep(usteps);
+		    }
 
 		    if (b->get_kira_diag()->report_stellar_evolution &&
 			abs(dm_slow) >= MINIMUM_REPORT_MASS_LOSS &&
@@ -494,7 +501,7 @@ bool evolve_stars(hdyn* b,
 
 	if (b->get_kira_diag()->report_stellar_evolution)
 	    cerr << "initialize_system_phase2 called from evolve_stars\n";
-       	initialize_system_phase2(b, 5);
+       	initialize_system_phase2(b, 5);		// default set_dt
 
        	b->set_mass(total_mass(b));
 
