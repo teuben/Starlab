@@ -1,19 +1,29 @@
 # For developers...
 
+# Require that STARLAB_PATH be defined.
+
+if (!$?STARLAB_PATH) then
+    setenv STARLAB_PATH $CWD
+endif
+
 set install-dir = $STARLAB_PATH/usr
 
-# If we need autotools (place in install-dir):
+# Install autotools (place in install-dir):
 
 (cd src/packages; ./install-autotools $install-dir)
 
-# First time through need to do autoreconf.  Assume that install-dir
-# precedes system directories in the search path.
+# Make sure that install-dir precedes system directories in search path.
+
+set path = ($install-dir $path)
+rehash
+
+# First time through we need to do autoreconf.
 
 if (! -e configure) then
     autoreconf
 endif
 
-# The usual configuration process:
+# Perform the usual configuration process:
 
 ./configure --prefix=$install-dir
 make make install
