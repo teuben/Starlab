@@ -11,8 +11,12 @@
 // hdyn_inline.C:  Inline functions for use in hdyn_ev.C, hdyn_grape4/6.C,
 //		   and hdyn_slow.C.
 //
-//		   Include this file directly into the source files,
-//		   rather than placing these functions in libraries.
+//		   These functions tend to be used frequently, at low
+//		   levels in the code.  For efficiency, include this file
+//		   directly into the source files, rather than placing
+//		   the functions in libraries.  As the number of functions
+//		   increases, maybe we should place some in libraries, and
+//		   include directly only the essentials...  (Steve, 10/04)
 //
 // Local inline functions defined:
 //
@@ -135,7 +139,7 @@ local inline void update_nn_coll(hdyn *this_node, int id,
 
 // binary_scale:  compute an appropriate "size" for a binary.
 
-local real binary_scale(hdyn* cm)
+local inline real binary_scale(hdyn* cm)
 {
     static hdyn *last_cm = NULL;
     static xreal last_time = 0;
@@ -309,9 +313,6 @@ local inline bool is_perturber(hdyn *b,			     // 'this' CM node
     }
 }
 
-// crit_separation_cubed: return the critical separation for the
-//			  adopted perturbation criterion.
-
 local inline real crit_separation_cubed(hdyn *b,	// binary CM node
 					real m_pert,	// perturber mass
 					real r_bin,	// binary scale
@@ -334,6 +335,9 @@ local inline real crit_separation_cubed(hdyn *b,	// binary CM node
 
 	return 2 * (m_pert / m_bin) * d3;
 }
+
+// crit_separation_cubed: return the critical separation for the
+//			  adopted perturbation criterion.
 
 local inline real time_to_radius(real dr,	// distance to cover
 				 real vr,	// relative radial velocity
@@ -358,4 +362,53 @@ local inline real time_to_radius(real dr,	// distance to cover
     if (ar < 0) dt = Starlab::min(dt, sqrt (-2 * dr / ar));
 
     return dt;
+}
+
+
+
+// It is most efficient to separate the functionalities of functions
+// define_perturbation_radius_factor() and is_perturbed() for computation
+// of many perturbations in a loop.  However, it is very convenient to
+// have functions which compute and/or test the perturbation in a single
+// call.  Don't worry about efficiency here -- packaging is more important.
+
+local inline bool is_perturber(hdyn *cm, hdyn *p, real gamma)
+{
+    // Is node p a perturber of the binary with center of mass cm
+    // at the level gamma?
+
+    real pert_radius_factor
+	= define_perturbation_radius_factor(cm, pow(gamma, -2/3.));
+    real distance_squared
+	= square(hdyn_something_relative_to_root(cm, &hdyn::get_pos)
+		  - hdyn_something_relative_to_root(p, &hdyn::get_pos));
+    return is_perturber(cm, p->get_mass(),
+			distance_squared, pert_radius_factor);
+}
+
+local inline real estimated_perturbation(hdyn *cm, hdyn *p)
+{
+    // Return the perturbation on the binary with center of mass cm
+    // due to perturber p.  (Consistent with is_perturber().)
+
+    PRC(cm); PRL(p);
+    real m_bin = cm->get_mass();
+    real m_pert = p->get_mass();
+    int  perturber_criterion = cm->get_kira_options()->perturber_criterion;
+    PRL(perturber_criterion);
+
+    real r_bin = binary_scale(cm);
+    real d2 = r_bin * r_bin;
+    PRL(r_bin);
+    real distance_squared
+	= square(hdyn_something_relative_to_root(cm, &hdyn::get_pos)
+		  - hdyn_something_relative_to_root(p, &hdyn::get_pos));
+    PRL(sqrt(distance_squared));
+
+    real gamma = pow(d2/distance_squared, 1.5);
+    if (perturber_criterion == 1
+	|| (perturber_criterion == 2 && m_pert > 0.5 * m_bin))
+	gamma *= 2 * m_pert / m_bin;
+
+    return gamma;
 }
