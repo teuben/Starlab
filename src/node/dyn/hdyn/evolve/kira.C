@@ -164,6 +164,8 @@
 //
 // NOTE:  ALL direct references to USE_GRAPE are confined to
 //	  this file (referenced externally via the functions below).
+//	  Most significant GRAPE-related functions are contained
+//	  in the file kira_grape_include.C.
 //
 // Known problems:  First timestep is a bit shaky, in particular 
 //                  if the system is cold.
@@ -431,7 +433,7 @@ local void check_unperturbed(hdyn* bi, bool& tree_changed)
 			sync = true;
 		}
 		if (sync)
-		    synchronize_tree(bi);
+		    synchronize_tree(bi);	// OK because bi is not root
 		synch |= sync;
 	    }
 
@@ -577,12 +579,12 @@ local void merge_and_correct(hdyn* b, hdyn* bi, hdyn* bcoll, int full_dump)
     cerr << "----------" << endl;
 }
 
-local void check_periapo(hdyn * bi) {
+local inline void check_periapo(hdyn * bi) {
 
-  // just book keeping for stellar orbits.
+  // Just bookkeeping for stellar orbits.
 
 #ifdef CHECK_PERI_APO_CLUSTER
-  bi->check_periapo_node();
+    bi->check_periapo_node();
 #endif
 }
 
@@ -1046,7 +1048,8 @@ local int integrate_list(hdyn * b,
 
 	if (bi && bi->is_valid()) {
 
-	    // first check for peri- or apoclustron passage
+	    // First check for peri- or apoclustron passage.
+
 	    check_periapo(bi);
 
 	    hdyn* bcoll = check_and_merge(bi, full_dump);
@@ -1073,7 +1076,7 @@ local int integrate_list(hdyn * b,
 		restart_grape = true;
 		reset_force_correction = true;	// no longer used
 
-		synchronize_tree(b);
+		kira_synchronize_tree(b);
 		steps += b->n_leaves();
 
 		cerr << "call initialize_system_phase2() "
@@ -1103,7 +1106,7 @@ local int integrate_list(hdyn * b,
 
     if (reinitialize) {
 
-	synchronize_tree(b);
+	kira_synchronize_tree(b);
 	steps += b->n_leaves();
 
 	cerr << "call initialize_system_phase2() from integrate_list [2]"

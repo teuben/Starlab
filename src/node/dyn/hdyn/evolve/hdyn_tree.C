@@ -20,7 +20,6 @@
 //	hdyn*  hdyn::new_sister_node
 //	int    hdyn::adjust_tree_structure
 //
-//	void   synchronize_tree
 //	void   split_top_level_node
 //	void   combine_top_level_nodes
 //
@@ -57,24 +56,11 @@
 // Both criteria 1 and 2 expand the binary distance criterion as masses
 // increase.  Both appear to work (Steve, 7/29/98).
 
-//----------------------------------------------------------------------
-
-void synchronize_tree(hdyn * b)
-{
-    if (!b->is_root())
-	b->synchronize_node();
-
-    for_all_daughters(hdyn, b, bb)		      // top-level nodes only
-	synchronize_tree(bb);
-}
-
 real hdyn::distance_to_sister_squared()
 {
     vector d_sep = pos - get_binary_sister()->get_pos();
     return d_sep * d_sep;
 }
-
-//----------------------------------------------------------------------
 
 local void init_predictor_tree(hdyn * b)
 {

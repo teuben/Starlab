@@ -50,6 +50,7 @@
 //	void initialize_system_phase1
 //	void correct_acc_and_jerk
 //	void clean_up_hdyn_ev
+//	void synchronize_tree
 
 //  More memo...
 //
@@ -3532,6 +3533,15 @@ void hdyn::integrate_node(hdyn * root,
 	    err_exit(
 	        "integrate_node: unperturbed binary with non-zero softening");
     }
+}
+
+void synchronize_tree(hdyn * b)			// update all top-level nodes
+{
+    if (!b->is_root())
+	b->synchronize_node();
+
+    for_all_daughters(hdyn, b, bb)
+	synchronize_tree(bb);
 }
 
 //=======================================================================//

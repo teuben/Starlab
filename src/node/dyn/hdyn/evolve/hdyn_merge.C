@@ -206,7 +206,7 @@ local void print_perioapo_clustron(hdyn* bi) {
 
     if (d2cd_2 > 0) {
 
-      if (d2cd_2 > d2cd_1 && d2cd >= d2cd_1) {    // just passed pericluctron
+      if (d2cd_2 > d2cd_1 && d2cd >= d2cd_1) {    // just passed periclustron
 
 	int pcp_cntr = 0;
 	real E = get_total_energy(bi, bj);
@@ -237,7 +237,7 @@ local void print_perioapo_clustron(hdyn* bi) {
 	putrq(bi->get_log_story(), "pcp_time", bi->get_time());
 	
       }
-      else if (d2cd_2 < d2cd_1 && d2cd <= d2cd_1) { //just passed apocluctron
+      else if (d2cd_2 < d2cd_1 && d2cd <= d2cd_1) { //just passed apoclustron
 
 	int pca_cntr = 0;
 	real E = get_total_energy(bi, bj);
@@ -297,11 +297,10 @@ local void print_perioapo_clustron(hdyn* bi) {
 
 hdyn* hdyn::check_periapo_node() {
 
-  // for now only for single stars.
+  // For now only for single stars.
   //  if (is_leaf() && (is_top_level_node() || parent->is_top_level_node())
 
     print_perioapo_clustron(this);
-
 }
 
 
@@ -466,6 +465,8 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     // This function actually does the work of merging nodes.
     // It returns a pointer to the newly merged CM.
 
+    // Currently, only calls come from kira.C and dstar_to_kira.C.
+
     if (diag->tree) {
 	if (diag->tree_level > 0) {
 	    cerr << endl << "merge_nodes: merging leaves ";
@@ -493,11 +494,17 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
     bool is_pert = (get_kepler() == NULL);
     real sum_of_radii_sq = pow(get_sum_of_radii(this, bcoll), 2);
-//    real sum_of_radii_sq = pow(radius+bcoll->radius, 2);
+    // real sum_of_radii_sq = pow(radius+bcoll->radius, 2);
+
+    // Potentially very expensive if merger doesn't occur during binary
+    // evolution, as this may entail synchronizing the entire system and
+    // synchronize_tree currently doesn't use GRAPE.  Fix is to define
+    // kira_synchronize_tree() in kira_grape_include.C to switch between
+    // GRAPE (if available) and non-GRAPE code.
 
     cerr << "merge_nodes: calling synchronize_tree..." << flush;
     PRL(cpu_time());
-    synchronize_tree(get_root());
+    kira_synchronize_tree(get_root());
     cerr << "back" << endl << flush;
     PRL(cpu_time());
 
@@ -540,8 +547,8 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 		if (full_dump)
 		    put_node(cout, *(get_top_level_node()), false, 3);
 	
-	        move_node(bcoll, this);		// Move bcoll to become
-		  				// sister of this.
+	        move_node(bcoll, this);		// move bcoll to become
+		  				// sister of this
 		if (full_dump)
 		    put_node(cout, *(get_top_level_node()), false, 2);
 	    }
@@ -586,7 +593,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
     //calculate_energies(get_root(), eps2, epot0, ekin0, etot0);//dyn function
     // replaced by GRAPE friendly function (SPZ, March 2001)
-    calculate_internal_energies(get_root(), epot0, ekin0, etot0);
+    kira_calculate_internal_energies(get_root(), epot0, ekin0, etot0);
     PRC(epot0); PRC(ekin0); PRL(etot0);
 
     hdyn* cm = get_parent();
@@ -740,7 +747,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 #ifdef CALCULATE_POST_COLLISION_ON_GRAPE
     cerr << "calculate post collision on GRAPE"<<endl;
     // replaced by GRAPE friendly function (SPZ, March 2001)
-    calculate_internal_energies(get_root(), epot, ekin, etot);
+    kira_calculate_internal_energies(get_root(), epot, ekin, etot);
 #else
     calculate_energies(get_root(), eps2, epot, ekin, etot);	//dyn function
 #endif
