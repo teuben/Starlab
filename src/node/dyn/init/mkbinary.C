@@ -18,11 +18,11 @@
 ////                      -f 1:
 ////                              1    angular momentum
 ////                              2    angular momentum, detached binary
-////                      -f 2:
-////                              1    semi-major axis
+////                      -f 2:        [in Rsun]
+////                              1    semi-major axis 
 ////                              2    semi-major axis, detached
 ////                              3    -l ==> peri, -u ==> apo, and detached
-////                      -f 3:
+////                      -f 3:        [in N-body units]
 ////                              1    |binary energy|
 ////                              2    |binary energy| per unit reduced mass
 ////                              3    |binary energy| per unit binary mass
@@ -199,13 +199,19 @@ local void mkbinary(dyn* b, real lower, real upper,
 		if (option == 2) {
 		    bool detached = false;
 		    real a_min = minimum_semi_major_axis(primary, secondary);
-		    if (pow(upper, 2) <= a_min*m_total*(1-pow(ecc, 2)))
-			err_exit(
-			    "mkbinary: Illegal limits on angular momentum");
+		    a_min = b->get_starbase()->conv_r_star_to_dyn(a_min);
+
+		    if (pow(upper, 2) <= a_min*m_total*(1-pow(ecc, 2))) {
+		      PRC(upper);PRL(a_min*m_total*(1-pow(ecc, 2)));
+		      err_exit("mkbinary: Illegal limits on angular momentum");
+		    }
+		    a_min = max(lower, a_min);
+
 		    do {
 			ecc = sqrt(randinter(0,emax));
-			l_const = log(upper) - log(max(lower, a_min));
-			angular_momentum = max(lower, a_min)*pow(frac, randinter(0,1));
+			l_const = log(upper) - log(a_min);
+			angular_momentum = a_min
+			                 * pow(frac, randinter(0,1));
 			sma = pow(angular_momentum, 2)
 			    	/ (m_total*(1-pow(ecc, 2)));
 			if (sma*(1-ecc) > a_min) 
@@ -227,20 +233,26 @@ local void mkbinary(dyn* b, real lower, real upper,
 		real semi_major_axis, a_const;
 
 		if (option >= 2) {
+
 		    bool detached = false;
 		    real a_min = minimum_semi_major_axis(primary, secondary);
-		    if(upper<=a_min)
-			err_exit(
-			    "mkbinary: Illegal limits on angular momentum");
+		    a_min = b->get_starbase()->conv_r_star_to_dyn(a_min);
+
+		    if(upper<=a_min) {
+		      PRC(upper);PRL(a_min);
+		      err_exit("mkbinary: Illegal limits on semi major axis");
+		    }
+		    a_min = max(lower, a_min);
 
 		    if (option == 3) {// limits between peri- and apocenter.
 			real pericenter, apocenter;
 			do {
 			    ecc = sqrt(randinter(0, emax));
-			    pericenter = max(lower, a_min)*(1-ecc);
+			    pericenter = a_min*(1-ecc);
 			    apocenter = upper*(1+ecc);
-			    a_const = log(upper) - log(max(lower, a_min));
-			    semi_major_axis = max(lower, a_min)*exp(randinter(0., a_const));
+			    a_const = log(upper) - log(a_min);
+			    semi_major_axis = a_min
+			                    * exp(randinter(0., a_const));
 			    if (semi_major_axis*(1-ecc) > a_min  &&
 				(semi_major_axis > pericenter &&
 				 semi_major_axis < apocenter))
@@ -250,17 +262,13 @@ local void mkbinary(dyn* b, real lower, real upper,
 		    }
 		    else {	// separation limited by semi-detached.
 
-			// Assume for now that
-			//	stellar radius [Rsun] = mass [Msun].
-			// This is of course not correct, but for the moment
-			// good enough.  mkbinary does not know much about
-			// stars.
 			do {
 			    ecc = sqrt(randinter(0, emax));
-			    a_const = log(upper) - log(max(lower, a_min));
-			    semi_major_axis = max(lower, a_min)*exp(randinter(0., a_const));
-			    // if(semi_major_axis*(1-pow(ecc, 2))>a_min)
-			    if(semi_major_axis*(1-ecc)>a_min)
+			    a_const = log(upper) - log(a_min);
+			    semi_major_axis = a_min
+			                    * exp(randinter(0., a_const));
+			    // if(semi_major_axis*(1-ecc)>a_min)
+			    if(semi_major_axis*(1-pow(ecc, 2))>a_min)
 				detached = true;
 			}
 			while(!detached);
@@ -323,7 +331,7 @@ PRL(scale);
 
 void main(int argc, char ** argv)
 {
-    real lower = 1.0, upper = 1.0;
+  real lower = 1.0, upper = 1.0;   //Units depends on -o and -f
     real emax = 1;
     int function_select = 3;
     int option = 1;
@@ -356,7 +364,7 @@ void main(int argc, char ** argv)
 		      exit(1);
 	}
 
-    if (lower <= 0 || upper <= 0 || lower > upper)
+    if (lower < 0 || upper <= 0 || lower > upper)
 	err_exit("mkbinary: Illegal limits");
 
     dyn* b;
@@ -380,6 +388,11 @@ void main(int argc, char ** argv)
 
     char* energy_string = "initial_total_energy";
 
+    // Scale input to N-body units where appropirate
+    // Possible options are:
+    //   1: Angular momentum   [cgs]
+    //   2: Semi-major axis    [Rsun]
+    //   3: Binding energy     [N-body]
     if (function_select == 1) {
 	if (b->get_starbase()->get_stellar_evolution_scaling()) {
 	    real scale = sqrt(b->get_starbase()->conv_m_star_to_dyn(1)
