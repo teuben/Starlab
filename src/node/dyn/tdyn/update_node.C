@@ -47,6 +47,8 @@ local inline void update_node(worldbundle *wb,
 	curr->set_worldline_index(wb->find_index(b));
     }
 
+    // Allow possibility that mass may change along the worldline:
+
     curr->set_mass(b->get_mass());
 
     // See if we need to deal with unperturbed motion.

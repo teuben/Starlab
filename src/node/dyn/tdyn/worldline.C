@@ -554,7 +554,10 @@ worldbundle *read_bundle(istream &s,
     if (b->get_log_story())
 	physical_mass = getrq(b->get_log_story(), "physical_initial_mass");
 
-    // Create the initial list of node IDs.
+    // Create the initial list of node IDs, esc_flags, etc.  Note that 
+    // we use the prev pointer in tdyn to carry temporary information
+    // about cluster membership.  These should be new worldline(b), 
+    // which is called by new worldbundle(b).  We do *not* check here!
 
     worldbundle *wb = new worldbundle(b);
 
