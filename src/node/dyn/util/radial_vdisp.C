@@ -71,7 +71,7 @@ int get_radial_vdisp(dyn *b, vec cpos, vec cvel,
     rmv_ptr table = new rmv[n];
 
     if (!table) {
-	cerr << "get_radial_densities: insufficient memory for table"
+	cerr << "get_radial_vdisp: insufficient memory for table"
 	     << endl;
 	return 1;
     }
