@@ -2467,12 +2467,12 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
 				    if (strncmp(compress_id, 
 						b->format_label(), 255)) {
-				        count = 0;
+				        compress_count = 0;
 					strncpy(compress_id, 
 						b->format_label(), 255);
 				    }
 
-				    if (count%10 == 0) {
+				    if (compress_count%10 == 0) {
 				        cerr << endl << func << ": compressing"
 					     << " perturber list for "
 					     << b->format_label() << endl;
@@ -2483,7 +2483,7 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 					PRC(n_neighbors); PRC(ntot);
 					PRL(rescale);
 				    }
-				    count++;
+				    compress_count++;
 #endif
 
 				    int count = 0;
