@@ -2,9 +2,10 @@ local inline void attach_new_node(worldbundle *wb, worldline *ww,
 				  pdyn *root, tdyn *top, tdyn *bb,
 				  bool debug)
 {
-    // Attach a new node corresponding to worldline ww.  The root node
-    // for the interpolated tree is root; bb is the base node for worldline
-    // ww; top is its top-level base node (at the start of the segment).
+    // Create and attach a new node corresponding to worldline ww.
+    // The root node for the interpolated tree is root; bb is the base
+    // node for worldline ww; top is its top-level base node (at the
+    // start of the segment).
 
     // The traversal of the tree is such that parents are always seen
     // before children and elder sisters are always seen before younger
@@ -17,8 +18,8 @@ local inline void attach_new_node(worldbundle *wb, worldline *ww,
 
     pdyn *curr = new pdyn(NULL, NULL, false);
 
-    // Don't use add_node, as it will create a tree with nodes in the
-    // reverse order!
+    // Attach curr to the tree.  Don't use add_node, as it will
+    // create a tree with nodes in the reverse order!
 
     if (bb == top) {
 
@@ -61,5 +62,46 @@ local inline void attach_new_node(worldbundle *wb, worldline *ww,
 	}
     }
 
+    //-----------------------------------------------------------------
+    // The following "static" quantities should be constant within a
+    // segment, and thus need only be set when node curr is created.
+    // Should not be necessary to copy these data at each update.
+    //
+    //		name/index
+    //		mass
+
+    // Very helpful to attach the worldline ID as an index to the pdyn,
+    // but then we lose the connection between the index seen by the
+    // display program and the index in the original data.  Save both!
+
+    // Index is the original index; worldline ID is worldline_index.
+
+#if 1
+
+    // Moved here from update_node.C (Steve, 5/30/01):
+
+    if (bb->get_name()) {
+	curr->set_name(bb->get_name());
+	curr->set_index(atoi(bb->get_name()));
+    }
+    if (bb->get_index() >= 0)
+	curr->set_index(bb->get_index());
+
+    // Cleanest way to get the worldline index:
+
+    curr->set_worldline_index(wb->find_index(bb));
+
+    curr->set_mass(bb->get_mass());
+
+#endif
+
+    //-----------------------------------------------------------------
+
     ww->set_tree_node(curr);
+
+    // Set standard values for some quantities:
+
+    ww->set_t_curr(-VERY_LARGE_NUMBER);
+//    curr->set_index(-42);			// indicator of new node
+						// (index/name not set here)
 }
