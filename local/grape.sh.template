@@ -1,0 +1,14 @@
+# This shell file defines the GRAPE software interface.
+# Please don't change the names of the variables,
+# just replace the values.
+
+# ***** FOR EXAMPLES, SEE grape.sh.examples IN THIS DIRECTORY *****
+
+# Where to find GRAPE libraries:
+GRAPE_LDFLAGS_='-L/usr2/makino/disk3src/harplibs'
+
+# GRAPE libraries that must be linked in:
+GRAPE_LIBS_='-lg6lx -lg6lxsim2'
+
+# For now, define this as `yes' for the AMD64 boxes only, `no' otherwise.
+OLD_READ_NEIGHBOUR_LIST=no

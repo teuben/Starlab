@@ -1,0 +1,48 @@
+# ***** GRAPE.SH.EXAMPLES *****
+# Some examples of grape.sh configuration settings for various sites.
+# Note: variable names are hardcoded
+
+
+# Generic
+GRAPE_LDFLAGS_='-Lgrape-lib-directory'
+GRAPE_LIBS_='-lgrape-lib1 -lgrape-lib2 -letc...'
+
+
+# For GRAPE-4 (in indiana)
+GRAPE_LDFLAGS_='-L/home/spz/grape'
+GRAPE_LIBS_='-lg4a -lharp -lprometheus'
+ 
+
+#  For GRAPE-4 (on merlot@drexel):
+GRAPE_LDFLAGS_='-L/usr/users/makino/src/harplibs'
+GRAPE_LIBS_='-lg4a -lrt'
+ 
+
+#  For GRAPE-4 (on port@hongo)
+GRAPE_LDFLAGS_='-L/usr2/makino/disk3src/harplibs'
+GRAPE_LIBS_='-lg4a -lrt'
+
+ 
+#  For GRAPE-6 (on bourgogne@hongo [OSF/EV5] and neomuscat@hongo [OSF/EV6]):
+GRAPE_LDFLAGS_='-L/usr2/makino/disk3src/harplibs'
+GRAPE_LIBS_='-lg6 -lg6sim2'
+
+ 
+#  For GRAPE-6 (on alexandria@hongo [Linux/EV6]):
+GRAPE_LDFLAGS_='-L/usr2/makino/disk3src/harplibs'
+GRAPE_LIBS_='-lg6la -lg6lasim2'
+                                                    
+                            
+#  For GRAPE-6 (on g6hostX@hongo [P4/K7/linux]):
+GRAPE_LDFLAGS_='-L/usr2/makino/disk3src/harplibs'
+GRAPE_LIBS_='-lg6lx -lg6lxsim2'
+
+ 
+#  For GRAPE-6 (on g6hostX@hongo [AMD64/linux]):
+GRAPE_LDFLAGS_='-L/usr2/makino/disk3src/harplibs/x86_64'
+GRAPE_LIBS_='-lg6lx -lg6lxsim2'
+
+ 
+#  For GRAPE-6 (on shiraz@drexel [P4 linux]):
+GRAPE_LDFLAGS_='-L/usr/local/lib'
+GRAPE_LIBS_='-lg6lx -lg6lxsim2'

@@ -51,15 +51,25 @@ AC_PROG_YACC
 AC_PROG_INSTALL
 
 # Checks for libraries.
-m4_include([local/grape.m4])
 AC_ARG_WITH(grape,
     AS_HELP_STRING([--with-grape], use the GRAPE [[[default=yes]]]),
     [grape="$withval"])
 if test -z "$grape" -o "x$grape" = "xyes"; then
-    AC_SUBST(GRAPE_LDFLAGS, "GRAPE_LDFLAGS_")
-    AC_SUBST(GRAPE_LIBS, "GRAPE_LIBS_")
+    if test -f local/grape.sh; then
+        . local/grape.sh
+    elif test "x$grape" = "xyes"; then
+        AC_MSG_ERROR([GRAPE was selected but configuration is missing.
+Please put relevant information in `local/grape.sh'
+as shown in `local/grape.sh.examples'.])
+    else
+        GRAPE_LDFLAGS_=
+	GRAPE_LIBS_=
+	OLD_READ_NEIGHBOUR_LIST=
+    fi
+    AC_SUBST(GRAPE_LDFLAGS, "$GRAPE_LDFLAGS_")
+    AC_SUBST(GRAPE_LIBS, "$GRAPE_LIBS_")
     OLDFLAGS="$LDFLAGS"
-    LDFLAGS="$LDFLAGS $GRAPE_LDFLAGS"
+    LDFLAGS="$LDFLAGS $GRAPE_LDFLAGS_"
     AC_CHECK_LIB(g6lx, g6_open_, grape6=yes, grape6=no)
     if test "x$grape6" = "xno"; then
         AC_CHECK_LIB(g4x, h3open_, grape4=yes, grape4=no)
@@ -70,7 +80,7 @@ if test -z "$grape" -o "x$grape" = "xyes"; then
     if test "x$grape6" = "xno" -a "x$grape4" = "xno"; then
         if test "x$grape" = "xyes"; then
             AC_MSG_ERROR([GRAPE was selected but a test program failed to compile.
-Please make sure correct paths are specified in `local/grape.m4'.
+Please make sure correct paths are specified in `local/grape.sh'.
 See `config.log' for more details.])
         fi
     else
@@ -80,7 +90,7 @@ See `config.log' for more details.])
     LDFLAGS="$OLDFLAGS"
 fi
 AM_CONDITIONAL(HAVE_GRAPE, [test "x$grape" = "xyes"])
-if test x"OLD_READ_NEIGHBOUR_LIST" = "xyes"; then
+if test x"$OLD_READ_NEIGHBOUR_LIST" = "xyes"; then
     AC_DEFINE(G6_OLD_READ_NEIGHBOUR_LIST, 1, [Define to 1 to use the old (PIO) neighbor list interface.])
 fi
 
