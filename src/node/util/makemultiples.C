@@ -27,6 +27,7 @@
 ////                                               secondary mass [0]
 ////               -M    specify upper limit for primaries to be binaries [inf]
 ////               -m    specify lower limit for primaries to be binaries [0]
+////               -p    split fraction of primaries [0.5]
 ////               -q    select choice of minimum mass ratio [false]
 ////                         if true, secondary mass ratio is chosen
 ////                             uniformly on [lower_limit, upper_limit]
@@ -63,7 +64,8 @@ local void name_from_components(node *od, node *yd)
 //                 where "n" is the name of the leaf being split.
 
 local real split_particle(node* bi, real mass_ratio, real fmultiple, 
-			  int depth, int &nmax, bool force_index, bool split)
+			  int depth, int &nmax, bool force_index, bool split,
+			  real primary_fraction)
 {
   if(depth<=1)
     return true;
@@ -167,11 +169,13 @@ local real split_particle(node* bi, real mass_ratio, real fmultiple,
     
     if(randinter(0, 1)<fmultiple) {
       real q = randinter(0, 1);
-      if(randinter(0, 1)<0.5) {
-      split_particle(d1, q, fmultiple, depth-1, nmax, force_index, split);
+      if(randinter(0, 1)<primary_fraction) {
+      split_particle(d1, q, fmultiple, depth-1, nmax, force_index, split,
+		     primary_fraction);
       }
       else {
-	split_particle(d2, q, fmultiple, depth-1, nmax, force_index, split);
+	split_particle(d2, q, fmultiple, depth-1, nmax, force_index, split,
+		     primary_fraction);
       }
     }
 
@@ -196,7 +200,8 @@ local real add_secondary(node* original, real mass_ratio,
 			 bool split)
 {
 
-  if (!split_particle(original, mass_ratio, fmultiple, max_depth, nmax, force_index, split))
+  if (!split_particle(original, mass_ratio, fmultiple, max_depth, nmax, force_index, split, primary_fraction)
+)
     err_exit("split_particles: fatal error");
 
   return 1;
@@ -275,7 +280,7 @@ local void makemultiples(node* b, real binary_fraction,
 			 real lower_limit, real upper_limit, 
 			 real fmultiple, int max_depth,
 			 bool force_index, bool q_flag, bool ignore_limits,
-			 bool split)
+			 bool split, real primary_fraction)
 {
     PRI(4); PRL(binary_fraction);
     PRI(4); PRL(min_mprim);
@@ -285,6 +290,7 @@ local void makemultiples(node* b, real binary_fraction,
     PRI(4); PRL(upper_limit);
     PRI(4); PRL(ignore_limits);
     PRI(4); PRL(split);
+    PRI(4); PRL(primary_fraction);
 
     renumber(b, 1, true, true, true);
 
@@ -308,7 +314,9 @@ local void makemultiples(node* b, real binary_fraction,
     // Assume that the probability of a star being the primary of
     // a binary is independent of mass.
 
-    real sum = 0;
+    // Removed sum-method as it is unreliable for most fractions 
+    // 180504 SPZ&JvdB
+    //  real sum = 0;
     b->set_mass(0);
 
     real m_prim, q;
@@ -326,14 +334,16 @@ local void makemultiples(node* b, real binary_fraction,
 		m_primaries += m_prim;
 
 		if (m_prim >= min_mprim && m_prim <= max_mprim) {
-		    sum += binary_fraction;
-		    if (sum >= 0.9999999999) {	// avoid roundoff problems!
-			sum = 0;
+		    if(randinter(0, 1)<binary_fraction) {
+		      // sum += binary_fraction;
+		      // if (sum >= 0.9999999999) {// avoid roundoff problems!
+		      //    sum = 0;
 			q = random_mass_ratio(lower_limit, upper_limit);
 			
 			m_secondaries += split_particle(bi, q, fmultiple, 
 							max_depth, nmax, 
-							force_index, split);
+							force_index, split,
+							primary_fraction);
 		    }
 		}
 	  }
@@ -385,15 +395,17 @@ local void makemultiples(node* b, real binary_fraction,
 		m_primaries += m_prim;
 
 		if (m_prim >= min_mprim && m_prim <= max_mprim) {
-		    sum += binary_fraction;
-		    if (sum >= 0.9999999999) {	// avoid roundoff problems!
-			sum = 0;
+		    if(randinter(0, 1)<binary_fraction) {
+		      // sum += binary_fraction;
+		      //  if (sum >= 0.9999999999) {	// avoid roundoff problems!
+		      //    sum = 0;
 			qmin = mmin/bi->get_mass();
 			qmax = Starlab::min(mmax, bi->get_mass())/bi->get_mass();
 			q = random_mass_ratio(qmin, qmax);
 			m_secondaries += split_particle(bi, q, fmultiple, 
 							max_depth, nmax, 
-							force_index, split);
+							force_index, split,
+							primary_fraction);
 		    }
 		}
 	  }
@@ -462,6 +474,7 @@ int main(int argc, char ** argv)
     bool split = false;
     bool ignore_limits = false;
     real binary_fraction = 0.1;
+    real primary_fraction = 0.5; // split half the primaries
     real fmultiple = 0.1;
     real lower_limit = 0.0;
     bool u_flag = false;
@@ -479,7 +492,7 @@ int main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "d:qf:h:M:m:il:nu:Ss:I";
+    char* param_string = "d:qf:h:M:m:il:nu:p:Ss:I";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -499,6 +512,8 @@ int main(int argc, char ** argv)
 	    case 'M': max_mprim = atof(poptarg);
 		      break;
 	    case 'm': min_mprim = atof(poptarg);
+		      break;
+            case 'p': primary_fraction = atoi(poptarg);
 		      break;
             case 'q': q_flag = true;
 		      break;
@@ -530,6 +545,8 @@ int main(int argc, char ** argv)
         cerr << "Maximum mass ratio > 1 not allowed; use -u 1" << endl;
 	upper_limit = 1;
     }
+    if(primary_fraction<0 || primary_fraction>1) 
+      err_exit("makemultuples: Illegal primary_fraction");
 
     if (lower_limit < 0)
         err_exit("Invalid lower limit");
@@ -556,7 +573,7 @@ int main(int argc, char ** argv)
 		  lower_limit, upper_limit, 
 		  fmultiple, max_depth, 
 		  force_index, q_flag,
-		  ignore_limits, split);
+		  ignore_limits, split, primary_fraction);
 
     put_node(b);
     rmtree(b);
