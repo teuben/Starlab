@@ -25,7 +25,7 @@ GRAPE	= -DSTARLAB_HAS_GRAPE6
 
 GRAPELIB = -L/usr2/makino/disk3src/harplibs -lg6 -lg6sim2
 
-CCFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) $(GRAPE)
+CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) $(GRAPE)
 
 LIBFLAGS	= -L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
 		  -ldstar -lsstar -lhdyn -l_dyn_ -ldyn -lnode \
