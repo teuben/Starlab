@@ -33,7 +33,7 @@
 				//   _______________________________________
 #define  SQRT_TRIG_TOL  1.e-6   // \/ Tolerance in sine and cosine functions
 
-#define  INFINITY  VERY_LARGE_NUMBER
+#define  _INFINITY_  VERY_LARGE_NUMBER
 
 #define	 ECC_TOL   1.0e-12	// Problems with nearly linear orbits;
 				// best to treat them as linear
@@ -57,13 +57,13 @@
  *		E < 0			E = 0			E > 0
  *
  * h > 0	e < 1			e = 1			e > 1
- *		a < INFINITY		a = INFINITY		a = INFINITY
- *		P < INFINITY		P = INFINITY		P = INFINITY
+ *		a < _INFINITY_		a = _INFINITY_		a = _INFINITY_
+ *		P < _INFINITY_		P = _INFINITY_		P = _INFINITY_
  *					n --> n'
  *
  * h = 0	e = 1			e = 1			e = 1
- *		a < INFINITY		a = INFINITY		a = INFINITY
- *		P < INFINITY		P = INFINITY		P = INFINITY
+ *		a < _INFINITY_		a = _INFINITY_		a = _INFINITY_
+ *		P < _INFINITY_		P = _INFINITY_		P = _INFINITY_
  *					n --> n''
  *		true_an = ecc_an	true_an = r^(3/2)	true_an = ecc_an
  *					mean_an = true_an
@@ -492,7 +492,7 @@ void  kepler::print_all(ostream & s)
     s << "  eccentricity     = " << eccentricity << endl;
     s << "  circular_binary_limit = " << circular_binary_limit << endl;
     s << "  periastron       = " << periastron << endl;
-    s << "  apastron         = " << (energy >= 0 ? INFINITY : 
+    s << "  apastron         = " << (energy >= 0 ? _INFINITY_ : 
 				       semi_major_axis * (1 + eccentricity))
                                     << endl;
     s << "  energy           = " << energy << endl;
@@ -533,7 +533,7 @@ void  kepler::print_elements(ostream & s)
     s << "  eccentricity     = " << eccentricity << endl;
     s << "  circular_binary_limit = " << circular_binary_limit << endl;
     s << "  periastron       = " << periastron << endl;
-    s << "  apastron         = " << (energy >= 0 ? INFINITY : 
+    s << "  apastron         = " << (energy >= 0 ? _INFINITY_ : 
 				       semi_major_axis * (1 + eccentricity))
                                     << endl;
     s << "  energy           = " << energy << endl;
@@ -1074,7 +1074,7 @@ void  kepler::initialize_from_pos_and_vel(bool minimal, bool verbose)
 
         eccentricity = 1;
 
-        semi_major_axis = INFINITY;
+        semi_major_axis = _INFINITY_;
         periastron = 0.5 * angular_momentum * angular_momentum / total_mass;
 
         mean_motion = sqrt(total_mass / 
@@ -1083,7 +1083,7 @@ void  kepler::initialize_from_pos_and_vel(bool minimal, bool verbose)
         // (The real mean motion is undefined, but this is useful in
         //  determining time from radius.)
 
-        period = INFINITY;
+        period = _INFINITY_;
     }
 
     if (angular_momentum != 0) 
@@ -1232,7 +1232,7 @@ void  kepler::initialize_from_shape_and_phase()
         periastron = semi_major_axis * abs(1 - eccentricity);
 	mean_motion = sqrt(total_mass
 			   /(semi_major_axis*semi_major_axis*semi_major_axis));
-	period = (energy < 0 ? TWO_PI / mean_motion : INFINITY);
+	period = (energy < 0 ? TWO_PI / mean_motion : _INFINITY_);
 
 	angular_momentum = sqrt(abs(1 - eccentricity * eccentricity)
 	                         * total_mass * semi_major_axis);
@@ -1243,7 +1243,7 @@ void  kepler::initialize_from_shape_and_phase()
 
 	if (energy == 0) {
 
-	    period = semi_major_axis = INFINITY;
+	    period = semi_major_axis = _INFINITY_;
 	    mean_motion = sqrt(4.5*total_mass);	// Yes, really!
 
 	} else {
@@ -1252,13 +1252,13 @@ void  kepler::initialize_from_shape_and_phase()
 
 	    mean_motion = sqrt(total_mass/(semi_major_axis
 					   *semi_major_axis*semi_major_axis));
-	    period = (energy < 0 ? TWO_PI / mean_motion : INFINITY);
+	    period = (energy < 0 ? TWO_PI / mean_motion : _INFINITY_);
 	}
 
     } else {			     // Parabola.
 
         energy = 0;
-	period = semi_major_axis = INFINITY;
+	period = semi_major_axis = _INFINITY_;
 
 	mean_motion = sqrt(total_mass
 			   / (2*periastron*periastron*periastron));
