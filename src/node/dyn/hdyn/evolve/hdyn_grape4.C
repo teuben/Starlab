@@ -965,7 +965,7 @@ local void set_grape4_neighbour_radius(hdyn * b, int nj_on_grape)
 	// For a single particle, adjust the nnb radius so that it will
 	// contain just 1-2 neighbours (set r = sqrt(2)*d_nn, if known).
 
-	if (b->get_nn()
+	if (b->get_nn() && b->get_nn() != b
 	    && b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER) {
 
 	    // Node seems to have a valid nearest neighbor pointer.
@@ -1107,7 +1107,7 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
     //
     // (The GRAPE release check is now performed externally.  The main
     //  advantage to doing the check here was that we only had to do it
-    //  once.  However a major disadvantage was that the hardware could
+    //  once.  However, a major disadvantage was that the hardware could
     //  get tied up unnecessarily by a process that was stuck elsewhere
     //  in the code (e.g. in a multiple encounter.)
     //
