@@ -1052,6 +1052,8 @@ local void print_most_massive_stars(dyn *b,
     for (int i = 0; i < ns; i++)
 	print_massive_star(md_list[i].b, center_pos, center_vel, verbose);
 
+    delete [] md_list;
+
     // Binaries:
 
     int nb = 0;
