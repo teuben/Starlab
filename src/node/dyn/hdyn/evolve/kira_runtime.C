@@ -1011,11 +1011,30 @@ local void dump_to_file(hdyn* b, char* name)
 
 void check_kira_init(hdyn *b)
 {
-    if (check_file("INIT_DIAG", false))
-	modify_diag(b, "INIT_DIAG", false);
+    // Look in standard places for nonstandard options.  Merge the old
+    // old "INIT_DIAG" and "INIT_OPTIONS" settings into a single file
+    // (change made by Steve, 1/02).
 
-    if (check_file("INIT_OPTIONS", false))
-	modify_options(b, "INIT_OPTIONS", false);
+    char file[1024];
+
+    // Look first in $HOME/.kira ...
+
+    strcpy(file, getenv("HOME"));
+    strcat(file, "/.kira");
+
+    if (check_file(file, false)) {
+	modify_diag(b, file, false);
+	modify_options(b, file, false);
+    }
+
+    // ... then allow local setup in ./.kira.
+
+    strcpy(file, "./.kira");
+
+    if (check_file(file, false)) {
+	modify_diag(b, file, false);
+	modify_options(b, file, false);
+    }
 }
 
 // Check_kira_runtime:  read and process files if present, then delete them.
