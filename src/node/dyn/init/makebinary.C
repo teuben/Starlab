@@ -109,11 +109,14 @@ real zero_age_main_sequnece_radius(const real mass) {
 
     real radius = delta;
 
-    if(radius<0.1) {
+    // Was in CVS version, removed by SPZ?
 
-	// assumed brown dwarf or planet.
-	radius = 0.1;
-    }
+//    if (radius < 0.1) {
+// 
+//	// assumed brown dwarf or planet.
+//
+//	radius = 0.1;
+//    }
 
     return radius;
 }
