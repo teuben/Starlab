@@ -22,6 +22,7 @@
 //	 	 Feb 2001   Simon Portegies Zwart
 
 #include "node.h"
+#include "util_io.h"
 
 #ifndef TOOLBOX
 
