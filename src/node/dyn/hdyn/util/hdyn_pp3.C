@@ -276,7 +276,7 @@ void pp3(hdyn * b,					// standard, recursive
     if (!pp3_check(b)) return;
 
     if (b->is_root() && level >= 0) {
-	s << endl << "Static data:" << endl << endl;
+	s << endl << "Static data:" << endl << endl << flush;
 	b->print_static(s);
     }
 
