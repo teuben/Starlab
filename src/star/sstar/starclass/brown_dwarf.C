@@ -59,7 +59,10 @@ void brown_dwarf::evolve_element(const real end_time) {
 
         next_update_age = relative_age + cnsts.safety(maximum_timestep);
 
-	luminosity = 1.e-4; // Dantona, F., Mazzitelli, I., 1985, ApJ 296, 502
+	//Burrows & Libert 1993, J. Rev. Mod. Phys. 65, 301
+	luminosity = 938 * pow(relative_mass, 2.64); 
+	if(relative_age>1)
+	  luminosity = 938 * pow(relative_mass, 2.64) / pow(relative_age, 1.3);
 
         core_radius = radius = 0.1;
        
