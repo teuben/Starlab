@@ -1,0 +1,208 @@
+Masters of the Virtual Universe,
+
+    Here's an attempt to recreate the diagram we produced at AMNH
+during our visit in September, and some notes on what I have done
+during the past ~2 weeks.  If you want to skip the details, my
+specific questions are at the end.
+
+Some terminology:
+
+    event:	   A point along the trajectory of a particle or
+		   node, containing time, position and velocity.
+
+    worldsegment:  Series of events for a given particle or node,
+		   spanning a time interval during which the local
+		   tree structure remains unchanged.
+
+    worldline:	   Collection of segments defining a trajectory.
+		   Segments representing stars are consecutive, with
+		   each segment spanning an interval between tree
+		   changes.  Segments representing center of mass
+		   nodes may have gaps between them.
+
+    worldbundle:   Collection of worldlines for all particles in
+		   the N-body system, covering some convenient
+		   time interval.  The worldbundle starts and ends
+		   with a complete synchronous system tree.  By
+		   construction, particles may be removed from the
+		   system only between worldbundles.
+
+    The processes of creating, reading, managing, and recomputing each
+new frame will be assigned to separate coupled programs, running
+independently and communicating by some means still to be determined.
+Program structure and specifications are:
+
+
+    +--------+
+    |        |
+    |  kira  |    -->    write event stream
+    |        |           to disk file(s)
+    +--------+
+                                 |
+                                 |
+                                 V
+
+	+---------------------------------------------------+
+	|                                                   |
+	|  read_bundle:  Read an event file (or files) and  |
+	|  create an array of worldbundles in memory        |
+	|  representing a portion of the evolution of the   |
+	|  system.  Provide data on the portion of the      |
+	|  evolution currently available for use, and       |
+	|  possibly perform "caching" to ensure that the    |
+	|  available data window is approximately centered  |
+	|  on the current display time.  Actual worldbundle |
+	|  size and the number of worldbundles stored in    |
+	|  memory will depend on total memory available and |
+        |  disk I/O speed.                                  |
+	|                                                   |
+	|  Code to read individual worldbundles exists.     |
+	|  Cache management code is still to be written.    |
+	|                                                   |
+	+---------------------------------------------------+
+
+                                 ^
+                                 |
+                                 |
+                                 V
+
+	+---------------------------------------------------+
+	|                                                   |
+	|  manage_bundle:  Maintain pointers and data       |
+	|  structures based on data provided by             |
+	|  read_bundle, to allow traversal of the 4tree.    |
+	|  Pointers identify worldline segments and events  |
+	|  spanning the current time.  (Done)               |
+	|                                                   |
+	+---------------------------------------------------+
+
+                                 ^
+                                 |
+                                 |
+                                 V
+
+	+---------------------------------------------------+
+	|                                                   |
+	|  build_snap:  Interpolate all worldlines to       |
+	|  produce a dynamic snapshot of the system at some |
+	|  specified time.  Initiate read of new data and   |
+	|  return appropriate status if the desired time is |
+	|  unavailable.  Returned snapshot is a pointer to  |
+	|  a complete tree for xstarplot2 (done), or a      |
+	|  pointer to a partiview data structure (soon?).   |
+	|                                                   |
+	+---------------------------------------------------+
+
+                                 ^
+                                 |
+                                 |
+                                 V
+
+	+---------------------------------------------------+
+	|                                                   |
+	|  partiview:  Display and manipulate a dynamically |
+	|  generated snapshot and determine the time of the |
+        |  next display.                                    |
+	|                                                   |
+	+---------------------------------------------------+
+
+
+    All data are passed (probably) using shared memory.  Note that, in
+this picture, partiview never reads anything from disk, only from
+memory, and the partiview data structures, the 4tree structures, and
+the external data representation are essentially independent of one
+another.
+
+    The choice of data formats is largely a matter of efficiency and
+convenience.  Presently, kira can write long- or short-format, ASCII
+or mixed-binary data files to represent the data.  The combination of
+binary data and significant undersampling of the data (OK because we
+can reconstruct trajectories using high-order interpolation) mean
+gains factors of ~20-50 in disk space without significant loss of
+information.  The standard (long-format) kira output would represent
+a single particle as:
+
+(Particle
+  name = <name-string>
+(Dynamics
+  m  =  m.mmmmmmmmmmmmmmmmmm
+  t  =  t.tttttttttttttttttt
+  r  =  x.xxxxxxxxxxxxxxxxxx  y.yyyyyyyyyyyyyyyyyy  z.zzzzzzzzzzzzzzzzzz
+  v  =  u.uuuuuuuuuuuuuuuuuu  v.vvvvvvvvvvvvvvvvvv  w.wwwwwwwwwwwwwwwwww
+)Dynamics
+(Star
+  star-stuff...
+)Star
+
+Where the "(" and ")" pieces allow representation of tree and story
+structure.  Pretty long-winded.  The shortest output format would
+be:
+
+(P
+name = <name-string>
+(D
+tmpv =
+<36-byte binary string: time (8 bytes), mass, pos, vel (4 bytes each)>
+)D
+(S
+star =
+<star-stuff binary data (to be determined)>
+)S
+)P
+
+Not so readable, but a lot shorter!  And of course binary data are
+also much faster to write and read.  The tree- and story-management
+characters consume 18 bytes (including carriage returns).  Identifying
+tags consume 19 bytes.  The name is stored internally as a character
+string, so no interpretation is needed.  The tree and story structures
+are essential parts of the data, and removing them would probably
+require storing positions to higher precision, so discarding them
+would lose information and gain little space.  In any case,
+read_bundle can handle any combination of formats.
+
+    The internal representation of worldbundle data in memory is
+presently quite wasteful of space, as the code is still under
+development, but it could be trimmed substantially to reflect the
+precision of the short-format data above.  Leaving out the star stuff,
+I estimate about 75 bytes per event on disk (possibly reducible to ~65
+with some work) and <100 bytes per event in memory (again with work),
+mainly because of the extra tree pointers (as well as acc and jerk
+information for interpolation).  With undersampling we probably need
+~10-20 events per particle per time unit (in the absence of binaries,
+which will also need extra work to control the volume of data), so 1
+Gbyte of memory corresponds to ~1.e6/N time units.  That's quite
+promising, I think.
+
+* Some questions:
+
+1. What do you think of the above layout, and particularly of the
+   data structures involved?
+
+2. Is it feasible to have partiview simply request a snapshot
+   instead of reading from disk or going to the next memory
+   location?  I assume the answer is yes.  If so, is there any
+   reason not just to use the current partiview data structure as
+   the snapshot format?  I don't see any particular problem creating
+   such a structure and returning a pointer to it -- far easier than
+   making a tree, I'd guess!
+
+3. What is the best way to implement sharing of data?  I have no
+   experience of this...
+
+4. Once we get to the point of actually displaying the data, we will
+   need symbols to represent various events.  In particular, the
+   various stages of mass transfer and contact between binaries need
+   to be coded in a recognizable way.  To start, I think we want a
+   series of "cartoons" based on the symbols in standard use in the
+   field.  These will have meaning to the experts, and will allow use
+   of the package as a real visualization tool.  For now, we should
+   begin to compile a list of evolutionary stages requiring such
+   symbols.
+
+5. Later we can think about more realistic depictions of binary
+   evolution.  Would it be feasible to have our cartoons be 3-D, so
+   (for example) we can fly around an accretion disk or contact binary
+   and have its appearance change as we move?  (For that matter, such
+   systems should be depicted as rotating in any case...)
+
+Steve
