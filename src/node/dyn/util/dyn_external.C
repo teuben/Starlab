@@ -165,18 +165,69 @@ local inline void add_plummer(dyn *b,
 
 // Add dynamical friction term.
 
-local inline void add_friction(dyn *b,
-			       vec pos,
-			       vec vel,
-			       real& pot,
-			       vec& acc,
-			       vec& jerk,
-			       bool pot_only)
+static real rhalf = 0;
+static real density = 0;
+
+local bool set_rhalf(dyn *b)
 {
-    // Preliminary code by F-C Lin (2004).
+    if (rhalf > 0) return true;
+
+    dyn *root = b->get_root();
+    story *s = root->get_dyn_story();
+
+    if (find_qmatch(s, "kira_rhalf")) {
+
+	// Get radius and density from the root dynstory.
+
+	rhalf   = getrq(s, "kira_rhalf");
+	density = getrq(s, "kira_half_density");  // assume present if rhalf is
+
+	if (rhalf <= 0 || density <= 0) return false;
+
+    } else {
+
+	// Recompute radius and density.  Code follows that in sys_stats.
+	// Suppressed temporarily -- reference to lagrad stuff somehow
+	// forces a libsstar dependency...
+
+	rhalf = print_lagrangian_radii(root, 2, false, 0,
+				       true);		    // noprint
+
+	if (rhalf > 0) {
+	    real density = 1.5*root->n_daughters() / (4*M_PI*pow(rhalf, 3));
+	    putrq(s, "half_density", density);
+	}
+    }
+
+    return true;
+}
+
+local inline void add_plummer_friction(dyn *b,
+				       vec pos,
+				       vec vel,
+				       real& pot,
+				       vec& acc,
+				       vec& jerk,
+				       bool pot_only)
+{
+    // Code by F-C Lin (2004).
 
     real M = b->get_p_mass();
     if (M == 0) return;
+
+    // Set parameters to reduce/cut off the friction term.
+
+    if (rhalf < 0)
+	return;
+    else if (rhalf == 0)
+	if (!set_rhalf(b)) {
+	    rhalf = -1;
+	    return;
+	}
+    if (density <= 0) return;
+
+    // Still need to deal more generally with the scaling of the
+    // particle masses to the mass of the background field.
 
     real mass = b->get_mass();		// scale the mass of black hole??
     real speed = sqrt(square(vel));
@@ -223,7 +274,7 @@ local inline void add_friction(dyn *b,
 
     }
 
-    // Apply cutoff/gradual reduction here...
+    // Apply cutoff/gradual reduction here, if desired.
 
     acc += da;
     jerk += dj;
@@ -728,7 +779,7 @@ void get_external_acc(dyn *b,
 	if (GETBIT(ext, 1)) {
 	    add_plummer(b, pos, vel, pot, acc, jerk, pot_only);
 	    if (b->get_p_friction())
-		add_friction(b, pos, vel, pot, acc, jerk, pot_only);
+		add_plummer_friction(b, pos, vel, pot, acc, jerk, pot_only);
 	}
 
 	if (GETBIT(ext, 2))
