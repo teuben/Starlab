@@ -55,9 +55,14 @@ void compute_mean_cod(dyn *b, vector& pos, vector& vel)
 
 	real dens_time = getrq(d->get_dyn_story(), "density_time");
 
-	if (dens_time != b->get_system_time() && print_message) {
+	if (print_message
+	    && !twiddles(dens_time, (real) b->get_system_time(), 1.e-9)) {
 	    warning("compute_mean_cod: using out-of-date densities.");
-	    PRC(d->format_label()), PRL(dens_time);
+	    PRL(d->format_label());
+	    int p = cerr.precision(HIGH_PRECISION);
+	    PRL(b->get_system_time());
+	    PRL(dens_time);
+	    cerr.precision(p);
 	    if (++count > MAX_COUNT) print_message = false;
 	}
 
