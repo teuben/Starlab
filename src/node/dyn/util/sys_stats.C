@@ -151,26 +151,27 @@ local void print_numbers_and_masses(dyn* b, bool& mass_spectrum)
 local void print_parameters_for_massive_black_holes(dyn *b,
 						    real kT,
 						    vector center,
-						    bool verbose) {
+						    bool verbose)
+{
+    int n_bh = 0;
+    for_all_daughters(dyn, b, bi) {
+	if(find_qmatch(bi->get_log_story(), "black_hole")) {
 
-  int n_bh = 0;
-  for_all_daughters(dyn, b, bi) {
-    if(find_qmatch(bi->get_log_story(), "black_hole")) {
-
-      n_bh ++;
-      bool long_binary_output = true;	
-      print_binary_from_dyn_pair(b, bi,
-				 kT, center, verbose,
-				 long_binary_output);
+	    n_bh ++;
+	    bool long_binary_output = true;	
+	    print_binary_from_dyn_pair(b, bi,
+				       kT, center, verbose,
+				       long_binary_output);
+	}
     }
-  }
 
-  if(n_bh==0) {
-    cerr << "           "
-         << "   ---   "
-         << "No massive black holes"
-         << "   ---   ";
-  }
+    if (!n_bh) {
+	cerr << "           "
+	     << "   ---   "
+	     << "No massive black holes"
+	     << "   ---   "
+	     << endl;
+    }
 }
 
 
@@ -274,7 +275,8 @@ local void print_numbers_and_masses_by_radial_zone(dyn* b, int which)
 	    for (i = 0; i <= n_lagr; i++) {
 	        cerr << "    zone " << i << "  N = " << N[i];
 	        if (N[i] > 0)
-		    cerr << "  m_av = " << total_mass_nodes[i] / Starlab::max(N[i], 1)
+		    cerr << "  m_av = " << total_mass_nodes[i]
+						/ Starlab::max(N[i], 1)
 		         << "  m_min = " << m_min[i]
 		         << "  m_max = " << m_max[i];
 		cerr << endl;
@@ -294,7 +296,7 @@ local void print_numbers_and_masses_by_radial_zone(dyn* b, int which)
 		m_maxc = Starlab::max(m_maxc, m_max[i]);
 		cerr << "    zone " << i << "  N = " << Nc;
 		if (Nc > 0)
-		    cerr << "  m_av = " << m_totc / Starlab::max(Nc, 1)
+		    cerr << "  m_av = "  << m_totc / Starlab::max(Nc, 1)
 		         << "  m_min = " << m_minc
 		         << "  m_max = " << m_maxc;
 		cerr << endl;
@@ -1368,18 +1370,18 @@ void sys_stats(dyn* b,
 	       bool verbose,				// default = true
 	       bool binaries,				// default = true
 	       bool long_binary_output,			// default = false
-	       int which_lagr,				// default = 0
+	       int  which_lagr,				// default = 0
 	       bool print_time,				// default = false
 	       bool compute_energy,			// default = false
 	       bool allow_n_sq_ops,			// default = false
 	       void (*compute_energies)(dyn*, real,	// default = calculate_
-					real&, real&,	//		energies
+					real&, real&,	//	       energies
 					real&, bool),
 	       void (*dstar_params)(dyn*),		// default = NULL
 	       bool (*print_dstar_stats)(dyn*, bool,	// default = NULL
 					 vector, bool))
 
-// The last three arguments are a nasty C way of allowing this dyn function
+// The last three arguments are a C-ish way of allowing this dyn function
 // to output additional dyn/dstar information when called from kira and
 // other hdyn programs.
 

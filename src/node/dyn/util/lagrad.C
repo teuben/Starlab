@@ -17,7 +17,7 @@
 //-----------------------------------------------------------------------------
 //   version 1:  May 1989   Piet Hut               email: piet@iassns.BITNET
 //                           Institute for Advanced Study, Princeton, NJ, USA
-//   version 2:  Dec 1992   Piet Hut  --  adopted to the new C++-based starlab
+//   version 2:  Dec 1992   Piet Hut  --  adapted to the new C++-based starlab
 //   version 3:  Jul 1996   Steve McMillan & Jun Makino
 //.............................................................................
 //   non-local functions: 
@@ -124,6 +124,7 @@ void compute_general_mass_radii(dyn * b, int nzones,
     if (mass_percent == NULL) {
 	cerr << "compute_general_mass_radii: "
 	     << "not enough memory left for mass_percent\n";
+	delete [] rm_table;
 	return;
     }
 
@@ -136,6 +137,13 @@ void compute_general_mass_radii(dyn * b, int nzones,
     }
 
     real *rlagr = new real[nzones-1];
+    if (rlagr == NULL) {
+	cerr << "compute_general_mass_radii: "
+	     << "not enough memory left for r_lagr\n";
+	delete [] rm_table;
+	delete [] mass_percent;
+	return;
+    }
     real cumulative_mass = 0.0;
     i = 0;
 
@@ -248,7 +256,7 @@ main(int argc, char ** argv)
 	    cerr << "r_lagr =";
 	    for (int i = 0; i < n_lagr; i++) cerr << " " << r_lagr[i];
 	    cerr << endl;
-
+	    delete [] r_lagr;
 	}
 
 	put_dyn(cout, *b);	

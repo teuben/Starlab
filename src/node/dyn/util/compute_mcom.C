@@ -105,7 +105,8 @@ void compute_mcom(dyn *b,
 
 	for (i = 0; i < f*n; i++) {
 	    dyn *bi = rp[i].p;
-	    real weight = bi->get_mass() * Starlab::max(0.0, 1 - rp[i].r2*r_max2i);
+	    real weight = bi->get_mass()
+				* Starlab::max(0.0, 1 - rp[i].r2*r_max2i);
 	    weighted_mass += weight;
 	    new_pos += weight * bi->get_pos();
 	    new_vel += weight * bi->get_vel();
@@ -124,6 +125,8 @@ void compute_mcom(dyn *b,
     putvq(b->get_dyn_story(), "mcom_vel", vel);
     putrq(b->get_dyn_story(), "mcom_f", f);
     putiq(b->get_dyn_story(), "mcom_n_iter", n_iter);
+
+    delete [] rp;
 }
 
 void compute_mcom(dyn *b,

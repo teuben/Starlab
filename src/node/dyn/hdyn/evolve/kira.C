@@ -1965,9 +1965,9 @@ local void evolve_system(hdyn * b,	       // hdyn array
     bool tree_changed = true;	// used by fast_get_nodes_to_move;
     				// set by integration/evolution routines
 
-    cerr << "check_sync #0 at t = " << b->get_system_time() << " (";
-    xprint(b->get_system_time(), cerr, false);
-    cerr << ")" << endl;
+    // cerr << "check_sync #0 at t = " << b->get_system_time() << " (";
+    // xprint(b->get_system_time(), cerr, false);
+    // cerr << ")" << endl;
     check_sync(b);
 
     while (t <= t_end) {
@@ -2025,8 +2025,6 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	//	4. snapshot/full dump output
 	//	5. remove escapers
 	//	6. reinitialize
-	//
-	// These differ significantly from the previous version...
 
 	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2113,10 +2111,10 @@ local void evolve_system(hdyn * b,	       // hdyn array
 		     << t << " *****" << endl << endl;
 	    }
 
-	    cerr << endl << "check_sync #1 at t = "
-		 << b->get_system_time() << " (";
-	    xprint(b->get_system_time(), cerr, false);
-	    cerr << ")" << endl;
+	    // cerr << endl << "check_sync #1 at t = "
+	    // 	 << b->get_system_time() << " (";
+	    // xprint(b->get_system_time(), cerr, false);
+	    // cerr << ")" << endl;
 
 	    tree_changed |= check_sync(b);
 	    update_step(ttmp, t_sync, dt_sync);
@@ -2132,8 +2130,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	bool reg_snap = (ttmp > t_snap
 			 || (dt_snap < VERY_LARGE_NUMBER && ttmp > t_end)
-			 );
-			 //			 || (fmod(steps, 1000) == 0 && check_file("DUMP")));
+			 || (fmod(steps, 1000) == 0 && check_file("DUMP")));
 
 	if (reg_snap || save_snap) {
 

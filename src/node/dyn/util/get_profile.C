@@ -63,6 +63,7 @@ main(int argc, char ** argv)
 	}
 
 	rmtree(b);
+	delete [] sys;
     }
 }
 

@@ -153,7 +153,7 @@ local void print_timestep_stats(hdyn* b)
 
 		// Basic stats (all steps):
 
-	        dt_mean += dt_a;
+		dt_mean += dt_a;
 		dt_min = Starlab::min(dt_min, dt_a);
 		dt_max = Starlab::max(dt_max, dt_a);
 
@@ -500,6 +500,7 @@ local void print_timestep_stats(hdyn* b)
     }
 
     delete [] list_dt;
+    delete [] list_dtb;
     delete [] steps_inst;
     delete [] steps_delta;
     delete [] f_dir_delta;
@@ -530,6 +531,7 @@ void print_statistics(hdyn* b,
     // General system statistics (omit time output
     // and O(N^2) operations):
 
+#if 1
     sys_stats(b,
 	      0.5,			// energy cutoff
 	      true,			// verbose output
@@ -542,11 +544,18 @@ void print_statistics(hdyn* b,
 	      kira_calculate_energies,	// energy calculation function
 	      print_dstar_params,	// allow access to dstar_to_kira
 	      print_dstar_stats);	// from dyn sys_stats function
+#else
+    cerr << "(sys_stats omitted)" << endl;
+#endif
 
     // Statistics on time steps and bottlenecks:
 
+#if 1
     print_timestep_stats(b);
     print_sort_counters();
+#else
+    cerr << "(statistics omitted)" << endl;
+#endif
 }
 
 local int n_bound(hdyn* b, vector& cod_vel)
@@ -600,7 +609,7 @@ void log_output(hdyn * b,
     compute_com(b, cod_pos, com_vel);
     cod_vel = com_vel;
 
-//#if 0
+#if 1
 
     // Suppressed while debugging other parts of
     // the GRAPE-6 interface (Steve, 7/00).
@@ -613,7 +622,7 @@ void log_output(hdyn * b,
     if (cpu < 0) cpu = 0;
     PRL(cpu);
 
-//#endif
+#endif
 
     int n_bound;
     real m_bound;
@@ -632,11 +641,12 @@ void log_output(hdyn * b,
 //     int p = cerr.precision(2)
 //     cerr << "          block steps = " << count
 // 	 << "  total steps = " << steps
-// 	 << "  steps/block = " << steps/max(1.0, count)
+// 	 << "  steps/block = " << steps/Starlab::max(1.0, count)
 // 	 << endl
 // 	 << "          top-level:    " << count_top_level
 // 	 << "                " << steps_top_level
-// 	 << "                " << steps_top_level/max(1.0, count_top_level)
+// 	 << "                "
+//	 << steps_top_level/Starlab::max(1.0, count_top_level)
 // 	 << endl;
 //     cerr.precision(p);
 
@@ -646,7 +656,7 @@ void log_output(hdyn * b,
     fprintf(stderr, "          top-level:    %8.2e", count_top_level);
     fprintf(stderr, "                %8.2e", steps_top_level);
     fprintf(stderr, "                %6.1f\n",
-	    			steps_top_level/Starlab::max(1.0, count_top_level));
+	    steps_top_level/Starlab::max(1.0, count_top_level));
 
     if (b->get_use_sstar())
 	print_sstar_time_scales(b);
