@@ -15,12 +15,9 @@
 ##.............................................................................
 ##
 
-# GRAPE options are nothing, STARLAB_HAS_GRAPE4, or STARLAB_HAS_GRAPE6:
+# Version for use on Linux systems.
 
-GRAPE	= -DSTARLAB_HAS_GRAPE6
-#GRAPE	= -DSTARLAB_HAS_GRAPE4
-
-CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) $(GRAPE)
+CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC)
 
 LIBFLAGS	= -L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
 		  -ldstar -lsstar -lhdyn -l_dyn_ -ldyn -lnode \
@@ -48,13 +45,6 @@ LIBRARY = libhdyn.a
 #..............................................................................
 
 include $(STARLAB_PATH)/inc/Makefile.worker.inc
-
-# Note that we use quite different ways of constructing the two
-# GRAPE functions in this drectory!  To be cleaned up...
-
-sys_stats_grape.C : sys_stats.C
-	echo "#define USE_GRAPE" > sys_stats_grape.C
-	cat sys_stats.C >> kira_grape.C
 
 #..............................................................................
 #..............................................................................

@@ -15,19 +15,14 @@
 ##.............................................................................
 ##
 
+# Version for use on merlot@drexel.
 # GRAPE options are nothing, STARLAB_HAS_GRAPE4, or STARLAB_HAS_GRAPE6:
 
 GRAPE	= -DSTARLAB_HAS_GRAPE4
 
 # Set GRAPELIB = nothing if we don't have GRAPE hardware.
 
-# For GRAPE-4 on merlot@drexel:
-
 GRAPELIB =	-L/usr/users/makino/src/harplibs -lg4a -lrt
-
-# For GRAPE-6 on bourgogne@hongo:
-
-#GRAPELIB = -L/usr2/makino/src/g6hib -lg6 -L/usr2/makino/src/grape6 -lg6sim2
 
 CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) $(GRAPE)
 

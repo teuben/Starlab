@@ -16,15 +16,21 @@
 ##.............................................................................
 ##
 
+# Version for use on GRAPE systems.
 # Options are nothing, STARLAB_HAS_GRAPE4, or STARLAB_HAS_GRAPE6:
 
 GRAPE	= -DSTARLAB_HAS_GRAPE6
 
-CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) $(GRAPE)
+# Modify this for the specific system:
+
+GRAPELIB = -L/usr2/makino/disk3src/harplibs -lg6 -lg6sim2
+
+CCFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) $(GRAPE)
 
 LIBFLAGS	= -L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
 		  -ldstar -lsstar -lhdyn -l_dyn_ -ldyn -lnode \
-		  -lstd  -lm
+		  -lstd -lm \
+                  $(GRAPELIB) 
 
 # (Libraries dstar and sstar are needed because of sys_stats...
 # The repeated searches are needed because hdyn references dstar,
