@@ -24,7 +24,7 @@ LIBRARY = liblux.a
 LIB_DEP = .$(LIBRARY)
 
 OBJECT_FILES = make_header.o write_image.o
-EXECUTABLES = make_image
+EXECUTABLES = make_image data
 
 #..............................................................................
 

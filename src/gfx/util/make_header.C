@@ -124,6 +124,59 @@ void make_standard_colormap(unsigned char* red,
     }
 }
 
+inline void swap(unsigned char *a, unsigned char *b)
+{
+    unsigned char tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
+void make_alternate_colormap(unsigned char* red,
+			     unsigned char* green,
+			     unsigned char* blue)
+{
+    // Make a "reverse standard colormap" (red --> blue).
+
+    int i;
+
+    for (i = 0; i < 48; i++) {				// violet to blue
+	red[i] = 5*(48-i)-1;				// 235 117 255
+	green[i] = red[i]/2;				//   5   2 255
+	blue[i] = 255;
+    }
+    for (i = 48; i < 86; i++) {				// blue to blue-green
+        red[i] = 0;					//   0   0 255
+        green[i] = (unsigned char)(6.84*(i-48));	//   0 251 137
+        blue[i] = 255 - (unsigned char)(2.5*(i-48));
+    }
+    for (i = 86; i < 100; i++) {			// blue-green to green
+        red[i] = 0;					//   0 251 180
+        green[i] = 255 - (100-i)/3;			//   0 255   5
+        blue[i] = 135 - 10*(i-86);
+    }
+    for (i = 100; i < 130; i++) {			// green to yellow
+        red[i] = (unsigned char)(8.5*(i-100));		//   0 255   0
+        green[i] = 255;					// 24 6255   0
+        blue[i] = 0;
+    }
+    for (i = 130; i < 215; i++) {			// yellow to red
+        red[i] = 255;					// 255 255   0
+        green[i] = 255 - 3*(i-130);			// 255   3   0
+        blue[i] = 0;
+    }
+    for (i = 215; i < 256; i++) {			// red to dark red
+        red[i] = 255 - 2*(i-215);			// 255 255   0
+        green[i] = 0;					// 255 175   0
+        blue[i] = 0;
+    }
+
+    for (i = 0; i < 128; i++) {
+	swap(red+i, red+255-i);
+	swap(green+i, green+255-i);
+	swap(blue+i, blue+255-i);
+    }
+}
+
 void make_greymap(unsigned char* red,
 		  unsigned char* green,
 		  unsigned char* blue)
@@ -210,8 +263,10 @@ void make_header(int m, int n, FILE* out_file,
 
     // Default colormap is now greyscale.
 
-    if (!colormap_file) // make_standard_colormap(red, green, blue);
-        make_greymap(red, green, blue);
+    if (!colormap_file)
+	// make_standard_colormap(red, green, blue);
+        // make_greymap(red, green, blue);
+	make_alternate_colormap(red, green, blue);
 
     make_header(m, n, out_file, red, green, blue);
 }
