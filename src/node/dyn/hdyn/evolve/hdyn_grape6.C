@@ -630,6 +630,11 @@ local INLINE int force_by_grape(xreal xtime,
     if (init_jp_dma)
 	g6_flush_jp_buffer_(&cluster_id);
 
+if (xtime > 0) {
+    PRL(iacc[0]);
+    PRL(ijerk[0]);
+}
+
     g6calc_firsthalf_(&cluster_id, &nj, &ni, iindex,
 		      ipos, ivel, iacc, ijerk, ipot,
 		      &eps2, ih2);
@@ -645,6 +650,11 @@ local INLINE int force_by_grape(xreal xtime,
     int error = g6calc_lasthalf2_(&cluster_id, &nj, &ni, iindex,
 				  ipos, ivel, &eps2, ih2,
 				  iacc, ijerk, ipot, inn);
+
+if (xtime > 0) {
+    PRL(iacc[0]);
+    PRL(ijerk[0]);
+}
 
 #ifdef T_DEBUG
     if (in_debug_range && T_DEBUG_LEVEL > 0) {
@@ -2991,7 +3001,7 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
     //					(Experimental - Steve, 5/02)
     //
     // Not to be confused with the experimental code in the scheduler
-    // to try to make the entire list traversal mode cache-friendly.
+    // to try to make the entire list traversal more cache-friendly.
     //						       (Steve, 3/03)
 
     int last_nbr_node = n_top;
