@@ -19,7 +19,7 @@
 
 pkglib_LTLIBRARIES = libstd.la
 bin_PROGRAMS = gethist pgetopt randinter runtime_help precision story \
-    test_vector xtest
+    test_vector xtest xreal
 
 libstd_la_LDFLAGS = -lm
 libstd_la_SOURCES = randinter.C pgetopt.C gethist.C precision.C story.C \
@@ -34,6 +34,7 @@ precision_CPPFLAGS = -DTOOLBOX
 story_CPPFLAGS = -DTOOLBOX
 test_vector_CPPFLAGS = -DTOOLBOX
 xtest_CPPFLAGS = -DTOOLBOX
+xreal_CPPFLAGS = -DTOOLBOX
 
 gethist_LDADD = libstd.la
 pgetopt_LDADD = libstd.la
@@ -43,6 +44,7 @@ precision_LDADD = libstd.la
 story_LDADD = libstd.la
 test_vector_LDADD = libstd.la
 xtest_LDADD = libstd.la
+xreal_LDADD = libstd.la
 
 gethist_SOURCES = gethist.C
 pgetopt_SOURCES = pgetopt.C
@@ -52,6 +54,7 @@ precision_SOURCES = precision.C
 story_SOURCES = story.C
 test_vector_SOURCES = test_vector.C
 xtest_SOURCES = xtest.C
+xreal_SOURCES = xreal.C
 
 .PHONY: libs
 libs: libstd.la
