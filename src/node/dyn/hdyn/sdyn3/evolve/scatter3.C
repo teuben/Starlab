@@ -117,7 +117,7 @@ local sdyn3 * init_to_sdyn3(initial_state3 & init, final_state3 & final)
     // Linux systems if the orbit is linear (i.e. rho = 0), as this
     // implies r = 0, v = infinity.  Most systems will accept v = Inf
     // (which is actually OK, as we later set the separation to something
-    // more reasonable).  However, Linux fails with a floating excetion.
+    // more reasonable).  However, Linux fails with a floating exception.
     // Any nonzero value should be OK, as far as initialization is
     // concerned, but any given value of mean_anomaly will present
     // difficulties as v_inf --> 0 (because the corresponding separation
@@ -267,7 +267,6 @@ void scatter3(initial_state3 & init,
 				   init.eta, cpu_time_check,
 				   dt_print, p,
 				   init.snap_limit);
-
 	if (status) init.cpu_limit = 0;
 
 	// Check the CPU time.  Note that the printed CPU time is the

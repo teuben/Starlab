@@ -18,7 +18,7 @@
 ////               -z    specify maximum number of steps to take [unspecified]
 
 //		  9/7/95:  Added "double unperturbed" motion near
-//			   close binary periastron.  SMcM
+//			   close binary periastron (Steve).
 
 // Starlab library function.
 
@@ -302,6 +302,7 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
     if (min_sep_sq > max_sep_sq * tol_23) return FALSE;
 
     // -------------------------------------------------------------------
+    //
     // Passed the first cut!
 
     // Now determine the binary components, and calculate the separation
@@ -355,8 +356,10 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
     if (square(r) > square(R) * true_tol_23) return FALSE;
 
     // -------------------------------------------------------------------
-    // We have unperturbed motion.  Keep track of the system center of
-    // mass (which will be lost by the kepler structures below).
+    //
+    // We have unperturbed motion (pericenter reflection of the inner
+    // binary).  Keep track of the system center of mass (which will
+    // otherwise be lost by the kepler structures below).
 
     vector system_cmpos = (m12 * binary_cmpos
 			   + b3->get_mass() * b3->get_pos()) / m123;
@@ -383,10 +386,12 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
     outer.set_total_mass(m123);    
     outer.set_rel_pos(R);
     outer.set_rel_vel(b3->get_vel() - binary_cmvel);
- 
     outer.initialize_from_pos_and_vel();
 
-    real t_init = inner.get_time();
+    // We will do pericenter reflection unless a collision occurred,
+    // in which case we will stop at pericenter.
+
+    real t_init = inner.get_time();	// should be system time
     real t_peri = inner.get_time_of_periastron_passage();
 
     // Update the closest-approach variables.  Assume that the pointers
@@ -417,12 +422,28 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
 	return TRUE;
     }
 
+    // Proceed with the reflection.
+
     real dt = 2*(t_peri - t_init);
 
-    // Require that both the old and the final configurations pass
-    // the "unperturbed" test.
+    // It is possible that in a (nearly) circular binary the
+    // periastron point cannot be determined, and even that
+    // t_peri = t_init here.  In that case, just take a step of
+    // one period (if circular, should satisfy the unperturbed
+    // criterion around the entire orbit).
+
+    if (dt <= true_dt) {
+	if (inner.get_eccentricity() < 0.01)	// (say)
+	    dt = inner.get_period();
+	else
+	    return false;			// just take a normal step
+    }
 
     outer.transform_to_time(t_init + dt);
+
+    // Require that both the old and the final configurations pass
+    // the "unperturbed" test before finalizing.  Note that the
+    // inner separation is unchanged, by construction.
 
     real sep = outer.get_separation();
     if (square(r) > sep * sep * true_tol_23) {
@@ -430,8 +451,8 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
 	// Restore the original system.
 
 	if (UNPERTURBED_DIAG)
-	    cerr <<
-    "unperturbed_step: failed unperturbed test after unperturbed step!\n";
+	    cerr << "unperturbed_step: failed unperturbed test "
+		 << "after unperturbed step!" << endl;
 
 	restore_pos_and_vel(inner, outer, t_init, 2, b1, b2, b3,
 			    system_cmpos, system_cmvel);
@@ -501,7 +522,7 @@ local bool step(sdyn3* b,	// sdyn3 array
 		real& t,	// time
 		real eps,	// softening length
 		real eta,	// time step parameter
-		real dt,	// time step of the integration 
+		real dt,	// desired time step of the integration 
 		real max_dt,	// maximum time step (to end of the integration)
 		int& end_flag,  // to flag that integration end is reached
 		tfp  the_tfp,	// timestep function pointer
@@ -516,6 +537,10 @@ local bool step(sdyn3* b,	// sdyn3 array
 
     real true_dt = dt; 
     int collision_flag = 0;
+
+    // Note: unperturbed_step will check for and take an unperturbed
+    // step if possible, adjusting true_dt and collision_flag and
+    // returning true.
 
     if (eps > 0 ||
 	!(unpert_flag = unperturbed_step(b, DEFAULT_TIDAL_TOL_FACTOR,
@@ -574,6 +599,8 @@ local bool step(sdyn3* b,	// sdyn3 array
 
     for_all_daughters(sdyn3, b, bb) bb->store_new_into_old();
     t += true_dt;
+
+    // Reminder: true_dt is not necessarily the dt supplied as an argument.
 
     if (collision_flag)	end_flag = 1;
 
