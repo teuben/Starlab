@@ -16,9 +16,9 @@ local void print_interactions(ostream& str,
 			      worldbundleptr wh[], int nh,
 			      char *id)
 {
-    real curr_id = -1;			// attempt to deal with repeats
-    real prev_id = -1;			// (1-cycles) and 2-cycles
-    real prev_prev_id = -1;
+    unique_id_t curr_id = -1;		// attempt to deal with repeats
+    unique_id_t prev_id = -1;		// (1-cycles) and 2-cycles
+    unique_id_t prev_prev_id = -1;
 
     real trep = 0;
     int  nrep = 0;
@@ -51,7 +51,7 @@ local void print_interactions(ostream& str,
 
 		    // See whether to print anything, and keep track of cycles.
 
-		    real this_id = unique_id(p);
+		    unique_id_t this_id = unique_id(p);
 
 		    // Note: 1-cycle has this_id = curr_id; 2-cycle has
 		    // this_id = prev_id and curr_id = prev_prev_id...

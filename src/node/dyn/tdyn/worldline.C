@@ -42,8 +42,8 @@
 //
 // Other externally visible functions:
 //
-//	real unique_id(char *name)
-//	real unique_id(node *b)
+//	unique_id_t unique_id(char *name)
+//	unique_id_t unique_id(node *b)
 //	void print_id(void *id, char *label)
 //	worldbundle *read_bundle(istream &s, int verbose)
 //	tdyn *find_event(worldline *w, tdyn *bn, real t)
@@ -62,6 +62,7 @@
 
 #include "worldline.h"
 #include "inline.h"
+#include <ctype.h>
 
 #define NEW 0
 
@@ -69,20 +70,48 @@
 
 // Functions to define unique identification for particles.
 
-#define FAC	(1.0/8192)		// power of 2...
+#ifndef NEW_UNIQUE_ID_T
+
+    // For use in old code:
+
+    //#define ID_FAC	(1.0/8192)		// power of 2...
+    //#define ID_FAC	(1.0/131072)		// power of 2...
+
+#   define ID_FAC 0.000001			// easier to read
+
+    // To keep ids unique, need 1/FAC to exceed the maximum particle index.
+    // Should possibly allow this to be varied at run time...
+
+#else
+
+//  For use in case NEW_UNIQUE_ID_T:
+
+#   define ID_SHIFT 20
+
+#endif
 
 // Overloaded function...
 
-real unique_id(int index)
+unique_id_t unique_id(int index)
 {
-    return 1 + FAC*index;
+#ifndef NEW_UNIQUE_ID_T
+    return (unique_id_t)(1 + ID_FAC*index);
+#else
+    return (unique_id_t)((1<<ID_SHIFT) + index);
+#endif
 }
 
-real unique_id(char *name)
+unique_id_t unique_id(char *name)
 {
     // Associate a unique identifier with the specified name.
     // This ID will be used to track the particle throughout.
-    // A leaf has 1 < id < 2, a binary CM has 2 < id < 3, etc.
+    // Old style: a leaf has 1 < id < 2, a binary CM has 2 < id < 3, etc.
+    // New style: a leaf has id>>20 = 1, binary CM has id>>20 = 2, etc.
+    //
+    // NOTE (Steve, 12/01): actually only necessary that the id be unique
+    // at any given instant.  Not necessary that the id is unique for all
+    // times (successive segments of a worldline may then refer to
+    // different nodes, but that is OK...).
 
     // First see if name can be interpreted as an integer.
 
@@ -92,25 +121,31 @@ real unique_id(char *name)
     // This is presumably a center of mass node.  Turn its
     // name into an identifying number.
 
-    // Look for commas and parentheses separating integers.
-    // Combine ((a,b),c) --> a + FAC*(b + FAC*c), etc.
-    // Factors are ~arbitrary.
-
-    // Really need a better way of generating unique IDs, but
-    // this should do for now.
-
-    char tname[1024];
-    strcpy(tname, name);	// work with a local copy
-
     // Parse the name.
 
-    real id = 0, fac = 1;
-    int num = 0, n = 0, l = strlen(tname);
+    unique_id_t id = 0;
+    int n = 0;
+
+#if 0
+
+    // Old version:
+    //
+    // Look for commas and parentheses separating integers.
+    // Combine ((a,b),c) --> a + ID_FAC*(b + ID_FAC*c), etc.
+    // Factor ID_FAC is ~arbitrary (but see above).
+    // Really need a better way of generating unique IDs...
+
+    char tname[1024];
+    strcpy(tname, name);	// work with a local copy of the name
+    int l = strlen(tname);
+
+    real fac = 1;
+    int num = 0;
 
     for (int i = 0; i < l; i++) {
 	if (tname[i] >= '0' && tname[i] <= '9') {
 	    if (num == 0) {
-		fac *= FAC;
+		fac *= ID_FAC;
 		num = i+1;
 	    }
 	} else {
@@ -123,11 +158,64 @@ real unique_id(char *name)
 	}
     }
 
+#else
+
+    // Improved code:  no copy and uses strtol (Steve, 12/01).
+    //
+    // New (12/01) version encodes only the *first* number found
+    // in name, relying on the value of n to keep id unique.
+    //
+    // New new version (12/01) uses an int to store the data, rather than
+    // a real.  Versions distinguished by value of NEW_UNIQUE_ID_T.
+
+    char *c = name, *end;
+    bool num = false;
+
+    while (1) {
+
+	// Find the next digit in name.
+
+	while (*c && !isdigit(*c)) c++;
+
+	if (*c) {
+
+	    // New number starts at c.  Read and count it.  With the new code,
+	    // it may be quicker just to count commas rather than use strol
+	    // for numbers that won't be used.
+
+	    long int i = strtol(c, &end, 10);
+	    n++;
+
+	    if (n == 1) {
+
+#ifndef NEW_UNIQUE_ID_T
+		id = (unique_id_t)(ID_FAC*i);	// new (12/01)
+#else
+		id = (unique_id_t)(i);		// new new (12/01)
+#endif
+	    }
+
+	    c = end;		// starting point for next search
+
+	} else
+	    break;
+    }
+
+#endif
+
+    // Portion of id before the decimal point or shifted by 20 indicates
+    // the number of numbers found in the name.
+
+#ifndef NEW_UNIQUE_ID_T
     id += n;
+#else
+    id += (n<<ID_SHIFT);				// new new (12/01)
+#endif
+
     return id;
 }
 
-real unique_id(node *b)
+unique_id_t unique_id(node *b)
 {
     // Return a unique non-negative real number identifying this node.
     // Use the index if available (assume unique!), otherwise, construct
@@ -381,7 +469,7 @@ void worldbundle::check()
 
 //======================================================================
 
-int worldbundle::find_index(real id)
+int worldbundle::find_index(unique_id_t id)
 {
     // Find the index of the worldline corresponding to id.
 
@@ -441,9 +529,9 @@ int worldbundle::find_index(real id)
 }
 
 int worldbundle::find_index(char *name)	{return find_index(unique_id(name));}
-int worldbundle::find_index(_pdyn_ *b)    {return find_index(unique_id(b));}
+int worldbundle::find_index(_pdyn_ *b)  {return find_index(unique_id(b));}
 
-worldline *worldbundle::find_worldline(real id)
+worldline *worldbundle::find_worldline(unique_id_t id)
 {
     int i = find_index(id);
     if (i >= 0 && i < nw)
@@ -495,7 +583,7 @@ void worldbundle::attach(tdyn *bn,
 	    // Find b on the worldline list or add it to the list
 	    // (maintaining the list ordering).
 
-	    real id = unique_id(b);
+	    unique_id_t id = unique_id(b);
 
 	    if (id >= 0) {
 
@@ -567,7 +655,7 @@ void worldbundle::attach(tdyn *bn,
 			// probably always a bad idea...
 		    }
 
-//		    if (deb) cerr.precision(p);
+		    // if (deb) cerr.precision(p);
 
 		    w->set_t_end(t);
 
@@ -1472,6 +1560,20 @@ local INLINE void add_to_interpolated_tree(worldbundle *wb,
     }
 }
 
+int id_n_clump(unique_id_t id)			// number of particles in id
+{
+#ifndef NEW_UNIQUE_ID_T
+    return (int) id;
+#else
+    return (id>>ID_SHIFT);			// new new (12/01)
+#endif
+}
+
+local inline bool id_is_leaf(unique_id_t id)
+{
+    return (id_n_clump(id) == 1);
+}
+
 #define EPS 1.e-12
 
 pdyn *create_interpolated_tree(worldbundle *wb, real t,
@@ -1537,9 +1639,10 @@ pdyn *create_interpolated_tree(worldbundle *wb, real t,
 
 	    // Tree entry for this node has not yet been created/updated.
 
-	    real id = w->get_id();
+	    unique_id_t id = w->get_id();
 
-	    if (id >= 1 && id < 2) {
+//	    if (id >= 1 && id < 2) {
+	    if (id_is_leaf(id)) {
 
 		// Worldline w represents a leaf.  Locate its current segment.
 

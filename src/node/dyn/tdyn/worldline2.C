@@ -485,9 +485,9 @@ local void interpolate_tree(worldbundle *wb, real t, real t_int,
 
 	    // Worldline needs to be updated.
 
-	    real id = w->get_id();
+	    unique_id_t id = w->get_id();
 
-	    if (i == 0 || (id >= 1 && id < 2)) {
+	    if (i == 0 || id_n_clump(id) == 1) {
 
 		// Worldline w represents a leaf.  Locate its current segment.
 
