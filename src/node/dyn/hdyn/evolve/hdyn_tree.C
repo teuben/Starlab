@@ -151,7 +151,10 @@ local bool too_close(hdyn * bi, hdyn * bj, real limit_sq,
     if (bi == bj)
 	return false;
 
-    real gap_sq = square(bi->get_pos() - bj->get_pos());
+    // Note: pred_pos necessary here to take care of runaways where a
+    // neighbor time step runs away to zero.  (Steve, 4/03).
+
+    real gap_sq = square(bi->get_pred_pos() - bj->get_pred_pos());
 
     // Binary criterion modified 7/98 by SLWM and SPZ to depend on
     // acceleration; modified again by SLWM and JM to include potential.
