@@ -438,12 +438,12 @@ main(int argc, char **argv)
 {
 
   scatter_input input;
-  //  char* default_init  
-  //    = "-M 0.879 -rm 3 -v 0.0071 -t -r1 0.0508 -r2 0.0348 -e 0 -q 0.567 -p -a 1 -q 1 -r1 0.0394 -r2 0.0394";        // Iota Ori Probleem 
+    char* default_init  
+      = "-M 0.879 -rm 3 -v 0.0071 -t -r1 0.0508 -r2 0.0348 -e 0 -q 0.567 -p -a 1 -q 1 -r1 0.0394 -r2 0.0394";        // Iota Ori Probleem 
   
   // identical binary collision
-  char* default_init  
-    = "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
+  //char* default_init  
+    //    = "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
 
   strcpy(&input.init_string[0], default_init);
 

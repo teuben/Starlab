@@ -1689,7 +1689,10 @@ real single_star::get_evolve_timestep() {
   // growth of giants at end phase 0.0001 seems to be OK (?)
   //  return max(next_update_age - relative_age - (0.5*0.001), 0.001);
 
-  return Starlab::max(next_update_age - relative_age, 0.0001);
+  real time_step = Starlab::max(next_update_age - relative_age, 0.0001);
+  // (SPZ Sept 5 2004) old description gave problems with dynamics.
+  time_step = Starlab::min(time_step, 0.05);
+  return time_step;
 
 }
 

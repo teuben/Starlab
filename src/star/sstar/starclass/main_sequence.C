@@ -113,7 +113,8 @@ void main_sequence::update_wind_constant() {
     if (relative_mass < 85)
       wind_constant = meader_fit_dm;
     else {// constant
-      real final_mass = 43 + (relative_mass-85); // final mass after ms
+      // SPZ 1 Sept 2004: removed relaive_mass-85 -part
+      real final_mass = 43;  // + (relative_mass-85); // final mass after ms
       wind_constant = relative_mass - final_mass;
     }
 
