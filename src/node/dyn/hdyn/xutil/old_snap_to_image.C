@@ -1,44 +1,46 @@
 
 //// snap_to_image:  Construct images of a series of snapshots.
 ////
-//// Options:  -1           combine all frames in a simgle image          [yes]
-////           -a           produce a series of frames for animation       [no]
-////           -c           compress the image file(s) using gzip          [no]
-////           -C colormap  specify a colormap file name                   [no]
-////           -f filename  specify root name of image files   ["-" --> stdout]
-////           -F format    specify image file format
-////                            (0 = PNG, 1 = SUN, 2 = GIF)                 [0]
-////           -g           write GIF files -- same as "-F 2"              [no]
-////           -G           toggle forcing particles to grid (nicer single
-////                            frames, but jerkier movies)              [true]
-////           -H           toggle Herzsprung-Russel diagram or positional
-////                            plot                                 [position]
-////           -i index     specify (real) color index for all stars
-////                                                       [use internal index]
-////           -l scale     specify size of field of view (+/- scale)       [3]
-////           -m           use mass to determine star color and/or size   [no]
-////           -n nmax      specify maximum number of images to produce   [Inf]
-////           -N nbody     color using a (small-N) colormap               [no]
-////           -p psize     specify star radius, in pixels
-////                                          [0 (single image), 1 (animation)]
-////           -P axis      specify projection axis                         [z]
-////           -q           toggle suppression of diagnostic output
-////                                                           [don't suppress]
-////           -r           use stellar radius to set point size           [no]
-////           -s size      specify image size, in pixels                 [256]
-////           -S nskip     specify snaps to skip between images            [0]
-////           -t           test the color map [don't test]
-////           -x           specify right (log effective temparature) edge
-////                            of HRD (-H only)                            [3]
-////           -X           specify left (log effective temparature) edge
-////                            of HRD (-H only)                            [5]
-////           -y           specify minimum (log luminosity/Lsun) limit
-////                            of HRD (-H only)                           [-3]
-////           -Y           specify maximum (log luminosity/Lsun) limit
-////                            of HRD (-H only)                            [3]
+//// Options:   -1           toggle combine all frames in a single image   [yes]
+////            -c           compress the image file(s) using gzip          [no]
+////            -C colormap  specify a colormap file name                   [no]
+////            -f filename  specify root name of image files   ["-" --> stdout]
+////            -F format    specify image file format
+////                             (0 = PNG, 1 = SUN, 2 = GIF)                 [0]
+////            -g           write GIF files (currently uses convert and
+////                             gifsicle; slow and messy, and may become
+////                             uninterruptible, but saves disk space)
+////                             -- same as "-F 2"                          [no]
+////            -G           toggle forcing particles to grid (nicer single
+////                             frames, but jerkier movies)              [true]
+////            -H           toggle Herzsprung-Russel diagram or positional
+////                             plot                                 [position]
+////            -i index     specify (real) color index for all stars
+////                                                        [use internal index]
+////            -l scale     specify size of field of view (+/- scale)       [3]
+////            -m           use mass to determine star color and/or size   [no]
+////            -n nmax      specify maximum number of images to produce   [Inf]
+////            -N nbody     color using a (small-N) colormap               [no]
+////            -p psize     specify star radius, in pixels
+////                                           [0 (single image), 1 (animation)]
+////            -P axis      specify projection axis                         [z]
+////            -q           toggle suppression of diagnostic output
+////                                                            [don't suppress]
+////            -r           use stellar radius to set point size           [no]
+////            -s size      specify image size, in pixels                 [256]
+////            -S nskip     specify snaps to skip between images            [0]
+////            -t           test the color map [don't test]
+////            -x           specify right (log effective temparature) edge
+////                             of HRD (-H only)                            [3]
+////            -X           specify left (log effective temparature) edge
+////                             of HRD (-H only)                            [5]
+////            -y           specify minimum (log luminosity/Lsun) limit
+////                             of HRD (-H only)                           [-3]
+////            -Y           specify maximum (log luminosity/Lsun) limit
+////                             of HRD (-H only)                            [3]
 ////
 //// Note: If PNG output is requested and the PNG libraries are unavailable,
-////       GIF output is produced instead.
+////       GIF output is used instead.
 //.............................................................................
 //
 //    version 1:  Nov 1998   Steve McMillan	 email: steve@zonker.drexel.edu
@@ -46,11 +48,29 @@
 //    version 2:  Aug 2002   Steve McMillan
 //.............................................................................
 
-
-
 #include "hdyn.h"
 #include "star/single_star.h"
-#include "../../../../gfx/util/image_fmt.h"	// clean this up!
+
+// From gfx/util/write_image.C:
+
+void write_image(float* a, int m, int n, char* filename, int scale,
+		 char *colormap_file);
+void write_image(float* a, int m, int n, char* filename, int scale,
+		 unsigned char *red,
+		 unsigned char *green,
+		 unsigned char *blue);
+
+#include "write_png.h"
+
+// From gfx/util/make_header.C:
+
+void make_standard_colormap(unsigned char* red,
+			    unsigned char* green,
+			    unsigned char* blue);
+
+void make_greymap(unsigned char* red,
+		  unsigned char* green,
+		  unsigned char* blue);
 
 // Our three-color convention now requires us to define our own standards,
 // basically the same map replicated three times at different intensities.
@@ -207,18 +227,7 @@ local void make_local_small_n_colormap(unsigned char* red,
     extend_local_colormap(red, green, blue, psize);
 }
 
-
-
-
-local void initialize_arrays(unsigned char *a, float *zarray, int n)
-{
-    for (int i = 0; i < n; i++) {
-	a[i] = 0;
-	zarray[i] = -1.e10;
-    }
-}
-
-local void add_point(unsigned char *a, int nx, int ny,
+local void add_point(float *a, int nx, int ny,
 		     real x, real y, int i, int j,
 		     bool grid,
 		     real r, float color,
@@ -228,8 +237,11 @@ local void add_point(unsigned char *a, int nx, int ny,
     // is (x,y).  The central pixel is (i,j).  We expect i <= x,
     // j <= y.  The desired radius is r.
 
+    // Despite the fact that almost everything to do with colors
+    // deals with integer indices, the "color" used here is real,
+    // with the range 0-1, mapping linearly to indices 0-255...
     // With our new scheme, the color specified should actually be
-    // at the bright end of the colormap, in the range 255*(0.667-1.0).
+    // at the bright end of the colormap, in the range 0.667-1.0.
     // May get around to cleaning up the color specification...
 
     real xref = x;
@@ -244,10 +256,8 @@ local void add_point(unsigned char *a, int nx, int ny,
 
     // PRC(x); PRC(i); PRC(y); PRL(j);
 
-    for (int ii = Starlab::max(-ir, -i);
-	 ii <= Starlab::min(ir, nx-i-1); ii++)
-	for (int jj = Starlab::max(-ir, -j);
-	     jj <= Starlab::min(ir, ny-j-1); jj++) {
+    for (int ii = Starlab::max(-ir, -i); ii <= Starlab::min(ir, nx-i-1); ii++)
+	for (int jj = Starlab::max(-ir, -j); jj <= Starlab::min(ir, ny-j-1); jj++) {
 
 	    // Get distance from pixel center to reference point.
 
@@ -262,7 +272,7 @@ local void add_point(unsigned char *a, int nx, int ny,
 	    // Soften the edges of the stars.  (Details fine-tuned by eye.)
 	    // Use 3 color levels, in addition to black.
 
-	    real c = color;			// convenient to use real here
+	    real c = color;
 
 	    if ((ii == 0 && jj == 0) || dx2 <= r2a)
 		; 				// "color 1" -- do nothing
@@ -280,16 +290,39 @@ local void add_point(unsigned char *a, int nx, int ny,
 
 		real zcur = *(zarray+(j+jj)*nx+(i+ii));
 		if (z > zcur) {
-		    *(a+(j+jj)*nx+(i+ii)) = (unsigned char)(255.999*c);
+		    *(a+(j+jj)*nx+(i+ii)) = c;
 		    *(zarray+(j+jj)*nx+(i+ii)) = z;
 		}
 	    }
 	}
 }
 
-
+local void initialize_arrays(float *a, float *zarray, int n)
+{
+    for (int i = 0; i < n; i++) {
+	a[i] = 0;
+	zarray[i] = -1.e10;
+    }
+}
 
-local void write_image_file(unsigned char *a, int nx, int ny,
+local void write_png_image(float *a, int nx, int ny,
+			   char *file_name,
+			   unsigned char *red,
+			   unsigned char *green,
+			   unsigned char *blue)
+{
+    // Input a is in the range [0, 1).  Convert to unsigned char.
+
+    unsigned char *image = (unsigned char *)malloc(nx*ny*sizeof(unsigned char));
+    for (int j = 0; j < ny; j++)
+	for (int i = 0; i < nx; i++)
+	    *(image + nx*j + i) = (unsigned char) (255.9 * (*(a + nx*j + i)));
+#ifdef HAS_PNG
+    write_png(image, nx, ny, file_name, red, green, blue);
+#endif
+}
+
+local void write_image_file(float *a, int nx, int ny,
 			    char *fn, char *filename,
 			    bool compress, int format,
 			    bool colormap_set, char *colormap,
@@ -299,8 +332,9 @@ local void write_image_file(unsigned char *a, int nx, int ny,
 {
     char command[1024];
 
-    // Note that write_xxx will write the image left to right,
-    // top to bottom.
+    // Note that write_image will write the image left to right,
+    // top to bottom, but expects "normal" ordering (bottom to top)
+    // in the input array... 
 
 //      for (int j = ny-1; j >= 0; j--) {
 //  	for (int i = 0; i < nx; i++)
@@ -311,46 +345,38 @@ local void write_image_file(unsigned char *a, int nx, int ny,
 //  	cerr << endl;
 //      }
 
-    FILE *dst = stdout;
+    if (colormap_set)
+	write_image(a, nx, ny, fn, 0, colormap);	// 0 ==> no scaling
+    else {
+	if (format == 0)
+	    write_png_image(a, nx, ny, fn, red, green, blue);	// PNG format
+	else
+	    write_image(a, nx, ny, fn, 0, red, green, blue);	// SUN format
+    }
+
     if (fn) {
-	dst = fopen(fn, "w");
-	if (!dst) {
-	    cerr << "Can't open file " << fn << "; using stdout" << endl;
-	    dst = stdout;
-	    fn = NULL;
+	if (format == 1 && compress) {
+
+	    // Runtime compression:
+
+	    sprintf(command, "gzip -f -q %s.sun &", filename);
+	    system(command);
+
+	} else if (format == 2) {
+
+	    // Create a GIF file (messy!).
+	    // Note that this system command (without the &) is
+	    // uninterruptible (known bug!), but running in the
+	    // background causes obvious errors.
+
+	    sprintf(command,
+"convert %s.sun tmp1.gif && gifsicle tmp1.gif -o tmp2.gif && mv tmp2.gif %s.gif && rm %s.sun tmp1.gif",
+		    filename, filename, filename);
+	    system(command);
+
 	}
     }
-    
-    if (colormap_set) {
-
-	if (format == 0)
-	    write_png(dst, nx, ny, a, colormap);
-	else if (format == 1)
-	    write_sun(dst, nx, ny, a, colormap);
-	else if (format == 2)
-	    write_gif(dst, nx, ny, a, colormap);
-
-    } else {
-
-	if (format == 0)
-	    write_png(dst, nx, ny, a, red, green, blue);
-	else if (format == 1)
-	    write_sun(dst, nx, ny, a, red, green, blue);
-	else if (format == 2)
-	    write_gif(dst, nx, ny, a, red, green, blue);
-
-    }
-
-    if (fn && format == 1 && compress) {
-
-	// Runtime compression of Sun rasterfile:
-
-	sprintf(command, "gzip -f -q %s.sun &", filename);
-	system(command);
-    }
 }
-
-
 
 // Some defaults:
 
@@ -369,6 +395,7 @@ main(int argc, char** argv)
 
     bool combine = true;
     bool compress = false;
+    bool gif = false;
     int format = 0;
 
     real l = L;
@@ -410,13 +437,11 @@ main(int argc, char** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "1acC:f:F:gGi:Hl:X:x:Y:y:mn:N:p:P:qrs:S:t";
+    char* param_string = "1cC:f:F:gGi:Hl:X:x:Y:y:mn:N:p:P:qrs:S:t";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
-	    case '1':	combine = true;
-			break;
-	    case 'a':	combine = false;
+	    case '1':	combine = !combine;
 			break;
 	    case 'c':	compress = true;
 			break;
@@ -428,8 +453,10 @@ main(int argc, char** argv)
 			file[63] = '\0';	// just in case
 			break;
 	    case 'F':	format = atoi(poptarg);
+			gif = (format == 2);
 			break;
-	    case 'g':	format = 2;
+	    case 'g':	gif = !gif;
+			format = 2 - format;
 			break;
 	    case 'G':	grid = !grid;
 			break;
@@ -499,12 +526,12 @@ main(int argc, char** argv)
 
 #ifndef HAS_PNG
     if (format == 0) {
-	cerr << "No PNG support; switching to GIF" << endl;
 	format = 2;
+	gif = true;
     }
 #endif
 
-    if (format != 1) compress = false;
+    if (gif) compress = false;
 
     if (HRD) {
 	if (!xlim_set) {
@@ -581,8 +608,7 @@ main(int argc, char** argv)
 	}
     }
 
-    unsigned char *a = new unsigned char[nx*ny];
-    float *zarray = new float[nx*ny];
+    float* a = new float[nx*ny], *zarray = new float[nx*ny];
     if (!a || !zarray) exit(1);
 
     if (testmap) {
@@ -591,10 +617,8 @@ main(int argc, char** argv)
 
 	for (int j = 0; j < ny; j++)
 	    for (int i = 0; i < nx; i++)
-		*(a+j*nx+i) = (i%256);
-	write_image_file(a, nx, ny, NULL, NULL,
-			 0, format, false, NULL,
-			 red, green, blue);
+		*(a+j*nx+i) = (i%256)/256.;
+	write_image(a, nx, ny, NULL, 0, red, green, blue);
 	exit(0);
     }
 
@@ -652,8 +676,7 @@ main(int argc, char** argv)
 		    }
 
 		    for_all_leaves(hdyn, b, bb) {
-			if (ncolor == 0 && index_all < 0
-			    && bb->get_index() >= 0) {
+			if (ncolor == 0 && index_all < 0 && bb->get_index() >= 0) {
 			    cmin = Starlab::min(cmin, bb->get_index());
 			    cmax = Starlab::max(cmax, bb->get_index());
 			}
@@ -679,7 +702,8 @@ main(int argc, char** argv)
 
 		    initialize_arrays(a, zarray, nx*ny);
 
-		    // Define the output file name.
+		    // Open the output file.  For now, we don't know how
+		    // to write a PNG file to stdout.
 
 		    if (streq(file, "-"))
 			fn = NULL;
@@ -687,10 +711,8 @@ main(int argc, char** argv)
 			sprintf(filename, "%s", file);
 			if (format == 0)
 			    sprintf(im_filename, "%s.png", file);
-			else if (format == 1)
+			else
 			    sprintf(im_filename, "%s.sun", file);
-			else if (format == 2)
-			    sprintf(im_filename, "%s.gif", file);
 			fn = im_filename;
 		    }
 		}
@@ -756,9 +778,7 @@ main(int argc, char** argv)
 
 		    if (HRD) {
 
-			real fac = Starlab::max(0.0,		  // ~arbitrary
-						Starlab::min(1.0,
-							     x - 3.5));
+			real fac = Starlab::max(0.0, Starlab::min(1.0, x - 3.5));	// arbitrary
 			color = 0.7 + 0.3 * fac;
 
 		    } else if (mass && bb->get_mass() > 0) {
@@ -794,8 +814,7 @@ main(int argc, char** argv)
 		    y = ((y - ybot) * 1.0 * ny / ly);
 		    int j = (int) y;
 
-		    add_point(a, nx, ny, x, y, i, j,
-			      grid, r, color, z, zarray);
+		    add_point(a, nx, ny, x, y, i, j, grid, r, color, z, zarray);
 		}
 	    }
 
@@ -811,10 +830,8 @@ main(int argc, char** argv)
 		    sprintf(filename, "%s.%3.3d", file, count1);
 		    if (format == 0)
 			sprintf(im_filename, "%s.%3.3d.png", file, count1);
-		    else if (format == 1)
+		    else
 			sprintf(im_filename, "%s.%3.3d.sun", file, count1);
-		    else if (format == 2)
-			sprintf(im_filename, "%s.%3.3d.gif", file, count1);
 		    fn = im_filename;
 		}
 

@@ -1,3 +1,6 @@
+
+// OBSOLETE
+
 int write_png(unsigned char *image,
 	      unsigned long width,
 	      unsigned long height,

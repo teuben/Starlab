@@ -42,8 +42,8 @@ XLIBFLAGS	= -L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
 		  -lstd -llux $(STARLAB_POSIX_LIB) \
 		  $(STARLAB_X11LIB) $(STARLAB_XLIB) -lm
 
-EXECUTABLES = snap_to_image write_png xstarplot
-OBJECT_FILES = write_png.o
+EXECUTABLES = snap_to_image xstarplot
+OBJECT_FILES = 
 
 LIBRARY = libhdyn.a
 
