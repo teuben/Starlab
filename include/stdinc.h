@@ -30,7 +30,7 @@
 #include  <fstream>
 
 #ifdef HAVE_CONFIG_H
-#  include  <config.h>       // config.h is created by "configure" (see autoconf)
+#  include  "config.h"       // config.h is created by "configure" (see autoconf)
 #endif
 
 // New GNU, HP, and Sun all use stdiostream.h, which includes both

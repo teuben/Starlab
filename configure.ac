@@ -2,8 +2,10 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(Starlab, 4.3, [steve@physics.drexel.edu])
+m4_include([local/version.m4])
+AC_INIT(Starlab, VERSION_NUMBER, [steve@physics.drexel.edu])
 AC_CONFIG_AUX_DIR(config)
+AC_CONFIG_LIBOBJ_DIR(lib)
 AC_CONFIG_MACRO_DIR(local)
 AC_CONFIG_HEADERS(include/config.h)
 AC_CONFIG_SRCDIR(src/std/util_math.C)
@@ -27,6 +29,7 @@ AC_PROG_CC
 AC_PROG_F77
 AC_F77_WRAPPERS
 AC_PROG_CXX
+# disable shared libs for now - I'll work this out later
 AC_DISABLE_SHARED
 AC_PROG_LIBTOOL
 LIBTOOL="$LIBTOOL --preserve-dup-deps"
@@ -114,10 +117,11 @@ AC_HEADER_STDBOOL
 AC_C_BIGENDIAN
 AC_C_CONST
 AC_C_INLINE
+AC_C_RESTRICT
 AC_LANG_POP
 
 # Checks for library functions.
-AC_CHECK_FUNCS(stpcpy)
+AC_REPLACE_FUNCS(stpcpy)
 
 AC_CONFIG_FILES([Makefile src/Makefile src/std/Makefile src/gfx/Makefile \
     src/gfx/lux/Makefile src/gfx/lux++/Makefile src/gfx/util/Makefile \
