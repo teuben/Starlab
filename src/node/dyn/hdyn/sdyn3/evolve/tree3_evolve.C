@@ -107,6 +107,8 @@ main(int argc, char **argv)
 		      break;
 	    case 'D': D_flag = TRUE;
 		      dt_snap = atof(poptarg);
+		      if (dt_snap == 0) dt_snap = VERY_LARGE_NUMBER;
+	    	      if (dt_snap < 0) dt_snap = pow(2.0, dt_snap);
 		      break;
 	    case 'q': q_flag = TRUE;
 		      break;

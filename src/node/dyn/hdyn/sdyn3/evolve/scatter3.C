@@ -159,7 +159,8 @@ local sdyn3 * init_to_sdyn3(initial_state3 & init, final_state3 & final)
 	return NULL;
     }
 
-    init.r_init = Starlab::max(init.r_init_min, Starlab::min(init.r_init_max, r_unp));
+    init.r_init = Starlab::max(init.r_init_min,
+			       Starlab::min(init.r_init_max, r_unp));
 
     // NOTE: Can't assume that k3.separation is less than r_init.
 
@@ -574,6 +575,7 @@ main(int argc, char **argv)
 		      if (dt_out < 0) dt_out = pow(2.0, dt_out);
 		      break;
 	    case 'D': dt_snap = atof(poptarg);
+		      if (dt_snap == 0) dt_snap = VERY_LARGE_NUMBER;
 	    	      if (dt_snap < 0) dt_snap = pow(2.0, dt_snap);
 		      break;
 	    case 'e': init.ecc = atof(poptarg);
