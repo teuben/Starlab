@@ -17,6 +17,9 @@ source $STARLAB_PATH/local/starlab_setup
 
 setenv STARLAB_VERSION `cat $STARLAB_PATH/VERSION` 
 
+#  always set a convenient shorter name for the last STARLAB_PATH loaded
+setenv STARLAB  $STARLAB_PATH
+
 if ($_do_echo) then
     if ($?TERM) echo Starlab version `cat $STARLAB_PATH/VERSION` loaded with STARLAB_PATH=$STARLAB_PATH
 endif
