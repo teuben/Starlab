@@ -199,6 +199,34 @@ int vaccum( char *tok, int toklen, char *val, struct shortform *sp ) {
   return 1;
 }
 
+void fixkeyword( char *s ) {
+    if(s[0] != '(' && s[0] != ')')
+	return;
+
+    if(fullform) {
+	int trunc = 0;
+	switch(s[1]) {
+	case 'P': if(!memcmp(s+1, "Particle", 8)) trunc = 1; break;
+	case 'S': if(!memcmp(s+1, "Star", 4)) trunc = 1; break;
+	case 'D': if(!memcmp(s+1, "Dynamics", 8)) trunc = 1; break;
+	case 'H': if(!memcmp(s+1, "Hydro", 5)) trunc = 1; break;
+	}
+	if(trunc) {
+	    s[2] = '\n';
+	    s[3] = '\0';
+	}
+    } else {
+	if(s[2] == '\n') {
+	    switch(s[1]) {
+	    case 'P': strcpy(s+1, "Particle\n"); break;
+	    case 'S': strcpy(s+1, "Star\n"); break;
+	    case 'D': strcpy(s+1, "Dynamics\n"); break;
+	    case 'H': strcpy(s+1, "Hydro\n"); break;
+	    }
+	}
+    }
+}
+
 
 main(int argc, char *argv[]) {
     char line[512];
@@ -239,13 +267,15 @@ With -a option, converts to (indented) ASCII form instead.\n", argv[0]);
 		;
 	}
 	if(!memcmp(s, ")P", 2)) {
-	    if(--nesting == 0 && start >= 0) {
-	    	fprintf(stderr, "%lg %lld %lld\n", systime, start, at + strlen(line));
+	    nesting--;
+	    if(nesting < 0) nesting = 0;
+	    setprefix();
+	    if(nesting == 0 && start >= 0) {
+		fixkeyword( s );
+	    	fprintf(stderr, "%lg %lld %lld\n", systime, start, at + strlen(prefix) + strlen(s));
 		start = -1;
 		systime = 0;
 	    }
-	    if(nesting < 0) nesting = 0;
-	    setprefix();
 
 	} else if(!memcmp(s, "(P", 2)) {
 	    nesting++;
@@ -289,14 +319,7 @@ With -a option, converts to (indented) ASCII form instead.\n", argv[0]);
 	    if(val) {
 		at += fprintf(stdout, "%s%.*s%s%s", prefix, slen, s, equals, val);
 	    } else {
-		if((s[0] == '(' || s[0] == ')') && s[2] == '\n') {
-		    switch(s[1]) {
-		    case 'P': strcpy(s+1, "Particle\n"); break;
-		    case 'S': strcpy(s+1, "Star\n"); break;
-		    case 'D': strcpy(s+1, "Dynamics\n"); break;
-		    case 'H': strcpy(s+1, "Hydro\n"); break;
-		    }
-		}
+		fixkeyword( s );
 		at += fprintf(stdout, "%s%s", prefix, s);
 	    }
 	} else {
@@ -309,19 +332,7 @@ With -a option, converts to (indented) ASCII form instead.\n", argv[0]);
 		putc('=', stdout);
 		fputs(val, stdout);		/* includes trailing newline */
 	    } else {
-		if(s[0] == '(' || s[0] == ')') {
-		    int trunc = 0;
-		    switch(s[1]) {
-		    case 'P': if(!memcmp(s+1, "Particle", 8)) trunc = 1; break;
-		    case 'S': if(!memcmp(s+1, "Star", 4)) trunc = 1; break;
-		    case 'D': if(!memcmp(s+1, "Dynamics", 8)) trunc = 1; break;
-		    case 'H': if(!memcmp(s+1, "Hydro", 5)) trunc = 1; break;
-		    }
-		    if(trunc) {
-			s[2] = '\n';
-			s[3] = '\0';
-		    }
-		}
+		fixkeyword( s );
 		at += strlen(s);
 		fputs(s, stdout);
 	    }
