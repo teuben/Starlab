@@ -82,19 +82,27 @@ local void add_dynamics(dyn* cm, real ecc, real energy)
     secondary->set_vel(m1 * k.get_rel_vel() / m_total);
 }
 
+local real roche_radius(const real m1, const real m2) {
+
+  real q = m1/m2;
+  real q1_3 = pow(q, cnsts.mathematics(one_third));
+  real q2_3 = pow(q1_3, 2);   //pow(mr, TWO_THIRD);
+  
+  return 0.49*q2_3/(0.6*q2_3 + log(1 + q1_3));
+}
+
+
 local real minimum_semi_major_axis(dyn* b1, dyn* b2)
 {
     real ms_prim = b1->get_starbase()->conv_m_dyn_to_star(b1->get_mass());
-    real ms_sec  = b2->get_starbase()->conv_m_dyn_to_star( b2->get_mass());
+    real ms_sec  = b2->get_starbase()->conv_m_dyn_to_star(b2->get_mass());
     real rs_prim = b1->get_starbase()->conv_r_star_to_dyn(ms_prim);
     real rs_sec  = b2->get_starbase()->conv_r_star_to_dyn(ms_sec);
-    real ms_tot  = ms_prim + ms_sec;
   
-    real sma_prim = 2.2*rs_prim*pow(ms_tot/ms_prim, ONE_THIRD);
-    real sma_sec  = 2.2*rs_sec*pow(ms_tot/ms_sec, ONE_THIRD);
-    // a_min is Roche-lobe limited.
+    real sma_prim = rs_prim/roche_radius(ms_prim, ms_sec);
+    real sma_sec = rs_sec/roche_radius(ms_sec, mp_prim);
 
-    return min(sma_prim, sma_sec);
+    return max(sma_prim, sma_sec);
 }
 
 local void mkbinary(dyn* b, real lower, real upper,
