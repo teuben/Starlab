@@ -49,7 +49,7 @@ real print_encounter_elements(hdyn* bi, hdyn* bj,
     bool print = true;
     real t = bi->get_time();
 
-    if (k.get_energy() < 0)
+    if (k.get_energy() > 0)
 	if (find_qmatch(bi->get_log_story(), "coll_tskip")
 	    && find_qmatch(bj->get_log_story(), "coll_tskip")) {
 	    real ti = getrq(bi->get_log_story(), "coll_tskip");
@@ -121,8 +121,11 @@ real print_encounter_elements(hdyn* bi, hdyn* bj,
 	    cerr << "     E = " << k.get_energy() << endl;
 	    real coll_tskip = k.pred_advance_to_radius(2*k.get_periastron());
 	    PRL(coll_tskip);
+	    PRL(bi->get_log_story());
 	    putrq(bi->get_log_story(), "coll_tskip", coll_tskip);
 	    putrq(bj->get_log_story(), "coll_tskip", coll_tskip);
+	    PRL(bi->get_log_story());
+	    putrq(bi->get_log_story(), "coll_tskip", coll_tskip);
 	}
     }
 
