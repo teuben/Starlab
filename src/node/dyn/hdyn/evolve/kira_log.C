@@ -687,32 +687,55 @@ void log_output(hdyn * b,
     // Use the story as a handy way to get the energies back without
     // adding more arguments.  Data saved at HIGH_PRECISION.
 
-    real pot_int = getrq(b->get_dyn_story(), "potential_energy");
-    real kin_int = getrq(b->get_dyn_story(), "kinetic_energy");
+    real true_pot_int = getrq(b->get_dyn_story(), "potential_energy");
+    real true_kin_int = getrq(b->get_dyn_story(), "kinetic_energy");
+
+    // ***However*** for purposes of computing the virial radius and kT,
+    // we want the top-level energies, not the totals, which include the
+    // energies of internal binaries.  Compute the top-level quantitles
+    // here using existing data.
+
+    real total_mass = 0, top_pot_int = 0, top_kin_int = 0;
+    int ntop = 0;
+    for_all_daughters(hdyn, b, bb) {
+	ntop++;
+	total_mass += bb->get_mass();
+	top_pot_int += bb->get_mass()*bb->get_pot();
+	top_kin_int += bb->get_mass()*square(bb->get_vel()-b->get_vel());
+    }
 
     // Extra output on external fields and center of mass energy:
 
     unsigned int ext = b->get_external_field();
     if (ext) {
 	real pot_ext = get_external_pot(b);
-	pot_int -= pot_ext;
-	cerr << "          external potential = " << pot_ext << " (";
+	true_pot_int -= pot_ext;
+	top_pot_int -= pot_ext;
+	PRI(10);
+	cerr << "external potential = " << pot_ext << " (";
 	print_external(ext);
 	cerr << ")" << endl;
     }
 
+    // Top-level pot and kin were counted twice above.
+
+    top_pot_int /= 2;
+    top_kin_int /= 2;
+
     real kin_CM = 0.5*b->get_mass()*square(com_vel);
-    kin_int -= kin_CM;
-    cerr << "          CM kinetic energy = " << kin_CM << endl;
+    PRI(10);
+    cerr << "CM kinetic energy = " << kin_CM << endl;
+    top_kin_int -= kin_CM;
 
-    real r_vir = -0.5*square(b->get_mass())/pot_int;	// standard definition
-    real kT = kin_int / (1.5*b->n_daughters());		// inefficient (counts N)
-    real q = -kin_int					// also inefficient
-	        / (pot_int + get_external_virial(b));	//     (recomputes com)
+    real r_virial = -0.5*square(total_mass)/top_pot_int;  // standard definition
+    real virial_ratio = -top_kin_int			  // inefficient
+	        / (top_pot_int + get_external_virial(b)); //   (recomputes com)
 
-    cerr << "          internal potential = " << pot_int
-	 << ",  kinetic = " << kin_int << endl;
-    PRI(10); PRC(r_vir); PRC(kT); PRL(q);
+    PRI(10);
+    cerr << "top-level internal potential = " << top_pot_int
+	 << ",  kinetic = " << top_kin_int << endl;
+    PRI(10); PRC(virial_ratio); PRL(r_virial); 
+
     // PRL(get_external_virial(b));
 
 #if 0

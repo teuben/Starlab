@@ -1464,7 +1464,6 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
 			     bool init = false)
 {
     cerr << endl << "reinitializing system at time " << t << endl;
-
     real cpu_0 = cpu_time();
 
     b->set_system_time(t);
@@ -1488,15 +1487,19 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
 
     pot -= get_external_pot(b);
     pot /= 2;
-    PRC(mass); PRC(pot);
 
-    real rvirial = -0.5*mass*mass/pot;
-    PRC(rvirial); PRL(n);
+    int p = cerr.precision(INT_PRECISION);
+
+    PRC(mass); PRC(pot);
+    real r_virial = -0.5*mass*mass/pot;
+    PRC(r_virial); PRL(n);
 
     cerr << "old "; PRC(b->get_d_min_sq());
-    real d_min_sq = square(b->get_d_min_fac()*rvirial/n);
+    real d_min_sq = square(b->get_d_min_fac()*r_virial/n);
     b->set_d_min_sq(d_min_sq);
     cerr << "new "; PRL(b->get_d_min_sq());
+
+    cerr.precision(p);
 
     putrq(b->get_log_story(), "kira_d_min_sq", d_min_sq);
 
@@ -1903,8 +1906,8 @@ local void evolve_system(hdyn * b,	       // hdyn array
     real t_end = tt + delta_t;		// final time, at end of integration
 
     real t_log = tt;			// time of next log output
-    if (t > (xreal)0) 
-    	t_log += dt_log;
+    //    if (t > (xreal)0) 
+    //    	t_log += dt_log;	// uncomment to prevent initial output
 
     real t_snap = tt + dt_snap;		// time of next snapshot output
     real t_sync = tt + dt_sync;		// time of next system synchronization
