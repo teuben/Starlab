@@ -151,10 +151,11 @@ xreal get_xreal_from_input_line(char * input_line)
     // "True" xreal:
 
     char *sp, *ep;
-    long long i = strtoll(val, &sp, 10);		// signed integer part
-    unsigned long long f = strtoull(sp, &ep, 10);	// unsigned fractional part
+    long long i = STRTOL(val, &sp, 10);		  // signed integer part
+    unsigned long long f = STRTOUL(sp, &ep, 10);  // unsigned fractional part
 
-    if (sp == ep) {					// if we didn't get both of above,
+    if (sp == ep) {				  // if we didn't get both
+						  // of above,
 
 	// Hmmm... most likely we have real input data.  Try just reading
 	// a real number.  (Steve, 6/00)
