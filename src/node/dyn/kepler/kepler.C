@@ -1,18 +1,25 @@
 
-//// kepler:  Starlab kepler structure functions.  Initialize an
-////          orbit from mass, pos, and vel, or mass, semi-major
-////          axis and eccentricity, and allow the user to
-////          manipulate it interactively.
+//// kepler:  Starlab kepler structure functions.  Initialize an orbit
+////          from mass, pos, and vel, or mass, semi-major axis and
+////          eccentricity, and allow the user to manipulate the
+////          resulting structure interactively, or animate the orbit.
 ////
 //// Command-line arguments:
 ////
 ////          -a    specify semi-major axis [1]
+////          -A    animate to apocenter [no]
+////          -d    specify animation timestep [1/64 orbit]
 ////          -e    specify eccentricity [0]
-////          -m    specify total mass [1]
+////          -m    specify total mass or primary mass (animation only) [1]
+////          -m2   specify mass of second component (animation only) [primary]
 ////          -M    specify mean anomaly [0]
+////          -O    turn on animation [no]
+////          -P    animate to pericenter [no]
+////          -r(R) specify sum of radii (to stop animation) [0]
 ////          -t    specify time [0]
-////          -x    specify separation vector [no default]
-////          -v    specify relative velocity vector [(0,0,0)]
+////          -T    specify end time of animation [0]
+////          -x    specify separation vector [(1,0,0)]
+////          -v    specify relative velocity vector [(0,1,0)]
 
 //   Steve McMillan, Fall 1994, Spring 1999.
 //   SPZ and JM, Feb 1998.
@@ -1666,8 +1673,18 @@ main(int argc, char **argv)
     real semi = 1;
     real ecc = 0;
     real mass = 1;
+    real m2 = 1;
     real mean_anomaly = 0;
-    vector r, v = vector(0);
+    vector r = vector(1,0,0);
+    vector v = vector(0,1,0);
+
+    bool anim = false;
+    bool to_apo = false;
+    bool to_peri = false;
+    real t_end = 0;
+    real dt_end = 0;		// specify in orbit periods
+    real dt_step = 0;		// specify in orbit periods
+    real rad_sum = 0;
 
     int i = 0;
     while (++i < argc)
@@ -1677,20 +1694,44 @@ main(int argc, char **argv)
 		case 'a':	semi = atof(argv[++i]);
 				orbit_params = true;
 				break;
+		case 'A':	to_apo = 1 - to_apo;
+				anim = to_apo;
+				if (anim) to_peri = false;
+				break;
+		case 'd':	dt_step = atof(argv[++i]);
+				anim = true;
+				break;
 		case 'e':	ecc = atof(argv[++i]);
 				break;
-		case 'm':	mass = atof(argv[++i]);
+		case 'm':	if (argv[i][2] == '2') {
+				    m2 = atof(argv[++i]);
+				    anim = true;
+				} else
+				    mass = atof(argv[++i]);
 				break;
 		case 'M':	mean_anomaly = atof(argv[++i]);
 				break;
+		case 'O':	anim = true;
+				break;
+		case 'P':	to_peri = 1 - to_peri;
+				anim = to_peri;
+				if (anim) to_apo = false;
+				break;
+		case 'r':
+		case 'R':	rad_sum = atof(argv[++i]);
+				anim = true;
+				break;
 		case 't':	time = atof(argv[++i]);
 				break;
+		case 'T':	dt_end = atof(argv[++i]);
+				anim = true;
+				break;
 		case 'x':	for (int k = 0; k < 3; k++)
-		    		    r[0] = atof(argv[++i]);
+		    		    r[k] = atof(argv[++i]);
 				orbit_params = false;
 				break;
 		case 'v':	for (int k = 0; k < 3; k++)
-		    		    v[0] = atof(argv[++i]);
+		    		    v[k] = atof(argv[++i]);
 				break;
 		default:	cerr << "unknown option \"" << argv[i] << endl;
 				exit(1);
@@ -1699,6 +1740,13 @@ main(int argc, char **argv)
     set_kepler_tolerance(2);
     cout.precision(12);
     cerr.precision(12);
+
+    real m1;
+    if (anim) {
+	m1 = mass;
+	if (m2 <= 0) m2 = m1;
+	mass = m1 + m2;
+    }
 
     k.set_time(time);
     k.set_total_mass(mass);
@@ -1711,7 +1759,8 @@ main(int argc, char **argv)
 	k.align_with_axes(1);
 	k.initialize_from_shape_and_phase();
 
-	cerr << "Initialized from shape and phase" << endl;
+	if (!anim)
+	    cerr << "Initialized from shape and phase" << endl;
 
     } else {
 
@@ -1719,54 +1768,126 @@ main(int argc, char **argv)
 	k.set_rel_vel(v);
 	k.initialize_from_pos_and_vel();
 
-	cerr << "Initialized from pos and vel" << endl;
+	if (!anim)
+	    cerr << "Initialized from pos and vel" << endl;
 
     }
 
-    cerr << endl;
-    k.print_all();
+    if (anim) {
 
-    // Loop over user input.
+	if (dt_end == 0) dt_end = 1;
+	t_end = time + k.get_period()*dt_end;
 
-    for (;;) {
+	real t_peri = k.get_time_of_periastron_passage();
+	while (t_peri <= time) t_peri += k.get_period();
 
-	char opt;
+	cerr << "start: " << endl;
 
-	cout << endl << "? ";
-	opt = 'q';
-	cin >> opt;
-	if (opt == 'q') exit(0);
-
-	if (opt == 'p') {
-
-	    cerr << endl;
-	    k.print_all();
-
-	} else if (opt == 'h' || opt == '?') {
-
-	    cerr << "  options:   a R    advance to radius R" << endl
-		 << "             d dT   increment time by dT" << endl
-		 << "             p      print" << endl
-		 << "             q      quit" << endl
-		 << "             r R    return to radius R" << endl
-		 << "             t T    evolve to time T" << endl;
-
-	} else {
-
-	    real x;
-	    cin >> x;
-
-	    if (opt == 'd')
-		tt(k.get_time()+x);
-	    else if (opt == 't')
-		tt(x);
-	    else if (opt == 'a')
-		ar(x);
-	    else if (opt == 'r') 
-		rr(x);
+	if (to_peri) {
+	    t_end = t_peri;
+	    PRI(4); PRL(t_peri);
 	}
-    }
 
+	if (to_apo) {
+	    real t_apo = t_peri - 0.5*k.get_period();
+	    while (t_apo < time) t_apo += k.get_period();
+	    t_end = t_apo;
+	    PRI(4); PRL(t_apo);
+	}
+
+	PRI(4); PRC(time); PRC(k.get_period()); PRL(t_end);
+
+	if (dt_step == 0) dt_step = 1./64;
+	dt_step *= k.get_period();
+
+	// Make the two-body system.
+
+	dyn *b  = new dyn();
+	dyn *bo = new dyn();
+	dyn *by = new dyn();
+
+	b->set_oldest_daughter(bo);
+	bo->set_parent(b);
+	bo->set_label(1);
+	bo->set_mass(m1);
+	bo->set_younger_sister(by);
+	by->set_parent(b);
+	by->set_label(2);
+	by->set_mass(m2);
+	by->set_elder_sister(bo);
+
+	while (time <= t_end + 0.01*dt_step) {
+	    k.transform_to_time(time);
+	    if (k.get_separation() < rad_sum) break;
+
+	    vector pos = k.get_rel_pos();
+	    vector vel = k.get_rel_vel();
+
+	    bo->set_pos(-(m2/mass)*pos);
+	    bo->set_vel(-(m2/mass)*vel);
+	    by->set_pos( (m1/mass)*pos);
+	    by->set_vel( (m1/mass)*vel);
+
+	    // PRL(time);
+	    put_node(cout, *b);
+
+	    time += dt_step;
+	}
+
+	cerr << "end: " << endl;
+	PRI(4); PRC(k.get_time()); PRL(k.get_separation());
+
+	delete by;
+	delete bo;
+	delete b;
+
+    } else {
+
+	cerr << endl;
+	k.print_all();
+
+	// Loop over user input.
+
+	for (;;) {
+
+	    char opt;
+
+	    cout << endl << "? ";
+	    opt = 'q';
+	    cin >> opt;
+	    if (opt == 'q') exit(0);
+
+	    if (opt == 'p') {
+
+		cerr << endl;
+		k.print_all();
+
+	    } else if (opt == 'h' || opt == '?') {
+
+		cerr << "  options:   a R    advance to radius R" << endl
+		     << "             d dT   increment time by dT" << endl
+		     << "             p      print" << endl
+		     << "             q      quit" << endl
+		     << "             r R    return to radius R" << endl
+		     << "             t T    evolve to time T" << endl;
+
+	    } else {
+
+		real x;
+		cin >> x;
+
+		if (opt == 'd')
+		    tt(k.get_time()+x);
+		else if (opt == 't')
+		    tt(x);
+		else if (opt == 'a')
+		    ar(x);
+		else if (opt == 'r') 
+		    rr(x);
+	    }
+	}
+
+    }
 }
 
 #endif
