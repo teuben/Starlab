@@ -10,7 +10,7 @@
 
 //// Create a linked list of equal-mass nodes.
 ////
-//// Usage: mass_dist [OPTIONS]
+//// Usage: makenode [OPTIONS]
 ////
 //// Options:
 ////         -m       specify total mass [1]
