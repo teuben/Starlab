@@ -326,9 +326,10 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		src/std/xtest.C \
 		TOOLS
 
+# Add sbin to SUBDIRS to ensure that utilities are built first.
 # Add include to SUBDIRS to ensure that make install goes there.
 
-SUBDIRS = src include
+SUBDIRS = sbin src include
 
 all-recursive: libs
 
