@@ -68,6 +68,9 @@ See `config.log' for more details.])
     LDFLAGS="$OLDFLAGS"
 fi
 AM_CONDITIONAL(HAVE_GRAPE, [test "x$grape" = "xyes"])
+if test x"OLD_READ_NEIGHBOUR_LIST" = "xyes"; then
+    AC_DEFINE(G6_OLD_READ_NEIGHBOUR_LIST, 1, [Define to 1 to use the old (PIO) neighbor list interface.])
+fi
 
 AC_ARG_WITH(png, AS_HELP_STRING([--with-png], use PNG format [[[default=yes]]]),
     [png="$withval"])

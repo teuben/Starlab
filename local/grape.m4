@@ -11,3 +11,7 @@ m4_define(GRAPE_LDFLAGS_, [-L/usr2/makino/disk3src/harplibs/x86_64])
 dnl GRAPE libraries that must be linked in:
 
 m4_define(GRAPE_LIBS_,    [-lg6lx -lg6lxsim2])
+
+dnl Define this as yes for the AMD64 boxes only, no otherwise.
+
+m4_define(OLD_READ_NEIGHBOUR_LIST, [no])
