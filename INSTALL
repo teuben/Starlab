@@ -78,26 +78,6 @@ First time install of starlab 4.x
     modifications for your local site.
 
 
-(( PJT::::  DO WE STILL WANT TO MAINTAIN THESE EXPORT LEVELS ))
-
-- Copy (or ftp) the most recent Starlab tar file, of the form 
-
-    "yymmddhh.s_tar_lab_version"
-    "yymmddhh.s_tar_lab_version_min" (for an absolutely minimal version)
-    "yymmddhh.s_tar_lab_version_0"   (for a fairly complete system)
-    "yymmddhh.s_tar_lab_version_1    (for a version with additional user code)
-    "yymmddhh.s_tar_lab_version_2    (for an even more extended version)
-
-  from the main Starlab directory to the private "starlab"
-  directory that you have just created.
-
-  The "_1" and "_2" versions of the tar file contain additional user-written
-  material (including versions of Aarseth's N-body codes in forms that work
-  in the Starlab environment). To find out how to use them, consult an
-  experienced user.
-
-	Do NOT unbundle the tar file in the "starlab" directory itself.
-
 ((PJT::OLD))
 - Make a subdirectory "starlab/version/local" and copy the files
   contained in "starlab/version/templates", currently:
@@ -223,24 +203,3 @@ First time install of starlab 4.x
 
  - For some sample programs, see "starlab/etc/demo"
 
-
-******
-
-Dec-2000: Example "cut and paste session" to setup starlab on redhat62:
-
-cd starlab	 ( or whereever you're in the starlab root directory)
-	
-cp templates/Makefile.local.inc      local                     #### not needed anymore
-cp templates/starlab_setup           local
-cp templates/cshrc.starlab.redhat62  local/cshrc.starlab
-
-setenv STARLAB_PATH `pwd`
-source $STARLAB_PATH/local/starlab_setup
-
-cp src/node/dyn/hdyn/evolve/Makefile.linux src/node/dyn/hdyn/evolve/Makefile
-cp src/node/dyn/hdyn/util/Makefile.linux src/node/dyn/hdyn/util/Makefile
-make libs bins >& LOG1
-
-
-
-On a Piii600/256M/15MB/sec machine this takes about 3.5 minutes.
