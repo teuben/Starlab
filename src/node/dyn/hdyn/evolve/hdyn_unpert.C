@@ -91,18 +91,19 @@
 //-------------------------------------------------------------------------
 //
 // The remaining parameters were originally #defined here, but are
-// now part of the hdyn::kira_options class (Steve, 6/00).
+// now part of the hdyn::kira_options class (Steve, 6/00).  Defaults
+// are defined in kira_defaults.h.
 //
 //
 // MIN_UNPERT_STEPS:  Minimum number of steps permitted in unperturbed motion.
 //
 //#define MIN_UNPERT_STEPS		5
 //
-// FULL_MERGE_TOLERANCE:  Factor above gamma2 at which we permit
-// merging of an entire binary orbit.  Used once, in function
-// is_unperturbed_and_approaching().
+// FULL_MERGE_TOLERANCE:  Perturbation limit (independent of gamma2,
+// as of 1/14/02) at which we permit merging of an entire binary orbit.
+// Used once, in function is_unperturbed_and_approaching().
 //
-//#define FULL_MERGE_TOLERANCE		1e4
+//#define FULL_MERGE_TOLERANCE		1e-8
 //#define RELAX_FACTOR			10	// relaxed factor to continue
 //
 // Allowing unperturbed motion at a greater value of gamma than is
@@ -114,11 +115,11 @@
 // binaries only), as the first unperturbed step takes them to
 // apocenter, where the external perturbation is greater.
 //
-// PARTIAL_MERGE_TOLERANCE:  Factor below gamma2 at which we permit
+// PARTIAL_MERGE_FACTOR:  Factor below gamma2 at which we permit
 // merging of at least part of an orbit.  Used once, in function
 // is_unperturbed_and_approaching().
 //
-//#define PARTIAL_MERGE_TOLERANCE		1e-2
+//#define PARTIAL_MERGE_FACTOR		1e-2
 //
 // FULL_MERGE_TOL_FOR_CLOSE_BINARY:  Absolute limit on perturbation_squared
 // (INDEPENDENT of gamma2, note) at which an unperturbed binary is regarded
@@ -129,11 +130,11 @@
 // The following parameters are used in is_stable() for assessing
 // multiple stability.
 //
-// MULTIPLE_MERGE_TOLERANCE:  Factor above gamma2 at which we permit
-// merging of an inner binary orbit.  Defines "weakly perturbed
-// outer orbit."
+// MULTIPLE_MERGE_TOLERANCE:  Perturnation limit (independnt of gamma2,
+// as of 1/14/01) at which we permit merging of an inner binary orbit.
+// Defines "weakly perturbed outer orbit."
 //
-//#define MULTIPLE_MERGE_TOLERANCE		1e6	// was 1.e4
+//#define MULTIPLE_MERGE_TOLERANCE		1e-8	// was 1.e-10
 //
 // UNCONDITIONAL_STABLE_FAC:  Simplest approach is to regard a multiple as
 // stable if
@@ -408,7 +409,7 @@ local inline real dt_perturbers(hdyn *b)
     // the threshhold for unperturbed multiple motion,  or -1 if no
     // perturber list exists.
 
-    // Effectively replace gamma2 by gamma2 * multiple_merge_tolerance in
+    // Effectively replace gamma2 by multiple_merge_tolerance in
     // the usual perturbation criterion.
 
     hdyn *top = b->get_top_level_node();
@@ -417,8 +418,7 @@ local inline real dt_perturbers(hdyn *b)
     if (top->get_valid_perturbers()) {
 
 	real scale = binary_scale(top);
-	real gamma = sqrt(b->get_gamma2()
-		          * b->get_kira_options()->multiple_merge_tolerance);
+	real gamma = sqrt(b->get_kira_options()->multiple_merge_tolerance);
 
 	// Loop over perturbers.
 
@@ -757,7 +757,7 @@ bool hdyn::is_weakly_perturbed(int& status)
 
     // Definition of "not weakly perturbed" (see *** note below):
 
-    if (perturbation_squared > gamma2 * options->multiple_merge_tolerance) {
+    if (perturbation_squared > options->multiple_merge_tolerance) {
 	status = 5;
 	return false;
     }
@@ -1391,7 +1391,7 @@ bool hdyn::is_unperturbed_and_approaching()
 	//     cerr << "100a perturbation = " << perturbation_squared << endl;
 
 	if ((perturbation_squared
-	     	< gamma2 * options->partial_merge_tolerance)
+	     	< gamma2 * options->partial_merge_factor)
 	    && is_low_level_leaf()
 	    && younger_sister->is_low_level_leaf()) {
 
@@ -1402,7 +1402,7 @@ bool hdyn::is_unperturbed_and_approaching()
 	    //     cerr << "100a true peri refl..." << endl;
 
 	    // PRC(perturbation_squared);
-	    // PRL(gamma2 * options->partial_merge_tolerance);
+	    // PRL(gamma2 * options->partial_merge_factor);
 
 	    init_binary_type = binary_type = PERICENTER_REFLECTION;
 	    return true;
@@ -1418,8 +1418,7 @@ bool hdyn::is_unperturbed_and_approaching()
 		// we could always normalize the perturbation to separation
 		// equal to semi.)
 
-	        if ((perturbation_squared
-		     	< gamma2 * options->full_merge_tolerance)
+	        if ((perturbation_squared < options->full_merge_tolerance)
 		    && is_low_level_leaf()
 		    && younger_sister->is_low_level_leaf()) {
 
@@ -1523,8 +1522,7 @@ bool hdyn::is_unperturbed_and_approaching()
 				    } else {
 
 					// PRC(perturbation_squared);
-					// PRL(gamma2 *
-					//     options->full_merge_tolerance);
+					// PRL(options->full_merge_tolerance);
 
 					init_binary_type = binary_type
 					    		 = FULL_MERGER;
@@ -1560,7 +1558,7 @@ bool hdyn::is_unperturbed_and_approaching()
 	        // Note relaxed criterion for continuing unperturbed
 	        // binary (but *not* multiple) motion.
 
-	        real crit_pert2 = gamma2 * options->full_merge_tolerance
+	        real crit_pert2 = options->full_merge_tolerance
 		    			 * options->relax_factor;
 
 		// PRC(pert_fac*perturbation_squared); PRL(crit_pert2);
@@ -2827,11 +2825,10 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 			    real r_end = outerkep.get_separation();
 			    if (perturbation_squared
-				  > gamma2 * options->full_merge_tolerance)
+				  > options->full_merge_tolerance)
 				r_end
-				  *= sqrt(perturbation_squared /
-					  (gamma2
-					     * options->full_merge_tolerance));
+				  *= sqrt(perturbation_squared
+					   / options->full_merge_tolerance);
 			    if (r_end > outerkep.get_apastron())
 				r_end = 0.9999*outerkep.get_apastron();
 			    real transit_time
