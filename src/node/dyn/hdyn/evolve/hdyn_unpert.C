@@ -2812,6 +2812,40 @@ void hdyn::recompute_unperturbed_steps()
 
 
 
+local vec rotate(vec v, vec r[3])
+{
+    return vec(v*r[0], v*r[1], v*r[2]);
+}
+
+local void rotate_kepler(kepler *k)
+{
+    // Apply a random rotation to all vectors of kepler k.
+
+    real alpha = randinter(-M_PI, M_PI),
+	 beta  = randinter(-M_PI, M_PI),
+	 gamma = randinter(-M_PI, M_PI);		// Euler angles
+    real ca = cos(alpha), sa = sin(alpha);
+    real cb = cos(beta),  sb = sin(beta);
+    real cg = cos(gamma), sg = sin(gamma);
+
+    // Rotation matrix rows are rot[i]:
+
+    vec rot[3];
+    rot[0] = vec( cg*cb*ca-sg*sa,  cg*cb*sa+sg*ca, -cg*sb);
+    rot[1] = vec(-sg*cb*ca-cg*sa, -sg*cb*sa+cg*ca,  sg*sb);
+    rot[2] = vec(sb*ca, sb*sa, cb);
+
+    // Rotate the longitudinal and transverse vectors, then
+    // reconstruct the new normal vector from them.
+
+    vec l = k->get_longitudinal_unit_vector();
+    l = rotate(l, rot);
+    vec t = k->get_transverse_unit_vector();
+    t = rotate(t, rot);
+    vec n = l^t;
+    k->set_orientation(l, t, n);
+}
+
 bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 					bool force_time)   // default = false
 {
@@ -3016,14 +3050,83 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 	unpert = false;
 
-	// Start by correcting any perturber lists containing the CM.
-	// (This would be repaired anyway at the next perturbee CM step,
-	// but that may be too late...)
-
 	bool verbose = diag->report_end_unperturbed
 			    || (is_multiple(this) && diag->report_multiple);
 
 	// PRL(verbose);
+
+#if 1
+	// The following workaround is a fix for unperturbed systems that
+	// find themselves in relatively wide triple orbits.  The problem
+	// is that, since the orientation of an unperturbed binary remains
+	// fixed, there is a change in the tidal potential on the binary
+	// when it becomes perturbed near the pericenter of the outer orbit,
+	// relative to the potential when unoerturbed motion started.
+	// This is a systematic effect, and can lead to a signigicant net
+	// error if the outer orbit survives for many periods.  (Steve, 8/03)
+	//
+	// Fix 1: randomize the orientation of any unperturbed binary
+	//	  satisfying the criteria, as below.
+	// Fix 2: (better) reorient the binary to absorb the tidal error,
+	//	  if possible -- to come...
+
+	hdyn *par = get_parent(), *pnn = par->get_nn();
+
+	if (pnn) {
+
+	    vec ppos = hdyn_something_relative_to_root(par,
+						       &hdyn::get_pred_pos);
+	    vec pvel = hdyn_something_relative_to_root(par,
+						       &hdyn::get_pred_vel);
+	    vec npos = hdyn_something_relative_to_root(pnn,
+						       &hdyn::get_pred_pos);
+	    vec nvel = hdyn_something_relative_to_root(pnn,
+						       &hdyn::get_pred_vel);
+
+	    real m = par->get_mass() + pnn->get_mass();
+	    real mu = par->get_mass() * pnn->get_mass() / m;
+	    real r = abs(npos - ppos);
+	    real vsq = square(nvel - pvel);
+
+	    real e = mu*(0.5*vsq - m/r);
+
+	    if (e < 0) {
+
+		// Need kT for comparison.  Only going to do this rarely, so
+		// just do it the hard way.  (Could save kT in the story...)
+
+		int ntop = 0;
+		real kin = 0;
+		for_all_daughters(hdyn, get_root(), bb) {
+		    ntop++;
+		    kin += bb->get_mass()*sqtare(bb->get_pred_vel());
+		}
+		real kT = 2*kin/(3*ntop);
+
+		if (e < -0.1*kT) {
+
+		    // ***** Randomize the binary orientation. *****
+
+		    rotate_kepler(kep);
+		    update_dyn_from_kepler();
+
+		    if (verbose)
+			cerr << endl
+			     << "integrate_unperturbed_motion: "
+			     << "applied random rotation to "
+			     << parent->format_label()
+			     << " at time " << system_time
+			     << endl;
+		}
+	    }
+	}
+
+#endif
+
+	// Start by correcting any perturber lists containing the CM.
+	// (This would be repaired anyway at the next perturbee CM step,
+	// but that may be too late...)
+
 	// PRL(save_unpert);
 	// PRL(binary_type);
 
