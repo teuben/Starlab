@@ -125,11 +125,6 @@ inline bool operator >= (real x, xreal y) {return ((xreal)x >= y);}
 // inline real operator + (xreal x, real y) {return (real)(x + (xreal)y);}
 // inline real operator - (xreal x, real y) {return (real)(x - (xreal)y);}
 
-void xprint(xreal x,
-	    ostream & s = cerr,
-	    bool newline = true);
-
-xreal get_xreal (char *str);
-real fmod2(xreal x, real y);
+xreal get_xreal(char *str);
 
 #endif

@@ -271,11 +271,17 @@ inline real	square(real x)			{return x*x;}
 //=============================================================================
 
 #if defined USE_XREAL
-#  include "xreal.h"
+#   include "xreal.h"
 #else
-   typedef real xreal;
-   real fmod2(xreal x, real y);
+    typedef real xreal;
 #endif
+
+// Intended for xreal, but referenced in the real version too.
+
+void xprint(xreal x,
+	    ostream & s = cerr,
+	    bool newline = true);
+real fmod2(xreal x, real y);
 
 // Long long is an ongoing irritant...  See std/xreal.C
 

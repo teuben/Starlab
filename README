@@ -1,25 +1,39 @@
 
-README
+README CONTENTS
 
-INSTALLATION BASICS:
+This file contains general information for a variety of users:
+
+  INSTALLATION BASICS	general installation information
+  GRAPE SYSTEMS		additional information for GRAPE sites
+  PROGRAMMERS		information for Starlab programmers
+  DEVELOPERS		information for Starlab developers
+  COPYRIGHTS		ownership, attribution, and contribution
+
+
+INSTALLATION BASICS
 
 - We assume here that the variable STARLAB_PATH points to the top-
-  level installation directory (i.e. the one containing this file).
+  level Starlab source directory (i.e. the one containing this file).
   GRAPE users should read the GRAPE section below before starting
   the configure/build process.
 
 - Installation proceeds in GNU standard fashion:
 
-	./configure --prefix=install-dir --other-options
+	./configure --prefix=STARLAB_INSTALL_PATH --other-options
 	make
 	make install
 
   See the INSTALL file in this directory for more information.  The
-  current default install-dir is
+  current default STARLAB_INSTALL_PATH is
 
 	$STARLAB_PATH/usr
 
   and in normal circumstances no other options need be specified.
+
+- Both STARLAB_PATH and STARLAB_INSTALL_PATH will be created as
+  environment variables by the starlab_start scripts generated as
+  part of the installation process.  (They are convenient, although
+  neither is actually needed for routine operation of the software.)
 
 - If you downloaded Starlab in the form of a distribution tarball
   (named starlab-version.tar.gz), the configure script should already
@@ -61,20 +75,31 @@ INSTALLATION BASICS:
   in this directory.  This script performs the various actions just
   described (including autotool installation in all cases), and in
   addition it provides timing information and attempts to clean up the
-  "make" output.
+  "make" output.  It also contains workarounds and corrections for
+  some known deficiencies of the configure/make proocess.
 
 - Once the package is successfully installed, to use the Starlab tools,
   make sure that the directory
 
-        $install_dir/bin
+        $STARLAB_INSTALL_PATH/bin
 
   is in your search path, preceding any system files.  You may also
   find it useful to include the Starlab administrative directory
 
 	$STARLAB_PATH/sbin
 
+  Sourcing the script $STARLAB_PATH/starlab_start.csh (or its .sh
+  equivalent, for bash users) will automatically set up the environment
+  variables
 
-GRAPE SYSTEMS:
+	STARLAB_PATH
+	STARLAB_INSTALL_PATH
+	STARLAB		(= STARLAB_PATH, included for compatibility)
+	STARLAB_VERSION
+
+  and will also appropriately modify the search path.
+
+GRAPE SYSTEMS
 
 - It is very difficult for the configure script to infer automatically
   the existence of a GRAPE or to determine the appropriate GRAPE
@@ -99,29 +124,60 @@ GRAPE SYSTEMS:
   script, so you will probably want to make these changes BEFORE building
   the system!  If you don't have a GRAPE, do nothing, and Starlab will
   by default build a system without GRAPE acceleration.
+
+- If you change any of the scripts in $STARLAB_PATH/local (e.g. to
+  use a different GRAPE library), you will have to rerun configure in
+  order for the changes to find their way into the relevant Makefiles.
   
 
-PROGRAMMERS:
+PROGRAMMERS
 
 - For programmers, the Starlab header files are installed in
 
-        $install_dir/include/starlab
+        $STARLAB_INSTALL_PATH/include/starlab
 
   and the libraries are in
 
-        $install_dir/lib/starlab
+        $STARLAB_INSTALL_PATH/lib/starlab
+
+
+DEVELOPERS
+
+- The new configuration procedure produces a lot of output, which may
+  become annoying if you find yourself repeatedly rebuilding programs as
+  you debug them.  To reduce the volume of diagnostic information coming
+  from the make process, use the 'smake' script in $STARLAB_PATH/sbin.
+  It will build the specified target, starting the process at the top
+  level (i.e. at $STARLAB_PATH), using the "make -s" option to suppress
+  extraneous output.
+
+- The current configuration currently creates duplicate copies of objects
+  and executables -- local versions are used to build the package, and
+  these are then copied into the install directory by 'make install.'
+  This can be confusing, as it is very possible to rebuild a program
+  without installing it, thus creating two versions and causing confusion.
+  We recommend always rebuilding libraries from the top level with
+
+	smake libs
+
+  which will guarantee that all local libraries are updated, and
+  rebuilding programs with
+
+	sremake program
+
+  which will rebuild all outstanding libraries, then delete, rebuild,
+  and properly install the executable.
 
 - If the autotools are properly installed, developers should find that
   any changes made to the automake "Makefile.am" files will cause the
-  relevant Makefiles to be automagically regenerated.
+  relevant Makefiles to be automagically regenerated the next time make
+  is involked.
 
-- If you change any of the m4 macros in $STARLAB_PATH/local (e.g. to
-  use a different GRAPE library) or if you modify the configure.ac
-  script in $STARLAB_PATH, you *MUST* run autoreconf before running
-  configure again.
+- If you modify the configure.ac script in $STARLAB_PATH, you *MUST*
+  run autoreconf before running configure again.
 
 
-COPYRIGHTS:
+COPYRIGHTS
 
 - see the COPYING file in this directory for information on the GPL.
 

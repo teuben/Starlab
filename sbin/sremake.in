@@ -4,7 +4,8 @@
 
 # Rebuild the first command-line argument by deleting the local executable
 # of that name and any object file associated with it, running make, and
-# copying the new executable to the install directory.
+# copying the new executable to the install directory.  Rebuild all
+# libraries before remaking the executable.
 
 if [ $# -lt 1 ]; then
     echo "$0: One make argument required." >&2
@@ -14,6 +15,7 @@ fi
 echo Rebuilding $1
 
 rm -f $1 $1-$1*.o
+smake libs
 make -s $1
 cp -p $1 @STARLAB_INSTALL_PATH@/bin
 

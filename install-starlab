@@ -1,8 +1,11 @@
 #!/bin/csh -f
 
-# Starlab installation script for "developers" (who get Starlab from CVS).
+# Starlab installation script.  Specify a non-default installation
+# directory as the first command-line argument.  Other arguments go
+# directly to the configure script.
+#
 # The extra layers are necessary to ensure that the correct autotools
-# are always available when needed. 
+# are always available when needed.
 
 # Require that STARLAB_PATH be defined.
 
@@ -12,6 +15,7 @@ endif
 echo STARLAB_PATH = $STARLAB_PATH
 
 set install_dir = $STARLAB_PATH/usr	# this is now the configure default
+if ($#argv > 0) set install_dir = $1
 echo install_dir \ = $install_dir
 
 set log = install.log
@@ -51,11 +55,11 @@ if (-e configure) then
     # Perform the usual configuration process:
 
     echo Running configure \(`date`\)
-    echo ./configure $Qt --prefix=$install_dir
+    echo ./configure $Qt --prefix=$install_dir $argv[2*]
     echo 						>>& $log
     echo Running configure \(`date`\)			>>& $log
     echo ./configure $Qt --prefix=$install_dir		>>& $log
-    ./configure $Qt --prefix=$install_dir		>>& $log
+    ./configure $Qt --prefix=$install_dir $argv[2*]	>>& $log
 
     # Build the package.
 
