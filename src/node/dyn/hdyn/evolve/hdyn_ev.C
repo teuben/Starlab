@@ -1293,58 +1293,100 @@ bool hdyn::correct_and_update()
     vector new_pos = pred_pos + (0.05 * at3 + ONE12 * bt2) * dt * dt;
     vector new_vel = pred_vel + (0.25 * at3 + ONE3 * bt2) * dt;
 
+    // Note from Steve (10/01):
+    //
+    // Need to check for possible hardware errors (at least on the GRAPE-4).
+    // By construction, no quantity should change much from one step to the
+    // next.  Thus, a large change in acc or jerk (on in new_vel relative to
+    // vel, which combines the two in a natural way) probably indicates a
+    // problem.  One difficulty with checking new_vel is that supernovae may
+    // result in legal but large kick velocities.  However, these should
+    // be applied *after* the dynamical step, in which case both the old and
+    // the new velocities should be large.
+    //
+    // The GRAPE-4 error of 10/01 occurs exclusively in acc and in only one
+    // component, usually (but not always) z.  Thus, another possible check
+    // might be to see if the velocity, acc, or jerk (whichever is "large")
+    // is directed predominantly along one coordinate axis.
+    //
+    // Probably best to use vel as an indicator, then apply successively
+    // finer criteria before declaring a problem.  Once a problem is found,
+    // we simply quit this function, returning false.  It is up to the
+    // calling function to take corrective action.  Currently, this normally
+    // consists of recomputing the acc and jerk on the front end and calling
+    // this function again (just one retry, so we should be sure not to flag
+    // high-speed neutron stars...).
+    //
+    // Note also that, if the acc/jerk error is sufficiently small that it
+    // doesn't register significantly in vel, then there is no need to take
+    // action, as the problem seems to disappear from one GRAPE call to the
+    // next.
+
     if (diag->grape && old_v > 0) {
 	real new_v = abs1(new_vel);
 
-	if (new_v/old_v > 1000 || new_v > 1.e6) {   // numbers are arbitrary
+	// Numbers here are somewhat arbitrary (but see above note).
+
+	// if (new_v/old_v > 1000 || new_v > 1.e6) {	// too loose...
+
+	if (new_v > 1 && new_v > 10*old_v) {
 
 	    // Possible runaway -- speed has increased by a large factor.
 
-	    cerr << endl << "correct: possible runaway at time "
-		 << get_system_time() << endl;
-	    PRL(get_grape_chip(this));
+	    // Refine the possibilities before flagging an error.
+	    // Neutron star shouldn't show a large delta(vel), and the acc
+	    // or jerk should be good indicators of problems in any case.
 
-	    cerr << endl << "pp3 with old pos and vel:" << endl;
-	    pp3(this);
+	    if (abs1(acc) > 100*abs1(old_acc)
+		|| abs1(jerk) > 1000*abs1(old_jerk)) {
 
-	    PRL(pred_pos);
-	    PRL(pred_vel);
-	    PRL(new_pos);
-	    PRL(new_vel);
+		cerr << endl << "correct: possible hardware error at time "
+		     << get_system_time() << endl;
+		PRL(get_grape_chip(this));
 
-	    // cerr << endl << endl << "System dump:" << endl << endl;
-	    // pp3(get_root());
+#if 0
+		cerr << endl << "pp3 with old pos and vel:" << endl;
+		pp3(this);
+#else
+		PRL(old_acc);
+		PRL(old_jerk);
+		PRL(acc);
+		PRL(jerk);
+#endif
 
-	    // Options:		quit
-	    //			restart
-	    //			flag and continue
-	    //			discard new_pos and new_vel, retain
-	    //			    old acc and jerk and continue
-	    //			flag, recompute acc and jerk, and continue  <--
+		// cerr << endl << endl << "System dump:" << endl << endl;
+		// pp3(get_root());
 
-	    cerr << endl;
-	    // exit(0);
+		// Options:	quit
+		//		restart
+		//		flag and continue
+		//		discard new_pos and new_vel, retain
+		//		    old acc and jerk and continue
+		//		flag, recompute acc and jerk, and continue  <--
 
-	    // Flag the problem.
+		// Flag the problem.
 
-	    char tmp[128];
-	    sprintf(tmp, "runaway in correct at time %f", time);
-	    log_comment(tmp);
+		char tmp[128];
+		sprintf(tmp, "runaway in correct at time %f", time);
+		log_comment(tmp);
 
-	    int n_runaway = 0;
-	    if (find_qmatch(get_log_story(), "n_runaway"))
-		n_runaway = getiq(get_log_story(), "n_runaway");
+		int n_runaway = 0;
+		if (find_qmatch(get_log_story(), "n_runaway"))
+		    n_runaway = getiq(get_log_story(), "n_runaway");
 
-	    n_runaway++;
-	    PRL(n_runaway);
+		n_runaway++;
+		PRL(n_runaway);
 
-	    if (n_runaway > 10)
-		exit(0);
+		if (n_runaway > 10)
+		    exit(0);		// pretty liberal, as errors are
+					// usually associated with pipes,
+					// not stars...
 
-	    putiq(get_log_story(), "n_runaway", n_runaway);
+		putiq(get_log_story(), "n_runaway", n_runaway);
 
-	    return false;	// trigger a retry on return; don't
-				// even bother with update
+		return false;		// trigger a retry on return; don't
+					// even bother with update
+	    }
 	}
     }
 

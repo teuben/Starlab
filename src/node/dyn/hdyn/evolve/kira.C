@@ -761,15 +761,15 @@ local int integrate_list(hdyn * b,
 		    }
 
 		    if (!bi->correct_and_update()) {
-			cerr << endl << "failed to correct error for "
+			cerr << "failed to correct error for "
 			     << bi->format_label() << " at time "
-			     << bi->get_system_time() << endl;
+			     << bi->get_system_time() << endl << endl;
 			err_exit("Run terminated in integrate_list");
 		    } else {
-			cerr << endl << "recomputed  "; PRL(bi->get_acc());
+			cerr << "recomputed  "; PRL(bi->get_acc());
 			PRI(12); PRL(bi->get_jerk());
-			PRI(12); PRL(bi->get_pos());
-			PRI(12); PRL(bi->get_vel());
+			// PRI(12); PRL(bi->get_pos());
+			// PRI(12); PRL(bi->get_vel());
 			cerr << endl;
 			return_fac = -1;
 		    }
