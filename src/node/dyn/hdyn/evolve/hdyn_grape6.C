@@ -36,15 +36,15 @@
 
 // T_DEBUG is not defined by kira_debug.h, so it can be used here as a flag.
 
-//#define T_DEBUG		175.04687
+#define T_DEBUG		0.278765
 
 // However, T_DEBUG_END is infinite by default, and T_DEBUG_LEVEL = 0.
 // To change these defaults, we must undefine them first...
 
 #undef  T_DEBUG_END
-#define T_DEBUG_END	175.04688
+#define T_DEBUG_END	1
 #undef  T_DEBUG_LEVEL
-#define T_DEBUG_LEVEL	2
+#define T_DEBUG_LEVEL	1
 
 // Set T_DEBUG_LEVEL =	0 (default) for basic debugging info
 //			1 for a substantial amount of high-level info
@@ -2955,12 +2955,22 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 
 	int ni = Starlab::min(n_pipes, n_top - i);
 
+
+	if (xtime > 0.278768) {
+	    cerr << func << ": top of loop: "; PRL(ni);
+	}
+
+
 	need_neighbors = false;
 	for (int ip = 0; ip < ni; ip++)
 	    if (current_nodes[i+ip]->get_grape_rnb_sq() > 0) {
 		need_neighbors = true;
 		break;
 	    }
+
+
+	if (xtime > 0.278768) PRL(need_neighbors);
+
 
 #ifdef T_DEBUG
 	if (in_debug_range && T_DEBUG_LEVEL > 0) {
