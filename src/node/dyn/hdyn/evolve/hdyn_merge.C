@@ -460,7 +460,7 @@ void hdyn::merge_logs_after_collision(hdyn *bi, hdyn* bj) {
 #define KICK_VELOCITY		0.0
 
 hdyn* hdyn::merge_nodes(hdyn * bcoll,
-			bool full_dump)	// default = false
+			int full_dump)	// default = 0
 {
 
     // This function actually does the work of merging nodes.

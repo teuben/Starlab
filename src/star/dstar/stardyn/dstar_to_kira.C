@@ -278,7 +278,7 @@ local void delete_double(hdyn *b) {			// b is binary CM
 local void delete_double(hdyn *b,		    // b is binary CM
 			 bool * update_dynamics,
 			 bool allow_evolution_before_termination,
-			 bool full_dump = false)
+			 int full_dump = 0)
 {
     if (b->get_oldest_daughter()->get_kepler() == NULL) {
 	cerr << "Deleting double without a kepler pointer"<<endl;
@@ -477,7 +477,7 @@ local void delete_double(hdyn *b,		    // b is binary CM
 
 bool create_or_delete_binary(hdyn *bi,		      // pointer to parent node
 			     bool * update_dynamics,
-			     bool full_dump = false)  // default = false
+			     int full_dump = 0)	      // default = false
 {
 // Two "update_dynamics" flags may be modified (by delete_double):
 //
@@ -538,7 +538,7 @@ bool binary_is_merged(dyn* bi)
 }
 
 bool binary_evolution(hdyn *b,		// root node
-		      bool full_dump)	// default = false
+		      int full_dump)	// default = 0
 
 // Return value is true iff a system reinitialization will be needed
 // after returning to kira.

@@ -40,6 +40,11 @@
 ////              -C    specify GRAPE release interval, in seconds [15]
 ////              -d    specify log output interval [0.25][*]
 ////              -D    specify snapshot interval [end of run]
+////                    special values:  xN: formatted full dump, frequency N
+////                                     XN: unformatted full dump, frequency N
+////                                     full/all: same as x1
+////                                     b: track binary changes only (formatted)
+////                                     B: track binary changes (unformatted)
 ////              -e    specify softening length [0][*]
 ////              -E    use exact calculation [false]
 ////              -f    specify close-encounter distance [1 --> 1/N][*]
@@ -535,7 +540,7 @@ local inline void check_extend_slow(hdyn *bi)
 
 
 
-local void merge_and_correct(hdyn* b, hdyn* bi, hdyn* bcoll, bool full_dump)
+local void merge_and_correct(hdyn* b, hdyn* bi, hdyn* bcoll, int full_dump)
 {
     // This intermediate function added mainly to allow
     // deletion of bi and bcoll after leaving merge_nodes.
@@ -575,7 +580,7 @@ local void check_periapo(hdyn * bi) {
 #endif
 }
 
-local hdyn* check_and_merge(hdyn* bi, bool full_dump)
+local hdyn* check_and_merge(hdyn* bi, int full_dump)
 {
     hdyn * bcoll;
     if ((bcoll = bi->check_merge_node()) != NULL) {
@@ -626,7 +631,7 @@ local hdyn* check_and_merge(hdyn* bi, bool full_dump)
 local int integrate_list(hdyn * b,
 			 hdyn ** next_nodes, int n_next,
 			 bool exact, bool & tree_changed,
-			 bool full_dump = false)
+			 int full_dump)
 {
     static bool restart_grape = true;
     static bool reset_force_correction = true;	// no longer used
@@ -1488,26 +1493,50 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     // Convenient for now to pass request for full dump and also the
     // dump interval via dt_snap...
+    //
+    // Full_dump options are becoming more complex.  Now, in addition
+    // to specifying the full_dump frequency, we can also opt to produce
+    // limited output to follow binary changes, and specify the length
+    // of the worldline interval.  Worldline interval (time between
+    // complete system dumps) is managed separately; other options are
+    // managed via the full_dump variable (now int rather than bool):
+    //
+    //		full_dump  =  0			// option off
+    //			      1			// dump all particles
+    //			      2			// track binary changes only
+    //
+    // Details if how these variables are used, specified and passed around
+    // the system remain to be finalized.			(Steve, 9/01)
+    //
+    // For now, we track all internal binary changes (makes the bookeeping and
+    // reconstruction simpler -- read_bundle() should work as is).  Later, we
+    // may decide to track only changes involvng the top-level nodes, in which
+    // case the reconstruction code will have to become more sophisticated.
 
-    bool full_dump = false;
-    real n_dump = 1.0;				// up to at least 50 seems OK!
+    int full_dump = 0;
+    real n_dump = 1.0;				// up to at least 30 seems OK!
 
     bool first_full_dump = false;
 
-    if (dt_snap < 0) {
+    if (dt_snap <= 0) {
 
-	// Turn on full_dump mode, at frequency -dt_snap.
-	// Turn off regular snapshot output.  Complete output
-	// occurs at intervals determined by dt_fulldump.
+	// Turn on full_dump mode, at frequency -dt_snap, or binary dump
+	// mode.  Turn off regular snapshot output.  Complete output occurs
+	// at intervals determined by dt_fulldump.
 
 	n_dump = -dt_snap;
 	dt_snap = VERY_LARGE_NUMBER;
 
+	if (n_dump > 0)
+	    full_dump = 1;
+	else
+	    full_dump = 2;
+	    
 	// first_full_dump added by SPZ Jan 2000 to assure initial dump 
 	// of snapshot to start worldbundle.
 
-	first_full_dump = full_dump = true;
-	PRL(n_dump);
+	first_full_dump = true;
+	PRC(n_dump); PRL(full_dump);
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1937,7 +1966,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    }
 	}
 
-	if (full_dump) {
+	if (full_dump == 1) {
 
 	    // The next_nodes[] array is used to test for changes in
 	    // unperturbed status.  The last_dt[] array saves timesteps
@@ -1966,7 +1995,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	grape_steps += ds;
 	count += 1;
 
-	if (full_dump) {
+	if (full_dump == 1) {
 
 	    // Check for dump of worldline information.
 

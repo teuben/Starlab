@@ -126,7 +126,7 @@ local void print_end_evolution(char* s, bool correct_dynamics)
 }
 
 bool evolve_stars(hdyn* b,
-		  bool full_dump)	// default = false
+		  int full_dump)	// default = 0
 {
     bool correct_dynamics = false;
 

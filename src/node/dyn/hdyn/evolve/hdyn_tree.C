@@ -529,7 +529,7 @@ local void check_merge_esc_flags(hdyn *bi, hdyn *bj)
 }
 
 void combine_top_level_nodes(hdyn * bj, hdyn * bi,
-			     bool full_dump)		// default = false
+			     int full_dump)		// default = 0
 {
     // Combine two top-level nodes into a binary.  Original node names
     // and addresses are retained, so neighboring perturber lists are
@@ -603,7 +603,7 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     if (full_dump) {
 
-	// Components are synchronized ,but lower levels are not.
+	// Components are synchronized, but lower levels are not.
 	// The 4tree software needs trees to be synchronous, but
 	// synchronizing everything here will likely lead to runaway
 	// timesteps.  Function put_node in this case must use
@@ -704,7 +704,7 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 }
 
 void split_top_level_node(hdyn * bi,
-			  bool full_dump)	// default = false
+			  int full_dump)	// default = 0
 {
     // Split a top-level node into two components.  The original node is
     // deleted, so any references to it (in nn/coll pointers or perturber
@@ -871,7 +871,7 @@ void split_top_level_node(hdyn * bi,
 }
 
 local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
-				   bool full_dump = false)
+				   int full_dump = 0)
 {
     // Rearrange the tree structure within a multiple system to try
     // to make bi and bj sister nodes.
@@ -935,6 +935,7 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 
     hdyn* old_top_level_node = bi->get_top_level_node();
 
+//    if (full_dump == 1) {
     if (full_dump) {
 
 	// Dump out the "before" system (top-level), for use in 4tree
@@ -1047,6 +1048,7 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 
     check_merge_esc_flags(bi, bi->get_binary_sister());
 
+//    if (full_dump == 1) {
     if (full_dump) {
 
 	// Dump out the "after" system (new top-level), for use in 4tree
@@ -1067,7 +1069,7 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
     }
 }
 
-local int adjust_low_level_node(hdyn * bi, bool full_dump = false)
+local int adjust_low_level_node(hdyn * bi, int full_dump = 0)
 {
     int status = 1;
 
@@ -1268,7 +1270,7 @@ local void print_tree_structure(hdyn *bb)		// for debugging
     }	
 }
 
-int hdyn::adjust_tree_structure(bool full_dump)		// default = false
+int hdyn::adjust_tree_structure(int full_dump)		// default = 0
 {
     int status = 0;
 

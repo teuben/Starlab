@@ -730,6 +730,8 @@ bool kira_initialize(int argc, char** argv,
     dt_reinit = DEFAULT_DT_REINIT;
     dt_fulldump = DEFAULT_DT_FULLDUMP;
 
+    bool binary_zero = false;
+
     // Frequency of full binary output, in units of the log output interval.
 
     long_binary_out = LONG_BINARY_OUT;
@@ -843,16 +845,14 @@ bool kira_initialize(int argc, char** argv,
 			break;
 	    case 'D':	if (streq(poptarg, "all") || streq(poptarg, "full")) {
 
-			    // UNANNOUNCED option: turn on full_dump mode.
+			    // Turn on full_dump mode.
 
 			    dt_snap = -1;
 			    set_write_unformatted(false);
 
 			} else if (*poptarg == 'x') {
 
-			    // UNANNOUNCED option: turn on full_dump
-			    // mode and optionally set its frequency.
-
+			    // Turn on full_dump mode and set its frequency.
 			    // Messy...
 
 			    dt_snap = -atoi(poptarg+1);
@@ -860,14 +860,26 @@ bool kira_initialize(int argc, char** argv,
 
 			} else if (*poptarg == 'X') {
 
-			    // UNANNOUNCED option: turn on full_dump
-			    // mode, optionally set its frequency, and
+			    // Turn on full_dump mode, set its frequency, and
 			    // specify unformatted output.
-
 			    // Messier...
 
 			    dt_snap = -atoi(poptarg+1);
 			    set_write_unformatted(true);
+
+			} else if (*poptarg == 'B' || *poptarg == 'b') {
+
+			    // Turn on full_dump mode for binary tracking only.
+
+			    dt_snap = 0;
+			    binary_zero = true;
+
+			    if (*poptarg == 'b')
+				set_write_unformatted(false);
+			    else
+				set_write_unformatted(true);
+
+			    cerr << "*** binary tracking on" << endl;
 
 			} else{
 			    dt_snap = atof(poptarg);
@@ -1061,7 +1073,7 @@ bool kira_initialize(int argc, char** argv,
 
     if (S_flag) {
         if (s_flag == FALSE)
-	    input_seed = 0;                         // default
+	    input_seed = 0;			// default
         actual_seed = srandinter(input_seed);
         sprintf(seedlog,
 		"       random number generator seed = %d",actual_seed);
@@ -1071,8 +1083,9 @@ bool kira_initialize(int argc, char** argv,
 
     // Establish defaults for time scales:
 
-    if (!snap_flag) dt_snap = delta_t;			// snap output at end
-    if (dt_snap == 0) dt_snap = VERY_LARGE_NUMBER;	// suppress snap output
+    if (!snap_flag) dt_snap = delta_t;		// snap output at end
+    if (dt_snap == 0 && !binary_zero)
+	dt_snap = VERY_LARGE_NUMBER;		// suppress snap output
 
     if (!esc_flag) dt_esc = dt_reinit;		// check for escapers at each
 						//     reinitialization
@@ -1096,11 +1109,7 @@ bool kira_initialize(int argc, char** argv,
     // remains to be seen whether this is really the most convenient
     // choice.						    (Steve, 7/99)
 
-    // Don't set dt_snap this way, as it may then default to the previous
-    // run interval (delta_t)...
-
     choose_param(b, verbose, dt_log, log_flag, "dt_log");
-    // choose_param(b, verbose, dt_snap, snap_flag, "dt_snap");
     choose_param(b, verbose, dt_sstar, sstar_flag, "dt_sstar");
     choose_param(b, verbose, dt_esc, esc_flag, "dt_esc");
     choose_param(b, verbose, dt_reinit, reinit_flag, "dt_reinit");
