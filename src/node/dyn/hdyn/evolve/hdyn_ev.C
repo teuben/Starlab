@@ -583,7 +583,7 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 // update:  Update the time and the timestep. 
 //-----------------------------------------------------------------------------
 
-inline void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
+void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
 						      // avoid recomputation
 {
     time += timestep;
@@ -2066,7 +2066,7 @@ void hdyn::calculate_partial_acc_and_jerk(hdyn * top,
 // check_add_perturber:  check if p is a perturber of 'this' and add it
 //			 to the perturber list if necessary.
 
-inline void hdyn::check_add_perturber(hdyn* p, vector& this_pos)
+void hdyn::check_add_perturber(hdyn* p, vector& this_pos)
 {
     vector ppos = hdyn_something_relative_to_root(p, &hdyn::get_pred_pos);
 
