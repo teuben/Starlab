@@ -1509,7 +1509,7 @@ local bool check_sync(hdyn* b)
 	       << "                     system time = "
 	       << b->get_system_time() << " (";
 	  xprint(b->get_system_time(), cerr, false); cerr << ")" << endl;
-	  cerr << "                     node time = "
+	  cerr << "                     node time   = "
 	       << bb->get_time() << " (";
 	  xprint(bb->get_time(), cerr, false); cerr << ")" << endl;
 	  need_new_list = true;
@@ -1947,6 +1947,16 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     bool tree_changed = true;	// used by fast_get_nodes_to_move;
     				// set by integration/evolution routines
+
+
+
+
+
+    check_sync(b);
+
+
+
+
 
     while (t <= t_end) {
 
