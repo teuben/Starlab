@@ -46,7 +46,6 @@ main(int argc, char ** argv)
     real  R_eff = 0;           // default value;
     char  *comment;
     extern char *poptarg;
-    int  pgetopt(int, char **, char *);
 
     while ((c = pgetopt(argc, argv, "R:c:")) != -1)
 	switch(c)

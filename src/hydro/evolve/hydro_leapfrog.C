@@ -282,7 +282,7 @@ main(int argc, char **argv)
     char  *comment;
 
     extern char *poptarg;
-    int  pgetopt(int, char **, char *), c;
+    int  c;
 
     bool  a_flag = FALSE;
     bool  c_flag = FALSE;

@@ -346,7 +346,6 @@ main(int argc, char ** argv)
     char seedlog[64];
     char  *comment;
     extern char *poptarg;
-    int  pgetopt(int, char **, char *);
 
     char * param_string = "A:a:E:e:M:R:Q:T:t:Ss:c:";
     check_help();

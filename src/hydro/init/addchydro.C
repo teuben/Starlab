@@ -68,7 +68,6 @@ main(int argc, char ** argv)
     real  m_core = 0;           // default value;
     char  *comment;
     extern char *poptarg;
-    int  pgetopt(int, char **, char *);
 
     while ((c = pgetopt(argc, argv, "R:r:m:c:")) != -1)
 	switch(c)
