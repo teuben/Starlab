@@ -8,10 +8,12 @@ Authors: Peter Teuben
 We propose an automated testing procedure, modeled after the
 "Testfile" approach NEMO has been using. This procedure places a small
 makefile-type file, called Testfile, in various directories in which
-testing should take place. This has the advantage that - under
-assumptions and limitations how you write these Testfiles - that
-testing can be done locally, but is easily (see below) done for the
-whole system.
+testing should take place. This has the advantage - under assumptions
+and limitations how you write these Testfiles - that testing can be
+done locally, but is easily (see below) done for the whole system
+and scales trivially as the system grows. This unlike a single
+shell script that tests and compares various executables that are
+in the system.
 
 It uses an object-oriented approach in the sense that the Testfile
 must be able to tell the caller what it can test, what output it
@@ -33,7 +35,14 @@ For examples:
     testsuite -n		dryrun, just shows where Testfiles live
     testsuite			run all tests, shows OK or FAILED for each
     testsuite -d		run all tests, but also diff/cmp output files
-    
+
+
+
+You can also change some global variables, e.g. NBODY or SEED, if you want to
+test the whole system under a different stress level. Or use it for benchmarking
+if you consider running the whole suite for say NBODY=2048. The testsuite
+
+-------------------------------------------------------------------------------    
     
 Authors of Testfiles are encouraged to test their work. For their
 ease, they can make an alias
@@ -50,9 +59,39 @@ to run the tests, and
 
 to clean up your mess.
 
+--------------------------------------------------------------------------------
+
+In summary, 
+
+   testsuite
+
+itself will run through a set of executables, and will complain if any of them
+did not seem to run fine (but does not know if data differ from a saved baseline).
+One can still difference the produced "testsuite.log" file with a baseline
+version to see how much things have changed.
+
+On a second level, and this is certainly ok within a CPU family, you can run
+
+   testsuite -d
+
+and compare the output on a more detailed level. It is now also easy to test
+programs individually.
+
+
+--------------------------------------------------------------------------------
+
+Here are some caveats:
+
+  - differencing data (diff or cmp) has the danger that they will not exactly
+    match on different cpus (e.g. sparc vs. intel) due to differences in
+    floating point rounding
+  - random number generators (although used with fixed seed) can differ on
+    different cpus (16bit vs. 32bit vs. 64bit)
+  - there is no procedure yet (flag to testsuite) to maintain testdata.
+    (we propose to put a set in
     
 
-
+--------------------------------------------------------------------------------
 Here is an example Testfile: (from src/node/dyn/init/Testfile)
 
 
