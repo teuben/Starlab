@@ -740,7 +740,16 @@ void split_top_level_node(hdyn * bi,
 				       bi->get_oldest_daughter()
 				         ->get_younger_sister());
 
-	    cerr << endl;
+#if 1
+	    PRL(bi->get_perturbation_squared());
+	    hdyn *pnode = bi->find_perturber_node();
+	    if (pnode && pnode->is_valid() && pnode->get_valid_perturbers())
+		PRL(pnode->get_n_perturbers());
+	    else
+		cerr << "perturbers unknown" << endl;
+#endif
+
+	    cerr << endl << flush;
 
 	    if (bi->get_kira_diag()->tree_level > 1) {
 		cerr << endl;
