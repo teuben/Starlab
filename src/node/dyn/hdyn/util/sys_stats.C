@@ -64,10 +64,6 @@
 
 #ifdef TOOLBOX
 
-#include "../evolve/kira_grape_include.C"	// GRAPE-specific functions:
-						// Invoke by setting USE_GRAPE
-						// at compilation time.
-
 // Main code follows dyn/util/sys_stats.C version.
 
 main(int argc, char **argv)
@@ -87,14 +83,7 @@ main(int argc, char **argv)
 	exit(1);
     }
 
-    if (!n_sq) {
-
-#ifndef USE_GRAPE
-	// calc_e = false;
-#endif
-
-    }
-
+    bool conf = false;
     // Loop over input until no more data remain.
 
     hdyn *b;
@@ -102,6 +91,21 @@ main(int argc, char **argv)
 
     set_hdyn_check_timestep(false);
     while (b = get_hdyn()) {
+
+	if (!conf) {
+
+	    unsigned int config = kira_config(b);	// default settings
+	    kira_print_config(config);
+
+	    if (!n_sq) {
+
+	        if (!b->has_grape()) {
+		    // calc_e = false;
+		}
+	    }
+
+	    conf = true;
+	}
 
 	check_addstar(b);
 	check_set_external(b, true);	// true ==> verbose output

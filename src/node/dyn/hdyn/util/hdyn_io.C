@@ -53,6 +53,9 @@ int hdyn::max_slow_factor			= DEFAULT_MAX_SLOW_FACTOR;
 real hdyn::max_slow_perturbation		= DEFAULT_MAX_SLOW_PERTURBATION;
 real hdyn::max_slow_perturbation_sq	     = DEFAULT_MAX_SLOW_PERTURBATION_SQ;
 
+unsigned int hdyn::config			= 0;
+//acc_function_ptr hdyn::kira_calculate_top_level_acc_and_jerk = NULL;
+
 
 void check_sanity_of_timestep(xreal & time, real & timestep)
 {

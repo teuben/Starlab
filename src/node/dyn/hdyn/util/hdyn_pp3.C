@@ -357,6 +357,8 @@ void pp3_tree(char *n,
 
 #else
 
+#include <sstream>
+
 main(int argc, char ** argv)
 {
     check_help();
@@ -376,7 +378,14 @@ main(int argc, char ** argv)
     hdyn *b;
 
     while (b = get_hdyn()) {
-	pp3_tree(b);
+
+	//pp3_tree(b);
+
+	ostringstream s;
+
+	pp3(b->get_oldest_daughter(), s);
+	cerr << s.str();
+
 	delete b;
     }
 }
