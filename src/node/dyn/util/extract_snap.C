@@ -66,12 +66,35 @@ main(int argc, char ** argv)
 	t_flag = true;
     }
 
-    dyn *b = NULL, *bp = NULL;
+    node *b = NULL, *bp = NULL;
     int i = 0;
 
-    while (b = get_dyn()) {
+    // Need to ensure that the data are not changed by this function.
+    // Currently, get_dyn() ends by calling check_and_correct_node(),
+    // which may change pos and vel to force the system to the center
+    // of mass frame.  Can fix (1) by suppressing this call in this
+    // case, (2) setting a tolerance to avoid forcing if the system is
+    // already "close" to the CM frame, or (3) use nodes here, which
+    // will never interpret pos or vel and hence will not change them.
+    // The only number we really need below is sytsem_time.  Options
+    // (1) and (2) are awkward, because this function is a member
+    // function and changing its arguments would propagate through the
+    // other classes.  However, we could add a static local option to
+    // the dyn instance of the function.  Option (3) seems cleanest.
+    // To revert, change node to dyn and use b->get_system_time() to
+    // determine time.
+    //						(Steve, 7/04)
 
-	real time = b->get_system_time();
+    while (b = get_node()) {
+
+	real time;
+	if (find_qmatch(b->get_dyn_story(), "real_system_time"))
+	    time = getrq(b->get_dyn_story(), "real_system_time");
+	else
+	    time = getrq(b->get_dyn_story(), "system_time");
+
+	// real time = b->get_system_time();
+
 	i++;
 
 	if (v_flag) cerr << "Snap time #" << i << " = " << time << endl;
@@ -84,7 +107,7 @@ main(int argc, char ** argv)
 		    b->log_comment(comment);
 
 		b->log_history(argc, argv);
-		put_dyn(b);
+		put_node(b);
 	    }
 
 	    if (--n <= 0) exit(0);
@@ -96,7 +119,7 @@ main(int argc, char ** argv)
 
     if (n > 0 && !t_flag) {
 	bp->log_history(argc, argv);
-	put_dyn(bp);
+	put_node(bp);
     }
 
 }

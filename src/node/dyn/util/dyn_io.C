@@ -114,12 +114,17 @@ bool dyn::check_and_correct_node(bool verbose)	// default = false
 	    v /= m;
 
 	    // Force daughters to have zero CM quantities relative to parent.
+	    // Impose an arbitrary limit on abs1(p) to prevent modification
+	    // of systems that were (presumably) already intended to be in
+	    // the CM frame.
 
-	    for_all_daughters(dyn, this, bb) {
-		bb->inc_pos(-p);
-		bb->inc_vel(-v);
+//	    if (abs1(p) > 1.e-12) {
+		for_all_daughters(dyn, this, bb) {
+		    bb->inc_pos(-p);
+		    bb->inc_vel(-v);
+		}
 	    }
-	}
+// 	}
 
 	if (!ok && verbose && parent == NULL) {
 	    cerr << "check_and_correct_node: applied ";

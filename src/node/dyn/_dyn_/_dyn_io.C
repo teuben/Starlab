@@ -42,6 +42,8 @@ void _dyn_::null_pointers()
     dyn::null_pointers();
 }
 
+// *** NOTE: check_and_correct_node() is inherited from the dyn class. ***
+
 istream & _dyn_::scan_dyn_story(istream & s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];
