@@ -9,6 +9,7 @@
 #define YY_FLEX_MINOR_VERSION 5
 
 #include <stdio.h>
+#include <unistd.h>
 
 
 /* cfront 1.2 defines "c_plusplus" instead of "__cplusplus" */
@@ -22,7 +23,6 @@
 #ifdef __cplusplus
 
 #include <stdlib.h>
-#include <unistd.h>
 
 /* Use prototypes in function declarations. */
 #define YY_USE_PROTOS
@@ -563,6 +563,9 @@ char *yytext;
 #include <vector>
 #include "dyn.h"
 #include "dyn_parser.h"
+#if !HAVE_STPCPY
+char *stpcpy(char *restrict, const char *restrict);
+#endif
 // we define this ourselves due to the peeking at the first character
 // in get_dyn() after which read(2) wouldn't work right
 #define YY_INPUT(buf, result, max_size) \
@@ -576,7 +579,7 @@ extern struct { char* s; size_t n; } story_line;
 
 #define VALUE 4
 
-#line 580 "dyn_lexer.cc"
+#line 583 "dyn_lexer.cc"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -724,14 +727,14 @@ YY_MALLOC_DECL
 YY_DECL
 	{
 	register yy_state_type yy_current_state;
-	register char *yy_cp, *yy_bp;
+	register char *yy_cp = NULL, *yy_bp = NULL;
 	register int yy_act;
 
-#line 40 "dyn_lexer.ll"
+#line 44 "dyn_lexer.ll"
 
 
 
-#line 735 "dyn_lexer.cc"
+#line 738 "dyn_lexer.cc"
 
 	if ( yy_init )
 		{
@@ -816,47 +819,47 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 43 "dyn_lexer.ll"
+#line 47 "dyn_lexer.ll"
 return PARTICLE;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 44 "dyn_lexer.ll"
+#line 48 "dyn_lexer.ll"
 yyless(0); BEGIN LOG__; return '(';
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 45 "dyn_lexer.ll"
+#line 49 "dyn_lexer.ll"
 BEGIN LOG_TEXT; return LOG;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 46 "dyn_lexer.ll"
+#line 50 "dyn_lexer.ll"
 yyless(0); BEGIN LOG__; return ')';
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 47 "dyn_lexer.ll"
+#line 51 "dyn_lexer.ll"
 BEGIN INITIAL; return LOG;
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 48 "dyn_lexer.ll"
+#line 52 "dyn_lexer.ll"
 return DYNAMICS;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 49 "dyn_lexer.ll"
+#line 53 "dyn_lexer.ll"
 return HYDRO;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 50 "dyn_lexer.ll"
+#line 54 "dyn_lexer.ll"
 return STAR;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 52 "dyn_lexer.ll"
+#line 56 "dyn_lexer.ll"
 {
 // log story: swallow everything up until ")Log"
   ++lineno;
@@ -873,7 +876,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 66 "dyn_lexer.ll"
+#line 70 "dyn_lexer.ll"
 {
 // alphanumeric string with parentheses, underscores, commas, and whitespace
   yylval.string = strdup(yytext);
@@ -883,7 +886,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 73 "dyn_lexer.ll"
+#line 77 "dyn_lexer.ll"
 {
 // alphanumeric string with underscores
   yylval.string = strdup(yytext);
@@ -893,7 +896,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 80 "dyn_lexer.ll"
+#line 84 "dyn_lexer.ll"
 {
 // floating point number
   yylval.real = atof(yytext);
@@ -905,30 +908,30 @@ YY_RULE_SETUP
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 89 "dyn_lexer.ll"
+#line 93 "dyn_lexer.ll"
 ++lineno; BEGIN INITIAL;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 91 "dyn_lexer.ll"
+#line 95 "dyn_lexer.ll"
 // skip whitespace
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 93 "dyn_lexer.ll"
+#line 97 "dyn_lexer.ll"
 // skip the rest of line on comments
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 95 "dyn_lexer.ll"
+#line 99 "dyn_lexer.ll"
 return yytext[0];
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 96 "dyn_lexer.ll"
+#line 100 "dyn_lexer.ll"
 ECHO;
 	YY_BREAK
-#line 932 "dyn_lexer.cc"
+#line 935 "dyn_lexer.cc"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(LOG_TEXT):
 case YY_STATE_EOF(LOG_):
@@ -1496,11 +1499,6 @@ YY_BUFFER_STATE b;
 	}
 
 
-#ifndef YY_ALWAYS_INTERACTIVE
-#ifndef YY_NEVER_INTERACTIVE
-extern int isatty YY_PROTO(( int ));
-#endif
-#endif
 
 #ifdef YY_USE_PROTOS
 void yy_init_buffer( YY_BUFFER_STATE b, FILE *file )
@@ -1818,4 +1816,4 @@ int main()
 	return 0;
 	}
 #endif
-#line 96 "dyn_lexer.ll"
+#line 100 "dyn_lexer.ll"

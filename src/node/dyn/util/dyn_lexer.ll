@@ -22,6 +22,10 @@
 	#include "dyn.h"
 	#include "dyn_parser.h"
 
+	#if !HAVE_STPCPY
+	  char *stpcpy(char *restrict, const char *restrict);
+	#endif
+
 	// we define this ourselves due to the peeking at the first character
 	// in get_dyn() after which read(2) wouldn't work right
 	#define YY_INPUT(buf, result, max_size) \
