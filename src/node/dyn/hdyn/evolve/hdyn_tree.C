@@ -224,7 +224,7 @@ local bool too_big(hdyn * bi, real limit_sq)
 
     // Expand this to extend binaries with small perturbation which are
     // not (yet) officially unperturbed.  May need other checks on nn
-    // distance, timestep. etc...  Use of gamma2 here is imperfect, and
+    // distance, timestep, etc...  Use of gamma2 here is imperfect, and
     // probably should be improved (12/12/01).
 
     real pert2 = od->get_perturbation_squared();
