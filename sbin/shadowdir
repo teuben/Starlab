@@ -8,6 +8,38 @@ if ($#argv < 1) then
     exit
 endif
 
+if (! -e $1) then
+    echo Directory $1 not found
+    exit
+endif
+
+#-----------------------------------------------------------------------
+
+#   Make a list of identifiers for Makefiles which should be saved
+#   if they already exist in the shadow tree, and which should *not*
+#   be linked to counterparts in the real (CVS) source tree.
+
+set PRECIOUS = (hdyn/evolve hdyn/util)
+
+#-----------------------------------------------------------------------
+
+# Hmmm...  Looks like DecUNIX and Linux finds operate differently!
+# Keep track of which OS we are using (choice of only two, for now).
+# Intent here is just to look at the files in the current directory,
+# without descending into subdirectories.  Keep this under review...
+
+if (X`uname` == XOSF1) then
+    alias ff 'find * -prune'
+else
+    alias ff 'find . -maxdepth 1'
+endif
+
+# Handy alias (to shorten the command line):
+
+alias gr 'grep -v CVS'
+
+#-----------------------------------------------------------------------
+
 # Make sure curr is a full pathname (not relative to .).  Note that,
 # as usual, we have to be careful of the "pwd" functions.  On DecUNIX,
 # the command pwd prepends a /tmp_mount to all automounted directory
@@ -26,6 +58,8 @@ chdir $1
 set dir = $cwd
 chdir $curr
 
+#-----------------------------------------------------------------------
+
 set shadow = ~/shadow_tmp
 if ($#argv > 1) set shadow = $2
 
@@ -35,11 +69,8 @@ set dlist = (`chdir $dir; find . -type d | grep -v CVS`) # not too many, I hope!
 
 if ($#dlist > 0) then
 
-#   Make a list of identifiers for Makefiles which should be saved
-#   if they already exist in the shadow tree, and which should *not*
-#   be linked to counterparts in the real (CVS) source tree.
+#   List of precious files actually saved.
 
-    set precious = (hdyn/evolve hdyn/util)
     set savelist = ()
 
 #   Remove any existing shadow directory.
@@ -58,7 +89,7 @@ if ($#dlist > 0) then
 
 #	Must save some Makefiles in a Starlab shadow directory tree to
 #	avoid having them overwritten or deleted.  Their directories are
-#	defined in $precious.  If the Makefiles exist in the current
+#	defined in $PRECIOUS.  If the Makefiles exist in the current
 #	shadow directory tree, save them and restore them at the end.
 #	A somewhat half-baked way of doing this follows:
 
@@ -66,7 +97,7 @@ if ($#dlist > 0) then
 	set mlist = (`find . -name Makefile`)
 	if ($#mlist > 0) then
 	    @ i = 0
-	    foreach p ($precious)
+	    foreach p ($PRECIOUS)
 	    foreach m ($mlist)
 		set tmp = (`echo $m | grep $p`)
 		if ("X$tmp" != "X") then
@@ -126,7 +157,7 @@ if ($#dlist > 0) then
 #	Check if Makefile should not be linked.
 
 	set link_make = 1
-	foreach p ($precious)
+	foreach p ($PRECIOUS)
 	    set tmp = `echo $sub | grep $p`
 	    if (X$tmp != X) set link_make = 0
 	end
@@ -136,22 +167,21 @@ if ($#dlist > 0) then
 
 	if (X$sub == X.) then
 	    set flist = (starlab_start VERSION Makefile)	# Starlab...
-	else if (X$sub == X./local) then
-	    set flist = (`chdir $dir/$sub; find * -prune -type f`)
-	else if (X$sub == X./sbin) then
-	    set flist = (`chdir $dir/$sub; find * -prune -type f`)
+	else if (X$sub == X./local || X$sub == X./sbin) then
+	    set flist = (`chdir $dir/$sub; ff -type f`)
 	else
 	    set flist = \
-		(`chdir $dir/$sub; find * -prune -name '*.[cCfFh]' -o -name '[A-Z]*' | grep -v CVS`)
+		(`chdir $dir/$sub; ff -name '*.[cCfFh]' -o -name '[A-Z]*' | gr`)
 	endif
 
 	if ($#flist > 0) then
 	    foreach file ($flist)
 		if (-e $dir/$sub/$file) then
-		    if ($link_make == 1 || $file != Makefile) then
-			ln -s $dir/$sub/$file $shadow/$sub/$file
-		    else
+		    if ($link_make == 0 && \
+			($file == Makefile || $file == ./Makefile)) then
 			echo "    *** " Skipping $sub/$file "***"
+		    else
+			ln -s $dir/$sub/$file $shadow/$sub/$file
 		    endif
 		endif
 	    end
