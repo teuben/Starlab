@@ -389,6 +389,24 @@ else
     echo without GRAPE					>> CONFIGURE_HOST
 fi
 echo -n "    "						>> CONFIGURE_HOST
+if test "x$sdyn3" = "xyes"; then
+    echo with sdyn3					>> CONFIGURE_HOST
+else
+    echo without sdyn3					>> CONFIGURE_HOST
+fi
+echo -n "    "						>> CONFIGURE_HOST
+if test "x$sdyn" = "xyes"; then
+    echo with sdyn					>> CONFIGURE_HOST
+else
+    echo without sdyn					>> CONFIGURE_HOST
+fi
+echo -n "    "						>> CONFIGURE_HOST
+if test "x$ac_cv_prog_f77" = "xyes"; then
+    echo with f77					>> CONFIGURE_HOST
+else
+    echo without f77					>> CONFIGURE_HOST
+fi
+echo -n "    "						>> CONFIGURE_HOST
 if test "x$no_x" = "xyes"; then
     echo without X support				>> CONFIGURE_HOST
 else
