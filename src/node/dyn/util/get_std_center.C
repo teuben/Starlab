@@ -46,7 +46,7 @@ int get_std_center(dyn *b, vector& pos, vector& vel)
 
     if (which == 0) {
 
-	if (find_qmatch(b->get_dyn_story(), "com_mpos")) {
+	if (find_qmatch(b->get_dyn_story(), "mcom_pos")) {
 
 	    // Try modified center of mass instead.
 
