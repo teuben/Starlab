@@ -752,7 +752,6 @@ void split_top_level_node(hdyn * bi,
 		cerr << "pnode invalid" << endl;
 #endif
 
-
 	    cerr << endl << flush;
 
 	    if (bi->get_kira_diag()->tree_level > 1) {
@@ -764,12 +763,31 @@ void split_top_level_node(hdyn * bi,
 		if (bi->get_kira_diag()->tree_level > 2)
 		    put_node(cerr, *bi, bi->get_kira_options()->print_xreal);
 	    }
+
 	} else {
+
 	    cerr << endl << "                      ";
 	    print_relative_energy_and_period(bi->get_oldest_daughter(),
 					     bi->get_oldest_daughter()
 					       ->get_younger_sister());
-	    cerr << endl;
+
+#if 1
+	    cerr << endl << "                      ";
+	    hdyn *pnode = bi->get_oldest_daughter()->find_perturber_node();
+	    if (pnode && pnode->is_valid()) {
+		cerr << "pnode = " << pnode->format_label();
+		if (pnode->get_valid_perturbers())
+		    cerr << ", " << pnode->get_n_perturbers()
+			 << " perturber(s), pert = "
+			 << sqrt(bi->get_oldest_daughter()
+				   ->get_perturbation_squared());
+		else
+		    cerr << ", perturbers unknown";
+	    } else
+		cerr << "pnode invalid";
+#endif
+
+	    cerr << endl << flush;
 	}
     }
 
