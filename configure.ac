@@ -33,7 +33,6 @@ AC_ARG_ENABLE(sdyn,
 AM_CONDITIONAL(USE_SDYN, [test "x$sdyn" = "xyes"])
 
 # Another HUGE FIXME - pgetopt() must be replaced by getopt_long()
-#CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__ -D_COMPILE_DATE_=__DATE__"
 CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"
 
 # Checks for programs.
