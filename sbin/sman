@@ -1,0 +1,11 @@
+#!/bin/tcsh -f
+
+# Silly man lookalike for starlab functions.
+
+if ($#argv < 1) exit
+
+foreach f ($argv[*])
+    help2man --no-info $f >&! /tmp/sman.$$
+    man /tmp/sman.$$
+    rm /tmp/sman.$$
+end
