@@ -207,7 +207,6 @@ real print_structure_recursive(dyn* bi,
     real eb = 0;
     if (bi->get_oldest_daughter()) {
 
-
 	dyn* od = bi->get_oldest_daughter();
 	dyn* yd = od->get_younger_sister();
 
@@ -237,6 +236,7 @@ real print_structure_recursive(dyn* bi,
 	eb += print_binary_params(&k, primary->get_mass(), kT,
 				  dist_from_center, verbose,
 				  long_binary_output, init_indent);
+	cerr << endl;
 
 	if (dstar_params != NULL && od->is_leaf() && yd->is_leaf())
 	    dstar_params(bi);
