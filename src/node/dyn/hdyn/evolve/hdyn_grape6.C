@@ -160,10 +160,15 @@ local INLINE void send_j_node_to_grape(hdyn *b,
 
     int grape_index = b->get_grape_index();
 
-    real t = b->get_time();
-    if (computing_energy) t = b->get_system_time();
+    // If we are computing the energy, we may be doing it at an odd time,
+    // which may cause the GRAPE to complain.  Since we never do prediction
+    // in this case, just send a time of zero to avoid prediction and warning
+    // messages. Note that this convention *must* be consistent with the actions
+    // taken by force_by_grape.
 
-    t -= grape_time_offset;			// 0 <= t <= 1
+    real t = 0;
+    if (!computing_energy)
+	t = b->get_time() - grape_time_offset;			// 0 <= t <= 1
 
     real dt = b->get_timestep();
     if (dt <= 0) dt = 1;
@@ -253,7 +258,7 @@ local int initialize_grape_arrays(hdyn *b,		// root node
 
     // See if we need to increase the time offset.
 
-    if (b->get_real_system_time() - grape_time_offset > 1)
+    while (b->get_real_system_time() - grape_time_offset > 1)
 	grape_time_offset += 1;
 
     // Set up the j-particle data.
@@ -367,6 +372,8 @@ local INLINE int force_by_grape(xreal xtime,
 //		grape_calculate_densities()			// global
 
 // Flag pot_only = true means that we are calculating the total energy.
+// As of 11/02, we ignore the value of xtime in this case, although it may
+// still be used for debugging purposes (Steve).
 
 {
     static char *func = "force_by_grape";
@@ -396,7 +403,8 @@ local INLINE int force_by_grape(xreal xtime,
 
     // Send the current time to the GRAPE.
 
-    real time = xtime - grape_time_offset;
+    real time = 0;
+    if (!pot_only) time = xtime - grape_time_offset;
     g6_set_ti_(&cluster_id, &time);
 
     // Pack the i-particle data and start the GRAPE calculation.
@@ -468,8 +476,15 @@ local INLINE int force_by_grape(xreal xtime,
 		    // cerr << "WARNING: Initializing acc and jerk from zero."
 		    //      << endl;
 
+		    // Small values here will cause overflow and annoying
+		    // messages from the GRAPE.  Large values will cause
+		    // underflow and no messages.
+
 		    iacc[i]   = vector(1);
 		    ijerk[i]  = vector(1);
+
+		    // Hmmm.  Increasing these numbers seems to increase
+		    // the number of error messages...
 		}
 	    }
 
@@ -477,8 +492,8 @@ local INLINE int force_by_grape(xreal xtime,
 
 	    // Only interested in a low-level node during the potential
 	    // calculation.  In this case, it is quite unlikely that
-	    // any of pot, acc, or jerk is usable.  Choose quantities
-	    // appropriate to the nearest neighbor.
+	    // any of pot, acc, or jerk is usable for scaling purposes.
+	    // Choose quantities appropriate to the nearest neighbor.
 
 	    hdyn *sis = nodes[i]->get_younger_sister();
 	    if (!sis) sis = nodes[i]->get_elder_sister();
@@ -1147,11 +1162,10 @@ void grape_calculate_energies(hdyn *b,			// root node
     // nodes.  If cm = false, then still use the CM approximation for
     // sufficiently close binaries to avoid roundoff errors on the GRAPE.
 
-    if (DEBUG) {
-	cerr << endl << "grape_calculate_energies..."
-	     << endl << flush;
+//    if (DEBUG) {
+	cerr << endl << "entering grape_calculate_energies... ";
 	PRL(cm);
-    }
+//    }
 
     if (!grape_is_open)
 	reattach_grape(b->get_real_system_time(),
@@ -1257,11 +1271,11 @@ void grape_calculate_energies(hdyn *b,			// root node
 //    cerr << "CPU time for grape_calculate_energies() = "
 //	 << cpu_time() - cpu0 << endl;
 
-    if (DEBUG) {
+//    if (DEBUG) {
 	cerr << "...leaving grape_calculate_energies...  ";
 	PRL(etot);
 	cerr << endl;
-    }
+//    }
 
 #ifdef E_NODES
     delete [] e_nodes;
