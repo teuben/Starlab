@@ -119,7 +119,9 @@ hdyn* hdyn::find_perturber_node()
 
     }
 
-    if (!pnode->valid_perturbers) pnode = NULL;
+    if (!(pnode->valid_perturbers || pnode->valid_perturbers_low))
+        pnode = NULL;
+
     return pnode;
 }
 
