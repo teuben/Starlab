@@ -1449,7 +1449,8 @@ void sys_stats(dyn* b,
 			       == b->get_system_time());
 
 	if (has_densities || allow_n_sq_ops) {
-	    cerr << "Compute densities"<<endl;
+
+	    // cerr << "Compute densities" << endl;	// ???
 
 	    // Function compute_core_parameters will look in the dyn story
 	    // for densities and use them if they are current.  It will
