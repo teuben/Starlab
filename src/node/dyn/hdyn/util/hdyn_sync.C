@@ -123,8 +123,8 @@ main(int argc, char **argv)
 		|| (bb->get_younger_sister()
 		    && !bb->get_kepler())) {
 		real dt = bb->get_timestep();
-		dtmin = min(dtmin, dt);
-		dtmax = max(dtmax, dt);
+		dtmin = Starlab::min(dtmin, dt);
+		dtmax = Starlab::max(dtmax, dt);
 		if (!is_power_of_two(dt)) {
 		    powers_of_two = false;
 		    nbad2++;
