@@ -46,22 +46,28 @@ real get_mass(dyn *b)
 
 void scale_mass(dyn* b, real mscale)
 {
-    for_all_nodes(dyn, b, bb)
+    for_all_nodes(dyn, b, bb)			// N.B. all nodes
 	bb->scale_mass(mscale);
 }
 
 void scale_pos(dyn* b, real rscale,
 	       vector com_pos)			// default = 0
 {
-    for_all_nodes(dyn, b, bb)
-	bb->set_pos(com_pos + rscale*(bb->get_pos()-com_pos));
+    b->set_pos(com_pos + rscale*(b->get_pos()-com_pos));
+
+    for_all_daughters(dyn, b, bb)		// N.B. all daughters
+	bb->set_pos(com_pos
+		     + rscale*(bb->get_pos()-com_pos));
 }
 
 void scale_vel(dyn* b, real vscale,
 	       vector com_vel)			// default = 0
 {
-    for_all_nodes(dyn, b, bb)
-	bb->set_vel(com_vel + vscale*(bb->get_vel()-com_vel));
+    b->set_vel(com_vel + vscale*(b->get_vel()-com_vel));
+
+     for_all_daughters (dyn, b, bb)		// N.B. all daughters
+	bb->set_vel(com_vel
+		     + vscale*(bb->get_vel()-com_vel));
 }
 
 real get_top_level_kinetic_energy(dyn *b)	// top-level nodes only
@@ -174,7 +180,7 @@ void scale(dyn *b, real eps,
 	mass = get_mass(b);
 
     if (debug) {
-	cerr << "debug: "; PRL(mass);
+	cerr << "debug: "; PRC(mass); PRL(get_mass(b));
     }
 
     // Need to know some energies if the E, Q, or R flags are set.
