@@ -1,0 +1,71 @@
+#!/bin/tcsh -f
+
+# Create man pages for Starlab programs.
+
+set dir = ""
+if ($?STARLAB_INSTALL_PATH) then
+    set dir = $STARLAB_INSTALL_PATH
+endif
+
+if ($#argv > 0) then
+    set dir = $1
+endif
+
+if ("X$dir" == "X" || ! -d $dir) then
+    echo Must specify a valid installation directory.
+    exit
+endif
+
+echo Starlab installation directory is $dir
+
+set bin = $dir/bin
+set man = $dir/man
+
+if (! -d $bin) then
+    echo No bin directory in $dir
+    exit
+endif
+
+if (! -d $man) then
+    if (-e $man) then
+	echo Deleting file $man
+	rm -f $man
+    endif
+    echo Creating directory $man
+    mkdir $man
+endif
+
+set man = $man/man1
+
+if (! -d $man) then
+    if (-e $man) then
+	echo Deleting file $man
+	rm -f $man
+    endif
+    echo Creating directory $man
+    mkdir $man
+endif
+
+echo Starlab executable directory is $bin
+echo Starlab man page directory is $man
+
+cd $bin
+foreach x (*)
+    if (-x $x) then						# executable
+        set tmp = `file $x | grep ELF`
+        if ($#tmp > 0) then					# not a script
+            set tmp = `strings $x | grep -e -h`
+            if ($#tmp > 0) then					# --help
+		set tmp = `find $man -name $x.1 -newer $x`
+		if ("X$tmp" == "X") then			# update needed
+		    alias x $x
+		    set tmp = `echo "" | x --version | grep Copyright`
+		    if ("X$tmp" != "X") then			# --version
+			echo Creating man page for $x
+			help2man --no-info $x >&! $man/$x.1
+		    endif
+		endif
+            endif
+        endif
+    endif
+end
