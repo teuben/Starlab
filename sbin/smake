@@ -3,17 +3,17 @@
 # Make command-line arguments, starting at the top-level Starlab
 # (or other) directory and suppressing some extraneous output.
 #
-# Option "-d dir" replaces STARLAB_PATH by dir.
+# Option "-d dir" or "-C dir" (for consistency with make) replaces
+# STARLAB_PATH by dir.
 
 list=""
 dir=$STARLAB_PATH
 
 while [ "x$1" != "x" ]; do
-    if [ "x$1" = "x-d" ]; then
+    if [[ "x$1" = "x-d" || "x$1" = "x-C" ]]; then
 	shift
 	dir=$1
     else
-	echo $1 b
 	list="$list $1"
     fi
     shift
@@ -35,10 +35,10 @@ if  [ "x$dir" != "x$STARLAB_PATH" ]; then
     sl=`readlink -f $STARLAB_PATH`
     dr=`readlink -f $dir`
 
-    if [[ "$sl" > "$dr" ]]; then
+    tmp=`echo $dr | grep $sl`
+    if [ "x$tmp" = "x" ]; then
 	echo Warning: building outside the current Starlab tree
     fi
-
 fi
 
 make -s -C $dir $list
