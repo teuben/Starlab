@@ -1442,6 +1442,7 @@ void sys_stats(dyn* b,
     // from the kinetic energy.
 
     real kT = 0;
+    int nd = b->n_daughters();
 
     if (compute_energy)					// recompute energies
 
@@ -1450,9 +1451,10 @@ void sys_stats(dyn* b,
 
     else if (b->get_oldest_daughter())
 
-	kT = top_level_kinetic_energy(b) / (1.5*b->n_daughters());
+	kT = top_level_kinetic_energy(b) / (1.5*nd);
 
-    PRI(4); PRL(kT);
+    real vrms = sqrt(3*nd*kT/b->get_mass());
+    PRI(4); PRC(vrms); PRL(kT);
 
     vector center = com_pos;
     real rcore = 0, rhalf = 0;
