@@ -401,7 +401,9 @@ real pot_on_general_node(dyn * bj, dyn * bi, real eps2, bool cm);
 void calculate_energies(dyn * root, real eps2,
 			real & epot, real & ekin, real & etot,
 			bool cm = false);
-void print_recalculated_energies(dyn *, int, real, real e_corr = 0);
+void print_recalculated_energies(dyn *, int mode = 0,
+				 real eps2 = 0, real e_corr = 0);
+void initialize_print_energies(dyn *, real eps2 = 0);
 
 void compute_density(dyn* b,
 		     int k = 12,

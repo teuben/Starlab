@@ -1129,6 +1129,30 @@ void check_print_close_encounter(hdyn *bi);
 void print_close_encounter(hdyn* bi,
 			   hdyn* bj);
 
+// ----- In kira_smallN.C -----
+
+void set_smallN_eta(real a);
+void set_smallN_gamma(real g);
+void set_smallN_niter(int n);
+void set_smallN_dtcrit(real dt);
+void set_smallN_rcrit(real r);
+
+real get_smallN_eta();
+real get_smallN_gamma();
+int  get_smallN_niter();
+real get_smallN_dtcrit();
+real get_smallN_rcrit();
+
+real smallN_evolve(hdyn *b,
+		   real t_end = VERY_LARGE_NUMBER,
+		   real break_r2 = VERY_LARGE_NUMBER,
+		   real end_on_unpert = false,
+		   real dt_log = 0,
+		   real dt_energy = 0,
+		   real dt_snap = 0);
+
+real integrate_multiple(hdyn *b);
+
 // ----- Handy clean-up functions (in files of ~same name): -----
 
 void clean_up_hdyn_schedule();
