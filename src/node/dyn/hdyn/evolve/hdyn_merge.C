@@ -459,7 +459,8 @@ void hdyn::merge_logs_after_collision(hdyn *bi, hdyn* bj) {
 #define MASS_LOSS		0.0
 #define KICK_VELOCITY		0.0
 
-hdyn* hdyn::merge_nodes(hdyn * bcoll)
+hdyn* hdyn::merge_nodes(hdyn * bcoll,
+			bool full_dump)	// default = false
 {
 
     // This function actually does the work of merging nodes.
@@ -529,28 +530,43 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
 	    // PRL(bcoll->get_top_level_node());
 
 	    combine_top_level_nodes(get_top_level_node(),
-				    bcoll->get_top_level_node());
+				    bcoll->get_top_level_node(),
+				    full_dump);
 
 	    // pp2(get_top_level_node(), cerr);
 
-	    if (get_binary_sister() != bcoll)
+	    if (get_binary_sister() != bcoll) {
+
+		if (full_dump)
+		    put_node(cout, *(get_top_level_node()), false, 3);
+	
 	        move_node(bcoll, this);		// Move bcoll to become
 		  				// sister of this.
+		if (full_dump)
+		    put_node(cout, *(get_top_level_node()), false, 2);
+	    }
 	    
 	    if (decombine) {
 
 		// cerr << "call split_top_level_node 3" << endl;
 
-		split_top_level_node(get_top_level_node());
+		split_top_level_node(get_top_level_node(), full_dump);
 
 	    }
 	    
 	} else {
 
+	    // Already in the same subtree.
+
 	    // pp2(get_top_level_node(), cerr);
+
+	    if (full_dump)
+		put_node(cout, *(get_top_level_node()), false, 3);
 
 	    move_node(bcoll, this);		// Move bcoll to become
 						// sister of this.
+	    if (full_dump)
+		put_node(cout, *(get_top_level_node()), false, 2);
 	}		
     }
     
@@ -559,6 +575,9 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
     
     // pp2(get_top_level_node(), cerr);
     
+    if (full_dump)
+	put_node(cout, *(get_top_level_node()), false, 3);
+
     // Compute energies prior to merger, for bookkeeping purposes:
 
     cerr << "calculating energies..." << endl << flush;
@@ -784,6 +803,12 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
 	cm->remove_from_perturbed_list();
     } else
 	cerr << cm->format_label() << " not on perturbed list " << endl;
+
+    if (full_dump) {
+	hdyn *top = cm->get_top_level_node();
+	predict_loworder_all(top, cm->get_system_time());
+	put_node(cout, *top, false, 2);
+    }
 
     return cm;
 }

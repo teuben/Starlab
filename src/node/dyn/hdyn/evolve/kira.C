@@ -62,6 +62,7 @@
 ////              -u    toggle unperturbed multiple motion [disabled][*]
 ////              -U    toggle all unperturbed motion [enabled][*]
 ////              -v    toggle "verbose" mode [on]
+////              -W    specify full-dump (worldline) timescale [1]
 ////              -x    toggle output of extended precision time [on]
 ////              -X    specify escaper removal timescale [reinit][*]
 ////              -y    specify stellar encounter criterion
@@ -534,7 +535,7 @@ local inline void check_extend_slow(hdyn *bi)
 
 
 
-local void merge_and_correct(hdyn* b, hdyn* bi, hdyn* bcoll)
+local void merge_and_correct(hdyn* b, hdyn* bi, hdyn* bcoll, bool full_dump)
 {
     // This intermediate function added mainly to allow
     // deletion of bi and bcoll after leaving merge_nodes.
@@ -547,7 +548,12 @@ local void merge_and_correct(hdyn* b, hdyn* bi, hdyn* bcoll)
 
     PRC(bi), PRC(bcoll), PRC(bi->get_parent()); PRL(cpu_time());
 
-    hdyn* cm = bi->merge_nodes(bcoll);
+    // Note from Steve (9/01): Modified merge_nodes() to accept the
+    // full_dump flag.  For a simple merger, could place the put_node()
+    // calls here, but merge_nodes() may modify the tree (if bi and bcoll
+    // aren't binary sisters), and this must be properly documented.
+
+    hdyn* cm = bi->merge_nodes(bcoll, full_dump);
 
     delete bi;
     delete bcoll;
@@ -569,7 +575,7 @@ local void check_periapo(hdyn * bi) {
 #endif
 }
 
-local hdyn* check_and_merge(hdyn* bi)
+local hdyn* check_and_merge(hdyn* bi, bool full_dump)
 {
     hdyn * bcoll;
     if ((bcoll = bi->check_merge_node()) != NULL) {
@@ -578,7 +584,7 @@ local hdyn* check_and_merge(hdyn* bi)
 
 	hdyn* b = bi->get_root();
 
-	merge_and_correct(b, bi, bcoll);
+	merge_and_correct(b, bi, bcoll, full_dump);
 
 	// Check for multiple mergers.  Note that we check *all*
 	// stars for merging, whether or not they are in the
@@ -599,7 +605,7 @@ local hdyn* check_and_merge(hdyn* bi)
 		    hdyn* bcoll2 = bb->check_merge_node();
 		    if (bcoll2 != NULL) {
 		        // cerr << "check_and_merge (2): "; PRL(bcoll2);
-			merge_and_correct(b, bb, bcoll2);
+			merge_and_correct(b, bb, bcoll2, full_dump);
 			merge_flag = true;
 		    }
 		}
@@ -950,7 +956,7 @@ local int integrate_list(hdyn * b,
 	    // first check for peri- or apoclustron passage
 	    check_periapo(bi);
 
-	    hdyn* bcoll = check_and_merge(bi);
+	    hdyn* bcoll = check_and_merge(bi, full_dump);
 
 	    // cerr << "integrate_list: "; PRL(bcoll);
 
@@ -967,10 +973,8 @@ local int integrate_list(hdyn * b,
 
 		// PRC(bi), PRL(bcoll);
 
-
 		// *** Must have check_and_merge take care of full_dump
 		// *** output in this case...
-
 
 		tree_changed = true;
 		restart_grape = true;
