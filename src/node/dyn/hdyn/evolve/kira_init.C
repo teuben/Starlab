@@ -225,7 +225,7 @@ local void set_runtime_params(hdyn *b, bool verbose,
     real ratio = d_min_sq / square(d_min/nbody);
     if (ratio < 0.0002 || ratio > 5.e3)
 	cerr << endl
-	     << "*** Warning: d_min_sq ratio = " << ratio << " ***"
+	     << "*** warning: d_min_sq ratio = " << ratio << " ***"
 	     << endl;
 
     choose_param(b, verbose, lag_factor, lag_flag, "lag_factor");
@@ -297,7 +297,7 @@ local real get_scaled_stripping_radius(hdyn* b,
 	} else {
 
 	    if (verbose)
-		cerr << "Warning: error reading "
+		cerr << "warning: error reading "
 		     << "kira_initial_jacobi_radius"
 		     << " from input snapshot"
 		     << endl;
@@ -584,7 +584,7 @@ local void get_physical_scales(hdyn* b,
     if (verbose) {
 	real tv = 21.0 * sqrt(q_vir*pow(r_vir, 3)/m_tot);
 	if (abs(1 - t_vir/tv) > 1.e-4) {
-	    cerr << "Warning: inconsistent units: ";
+	    cerr << "warning: inconsistent units: ";
 	    PRC(t_vir); PRL(tv);
 	}
     }
@@ -869,7 +869,27 @@ bool kira_initialize(int argc, char** argv,
     int nbody = b->n_leaves();
     if (nbody <= 0) err_exit("kira: N <= 0!");
 
-    // Some preliminaries:
+    // ======================================================================
+    //
+    // New (from Steve, 6/03): the standard external representation (always
+    // used in the dyn code) now is for the root node to be at the center of
+    // mass of the top-level nodes, and for all center of mass information
+    // to reside in root.  This description is consistent with the tree
+    // structure at all other levels.  However, within kira it is much more
+    // convenient to place the root node at the origin and drop the CM
+    // requirement for the daughters (e.g. makes dealing with external fields
+    // much simpler).  The member functions offset_com() and reset_com()
+    // perform the transformations between these two equivalent descriptions
+    // of the system.  We transform root to the origin here.  We must always
+    // make the reverse transformation before writing data to disk to maintain
+    // the external representation..
+
+    cerr << "offsetting system to place root node at (0,0,0)" << endl;
+    b->offset_com();
+
+    // ======================================================================
+
+    // Other preliminaries:
 
     b->set_kira_counters(new kira_counters);
     b->set_kira_options(new kira_options);
@@ -1276,7 +1296,9 @@ bool kira_initialize(int argc, char** argv,
     check_set_external(b, verbose);
 
     if (friction_beta > 0 && !b->get_pl())
-	cerr << "Warning: dynamical friction, but no external field." << endl;
+	cerr << "warning: dynamical friction, but "
+	     << "no external power-law field set."
+	     << endl;
 
     //----------------------------------------------------------------------
 

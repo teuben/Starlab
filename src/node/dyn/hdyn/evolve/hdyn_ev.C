@@ -277,14 +277,14 @@ void hdyn::synchronize_node()
 	cerr << flush;
     }
 
-    // cerr << "Energy before "; print_recalculated_energies(get_root(), 1);
+    // cerr << "Energy before "; print_recalculated_energies(get_root());
 
     // NOTE: the "false" here means that we do NOT attempt to
     //	     synchronize unperturbed binaries...
 
     integrate_node(false, true);
 
-    // cerr << "Energy after "; print_recalculated_energies(get_root(), 1);
+    // cerr << "Energy after "; print_recalculated_energies(get_root());
 
     if (do_diag)
 	cerr <<"After integrate_node "<<endl;

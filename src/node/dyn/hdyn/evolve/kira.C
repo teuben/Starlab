@@ -1464,7 +1464,6 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
 
     b->set_system_time(t);
     b->set_time(t);
-    // b->to_com();
     initialize_system_phase1(b, t);
     initialize_system_phase2(b, 3, 0);			// "0" here means
 							// timesteps are only
@@ -3027,8 +3026,6 @@ main(int argc, char **argv) {
 			 save_snap_at_log, snap_save_file,
 			 n_stop, alt_flag))
 	get_help();
-
-    // b->to_com();	// don't modify input data -- use tool to do this
 
     // Control behavior of the kepler package.
 

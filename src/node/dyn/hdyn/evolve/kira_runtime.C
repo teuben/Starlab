@@ -130,7 +130,7 @@ local void force_unperturbed_step(hdyn * b)
 	    b->set_unperturbed_timestep((dt_unp -= kep->get_period()));
 	b->set_unperturbed_timestep((dt_unp += kep->get_period()));
     } else {
-	cerr << "Warning: " << b->format_label()
+	cerr << "warning: " << b->format_label()
 	     << " has no kepler pointer\n";
 	force_step(b, b->get_parent()->get_next_time());
     }
@@ -193,7 +193,7 @@ local bool kill_multiple(hdyn * b)
 
 		    if (bb->get_kepler() == NULL) {
 
-			cerr << "Warning: " << bb->format_label()
+			cerr << "warning: " << bb->format_label()
 			     << " has no kepler pointer\n";
 
 			force_step(bb, bb->get_parent()->get_next_time());
@@ -271,7 +271,7 @@ local void modify_params(hdyn * b, char * name,
     ifstream file(name);
     if (file) {
 
-	cerr << endl << "***** Reading parameter changes from file " << name
+	cerr << endl << "***** reading parameter changes from file " << name
 	     << "\n\n";
 
 	// File should contain lines of the form:
@@ -1066,7 +1066,7 @@ void check_kira_init(hdyn *b)
 
 	if (check_file(file, false)) {
 	    cerr << endl
-		 << "Reading init file " << getenv("HOME") << "/.kira"
+		 << "reading init file " << getenv("HOME") << "/.kira"
 		 << endl << flush;
 	    modify_diag(b, file, false);
 	    modify_options(b, file, false);
@@ -1079,7 +1079,7 @@ void check_kira_init(hdyn *b)
 
     if (check_file(file, false)) {
 	cerr << endl
-	     << "Reading init file " << "./.kira"
+	     << "reading init file " << "./.kira"
 	     << endl << flush;
 	modify_diag(b, file, false);
 	modify_options(b, file, false);

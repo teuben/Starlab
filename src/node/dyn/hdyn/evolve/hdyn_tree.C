@@ -593,10 +593,10 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     predict_loworder_all(bi->get_root(), bi->get_system_time());
 
-    // print_recalculated_energies(bi->get_root(), 1);
+    // print_recalculated_energies(bi->get_root());
     // pp3((bi->get_root()), cerr);
     // synchronize_tree(bi->get_root(), time);
-    // print_recalculated_energies(bi->get_root(), 1);
+    // print_recalculated_energies(bi->get_root());
     // pp3((bi->get_root()), cerr);
 
     bi->synchronize_node();
@@ -1160,7 +1160,7 @@ local int adjust_low_level_node(hdyn * bi, int full_dump = 0)
 	        cerr << "\nadjust_low_level_node: "
 		     << "normal top level combine at time "
 		     << bi->get_time() << endl;
-		// print_recalculated_energies(bi->get_root(), 1);
+		// print_recalculated_energies(bi->get_root());
 	    }
 
 	    // cerr<< "Call combine_top_level_nodes from adjust_low_level_node"
@@ -1177,7 +1177,7 @@ local int adjust_low_level_node(hdyn * bi, int full_dump = 0)
 	        cerr << "adjust_low_level_node:"
 		     << " top level combine with two top level nodes at time "
 		     << bi->get_time() << endl;
-		// print_recalculated_energies(bi->get_root(), 1);
+		// print_recalculated_energies(bi->get_root());
 	    }
 
 	    hdyn* t = bi->get_top_level_node();
@@ -1366,7 +1366,7 @@ int hdyn::adjust_tree_structure(int full_dump)		// default = 0
 		predict_loworder_all(get_root(), system_time);
 
 		// cerr << "\ntime = " << system_time << endl;
-		// print_recalculated_energies(get_root(), 1);
+		// print_recalculated_energies(get_root());
 		// pp3(get_root(), cerr);
 
 		// cerr << "Call combine_top_level_nodes from "
@@ -1375,7 +1375,7 @@ int hdyn::adjust_tree_structure(int full_dump)		// default = 0
 		combine_top_level_nodes(nn_top, this, full_dump);
 
 		 // cerr << "Time = " << system_time<< endl;
-		 // print_recalculated_energies(get_root(), 1);
+		 // print_recalculated_energies(get_root());
 		 // pp3(get_root(), cerr);
 
 		status = 2;
@@ -1387,7 +1387,7 @@ int hdyn::adjust_tree_structure(int full_dump)		// default = 0
 
 	} else if (too_big(this, d_min_sq * lag_factor)) {
 
-	    // print_recalculated_energies(get_root(), 1);
+	    // print_recalculated_energies(get_root());
 
 	    predict_loworder_all(get_root(), system_time);
 

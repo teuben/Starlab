@@ -46,7 +46,7 @@ bool check_allowed(bool allow_kira_override,
 
 	if (verbose) {
 	    cerr << endl
-		 << "*** Warning: " << what_is_allowed
+		 << "*** warning: " << what_is_allowed
 		 << " is now turned off"
 		 << endl;
 	    need_skip = true;

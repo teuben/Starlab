@@ -522,12 +522,6 @@ bool evolve_stars(hdyn* b,
 
 	}	// end for_all_leaves(hdyn, b, bi) { ...
 
-
-	// *Don't* reset center of mass; recompute accs and jerks
-	// on top-level nodes (latter not needed?).
-
-	// b->to_com();
-
 	// calculate_acc_and_jerk_on_all_top_level_nodes(b);
 	// predict_loworder_all(b, b->get_system_time());
 
