@@ -429,7 +429,8 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 	real aarsethstep = 0;
 
 	// Not completely clear why this option should be tied to
-	// diag->grape...
+	// diag->grape...  (But most likely place for a problem to
+	// occur probably is in the GRAPE acc and jerk.)
 
 	if (!b->get_kira_diag()->grape) {
 
@@ -504,8 +505,6 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 		exit(0);
 	    }
 
-	    newstep = aarsethstep * correction_factor;
-
 #if 0
 	    // Handy to look at timestep details (e.g. inconsistent acc
 	    // and jerk in an external potential...).
@@ -521,11 +520,14 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 	    PRC(abs(bt2)); PRL(abs(at3));
 	    PRC(k2); PRL(l2);
 	    PRC(tmp1); PRC(tmp2); PRC(tmp3); PRL(tmp4);
-
-	    PRC(timestep); PRL(newstep);
 #endif
 
 	}
+
+	newstep = aarsethstep * correction_factor;
+#if 0
+	PRC(timestep); PRL(newstep);
+#endif
     }
 
     if (keplstep && timestep_check) {
