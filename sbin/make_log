@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Make $1, but write output to a file (make.log) and suppress some
+# annoying extraneous messages.
+
+if [ $# -lt 1 ]; then
+    echo "$0: At least one make argument required." >&2
+    exit 1
+fi
+
+echo Writing output to make.log >&2
+make "$@" 2>&1 | grep -v 'make\[' > make.log&
