@@ -305,7 +305,7 @@ local void modify_params(hdyn * b, char * name,
 
 		real tmp = atof(s+2);
 		if (tmp > 0 && tmp < 1) {
-		    cerr << "Setting eta = " << tmp << endl;
+		    cerr << "setting eta = " << tmp << endl;
 		    b->set_eta(tmp);
 		    putrq(b->get_log_story(), "eta", tmp);
 		}
@@ -314,7 +314,7 @@ local void modify_params(hdyn * b, char * name,
 
 		int tmp = atoi(s+2);
 		if (tmp > 0) {
-		    cerr << "Setting long_binary_output = " << tmp << endl;
+		    cerr << "setting long_binary_output = " << tmp << endl;
 		    long_binary_output = tmp;
 		}
 
@@ -322,7 +322,7 @@ local void modify_params(hdyn * b, char * name,
 
 		real tmp = atof(s+2);
 		if (tmp > 0 && tmp <= 1800) {	// arbitrary upper limit...
-		    cerr << "Setting grape_max_cpu = " << tmp << endl;
+		    cerr << "setting grape_max_cpu = " << tmp << endl;
 		    b->get_kira_options()->grape_max_cpu = tmp;
 		}
 
@@ -330,7 +330,7 @@ local void modify_params(hdyn * b, char * name,
 
 		real tmp = atof(s+2);
 		if (tmp > 0) {
-		    cerr << "Setting dt_log = " << tmp << endl;
+		    cerr << "setting dt_log = " << tmp << endl;
 		    new_dt_log = tmp;
 		}
 
@@ -338,7 +338,7 @@ local void modify_params(hdyn * b, char * name,
 
 		real tmp = atof(s+2);
 		if (tmp > 0) {
-		    cerr << "Setting dt_snap = " << tmp << endl;
+		    cerr << "setting dt_snap = " << tmp << endl;
 		    new_dt_snap = tmp;
 		}
 
@@ -355,7 +355,7 @@ local void modify_params(hdyn * b, char * name,
 
 		real tmp = atof(s+2);
 		if (tmp > 0 && tmp < 100) {
-		    cerr << "Setting lag_factor = " << tmp << " (squared)\n";
+		    cerr << "setting lag_factor = " << tmp << " (squared)\n";
 		    b->set_lag_factor(tmp*tmp);
 		    putrq(b->get_log_story(), "lag_factor", tmp);
 		}
@@ -364,7 +364,7 @@ local void modify_params(hdyn * b, char * name,
 
 		real tmp = atof(s+2);
 		if (tmp > 0 && tmp < 1) {
-		    cerr << "Setting gamma = " << tmp << endl;
+		    cerr << "setting gamma = " << tmp << endl;
 		    b->set_gamma2(tmp*tmp);
 		    putrq(b->get_log_story(), "gamma", tmp);
 		}
@@ -375,7 +375,7 @@ local void modify_params(hdyn * b, char * name,
 		if (tmp > 0) {
 		    int kappa_max = (int) pow(2.0, tmp);
 		    b->set_max_slow_factor(kappa_max);
-		    cerr << "Setting maximum slowdown factor = "
+		    cerr << "setting maximum slowdown factor = "
 			 << kappa_max << endl;
 		    putiq(b->get_log_story(), "log_max_slow", tmp);
 		}
@@ -384,7 +384,7 @@ local void modify_params(hdyn * b, char * name,
 
 		real tmp = atof(s+2);
 		if (tmp > 0 && tmp < 100) {
-		    cerr << "Setting d_min_fac = " << tmp << endl;
+		    cerr << "setting d_min_fac = " << tmp << endl;
 		    b->set_d_min_fac(tmp);
 		    putrq(b->get_log_story(), "d_min_fac", tmp);
 		}
@@ -393,7 +393,7 @@ local void modify_params(hdyn * b, char * name,
 
 		int tmp = atoi(s+2);
 		if (tmp > 0) {
-		    cerr << "Setting n_check = " << tmp << endl;
+		    cerr << "setting n_check = " << tmp << endl;
 		    b->get_kira_diag()->n_check_heartbeat = tmp;
 		}
 
@@ -401,7 +401,7 @@ local void modify_params(hdyn * b, char * name,
 
 		strcpy(new_snap_save_file, s+3);
 		if (new_snap_save_file[0] != '\0') {
-		    cerr << "Setting snap_save_file = "
+		    cerr << "setting snap_save_file = "
 			 << new_snap_save_file << endl;
 		}
 
@@ -409,7 +409,7 @@ local void modify_params(hdyn * b, char * name,
 
 		real tmp = atof(s+2);
 		t_end += tmp;
-		cerr << "Setting t_end = " << t_end << endl;
+		cerr << "setting t_end = " << t_end << endl;
 
 	    } else if (s = strstr(line, "-u")) {
 
@@ -425,7 +425,7 @@ local void modify_params(hdyn * b, char * name,
 
 		b->get_kira_options()->print_xreal
 		    = !b->get_kira_options()->print_xreal;
-		cerr << "Setting print_xreal = "
+		cerr << "setting print_xreal = "
 		     << b->get_kira_options()->print_xreal << endl;
 
 	    }
@@ -1133,7 +1133,7 @@ bool check_kira_runtime(hdyn* b,
     if (check_file("ALLOW_CHECK")) {
 	allow_check = !allow_check;
 	cerr << endl
-	     << "**** Setting allow_check = " << allow_check
+	     << "**** setting allow_check = " << allow_check
 	     << endl;
     }
 
