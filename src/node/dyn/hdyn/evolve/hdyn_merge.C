@@ -718,7 +718,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
     real epot, ekin, etot;
     //calculate_energies(get_root(), eps2, epot, ekin, etot);	//dyn function
     // replaced by GRAPE friendly function (SPZ, March 2001)
-    calculate_internal_energies(get_root(), epot0, ekin0, etot0); 
+    calculate_internal_energies(get_root(), epot, ekin, etot); 
     PRC(epot); PRC(ekin); PRL(etot);
     
     real de_total = etot - etot0;

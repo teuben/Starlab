@@ -9,7 +9,7 @@
 // Only to make SPZDCH star known to this file 
 #include "SPZDCH_star.h"
 
-#define REPORT_MASS_TRANSFER_TIMESCALE false
+#define REPORT_MASS_TRANSFER_TIMESCALE true
 
 single_star * new_single_star(stellar_type type,	// All defaults are
 			      int  id,			// now specified in

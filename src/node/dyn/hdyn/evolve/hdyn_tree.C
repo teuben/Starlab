@@ -554,6 +554,7 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     // Make sure bi and bj are up to date.
 
+
     predict_loworder_all(bi->get_root(), bi->get_system_time());
 
     // print_recalculated_energies(bi->get_root(), 1);
@@ -1265,7 +1266,7 @@ int hdyn::adjust_tree_structure(bool full_dump)		// default = false
 
 		predict_loworder_all(get_root(), system_time);
 
-		// cerr << "\ntime = " << system_time << endl;
+		//cerr << "\ntime = " << system_time << endl;
 		// print_recalculated_energies(get_root(), 1);
 		// pp3(get_root(), cerr);
 
@@ -1274,9 +1275,9 @@ int hdyn::adjust_tree_structure(bool full_dump)		// default = false
 
 		combine_top_level_nodes(nn_top, this, full_dump);
 
-		// cerr << "Time = " << system_time<< endl;
-		// print_recalculated_energies(get_root(), 1);
-		// pp3(get_root(), cerr);
+		 //cerr << "Time = " << system_time<< endl;
+		 //print_recalculated_energies(get_root(), 1);
+		 //pp3(get_root(), cerr);
 
 		status = 2;
 

@@ -615,6 +615,8 @@ local int integrate_list(hdyn * b,
     int i, steps = 0;
     xreal sys_t = next_nodes[0]->get_system_time();
 
+    //    cerr << "At stars of Integrate_list: sys_t = " << sys_t << endl;
+
     // Code to time specific force-calculation operations:
 
     real cpu0, cpu1;
@@ -1933,13 +1935,13 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	if (fmod(b->get_system_time(), dt_sstar) == 0.0
 	    && b->get_use_sstar())  {
 
-	   // cerr << "pre SE at t = " << b->get_system_time() << endl;
-	   // print_recalculated_energies(b);
+	   //cerr << "pre SE at t = " << b->get_system_time() << endl;
+	   //print_recalculated_energies(b);
 
 	    tree_changed |= evolve_stars(b);
 
-	    // cerr << "post SE ";
-	    // print_recalculated_energies(b);
+	   //cerr << "post SE at t = " << b->get_system_time() << endl;
+	   // print_recalculated_energies(b);
 
 	    // print_energy_from_pot(b);	// should be free, but
 						// doesn't quite work...
