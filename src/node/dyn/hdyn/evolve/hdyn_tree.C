@@ -222,6 +222,12 @@ local bool too_big(hdyn * bi, real limit_sq)
 
     if (od->get_kepler()) return false;
 
+    // Expand this to extend binaries with zero (small?) perturbation
+    // which are not (yet) officially unperturbed.  May need other checks
+    // on nn distance, timestep. etc...
+
+    if (od->get_perturbation_squared() == 0) return false;
+
     bool big = !too_close(od, od->get_younger_sister(), limit_sq, false);
 
     // Don't allow a slow binary to be split, but schedule the slow

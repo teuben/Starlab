@@ -806,13 +806,13 @@ local int integrate_list(hdyn * b,
 
 
 
-
+#if 1
 		if (bi->is_parent()
 		    && streq(bi->format_label(), "(18298,40562)")) {
 		    cerr << endl;
 		    pp3(bi);
 		}
-
+#endif
 
 
 
