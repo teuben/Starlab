@@ -776,26 +776,26 @@ local int integrate_list(hdyn * b,
 			// Should we always print a message here, or only
 			// if GRAPE diagnostics are enabled...?
 
-			if (bi->get_kira_diag()->grape) {
-			    if (bi->get_kira_diag()->grape_level == 0) {
-				cerr << endl
-				     << "Corrected apparent GRAPE"
-				     << " error for "
-				     << bi->format_label() << " at time "
-				     << bi->get_system_time();
+			cerr << endl
+			     << "Corrected apparent GRAPE"
+			     << " error for "
+			     << bi->format_label() << " at time "
+			     << bi->get_system_time();
 #if defined(STARLAB_HAS_GRAPE4)
-				cerr << " (chip " << get_grape_chip(bi) << ")";
+			cerr << " (chip " << get_grape_chip(bi) << ")";
 #endif
-				cerr << endl;
-			    } else {
+			cerr << endl;
+
+			if (bi->get_kira_diag()->grape) {
+			    if (bi->get_kira_diag()->grape_level > 0) {
 				cerr << "recomputed  "; PRL(bi->get_acc());
 				PRI(12); PRL(bi->get_jerk());
 				// PRI(12); PRL(bi->get_pos());
 				// PRI(12); PRL(bi->get_vel());
 				cerr << endl;
 			    }
+			    return_fac = -1;
 			}
-			return_fac = -1;
 		    }
 		}
 

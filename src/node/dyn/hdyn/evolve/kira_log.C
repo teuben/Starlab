@@ -604,7 +604,7 @@ void log_output(hdyn * b, real count, real steps,
     // the GRAPE-6 interface (Steve, 7/00).
 
     real cpu = cpu_time();
-    cerr << "Computing densities..." << flush;
+    cerr << endl << "Computing densities..." << flush;
     compute_densities(b, cod_pos, cod_vel);	// does nothing unless
 						// GRAPE is present
     cpu = cpu_time() - cpu;
