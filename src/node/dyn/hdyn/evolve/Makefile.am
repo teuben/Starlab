@@ -34,9 +34,7 @@ kira_LDADD = ../libhdyn.la ../xutil/libxhdyn.la \
 kira_SOURCES = kira.C
 
 if HAVE_GRAPE
-  kira_CPPFLAGS += $(GRAPE_CPPFLAGS)
   kira_LDADD += $(GRAPE_LIBS)
   AM_LDFLAGS = $(GRAPE_LDFLAGS)
-else
-  kira_LDADD += ../stubs/libstubs.la
 endif
+kira_LDADD += ../stubs/libstubs.la

@@ -41,15 +41,11 @@ scale_SOURCES = scale.C
 get_densities_SOURCES = get_densities.C
 
 if HAVE_GRAPE
-  sys_stats_CPPFLAGS += $(GRAPE_CPPFLAGS)
-  scale_CPPFLAGS += $(GRAPE_CPPFLAGS)
-  get_densities_CPPFLAGS += $(GRAPE_CPPFLAGS)
   sys_stats_LDADD += $(GRAPE_LIBS)
   scale_LDADD += $(GRAPE_LIBS)
   get_densities_LDADD += $(GRAPE_LIBS)
   AM_LDFLAGS = $(GRAPE_LDFLAGS)
-else
-  sys_stats_LDADD += ../stubs/libstubs.la
-  scale_LDADD += ../stubs/libstubs.la
-  get_densities_LDADD += ../stubs/libstubs.la
 endif
+sys_stats_LDADD += ../stubs/libstubs.la
+scale_LDADD += ../stubs/libstubs.la
+get_densities_LDADD += ../stubs/libstubs.la

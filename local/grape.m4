@@ -2,10 +2,6 @@ dnl this M4 file defines the GRAPE software interface
 dnl please, don't change the names of the variables
 dnl just replace the second part of the call with your values
 
-dnl where to find GRAPE include files
-dnl m4_define(GRAPE_CPPFLAGS_, [-I/usr/local/grape/include])
-m4_define(GRAPE_CPPFLAGS_, [-I.])
-
 dnl where to find GRAPE libraries
 dnl m4_define(GRAPE_LDFLAGS_, [-L/usr/local/grape/lib])
 m4_define(GRAPE_LDFLAGS_, [-L/usr2/makino/disk3src/harplibs/x86_64])

@@ -41,12 +41,9 @@ AC_ARG_WITH(grape,
     AS_HELP_STRING([--with-grape], use the GRAPE [[[default=yes]]]),
     [grape="$withval"])
 if test -z "$grape" -o "x$grape" = "xyes"; then
-    AC_SUBST(GRAPE_CPPFLAGS, "GRAPE_CPPFLAGS_")
     AC_SUBST(GRAPE_LDFLAGS, "GRAPE_LDFLAGS_")
     AC_SUBST(GRAPE_LIBS, "GRAPE_LIBS_")
-    OCPPFLAGS="$CPPFLAGS"
     OLDFLAGS="$LDFLAGS"
-    CPPFLAGS="$CPPFLAGS $GRAPE_CPPFLAGS"
     LDFLAGS="$LDFLAGS $GRAPE_LDFLAGS"
     AC_CHECK_LIB(g6lx, g6_open_, grape6=yes, grape6=no)
     if test "x$grape6" = "xno"; then
@@ -65,7 +62,6 @@ See `config.log' for more details.])
         AC_DEFINE(SHARE_GRAPE, 1, [Define to 1 if you want to release the GRAPE hardware periodically.])
 	grape=yes
     fi
-    CPPFLAGS="$OCPPFLAGS"
     LDFLAGS="$OLDFLAGS"
 fi
 AM_CONDITIONAL(HAVE_GRAPE, [test "x$grape" = "xyes"])
