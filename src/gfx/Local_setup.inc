@@ -98,7 +98,10 @@ CPP = $(STARLAB_CPP)
 
 # Set XLIB if we have X-windows:
 
-XLIB  	= -L$(STARLAB_X11LIB) -lX11 $(STARLAB_POSIX_LIB) $(STARLAB_XLIB)
+# starlab3
+#XLIB  	= -L$(STARLAB_X11LIB) -lX11 $(STARLAB_POSIX_LIB) $(STARLAB_XLIB)
+# starlab4
+XLIB  	= $(STARLAB_X11LIB) $(STARLAB_POSIX_LIB) $(STARLAB_XLIB)
 #XLIB	= 
 
 #------------------------------------------------------------------------

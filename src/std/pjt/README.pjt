@@ -1,19 +1,19 @@
 This directory contains the new user interface, and (is assumed)
 to live in $STARLAB_PATH/src/std/pjt
 
-There is a start of a users and programmers guide to this mess,
-for which you have to run something like this:
-
-	echo ui.inc | latex latest
-	dvips latest -o
-
-(don't ask - relic of latex manual develoment)
-
 Please don't change the code, apart from major problems, without
 consulting me. Or at least inform me of any changes. In particular
 August 1996 almost daily this class is changing.
 
 peter
+
+BASIC IDEAS HOW IT SHOULD WORK:
+
+    -s 1.0              short option with value
+    -q                  short toggle
+    -s                  short option, with default  (???? Steve ????)
+    --step 1.0          long option
+    step=1.0            keyword option NEMO style
 
 INSTALLATION:
    - cp program.h $STARLAB_PATH/inc

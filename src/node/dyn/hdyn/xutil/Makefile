@@ -22,7 +22,7 @@ CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) $(STARLAB_GFX_CFLAGS) \
 		  $(STARLAB_EXTRAS)
 LIBFLAGS	= -L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
 		  -lstd -llux $(STARLAB_POSIX_LIB) \
-		  -L$(STARLAB_X11LIB) -lX11 $(STARLAB_XLIB) -lm
+		  $(STARLAB_X11LIB) $(STARLAB_XLIB) -lm
 
 EXECUTABLES = xstarplot snap_to_image
 

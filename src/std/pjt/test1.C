@@ -29,7 +29,7 @@ string Program::description =
  "     litt: S.J. Aarseth, M. Henon and R. Wielen (1974),\n"
  "           Astron. and Astrophys. 37, p. 183.";
 
-starlab_main()
+void starlab_main()
 {
 
     string comment = 0;
@@ -59,7 +59,6 @@ starlab_main()
 
 
     if (o_flag) cerr << "mkplummer: random seed = " << seed << endl;
-
     sprintf(seedlog, "       random number generator seed = %d",seed);
     cout << "COMMENT:" << seedlog << endl;
     cout << "nbody = " << n << endl;

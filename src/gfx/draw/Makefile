@@ -64,7 +64,7 @@ mcdraw.o:	mcdraw.f
 	$(FCOMP) -c mcdraw.f
 
 unix.o:	unix.F
-	$(CPP) -P unix.F unix.f
+	$(CPP) -P unix.F > unix.f
 	$(FCOMP) $(FFLAGS) -c unix.f
 	@ /bin/rm unix.f
 

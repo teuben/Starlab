@@ -118,22 +118,22 @@ show_fonts:	../lux/.liblux.a .libmcpak.a
 # Special treatment for some FORTRAN/cpp files:
 
 plotdetails.o:	plotdetails.F
-	$(STARLAB_CPP) -P -UHAS_SUNCORE plotdetails.F plotdetails.f
+	$(STARLAB_CPP) -P -UHAS_SUNCORE plotdetails.F > plotdetails.f
 	$(FCOMP) $(FFLAGS) -c plotdetails.f
 	@/bin/rm plotdetails.f
 
 psinit.o:	psinit.F
-	$(STARLAB_CPP) -P psinit.F psinit.f
+	$(STARLAB_CPP) -P psinit.F > psinit.f
 	$(FCOMP) $(FFLAGS) -c psinit.f
 	@/bin/rm psinit.f
 
 setfill.o:	setfill.F
-	$(STARLAB_CPP) -P -UHAS_SUNCORE setfill.F setfill.f
+	$(STARLAB_CPP) -P -UHAS_SUNCORE setfill.F > setfill.f
 	$(FCOMP) $(FFLAGS) -c setfill.f
 	@/bin/rm setfill.f
 
 unix.o:	unix.F
-	$(STARLAB_CPP) -P unix.F unix.f
+	$(STARLAB_CPP) -P unix.F > unix.f
 	$(FCOMP) $(FFLAGS) -c unix.f
 	@/bin/rm unix.f
 

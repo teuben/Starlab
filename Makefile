@@ -341,6 +341,7 @@ cleanbin:
 	@cd src ; ${MAKE} cleanbin ; cd ..
 
 #..............................................................................
+# configure and related stuff for new starlab4 installation
 
 CONFIG_CLEAN = config.h config.cache config.log config.status 
 CONFIG_EXTRA = cshrc.starlab config.h 
@@ -384,6 +385,10 @@ config_clean:
 
 STARLAB_VERSION = `cat VERSION`
 DIST_DIR = starlab_$(STARLAB_VERSION)
+
+version:	VERSION
+	echo '#define STARLAB_VERSION  "'$(STARLAB_VERSION)'"' > inc/version.h
+	
 
 dist:
 	rm -rf $(DIST_DIR)

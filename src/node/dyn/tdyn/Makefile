@@ -34,7 +34,7 @@ CPPFLAGS =
 
 LIBFLAGS  =	-L$(LIB) -ltdyn -ldyn -lnode \
 		  -lstd -llux $(STARLAB_POSIX_LIB) \
-		  -L$(STARLAB_X11LIB) -lX11 $(STARLAB_XLIB) -lm
+		  $(STARLAB_X11LIB) $(STARLAB_XLIB) -lm
 
 EXEFLAGS = 
 

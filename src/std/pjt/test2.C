@@ -24,7 +24,7 @@ string Program::description =
  "This program does not have a final name, but simply tests out all\n"
  "the command line user interface (CLUI) options";
 
-starlab_main()
+void starlab_main()
 {
     string comment = 0;
     int  n, nr, seed, argc;

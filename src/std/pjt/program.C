@@ -11,12 +11,13 @@
 //  0.2  5-jun-97  enabled minimum match
 //
 //
+//
 
 #include "program.h"
 #include <string.h>
 #include <stdlib.h>
 
-#define PROGRAM_VERSION "Program:: Version 0.1 5-jun-97 PJT"
+#define PROGRAM_VERSION "Program:: Version 0.2 5-jun-97 PJT"
 
 #define MINMATCH
 

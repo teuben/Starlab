@@ -21,16 +21,16 @@ unsetenv $all
 # Keep everything on the "definitive" machine.
 #
 setenv	STARLAB_STAR	star 		# Stellar evolution
-setenv	STARLAB_HYDRO	hydro 		# Hydrodynamics
+#setenv	STARLAB_HYDRO	hydro 		# Hydrodynamics
 setenv	STARLAB_KEPLER	kepler 		# Kepler package (used by sdyn*)
-setenv	STARLAB_MCD	"libs draw" 	# Mcdraw graphics programs (need gfx)
+#setenv	STARLAB_MCD	"libs draw" 	# Mcdraw graphics programs (need gfx)
 setenv	STARLAB_GFX	gfx 		# Graphics library
 setenv	STARLAB_XUTIL	xutil 		# X utilities (xstarplot uses gfx)
 setenv	STARLAB_DYN	dyn 		# Dynamics programs
 setenv	STARLAB_HDYN	hdyn 		# Hermite programs
-setenv	STARLAB_SDYN	sdyn 		# Multi-particle scattering
-setenv	STARLAB_SDYN3	sdyn3 		# Three-body scattering
-setenv	STARLAB_HARPSIMS harpsims	# HARP support
+#setenv	STARLAB_SDYN	sdyn 		# Multi-particle scattering
+#setenv	STARLAB_SDYN3	sdyn3 		# Three-body scattering
+#setenv	STARLAB_HARPSIMS harpsims	# HARP support
 
 #...........................................................................
 
@@ -117,6 +117,8 @@ setenv	STARLAB_HARPSIMS harpsims	# HARP support
 
 # For Linux:
 
+setenv	STARLAB_OS_FLAG			"linux"
+
 setenv	STARLAB_CCC			"@CXX@ -DGNU_CPLUSPLUS"
 setenv	STARLAB_C_COMPILE		"@CC@"
 setenv	STARLAB_CPP			"@CPP@ -C -Dlinux"
@@ -141,8 +143,11 @@ setenv	STARLAB_MAKEFLAGS		" "
 setenv  STARLAB_CFITSIOINC              "-I/usr/local/include"
 setenv  STARLAB_CFITSIOLIB		"-L/usr/local/lib"
 
-# a joke for now :-)
-setenv  STARLAB_GRAPEID                 /dev/null
+#					-DSTARLAB_HAS_GRAPE6  or -DSTARLAB_HAS_GRAPE4   but also needs -DUSE_GRAPE ????
+setenv  STARLAB_GRAPE_FLAGS		" "
+#					-L/usr/users/makino/src/harplibs -lg4a -lrt
+#					-L/usr2/makino/src/g6hib -lg6 -L/usr2/makino/src/grape6 -lg6sim2
+setenv  STARLAB_GRAPE_LIBS              " "
 
 if ($?PVM_ROOT && $?PVM_ARCH) then
     setenv  STARLAB_PVM_LIBS		"-L$PVM_ROOT/lib/$PVM_ARCH -lpvm3 -lgpvm3"

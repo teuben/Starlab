@@ -8,6 +8,11 @@ dnl "autoconf" manually.
 
 AC_INIT(inc/kira.h)
 
+nl ---			STARLAB base directory
+STARLAB_PATH="`pwd`"
+AC_SUBST(STARLAB_PATH)
+
+
 dnl 
 AC_CONFIG_HEADER(config.h)
 
@@ -158,5 +163,5 @@ AC_CHECK_FUNCS(gethostname gettimeofday select strdup strstr strtod strtol strto
 
 AC_C_BIGENDIAN
 
-dnl AC_OUTPUT(Makefile cshrc.starlab)
-AC_OUTPUT(cshrc.starlab)
+dnl skip Makefile for now
+AC_OUTPUT(cshrc.starlab starlab_start)
