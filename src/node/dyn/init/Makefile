@@ -15,6 +15,9 @@
 ##.............................................................................
 ##
 
+#INC_GADGET	= "/home/spz/cpp/gadget"
+#CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) -I$(INC_GADGET)
+
 CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC)
 LIBFLAGS	= -L$(LIB) -ldyn -lsstar -ldyn -lnode -lstd -lm
 DEPEND_LIBS	= $(LIB)/libstd.a $(LIB)/libnode.a $(LIB)/libdyn.a
@@ -28,9 +31,11 @@ EXECUTABLES	= makecube makedisk makeplummer makepyth makesphere makewrite \
 	 	  makeheavystar readp readstoa \
 	          makeplanetary makeblack_hole grow_black_hole \
 		  make_aniso_king makepowerlaw \
-	          cutrandomsample
+	          cutrandomsample 
 
-#		  readgadget	# ???
+#                 include Gadget read/write routines should include also the 
+#		  libraries
+#		  readgadget	
 
 # (Steve 9/01: place mk_aniso_king last, as the build may break on new systems.)
 
