@@ -1,6 +1,14 @@
 //// scanbinary:  read and print binary statistics on a series of worbundles.
 ////
 //// Options:    -F    input file [run.out]
+////
+//// Program reads a collection of worldbundles, then repeatedly prompts
+//// for the name of a particle or node and prints out the interaction
+//// history of that object, in lines of the form
+////
+////                 time: top-level node name
+////
+//// End with exit, quit, or ^D.
 
 #include "worldline.h"
 
