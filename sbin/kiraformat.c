@@ -209,10 +209,10 @@ main(int argc, char *argv[]) {
     if(argc <= 1 && isatty(0)) {
 	fprintf(stderr, "Usage: %s [-a] [file.kira] > outfile.kira\n\
 Converts an ASCII kira (tdyn) output stream to binary (tmpv, TL) form.\n\
-With -a option, converts binary to (indented) ASCII form instead.\n", argv[0]);
+With -a option, converts to (indented) ASCII form instead.\n", argv[0]);
 	exit(1);
     }
-    if(argc > 1 && !strcmp(argv[1], "-l")) {
+    if(argc > 1 && !strcmp(argv[1], "-a")) {
 	fullform = 1;
 	argc--, argv++;
     }
