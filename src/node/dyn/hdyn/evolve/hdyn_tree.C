@@ -1011,13 +1011,17 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
     // the eventual top-level node.
 
     bool vp = old_top_level_node->get_valid_perturbers();
+    if (!vp) vp = old_top_level_node->get_valid_perturbers_low();
     int np = 0;
     real p_sq = -1;
     real p_fac = 0;
     hdyn** pert_list = NULL;
 
     if (vp) {
-	np = old_top_level_node->get_n_perturbers();
+	if (old_top_level_node->get_valid_perturbers())
+	    np = old_top_level_node->get_n_perturbers();
+	else
+	    np = old_top_level_node->get_n_perturbers_low();
 	p_sq = old_top_level_node->get_perturbation_squared();
 	p_fac = old_top_level_node->get_perturbation_radius_factor();
 	pert_list = new hdyn *[MAX_PERTURBERS];
@@ -1040,8 +1044,16 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 	    top_level_node->remove_perturber_list();
 	    top_level_node->new_perturber_list();
 
-	    top_level_node->set_valid_perturbers(vp);
-	    top_level_node->set_n_perturbers(np);
+	    top_level_node->set_valid_perturbers(old_top_level_node
+						 ->get_valid_perturbers());
+	    top_level_node->set_n_perturbers(old_top_level_node
+					     ->get_n_perturbers());
+	    top_level_node
+		->set_valid_perturbers_low(old_top_level_node
+					   ->get_valid_perturbers_low());
+	    top_level_node
+		->set_n_perturbers_low(old_top_level_node
+				       ->get_n_perturbers_low());
 	    top_level_node->set_perturbation_squared(p_sq);
 	    top_level_node->set_perturbation_radius_factor(p_fac);
 
