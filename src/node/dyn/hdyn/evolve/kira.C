@@ -1508,8 +1508,18 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
     // Quietly reinitialize all kepler structures.
     // (Repeats actions taken by get_hdyn() on startup.)
 
-    cerr << "calling initialize_unperturbed()" << endl;
     b->initialize_unperturbed();
+
+    // Note from Steve, 7/03: the explanation for the following call to
+    // recompute_unperturbed_steps() is that some external agent may
+    // have synchronized some unperturbed binaries, in which case
+    // the step may no longer end at the correct phase of the orbit.
+    // However, this  is usually not the case, and if applied routinely,
+    // this action will destroy reproducibility.  Could just omit it,
+    // except in special cases (command-line flag? -- in which case
+    // this should be done in main).  For now, we retain the call, but
+    // recompute only if the binary time is the same as the system time
+    // (normally, would expect the components to lag the system time).
 
     if (init) b->recompute_unperturbed_steps();
 

@@ -254,6 +254,7 @@ local void print_timestep_stats(hdyn* b)
 
 		    cerr << bb->format_label() << ":  ";
 		    PRC(kb), PRC(dt_a); PRL(dtb);
+
 		}
 
 		if (kb > 29) kb = 29;

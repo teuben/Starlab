@@ -2798,10 +2798,14 @@ void hdyn::recompute_unperturbed_step()
 
 void hdyn::recompute_unperturbed_steps()
 {
+    // Use time = system time as an indicator that the binary may
+    // have beeen synchronized improperly...
+
     for_all_nodes(hdyn, this, b)
         if (b->is_low_level_node()
 	    && !b->get_elder_sister()
-	    && b->get_unperturbed_timestep() > 0)
+	    && b->get_unperturbed_timestep() > 0
+	    && b->time == system_time)			// new 07/03 (Steve)
 
 	    b->recompute_unperturbed_step();
 }
