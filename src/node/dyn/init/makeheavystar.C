@@ -63,6 +63,15 @@ local void makeheavystar(node* b, real fraction_doubled, real lower_limit,
 
 	b->inc_mass(bi->get_mass());
     }
+
+    // Write essential model information to root dyn story.
+
+    putrq(b->get_log_story(), "initial_mass", b->get_mass());
+
+    // We have probably broken any virialization.  Unset flage here.
+
+    rmq(b->get_log_story(), "initial_rvirial");
+    rmq(b->get_log_story(), "initial_rtidal_over_rvirial");
 }
 
 int main(int argc, char ** argv)
