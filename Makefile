@@ -20,6 +20,7 @@ SHELL = /bin/sh
 RM = /bin/rm
 MV = /bin/mv
 CP = /bin/cp
+DIFF = diff
 
 MAKEWALK = makewalk
 
@@ -340,6 +341,53 @@ cleanbin:
 	@cd src ; ${MAKE} cleanbin ; cd ..
 
 #..............................................................................
+
+CONFIG_CLEAN = config.h config.cache config.log config.status 
+CONFIG_EXTRA = cshrc.starlab config.h 
+
+config: configure
+	./configure
+
+
+config_extra:	config_new
+
+HDYN = linux
+
+config_new:
+	$(CP) cshrc.starlab local
+	$(CP) config.h inc
+	$(CP) templates/starlab_setup local
+	-(cd src/node/dyn/hdyn/util; cp Makefile.$(HDYN) Makefile)
+	-(cd src/node/dyn/hdyn/evolve; cp Makefile.$(HDYN) Makefile)
+
+diff_new:
+	-$(DIFF) cshrc.starlab local
+	-$(DIFF) config.h inc
+	-$(DIFF) templates/starlab_setup local
+
+config.status: configure
+	$(SHELL) ./config.status --recheck
+
+configure: configure.in 
+	autoconf
+
+config_clean:
+	rm -f $(CONFIG_CLEAN)
+
+
+#		a CVS based distribution maker
+
+STARLAB_VERSION = `cat VERSION`
+DIST_DIR = starlab_$(STARLAB_VERSION)
+
+dist:
+	rm -rf $(DIST_DIR)
+	cvs -q export -D tomorrow -d $(DIST_DIR) starlab 2>&1 /tmp/starlabdist.log
+	tar -cf $(DIST_DIR).tar $(DIST_DIR)
+	gzip $(DIST_DIR).tar
+	rm -rf $(DIST_DIR)
+
+#..............................................................................
 #..............................................................................
 
 ##=======================================================================//
@@ -347,4 +395,3 @@ cleanbin:
 ##  |  the end of:  |         /|\         |  Makefile
 ##  +---------------+                     +------------------------------//
 ##========================= STARLAB =====================================\\
-
