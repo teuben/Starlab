@@ -1770,8 +1770,7 @@ void hdyn::startup_unperturbed_motion()
         binary_type = STABLE_INNER;	// for startup of inner component
 
 	if (is_parent())
-	    get_oldest_daughter()
-		->startup_unperturbed_motion();
+	    get_oldest_daughter()->startup_unperturbed_motion();
 
 	if (get_binary_sister()->is_parent())
 	    get_binary_sister()->get_oldest_daughter()
@@ -1785,12 +1784,16 @@ void hdyn::startup_unperturbed_motion()
 
 	// Make a list of leaves or unperturbed nodes below parent.
 
-	hdynptr *cpt_list = new hdynptr[2*n_leaves()];
 	int nl = 0;
+	for_all_nodes(hdyn, get_parent(), bb)
+	    if (bb != get_parent()) nl++;
+
+	hdynptr *cpt_list = new hdynptr[nl];
 
 	// Don't know which nodes or leaves might be on others' lists,
 	// so simply list all possibilities.
 
+	nl = 0;
 	for_all_nodes(hdyn, get_parent(), bb)
 	    if (bb != get_parent()) cpt_list[nl++] = bb;
 
