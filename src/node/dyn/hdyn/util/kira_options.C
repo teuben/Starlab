@@ -50,6 +50,9 @@ kira_options::kira_options() {
     grape_max_cpu	=	DEFAULT_GRAPE_MAX_CPU;
     grape_last_cpu	=	DEFAULT_GRAPE_LAST_CPU;
 
+    grape_coll_freq	=	DEFAULT_GRAPE_COLL_FREQ;
+    grape_pert_freq	=	DEFAULT_GRAPE_PERT_FREQ;
+
     use_perturbed_list	=	DEFAULT_USE_PERTURBED_LIST;
 
 }
@@ -89,6 +92,9 @@ void kira_options::print(ostream &s)
     PRS(grape_check_count);
     PRS(grape_max_cpu);
     PRS(grape_last_cpu);
+
+    PRS(grape_coll_freq);
+    PRS(grape_pert_freq);
 
     PRS(use_perturbed_list);
 
