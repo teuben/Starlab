@@ -18,6 +18,7 @@ AM_INIT_AUTOMAKE([1.8 gnu no-exeext nostdinc std-options])
 # but I don't quite understand how ac_top_srcdir/top_srcdir work
 CPPFLAGS="$CPPFLAGS -I$PWD/include -I$PWD/include/star"
 
+#---------------------------------------------------------------------
 # Source and install paths will be used in starlab_setup.* scripts.
 AC_SUBST(STARLAB_SOURCE_PATH, $PWD)
 AC_SUBST(STARLAB_VERSION_NUMBER, VERSION_NUMBER)
@@ -30,10 +31,50 @@ else
     AC_SUBST(STARLAB_INSTALL_PATH, $prefix)
 fi
 
+#---------------------------------------------------------------------
+# xreal setup.
+
 AC_ARG_ENABLE(xreal,
     AS_HELP_STRING([--enable-xreal], use the xreal type [[[default=no]]]),
-    [AC_DEFINE(USE_XREAL, 1,
-        [Define to 1 if you want to enable the xreal type. Although this significantly increases precision, it also incurs a substantial performance penalty.])])
+    xreal=yes, xreal=no)
+
+if test "x$xreal" = "xyes" ; then
+
+#   xreal is desired, but we can't do it if long long isn't defined or
+#   has length other than 8 bytes.  Check these here and modify xreal
+#   if necessary.
+
+#   First check that long long exists.
+
+    AC_CHECK_TYPE(long long, llong=yes, llong=no)
+
+    if test "x$llong" != "xyes" ; then
+	AC_MSG_WARN([ ])
+	AC_MSG_WARN([* unsetting xreal because long long is not defined *])
+	AC_MSG_WARN([ ])
+ 	xreal=no
+    else
+	AC_DEFINE(HAVE_LONG_LONG, 1,
+		  [Define iff the long long type exists.])
+    fi
+    if test "x$xreal" = "xyes" ; then
+	AC_CHECK_SIZEOF(long long)
+	if test "x$ac_cv_sizeof_long_long" != "x8" ; then
+	    AC_MSG_WARN([ ])
+	    AC_MSG_WARN([* unsetting xreal because long long is not 8 bytes *])
+	    AC_MSG_WARN([ ])
+ 	    xreal=no
+	fi
+    fi
+fi
+
+if test "x$xreal" = "xyes" ; then
+    AC_DEFINE(USE_XREAL, 1,
+        [Define to 1 if you want to enable the xreal type. Although this significantly increases precision, it also incurs a substantial performance penalty.])
+fi
+
+#---------------------------------------------------------------------
+# sdyn* setup.
 
 AC_ARG_ENABLE(sdyn3,
     AS_HELP_STRING([--enable-sdyn3], compile the sdyn3 tree [[[default=no]]]),
@@ -45,6 +86,7 @@ AC_ARG_ENABLE(sdyn,
     sdyn=yes, sdyn=no)
 AM_CONDITIONAL(USE_SDYN, [test "x$sdyn" = "xyes"])
 
+#---------------------------------------------------------------------
 # Another HUGE FIXME - pgetopt() must be replaced by getopt_long()
 CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"
 
@@ -56,7 +98,7 @@ if test "x$ac_cv_prog_f77" = "xyes"; then
 fi
 AM_CONDITIONAL(HAVE_F77, [test "x$ac_cv_prog_f77" = "xyes"])
 AC_PROG_CXX
-# disable shared libs for now - I'll work this out later
+# disable shared libs for now -- work this out later
 AC_DISABLE_SHARED
 AC_PROG_LIBTOOL
 LIBTOOL="$LIBTOOL --preserve-dup-deps"
@@ -65,7 +107,9 @@ AC_PROG_LEX
 AC_PROG_YACC
 AC_PROG_INSTALL
 
-# Checks for libraries.
+#---------------------------------------------------------------------
+# Check for GRAPE libraries.
+
 AC_ARG_WITH(grape,
     AS_HELP_STRING([--with-grape], use the GRAPE [[[default=yes]]]),
     [grape="$withval"])
@@ -108,6 +152,9 @@ AM_CONDITIONAL(HAVE_GRAPE, [test "x$grape" = "xyes"])
 if test x"$OLD_READ_NEIGHBOUR_LIST" = "xyes"; then
     AC_DEFINE(G6_OLD_READ_NEIGHBOUR_LIST, 1, [Define to 1 to use the old (PIO) neighbor list interface.])
 fi
+
+#---------------------------------------------------------------------
+# Check for png and Qt.
 
 AC_ARG_WITH(png, AS_HELP_STRING([--with-png], use PNG format [[[default=yes]]]),
     [png="$withval"])
@@ -164,6 +211,7 @@ See `config.log' for more details.])
 fi
 AM_CONDITIONAL(HAVE_LIBQT, [test "x$good_qt" = "xyes"])
 
+#---------------------------------------------------------------------
 # Checks for header files.
 AC_LANG_PUSH(C)
 AC_PATH_XTRA
@@ -179,6 +227,7 @@ AC_LANG_POP
 # Checks for library functions.
 AC_REPLACE_FUNCS(stpcpy)
 
+#---------------------------------------------------------------------
 AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
     starlab.pl VERSION \
     src/Makefile src/std/Makefile src/gfx/Makefile \
@@ -206,6 +255,7 @@ AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
     src/hydro/util/Makefile src/hydro/init/Makefile src/hydro/evolve/Makefile \
     src/harpsims/Makefile])
 
+#---------------------------------------------------------------------
 # From Steve, 09/03/04:  We would like to make a handy link to the appropriate
 # starlab_start file, but it is unclear how to distinguish between various
 # shells.  The $SHELL variable will apparently always be /bin/sh here.  We need
@@ -222,13 +272,13 @@ AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
 #	shell=csh
 #    fi
 #fi
-
+#
 # ...but it doesn't, so just link to the csh version (which is consistent
 # with previous usage in any case.)
 
 shell=csh
 
-echo linking starlab_start to starlab_start.$shell
+AC_MSG_NOTICE([linking starlab_start to starlab_start.$shell])
 
 cd $STARLAB_SOURCE_PATH
 ln -f -s starlab_start.$shell starlab_start
@@ -239,4 +289,5 @@ ln -f -s starlab_start.$shell starlab_start
 
 chmod a+x ./sbin/sremake
 
+#---------------------------------------------------------------------
 AC_OUTPUT

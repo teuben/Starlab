@@ -145,6 +145,17 @@ PROGRAMMERS
 
         $STARLAB_INSTALL_PATH/lib/starlab
 
+  To use them, it should be necessary only to include lines like the
+  following in your Makefile (the "-l" libraries may differ -- these are
+  for a dyn target):
+
+      CPPFLAGS = -I$(STARLAB_PATH)/include -DHAVE_CONFIG_H
+      LDLIBS   = -L$(STARLAB_INSTALL_PATH)/lib/starlab -ldyn -lnode -lstd -lm
+
+  Note that, for now, there is a bug in make install, so please use the
+  header files in $(STARLAB_PATH)/include rather than those in
+  $(STARLAB_INSTALL_PATH)/include/starlab.  This will be fixed soon.
+
 
 DEVELOPERS
 
