@@ -5,19 +5,69 @@
 #include <math.h>
 
 typedef double real;
-typedef void (*action)(int);
+typedef int (*action)(int);
 
 #define NTEST 10
 #define NMAX  30000
 
 /* Work vectors: */
 
-static real v1[NMAX], v2[NMAX], v3[NMAX], v4[NMAX];
-static int  iv1[NMAX], iv2[NMAX], iv3[NMAX];
-static int  ind1[NMAX], ind2[NMAX];
+real v1[NMAX], v2[NMAX], v3[NMAX], v4[NMAX];
+int  iv1[NMAX], iv2[NMAX], iv3[NMAX];
+int  ind1[NMAX], ind2[NMAX];
 
-static real s1, s2;
-static real x = 1.0, y = -2.5, z = 3.14;
+real s1, s2;
+real x = 1.0, y = -2.5, z = 3.14;
+
+/*------------------------------------------------------------------------*/
+
+/* Declarations of functions defined in routines.c: */
+
+int itor(int n);
+int rtoi(int n);
+int iadd(int n);
+
+int vmove(int n);
+
+int ssum1(int n);
+int ssum2(int n);
+int ssum3(int n);
+
+int vsadd1(int n);
+int vsmul1(int n);
+int vsdiv1(int n);
+
+int vsmul1a(int n);
+
+int vsadd2(int n);
+int vsmul2(int n);
+int vsdiv2(int n);
+
+int vsum1(int n);
+int vsum2(int n);
+int vmul1(int n);
+int vmul2(int n);
+int vdiv1(int n);
+int vdiv2(int n);
+
+int saxpy1(int n);
+int saxpy2(int n);
+int saxpy3(int n);
+
+int vsqrt(int n);
+int vabs(int n);
+int vsin(int n);
+int vexp(int n);
+int vpow(int n);
+
+int scatter1(int n);
+int scatter2(int n);
+int gather1(int n);
+int gather2(int n);
+
+int vif(int n);
+
+int vforce(int n);
 
 /*------------------------------------------------------------------------*/
 
@@ -146,78 +196,7 @@ void time_action(action a, int factor, char *name, int ntmax)
 }
 /*------------------------------------------------------------------------*/
 
-/* Routines to time... */
-
-#define for_all(i)	register int i; for (i = 0; i < n; i++)
-
-void itor(int n)	{for_all(i) v1[i]  = iv2[i];}
-void rtoi(int n)	{for_all(i) iv1[i] = v2[i];}
-void iadd(int n)	{for_all(i) iv1[i] = iv2[i] + iv3[i];}
-
-void vmove(int n)	{for_all(i) v1[i] = v2[i];}
-
-void ssum1(int n)	{for_all(i) s1 += v1[i];}
-void ssum2(int n)	{for_all(i) s1 += v1[i] + v2[i];}
-void ssum3(int n)	{for_all(i) s1 += v1[i] * v2[i];}
-
-void vsadd1(int n)	{for_all(i) v1[i] += s1;}
-void vsmul1(int n)	{for_all(i) v1[i] *= s1;}
-void vsdiv1(int n)	{for_all(i) v1[i] /= s2;}
-
-void vsmul1a(int n)
-{
-    register int i;
-    for (i = 0; i < n; i += 4) {
-        v1[i] *= s1;
-        v1[i+1] *= s1;
-        v1[i+2] *= s1;
-        v1[i+3] *= s1;
-    }
-}
-
-void vsadd2(int n)	{for_all(i) v1[i] = v2[i] + s1;}
-void vsmul2(int n)	{for_all(i) v1[i] = v2[i] * s1;}
-void vsdiv2(int n)	{for_all(i) v1[i] = v2[i] / s2;}
-
-void vsum1(int n)	{for_all(i) v1[i] += v2[i];}
-void vsum2(int n)	{for_all(i) v1[i] = v2[i] + v3[i];}
-void vmul1(int n)	{for_all(i) v1[i] *= v2[i];}
-void vmul2(int n)	{for_all(i) v1[i] = v2[i] * v3[i];}
-void vdiv1(int n)	{for_all(i) v1[i] /= v2[i];}
-void vdiv2(int n)	{for_all(i) v1[i] = v3[i] / v2[i];}
-
-void saxpy1(int n)	{for_all(i) v1[i] = s1*v2[i] + s2;}
-void saxpy2(int n)	{for_all(i) v1[i] = s1*v2[i] + v3[i];}
-void saxpy3(int n)	{for_all(i) v1[i] = v2[i]*v3[i] + v4[i];}
-
-void vsqrt(int n)	{for_all(i) v1[i] = sqrt(v2[i]);}
-void vabs(int n)	{for_all(i) v1[i] = abs(v3[i]);}
-void vsin(int n)	{for_all(i) v1[i] = sin(v3[i]);}
-void vexp(int n)	{for_all(i) v1[i] = exp(v2[i]);}
-void vpow(int n)	{for_all(i) v1[i] = pow(v2[i], s2);}
-
-void scatter1(int n)	{for_all(i) v1[ind1[i]] = v2[i];}
-void scatter2(int n)	{for_all(i) v1[ind2[i]] = v2[i];}
-void gather1(int n)	{for_all(i) v1[i] = v2[ind1[i]];}
-void gather2(int n)	{for_all(i) v1[i] = v2[ind2[i]];}
-
-void vif(int n)		{for_all(i) if (v4[i] > 0.0) v1[i] = v4[i];}
-
-void vforce(int n)
-{
-    real d0, d1, d2, rij2, fac;
-
-    for_all(i) {
-	d0 = v2[i] - x;
-	d1 = v3[i] - y;
-	d2 = v4[i] - z;
-	rij2 = d0*d0 + d1*d1 + d2*d2 + 0.1;
-	fac = v1[i] / (rij2*sqrt(rij2));
-	v1[0] += d0*fac;
-	v1[1] += d1*fac;
-	v1[2] += d2*fac;
-    }
-}
+/* Routines to time now moved to separate file "routines.c"... */
 
 /*------------------------------------------------------------------------*/
 
@@ -234,9 +213,9 @@ main(int argc, char *argv[])
 
     time_action(vmove, 1, "v1 = v2", n);
 
-    s1 = 0.0, time_action(ssum1, 1, "s += v", n);
-    s1 = 0.0, time_action(ssum2, 2, "s += v + v", n);
-    s1 = 0.0, time_action(ssum3, 2, "s += v * v", n);
+    s1 = 1.0, time_action(ssum1, 1, "s += v", n);
+    s1 = 1.0, time_action(ssum2, 2, "s += v + v", n);
+    s1 = 1.0, time_action(ssum3, 2, "s += v * v", n);
 
     s1 = 1.00000123;
     reset_v1(n);
