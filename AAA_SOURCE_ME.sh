@@ -63,6 +63,16 @@ if [ $? -ne 0 ]; then
 fi
 echo '++++++++++++++++++++++++++++++++++++++++' >> install.log
 
+echo Running Testsuite \(this may also take a few minutes\)...
+sbin/testsuite >>& install.log
+n1=`grep ^Working install.log | grep OK | wc -l`
+n2=`grep ^Working install.log | grep Problems | wc -l`
+echo Found $n1 OK and $n2 Problems.
+
+
+echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
+
+
 if [ $stat -eq 0 ]; then
     echo -n Testing kira...
     kira --help > /dev/null 2>&1
