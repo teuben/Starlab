@@ -788,9 +788,10 @@ void split_top_level_node(hdyn * bi,
 		cerr << "pnode = " << pnode->format_label();
 		if (pnode->get_valid_perturbers())
 		    cerr << ", " << pnode->get_n_perturbers()
-			 << " perturber(s), pert = "
+			 << " perturber(s) ("
 			 << sqrt(bi->get_oldest_daughter()
-				   ->get_perturbation_squared());
+				   ->get_perturbation_squared())
+			 << ")";
 		else
 		    cerr << ", perturbers unknown";
 	    } else
