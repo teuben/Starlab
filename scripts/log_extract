@@ -47,7 +47,7 @@ warn() { echo "${0##*/}: $wc$@$nc" >&2; }
 usage() {
     echo "\
 Usage: ${0##*/} [OPTIONS] [LOG FILE] ...
-Extracts various data from Starlab log files, which may be compressed.
+Extracts various data from Starlab log files.
 Defaults are shown in parentheses.
 
   -c	center of mass position, X-Y projection (default)
