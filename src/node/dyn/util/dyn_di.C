@@ -216,7 +216,8 @@ void print_recalculated_energies(dyn * b, int mode, real eps2, real e_corr)
     real etot = 0;
     static real initial_etot;
 
-    accumulate_energies(b, b, eps2, epot, ekin, etot);
+    if (!b->get_ignore_internal())
+	accumulate_energies(b, b, eps2, epot, ekin, etot);
 
     cerr << "Energies: " << epot << " " << ekin << " " << etot
 	 << " " << initial_etot;

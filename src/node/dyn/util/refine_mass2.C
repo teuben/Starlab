@@ -153,6 +153,10 @@ void refine_cluster_mass2(dyn *b,
 
     if (bitcount(ext) != 1) return;
 
+    // Quit if internal forces are to be neglected.
+
+    if (b->get_ignore_internal()) return;
+
     // Do nothing if all we want is to set the dyn story and the current
     // values are up to date.
 

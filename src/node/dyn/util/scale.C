@@ -31,6 +31,8 @@
 ////         in terms of the *internal* potential energy only.  For now, only
 ////         allow the energy to be specified if there are no external
 ////         (non-tidal) fields.
+////
+//// Note: NO provision for embedded masses yet...
 
 // Steve McMillan, April 1993
 //
@@ -201,10 +203,7 @@ void scale(dyn *b, real eps,
     // mass and radius, but velocity scaling will ignore the internal
     // potential).
 
-    bool ignore_internal = false;
-    if (find_qmatch(b->get_log_story(), "ignore_internal")
-	&& getiq(b->get_log_story(), "ignore_internal") == 1)
-	ignore_internal = true;
+    check_set_ignore_internal(b);
 
 
     // Define various relevant quantities.  Trust the data in the input
@@ -433,7 +432,7 @@ void scale(dyn *b, real eps,
 	PRL(vir);
 
 	real denominator = vir;
-	if (!ignore_internal) denominator += pot_int;
+	if (!b->get_ignore_internal()) denominator += pot_int;
 
 	real qvir = -(kin - com_kin) / denominator;
 	real vfac = sqrt(q/qvir);
