@@ -198,7 +198,7 @@ char * string_index_of_node(node * n)
     }
 }
 
-local char * construct_binary_label(node * ni, node * nj)
+char * construct_binary_label(node * ni, node * nj)
 {
     static char new_name[256];
     sprintf(new_name,"(%s,%s)",string_index_of_node(ni),
