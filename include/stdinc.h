@@ -33,9 +33,6 @@
 #  include  "config.h"	// config.h is created by "configure" (see autoconf)
 #endif
 
-#define HAVE_STRTOLL	// set for 32-bit Linux, omit for 64-bit Dec UNIX
-			// should (will...) set this up in config.h
-
 // New GNU, HP, and Sun all use stdiostream.h, which includes both
 // the stdio.h (C) and the iostream.h (C++) header files.  SGI and
 // old GNU apparently want iostream.h and stdio.h to be included
@@ -45,10 +42,10 @@
 # define SG_CPLUSPLUS 1
 #endif
 
-
-//  heck, for gcc3 this should do .... forget about the rest for now
+// Heck, for gcc3 this should do .... forget about the rest for now.
 #include <iostream>
-//  probably don't need include <cstdio> here??
+
+// Probably don't need include <cstdio> here??
 #include <cstdio>
 
 #if 0
@@ -270,10 +267,57 @@ inline real	square(real x)			{return x*x;}
 // xreal -- extended precision real, for use with time and system_time
 //=============================================================================
 
-#if defined USE_XREAL
-#   include "xreal.h"
+// Long long is an ongoing irritant...  See std/xreal.C
+// *** Options should now be properly set up by configure. (Steve, 9/04) ***
+
+#if 0			// old (pre-/04)
+
+#  ifdef HAVE_STRTOLL
+
+//    e.g. Linux.
+
+#     define STRTOL strtoll
+#     define STRTOUL strtoull
+
+#  else
+
+//    e.g. Dec UNIX
+
+#     define STRTOL strtol
+#     define STRTOUL strtoul
+
+#  endif
+
+#else			// new
+
+// Configure should have done all the work, but just in case the size of
+// a long long isn't 8 bytes, silently disable USE_XREAL.  (If this has
+// been handled properly, configure should already have warned the user.)
+
+#  ifdef USE_XREAL
+
+//    Make sure...
+
+#     ifdef HAVE_LONG_LONG
+#        ifdef SIZEOF_LONG_LONG
+#           if (SIZEOF_LONG_LONG != 8)
+//#              warning "Undefining USE_XREAL because long long size is not 8"
+#              undef USE_XREAL
+#           endif
+#        endif
+#     else
+//#        warning "Undefining USE_XREAL because long long is not defined"
+#        undef USE_XREAL
+#     endif
+#
+#   endif
+
+#endif
+
+#ifdef USE_XREAL
+#  include "xreal.h"
 #else
-    typedef real xreal;
+   typedef real xreal;
 #endif
 
 // Intended for xreal, but referenced in the real version too.
@@ -282,24 +326,6 @@ void xprint(xreal x,
 	    ostream & s = cerr,
 	    bool newline = true);
 real fmod2(xreal x, real y);
-
-// Long long is an ongoing irritant...  See std/xreal.C
-
-#ifdef HAVE_STRTOLL
-
-// e.g. Linux.
-
-#  define STRTOL strtoll
-#  define STRTOUL strtoull
-
-#else
-
-// e.g. Dec UNIX
-
-#  define STRTOL strtol
-#  define STRTOUL strtoul
-
-#endif
 
 //=============================================================================
 //  Various declarations

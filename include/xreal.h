@@ -67,7 +67,8 @@ class xreal {
 	int to_int() {return i;}			// always round down!
 	real to_real();
 
-	void print(ostream& s = cerr);			// xprint(x) is better
+	void print(ostream& s = cerr,
+		   bool newline = false);		// xprint(x) is better
 
 	xreal::operator int() {return to_int();}
 	xreal::operator real() {return to_real();}
@@ -126,5 +127,8 @@ inline bool operator >= (real x, xreal y) {return ((xreal)x >= y);}
 // inline real operator - (xreal x, real y) {return (real)(x - (xreal)y);}
 
 xreal get_xreal(char *str);
+void put_real_number(ostream & s, char * label, xreal x);
+
+void identify_xreal(ostream& s = cerr);
 
 #endif
