@@ -1,0 +1,85 @@
+#!/usr/local/bin/tcsh -f
+
+# Make all libraries and selected (mainly) dyn exectables, for faster
+# Starlab construction.  Write output to a file (make.log) and suppress
+# some annoying extraneous messages.
+
+set log = $STARLAB_PATH/make.log
+
+echo Writing output to $log
+
+echo Building all libraries...
+
+cd $STARLAB_PATH
+(cd sbin; make all; cd ..)		>&! $log
+make $argv[*] libs |& grep -v 'make\['	>>& $log
+
+# Build specific executables:
+
+echo Building selected executables...
+
+cd $STARLAB_PATH/src/node/util
+build_report $log mknode mkmass mksecondary
+
+cd $STARLAB_PATH/src/node/dyn/init
+build_report $log mkplummer mkking mk_aniso_king mkbinary
+
+cd $STARLAB_PATH/src/node/dyn/util
+build_report $log compute_com compute_density compute_max_cod \
+		  compute_mean_cod extract_snap flatten freeze \
+		  lagrad scale to_cod to_com
+
+cd $STARLAB_PATH/src/node/dyn/hdyn/util
+build_report $log sys_stats
+
+cd $STARLAB_PATH/src/star/sstar/init
+build_report $log addstar
+
+#-----------------------------------------------------------------------
+
+# Slightly different treatment of hdyn/evolve executables (approach
+# follows that used in build_report).
+
+cd $STARLAB_PATH/src/node/dyn/hdyn/evolve
+echo -n "   " `pwd`...
+
+# Rebuild if kira is out of date with respect to local objects or
+# libraries.  Note that this (very tricky) checking is what we would
+# like make to do, but the syntax is too hard for make to handle in
+# a default rule...
+
+# Do not rebuild if the libs are not up to date -- presumably this
+# means that 'make lib' failed previously.
+
+set rebuild = 1
+foreach obj (`make list_obj`)
+    set src = {$obj:r}.C
+    if (`latest_time $obj` < `latest_time $src`) then
+	set rebuild = 0
+	break
+    endif
+end
+
+if ($rebuild == 0) then
+    echo "(not rebuilt)"
+else
+    set last_obj = `latest_time *.o $STARLAB_PATH/lib/*.a`
+    set exe = "`make list_exe`"
+    set first_exe = `earliest_time $exe`
+    set last_src = `latest_time kira.C`
+
+    if ($last_src > $first_exe || $last_obj > $first_exe) then
+
+        rm -f $exe
+        make bin |& grep -v 'make\[' >>& $log
+
+	if (`earliest_time $exe` < $last_src) then
+	    echo "(failed)"
+	else
+	    echo "(built)"
+	endif
+    else
+        echo "(up to date)"
+    endif
+endif
+#-----------------------------------------------------------------------
