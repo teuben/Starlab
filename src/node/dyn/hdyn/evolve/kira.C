@@ -6,7 +6,7 @@
     //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
   //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
- //                                                       //            _\|/_
+ //                                       
 //=======================================================//              /|\ ~
 
 //// kira:  Hermite N-body integrator with evolving hierarchical tree
@@ -161,6 +161,7 @@
 //	S. McMillan			 8/98
 //	S. Portegies Zwart	        12/00
 //	S. McMillan			 7/01
+//	S. Portegies Zwart	         7/03
 //
 // NOTE:  ALL direct references to USE_GRAPE are confined to
 //	  this file (referenced externally via the functions below).
@@ -179,13 +180,17 @@
 
 
 
-#ifdef TOOLBOX
-
 #include "hdyn.h"
 #include "star/dstar_to_kira.h"
 #include "kira_timing.h"
 
 #include "kira_debug.h"	// (a handy way to turn on blocks of debugging)
+
+static hdyn **next_nodes = NULL;
+
+#ifndef TOOLBOX
+
+
 #ifndef T_DEBUG_kira
 #   undef T_DEBUG
 #endif
@@ -1718,7 +1723,8 @@ local void kira_alt_output(hdyn *b)
 
 // evolve_system:  Main integration loop.
 
-static hdyn **next_nodes = NULL;
+//static hdyn **next_nodes = NULL;
+// used to be here (SPZ: 18 July 2003) but now at top.
 
 local void evolve_system(hdyn * b,	       // hdyn array
 			 real delta_t,	       // time span of the integration
@@ -2984,6 +2990,94 @@ local void recompute_perturber_lists(hdyn *b, bool verbose = false)
     PRL(n_nolist);
 }
 
+void kira_finalize(hdyn *b) {
+
+  cerr << endl << "Finalize kira:"<<endl;
+    cerr << "End of run at time " << b->get_system_time()
+	 << endl
+	 << "Total CPU time for this segment = " << cpu_time()
+	 << endl;
+
+    //--------------------------------------------------------------------
+    // For unknown reasons, neomuscat sometimes dumps core at end of run...
+    //--------------------------------------------------------------------
+
+    // exit(0);			// may still cause a core dump...
+
+    // kill(getpid(), 9);    	// dumb, but brute force works!
+
+    //--------------------------------------------------------------------
+
+    // Clean up static data (to make it easier for ccmalloc to find
+    // real memory leaks).
+
+    cerr << endl << "cleaning up hdyn_schedule" << endl << flush;
+    clean_up_hdyn_schedule();
+
+    cerr << "cleaning up hdyn_ev" << endl << flush;
+    clean_up_hdyn_ev();
+
+    cerr << "cleaning up kira_ev" << endl << flush;
+    clean_up_kira_ev();
+
+#if defined(USE_GRAPE)
+    cerr << "cleaning up hdyn_grape" << endl << flush;
+    clean_up_hdyn_grape();
+#endif
+
+    cerr << "cleaning up next_nodes" << endl << flush;
+    if (next_nodes) delete [] next_nodes;
+
+    cerr << "cleaning up kira_counters" << endl << flush;
+    if (b->get_kira_counters()) delete b->get_kira_counters();
+
+    cerr << "cleaning up perturbed_list" << endl << flush;
+    if (b->get_perturbed_list()) delete [] b->get_perturbed_list();
+
+    cerr << "cleanup complete" << endl << flush;
+
+}
+
+void kira(hdyn * b,	       // hdyn array
+	  real delta_t,	       // time span of the integration
+	  real dt_log,	       // time step of the integration
+	  int long_binary_out,
+	  real dt_snap,	       // snapshot output interval
+	  real dt_sstar,       // timestep for single stellar evolution
+	  real dt_esc,	       // escaper removal
+	  real dt_reinit,      // reinitialization interval
+	  real dt_fulldump,    // full dump interval
+	  bool exact,	       // exact force calculation
+	  real cpu_time_limit,
+	  bool verbose,
+	  bool save_snap_at_log, // save snap at log output
+	  char* snap_save_file, // filename to save in
+	  int n_stop,	       // when to stop
+	  bool alt_flag)	       // enable alternative output
+
+{
+
+  // Control behavior of the kepler package.
+
+  set_kepler_tolerance(2);
+  set_kepler_print_trig_warning(b->get_kira_diag()
+				->report_kepler_trig_error);
+
+  // It is desirable to compute perturber lists to avoid excessive
+  // computation in any initial perturbed binaries.  This will be done
+  // in evolve_system() when the system is initialized.
+
+  evolve_system(b, delta_t, dt_log, long_binary_out,
+		dt_snap, dt_sstar, dt_esc, dt_reinit, dt_fulldump,
+		exact, cpu_time_limit,
+		verbose, save_snap_at_log, snap_save_file,
+		n_stop, alt_flag);
+
+}
+
+
+#else
+
 #include <unistd.h>				// for termination below...
 #include <signal.h>
 
@@ -3027,64 +3121,13 @@ main(int argc, char **argv) {
 			 n_stop, alt_flag))
 	get_help();
 
-    // Control behavior of the kepler package.
+    kira(b, delta_t, dt_log, long_binary_out, 
+	 dt_snap, dt_sstar, dt_esc, dt_reinit, dt_fulldump,
+	 exact, cpu_time_limit,
+	 verbose, save_snap_at_log, snap_save_file,
+	 n_stop, alt_flag);
 
-    set_kepler_tolerance(2);
-    set_kepler_print_trig_warning(b->get_kira_diag()
-				   ->report_kepler_trig_error);
-
-    // It is desirable to compute perturber lists to avoid excessive
-    // computation in any initial perturbed binaries.  This will be done
-    // in evolve_system() when the system is initialized.
-
-    evolve_system(b, delta_t, dt_log, long_binary_out,
-		  dt_snap, dt_sstar, dt_esc, dt_reinit, dt_fulldump,
-		  exact, cpu_time_limit,
-		  verbose, save_snap_at_log, snap_save_file,
-		  n_stop, alt_flag);
-
-    cerr << endl << "End of run at time " << b->get_system_time()
-	 << endl
-	 << "Total CPU time for this segment = " << cpu_time()
-	 << endl;
-
-    //--------------------------------------------------------------------
-    // For unknown reasons, neomuscat sometimes dumps core at end of run...
-    //--------------------------------------------------------------------
-
-    // exit(0);			// may still cause a core dump...
-
-    // kill(getpid(), 9);    	// dumb, but brute force works!
-
-    //--------------------------------------------------------------------
-
-    // Clean up static data (to make it easier for ccmalloc to find
-    // real memory leaks).
-
-    cerr << endl << "cleaning up hdyn_schedule" << endl << flush;
-    clean_up_hdyn_schedule();
-
-    cerr << "cleaning up hdyn_ev" << endl << flush;
-    clean_up_hdyn_ev();
-
-    cerr << "cleaning up kira_ev" << endl << flush;
-    clean_up_kira_ev();
-
-#if defined(USE_GRAPE)
-    cerr << "cleaning up hdyn_grape" << endl << flush;
-    clean_up_hdyn_grape();
-#endif
-
-    cerr << "cleaning up next_nodes" << endl << flush;
-    if (next_nodes) delete [] next_nodes;
-
-    cerr << "cleaning up kira_counters" << endl << flush;
-    if (b->get_kira_counters()) delete b->get_kira_counters();
-
-    cerr << "cleaning up perturbed_list" << endl << flush;
-    if (b->get_perturbed_list()) delete [] b->get_perturbed_list();
-
-    cerr << "cleanup complete" << endl << flush;
+    kira_finalize(b);
 
     // rmtree(b);
     // rmtree(b, false);	// experiment: don't delete root node
@@ -3097,3 +3140,4 @@ main(int argc, char **argv) {
 }
 
 #endif
+
