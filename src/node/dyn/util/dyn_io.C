@@ -259,14 +259,15 @@ dyn *get_dyn(istream & s,		// default = cin
 
   static enum { NUL, DYN, COL } format = NUL;
   static bool fast = false;
+  FILE* ifp = dyn::get_ifp() ?: stdin;
   switch (format) {
   case DYN:
-    return fast ? fget_dyn() :
+    return fast ? fget_dyn(ifp) :
       (dyn*)get_node(s, new_dyn, the_hbpfp, the_sbpfp, use_stories);
   case COL: return get_col(s, new_dyn, the_hbpfp, the_sbpfp, use_stories);
   case NUL:
     fast = getenv("STARLAB_USE_FDYN");		// fast input off by default
-    format = ungetc(getc(stdin), stdin) == '(' ? DYN : COL;
+    format = ungetc(getc(ifp), ifp) == '(' ? DYN : COL;
     return get_dyn(s, the_hbpfp, the_sbpfp, use_stories);
   }
 }
