@@ -405,7 +405,7 @@ local void merge(sdyn3 * bi, sdyn3 * bj)
     sdyn3 * b = bi->get_parent();
     if (b != bj->get_parent()) err_exit("merge: parent conflict...");
 
-    // Note: any stories attached to the particles are lost.
+    // Note: any stories attached to the particles are lost (lazy!).
 
     sdyn3 * bn = new sdyn3();
 
@@ -436,6 +436,15 @@ local void merge(sdyn3 * bi, sdyn3 * bj)
     int new_index = bi->get_index() + bj->get_index();
     if (bi->get_index() < 4 && bj->get_index() < 4) new_index++;
     bn->set_label(new_index);
+
+    // Preserve the min_nn distance (~ sum of radii on merger), and
+    // set label to 0.  Necessary so that final report properly reflects
+    // this merger.
+    //							(Steve, 4/05)
+	
+    bn->set_min_nn_dr2(Starlab::min(bi->get_min_nn_dr2(),
+				    bj->get_min_nn_dr2()));
+    bn->set_min_nn_label(0);
 
     detach_node_from_general_tree(bi);
     detach_node_from_general_tree(bj);
@@ -557,7 +566,9 @@ local int extend_or_end_scatter3(sdyn3 * b,
 
 	if (final) {
 	    final->descriptor = ionization;
-	    final->virial_ratio = Starlab::min(Starlab::min(k12/phi12, k23/phi23), k31/phi31);
+	    final->virial_ratio = Starlab::min(
+					Starlab::min(k12/phi12,
+						     k23/phi23), k31/phi31);
 	    final->outer_separation = -1;
 	    final->escaper = -1;                // -1 means all escaping
 	}
@@ -619,7 +630,7 @@ local int extend_or_end_scatter2(sdyn3 * b, final_state3 * final = NULL)
 
         merge(d1, d2);
 	d1 = b->get_oldest_daughter();
-	d1->set_younger_sister(NULL);	// Again, just in case.
+	d1->set_younger_sister(NULL);		// again, just in case.
 
 	if (final) {
 	    final->descriptor = triple_merger;
@@ -632,8 +643,13 @@ local int extend_or_end_scatter2(sdyn3 * b, final_state3 * final = NULL)
 
         real closest_approach_squared = closest_approach * closest_approach;
 
-        merger->set_min_nn_dr2(closest_approach_squared);
-        merger->set_min_nn_label(single->get_index());
+	// Merger min_nn_dr2 as set to the min of the component
+	// quantities when the merger occurred.  (Steve 4/05)
+
+	if (closest_approach_squared < merger->get_min_nn_dr2()) {
+	    merger->set_min_nn_dr2(closest_approach_squared);
+	    merger->set_min_nn_label(single->get_index());
+	}
 
 	if (closest_approach_squared < single->get_min_nn_dr2()) {
 	    single->set_min_nn_dr2(closest_approach_squared);
@@ -730,5 +746,6 @@ int extend_or_end_scatter(sdyn3 * b,
 	cerr << "extend_or_end_scatter: n = " << n << endl;
 	exit(1);
     }
+
     return 0; // To keep HP g++ happy!
 }
