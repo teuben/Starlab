@@ -92,7 +92,7 @@ static bool read_xreal = false;
 
 void hdyn::print_static(ostream& s)		// default = cerr
 {
-    _dyn:_:print_static(s);
+    _dyn_::print_static(s);
 
     s << "kc = " << kc << endl;
     s << "options = " << options << endl;
