@@ -698,7 +698,7 @@ local real t_sync(sdyn3* b, real dt)
     else if (dt > 0.1*VERY_LARGE_NUMBER)
 	return VERY_LARGE_NUMBER;
     else {
-	real t_act = t + b->get_time_offset();
+	real t_act = t + (real)b->get_time_offset();
 	real fm = fmod(t_act, dt);
 	real t_s = t - fm;
 
