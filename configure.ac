@@ -5,7 +5,7 @@ AC_PREREQ(2.59)
 m4_include([version.m4])
 AC_INIT(Starlab, VERSION_NUMBER, [steve@physics.drexel.edu])
 AC_CONFIG_AUX_DIR(config)
-# doesn't really matter because there a bug in Autoconf that disregards this
+# doesn't really matter because there is a bug in Autoconf that disregards this
 #AC_CONFIG_LIBOBJ_DIR(lib)
 AC_CONFIG_MACRO_DIR(local)
 AC_CONFIG_HEADERS(include/config.h)
@@ -14,12 +14,54 @@ AC_LANG([C++])
 AC_PREFIX_DEFAULT([$PWD/usr])
 AM_INIT_AUTOMAKE([1.8 gnu no-exeext nostdinc std-options])
 
+#--------------------------------------------------------------------------
 # HUGE FIXME - $PWD will fail if building outside the source directory
 # but I don't quite understand how ac_top_srcdir/top_srcdir work
 CPPFLAGS="$CPPFLAGS -I$PWD/include -I$PWD/include/star"
 
-#---------------------------------------------------------------------
+# Another HUGE FIXME - pgetopt() must be replaced by getopt_long()
+CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"
+
+#--------------------------------------------------------------------------
+# Checks for programs.
+AC_PROG_CC
+AC_PROG_F77
+if test "x$ac_cv_prog_f77" = "xyes"; then
+    AC_F77_WRAPPERS
+fi
+AM_CONDITIONAL(HAVE_F77, [test "x$ac_cv_prog_f77" = "xyes"])
+AC_PROG_CXX
+# disable shared libs for now -- work this out later
+AC_DISABLE_SHARED
+AC_PROG_LIBTOOL
+LIBTOOL="$LIBTOOL --preserve-dup-deps"
+AC_SUBST(LIBTOOL)
+AC_PROG_LEX
+AC_PROG_YACC
+AC_PROG_INSTALL
+
+# Checks for header files.
+AC_LANG_PUSH(C)
+AC_PATH_XTRA
+AC_HEADER_STDBOOL
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_C_BIGENDIAN
+AC_C_CONST
+AC_C_INLINE
+AC_C_RESTRICT
+AC_LANG_POP
+
+#==========================================================================
+#==========================================================================
+# Add our own conditional stuff **after** the standard checks.  Some of
+# our conditionals may force other checks to be performed, but the parser
+# isn't smart enough to realize that these checks are only conditionally
+# carried out, and so the script may fail to perform them.  (Steve, 9/04)
+
+#--------------------------------------------------------------------------
 # Source and install paths will be used in starlab_setup.* scripts.
+
 AC_SUBST(STARLAB_SOURCE_PATH, $PWD)
 AC_SUBST(STARLAB_VERSION_NUMBER, VERSION_NUMBER)
 
@@ -31,7 +73,7 @@ else
     AC_SUBST(STARLAB_INSTALL_PATH, $prefix)
 fi
 
-#---------------------------------------------------------------------
+#--------------------------------------------------------------------------
 # xreal setup.
 
 AC_ARG_ENABLE(xreal,
@@ -66,14 +108,13 @@ if test "x$xreal" = "xyes" ; then
  	    xreal=no
 	fi
     fi
-fi
-
-if test "x$xreal" = "xyes" ; then
-    AC_DEFINE(USE_XREAL, 1,
+    if test "x$xreal" = "xyes" ; then
+        AC_DEFINE(USE_XREAL, 1,
         [Define to 1 if you want to enable the xreal type. Although this significantly increases precision, it also incurs a substantial performance penalty.])
+    fi
 fi
 
-#---------------------------------------------------------------------
+#--------------------------------------------------------------------------
 # sdyn* setup.
 
 AC_ARG_ENABLE(sdyn3,
@@ -86,28 +127,7 @@ AC_ARG_ENABLE(sdyn,
     sdyn=yes, sdyn=no)
 AM_CONDITIONAL(USE_SDYN, [test "x$sdyn" = "xyes"])
 
-#---------------------------------------------------------------------
-# Another HUGE FIXME - pgetopt() must be replaced by getopt_long()
-CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"
-
-# Checks for programs.
-AC_PROG_CC
-AC_PROG_F77
-if test "x$ac_cv_prog_f77" = "xyes"; then
-    AC_F77_WRAPPERS
-fi
-AM_CONDITIONAL(HAVE_F77, [test "x$ac_cv_prog_f77" = "xyes"])
-AC_PROG_CXX
-# disable shared libs for now -- work this out later
-AC_DISABLE_SHARED
-AC_PROG_LIBTOOL
-LIBTOOL="$LIBTOOL --preserve-dup-deps"
-AC_SUBST(LIBTOOL)
-AC_PROG_LEX
-AC_PROG_YACC
-AC_PROG_INSTALL
-
-#---------------------------------------------------------------------
+#--------------------------------------------------------------------------
 # Check for GRAPE libraries.
 
 AC_ARG_WITH(grape,
@@ -153,7 +173,7 @@ if test x"$OLD_READ_NEIGHBOUR_LIST" = "xyes"; then
     AC_DEFINE(G6_OLD_READ_NEIGHBOUR_LIST, 1, [Define to 1 to use the old (PIO) neighbor list interface.])
 fi
 
-#---------------------------------------------------------------------
+#--------------------------------------------------------------------------
 # Check for png and Qt.
 
 AC_ARG_WITH(png, AS_HELP_STRING([--with-png], use PNG format [[[default=yes]]]),
@@ -211,23 +231,11 @@ See `config.log' for more details.])
 fi
 AM_CONDITIONAL(HAVE_LIBQT, [test "x$good_qt" = "xyes"])
 
-#---------------------------------------------------------------------
-# Checks for header files.
-AC_LANG_PUSH(C)
-AC_PATH_XTRA
-AC_HEADER_STDBOOL
-
-# Checks for typedefs, structures, and compiler characteristics.
-AC_C_BIGENDIAN
-AC_C_CONST
-AC_C_INLINE
-AC_C_RESTRICT
-AC_LANG_POP
-
+#--------------------------------------------------------------------------
 # Checks for library functions.
 AC_REPLACE_FUNCS(stpcpy)
 
-#---------------------------------------------------------------------
+#--------------------------------------------------------------------------
 AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
     starlab.pl VERSION \
     src/Makefile src/std/Makefile src/gfx/Makefile \
@@ -255,7 +263,7 @@ AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
     src/hydro/util/Makefile src/hydro/init/Makefile src/hydro/evolve/Makefile \
     src/harpsims/Makefile])
 
-#---------------------------------------------------------------------
+#--------------------------------------------------------------------------
 # From Steve, 09/03/04:  We would like to make a handy link to the appropriate
 # starlab_start file, but it is unclear how to distinguish between various
 # shells.  The $SHELL variable will apparently always be /bin/sh here.  We need
@@ -289,5 +297,6 @@ ln -f -s starlab_start.$shell starlab_start
 
 chmod a+x ./sbin/sremake
 
-#---------------------------------------------------------------------
+#==========================================================================
+
 AC_OUTPUT
