@@ -19,7 +19,6 @@
 ////               -I    don't limit masses to primary mass range [false]
 ////               -M    specify upper limit for primaries to be binaries [inf]
 ////               -m    specify lower limit for primaries to be binaries [0]
-////               -n    require numeric labels for all stars [false]
 ////               -l    specify lower limit on mass ratio or 
 ////                                               secondary mass [0]
 ////               -u    specify upper limit on mass ratio or 
@@ -336,7 +335,7 @@ void main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "qf:M:m:il:u:s:I";
+    char* param_string = "qf:M:m:il:nu:s:I";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
