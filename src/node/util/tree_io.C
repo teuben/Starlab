@@ -83,8 +83,6 @@ istream & node::scan_star_story(istream& s, int level)
 
 	// (See hydrobase note above.)
 
-	cerr << "hello..." << endl;
-
 	char input_line[MAX_INPUT_LINE_LENGTH];
 	while (get_line(s,input_line), !matchbracket(END_STAR, input_line));
     }
