@@ -110,7 +110,9 @@ hdyn* hdyn::find_perturber_node()
 
 // print_nn: print out the ID of b's nearest neighbor.
 
-void print_nn(hdyn* b, int level, ostream& s)
+void print_nn(hdyn* b,
+	      int level,	// default = 0
+	      ostream& s)	// default = cerr
 {
     if (level > 0)
 	s << "nn of " << b->format_label() << " is ";
@@ -132,7 +134,9 @@ void print_nn(hdyn* b, int level, ostream& s)
 
 // print_coll: print out the ID of b's coll particle.
 
-void print_coll(hdyn* b, int level, ostream& s)
+void print_coll(hdyn* b,
+		int level,	// default = 0
+		ostream& s)	// default = cerr
 {
     if (level > 0)
 	s << "coll of " << b->format_label() << " is ";
