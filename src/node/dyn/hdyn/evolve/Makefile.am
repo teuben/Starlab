@@ -40,4 +40,5 @@ kira_smallN_SOURCES = kira_smallN.C
 kira_smallN_CPPFLAGS = -DTOOLBOX
 kira_smallN_LDADD = ../libhdyn.la ../xutil/libxhdyn.la \
 		    ../../../../star/dstar/libdstar.la \
+		    ../libhdyn.la \
 		    ../stubs/libstubs.la

@@ -931,7 +931,7 @@ local void clear_tag(hdyn *b, char *s)
     rmq(b->get_log_story(), s);
 }
 
-local void merge_nodes(hdyn *bi, hdyn *bj)
+local void combine_nodes(hdyn *bi, hdyn *bj)
 {
     // Merge bi and bj into bi, and call the node (bi, bj).
 
@@ -1109,7 +1109,7 @@ local void search_for_multiples(hdyn* b,
 	for (int i = 0; i < nmerge; i++) {
 	    cerr << "merging " << imerge[i]->format_label();
 	    cerr << " and " << jmerge[i]->format_label() << endl;
-	    merge_nodes(imerge[i], jmerge[i]);
+	    combine_nodes(imerge[i], jmerge[i]);
 	}
 
 //	search_for_multiples(b, energy_cutoff);
