@@ -150,13 +150,14 @@ void putfloat32( FILE *f, float fv ) {
 
 void copybytes( int count, FILE *inf, FILE *outf ) {
   int c;
+  at += count;
   while(count-- > 0 && (c = getc(inf)) != EOF)
     putc(c, outf);
-  at += count;
 }
 
 int vaccum( char *tok, int toklen, char *val, struct shortform *sp ) {
   char *which = strchr(sp->intag, tok[0]);
+  char *eval;
   int cur, k;
 
   if(fullform)
@@ -178,11 +179,24 @@ int vaccum( char *tok, int toklen, char *val, struct shortform *sp ) {
     return 1;
   }
 
-  sp->v[sp->vp++] = strtod( val, &val );
+  sp->v[sp->vp++] = strtod( val, &eval );
   if(sp->counts[cur] == 3) {
-      sp->v[sp->vp++] = strtod(val, &val);
-      sp->v[sp->vp++] = strtod(val, &val);
+      sp->v[sp->vp++] = strtod(eval, &eval);
+      sp->v[sp->vp++] = strtod(eval, &eval);
   }
+  while(*eval == ' ')
+    eval++;
+
+  if(*eval != '#' && *eval != '\n' && *eval != '\0') {
+    vflush( sp );
+    at += 3 + strlen(val);
+    putc( tok[0], stdout );
+    putc( ' ', stdout );
+    putc( '=', stdout );
+    fputs( val, stdout );
+    return 1;
+  }
+
   if(++cur >= sp->nfields) {
     at += printf("%s%s%s\n", prefix, sp->outtag, equals);
     if(sp->as32) {
