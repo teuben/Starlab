@@ -1,9 +1,4 @@
 
-#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
-#ifndef T_DEBUG_kira
-#   undef T_DEBUG
-#endif
-
 //#define DUMP_DATA 1	// uncomment to allow detailed TMP_DUMP output
 
        //=======================================================//    _\|/_
@@ -188,6 +183,12 @@
 
 #include "hdyn.h"
 #include "star/dstar_to_kira.h"
+#include "kira_timing.h"
+
+#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
+#ifndef T_DEBUG_kira
+#   undef T_DEBUG
+#endif
 
 #define INITIAL_STEP_LIMIT  0.0625	// Arbitrary limit on the first step
 
@@ -639,10 +640,6 @@ local hdyn* check_and_merge(hdyn* bi, int full_dump)
 
 
 
-// Define TIME_LIST in order to time various parts of integrate_list.
-
-//#define TIME_LIST
-
 local int integrate_list(hdyn * b,
 			 hdyn ** next_nodes, int n_next,
 			 bool exact, bool & tree_changed,
@@ -665,12 +662,17 @@ local int integrate_list(hdyn * b,
 
     //    cerr << "At start of integrate_list: sys_t = " << sys_t << endl;
 
-    // Code to time specific force-calculation operations:
+    kira_counters *kc = b->get_kira_counters();
 
-    real cpu0, cpu1;
+#ifdef CPU_COUNTERS
+    real cpu = cpu_time(), cpu_prev;
+#endif
 
 #ifdef TIME_LIST
 
+    // Code to time specific force-calculation operations:
+
+    real cpu0, cpu1;
     int kmax = 1;
 
     for (int k = 0; k < n_next; k++) {
@@ -728,6 +730,11 @@ local int integrate_list(hdyn * b,
 					reset_force_correction,  // not used
 					restart_grape);
 
+#ifdef CPU_COUNTERS
+    cpu_prev = cpu;
+    kc->cpu_time_total_force += (cpu = cpu_time()) - cpu_prev;
+#endif
+
 #ifdef T_DEBUG
     if (IN_DEBUG_RANGE(sys_t)) {
 	cerr << "DEBUG: integrate_list " << 2 << endl << flush;
@@ -754,6 +761,8 @@ local int integrate_list(hdyn * b,
 	hdyn *bi = next_nodes[i];
 
 	if (bi && bi->is_valid()) {
+
+	    cpu = cpu_time();
 
 	    if (!bi->get_kepler()) {
 
@@ -790,7 +799,7 @@ local int integrate_list(hdyn * b,
 		    // This may run into problems with slow binaries, however.
 
 		    bi->clear_interaction();
-		    bi->calculate_acc_and_jerk(true);
+		    bi->calculate_acc_and_jerk(true);		// painful...
 		    bi->set_valid_perturbers(false);
 
 		    if (bi->is_top_level_node()
@@ -862,6 +871,11 @@ local int integrate_list(hdyn * b,
 		}
 #endif
 
+#ifdef CPU_COUNTERS
+		cpu_prev = cpu;
+		kc->cpu_time_correct += (cpu = cpu_time()) - cpu_prev;
+#endif
+
 	    } else {
 
 		if (bi->get_eps2() != 0)	// Excessively cautious?
@@ -917,6 +931,10 @@ local int integrate_list(hdyn * b,
 		if (!bi->is_valid())
 		    next_nodes[i] = NULL;
 
+#ifdef CPU_COUNTERS
+		cpu_prev = cpu;
+		kc->cpu_time_unperturbed += (cpu = cpu_time()) - cpu_prev;
+#endif
 	    }
 	}
     }
@@ -982,9 +1000,9 @@ local int integrate_list(hdyn * b,
 	       // Not much to do for a top-level node -- just update counters.
 
 		if (bi->is_leaf())
-		    b->get_kira_counters()->step_top_single++;
+		    kc->step_top_single++;
 		else
-		    b->get_kira_counters()->step_top_cm++;
+		    kc->step_top_cm++;
 
 		// Diagnostics:
 
@@ -1000,10 +1018,10 @@ local int integrate_list(hdyn * b,
 
 		update_binary_sister(bi);
 
-		b->get_kira_counters()->step_low_level++;
+		kc->step_low_level++;
 
 		if (bi->get_slow())
-		    b->get_kira_counters()->inc_slow(bi->get_kappa());
+		    kc->inc_slow(bi->get_kappa());
 
 		// print_binary_diagnostics(bi);
 
@@ -1055,6 +1073,11 @@ local int integrate_list(hdyn * b,
 	    steps++;
 	}
     }
+
+#ifdef CPU_COUNTERS
+    cpu_prev = cpu;
+    kc->cpu_time_final_step += (cpu = cpu_time()) - cpu_prev;
+#endif
 
 #ifdef T_DEBUG
     if (IN_DEBUG_RANGE(sys_t)) {
@@ -1156,6 +1179,11 @@ local int integrate_list(hdyn * b,
 			next_nodes[j] = NULL;
 		}
 
+#ifdef CPU_COUNTERS
+		cpu_prev = cpu;
+		kc->cpu_time_tree_check += (cpu = cpu_time()) - cpu_prev;
+#endif
+
 		return return_fac* steps;
 	    }
 	}
@@ -1235,7 +1263,7 @@ local int integrate_list(hdyn * b,
 
 		if (adjust_tree) {
 
-		    b->get_kira_counters()->tree_change++;
+		    kc->tree_change++;
 
 		    reset_force_correction = true;	// no longer used
 		    restart_grape = true;
@@ -1350,7 +1378,7 @@ local int integrate_list(hdyn * b,
 			cerr << "\nAfter adjusting tree structure... \n";
 			cerr << "Time = " << next_nodes[0]->get_system_time()
 			     << " single_steps = "
-			     << b->get_kira_counters()->step_top_single
+			     << kc->step_top_single
 			     << endl;
 			print_recalculated_energies(b);
 			// pp3(bi->get_top_level_node(), cerr);
@@ -1383,6 +1411,11 @@ local int integrate_list(hdyn * b,
 		    }
 		    if (cm_list) delete [] cm_list;
 
+#ifdef CPU_COUNTERS
+		    cpu_prev = cpu;
+		    kc->cpu_time_tree_check += (cpu = cpu_time()) - cpu_prev;
+#endif
+
 		    return return_fac*steps;
 					// NOTE: we currently return after
 					//	 the FIRST tree rearrangement,
@@ -1394,6 +1427,11 @@ local int integrate_list(hdyn * b,
 	    }
 	}
     }
+
+#ifdef CPU_COUNTERS
+    cpu_prev = cpu;
+    kc->cpu_time_tree_check += (cpu = cpu_time()) - cpu_prev;
+#endif
 
     return return_fac*steps;
 }
@@ -1647,8 +1685,14 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	     << endl;
     }
 
+    kira_counters *kc = b->get_kira_counters();
+
+#ifdef CPU_COUNTERS
+    real cpu = cpu_time(), cpu_prev;
+#endif
+
     initialize_counters_from_log(b);
-    kc_prev = *b->get_kira_counters();		// (make a local copy)
+    kc_prev = *kc;					// (make a local copy)
 
     kira_options *ko = b->get_kira_options();
     kira_diag *kd = b->get_kira_diag();
@@ -2147,7 +2191,12 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	if (ttmp < t)
 	    backward_step_exit(b, ttmp, t, next_nodes, n_next);
-	    
+
+#ifdef CPU_COUNTERS
+	cpu_prev = cpu;
+	kc->cpu_time_other += (cpu = cpu_time()) - cpu_prev;
+#endif
+
 	// Force the elder of two binary sisters to be integrated.
 
 	check_binary_scheduling(b, next_nodes, n_next);
@@ -2267,6 +2316,11 @@ local void evolve_system(hdyn * b,	       // hdyn array
 // 		 << " is now invalid" << endl << flush;
 // 	}
 //     }
+
+#ifdef CPU_COUNTERS
+	cpu_prev = cpu;
+	kc->cpu_time_integrate += (cpu = cpu_time()) - cpu_prev;
+#endif
 
 #ifdef T_DEBUG
 	if (IN_DEBUG_RANGE(ttmp) && T_DEBUG_LEVEL > 0) {
