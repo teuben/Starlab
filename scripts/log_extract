@@ -1,0 +1,154 @@
+#!/bin/bash
+# -*-shell-script-*-
+
+# Extracts various data from Starlab log files.
+# Copyright (C) 2005  Ernest N. Mamikonyan
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+
+action=com_position
+force=false
+output=/dev/stdout
+quiet=false
+
+
+# enable colors but only when output is a tty
+if [[ -t 2 ]]; then
+    ec='\e[31m' # error color (red)
+    wc='\e[33m' # warning color (yellow)
+    sc='\e[32m' # success color (green)
+    nc='\e[39m' # normal color
+fi
+
+
+error() {
+    builtin echo -n "${0##*/}: $ec$1" >&2
+    [[ "$2" ]] && builtin echo " - exiting...$nc" >&2 && exit $2
+    builtin echo "$nc" >&2
+}
+
+
+warn() { echo "${0##*/}: $wc$@$nc" >&2; }
+
+
+usage() {
+    echo "\
+Usage: ${0##*/} [OPTIONS] [LOG FILE] ...
+Extracts various data from Starlab log files.
+Defaults are shown in parentheses.
+
+  -c	center of mass position, X-Y projection (default)
+  -d	center of mass galacto-centric distance
+  -h	display this help message and exit
+  -m	mass (in stars) bound to the cluster
+  -n	number of stars bound to the cluster
+  -o F	output to file F ($output)
+  -q	suppress all diagnostic output
+  -V	display version information and exit
+" >&2
+    exit $1
+}
+
+
+to_clobber() {
+    [[ -e "$1" ]] || return 0
+    if $force; then warn "$1 exists - overwriting..."; return 0
+    else
+        read -n 1 -p "$1 exists - overwrite? " < /dev/tty
+        if [[ "$REPLY" != [Yy] ]]; then
+            [[ "$REPLY" ]] && builtin echo \\bNo. >&2 || builtin echo No. >&2
+            return 1
+        fi
+        builtin echo \\bYes! >&2
+        return 0
+    fi
+}
+
+
+shopt -s expand_aliases nullglob xpg_echo
+
+while getopts :cdhmnoqV option; do
+    case $option in
+	c) action=com_position;;
+	d) action=com_distance;;
+	h) usage 0;;
+	m) action=mass;;
+	n) action=star_number;;
+	o) output="$OPTARG";;
+	q) quiet=true;;
+	V) echo $'\
+log_extract version 0.1, Copyright © 2005  Ernest N. Mamikonyan.
+log_extract comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the source for details.
+'
+	    exit 0
+	    ;;
+	:) echo "The \`-$OPTARG' option requires an argument!" >&2; usage 1;;
+	*) echo "\`-$OPTARG' is not a valid option!" >&2; usage 1;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+$quiet && echo() { :; } || echo() { builtin echo "$@" >&2; }
+
+
+echo -n searching for scale factors...
+# scale factors in this order: mass, distance, time
+# e.g., mass: ${sf[0]}, distance: ${sf[1]}, time: ${sf[2]}
+sf=($(awk '
+BEGIN {
+  while (i < 3 && getline) {
+    if (/^[[:blank:]]*\[m\]:/) { ++i; print $2 }
+    else if (/^[[:blank:]]*\[R\]:/) { ++i; print $2 }
+    else if (/^[[:blank:]]*\[T\]:/) { ++i; print $2 }
+  }
+}' "$@"))
+
+if [[ "$sf" ]]; then
+    echo "${sc}done$nc\nmass: ${sf[0]}, distance: ${sf[1]}, time: ${sf[2]}"
+else
+    echo "${ec}failed$nc"
+    error "can't find scale factors in input" 2
+fi
+
+case $action in
+    com_distance)
+	awk "
+/center of mass position = / {
+  print ${sf[2]}*i++, sqrt(\$6^2+\$7^2+\$8^2)*${sf[1]}
+}" "$@" > "$output"
+	;;
+    com_position)
+	awk "
+/center of mass position = / {
+  print \$6*${sf[1]}, \$7*${sf[1]}
+}" "$@" > "$output"
+	;;
+    mass)
+	awk "
+/^Time = / {
+  print \$3*${sf[2]}, substr(\$12,2)*${sf[0]}
+}" "$@" > "$output"
+	;;
+    star_number)
+	awk "
+/^Time = / {
+  print \$3*${sf[2]}, substr(\$7,2)
+}" "$@" > "$output"
+
+esac
