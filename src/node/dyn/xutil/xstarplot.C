@@ -39,7 +39,7 @@
 //	 This isn't fatal, but it should be fixed someday...
 
 #include "dyn.h"
-#include <strstream.h>
+#include <strstream>
 
 #define HALF_ROOT2   0.707106781186547524400844362105	// Root2/2
 #define ROOT2        1.414213562373095048801688724210	// sqrt(2)
