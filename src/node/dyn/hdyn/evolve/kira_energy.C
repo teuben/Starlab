@@ -135,5 +135,7 @@ void print_recalculated_energies(hdyn* b,
 	      HIGH_PRECISION);
 	putrq(b->get_dyn_story(), "kinetic_energy", ekin,
 	      HIGH_PRECISION);
+	putrq(b->get_dyn_story(), "total_energy", ekin+epot,
+	      HIGH_PRECISION);
     }
 }
