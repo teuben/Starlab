@@ -65,6 +65,7 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		sbin/latest_time.save \
 		sbin/length \
 		sbin/lengthof \
+		sbin/list_tools \
 		sbin/loop \
 		sbin/make_ar_cleanup \
 		sbin/make_cond_build \
