@@ -33,7 +33,10 @@
 
 #define DEBUG	0
 
-#define G6_NEIGHBOUR_LIST
+// Allow possibility of no neighborlist (former SPZ convention
+// reversed by Steve, 6/01):
+
+//#define NO_G6_NEIGHBOUR_LIST
 
 // Convenient to allow inline functions to be separated out for
 // debugging and profiling purposes.
@@ -880,7 +883,7 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 	// Bring all neighbor lists from the GRAPE to the front end.
 
       int status = 0;
-#ifdef G6_NEIGHBOUR_LIST
+#ifndef NO_G6_NEIGHBOUR_LIST
       status = g6_read_neighbour_list_(&cluster_id);
 #endif
 	if (status) {
@@ -1010,11 +1013,11 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 // Called by:	grape_calculate_acc_and_jerk()			// global
 
 {
-    // Get the list of neighbors from the GRAPE.
+    // Get the list of neighbors from the GRAPE, if available.
 
     int n_neighbors = 0;
     int status = 0;
-#ifdef G6_NEIGHBOUR_LIST
+#ifndef NO_G6_NEIGHBOUR_LIST
     status = g6_get_neighbour_list_(&cluster_id,
 					&pipe,
 					&max_neighbors,
@@ -1222,7 +1225,6 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 
 		    count_force++;
 		    while (get_force_and_neighbors(xtime,
-//						   ilist+ip,	// ****BUG???
 						   &bb,
 						   pipe,
 						   nj_on_grape, n_pipes,
@@ -1361,23 +1363,9 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     n_previous_nodes = n_top;
     bool need_neighbors = false;
 
-
-
-
-    bool dbg = false;
-
-
-
-
     for (i = 0; i < n_top; i++) {
 
 	hdyn *bb = previous_nodes[i] = current_nodes[i];
-
-
-
-//	if (bb->name_is("(1752,101752)")) dbg = true;
-
-
 
 	// Set a reasonable h2 value for this node.
 
@@ -1394,12 +1382,6 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	cerr << func << ":  ";
 	PRC(xtime); PRC(n_next); PRL(n_top);
     }
-
-
-
-    if (dbg) PRL(n_top);
-
-
 
     //------------------------------------------------------------------
 
@@ -1453,11 +1435,6 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	else if (need_neighbors) {
 
 	    // Get colls and perturber lists.
-
-	    if (dbg) {
-	      cerr << "to get_coll..." ; PRL(i);
-	      PRL(current_nodes[i]->format_label());
-	    }
 
 	    i += get_coll_and_perturbers(xtime, current_nodes+i, ni,
 					 h2_crit, nj_on_grape, n_pipes);
@@ -1534,6 +1511,21 @@ local INLINE void set_grape_density_radius(hdyn *b, real h2_max)
 	b->set_grape_rnb_sq(9 * pow(b->get_d_min_sq(), 1.0/3.0));  // (??)
 }
 
+local void check_neighbors(hdyn *b, real rnb_sq, int indent = 0)
+
+// (The hard way...)
+
+{
+    int nn = 0;
+    b = b->get_top_level_node();
+    for_all_daughters(hdyn, b->get_root(), bb)
+	if (bb != b)
+	    if (square(bb->get_pos() - b->get_pos()) < rnb_sq) nn++;
+    PRI(indent);
+    cerr << "check:  " << nn << " neighbors within " << sqrt(rnb_sq)
+	 << " of " << b->format_label() << endl;
+}
+
 // Density is based on the 12th nearest neighbor.
 
 #define N_DENS	12
@@ -1548,15 +1540,18 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 {
     // Get the list of neighbors from the GRAPE.
 
-    int n_neighbors;
+    int n_neighbors = 0;
     int status = 0;
-#ifdef G6_NEIGHBOUR_LIST
+#ifndef NO_G6_NEIGHBOUR_LIST
     status = g6_get_neighbour_list_(&cluster_id,
-					&pipe,
-					&max_neighbors,
-					&n_neighbors,
-					neighbor_list);
+				    &pipe,
+				    &max_neighbors,
+				    &n_neighbors,
+				    neighbor_list);
 #endif
+
+//    cerr << "  GRAPE "; PRC(max_neighbors); PRL(n_neighbors);
+//    check_neighbors(b, b->get_grape_rnb_sq(), 2);
 
     if (status) {
 
@@ -1640,7 +1635,15 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    int  density_k    = getiq(b->get_dyn_story(), "density_k_level");
 	    real density      = getrq(b->get_dyn_story(), "density");
 
-	    PRI(4); PRC(density_time); PRC(density_k); PRL(density);
+	    PRI(4); cerr << b->format_label() << ": ";
+	    PRC(density_time); PRC(density_k); PRL(density);
+	    PRI(4); PRL(b->get_pos());
+	    check_neighbors(b, b->get_grape_rnb_sq(), 4);
+
+	} else {
+
+	    PRI(4); cerr << "density data unavailable for "
+	                 << b->format_label() << endl;
 	}
     }
 
@@ -1653,43 +1656,31 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 				int nj_on_grape, int n_pipes)
 {
     // Compute the densities of the ni particles in nodes[].
-    // Return true iff an error occurred.
+    // Return true iff an error occurred and densities could
+    // not be determined.
 
     static char *func = "get_densities";
     bool error = false;
 
     if (DEBUG)
-	cerr << func << "..." << endl << flush;
+	cerr << func << "..." << nodes[0]->format_label()
+	     << "  " << nodes[0]->get_grape_rnb_sq() << endl << flush;
 
     if (ni < 0) return error;			// should never happen
 
-    // Get the force on the current group of particles.
-
-    if (force_by_grape(xtime, nodes, ni,
-		       nj_on_grape, n_pipes)) {
-
-        // Hardware error has persisted despite GRAPE reset(s).
-        // Give up...
-
-        hw_err_exit(func, 1, nodes[0]);
-    }
-
-    // Compute densities.
+    // Get the forces and neighbor lists for the current group of particles.
 
     int status = 0;
-#ifdef G6_NEIGHBOUR_LIST
-    status = g6_read_neighbour_list_(&cluster_id);
-#endif
+    if (status = get_force_and_neighbors(xtime, nodes, ni,
+					 nj_on_grape, n_pipes, true)) {
 
-    if (status) {
+	// Neighbor list overflow.  Return with error = true will cause
+	// the calling function to reduce neighbor radii and retry.
 
-        // Flag an error to force appropriate action in the
-        // calling function.
-
-        cerr << func << ": " << "error getting GRAPE neighbor data: "; 
+        cerr << func << ": " << "error 1 getting GRAPE neighbor data: "; 
 	PRL(status);
 
-        error = true;
+	error = true;
 
     } else {
 
@@ -1700,47 +1691,73 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 	    int n_retry = 0;
 	    hdyn *bb = nodes[ip];
 
-	    while (!count_neighbors_and_adjust_h2(bb, ip)) {
+	    if (bb->get_grape_rnb_sq() > 0) {	    // neighbors still needed
 
-	        if (bb->get_grape_rnb_sq() > h2_crit) {
+		while (!count_neighbors_and_adjust_h2(bb, ip)) {
 
-		    // Write zero density to the dyn story.
+		    // (Function sets density on success.)
 
-		    putrq(bb->get_dyn_story(), "density_time",
-			  (real)bb->get_system_time());
-		    putrq(bb->get_dyn_story(), "density", 0.0);
+		    if (bb->get_grape_rnb_sq() > h2_crit) {
 
-		    if (DEBUG > 1) {
-		        PRI(2); PR(bb->get_grape_rnb_sq());
-			cerr << " too large for "
-			     << bb->format_label() << endl;
+			// Write zero density to the dyn story.
+
+			putrq(bb->get_dyn_story(), "density_time",
+			      (real)bb->get_system_time());
+			putrq(bb->get_dyn_story(), "density", 0.0);
+
+			if (DEBUG > 1) {
+			    PRI(2); PR(bb->get_grape_rnb_sq());
+			    cerr << " too large for "
+			         << bb->format_label() << endl;
+			    PRI(2); PRL(bb->get_pos());
+			    check_neighbors(bb, bb->get_grape_rnb_sq(), 2);
+			}
+
+			break;
+
+		    } else {
+
+			// Changed the neighbor sphere size; recompute all
+			// forces and neighbor lists (probably overkill).
+
+			// If this becomes an issue, can do better by setting
+			// neighbor radii for successfully handled particles
+			// to zero.  Also, we could restart after those
+			// particles, as in grape_calculate_acc_and_jerk().
+			//					[Steve, 6/01]
+
+			if (++n_retry > 20) 
+			    hw_err_exit(func, 2, nodes[0]);
+
+			if (DEBUG > 1
+			    || (DEBUG > 0 && n_retry > 4 && n_retry%5 == 0)
+			    || (n_retry > 9 && n_retry%10 == 0) ) {
+			    PRI(2); cerr << func << ": recomputing forces for "
+				<< nodes[0]->format_label() << " + " << ni-1
+				<< endl;
+			    cerr << "                 first rnb_sq = "
+				 << nodes[0]->get_grape_rnb_sq()
+				 << ",  n_retry = " << n_retry << endl;
+			}
+
+			int status = 0;
+			if (status = get_force_and_neighbors(xtime, nodes, ni,
+						nj_on_grape, n_pipes, true)) {
+
+			    cerr << func << ": "
+				 << "error 2 getting GRAPE neighbor data: "; 
+			    PRL(status);
+
+			    error = true;
+
+			    ip = ni;	// force exit from for loop
+			    break;
+			}
 		    }
-		    break;
-
-		} else {
-
-		    // Changed the neighbor sphere size; recompute all
-		    // forces and neighbor lists (probably overkill).
-
-		    if (++n_retry > 20) 
-		        hw_err_exit(func, 2, nodes[0]);
-
-		    if (DEBUG > 1
-			|| (DEBUG > 0 && n_retry > 4 && n_retry%5 == 0)
-			|| (n_retry > 9 && n_retry%10 == 0) ) {
-		        cerr << func << ": recomputing forces for "
-			     << nodes[0]->format_label() << " + " << ni-1
-			     << endl;
-			cerr << "               first rnb_sq = "
-			     << nodes[0]->get_grape_rnb_sq()
-			     << ",  n_retry = " << n_retry << endl;
-		    }
-
-		    if (force_by_grape(xtime, nodes, ni,
-				       nj_on_grape, n_pipes))
-		        hw_err_exit(func, 3, nodes[0]);
-
 		}
+
+		if (!error)
+		    bb->set_grape_rnb_sq(0);	// don't recalculate density
 	    }
 	}
     }
@@ -1762,14 +1779,16 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 //  *****************************
 
 void grape_calculate_densities(hdyn* b,			// root node
-			       real h2_crit)		// default = 1
+			       real h2_crit)		// default = 4
 {
     static char *func = "grape_calculate_densities";
 
-    if (DEBUG)
-	cerr << endl << func << "..." << endl << flush;
+    if (DEBUG) {
+	cerr << endl << func << "..."; PRL(h2_crit);
+    }
 
-#ifndef G6_NEIGHBOUR_LIST
+#ifdef NO_G6_NEIGHBOUR_LIST
+    cerr << "No hardware neighbor list available..." << endl;
     return;
 #endif
 
@@ -1816,6 +1835,7 @@ void grape_calculate_densities(hdyn* b,			// root node
 
 	// Use one pipeline only to (try to) avoid neighbor list overflow...
 	// Implemented by SPZ on May 8 2001.
+	// May no longer be necessary (Steve, 6/01).
 
 	ni = 1;
 #endif
@@ -1842,8 +1862,8 @@ void grape_calculate_densities(hdyn* b,			// root node
 	    // Reduction factor is 0.9 for now...
 
 	    for (int j = i; j < i + ni; j++) {
-	        hdyn *b = top_nodes[j];
-		b->set_grape_rnb_sq(0.9 * b->get_grape_rnb_sq());
+	        hdyn *bb = top_nodes[j];
+		bb->set_grape_rnb_sq(0.9 * bb->get_grape_rnb_sq());
 	    }
 
 	    n_retry++;

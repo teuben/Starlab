@@ -1390,7 +1390,7 @@ local bool count_neighbors_and_adjust_h2(int chip, hdyn * b)
 //  *****************************
 
 void grape_calculate_densities(hdyn* b,
-			       real h2_crit)	// default = 1
+			       real h2_crit)	// default = 4
 {
     if (!grape_is_open) {
 
