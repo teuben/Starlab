@@ -5,7 +5,7 @@
 ////
 //// Options:      -A    specify accuracy parameter [0.02]
 ////               -c    specify CPU time check interval (s) [3600]
-////               -C    specify cube size for snapshot output [10]
+////               -C    specify cube size (+/- #) for snapshot output [10]
 ////               -d    specify log output interval [none]
 ////               -D    specify snapshot output interval [none]
 ////               -e    specify softening parameter [0.05]
@@ -597,7 +597,7 @@ local void initialize(sdyn3* b,	// sdyn3 array
 
 real constant_timestep(sdyn3* b, real eta)
 {
-    if (b == NULL) eta = 0; // To keep an HP compiler happy...
+    if (b == NULL) eta = 0;	// To keep an HP compiler happy...
     return  eta;
 }
 
@@ -658,6 +658,35 @@ int system_in_cube(sdyn3* b, real cube_size)
     return 1;
 }
 
+#define T_TOL 1.e-12
+
+local real t_sync(sdyn3* b, real dt)
+{
+    // Return dt plus the largest multiple of dt less than t.
+
+    real t = b->get_time();
+
+    if (dt <= 0)
+	return t;
+    else if (dt > 0.1*VERY_LARGE_NUMBER)
+	return VERY_LARGE_NUMBER;
+    else {
+	real t_act = t + b->get_time_offset();
+	real fm = fmod(t_act, dt);
+	real t_s = t - fm;
+
+	// Note: fmod(x,y) is x - n*y, where n is the integer value of x/y,
+	// rounded towards zero.  Have to correct t_s if t < 0.
+
+	if (t_act < T_TOL) t_s -= dt;
+
+	t_s += dt;
+
+	while (t_s < t + T_TOL) t_s += dt;
+	return t_s;
+    }
+}
+
 #define N_STEP_CHECK 1000	   // Interval for checking CPU time
 
 #define PERT_OUTPUT 2
@@ -672,20 +701,36 @@ void low_n3_evolve(sdyn3* b,	   // sdyn3 array
 		   real eta,	   // time step parameter
 		   int  x_flag,	   // exact-time termination flag
 		   char* timestep_name,
-		   int  s_flag,	   // symmetric timestep ?
-		   int  n_iter,	   // number of iterations
+		   int  s_flag,	   // symmetric timestep?
+		   int  n_iter_in, // number of iterations
 		   real n_max,	   // if > 0: max. number of integration steps
 		   real cpu_time_check,
 		   real dt_print,  // external print interval
 		   sdyn3_print_fp
 		        print)	   // pointer to external print function
 {
+
+    // Advance the system for an interval delta_t.  Do a full restart,
+    // making this integration step completely self-contained.
+
     real t = b->get_time();
 
+    // Note: Should have delta_t be a multiple of each dt for proper
+    //	     synchronization.  Note however that t may not be a multiple
+    //	     of delta_t, as we may have analytic segments between calls
+    //	     to this function.
+
+    real t_off = b->get_time_offset();
     real t_end = t + delta_t;	   // final time, at the end of the integration
-    real t_out = t + dt_out;	   // time of next diagnostic output
-    real t_snap = t + dt_snap;	   // time of next snapshot;
-    real t_print = t + dt_print;   // time of next printout;
+
+    // To preserve the step interval, must use actual time in setting up
+    // the output intervals.
+
+    real t_out = t_sync(b, dt_out);		// next diagnostic output
+    real t_snap = t_sync(b, dt_snap);		// next snapshot
+
+    real t_print = VERY_LARGE_NUMBER;
+    if (print) t_print = t_sync(b, dt_print);	// next printout
 
     bool unpert;
 
@@ -705,7 +750,7 @@ void low_n3_evolve(sdyn3* b,	   // sdyn3 array
     calculate_energy(b, ekin, epot);
 
     if (t_out <= t_end && n_steps == 0) {
-	cerr << "Time = " << t + (real)b->get_time_offset()
+	cerr << "Time = " << t + t_off
 	     << "  n_steps = " << n_steps
 	     << "  Etot = " << ekin + epot << endl;
     }
@@ -716,30 +761,70 @@ void low_n3_evolve(sdyn3* b,	   // sdyn3 array
 	b->clear_de_tot_abs_max();
     }
 
+#if 0
+    cerr << endl << "entering...  ";
+    PRL(b->get_system_time());
+    PRC(t); PRC(t_end); PRC(dt_snap); PRL(t_snap);
+#endif
+
     int end_flag = 0;
     while (t < t_end && !end_flag) {
 
-        real max_dt = t_end - t;
+	// Limit dt by the various time intervals involved.
+
+	// Note that the actual timestep may be determined iteratively,
+	// so the actual step may still not be exactly determined.
+	// (Can we fix this without limiting the number of iterations?)
+
+	real end_dt = t_end - t;
+        real max_dt = end_dt;
+
+	if (dt_out < VERY_LARGE_NUMBER)
+	    max_dt = min(max_dt, t_out - t);
+
+	if (dt_snap < VERY_LARGE_NUMBER) {
+	    if (t + max_dt >= t_snap
+		&& system_in_cube(b, 1.2*snap_cube_size))
+	    max_dt = min(max_dt, t_snap - t);
+	}
+	if (print)
+	    max_dt = min(max_dt, t_print - t);
+
         real dt = the_tfp(b, eta);
 
+	real t_prev = t;		// for diagnostics below
+	real dt1 = dt;
+
+	int n_iter = n_iter_in;
+
+	// Cautiously limit n_iter if we may be close to a synch point.
+
+	if (dt > max_dt) dt = max_dt;
+	if (dt > 0.9*max_dt) n_iter = 0;
+
+	real dt2 = dt;			// for diagnostics below
+
         end_flag = 0;
-        if (dt > max_dt && x_flag) {
+        if (x_flag && t + dt >= t_end) {
 	    end_flag = 1;
-	    dt = max_dt;
+	    dt = t_end - t;
+	    n_iter = 0;
 	}
 
-        unpert = step(b, t, eps, eta, dt, max_dt, end_flag, the_tfp, n_iter,
+	real dt3 = dt;			// for diagnostics below
+
+        unpert = step(b, t, eps, eta, dt, end_dt, end_flag, the_tfp, n_iter,
 		      x_flag, s_flag);
-
-	// Time may be offst.  System time will be correct.
-
-	b->set_system_time(b->get_system_time()+dt);
 
 	b->set_time(t);			   // should be prettified some time
 	for_all_daughters(sdyn3, b, bi)
 	    bi->set_time(t);
 
-	n_steps += 1;			   // (Note that n_steps is real)
+	// Time may be offset.  System time will be correct.
+
+	b->set_system_time(t + t_off);
+
+	n_steps += 1;			   // (note that n_steps is real)
 	count_steps++;
 
 	if (unpert) last_unpert = n_steps;
@@ -750,7 +835,7 @@ void low_n3_evolve(sdyn3* b,	   // sdyn3 array
 	    || (UNPERTURBED_DIAG && n_steps - last_unpert < PERT_OUTPUT)) {
 	    calculate_energy(b, ekin, epot);
 	    int pp = cerr.precision(PRECISION);
-	    cerr << "Time = " << t + (real)b->get_time_offset()
+	    cerr << "Time = " << t + t_off
 		 << "  n_steps = " << n_steps
 		 << "  dE = " << ekin + epot - b->get_e_tot_init() << endl;
 	    while (t >= t_out) t_out += dt_out;
@@ -761,18 +846,33 @@ void low_n3_evolve(sdyn3* b,	   // sdyn3 array
 
 	if (print && t >= t_print) {
 	    (*print)(b);
-	    t_print += dt_print;
+	    while (t >= t_print) t_print += dt_print;
 	}
 
 //      Output a snapshot to cout at the scheduled time, or at end of run.
 
         if (n_max > 0 && n_steps >= n_max) end_flag = 1;
 
-	if (end_flag || t >= t_snap) {
-	    if ((t >= t_snap) && system_in_cube(b, snap_cube_size)) {
-		put_node(cout, *b);
-		cout << flush; 
-		t_snap += dt_snap;         // too early to get clean_up info?
+	if (end_flag || t >= t_snap) {	// ???
+	    if (t >= t_snap) {
+
+		if (system_in_cube(b, snap_cube_size)) {
+		    put_node(cout, *b);
+		    cout << flush;
+
+#if 0
+		    cerr << "snap... "; PRC(t); PRL(t-t_snap);
+		    if (t-t_snap > T_TOL) {
+			PRI(4); PRC(max_dt); PRL(end_dt);
+			PRI(4); PRC(dt1); PRC(dt2); PRL(dt3);
+			PRI(4); PRC(n_iter); PRL(t-t_prev);
+		    }
+#endif
+		}
+
+		// Too early for clean_up info?
+
+		while (t >= t_snap) t_snap += dt_snap;
 	    }
 	}
 
@@ -792,7 +892,7 @@ void low_n3_evolve(sdyn3* b,	   // sdyn3 array
 		int p = cerr.precision(STD_PRECISION);
 		cerr << "low_n3_evolve:  CPU time = " << cpu_save - cpu_init;
 		cerr.precision(PRECISION);
-		cerr << "  time = " << t + (real)b->get_time_offset();
+		cerr << "  time = " << t + t_off;
 		cerr.precision(STD_PRECISION);
 		cerr << "  offset = " << b->get_time_offset() << endl;
 		cerr << "                n_steps = " << n_steps
@@ -803,6 +903,10 @@ void low_n3_evolve(sdyn3* b,	   // sdyn3 array
 	    }
 	}
     }
+
+#if 0
+    cerr << "exiting...  "; PRC(t); PRL(b->get_system_time());
+#endif
 
     cerr.precision(p);
     clean_up(b, n_steps);       // too late for snapshot?

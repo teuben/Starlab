@@ -4,7 +4,7 @@
 ////
 //// Options:      -A    specify accuracy parameter [0.02]
 ////               -c    specify CPU time check interval (s) [3600]
-////               -C    specify cube size for snapshot output [10]
+////               -C    specify cube size (+/- #) for snapshot output [10]
 ////               -d    specify log output interval [none]
 ////               -D    specify snapshot output interval [none]
 ////               -q    quiet output [verbose]
@@ -40,6 +40,7 @@ void tree3_evolve(sdyn3 * b,          // sdyn3 array
     // Use offset times within the integrator to avoid roundoff.
     // Reset before returning.
 
+    b->set_system_time(b->get_time());	// ??
     real t_offset = b->get_time();
 
     b->begin_offset_time(t_offset);

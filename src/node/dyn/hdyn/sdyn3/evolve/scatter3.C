@@ -28,7 +28,7 @@
 //// Options:   -A    specify accuracy parameter [0.05]
 ////            -b    print positions and velocities in report [no]
 ////            -c    specify CPU time check, in hours [1]
-////            -C    specify snap cube size [10]
+////            -C    specify snap cube size (+/- #) [10]
 ////            -d    specify log output interval [none]
 ////            -D    specify snap output interval [none]
 ////            -e    specify initial eccentricity [0]
