@@ -1,10 +1,15 @@
 #!/bin/tcsh -f
 
-# Set the prefix, or use a default.  Note that STARLAB_PATH must be set.
+# Set the prefix, or use a default (option x or default).  Note that
+# STARLAB_PATH must be set for the default option to work.
 
 set pre = ""
 if ($#argv > 0) then
-    if (x$1 == xx) then
+    if (x$1 == xx || x$1 == xdefault) then
+	if ($?STARLAB_PATH == 0) then
+	    echo STARLAB_PATH not set
+	    exit
+	endif
 	set p = $STARLAB_PATH/usr
     else
 	set p = $1
@@ -12,9 +17,10 @@ if ($#argv > 0) then
 
     set pre = "--prefix=$p"
 
-    # We will update the search hash after each tool, since automake
-    # installation may require the installed autoconf.  First add the
-    # target bin directory to the search path.
+    # We will update the search path after each tool build, since
+    # automake and libtool installation may require the installed
+    # version of autoconf.  First add the target bin directory to
+    # the search path.
 
     set path = ($p/bin $path)
 endif
@@ -28,16 +34,21 @@ foreach tool (autoconf automake libtool)
     echo Unpacking $tool
     tar xzf $tool*.tar.gz
 
-    echo Installing $tool
     set dir = $tool*[0-9]
-    set log = $dir.install.log
-    echo Installation log is $log
 
-    cd $dir
-    ./configure $pre			>&! ../$log
-    make				>>& ../$log
-    make install			>>& ../$log
-    cd ..
+    if (-d $dir) then
 
-    rehash
+	echo Installing $tool
+	set log = $dir.install.log
+	echo Installation log is $log
+
+	chdir $dir
+	./configure $pre			>&! ../$log
+	make					>>& ../$log
+	make install				>>& ../$log
+	chdir ..
+
+	rehash
+    endif
+
 end

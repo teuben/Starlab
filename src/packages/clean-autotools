@@ -1,16 +1,24 @@
 #!/bin/tcsh -f
 
-# Clean the autotools (not quite standard...):
+# Clean the autotools.  Could do distclean in each (not quite standard...),
+# but little extra effort in rebuilding from scratch, so just delete the
+# directory completely.
 
 foreach tool (autoconf automake libtool)
 
     echo Cleaning $tool
     set dir = $tool*[0-9]
-    cd $dir
-    if ($tool == "libtool") then
-	make distclean-libtool
-    else
-	make distclean
+    if (-d $dir) then
+
+	/bin/rm -rf $dir
+
+#	cd $dir
+#	if ($tool == "libtool") then
+#	    make distclean-libtool
+#	else
+#	    make distclean
+#	endif
+#	cd ..
+
     endif
-    cd ..
 end
