@@ -23,7 +23,7 @@ DEPEND_LIBS	= $(LIB)/libsstar.a  $(LIB)/libdstar.a $(LIB)/librdc.a \
 
 EXECUTABLES = rdc_SeBa makepovfile make_ccd rs_findtype rs_snapshot \
 	      rs_population rs_scenarios rs_birthrate \
-	      rs_countsn
+	      rs_countsn rs_reorder
 OBJECT_FILES =  makepovfile.o SeBa_hist.o
 
 #OBJECT_FILES = sint.o

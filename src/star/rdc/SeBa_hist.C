@@ -326,8 +326,20 @@ SeBa_hist* get_history(SeBa_hist *hi, istream& is) {
     next_hi->set_past(NULL);
 
     return next_hi;
-
 	   
+}
+
+void SeBa_hist::add_to_SeBa_hist(SeBa_hist *next_hi) {
+
+  cerr << "add: "; 
+  next_hi->put_state(cerr);
+  cerr << "\nto ";
+  put_state(cerr);
+  cerr << endl;
+
+  SeBa_hist *last = get_last();
+  last->set_future(next_hi);
+  next_hi->set_past(last);
 }
 
 /*-----------------------------------------------------------------------------

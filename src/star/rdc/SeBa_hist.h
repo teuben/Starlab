@@ -43,12 +43,12 @@ class SeBa_hist {
     real semi;
     real ecc;
 
-    char label_prim[3];
+    char label_prim[255];
     stellar_type tpe_prim;
     real m_prim;
     real r_prim;
     
-    char label_sec[3];
+    char label_sec[255];
     stellar_type tpe_sec;
     real m_sec;
     real r_sec;
@@ -77,6 +77,7 @@ class SeBa_hist {
 	   m_prim=m_sec=r_prim=r_sec=0;
        }
        ~SeBa_hist(){
+
          if (future!=NULL) {
 	     SeBa_hist *tmp = future;
 	     future = NULL;
@@ -107,14 +108,13 @@ class SeBa_hist {
        void set_last(SeBa_hist* f) {
             if(future!=NULL) 
               future->set_last(f);
-            else
+            else 
               future=f;
        }
-       int get_number()             {return number;}
-       int set_number(int n)        {number=n;}
-
 
        real get_time()              {return time;}
+       int get_number()             {return number;}
+       int set_number(int n)        {number = n;}
 
        real set_stellar_radius(bool);
        void move_SeBa_hist_to(SeBa_hist*);
@@ -130,8 +130,12 @@ class SeBa_hist {
        binary_type get_binary_type() { return bin_tpe;}
        stellar_type get_primary_type() { return tpe_prim;}
        stellar_type get_secondary_type() { return tpe_sec;}
+       char* get_label_prim() {return label_prim;}
+       char* get_label_sec() {return label_sec;}
 
        SeBa_hist* get_SeBa_hist_at_time(real);
+
+    void add_to_SeBa_hist(SeBa_hist *next_hi);
 				  
        void put_state(ostream&);
        friend ostream& operator<<(ostream& s, SeBa_hist&);
