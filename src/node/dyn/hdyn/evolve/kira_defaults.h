@@ -1,12 +1,13 @@
 
-// Default parameter settings.
+// Default parameter settings for parameters we might want to change.
 
-// Used in evolve/kira_init.C:
+// Used in util/hdyn_io.C and evolve/kira_init.C:
 
 #define	DEFAULT_ETA				0.1
+#define	DEFAULT_EPS				0.0
 #define	DEFAULT_GAMMA				1.e-7
-#define	DEFAULT_DMIN				0.25
-#define	DEFAULT_LAG				2.5
+#define	DEFAULT_D_MIN_FAC			0.25
+#define	DEFAULT_LAG_FACTOR			2.5
 
 #define	DEFAULT_DT				10.0
 #define	DEFAULT_DT_REINIT			1.0
@@ -15,6 +16,8 @@
 #define	DEFAULT_DT_SSTAR			0.015625
 
 // Used in util/kira_options.C and evolve/kira_runtime.C:
+
+#define DEFAULT_PRINT_XREAL			true
 
 #define DEFAULT_PERTURBER_CRITERION		2	// hybrid
 

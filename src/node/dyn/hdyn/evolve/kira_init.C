@@ -241,6 +241,7 @@ local void set_runtime_params(hdyn *b, bool verbose,
 	if (kappa_max > 1)
 	    cerr << "Maximum slow perturbation = "
 		 << b->get_max_slow_perturbation() << endl;
+	putiq(b->get_log_story(), "log_max_slow", max_slow);
     }
 }
 
@@ -705,12 +706,14 @@ bool kira_initialize(int argc, char** argv,
 {
 
     // Establish defaults for parameters (static class members or
-    // carried back explicitly):
+    // carried back explicitly).  Probably not really necessary to
+    // initialize here, as class variables have already been set
+    // in util/hdyn_io.C.
 
     real eta = DEFAULT_ETA;
-    real eps = 0.0;
-    real d_min = DEFAULT_DMIN;
-    real lag_factor = DEFAULT_LAG;
+    real eps = DEFAULT_EPS;
+    real d_min = DEFAULT_D_MIN_FAC;
+    real lag_factor = DEFAULT_LAG_FACTOR;
     real gamma = DEFAULT_GAMMA;
 
     bool eta_flag = false, eps_flag = false, d_min_flag = false,

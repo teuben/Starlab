@@ -16,42 +16,42 @@
 
 #ifndef TOOLBOX
 
-// Initialize all static hdyn data here (?)
+// Initialize all static hdyn data here.
 
-kira_counters *hdyn::kc		= NULL;
-kira_options *hdyn::options	= NULL;
-kira_diag *hdyn::diag		= NULL;
+kira_counters *hdyn::kc				= NULL;
+kira_options *hdyn::options			= NULL;
+kira_diag *hdyn::diag				= NULL;
 
-bool hdyn::use_dstar	= false;
+bool hdyn::use_dstar				= false;
 
-real hdyn::stellar_encounter_criterion_sq = 1;
-real hdyn::stellar_merger_criterion_sq = 1;
-real hdyn::stellar_capture_criterion_sq = 1;
+real hdyn::stellar_encounter_criterion_sq	= 0;
+real hdyn::stellar_merger_criterion_sq		= 0;
+real hdyn::stellar_capture_criterion_sq		= 0;
 
-hdyn** hdyn::perturbed_list = NULL;
-int  hdyn::n_perturbed	= 0;
+hdyn** hdyn::perturbed_list			= NULL;
+int  hdyn::n_perturbed				= 0;
 
-real hdyn::eta		= 0;
-real hdyn::eps		= 0;
-real hdyn::eps2		= 0;
+real hdyn::eta					= DEFAULT_ETA;
+real hdyn::eps					= DEFAULT_EPS;
+real hdyn::eps2					= (DEFAULT_EPS*DEFAULT_EPS);
 
-real hdyn::d_min_fac	= 1;
-real hdyn::d_min_sq	= 0;
-real hdyn::lag_factor	= 0;
-real hdyn::mbar		= 0;
+real hdyn::d_min_fac				= DEFAULT_D_MIN_FAC;
+real hdyn::d_min_sq				= 0;	// compute at runtime
+real hdyn::lag_factor				= DEFAULT_LAG_FACTOR;
+real hdyn::mbar					= 0;	// compute at runtime
 
-real hdyn::gamma2	= 0;
-real hdyn::gamma23	= VERY_LARGE_NUMBER;
+real hdyn::gamma2				= DEFAULT_GAMMA;
+real hdyn::gamma23				= VERY_LARGE_NUMBER;
 
-real hdyn::initial_step_limit	= 0;
-real hdyn::step_limit		= 0;
-real hdyn::unpert_step_limit	= 1;
+real hdyn::initial_step_limit			= 0;
+real hdyn::step_limit				= 0;
+real hdyn::unpert_step_limit			= 1;
 
-real hdyn::scaled_stripping_radius = -1;
+real hdyn::scaled_stripping_radius		= -1;	// no value set
 
-int hdyn::max_slow_factor = DEFAULT_MAX_SLOW_FACTOR;
-real hdyn::max_slow_perturbation = DEFAULT_MAX_SLOW_PERTURBATION;
-real hdyn::max_slow_perturbation_sq = DEFAULT_MAX_SLOW_PERTURBATION_SQ;
+int hdyn::max_slow_factor			= DEFAULT_MAX_SLOW_FACTOR;
+real hdyn::max_slow_perturbation		= DEFAULT_MAX_SLOW_PERTURBATION;
+real hdyn::max_slow_perturbation_sq	     = DEFAULT_MAX_SLOW_PERTURBATION_SQ;
 
 
 void check_sanity_of_timestep(xreal & time, real & timestep)

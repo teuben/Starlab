@@ -29,9 +29,9 @@ kira_diag::kira_diag() {		    // (Steve's 6/00
     n_check_runtime				= 2500;
 
     unpert_function_id				= false;
-    report_start_unperturbed			= false;
+    report_start_unperturbed			= false;	// SPZ mod
     report_continue_unperturbed			= false;
-    report_end_unperturbed			= false;
+    report_end_unperturbed			= false;	// SPZ mod
     report_pericenter_reflection		= false;
     report_impending_multiple_status		= false;
     report_zero_unpert_steps			= false;

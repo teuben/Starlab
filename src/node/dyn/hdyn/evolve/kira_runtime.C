@@ -272,9 +272,9 @@ local void modify_params(hdyn * b, char * name,
 	//
 	//		-keyword value
 	//
-	// where the keywords a, b, C, d, D, f, g, k, N, O, and t are
-	// permitted (meanings are the same as if specified on the
-	// command line, except that "-t" increments t_end).
+	// where the keywords a, b, C, d, D, f, g, k, K, N, O, and t are
+	// permitted (meanings are the same as if specified on the command
+	// line, except that "-t" increments t_end).
 	//
 	// Parameter changes take place IMMEDIATELY.
 
@@ -360,6 +360,17 @@ local void modify_params(hdyn * b, char * name,
 		    cerr << "Setting gamma = " << tmp << endl;
 		    b->set_gamma2(tmp*tmp);
 		    putrq(b->get_log_story(), "gamma", tmp);
+		}
+
+	    } else if (s = strstr(line, "-K")) {
+
+		int tmp = atoi(s+2);
+		if (tmp > 0) {
+		    int kappa_max = (int) pow(2, tmp);
+		    b->set_max_slow_factor(kappa_max);
+		    cerr << "Setting maximum slowdown factor = "
+			 << kappa_max << endl;
+		    putiq(b->get_log_story(), "log_max_slow", tmp);
 		}
 
 	    } else if (s = strstr(line, "-N")) {

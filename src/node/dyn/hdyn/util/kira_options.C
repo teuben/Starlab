@@ -17,7 +17,7 @@
 
 kira_options::kira_options() {
 
-    print_xreal		=	true;
+    print_xreal		=	DEFAULT_PRINT_XREAL;
 
     perturber_criterion	=	DEFAULT_PERTURBER_CRITERION;
 
