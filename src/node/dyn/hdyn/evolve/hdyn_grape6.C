@@ -1,9 +1,4 @@
 
-#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
-#ifndef T_DEBUG_hdyn_grape6
-#   undef T_DEBUG
-#endif
-
        //=======================================================//    _\|/_
       //  __  _____           ___                    ___       //      /|\
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
@@ -32,6 +27,12 @@
 
 #include "hdyn.h"
 #include "grape6.h"
+
+#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
+#ifndef T_DEBUG_hdyn_grape6
+#   undef T_DEBUG
+#endif
+
 #include "hdyn_inline.C"
 
 #define EXPAND_TO_FIND_COLL
