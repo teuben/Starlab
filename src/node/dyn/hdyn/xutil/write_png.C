@@ -81,7 +81,7 @@ int write_png(png_bytep image, png_uint_32 width, png_uint_32 height,
     info_ptr = png_create_info_struct(png_ptr);
     if (info_ptr == NULL) {
 	fclose(fp);
-	png_destroy_write_struct(&png_ptr,  png_infopp_NULL);
+	png_destroy_write_struct(&png_ptr,  (png_infopp)NULL);
 	return (ERROR);
     }
 
