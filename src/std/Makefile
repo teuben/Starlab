@@ -39,7 +39,7 @@ include $(STARLAB_PATH)/inc/Makefile.worker.inc
 # Special case (don't allow -O2, but -O1 seems OK):
 
 util_unformatted_io.o:
-	@make_cond_compile util_unformatted_io.C $(STARLAB_CCC) $(CFLAGS) -O1
+	@sh $(STARLAB_PATH)/sbin/make_cond_compile util_unformatted_io.C $(STARLAB_CCC) $(CFLAGS) -O1
 
 #..............................................................................
 #..............................................................................
