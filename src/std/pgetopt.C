@@ -143,7 +143,7 @@ local inline char *get_name(char *source)
     if (!source) return NULL;
 
     char *start = source + strlen(source);
-    while (start >= source && *start != '/') start--;
+    while (start > source && *start != '/') start--;
     if (*start == '/') start++;
 
     char *end = start;
