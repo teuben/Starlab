@@ -255,7 +255,10 @@ real hdyn::print_pert(bool long_binary_output,		// default = true
 	}
 
 	PRI(indent);
-	cerr << "pert = " << sqrt(get_perturbation_squared());
+	real pert_sq = 0;
+	if(get_perturbation_squared()>=0)
+	  pert_sq = sqrt(get_perturbation_squared());
+	cerr << "pert = " << pert_sq;
 
 	if (slow) cerr << " [" << get_kappa() << "]";
 

@@ -203,8 +203,10 @@ real print_structure_recursive(dyn* bi,
 // total energy of the system.  On entry, bi is the top-level CM.
 
 {
+      
     real eb = 0;
     if (bi->get_oldest_daughter()) {
+
 
 	dyn* od = bi->get_oldest_daughter();
 	dyn* yd = od->get_younger_sister();
@@ -245,12 +247,13 @@ real print_structure_recursive(dyn* bi,
 	    e_unp += e;
 	}
 
-	for_all_daughters(dyn, bi, bb)
-	    eb += print_structure_recursive(bb, dstar_params,
+	for_all_daughters(dyn, bi, bb) {
+ 	    eb += print_structure_recursive(bb, dstar_params,
 					    n_unp, e_unp,
 					    kT, center,
 					    verbose, long_binary_output,
 					    indent+2);
+	}
     }
 
     return eb;
