@@ -51,6 +51,9 @@ if test -z "$grape" -o "x$grape" = "xyes"; then
     AC_CHECK_LIB(g6lx, g6_open_, grape6=yes, grape6=no)
     if test "x$grape6" = "xno"; then
         AC_CHECK_LIB(g4x, h3open_, grape4=yes, grape4=no)
+	if test "x$grape4" = "xyes"; then
+	    AC_DEFINE(USE_HALF_CHIP, 1, [Define to 1 to use half chip and preserve neighbor lists.])
+	fi
     fi
     if test "x$grape6" = "xno" -a "x$grape4" = "xno"; then
         if test "x$grape" = "xyes"; then
