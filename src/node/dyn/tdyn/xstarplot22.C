@@ -515,7 +515,8 @@ local int plot_all_stars(DYN* b, int f_flag)
 		    && (s > (ymin + actual_point_size))
 		    && (s < (ymax - actual_point_size)) ) {
 
-		    plot_star(bi, r, s, actual_point_size, f_flag);
+		    if (bi->get_index() != -42)
+			plot_star(bi, r, s, actual_point_size, f_flag);
 
 		    if (links && bi->get_oldest_daughter())
 			draw_links_2d(bi, r, s);
@@ -1967,6 +1968,12 @@ main(int argc, char** argv)
     while (1) {
 
 	DYN *root = create_interpolated_tree2(wb, t);
+
+	// Flag non-members.
+
+	for_all_nodes(DYN, root, bb)
+	    if (bb != root && !is_member(wb, bb))
+		bb->set_index(-42);
 
 	if (!max_cm_set) {
 	    max_cm /= root->n_daughters();
