@@ -16,10 +16,22 @@ AM_INIT_AUTOMAKE([1.8 gnu no-exeext nostdinc std-options])
 # HUGE FIXME - $PWD will fail if building outside the source directory
 # but I don't quite understand how ac_top_srcdir/top_srcdir work
 CPPFLAGS="$CPPFLAGS -I$PWD/include -I$PWD/include/star"
+
 AC_ARG_ENABLE(xreal,
     AS_HELP_STRING([--enable-xreal], use the xreal type [[[default=no]]]),
     [AC_DEFINE(USE_XREAL, 1,
         [Define to 1 if you want to enable the xreal type. Although this significantly increases precision, it also incurs a substantial performance penalty.])])
+
+AC_ARG_ENABLE(sdyn3,
+    AS_HELP_STRING([--enable-sdyn3], compile the sdyn3 tree [[[default=no]]]),
+    sdyn3=yes, sdyn3=no)
+AM_CONDITIONAL(USE_SDYN3, [test "x$sdyn3" = "xyes"])
+
+AC_ARG_ENABLE(sdyn,
+    AS_HELP_STRING([--enable-sdyn], compile the sdyn tree [[[default=no]]]),
+    sdyn=yes, sdyn=no)
+AM_CONDITIONAL(USE_SDYN, [test "x$sdyn" = "xyes"])
+
 # Another HUGE FIXME - pgetopt() must be replaced by getopt_long()
 #CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__ -D_COMPILE_DATE_=__DATE__"
 CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"

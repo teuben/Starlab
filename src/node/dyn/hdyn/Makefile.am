@@ -16,7 +16,15 @@
 ##..............................................................................
 ##
 
-SUBDIRS = util evolve xutil stubs sdyn sdyn3
+SUBDIRS = util evolve xutil stubs
+
+if USE_SDYN3
+  SUBDIRS += sdyn3
+endif
+
+if USE_SDYN
+  SUBDIRS += sdyn
+endif
 
 pkglib_LTLIBRARIES = libhdyn.la
 
