@@ -211,7 +211,7 @@ local int compare_mass(const void * pi, const void * pj)
 
 local void mkmass(node* b, mass_function mf,
 		  real m_lower, real m_upper, 
-		  real exponent, real total_mass, bool renumber) {
+		  real exponent, real total_mass, bool renumber_stars) {
   
     real m, m_sum = 0;
     int n=0;
@@ -226,7 +226,13 @@ local void mkmass(node* b, mass_function mf,
 
     // Renumber the stars in order of mass.
     // Highest mass gets smallest number (strange choise, but).
-    if (renumber) {
+    if (renumber_stars) {
+      int istart = 1;
+      bool M_flag = true;
+      renumber(b, istart, M_flag);
+    }
+
+#if 0
       nm_pair_ptr nm_table = new nm_pair[n];
       if (nm_table == NULL) {
 	cerr << "mkmass: "
@@ -246,7 +252,10 @@ local void mkmass(node* b, mass_function mf,
       for (i=0; i<n; i++) {
 	nm_table[i].str->set_index(i+1);  // Ok, lets number from 1 to n
       }
+
+      delete []nm_table;
     }
+#endif
 
     if (total_mass > 0) {
 	real m_factor = total_mass/m_sum;
@@ -280,7 +289,7 @@ void main(int argc, char ** argv)
                                                 // Miller & Scalo is used
     real m_total = -1;				// Don't rescale
 
-    bool renumber = false;                      // renumber stellar index
+    bool renumber_stars = false;                // renumber stellar index
                                                 // from high to low mass
 
     int random_seed = 0;
@@ -300,7 +309,7 @@ void main(int argc, char ** argv)
 	              break;
 	    case 'f': mf = (mass_function)atoi(poptarg);
 	              break;
-	    case 'i': renumber = true;
+	    case 'i': renumber_stars = true;
 	              break;
 	    case 'E':
 	    case 'e':
@@ -343,7 +352,7 @@ void main(int argc, char ** argv)
     sprintf(seedlog, "         random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
-    mkmass(b, mf, m_lower, m_upper, exponent, m_total, renumber);	
+    mkmass(b, mf, m_lower, m_upper, exponent, m_total, renumber_stars);	
     real initial_mass = getrq(b->get_dyn_story(), "initial_mass");
 
     if (initial_mass > -VERY_LARGE_NUMBER)

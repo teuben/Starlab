@@ -290,7 +290,7 @@ local void mksecondary(node* b, real binary_fraction,
 		    if (sum >= 0.9999999999) {	// avoid roundoff problems!
 			sum = 0;
 			qmin = mmin/bi->get_mass();
-			qmax = mmax/bi->get_mass();
+			qmax = min(mmax, bi->get_mass())/bi->get_mass();
 			q = random_mass_ratio(qmin, qmax);
 			m_secondaries += m_prim * q;
 			add_secondary(bi, q, force_index, nmax);

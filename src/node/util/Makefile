@@ -25,7 +25,7 @@ EXECUTABLES = node_io display_subtrees rmq snapprune mk_single_node \
 	        setmass
 OBJECT_FILES = node_io.o hydrobase_io.o starbase_io.o tree_io.o node_tt.o \
 		rmtree.o print_normal.o starbase_init.o \
-		mknode.o mkmass.o
+		mknode.o mkmass.o renumber.o
 
 LIBRARY = libnode.a
 
