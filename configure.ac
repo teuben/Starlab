@@ -152,7 +152,7 @@ AC_C_RESTRICT
 AC_LANG_POP
 
 # Checks for library functions.
-AC_REPLACE_FUNCS(stpcpyy)
+AC_REPLACE_FUNCS(stpcpy)
 
 AC_CONFIG_FILES([Makefile src/Makefile src/std/Makefile src/gfx/Makefile \
     src/gfx/lux/Makefile src/gfx/lux++/Makefile src/gfx/util/Makefile \
