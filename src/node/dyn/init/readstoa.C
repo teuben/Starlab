@@ -6,6 +6,7 @@
 ////            data into a Starlab snapshot.
 ////
 //// Options:     -i    number the particles sequentially [don't number]
+//// Options:     -w    Write stoa insted of reading it
 
 //	      Jun Makino, Aug 1996
 
@@ -13,25 +14,7 @@
 
 #ifdef TOOLBOX
 
-void main(int argc, char ** argv)
-{
-    check_help();
-
-    extern char *poptarg;
-    int c;
-    char* param_string = "i";
-
-    bool i_flag = false;
-
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
-	switch(c) {
-
-	    case 'i': i_flag = true;
-		      break;
-            case '?': params_to_usage(cerr, argv[0], param_string);
-		      exit(1);
-	}
-
+local dyn* read_stoa(bool i_flag) {
 
     dyn *root, *by, *bo;
 
@@ -84,8 +67,75 @@ void main(int argc, char ** argv)
 	b->set_vel(vel);
     }
 
-    root->log_history(argc, argv);
-    put_node(cout, *root);
+    return root;
+  }
+
+local void write_stoa() {
+
+  real ndim = 3; // x, y and z
+
+  dyn *b;
+  b = get_dyn(cin);
+  
+  b->flatten_node();
+  
+  // for safetly check number of leaves.
+  int n=0;
+  for_all_daughters(dyn, b, bi) {
+    n++;
+  }
+  
+  //start writing NEMO stoa
+  cout << n << endl;
+  cout << ndim << endl;
+  cout << b->get_system_time() << endl;
+  for_all_daughters(dyn, b, bi) {
+    cout << bi->get_mass() << endl;
+  }
+  
+  for_all_daughters(dyn, b, bi) {
+    cout << bi->get_pos() << endl;
+  }
+  
+  for_all_daughters(dyn, b, bi){
+    cout << bi->get_vel() << endl;
+  }
+  
+}
+
+void main(int argc, char ** argv)
+{
+    check_help();
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "iw";
+
+    bool i_flag = false;
+    bool w_flag = false;
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1)
+	switch(c) {
+
+	    case 'i': i_flag = true;
+		      break;
+	    case 'w': w_flag = true;
+		      break;
+            case '?': params_to_usage(cerr, argv[0], param_string);
+		      exit(1);
+	}
+
+    dyn *root;
+
+    if(w_flag) {
+      write_stoa();
+    }
+    else {
+      root = read_stoa(i_flag);
+      root->log_history(argc, argv);
+      put_node(cout, *root);
+    }
+
 }
 
 #endif

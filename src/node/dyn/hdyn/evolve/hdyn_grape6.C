@@ -33,6 +33,8 @@
 
 #define DEBUG	0
 
+#define G6_NEIGHBOUR_LIST
+
 // Convenient to allow inline functions to be separated out for
 // debugging and profiling purposes.
 
@@ -841,8 +843,10 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 	// At least one i-particle needs coll or perturber information.
 	// Bring all neighbor lists from the GRAPE to the front end.
 
-	int status = g6_read_neighbour_list_(&cluster_id);
-
+      int status = 0;
+#ifdef G6_NEIGHBOUR_LIST
+      status = g6_read_neighbour_list_(&cluster_id);
+#endif
 	if (status) {
 
 	    // An error has occurred.  Flag it and take appropriate action...
@@ -973,11 +977,15 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
     // Get the list of neighbors from the GRAPE.
 
     int n_neighbors;
-    int status = g6_get_neighbour_list_(&cluster_id,
+    int status = 0;
+#ifdef G6_NEIGHBOUR_LIST
+    status = g6_get_neighbour_list_(&cluster_id,
 					&pipe,
 					&max_neighbors,
 					&n_neighbors,
 					neighbor_list);
+#endif
+
     if (status) {
 
 	// GRAPE found too many neighbors:  n_neighbors > max_neighbors,
@@ -1444,11 +1452,15 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
     // Get the list of neighbors from the GRAPE.
 
     int n_neighbors;
-    int status = g6_get_neighbour_list_(&cluster_id,
+    int status = 0;
+#ifdef G6_NEIGHBOUR_LIST
+    status = g6_get_neighbour_list_(&cluster_id,
 					&pipe,
 					&max_neighbors,
 					&n_neighbors,
 					neighbor_list);
+#endif
+
     if (status) {
 
 	// GRAPE has found too many neighbors:  n_neighbors > max_neighbors.
@@ -1609,7 +1621,10 @@ void grape_calculate_densities(hdyn* b,			// root node
 
 	// Compute densities.
 
-	int status = g6_read_neighbour_list_(&cluster_id);
+	int status = 0;
+#ifdef G6_NEIGHBOUR_LIST
+	status = g6_read_neighbour_list_(&cluster_id);
+#endif
 
 	if (status) {
 
