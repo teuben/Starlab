@@ -33,14 +33,18 @@ main(int argc, char ** argv)
     real m = 0, q = -1, e = 0, r = 0;
     real eps = 0;
 
+    bool debug = false;
+    bool c_flag = false;
     bool e_flag = false;
     bool m_flag = false;
     bool q_flag = false;
     bool r_flag = false;
 
     if (!parse_scale_main(argc, argv, eps,
+			  c_flag,
 			  e_flag, e, m_flag, m,
-			  q_flag, q, r_flag, r)) {
+			  q_flag, q, r_flag, r,
+			  debug)) {
 	get_help();
 	exit(1);
     }
@@ -48,8 +52,8 @@ main(int argc, char ** argv)
     hdyn *b = get_hdyn(cin);
     b->log_history(argc, argv);
 
-    scale(b, eps, e_flag, e, m_flag, m, q_flag, q, r_flag, r,
-	  kira_top_level_energies);
+    scale(b, eps, c_flag, e_flag, e, m_flag, m, q_flag, q, r_flag, r,
+	  debug, kira_top_level_energies);
 
     put_node(cout, *b);
 }
