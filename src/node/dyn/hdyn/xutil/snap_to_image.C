@@ -22,6 +22,8 @@
 ////            -p psize     specify star radius, in pixels
 ////                                           [0 (single image), 1 (animation)]
 ////            -P axis      specify projection axis [z]
+////            -q           toggle suppression of diagnostic output
+////                                                            [don't suppress]
 ////            -r           use stellar radius to set point size [no]
 ////            -s size      specify image size, in pixels [256]
 ////            -S nskip     specify snaps to skip between images [0]
@@ -374,11 +376,13 @@ main(int argc, char** argv)
     int ncolor = 0;
     real index_all = -1;
 
+    bool quite = false;
+
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "1cC:f:gGi:Hl:X:x:Y:y:mn:N:p:P:rs:S:t";
+    char* param_string = "1cC:f:gGi:Hl:X:x:Y:y:mn:N:p:P:qrs:S:t";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
@@ -433,6 +437,8 @@ main(int argc, char** argv)
 			    axis = 2;
 	    		else if (poptarg[0] == 'z' || atoi(poptarg) == 3)
 			    axis = 3;
+			break;
+	    case 'q':	quiet = !quiet;
 			break;
 	    case 'r':	radius = true;
 			break;
@@ -702,11 +708,13 @@ main(int argc, char** argv)
 
 	count1++;
 	count++;
-	if (count%10 == 0) cerr << count1 << "/" << count << " ";
+	if (count%10 == 0 && !quiet)
+	    cerr << count1 << "/" << count << " ";
 
 	if (n > 0 && count1 >= n) break;
     }
-    cerr << endl;
+
+    if (!quiet) cerr << endl;
 
     if (combine) {
 
