@@ -97,6 +97,9 @@ bins:	.libs
 
 bin:	bins
 
+packages:
+	@cd src/packages; ./install; cd ../..
+
 #..............................................................................
 
 # Note from Steve:  All "tar" options have been removed as of July 2001
