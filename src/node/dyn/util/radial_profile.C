@@ -261,7 +261,7 @@ main(int argc, char ** argv)
 	m_bar /= n;
 	if (need_r_max) r_max = sqrt(r_max);
 
-	if (option <= 1) PRC(m_bar); 
+	if (option <= 1) PRL(m_bar); 
 
 	// Set up the radial array.
 

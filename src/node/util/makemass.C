@@ -383,7 +383,8 @@ local void makemass(node* b, mass_function mf,
 		"       %s mass function, total mass = %8.2f Solar",
 		type_string(mf), m_sum);
     b->log_comment(tmp_string);
-    cerr << "Mass function is " << type_string(mf) <<endl;
+    cerr << "mass function is " << type_string(mf) << ", ";
+    PRC(m_lower); PRL(m_upper);
 
 }
 
