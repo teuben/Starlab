@@ -171,16 +171,23 @@ as shown in `local/grape.sh.examples'.])
     AC_SUBST(GRAPE_LIBS, "$GRAPE_LIBS_")
     OLDFLAGS="$LDFLAGS"
     LDFLAGS="$LDFLAGS $GRAPE_LDFLAGS_"
+
+#   Check all named libraries for g6_open().
+
     for gl in $GRAPE_LIBS_; do
         AC_CHECK_LIB(${gl/-l/}, g6_open_, grape6=yes, grape6=no)
 	if test "x$grape6" = "xyes"; then break; fi
     done
+
+#   Check hardcoded library for h3open().
+
     if test "x$grape6" = "xno"; then
         AC_CHECK_LIB(g4x, h3open_, grape4=yes, grape4=no)
 	if test "x$grape4" = "xyes"; then
 	    AC_DEFINE(USE_HALF_CHIP, 1, [Define to 1 to use half chip and preserve neighbor lists.])
 	fi
     fi
+
     if test "x$grape6" = "xno" -a "x$grape4" = "xno"; then
         if test "x$grape" = "xyes"; then
             AC_MSG_ERROR([GRAPE was selected but a test program failed to compile.
@@ -247,14 +254,21 @@ Please set environment QTDIR or use --with-qt-dir=QTDIR.])
         fi
     fi
 
+#   Possible that qt_dir simply doesn't exist (bad argument or environment).
+
+    if ! test -d "$qt_dir"; then
+	AC_MSG_ERROR([*** QTDIR $qt_dir does not exist.  Disabling Qt ***])
+	good_qt=no
+    fi
+
     if test "x$good_qt" = "xyes"; then
 
 #	We want Qt and have a Qt directory name.  Check that the
 #	library is usable.  Look in both lib64 and lib if necessary.
 
 	AC_SUBST(MOC, [$qt_dir/bin/moc])
-	qt_libs=-lqt
 	CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
+	qt_libs=-lqt
 
 	found_qt=no
 	save_LDFLAGS="$LDFLAGS"
@@ -443,7 +457,7 @@ else
 fi
 echo -n "    "						>> CONFIGURE_HOST
 if test "x$good_qt" = "xyes"; then
-    echo with Qt					>> CONFIGURE_HOST
+    echo with Qt \($qt_libs\)				>> CONFIGURE_HOST
 else
     echo without Qt					>> CONFIGURE_HOST
 fi
