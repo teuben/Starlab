@@ -18,6 +18,7 @@
 //	void print_counters
 
 #include "hdyn.h"
+#include "kira_timing.h"
 
 // For initialize_counters_from_log:
 
@@ -54,6 +55,18 @@ void initialize_counters_from_log(hdyn* b)
 
     b->get_kira_counters()->cpu_time = 0;
     GETLOG(total_cpu_time);
+
+    GETLOG(cpu_time_predict);
+    GETLOG(cpu_time_top_level_force);
+    GETLOG(cpu_time_low_level_force);
+    GETLOG(cpu_time_external_force);
+    GETLOG(cpu_time_total_force);
+    GETLOG(cpu_time_correct);
+    GETLOG(cpu_time_unperturbed);
+    GETLOG(cpu_time_final_step);
+    GETLOG(cpu_time_tree_check);
+    GETLOG(cpu_time_integrate);
+    GETLOG(cpu_time_other);
 
     GETLOG(step_top_single);
     GETLOG(step_top_cm);
@@ -105,6 +118,18 @@ void write_counters_to_log(hdyn* b)
 
     PUTLOG(cpu_time);
     PUTLOG(total_cpu_time);
+
+    PUTLOG(cpu_time_predict);
+    PUTLOG(cpu_time_top_level_force);
+    PUTLOG(cpu_time_low_level_force);
+    PUTLOG(cpu_time_external_force);
+    PUTLOG(cpu_time_total_force);
+    PUTLOG(cpu_time_correct);
+    PUTLOG(cpu_time_unperturbed);
+    PUTLOG(cpu_time_final_step);
+    PUTLOG(cpu_time_tree_check);
+    PUTLOG(cpu_time_integrate);
+    PUTLOG(cpu_time_other);
 
     PUTLOG(step_top_single);
     PUTLOG(step_top_cm);
@@ -165,6 +190,21 @@ void print_counters(kira_counters* kc,
 	cerr << "  (delta = " << kc->cpu_time - kc_prev->cpu_time << ")";
     cerr << endl;
 
+#ifdef CPU_COUNTERS
+    PRI(4); PRLOGL(cpu_time_predict);
+    PRI(4); PRLOGL(cpu_time_top_level_force);
+    PRI(4); PRLOGL(cpu_time_low_level_force);
+    PRI(4); PRLOGL(cpu_time_external_force);
+    PRI(4); PRLOGL(cpu_time_total_force);
+    PRI(4); PRLOGL(cpu_time_correct);
+    PRI(4); PRLOGL(cpu_time_unperturbed);
+    PRI(4); PRLOGL(cpu_time_final_step);
+    PRI(4); PRLOGL(cpu_time_tree_check);
+    PRI(4); PRLOGL(cpu_time_integrate);
+    PRI(4); PRLOGL(cpu_time_other);
+    cerr << endl;
+#endif
+
     PRI(4); PRLOGL(step_top_single);
     PRI(4); PRLOGL(step_top_cm);
     PRI(4); PRLOGL(step_low_level);
@@ -179,6 +219,7 @@ void print_counters(kira_counters* kc,
     PRI(4); PRLOGL(full_unpert_step);
     PRI(4); PRLOGL(full_unpert_orbit);
     PRI(4); PRLOGL(partial_unpert_orbit);
+    cerr << endl;
 
     PRI(4); PRLOGL(tree_change);
     PRI(4); PRLOGL(top_level_combine);
