@@ -3,6 +3,7 @@
 ////             to ensure finite radius.
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
+////              -C    output data in 'col' format [no]
 ////              -i    number the particles sequentially [don't number]
 ////              -m    mass cutoff (for finite radius) [0.999]
 ////              -n    specify number of particles [no default]
