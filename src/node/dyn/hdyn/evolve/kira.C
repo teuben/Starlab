@@ -1505,10 +1505,12 @@ local bool check_sync(hdyn* b)
 	if (bb->get_time() != b->get_system_time()
 	     && bb->get_kepler() == NULL) {
 	  cerr << "check_sync warning:  node "
-	       << bb->format_label() << " not synchronized at time "
-	       << b->get_system_time() << "(";
+	       << bb->format_label() << " not synchronized" << endl
+	       << "                     system time = "
+	       << b->get_system_time() << " (";
 	  xprint(b->get_system_time()); cerr << ")" << endl;
-	  cerr << "                     node time = " << bb->get_time() << "(";
+	  cerr << "                     node time = "
+	       << bb->get_time() << " (";
 	  xprint(bb->get_time()); cerr << ")" << endl;
 	  need_new_list = true;
 	}
