@@ -8,7 +8,7 @@
 #
 # Note that numerous autoconf cache (ac_cv_xxx) variables are also used.
 #
-# The following automake variables are set (checked in numerous Makefile.am).
+# The following automake conditionals are set (checked in various Makefile.am).
 #
 #	HAVE_F77	if we have a usable Fortran compiler
 #	USE_SDYN3	if we have elected to include the sdyn3 code
