@@ -10,7 +10,6 @@
 ////                     m:  mass
 ////                     v:  velocity vector
 ////                     t:  time
-////                     j:  angular momentum vector
 ////
 //	      Simon Portegies Zwart, April 1999
 
@@ -19,10 +18,10 @@
 #ifndef TOOLBOX
 #else
 
-local void mk_mrv(dyn* b, bool i_flag, int id, 
-		          bool m_flag, real mass, 
-                          bool r_flag, vector pos, 
-                          bool v_flag, vector vel) { 
+local void mk_mrv(dyn* b, int i_flag, int id, 
+		          int m_flag, real mass, 
+                          int r_flag, vector pos, 
+                          int v_flag, vector vel) { 
 
     b->set_index(id);
     b->set_mass(mass);
@@ -31,42 +30,51 @@ local void mk_mrv(dyn* b, bool i_flag, int id,
 
 }
 
-local dyn * initialize_dyn(istream &in, int n, bool i_flag, 
-			   bool m_flag, bool r_flag,
-			   bool v_flag, bool j_flag) {
+local dyn * initialize_dyn(istream &in, int n, int i_flag, 
+			   int m_flag, int r_flag,
+			   int v_flag) {
 
 
   if(n<=0)
     in >> n;
 
-  vector r, v, j;
+  vector r, v;
   real m, time;
-  int id;
+  real m_tot = 0;
+  int id=0;
   dyn *root = mkdyn(n);
   for_all_daughters(dyn, root, b) {
-    if (i_flag && m_flag && r_flag)
-      in >> id >> m >> r;
-    else
-      in >> id >> r >> m >> v >> time >> j;
-//    PRC(m);PRC(x);
+    if(i_flag < 0 && m_flag < r_flag && r_flag < v_flag) {
+      id++;
+      in >> m >> r >> v;
+    }
+    else if (i_flag < m_flag && m_flag < r_flag && r_flag < v_flag)
+      in >> id >> m >> r >> v;
+    else {
+      cerr << "order not not yet implemented."<<endl;
+      PRC(i_flag);PRC(m_flag);PRC(r_flag);PRL(v_flag);
+    }
 
     mk_mrv(b, i_flag, id, 
 	      m_flag, m, 
 	      r_flag, r, 
 	      v_flag, v); 
+    m_tot += m;
   }
 
+  root->set_mass(m_tot);
   return root;
 }
 
 void main(int argc, char ** argv)
 {
     bool F_flag = false;
-    bool i_flag = false;
-    bool m_flag = false;
-    bool r_flag = false;
-    bool v_flag = false;
-    bool j_flag = false;
+    int i_flag = -1;
+    int m_flag = -1;
+    int r_flag = -1;
+    int v_flag = -1;
+    int order = 0;
+    bool vctr[] = {false, false, false, false};
     char *filename;
 
     int n = -1;
@@ -74,7 +82,7 @@ void main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "F:imrvjn:";
+    char* param_string = "F:imrvn:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -84,20 +92,23 @@ void main(int argc, char ** argv)
 		      break;
 	    case 'n': n = atoi(poptarg);
 		      break;
-	    case 'i': i_flag = true;
+	    case 'i': i_flag = order++;
 		      break;
-	    case 'm': m_flag = true;
+	    case 'm': m_flag = order++;
 		      break;
-	    case 'r': r_flag = true;
+	    case 'r': r_flag = order++;
+	              vctr[r_flag] = true;
 		      break;
-	    case 'v': v_flag = true;
-		      break;
-	    case 'j': j_flag = true;
+	    case 'v': v_flag = order++;
+	              vctr[v_flag] = true;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	    	      get_help();
 		      exit(1);
 	}
+
+    cerr << "Selected order: " << endl;
+    PRC(order);PRC(i_flag);PRC(m_flag);PRC(r_flag);PRL(v_flag);
 
     dyn * root = NULL;
     if (F_flag) {
@@ -106,10 +117,10 @@ void main(int argc, char ** argv)
 	                  << filename <<endl;
       cerr << "Reading input from file "<< filename <<endl;
 
-      root = initialize_dyn(infile, n, i_flag, m_flag, r_flag, v_flag, j_flag);
+      root = initialize_dyn(infile, n, i_flag, m_flag, r_flag, v_flag);
     }
     else {
-      root = initialize_dyn(cin, n, i_flag, m_flag, r_flag, v_flag, j_flag);
+      root = initialize_dyn(cin, n, i_flag, m_flag, r_flag, v_flag);
     }
 
     root->log_history(argc, argv);
