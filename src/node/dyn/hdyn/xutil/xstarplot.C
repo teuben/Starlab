@@ -21,7 +21,7 @@
 ////             -r    "reverse video" (black background) [true]
 ////             -s    window size, relative to "standard" 400 pixels [1]
 ////             -t    show tree structure [no]
-////             -m    highlight unperturbed systems [no]
+////             -u    highlight unperturbed systems [no]
 ////             -v    verbose mode (echo snap times) [no]
 ////
 //// Note:  There appears to be a problem with the X interface on some

@@ -532,7 +532,7 @@ main(int argc, char** argv)
 	    psize = 1;
     }
 
-#ifndef HAS_PNG
+#ifndef HAVE_LIBPNG
     if (format == 0) {
 	cerr << "No PNG support; switching to GIF" << endl;
 	format = 2;

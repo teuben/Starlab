@@ -1,5 +1,6 @@
 
 #include "xstarplot.h"
+#include <sstream>
 
 static float linespacing;
 			 
@@ -290,7 +291,7 @@ void show_instructions(unsigned long win, float r, char* buffer,
 
     lux_clear_window(win);
     lux_reconvert_rcoord(win,0,0,&statusx, &statusy);
-    istrstream ins(buffer,strlen(buffer));
+    istringstream ins(buffer);
     while(ins.get(s,255,'\n')) {
 	lux_set_nobuffer();
 	lux_draw_image_string(win, statusx, statusy,
@@ -310,7 +311,7 @@ void show_instructions(unsigned long win, float r, char* buffer,
     int ptr = 0, len;
 
     lux_reconvert_rcoord(win,0,0,&statusx, &statusy);
-    istrstream ins(buffer,strlen(buffer));
+    istringstream ins(buffer);
     while(ins.get(s,255,'\n')) {
 	lux_set_nobuffer();
 	lux_draw_string(win, statusx, statusy,
