@@ -89,7 +89,7 @@ static bool print_trig_warning = false;
 void set_kepler_tolerance(int i)
 {
     if (i < 0) i = 0;
-    if (i > 2) i = 2;
+    if (i > 3) i = 3;
     kepler_tolerance_level = i;
 }
 
@@ -146,11 +146,21 @@ local int check_trig_limit(kepler* k, real &c, char *s)
     return forced;
 }
 
+#define MAX_WARNINGS 10
+static int nwarnings = 0;
+
 local void err_or_warn(char *s)
 {
-    if (kepler_tolerance_level > 0)
+    if (kepler_tolerance_level > 0) {
+
+	// Unlimited warnings are a problem for automated scripts...
+	// Place a fairly conservative limit here (Steve, 8/02).
+
 	warning(s);
-    else
+	if (kepler_tolerance_level == 3 && ++nwarnings > MAX_WARNINGS)
+	    kepler_tolerance_level = 0;
+
+    } else
 	err_exit(s);
 }
 
