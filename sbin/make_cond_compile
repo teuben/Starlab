@@ -22,5 +22,5 @@ if [ -f "$src" -a ! -s "$src" ]; then
 else
     date=`date +%a_%b_%d_%Y,_%T_%Z`
     echo "$* -c $src -D_COMPILE_DATE_=\"$date\""
-    "$@"  -c $src -D_COMPILE_DATE_=\"$date\"
+    $*  -c $src -D_COMPILE_DATE_=\"$date\"
 fi
