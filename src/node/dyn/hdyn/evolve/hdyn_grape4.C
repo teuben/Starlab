@@ -485,7 +485,8 @@ local int initialize_array(hdyn * root)
 // check_release_grape:  Accessor for GRAPE release/attach.
 //========================================================================
 
-void check_release_grape(kira_options *ko, xreal time)
+void check_release_grape(kira_options *ko, xreal time,
+			 bool verbose)		// default = true
 {
 #ifdef SHARE_GRAPE
 
@@ -493,8 +494,9 @@ void check_release_grape(kira_options *ko, xreal time)
 
     if (cpu_time() - ko->grape_last_cpu > ko->grape_max_cpu) {
 
-	cerr << "\nReleasing GRAPE-4 at time " << time << " after "
-	     << cpu_time() - ko->grape_last_cpu <<" CPU sec\n";
+	if (verbose)
+	    cerr << "\nReleasing GRAPE-4 at time " << time << " after "
+		 << cpu_time() - ko->grape_last_cpu <<" CPU sec\n";
 
 	h3close_();
 	grape_is_open = false;
@@ -976,7 +978,7 @@ local void set_grape4_neighbour_radius(hdyn * b, int nj_on_grape)
 		// Radius information included here to allow coll
 		// criterion to be applied elsewhere.
 
-		b->set_grape_rnb_sq(max(b->get_d_nn_sq(),	// 1 --> 2?
+		b->set_grape_rnb_sq(max(b->get_d_nn_sq(),
 					4*b->get_radius()*b->get_radius()));
 
 		// In this case, if the actual value set is zero,
@@ -1237,7 +1239,7 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
     real r90_sq = next_top[0]->get_d_min_sq()
 			    / square(next_top[0]->get_d_min_fac());
 
-#define H2_FAC 8192*2			// pretty arbitrary...
+#define H2_FAC 8192			// pretty arbitrary...
 
     real h2_critical = H2_FAC * r90_sq;
 
@@ -1381,7 +1383,8 @@ local inline void set_grape4_density_radius(hdyn * b, real rnn_sq)
     //
     // Note that nn = b means that no neighbors were found.
 
-    // We will modify rnn_sq for use as the initial GRAPE radius.
+    // We will modify rnn_sq for use as the initial GRAPE radius
+    // (on entry, rnn_sq is the squared average nn distance).
 
     if (b->get_nn() != NULL && b->get_nn() != b
 	&& b->get_d_nn_sq() < 0.1 * VERY_LARGE_NUMBER
@@ -1390,54 +1393,193 @@ local inline void set_grape4_density_radius(hdyn * b, real rnn_sq)
 	// Node seems to have a valid nearest neighbor pointer.
 	// Modify the initial guess for particles with a close nn.
 
+	if (DEBUG) {
+	    cerr << "nn OK for " << b->format_label() << ",  ";
+	    PRC(rnn_sq); PRL(sqrt(b->get_d_nn_sq()));
+	    PRL(b->get_nn()->format_label());
+	}
+
+#if 0
 	if (b->get_d_nn_sq() < rnn_sq)
 	    rnn_sq = sqrt(rnn_sq * b->get_d_nn_sq());	// empirical
 	else
 	    rnn_sq = b->get_d_nn_sq();
+#endif
 
-	if (DEBUG)
-	    cerr << "nn OK for " << b->format_label() << ",  ";
+	rnn_sq = 5*b->get_d_nn_sq();
 
     } else {
 
 	// Node does not know its nearest neighbor.  Value of d_nn_sq
-	// is where the search stopped.
+	// is where the neighbor search stopped.
 
-	rnn_sq = max(rnn_sq, b->get_d_nn_sq());
+	rnn_sq = 4*max(rnn_sq, b->get_d_nn_sq());
 
 	if (DEBUG)
 	    cerr << "no nn for " << b->format_label() << ",  ";
     }
 
-#define RNN_FAC 12	// trial and error
-
-    b->set_grape_rnb_sq(RNN_FAC * rnn_sq);
-    if (DEBUG) PRL(b->get_grape_rnb_sq());
+    b->set_grape_rnb_sq(rnn_sq);
+    if (DEBUG) PRL(sqrt(b->get_grape_rnb_sq()));
 }
 
-local bool count_neighbors_and_adjust_h2(int chip, hdyn * b)
+local void count_neighbors(hdyn *b, real r2, int nnb)
+{
+    int nnb_check0 = 0, nnb_check1 = 0, nnb_check2 = 0;
+    for_all_daughters(hdyn, b->get_root(), bb) {
+	real sep2 = square(bb->get_pos() - b->get_pos());
+	if (sep2 <= r2/2) nnb_check0++;
+	if (sep2 <= r2)   nnb_check1++;
+	if (sep2 <= 2*r2) nnb_check2++;
+    }
+    if (nnb_check2 != nnb) {
+	cerr << "***1 node " << b->format_label() << ",  "; PRL(sqrt(r2));
+	PRI(5); PRC(nnb_check0); PRC(nnb_check1); PRL(nnb_check2);
+    }
+}
+
+real d_nn_sq, d_nn_sq2, d_nn_sq3;
+static hdyn *nn2, *nn3;
+
+local hdyn *find_nn(hdyn *b)
+{
+    hdyn *nn = NULL;
+    d_nn_sq = d_nn_sq2 = d_nn_sq3 = VERY_LARGE_NUMBER;
+    nn2 = nn3 = NULL;
+
+    for_all_daughters(hdyn, b->get_root(), bb)
+	if (bb != b) {
+	    real sep2 = square(bb->get_pos() - b->get_pos());
+	    if (sep2 < d_nn_sq) {
+		d_nn_sq3 = d_nn_sq2;
+		d_nn_sq2 = d_nn_sq;
+		d_nn_sq = sep2;
+		nn3 = nn2;
+		nn2 = nn;
+		nn = bb;
+	    } else if (sep2 < d_nn_sq2) {
+		d_nn_sq3 = d_nn_sq2;
+		d_nn_sq2 = sep2;
+		nn3 = nn2;
+		nn2 = bb;
+	    } else if (sep2 < d_nn_sq3) {
+		d_nn_sq3 = sep2;
+		nn3 = bb;
+	    }
+	}
+    return nn;
+}
+
+static hdyn *bprev = NULL;
+static real rnb_sq_prev = 0;
+static int  nnb_prev = 0;
+static int  nnb_count = 0;
+
+local bool count_neighbors_and_adjust_h2(int chip, hdyn *b)
 {
     int nnb = h3nblist_(&nboards, &chip, h3nb);		// get neighbor list
+    real rnb_sq = b->get_grape_rnb_sq();
 
-    if (nnb < 15) {
+    if (nnb < 14) {
 
-	if (DEBUG)
+	if (DEBUG) {
 	    cerr << "increasing grape_rnb_sq for " << b->format_label()
 		 << " (nnb = " << nnb << ", grape_rnb = "
-		 << sqrt(b->get_grape_rnb_sq()) << ")" << endl;
+		 << sqrt(rnb_sq) << ")" << endl;
 
-	real fac = 4;					// (4 here was 2)
-	if (nnb < 4) fac *= 2;
-	b->set_grape_rnb_sq(fac * b->get_grape_rnb_sq());
+	    // count_neighbors(b, rnb_sq, nnb);
+
+	    if (bprev) {
+		PRC(b->format_label()); PRC(nnb_prev); PRC(nnb); PRL(nnb_count);
+	    }
+	}
+
+#if 0
+	real fac = 1.25;
+	if (nnb < 12) fac *= 1.25;
+	if (nnb < 8) fac *= 1.6;
+	if (nnb < 4) fac *= 1.6;
+	if (nnb < 2) fac *= 1.6;
+#endif
+
+	real fac = min(2.0, pow(15.0/(1.0+nnb), 1.5));
+
+	// About to increase rnb.  Take steps to ensure that we don't
+	// undo a decrease from last time around...
+
+	real rnb_sq_next =fac * rnb_sq;
+
+	if (bprev == b && nnb_prev >= 14 && rnb_sq_prev > rnb_sq
+	    && rnb_sq_next > 0.95*rnb_sq_prev) {
+	    rnb_sq_next = sqrt(rnb_sq*rnb_sq_prev);
+	}
+
+	b->set_grape_rnb_sq(rnb_sq_next);
+
+	// For use when iterating:
+
+	bprev = b;
+	rnb_sq_prev = rnb_sq;
+	nnb_prev = nnb;
+	nnb_count++;
+
+	return false;
+
+    } else if (nnb >= 512) {
+
+	// This probably indicates overflow, in which case *none* of the
+	// neighbor lists for this batch of particles is trustworthy.
+	// Really should apply this logic to the entire block of nodes,
+	// not just this one...
+
+	if (DEBUG) {
+	    cerr << "decreasing grape_rnb_sq for " << b->format_label()
+		 << " (nnb = " << nnb << ", grape_rnb = "
+		 << sqrt(rnb_sq) << ")" << endl;
+
+	    // PRL(chip);
+	    // count_neighbors(b, rnb_sq, nnb);
+
+	    if (bprev) {
+		PRC(b->format_label()); PRC(nnb_prev); PRC(nnb); PRL(nnb_count);
+	    }
+	}
+
+	// About to decrease rnb.  Take steps to ensure that we don't
+	// undo an increase from last time around...
+
+	real fac = 0.5;
+	real rnb_sq_next =fac * rnb_sq;
+
+	if (bprev == b && nnb_prev < 14 && rnb_sq_prev < rnb_sq
+	    && rnb_sq_next < 1.05*rnb_sq_prev) {
+	    rnb_sq_next = sqrt(rnb_sq*rnb_sq_prev);
+	}
+
+	b->set_grape_rnb_sq(rnb_sq_next);
+
+	// For use when iterating:
+
+	bprev = b;
+	rnb_sq_prev = rnb_sq;
+	nnb_prev = nnb;
+	nnb_count++;
 
 	return false;
     }
+
+    // This node is OK, so discard prev info.
+
+    bprev = NULL;
+    nnb_count = 0;
 
     // Make a list of nodes to send to compute_com().
 
     dyn** dynlist = new dynptr[nnb];
 
-    real d_max = 0;
+    real d_max = 0, d_min = VERY_LARGE_NUMBER;
+    hdyn *bmin = NULL;
+
     for (int j = 0; j < nnb; j++) {
 
 	hdyn * bb = nodes[h3nb[j]];
@@ -1449,6 +1591,10 @@ local bool count_neighbors_and_adjust_h2(int chip, hdyn * b)
 	    if (bb != b) {
 		vector diff = b->get_pred_pos() - bb->get_pred_pos();
 		real d2 = diff * diff;
+		if (d2 < d_min) {
+		    d_min = d2;
+		    bmin = bb;
+		}
 		d_max = max(d_max, d2);
 	    }
 	}
@@ -1457,14 +1603,36 @@ local bool count_neighbors_and_adjust_h2(int chip, hdyn * b)
     if (DEBUG) {
 	real grape_rnb = sqrt(b->get_grape_rnb_sq());
 	d_max = sqrt(d_max);
+	d_min = sqrt(d_min);
 	cerr << b->format_label() << ": ";
-	PRC(nnb), PRC(grape_rnb), PRL(d_max);
+	PRC(nnb), PRC(grape_rnb), PRC(d_min); PRL(d_max);
+	if (b->get_nn() != b && b->get_nn() != bmin) {
+	    cerr << "***2 ";
+	    if (bmin) {
+		PR(bmin->format_label()); cerr << "  ";
+	    }
+	    if (b->get_nn()) PR(b->get_nn()->format_label());
+	    cerr << endl;
+	    PRL(sqrt(b->get_d_nn_sq()));
+#if 0
+	    hdyn *nn = find_nn(b);
+	    if (nn) {
+		cerr << "check: "; PRC(nn->format_label()); PRL(sqrt(d_nn_sq));
+		if (nn2) {
+		    PRI(7); PRC(nn2->format_label()); PRL(sqrt(d_nn_sq2));
+		}
+		if (nn3) {
+		    PRI(7); PRC(nn3->format_label()); PRL(sqrt(d_nn_sq3));
+		}
+	    }
+#endif
+	}
     }
 
     compute_density(b, 12, dynlist, nnb);	// writes to dyn story
 
-    // Strangely, compute_density sometimes fails to write the proper
-    // info to the dyn story.  Reason and circumstances still unknown.
+    // Compute_density sometimes fails to write the proper info to
+    // the dyn story.  Reason and circumstances still unknown.
 
     if (find_qmatch(b->get_dyn_story(), "density_time")
 	&& find_qmatch(b->get_dyn_story(), "density_k_level")
@@ -1482,6 +1650,280 @@ local bool count_neighbors_and_adjust_h2(int chip, hdyn * b)
     return true;
 }
 
+#define NEW_DENSITY_ALGORITHM
+
+#ifdef NEW_DENSITY_ALGORITHM
+
+#define NNB_MIN		14
+#define NNB_OVERFLOW	256			// rather arbitrary...
+
+#define ITER_MAX	30
+
+// Experimental (and should carry over to GRAPE-6 code)...
+
+local int get_densities_for_list(xreal time, int ni, hdynptr list[],
+				 int nj_on_grape4, real h2_crit,
+				 bool debug = false)
+{
+    // Iterate until densities have been set for all particles on the list.
+    // On entry, initial guesses have already been assigned to the GRAPE-4
+    // neighbor radii.  Must watch out for overflow, which will invalidate
+    // all lists returned from the GRAPE.  Note that the criterion for
+    // detecting overflow is somewhat unclear...
+
+    bool *done = new bool[ni];			// density has been computed
+
+    int  *nnb_prev = new int[ni];		// consistent (nnb, rnb) pair
+    real *rnb_sq_prev = new real[ni];		// from the previous iteration
+
+    int  *nnb_prev_save = new int[ni];		// quantities at the start of
+    real *rnb_sq_prev_save = new real[ni];	// the do loop, to allow
+    bool *done_save = new bool[ni];		// recalculation following
+    real *rnb_sq_save = new real[ni];		// neighbor list overflow
+
+    // The "save" quantities represent the state of the system at the start
+    // of the do loop, in case of overflow and reset.  The "prev" quantities
+    // give information on the most recent neighbor calculation.
+
+    // Initialization (not really needed):
+
+    for (int i = 0; i < ni; i++) {
+	rnb_sq_prev[i] = rnb_sq_save[i] = rnb_sq_prev_save[i] = 0;
+	nnb_prev[i] = nnb_prev_save[i] = 0;
+	done[i] = done_save[i] = false;
+    }
+
+    // Loop until all_done is true.
+    // (Probably should count and limit iterations also...)
+
+    bool all_done = false;
+    int ngrape = 0;
+
+    if (debug)
+	cerr << endl << "Nodes " << list[0]->format_label()
+	     << " to " << list[ni-1]->format_label() << ":" << endl;
+
+    int iter = 0;
+
+    do {
+
+	iter++;
+	if (debug)
+	    PRL(iter);
+
+	// Save data in case of overflow.
+
+	for (int i = 0; i < ni; i++) {
+	    rnb_sq_save[i] = list[i]->get_grape_rnb_sq();
+	    rnb_sq_prev_save[i] = rnb_sq_prev[i];
+	    nnb_prev_save[i] = nnb_prev[i];
+	    done_save[i] = done[i];
+	}
+
+	// Compute forces (==> get neighbors).
+
+	force_by_grape4(time, ni, list, nj_on_grape4);
+	ngrape++;
+
+	// Retrieve neighbor lists and begin density computation.
+
+	all_done = true;
+	bool overflow = false;
+
+	for (int i = 0; i < ni; i++) {
+
+	    if (!done[i]) {
+
+		hdyn *bb = list[i];
+		real rnb_sq = bb->get_grape_rnb_sq();
+
+#ifndef USE_HALF_CHIP
+		int real_chip = i;
+#else
+		int real_chip = 2*i;
+#endif
+
+		// Get the neighbor list for this node.
+
+		int nnb = h3nblist_(&nboards, &real_chip, h3nb);
+
+		// Overflow check:
+
+		if (nnb >= NNB_OVERFLOW) {
+
+		    if (debug)
+			cerr << "    overflow detected at "
+			     << bb->format_label()
+			     << ";  rnb = " << sqrt(rnb_sq)
+			     << ",  nnb = " << nnb << endl;
+
+		    overflow = true;
+		    break;
+
+		} else if (nnb < NNB_MIN) {
+
+		    if (rnb_sq > h2_crit) {
+
+			// Set zero density for this node.
+
+			putrq(bb->get_dyn_story(), "density_time",
+			      (real)bb->get_system_time());
+			putrq(bb->get_dyn_story(), "density", 0.0);
+
+			done[i] = true;
+			bb->set_grape_rnb_sq(0);
+
+			if (debug)
+			    cerr << "    set zero density for "
+				 << bb->format_label() << endl;
+
+		    } else {
+
+			// Modify GRAPE neighbor radius.
+
+			real fac = min(2.0, pow(15.0/(1.0+nnb), 1.5));
+
+			// About to increase rnb_sq.  Take steps to ensure that
+			// we don't undo a decrease from last time around...
+
+			real rnb_sq_next =fac * rnb_sq;
+
+			if (nnb_prev[i] >= NNB_MIN	  // <==> prev overflow
+			    && rnb_sq_prev[i] > rnb_sq
+			    && rnb_sq_next > 0.95*rnb_sq_prev[i])
+			    rnb_sq_next = sqrt(rnb_sq*rnb_sq_prev[i]);
+
+			bb->set_grape_rnb_sq(rnb_sq_next);
+			all_done = false;
+
+			nnb_prev[i] = nnb;
+			rnb_sq_prev[i] = rnb_sq;
+
+			if (debug)
+			    cerr << "    increased rnb for "
+				 << bb->format_label()
+				 << " to " << sqrt(rnb_sq_next)
+				 << ";  nnb was " << nnb << endl;
+		    }
+
+		} else {
+
+		    // Compute density and remove node from further
+		    // consideration.
+
+		    // Make a list of nodes to send to compute_density().
+
+		    dyn** dynlist = new dynptr[nnb];
+
+		    for (int j = 0; j < nnb; j++) {
+			hdyn *nbr = nodes[h3nb[j]];	// j-th neighbor of bb
+			dynlist[j] = (dyn*)nbr;
+		    }
+
+		    // Function compute_density() writes to the  dyn story.
+
+		    compute_density(bb, 12, dynlist, nnb);
+		    delete [] dynlist;
+
+		    done[i] = true;
+		    bb->set_grape_rnb_sq(0);		// avoid unnecessary
+							// neighbors
+
+		    // No need to set prev quantities, as we won't visit
+		    // this node again (except on overflow).
+
+		    if (debug)
+			cerr << "    set density for " << bb->format_label()
+			     << endl;
+
+		}
+	    }
+	}
+
+	if (overflow) {
+
+	    // Must revert, adjust all radii, and retry.
+
+	    for (int i = 0; i < ni; i++) {
+
+		// Restore initial settings (discard partial update):
+
+		done[i] = done_save[i];
+		if (!done[i]) {
+
+		    rnb_sq_prev[i] = rnb_sq_prev_save[i];
+		    nnb_prev[i] = nnb_prev_save[i];
+
+		    real rnb_sq = rnb_sq_save[i];
+
+		    // About to decrease rnb_sq.  Take steps to ensure that
+		    // we don't undo an increase from last time around...
+
+		    real fac = 0.5;
+		    real rnb_sq_next =fac * rnb_sq;
+
+		    if (nnb_prev[i] < NNB_MIN
+			&& rnb_sq_next < 1.05*rnb_sq_prev[i])
+			rnb_sq_next = sqrt(rnb_sq*rnb_sq_prev[i]);
+
+		    list[i]->set_grape_rnb_sq(rnb_sq_next);
+
+		    // Flag the overflow:
+
+		    rnb_sq_prev[i] = rnb_sq;
+		    nnb_prev[i] = NNB_OVERFLOW;
+		    
+		}
+	    }
+
+	    all_done = false;
+	}
+
+    } while (!all_done && iter < ITER_MAX);		// end of do loop
+
+    // Set any remaining densities to zero (exceeded iteration count).
+
+    if (!all_done) {
+
+	if (debug)
+	    cerr << "maximum iterations exceeded" << endl;
+
+	for (int i = 0; i < ni; i++) {
+
+	    if (!done[i]) {
+		hdyn *bb = list[i];
+		putrq(bb->get_dyn_story(), "density_time",
+		      (real)bb->get_system_time());
+		putrq(bb->get_dyn_story(), "density", 0.0);
+
+		if (debug)
+		    cerr << "    set zero density for "
+			 << bb->format_label() << endl;
+	    }
+	}
+    }
+
+    // Clean up.
+
+    delete [] done;
+
+    delete [] nnb_prev;
+    delete [] rnb_sq_prev;
+
+    delete [] nnb_prev_save;
+    delete [] rnb_sq_prev_save;
+    delete [] done_save;
+    delete [] rnb_sq_save;
+
+    if (debug) {
+	cerr << endl << "Returning "; PRL(ngrape);
+    }
+
+    return ngrape;
+}
+
+#endif
+
 //  *****************************
 //  *****************************
 //  ***                       ***
@@ -1489,6 +1931,19 @@ local bool count_neighbors_and_adjust_h2(int chip, hdyn * b)
 //  ***                       ***
 //  *****************************
 //  *****************************
+
+
+local int recount_nblist(int ip)	// ip = number of chips in use
+{
+    int total = 0;
+
+    for (int i = 0; i < ip; i++) {
+	int real_chip = 2*i;
+	if (real_chip == 32 || real_chip == 64) PRL(total);
+	total += h3nblist_(&nboards, &real_chip, h3nb);
+    }
+    return total;
+}
 
 void grape_calculate_densities(hdyn* b,
 			       real h2_crit)	// default = 4
@@ -1544,6 +1999,8 @@ void grape_calculate_densities(hdyn* b,
     int nimax = h3npipe_()/2;
 #endif
 
+//------------------------------------------------------------------------
+
     int n_grape = 0;
     int n_retry = 0;
 
@@ -1553,11 +2010,28 @@ void grape_calculate_densities(hdyn* b,
 	int inext = i;
 	int ip = min(nimax, n_top - i);
 
+#ifdef NEW_DENSITY_ALGORITHM
+
+	n_grape += get_densities_for_list(time, ip, top_nodes+i,
+					  nj_on_grape4, h2_crit,
+					  false);	      // true = verbose
+	i += ip;
+
+#else
+
 	// Compute forces and neighbors on the next block of particles,
 	// of length ip.
 
 	force_by_grape4(time, ip, top_nodes+i, nj_on_grape4);
 	n_grape++;
+
+	if (DEBUG) {
+	    cerr << endl; PRL(ip);
+	    PRL(count_nblist_low(0, 0));
+	    PRL(count_nblist_low(0, 32));
+	    PRL(count_nblist_low(0, 64));
+	    PRL(recount_nblist(ip));
+	}
 
 	for (int ichip = 0; ichip < ip ; ichip ++) {
 
@@ -1568,7 +2042,6 @@ void grape_calculate_densities(hdyn* b,
 #endif
 
 	    hdyn * bb = top_nodes[i+ichip];
-	    int hindex = bb->get_grape_index()-1;
 
 	    // Just count neighbors, for now.
 
@@ -1599,10 +2072,15 @@ void grape_calculate_densities(hdyn* b,
 		    // Expand the neighbor sphere -- must recompute the
 		    // force.  Could probably speed this up substantially
 		    // by checking, correcting and recomputing all
-		    // remaining particles on the list.
+		    // particles on the list at once.
 
 		    force_by_grape4(time, 1, top_nodes+inew, nj_on_grape4);
 		    n_retry++;
+
+		    if (DEBUG) {
+			PRL(count_nblist_low(0, 0));
+			PRL(recount_nblist(1));
+		    }
 
 		    real_ichip = 0;
 		    ichip = ip;
@@ -1615,9 +2093,33 @@ void grape_calculate_densities(hdyn* b,
 	    }
 
 	    inext++;
+	    bprev = NULL;
+	    nnb_count = 0;
+
 	}
 	i = inext;
+
+#endif
+
+	// Work around side-effect of inefficient iteration.
+	// Silently release and reattach the GRAPE hardware.
+
+	check_release_grape(b->get_kira_options(), time, false);
+
+	if (!grape_is_open) {
+	    // cerr << "reattaching GRAPE, i = " << i << endl;
+	    h3open_();
+	    set_time_check_mode(0);
+	    b->get_kira_options()->grape_last_cpu = cpu_time();
+	    int dbgl = 0;
+	    h3setdebuglevel_(&dbgl);
+	    grape_is_open = true;
+	    nj_on_grape4 = initialize_array(b);
+	    jpdma_nodes(n_top, top_nodes, true, time);
+	}
     }
+
+//------------------------------------------------------------------------
 
     // Timestamp the root node.
 
