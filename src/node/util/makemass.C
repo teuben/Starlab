@@ -16,10 +16,10 @@
 ////                                            2) Miller & Scalo
 ////                                            3) Scalo
 ////                                            4) Kroupa
-////                                            5) Tapered_Power_Law
+////                                            5) GdeMarchi
 ////            Option -F requires one of the following strings:
 ////                      (Power_Law, Miller_Scalo, 
-////                       Scalo, Kroupa, Tapered_Power_Law)
+////                       Scalo, Kroupa, GdeMarchi)
 ////                   -f requires the appropriate interger.
 ////            -i        (re)number stellar index from highest to lowest mass.
 ////            -l/L      lower mass limit [1]
@@ -57,7 +57,29 @@ local real mf_Miller_Scalo(real m_lower, real m_upper) {
     return m;
 }
 
-//Tapered power-law (from Guido de Marchi private communication Oct. 2001)
+#if 0
+//Tapered power-law (from Guido de Marchi private communication April. 2002)
+//dN/dLogm= m^(-1.35)*(1-exp(-m/0.25)^2.4)
+local real tapered_power_law(real m, 
+			     const real x1 = -1.35, 
+			     const real x2 = 2.4, 
+			     const real mbreak = 0.25) {
+
+    real m, rnd;
+    do {
+	rnd = randinter(0,1);
+	//	m = 0.08 + (0.19*pow(rnd, 1.55) + 0.05*pow(rnd, 0.6))
+	//	  /        pow(1-rnd, 0.58);
+	real X = 1-rnd;
+	m = 0.15 * (1 /(pow(X, 0.75) + 0.04*pow(X, 0.25)) - pow(X, 2)/1.04);
+    }
+    while(m_lower>m || m>m_upper);
+    return m;
+}
+#endif
+
+#if 0
+//Tapered power-law (from Guido de Marchi private communication April. 2002)
 //dN/dLogm= m^(-1.35)*(1-exp(-m/0.25)^2.4)
 local real tapered_power_law(real m, 
 			     const real x1 = -1.35, 
@@ -82,11 +104,28 @@ local real tapered_power_law(real m,
   // 562   3.55   2.24   1.41   0.89   0.56   0.35   0.22   0.14   0.09  0.04
   //     |      |      |      |      |      |      |      |      |      |
   //    1.00   3.16   3.98   6.03   6.76  15.14  19.96  16.60  12.30   5.5
-// 1    2.00   5.16   9.14   15.17  21.93 37.07  57.03  73.63  85.93  91.43
+  // 1    2.00   5.16   9.14   15.17  21.93 37.07  57.03  73.63  85.93  91.43
+
   return ms;
 }
+#endif
 
 local real mf_GdeMarchi(real m_lower, real m_upper) {
+
+    real m, X;
+    do {
+	X = 1-randinter(0,1);
+	// better fit to Guido's results at low mass end, 
+        // but lacks high mass component.
+	//m = 0.15 * (1 /(pow(X, 0.9) + 0.03*pow(X, 0.2)) - pow(X, 8)/1.03);
+
+	// most satisfactory
+	m = 0.15 * (1 /(pow(X, 0.75) + 0.03*pow(X, 0.25)) - pow(X, 8)/1.03);
+    }
+    while(m_lower>m || m>m_upper);
+    return m;
+
+#if 0
 
 //dN/dLogm= m^(-1.35)*(1-exp(-m/0.15)^2.4)
 // for now we do it the poor way by Monte Carlo
@@ -95,23 +134,6 @@ local real mf_GdeMarchi(real m_lower, real m_upper) {
     real mass = tapered_power_law(m_lower, x1, x2, mbreak);
     return mass;
 
-#if 0
-  real x1 = -2.35;
-  real x2 = 2.40;
-  real mbreak = 0.15;
-    real dNdm_min = tapered_power_law(m_lower, x1, x2, mbreak);
-    real dNdm_max = tapered_power_law(m_upper, x1, x2, mbreak);
-//    PRC(dNdm_min);PRL(dNdm_max);
-    real m, rnd;
-    real dNdm_try, dNdm;
-    do {
-	rnd = randinter(0,1);
-	m = m_lower + rnd*(m_upper-m_lower);
-	dNdm_try = randinter(dNdm_min,dNdm_max);
-	dNdm = tapered_power_law(m, x1, x2, mbreak);
-    }
-    while(dNdm_try>dNdm);
-    return m;
 #endif
 }
 
@@ -136,7 +158,9 @@ local real Kroupa_Tout_Gilmore(real m_lower, real m_upper) {
     do {
 	rnd = randinter(0,1);
 	m = 0.08 + (0.19*pow(rnd, 1.55) + 0.05*pow(rnd, 0.6))
-	    /        pow(1-rnd, 0.58);
+	  /        pow(1-rnd, 0.58);
+	//real X = 1-rnd;
+	//m = 0.15 * (1 /(pow(X, 0.75) + 0.04*pow(X, 0.25)) - pow(X, 2)/1.04);
     }
     while(m_lower>m || m>m_upper);
     return m;
@@ -168,7 +192,7 @@ real get_random_stellar_mass(real m_lower, real m_upper,
        case Kroupa: // Kroupa, Tout & Gilmore 1993, MNRAS 262, 545
 	  m = Kroupa_Tout_Gilmore(m_lower, m_upper);
 	      break;
-       case Tapered_Power_Law:
+       case GdeMarchi:
 	  m = mf_GdeMarchi(m_lower, m_upper);
 	      break;
        default:
@@ -201,8 +225,8 @@ char* type_string(mass_function mf) {
        case Kroupa:
             sprintf(mf_name, "Kroupa");
 	    break;
-       case Tapered_Power_Law:
-            sprintf(mf_name, "Tapered_Power_Law");
+       case GdeMarchi:
+            sprintf(mf_name, "GdeMarchi");
 	    break;
        default:
             sprintf(mf_name, "Unknown");
@@ -225,8 +249,8 @@ mass_function extract_mass_function_type_string(char* type_string) {
         type = Scalo;
      else if (!strcmp(type_string, "Kroupa"))
         type = Kroupa;
-     else if (!strcmp(type_string, "Tapered_Power_Law"))
-        type = Tapered_Power_Law;
+     else if (!strcmp(type_string, "GdeMarchi"))
+        type = GdeMarchi;
      else if (!strcmp(type_string, "Unknown"))
         type = Unknown_MF;
      else {
@@ -335,7 +359,8 @@ local void mkmass(node* b, mass_function mf,
     if(m_lower>=m_upper)
 	sprintf(tmp_string,
 		"         %s mass function, total mass = %8.2f",
-		type_string(Equal_Mass), m_sum);
+		type_string(mf), m_sum);
+//		type_string(Equal_Mass), m_sum);
     else
 	sprintf(tmp_string,
 		"       %s mass function, total mass = %8.2f Solar",
