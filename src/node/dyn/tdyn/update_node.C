@@ -99,6 +99,9 @@ local inline void update_node(worldbundle *wb,
 
 		    kepler * k = new kepler;
 
+		    k->set_circular_binary_limit(1.e-6);	// ~arbitrary
+		    set_kepler_tolerance(2);			// repetitious
+
 		    k->set_time(b->get_time());
 		    k->set_total_mass(b->get_mass() + sis->get_mass());
 		    k->set_rel_pos(sis->get_pos() - b->get_pos());
