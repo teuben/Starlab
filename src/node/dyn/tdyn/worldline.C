@@ -966,7 +966,9 @@ tdyn *find_event(worldline *w, tdyn *bn, real t)
 	if (curr) {
 
 	    real t_curr = curr->get_time();
-	    real t_bn = bn->get_time();
+	    real t_bn = bn->get_time();		// evaluating bn->get_time() in
+						// if (..) below causes strange
+	    					// error on margaux (DecUNIX)...
 
 	    if (t_curr > t) {
 
