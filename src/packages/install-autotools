@@ -34,7 +34,7 @@ echo Package prefix flag is \"$pre\"
 foreach tool (autoconf automake libtool)
 
     echo Unpacking $tool
-    tar xzf $tool*.tar.gz
+    gunzip -c $tool*.tar.gz | tar xzf -
 
     set dir = $tool*[0-9]
 

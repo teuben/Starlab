@@ -11,7 +11,6 @@ if ($?STARLAB_PATH == 0) then
 endif
 echo STARLAB_PATH = $STARLAB_PATH
 
-echo ""
 set install_dir = $STARLAB_PATH/usr
 echo install_dir \ = $install_dir
 

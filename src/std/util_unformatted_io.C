@@ -25,11 +25,11 @@
 # elif i386 || __i386__ || alpha || __alpha__ || MIPSEL || __MIPSEL || __MIPSEL__
 #  define WORDS_BIGENDIAN 0
 # else
-#  error  Is this machine big- or little-endian?  Need to define WORDS_BIGENDIAN=0 or 1
+#  error  Is this machine big- or little-endian?  Define WORDS_BIGENDIAN=1 or 0.
 # endif
 #endif
 
-#undef isalnum		/* Hacks for Irix 6.5 <ctype.h> backward compatibility */
+#undef isalnum	    // hacks for Irix 6.5 <ctype.h> backward compatibility
 #undef isspace
 
 void write_unformatted_real( ostream & s, real v )
