@@ -49,7 +49,7 @@
 #define  SEED_STRING_LENGTH  256
 char  tmp_string[SEED_STRING_LENGTH];
 
-// Yikes!  All local tions.  Should be moved to node and the essentials
+// Yikes!  All local functions.  Should be moved to node and the essentials
 // made global (Steve, 6/03).
 
 local void name_from_components(dyn *od, dyn *yd)
