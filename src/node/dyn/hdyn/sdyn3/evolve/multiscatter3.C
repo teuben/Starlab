@@ -82,9 +82,11 @@ int multiscatter3(scatter_profile & prof, sigma_out & out,
 	    scatter_summary = 2;
 	}
 
-	if (scatter_summary > 0)
+	if (scatter_summary == 1)
 	    summarize_scattering_final(inter, final,
 				       scatter_summary, cpu_scatter);
+
+	else if (scatter_summary > 1) print_scatter3_report(init, inter, final, cpu_scatter);
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

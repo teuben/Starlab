@@ -645,7 +645,7 @@ void summarize_scattering_final(intermediate_state3 & inter,
     cerr << "outcome:  ";
     print_scatter3_outcome(inter, final, cerr);
 
-    if (level > 1) print_scatter3_summary(inter, final, cpu, cerr);
+    if (level >= 1) print_scatter3_summary(inter, final, cpu, cerr);
 
 //    print_final(cerr, final);
 }
