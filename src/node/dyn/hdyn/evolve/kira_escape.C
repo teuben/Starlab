@@ -128,15 +128,11 @@ local bool remove_escapers(hdyn* b,		// root node
     // coordinates (rather than, say, the density center).  Without
     // resetting, recoil would eventually carry the entire system
     // beyond the tidal radius!  Now we should *never* use the
-    // coordinate origin in determining escapers, so there is no need
-    // to correct here.
+    // coordinate origin in determining escapers, and the root node
+    // should never change, so we should never need to correct here.
 
     // b->to_com();
-
-    // However, the root node is now always at the center of mass of the
-    // particles in the system, so correct the particles and root here.
-
-    b->reset_com();
+    // b->reset_com();
 
     // Correct all perturber lists.
 
@@ -170,7 +166,8 @@ local bool remove_escapers(hdyn* b,		// root node
 
 	predict_loworder_all(b, b->get_system_time());	// Unnecessary?
 
-	cerr << "initialize_system_phase2 called from remove_escapers\n";
+	PRI(2); cerr << "initialize_system_phase2 called from remove_escapers"
+		     << endl;
 	initialize_system_phase2(b, 4);		// default set_dt
     }
 
@@ -223,6 +220,7 @@ void check_and_remove_escapers(hdyn* b,
 	cerr << "\n  New N = " << b->n_leaves()
 	     <<  "  mass = " << total_mass(b) << endl;
 	PRI(2); print_recalculated_energies(b);
+	PRI(2); PRL(b->get_pos());
 
 	// Update statistics.
 
