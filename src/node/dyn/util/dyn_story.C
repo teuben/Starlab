@@ -851,7 +851,7 @@ void check_set_external(dyn *b,
 	    cerr << "command-line flag -f " << fric_int
 		 << (fric_int == fric_int_snap ? " is identical to"
 		     			     : " overrides")
-		 << " value in input snapshot";
+		 << " value in input snapshot" << endl;
     }
 
     if (fric_int > 0) fric_int = 1;
