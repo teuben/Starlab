@@ -4,6 +4,7 @@
 #
 # Options:	-c i j k ...	columns to plot (x y y...) [1 2]
 #		-h header	specify an overall header [none]
+#		-k		suppress "column x" key [no]
 #		-l x1 x2 y1 y2	specify plot limits [automatic]
 #		-L size		specify plot limits [automatic]
 #		-p		toggle points [on]
@@ -25,6 +26,7 @@ if ($#argv > 0 && x$1 == x--help) then
     echo ""
     echo 'Options:   -c i j k...     columns to plot (x y1 y2...)       [1 2]'
     echo '           -h header       specify an overall header         [none]'
+    echo '           -k              suppress key giving column info     [no]'
     echo '           -l x1 x2 y1 y2  specify plot limits          [automatic]'
     echo '           -L size         specify plot limits (+/- L)  [automatic]'
     echo '           -p              toggle points/lines             [points]'
@@ -54,6 +56,7 @@ cat >! $datafile
 
 set col = (1 2)
 @ l = 1
+set nokey = 0
 set post = 0
 set script = ""
 set xlabel = ""
@@ -84,6 +87,8 @@ while ($i < $#argv)
     else if (x$arg == x-h) then
 	@ i++
 	set title = "$argv[$i]"
+    else if (x$arg == x-k) then
+	set nokey = 1
     else if (x$arg == x-l) then
 	@ i++ ; set x1 = $argv[$i]
 	@ i++ ; set x2 = $argv[$i]
@@ -158,6 +163,10 @@ if ($#col > 1) then
     echo set bmargin 4					>> $infile
     echo set lmargin 14					>> $infile
     echo set rmargin 8					>> $infile
+
+    if ($nokey == 1) then
+	echo set nokey					>> $infile
+    endif
 
     if ($post == 1) then
 	echo set term post color 18			>> $infile
