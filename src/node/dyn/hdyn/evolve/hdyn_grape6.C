@@ -2318,11 +2318,12 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    // error in the GRAPE or (more likely) the I/O system.
 
 	    if (nbj < 0 || nbj >= n_node_list) {
+		real time = b->get_system_time();
 		cerr << func
 		     << ": warning: GRAPE neighbor index out of range"
 		     << endl;
-		PRC(n_neighbors); PRC(j); PRL(nbj);
-		cerr << "skipping" << endl << flush;
+		PRC(time); PRC(n_neighbors); PRC(j); PRL(nbj);
+		cerr << "skipping..." << endl << flush;
 
 		// Just skip for now (bb = b).  An alternative might
 		// be to recompute the entire list on the front end.
