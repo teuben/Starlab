@@ -66,6 +66,9 @@ echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
 
 echo Running Testsuite \(this may also take a few minutes\)...
 sbin/testsuite >>& install.log
+set n1=`grep ^Working install.log | grep OK | wc -l`
+set n2=`grep ^Working install.log | grep Problems | wc -l`
+echo Found $n1 OK and $n2 Problems.
 
 echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
 
