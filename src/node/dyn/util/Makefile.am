@@ -26,6 +26,7 @@ bin_PROGRAMS = compute_com compute_mcom compute_density compute_max_cod \
     radial_density radial_numdensity radial_vdisp radial_profile makemass \
     makesecondary
 
+libdyn_1_la_CPPFLAGS = -D_GNU_SOURCE
 libdyn_1_la_SOURCES = compute_com.C compute_density.C compute_max_cod.C \
     compute_mcom.C compute_mean_cod.C dyn_di.C dyn_external.C dyn_io.C \
     dyn_stats.C dyn_story.C dyn_tt.C flatten.C lagrad.C merge_low.C scale.C \
