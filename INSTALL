@@ -59,9 +59,9 @@ First time install of starlab 4.x
 
 			(optionally override compilers if you need to fool the system)
 			(not well tested yet)
-	setenv CC   ...
-	setenv CXX  ...
-	setenv F77  ...
+	setenv CC   `which gcc`
+	setenv CXX  `which g++`
+	setenv F77  `which g77`
 
 	configure
 	make config_new [SITE=linux]       (other optional names: .....)
