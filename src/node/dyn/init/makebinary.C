@@ -335,23 +335,23 @@ local void mkbinary(dyn* b, real lower, real upper,
 }
 
 local void scale_limits(real& e1, real& e2, int option,
-			int N, real M, real E)
+			int N, real M, real K)
 {
     real scale = 1.0;
 
-    // PRL(E);
+    // PRL(K);
 
     if (option == 3) {
 
-	// Limits refer to kinetic energy per unit mass.  Scale to -E/M.
+	// Limits refer to kinetic energy per unit mass.  Scale to K/M.
 
-	scale = -E / M;
+	scale = K / M;
 
     } else if (option != 2) {
 
-	// Limits refer to energy.  Scale to kT = -(2/3) E/N.
+	// Limits refer to energy.  Scale to kT = (2/3) K/N.
 
-	scale = -E / (1.5*N);
+	scale = K / (1.5*N);
 	// PRL(scale);
     }
 
@@ -437,17 +437,35 @@ void main(int argc, char ** argv)
 	if (b->get_starbase()->conv_r_star_to_dyn(1)>0) {
 	  //	    lower = b->get_starbase()->conv_r_star_to_dyn(lower);
 	  //	    upper = b->get_starbase()->conv_r_star_to_dyn(upper);
-	  cerr << "mkbinary: Do not transform upper limit to dynamical units"<<endl;
+	  cerr << "mkbinary: Do not transform upper limit to dynamical units"
+	       << endl;
 	}
 	else
 	    cerr << "mkbinary: Using unscaled semi-major axis limits.\n";
     }
     else if (function_select == 3) {
-	if (find_qmatch(b->get_dyn_story(), energy_string))
+	if (find_qmatch(b->get_dyn_story(), energy_string)) {
+
+	    // Use energy_string as an indicator that some energies
+	    // are known, but don't use its value as an estimator
+	    // of the kinetic energy, as it may include an external
+	    // field and also includes any CM motion of the system.
+
+	    // Recompute the top-level kinetic energy in the CM frame.
+
+	    vector com_pos, com_vel;
+	    compute_com(b, com_pos, com_vel);
+
+	    real kin = get_top_level_kinetic_energy(b)
+			    - 0.5*b->get_mass()*square(com_vel);
+
+	    // PRL(get_top_level_kinetic_energy(b));
+	    // PRL(0.5*b->get_mass()*square(com_vel));
+
 	    scale_limits(lower, upper, option,
-			 b->n_daughters(), b->get_mass(),
-			 getrq(b->get_dyn_story(), energy_string));
-	else
+			 b->n_daughters(), b->get_mass(), kin);
+
+	} else
 	    cerr << "mkbinary: Using unscaled energy limits.\n";
     }
 
