@@ -1508,10 +1508,10 @@ local bool check_sync(hdyn* b)
 	       << bb->format_label() << " not synchronized" << endl
 	       << "                     system time = "
 	       << b->get_system_time() << " (";
-	  xprint(b->get_system_time()); cerr << ")" << endl;
+	  xprint(b->get_system_time(), cerr, false); cerr << ")" << endl;
 	  cerr << "                     node time = "
 	       << bb->get_time() << " (";
-	  xprint(bb->get_time()); cerr << ")" << endl;
+	  xprint(bb->get_time(), cerr, false); cerr << ")" << endl;
 	  need_new_list = true;
 	}
 
