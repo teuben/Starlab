@@ -379,12 +379,12 @@ local void delete_double(hdyn *b,		    // b is binary CM
 	     << "(binary: "<< od->get_time() <<")"<< endl; 
 	cerr.precision(p);
 
-//	cerr << "merging nodes(1)..." << endl << flush;
+	cerr << "merging nodes(1)..." << endl << flush;
 
 	od->merge_nodes(bcoll, full_dump);
 	update_dynamics[0] = true;
 
-//	cerr << "...done" << endl << flush;
+	cerr << "...done" << endl << flush;
       
 	// Components are not deleted in merge_nodes.  Do this now.
 	// Also, if unperturbed binaries are resolved in perturber lists,
@@ -627,11 +627,11 @@ bool binary_evolution(hdyn *b,		// root node
 // 			calculate_energies_with_external(b, epot0,
 // 							 ekin0, etot0);
 // 			cerr << "OK" << endl << endl << flush;
-//			cerr << "merging nodes(2)..." << endl;
+			cerr << "merging nodes(2)..." << endl;
 
 			bi->merge_nodes(bcoll, full_dump);
 
-//			cerr << "...done" << endl << flush;
+			cerr << "...done" << endl << flush;
 // 			cerr << endl << "computing energies after merger (#1):"
 // 			     << endl << flush;
 // 			calculate_energies_with_external(b, epot0,
@@ -642,6 +642,7 @@ bool binary_evolution(hdyn *b,		// root node
 			// here, and adjust perturber lists if necessary.
 		    
 			if (RESOLVE_UNPERTURBED_PERTURBERS) {
+//			if (true) {
 			    hdynptr del[2];
 			    del[0] = bi;
 			    del[1] = bcoll;

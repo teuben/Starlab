@@ -59,8 +59,10 @@ void double_star::initialize(binary_type type, real sma,
       initial.mass_prim    = get_primary()->get_total_mass();
       initial.eccentricity = eccentricity;
 
-      get_primary()->set_identity(0);
-      get_secondary()->set_identity(1);
+      if(get_primary()->get_identity()<0)
+	  get_primary()->set_identity(0);
+      if(get_secondary()->get_identity()<0)
+	  get_secondary()->set_identity(1);
       
       refresh_memory();       //implemented 25-1-95
 }
@@ -312,17 +314,21 @@ void double_star::dump(ostream & s, bool brief) {
 	secondary_roche_lobe = roche_radius(semi, m2, m1);
     }
     
-    s << identity << " "
-      << binary_age << " "
+    if(identity>0)
+	s << identity << " ";
+    else
+	s << get_node()->format_label() << " ";
+
+    s << binary_age << " "
       << semi << " "
       << eccentricity << "    "
 
-      << stp->get_node()->format_label() << " "	  
+      << stp->get_identity() << " "	  
       << stp->get_element_type() << " "
       << m1 << " "
       << primary_roche_lobe - stp->get_effective_radius() << "    "
 
-      << sts->get_node()->format_label() << " "	  
+      << sts->get_identity() << " "	  
       << sts->get_element_type() << " "
       << m2 << " "
       << secondary_roche_lobe - sts->get_effective_radius() 
@@ -365,60 +371,7 @@ void double_star::dump(char * filename, bool brief) {
   ofstream s(filename, ios::app|ios::out);
   if (!s) cerr << "error: couldn't create file " << filename <<endl;
 
-  if (brief) {
-    star* stp = get_initial_primary();
-    star* sts = get_initial_secondary();
-
-    real m1 = stp->get_total_mass();
-    real m2 = sts->get_total_mass();
-    real primary_roche_lobe, secondary_roche_lobe;
-
-    if (bin_type==Merged || bin_type==Disrupted) {
-	primary_roche_lobe   = 2 * stp->get_effective_radius();
-	secondary_roche_lobe = 2 * sts->get_effective_radius();
-    }
-    else {
-	primary_roche_lobe   = roche_radius(semi, m1, m2);
-	secondary_roche_lobe = roche_radius(semi, m2, m1);
-    }
-
-    s << identity << " "
-      << binary_age << " "
-      << semi << " "
-      << eccentricity << "    "
-
-      << stp->get_node()->format_label() << " "	  
-      << stp->get_element_type() << " "
-      << m1 << " "
-      << primary_roche_lobe - stp->get_effective_radius() << "    "
-
-      << sts->get_node()->format_label() << " "	  
-      << sts->get_element_type() << " "
-      << m2 << " "
-      << secondary_roche_lobe - sts->get_effective_radius()
-      << endl;
-      
-  }
-  else {    
-      int n_elements = no_of_elements();
-
-      s << n_elements
-        << "\n " << identity
-        << " " << binary_age
-        << " " << bin_type
-        << " " << eccentricity
-        << " " << get_period()
-        << " " << semi
-        << " " << velocity
-        << endl;
-      initial.dump(s);
-
-      s << "  ";
-      get_primary()->dump(s, brief);
-      s << "  ";
-      get_secondary()->dump(s, brief);
-   }
-  
+  dump(s, brief);
   s.close();
 }
 

@@ -634,6 +634,10 @@ cerr << "addstar(node... called from adddouble(node ..." << endl;
 	    
             double_star* new_double = new_double_star(bi, sma, ecc, stellar_time, id,
                          type);
+
+	    // added spz:8Aug2002
+	    new_double->dump("SeBa.data", true);
+
 	    if (REPORT_ADD_DOUBLE) {
 	      cerr<<"double: "<<new_double<<endl;
 	      new_double->dump(cerr);

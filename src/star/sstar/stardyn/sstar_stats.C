@@ -897,6 +897,7 @@ local void print_massive_star(dyn *bi, vector center_pos,
     cerr << ") \t  " << r_com << "   " << v_com << endl;
 }
     
+#if 0
 local int print_massive_binary(dyn *bi,
 			       vector center_pos, vector center_vel,
 			       real mass_limit, real number_limit,
@@ -932,6 +933,7 @@ local int print_massive_binary(dyn *bi,
 
     return 1;
 }
+#endif
 
 local bool contains_massive_star(dyn *b,
 				 real mass_limit,
@@ -953,6 +955,8 @@ local int print_massive_binary_recursive(dyn *b,
     int nb = 0;
     if (b->get_oldest_daughter() &&
 	contains_massive_star(b, mass_limit, number_limit)) {
+
+	nb ++;
 
 	real r_com  = abs(b->get_pos() - center_pos);
 	real v_com  = abs(b->get_vel() - center_vel);
@@ -1040,12 +1044,14 @@ local void print_most_massive_stars(dyn *b,
     qsort((void *)md_list, (size_t)nl, sizeof(md_pair), compare_mass);
 
     int ns = 0;
-    if (nl < rint(number_limit)) nl = (int)rint(number_limit);
+//    if (nl < rint(number_limit)) nl = (int)rint(number_limit);
 
     for (ns = 0; ns < nl; ns++)
 	if (md_list[ns].mass < mass_limit) break;
 
-    if (ns > 0) print_massive_star_header(cod);
+    if (ns < rint(number_limit)) ns = min(nl, (int)rint(number_limit));
+
+    print_massive_star_header(cod);
 
     // Stars:
 
