@@ -14,25 +14,25 @@ istream & sdyn::scan_dyn_story(istream& s)
 
     while(get_line(s,input_line), strcmp(END_DYNAMICS, input_line)){
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char *val = getequals(input_line, keyword);
+	const char *val = getequals(input_line, keyword);
 
     	if(0){   // trick to keep the else if() statements homogeneous
     	    }else if(!strcmp("m",keyword)){
-		mass = strtod(val, &val);
+		mass = strtod(val, NULL);
 	    }else if(!strcmp("r",keyword)){
 		set_vector_from_input_line(pos,input_line);
 	    }else if(!strcmp("v",keyword)){
 		set_vector_from_input_line(vel,input_line);
 	    }else if(!strcmp("t",keyword)){
-		time = strtod(val, &val);
+		time = strtod(val, NULL);
 	    }else if(!strcmp("dt",keyword)){
-		timestep = strtod(val, &val);
+		timestep = strtod(val, NULL);
 	    }else if(!strcmp("a",keyword)){
 		set_vector_from_input_line(acc,input_line);
 	    }else if(!strcmp("j",keyword)){
 		set_vector_from_input_line(jerk,input_line);
 	    }else if(!strcmp("pot",keyword)){
-		pot = strtod(val, &val);
+		pot = strtod(val, NULL);
 	    }else{
 		add_story_line(dyn_story, input_line);
 	    }
@@ -45,7 +45,10 @@ ostream& sdyn::print_dyn_story(ostream& s,
 			       int short_output)	// default = 0
 							// (not implemented)
 {
-    put_story_header(s, DYNAMICS_ID);
+    // Could start with _dyn_::print_dyn_story(), but prefer
+    // to control the output here.
+
+    // Header and footer now placed by put_node().
 
     put_real_number(s, "  t  =  ", time);
     put_real_number(s, "  m  =  ", mass);
@@ -67,8 +70,6 @@ ostream& sdyn::print_dyn_story(ostream& s,
 	    put_story_contents(s, *dyn_story);
     }
 
-    put_story_footer(s, DYNAMICS_ID);
-    
     return s;
 }
 
