@@ -196,6 +196,17 @@ void scale(dyn *b, real eps,
 	b->to_com();
     }
 
+
+    // See if we are dealing with test particles only (still can set
+    // mass and radius, but velocity scaling will ignore the internal
+    // potential).
+
+    bool ignore_internal = false;
+    if (find_qmatch(b->get_log_story(), "ignore_internal")
+	&& getiq(b->get_log_story(), "ignore_internal") == 1)
+	ignore_internal = true;
+
+
     // Define various relevant quantities.  Trust the data in the input
     // snapshot, if current.
 
@@ -419,15 +430,21 @@ void scale(dyn *b, real eps,
 	// Scale the velocities to set q and preserve r_virial.
 
 	real vir = get_external_virial(b);
-	real qvir = -(kin - com_kin) / (pot_int + vir);
+	PRL(vir);
+
+	real denominator = vir;
+	if (!ignore_internal) denominator += pot_int;
+
+	real qvir = -(kin - com_kin) / denominator;
 	real vfac = sqrt(q/qvir);
+	PRL(vfac);
 
 	scale_vel(b, vfac, com_vel);
 	kin = com_kin + vfac*vfac*(kin - com_kin);
 
 	cerr << "scale:  "; PRL(q);
 	if (debug) {
-	    cerr << "debug: "; PRL((kin-com_kin)/(pot_int+vir));
+	    cerr << "debug: "; PRL((kin-com_kin)/denominator);
 	}
     }
 
