@@ -37,6 +37,11 @@ set autoconf = (`find . -name autoconf\*.tar.gz | sed "s/.tar.gz//"`)
 set automake = (`find . -name automake\*.tar.gz | sed "s/.tar.gz//"`)
 set libtool  = (`find . -name libtool\*.tar.gz  | sed "s/.tar.gz//"`)
 
+if ($#autoconf == 0 || $#automake == 0 || $#libtool == 0) then
+    echo "Autotool package(s) not found."
+    exit
+endif
+
 foreach dir ($autoconf $automake $libtool)
 
 #   Start by checking whether we should actually build the package.  Compare
