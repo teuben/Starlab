@@ -1,5 +1,6 @@
 
 #include "stdinc.h"
+#include "image_fmt.h"
 
 // Description of header for files containing SUN raster images:
 // (nothing special about this format -- it just happens to be simple.)
@@ -35,7 +36,7 @@ struct rasterfile {
 
 static int byte_order = 0;	// 0 == Sun, 1 = non-Sun ordering
 
-void check_byte()
+local void check_byte()
 {
     int i = RAS_MAGIC;
     unsigned char *c;
@@ -48,7 +49,7 @@ void check_byte()
 	byte_order = 1;
 }
 
-void write_word(unsigned char * x, int n, FILE* out_file)
+local void write_word(unsigned char * x, int n, FILE* out_file)
 {
     int i1, i2, inc;
 
@@ -90,108 +91,13 @@ void write_word(unsigned char * x, int n, FILE* out_file)
 //   compatibility, code reading rasterfiles must be prepared to compute the
 //   true length from the width, height, and depth fields.
 
-void make_standard_colormap(unsigned char* red,
-			    unsigned char* green,
-			    unsigned char* blue)
+void write_sun_header(int m, int n, FILE* out_file,
+		      unsigned char *red,
+		      unsigned char *green,
+		      unsigned char *blue)
 {
-    // Make a simple standard colormap.
+    // Construct a SUN rasterfile header.
 
-    int i;
-
-    for (i = 0; i < 32; i++) {
-        red[i] = 0;
-        green[i] = 0;
-        blue[i] = 8*i;
-    }
-    for (i = 32; i < 96; i++) {
-        red[i] = 0;
-        green[i] = 4*(i-32);
-        blue[i] = 255;
-    }
-    for (i = 96; i < 160; i++) {
-        red[i] = 4*(i-96);
-        green[i] = 255;
-        blue[i] = 255 - red[i];
-    }
-    for (i = 160; i < 224; i++) {
-        red[i] = 255;
-        green[i] = 255 - 4*(i-160);
-        blue[i] = 0;
-    }
-    for (i = 224; i < 256; i++) {
-        red[i] = 255;
-        blue[i] = green[i] = 8*(i-224);
-    }
-}
-
-inline void swap(unsigned char *a, unsigned char *b)
-{
-    unsigned char tmp = *a;
-    *a = *b;
-    *b = tmp;
-}
-
-void make_alternate_colormap(unsigned char* red,
-			     unsigned char* green,
-			     unsigned char* blue)
-{
-    // Make a "reverse standard colormap" (red --> blue).
-
-    int i;
-
-    for (i = 0; i < 48; i++) {				// violet to blue
-	red[i] = 5*(48-i)-1;				// 235 117 255
-	green[i] = red[i]/2;				//   5   2 255
-	blue[i] = 255;
-    }
-    for (i = 48; i < 86; i++) {				// blue to blue-green
-        red[i] = 0;					//   0   0 255
-        green[i] = (unsigned char)(6.84*(i-48));	//   0 251 137
-        blue[i] = 255 - (unsigned char)(2.5*(i-48));
-    }
-    for (i = 86; i < 100; i++) {			// blue-green to green
-        red[i] = 0;					//   0 251 180
-        green[i] = 255 - (100-i)/3;			//   0 255   5
-        blue[i] = 135 - 10*(i-86);
-    }
-    for (i = 100; i < 130; i++) {			// green to yellow
-        red[i] = (unsigned char)(8.5*(i-100));		//   0 255   0
-        green[i] = 255;					// 24 6255   0
-        blue[i] = 0;
-    }
-    for (i = 130; i < 215; i++) {			// yellow to red
-        red[i] = 255;					// 255 255   0
-        green[i] = 255 - 3*(i-130);			// 255   3   0
-        blue[i] = 0;
-    }
-    for (i = 215; i < 256; i++) {			// red to dark red
-        red[i] = 255 - 2*(i-215);			// 255 255   0
-        green[i] = 0;					// 255 175   0
-        blue[i] = 0;
-    }
-
-    for (i = 0; i < 128; i++) {
-	swap(red+i, red+255-i);
-	swap(green+i, green+255-i);
-	swap(blue+i, blue+255-i);
-    }
-}
-
-void make_greymap(unsigned char* red,
-		  unsigned char* green,
-		  unsigned char* blue)
-{
-    // Make a simple greyscale colormap.
-
-    for (int i = 0; i < 256; i++)
-        red[i] = green[i] = blue[i] = i;
-}
-
-void make_header(int m, int n, FILE* out_file,
-		 unsigned char *red,
-		 unsigned char *green,
-		 unsigned char *blue)
-{
     struct rasterfile r;
 
     r.ras_magic = RAS_MAGIC;
@@ -226,48 +132,12 @@ void make_header(int m, int n, FILE* out_file,
     fwrite(blue, 1, 256, out_file);
 }
 
-void make_header(int m, int n, FILE* out_file,
-		 char* colormap_file)		// (make our own if NULL)
+void write_sun_header(int m, int n, FILE* out_file,
+		      char* colormap_file)	    // default = NULL
 {
-    // Construct a SUN rasterfile header.
-
     unsigned char red[256], green[256], blue[256];
 
-    FILE* mapfile;
-
-    // Attempt to read a color map.
-
-    if (colormap_file) {
-	if ((mapfile = fopen(colormap_file, "r")) == NULL) {
-	    fprintf(stderr, "Can't open color map file %s: using default\n",
-		    colormap_file);
-	    colormap_file = NULL;
-	} else {
-	    if (fread(red, 1, 256, mapfile) != 256) {
-		fprintf(stderr, "Error reading color map: using default\n");
-		colormap_file = NULL;
-	    } else {
-		if (fread(green, 1, 256, mapfile) != 256) {
-		    fprintf(stderr, "Error reading color map: using default\n");
-		    colormap_file = NULL;
-		} else {
-		    if (fread(blue, 1, 256, mapfile) != 256) {
-			fprintf(stderr,
-				"Error reading color map: using default\n");
-			colormap_file = NULL;
-		    }
-		}
-	    }
-	}
-    }
-
-    // Default colormap is now greyscale.
-
-    if (!colormap_file)
-	// make_standard_colormap(red, green, blue);
-        // make_greymap(red, green, blue);
-	make_alternate_colormap(red, green, blue);
-
-    make_header(m, n, out_file, red, green, blue);
+    get_colormap(red, green, blue, colormap_file);
+    write_sun_header(m, n, out_file, red, green, blue);
 }
 

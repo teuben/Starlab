@@ -4,6 +4,9 @@
 //
 //		  This version is called from Fortran or C.
 //		  For a UNIX pipe version, use make_image.
+//
+//		  OBSOLETE -- only works with Sun raster format, and not
+//		  compatible with newer png/gif/sun calling sequences.
 
 #include "stdinc.h"
 
