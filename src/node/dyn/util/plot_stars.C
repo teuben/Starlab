@@ -190,6 +190,7 @@ void plot_stars(dyn * bi,
 	int nnodes = 1000;
 
 	while (nnodes > 10) {
+	  nnodes = 0;
 	  for (m = 0; m <= n; m++) {
 	    if (list[m]) {
 	      for_all_nodes(dyn, list[m], bb) nnodes++;
