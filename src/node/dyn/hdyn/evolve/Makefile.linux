@@ -70,6 +70,12 @@ EXEFLAGS =
 
 include $(STARLAB_PATH)/inc/Makefile.worker.inc
 
+# Temporary:
+
+hdyn_unpert.o:	hdyn_unpert.C
+	$(STARLAB_CCC) $(CFLAGS) $(STARLAB_CCC_FLAGS) \
+	-ffloat-store -O1 -c hdyn_unpert.C
+
 #..............................................................................
 #..............................................................................
 
