@@ -262,7 +262,6 @@ void initialize_print_energies(dyn * b,
     real epot = 0;
     real ekin = 0;
     real etot = 0;
-    static real initial_etot;
 
     if (!b->get_ignore_internal())
 	accumulate_energies(b, b, eps2, epot, ekin, etot);
