@@ -1,59 +1,115 @@
 
-//// sdyn_io: Starlab sdyn-specific I/O functions.
+//// sdyn_io:  Starlab sdyn-specific I/O functions
 ////
-//// Options: none
+//// Options:  none
 
 #include "sdyn.h"
 #include "util_io.h"
 
 #ifndef TOOLBOX
 
-istream & sdyn::scan_dyn_story(istream& s)
+static bool read_xreal = false;
+
+istream & sdyn::scan_dyn_story(istream & s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];
+    real last_real = false;
 
-    while(get_line(s,input_line), strcmp(END_DYNAMICS, input_line)){
+    while (get_line(s, input_line), strcmp(END_DYNAMICS, input_line)) {
+
 	char keyword[MAX_INPUT_LINE_LENGTH];
 	const char *val = getequals(input_line, keyword);
 
-    	if(0){   // trick to keep the else if() statements homogeneous
-    	    }else if(!strcmp("m",keyword)){
+	// See xreal notes in dyn_io.C...
+
+    	if (!strcmp("real_system_time", keyword)) {
+
+	    read_xreal = true;
+	    last_real = true;
+
+	} else if (!strcmp("system_time", keyword)) {
+
+	    // Check input format before reading.
+
+	    if (!last_real) read_xreal = false;
+
+	    if (read_xreal)
+		system_time = get_xreal_from_input_line(input_line);
+	    else
+		system_time = strtod(val, NULL);
+
+	} else {
+
+	    last_real = false;
+
+	    if (!strcmp("t", keyword)) {
+
+		if (read_xreal)
+		    time = get_xreal_from_input_line(input_line);
+		else
+		    time = strtod(val, NULL);
+
+	    } else if (!strcmp("m", keyword))
 		mass = strtod(val, NULL);
-	    }else if(!strcmp("r",keyword)){
-		set_vector_from_input_line(pos,input_line);
-	    }else if(!strcmp("v",keyword)){
-		set_vector_from_input_line(vel,input_line);
-	    }else if(!strcmp("t",keyword)){
-		time = strtod(val, NULL);
-	    }else if(!strcmp("dt",keyword)){
+	    else if (!strcmp("r", keyword))
+		set_vector_from_input_line(pos, input_line);
+	    else if (!strcmp("v", keyword))
+		set_vector_from_input_line(vel, input_line);
+	    else if (!strcmp("dt", keyword))
 		timestep = strtod(val, NULL);
-	    }else if(!strcmp("a",keyword)){
-		set_vector_from_input_line(acc,input_line);
-	    }else if(!strcmp("j",keyword)){
-		set_vector_from_input_line(jerk,input_line);
-	    }else if(!strcmp("pot",keyword)){
+	    else if (!strcmp("a", keyword))
+		set_vector_from_input_line(acc, input_line);
+	    else if (!strcmp("j", keyword))
+		set_vector_from_input_line(jerk, input_line);
+	    else if (!strcmp("pot", keyword))
 		pot = strtod(val, NULL);
-	    }else{
+	    else
 		add_story_line(dyn_story, input_line);
-	    }
 	}
+    }
+
     return s;
 }
 
 ostream& sdyn::print_dyn_story(ostream& s,
-			       bool print_xreal,	// default = true
-			       int short_output)	// default = 0
-							// (not implemented)
+				bool print_xreal,	// default = true
+				int short_output)	// default = 0
 {
-    put_story_header(s, DYNAMICS_ID);
+    if (!parent) {
 
-    put_real_number(s, "  t  =  ", time);
+	// See xreal notes in dyn_io.C...
+
+#ifdef USE_XREAL
+	if (print_xreal) {
+
+	    put_real_number(s, "  real_system_time  =  ", (real)system_time);
+	    put_real_number(s, "  system_time  =  ", system_time);
+
+	} else
+
+	    put_real_number(s, "  system_time  =  ", (real)system_time);
+#else
+
+	put_real_number(s, "  system_time  =  ", system_time);
+
+#endif
+    }
+
+    if (print_xreal)
+	put_real_number(s, "  t  =  ", time);		// OK for real or xreal
+    else
+	put_real_number(s, "  t  =  ", (real)time);
+
     put_real_number(s, "  m  =  ", mass);
     put_real_vector(s, "  r  =  ", pos);
-    put_real_vector(s, "  v  =  ", vel);
-    put_real_vector(s, "  a  =  ", acc);
+    put_real_number(s, "  R_eff  =  ", get_radius());
+
+    if (short_output < 2)
+	put_real_vector(s, "  v  =  ", vel);
 
     if (!short_output) {
+
+	put_real_vector(s, "  a  =  ", acc);
 	put_real_vector(s, "  j  =  ", jerk);
 	put_real_number(s, "  pot  =  ", pot);
 
@@ -66,8 +122,6 @@ ostream& sdyn::print_dyn_story(ostream& s,
 	if (dyn_story)
 	    put_story_contents(s, *dyn_story);
     }
-
-    put_story_footer(s, DYNAMICS_ID);
     
     return s;
 }
@@ -80,7 +134,7 @@ main(int argc, char** argv)
 
     sdyn * b;
     while (b = (sdyn *) get_node(cin, new_sdyn)){
-        put_node(cout,*b);
+	put_node(cout,*b);
 	pp2(b);
     }
     cerr << "Normal exit\n";
