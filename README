@@ -13,6 +13,18 @@ Copyrights:
                                          Piet and Steve, March 1994.
 
 
+--------------------------------------------------------------------------------
+
+To upgrade your running starlab under CVS control:
+
+	cd $STARLAB_PATH
+	cvs update -d
+	make sure
+
+
+
+--------------------------------------------------------------------------------
+
 To install Starlab:
 
 1a) A tarball from the archive:
@@ -24,13 +36,18 @@ To install Starlab:
 
 1b) CVS access (developers, but perhaps anonymous too)
 
-	setenv CVSROOT :pserver:....
+	setenv CVSROOT :pserver:pteuben@akash.astro.umd.edu:/home/cvsroot
 	cvs login
 	cvs checkout starlab
 	cd starlab
 	
-	(goto step 2)
+	(goto step 2a or 2b)
 
+2b) New method (configure based starlab 4.x based)
+
+	configure
+	make config_new
+	
 
 2a) Old method (pre-configure, or starlab 3.x and below)
 
