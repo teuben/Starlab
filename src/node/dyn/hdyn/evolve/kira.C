@@ -1,4 +1,3 @@
-//#define DUMP_DATA 1	// uncomment to allow detailed TMP_DUMP output
 
        //=======================================================//    _\|/_
       //  __  _____           ___                    ___       //      /|\ ~
@@ -8,6 +7,8 @@
   //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                       
 //=======================================================//              /|\ ~
+
+//#define DUMP_DATA 1	// uncomment to allow detailed TMP_DUMP output
 
 //// kira:  Hermite N-body integrator with evolving hierarchical tree
 ////        structure, stellar and binary evolution, and an arbitrary
@@ -1529,9 +1530,12 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
     }
 }
 
-local bool check_sync(hdyn* b)
+#define N_CHECK 3
+
+local bool check_sync(hdyn* b, int max_count = N_CHECK)
 {
     bool need_new_list = false;
+    int count = 0;
 
     for_all_nodes(hdyn, b, bb) {
 
@@ -1551,16 +1555,26 @@ local bool check_sync(hdyn* b)
 	if (bb->get_time() != b->get_system_time()
 	     && bb->get_kepler() == NULL) {
 
-	    cerr << "check_sync warning:  node "
-		 << bb->format_label() << " not synchronized" << endl
-		 << "                     system time = "
-		 << b->get_system_time() << " (";
-	    xprint(b->get_system_time(), cerr, false); cerr << ")" << endl;
-	    cerr << "                     node time   = "
-		 << bb->get_time() << " (";
-	    xprint(bb->get_time(), cerr, false); cerr << ")" << endl;
-	    need_new_list = true;
+	    if (++count <= max_count) {
+	        cerr << "check_sync warning:  node "
+		     << bb->format_label() << " not synchronized" << endl
+		     << "                     system time = "
+		     << b->get_system_time() << " (";
+		xprint(b->get_system_time(), cerr, false); cerr << ")" << endl;
+		cerr << "                     node time   = "
+		     << bb->get_time() << " (";
+		xprint(bb->get_time(), cerr, false); cerr << ")" << endl;
+		need_new_list = true;
+	    }
 	}
+    }
+
+    if (count > max_count) {
+	if (max_count > 0)
+	    cerr << ".\n.\n(plus "
+		 << count-max_count << " more warnings)" << endl;
+	else
+	    cerr << "*** " << count << " unsynchronized nodes" << endl;
     }
 
     return need_new_list;
@@ -2464,6 +2478,37 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	}
 #endif
 
+#if 0
+	if (t >= 44.1875 && t <= 44.21875) {
+
+	  int nstep = 100;
+	  if (   (t >= 44.1903765  && t <= 44.1903767)
+	      || (t >= 44.19358027 && t <= 44.1935804)
+	      || (t >= 44.19804955 && t <= 44.19805098)) nstep = 1;
+
+	    int p = cerr.precision(INT_PRECISION);
+	    cerr << endl; PRL(t);
+	    cerr.precision(p);
+
+	    if (fmod(steps, nstep) == 0) {
+	        cerr << "nodes (pre): ";
+		for (int ii = 0; ii < n_next; ii++) {
+		    if (next_nodes[ii] && next_nodes[ii]->is_valid())
+		      cerr << next_nodes[ii]->format_label() << " ";
+		}
+		cerr << endl; 	    
+		print_recalculated_energies(b);
+	    }
+
+	    for (int ii = 0; ii < n_next; ii++) {
+		if (next_nodes[ii] && next_nodes[ii]->is_valid()
+		    && next_nodes[ii]->is_top_level_node()
+		    && next_nodes[ii]->n_leaves() > 2)
+		    pp3(next_nodes[ii]);
+	    }
+
+	}
+#endif
 
 	// Take the block step.
 
@@ -2474,21 +2519,37 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 
 #if 0
-	if (t >= 0.952164 && t <= 0.952273) {
-	    cerr << endl; PRL(t);
-	    cerr << "nodes: ";
-	    for (int ii = 0; ii < n_next; ii++) {
-		if (next_nodes[ii] && next_nodes[ii]->is_valid())
-		    cerr << next_nodes[ii]->format_label() << " ";
-	    }
-	    cerr << endl; 	    
-	    print_recalculated_energies(b);
-	    if (n_next <= 2 && next_nodes[0]
-		&& node_contains(next_nodes[0]->get_top_level_node(), "44"))
-		pp3(next_nodes[0]->get_top_level_node());
-	}
-#endif
+	if (t >= 44.1875 && t <= 44.21875) {
 
+	  int nstep = 100;
+	  if (   (t >= 44.1903765  && t <= 44.1903767)
+	      || (t >= 44.19358027 && t <= 44.1935804)
+	      || (t >= 44.19804955 && t <= 44.19805098)) nstep = 1;
+
+	    int p = cerr.precision(INT_PRECISION);
+	    cerr << endl; PRL(t);
+	    cerr.precision(p);
+
+	    if (fmod(steps, nstep) == 0) {
+	        cerr << "nodes (post): ";
+		for (int ii = 0; ii < n_next; ii++) {
+		    if (next_nodes[ii] && next_nodes[ii]->is_valid())
+		      cerr << next_nodes[ii]->format_label() << " ";
+		}
+		cerr << endl; 	    
+		print_recalculated_energies(b);
+	    }
+
+	    for (int ii = 0; ii < n_next; ii++) {
+		if (next_nodes[ii] && next_nodes[ii]->is_valid()
+		    && next_nodes[ii]->is_top_level_node()
+		    && next_nodes[ii]->n_leaves() > 2)
+		    pp3(next_nodes[ii]);
+	    }
+
+	}
+	if (t > 44.1935804) exit(0);
+#endif
 
 	if (n_list_top_level > 0) {
 
