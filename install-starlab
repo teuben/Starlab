@@ -24,7 +24,8 @@ echo Writing detailed output to $log
 # Install autotools (place in install_dir):
 
 echo Installing local versions of autotools in install_dir
-(chdir src/packages; ./install-autotools $install_dir)	>&! $log
+echo Installing local versions of autotools in install_dir	>&! $log
+(chdir src/packages; ./install-autotools $install_dir)		>&! $log
 
 # Make sure that install_dir precedes system directories in search path
 
