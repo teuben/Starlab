@@ -181,7 +181,6 @@ AC_REPLACE_FUNCS(stpcpy)
 
 AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
     starlab.pl VERSION \
-    sbin/sremake \
     src/Makefile src/std/Makefile src/gfx/Makefile \
     src/gfx/lux/Makefile src/gfx/lux++/Makefile src/gfx/util/Makefile \
     src/node/Makefile src/node/util/Makefile src/node/dyn/Makefile \

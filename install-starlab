@@ -79,10 +79,6 @@ if (-e configure) then
     echo Running make install \(`date`\)		>>& $log
     make install					>>& $log
 
-    # Another temporary workaround...
-
-    chmod +x sbin/sremake
-
     # Then test whatever...
 
     rehash

@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Rebuild the specified files by deleting the local executables of
+# the same name and any associated object files, running make, and
+# copying the new executables to the install directory.  Rebuild all
+# libraries before remaking the executables.
+
+if [ $# -lt 1 ]; then
+    echo "$0: At least one make argument required." >&2
+    exit 1
+fi
+
+smake libs
+while [ "x$1" != "x" ]; do
+    echo Rebuilding $1
+    rm -f $1 $1-$1*.o
+    make -s $1
+    sinstall $1
+    shift
+done
+
