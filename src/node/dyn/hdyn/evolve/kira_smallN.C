@@ -21,14 +21,14 @@
 //// Usage: kira_smallN [OPTIONS] < input > ouptut
 ////
 //// Options:
-////	     -a    set accuracy parameter [0.03]
-////         -d    set log output interval [0 --> infinite]
-////         -D    set snap output interval [0 --> infinite]
-////         -E    set energy output interval [0 --> infinite]
-////	     -g    set unperturbed limit [1.e-5]
-////	     -n    set number of symmetrization iterations [1]
-////	     -r    set termination radius [infinite]
-////	     -t    set termination time [200]
+////         -a    set accuracy parameter [0.03]
+////         -d    set log output interval [0 --> no output]
+////         -D    set snap output interval [0 --> no output]
+////         -E    set energy output interval [0 --> no output]
+////         -g    set unperturbed limit [1.e-5]
+////         -n    set number of symmetrization iterations [1]
+////         -r    set termination radius [infinite]
+////         -t    set termination time [200]
 ////
 //// Written by Fan-Chi Lin and Steve McMillan.
 ////
@@ -1203,8 +1203,11 @@ main(int argc, char *argv[])
                       exit(1);
         }            
 
-    PRC(get_smallN_eta()); PRC(get_smallN_gamma()); PRL(get_smallN_niter());
-    PRC(break_r2); PRL(t_end);
+    PRL(get_smallN_eta());
+    PRL(get_smallN_gamma());
+    PRL(get_smallN_niter());
+    PRL(break_r2);
+    PRL(t_end);
 
     hdyn *b = get_hdyn();
     b->log_history(argc, argv);
@@ -1224,12 +1227,6 @@ main(int argc, char *argv[])
     cerr.precision(8);
     real t = smallN_evolve(b, t_end, break_r2,
 			   false, dt_log, dt_energy, dt_snap);
-
-    cerr << endl;
-    if (t != t_end)
-	cerr << "Interaction over!" << endl;
-    else
-	cerr << "Interaction not over!" << endl;
 
     if (dt_log == 0 && !d_set) {
 	real t_sys = b->get_system_time();
