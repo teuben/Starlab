@@ -11,9 +11,9 @@ endif
 
 # Make sure curr is a full pathname (not relative to .).
 
-set curr = `pwd`
+set curr = $cwd
 cd $1
-set dir = `pwd`
+set dir = $cwd
 cd $curr
 
 set shadow = ~/shadow_tmp
@@ -82,7 +82,7 @@ if ($#dlist > 0) then
 
 #   Make shadow into a full pathname.
 
-    set shadow = `pwd`
+    set shadow = $cwd
 
 #   Create the entire shadow directory tree before making any links.
 
