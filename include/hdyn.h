@@ -1119,7 +1119,7 @@ bool evolve_stars(hdyn* b, int full_dump = 0);
 
 // ----- In kira_encounter.C: -----
 
-real get_sum_of_radii(hdyn* bi, hdyn* bj);
+real get_sum_of_radii(hdyn* bi, hdyn* bj, bool check_story = false);
 real print_encounter_elements(hdyn* bi, hdyn* bj,
 			      char* s = "Collision",
 			      bool verbose = true);
