@@ -26,18 +26,19 @@ LIBFLAGS	= -L$(LIB) -ldyn -lsstar -lnode -lstd -lm
 
 DEPEND_LIBS	= $(LIB)/libdyn.a $(LIB)/libnode.a $(LIB)/libstd.a 
 
-EXECUTABLES =	compute_com compute_density compute_max_cod \
+EXECUTABLES =	compute_com compute_mcom compute_density compute_max_cod \
 		compute_mean_cod dumbp dyn_io dyndiff dyndist energy \
 		extract_snap flatten freeze lagrad lagradplot list_snap \
 		merge_low molecules reflect_velocities scale \
 		plot_stars starplot snap2speck \
 		sys_stats to_cod to_com jiggle \
-                lagradplotsmooth
+                lagradplotsmooth get_std_center
 
 OBJECT_FILES =	compute_com.o compute_density.o compute_max_cod.o \
-		compute_mean_cod.o dyn_di.o dyn_io.o dyn_stats.o dyn_tt.o \
+		compute_mcom.o compute_mean_cod.o \
+		dyn_di.o dyn_io.o dyn_stats.o dyn_tt.o \
 		flatten.o lagrad.o merge_low.o scale.o sys_stats.o to_com.o \
-		plot_stars.o
+		plot_stars.o get_std_center.o
 
 LIBRARY = libdyn.a
 

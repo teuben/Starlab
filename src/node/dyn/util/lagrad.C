@@ -80,41 +80,9 @@ void compute_general_mass_radii(dyn * b, int nzones,
 
     // Use the density center if known and up to date (preferred).
     // Otherwise, use modified center of mass, if known and up to date.
-    // Otherwise, use the geometric center.
 
-    vector lagr_pos = 0, lagr_vel = 0;
-    bool try_com = true;
-    bool modify_com = false;
-
-    if (find_qmatch(b->get_dyn_story(), "density_center_pos")) {
-
-	if (getrq(b->get_dyn_story(), "density_center_time")
-		!= b->get_system_time())
-	    warning("lagrad: neglecting out-of-date density center");
-	else {
-	    lagr_pos = getvq(b->get_dyn_story(), "density_center_pos");
-	    strcpy(lagr_string, "density center");
-	    try_com = false;
-
-	    // Assume that density_center_vel exists if density_center_pos
-	    // is OK.
-
-	    lagr_vel = getvq(b->get_dyn_story(), "density_center_vel");
-	}
-    }
-
-    if (try_com && find_qmatch(b->get_dyn_story(), "com_pos")) {
-
-	if (getrq(b->get_dyn_story(), "com_time")
-		!= b->get_system_time()) {
-	    warning("lagrad: neglecting out-of-date center of mass");
-	} else {
-	    lagr_pos = getvq(b->get_dyn_story(), "com_pos");
-	    lagr_vel = getvq(b->get_dyn_story(), "com_vel");
-	    strcpy(lagr_string, "center of mass");
-	    modify_com = true;
-	}
-    }
+    vector lagr_pos, lagr_vel;
+    get_std_center(b, lagr_pos, lagr_vel);
 
     rm_pair_ptr rm_table = new rm_pair[n];
 
@@ -127,61 +95,24 @@ void compute_general_mass_radii(dyn * b, int nzones,
     // Set up an array of (radius, mass) pairs.  Also find the total
     // mass of all nodes under consideration.
 
-    real total_mass;
-    int i;
-    bool loop;
+    real total_mass = 0;
+    int i = 0;
 
-    do {
-	loop = false;
-	total_mass = 0;
-	i = 0;
-
-	for_all_daughters(dyn, b, bi) {
-	    if (bf == NULL || (*bf)(bi)) {
-		total_mass += bi->get_mass();
-		rm_table[i].radius = abs(bi->get_pos() - lagr_pos);
-		rm_table[i].mass = bi->get_mass();
-		i++;
-	    }
+    for_all_daughters(dyn, b, bi) {
+	if (bf == NULL || (*bf)(bi)) {
+	    total_mass += bi->get_mass();
+	    rm_table[i].radius = abs(bi->get_pos() - lagr_pos);
+	    rm_table[i].mass = bi->get_mass();
+	    i++;
 	}
+    }
 
-	// Sort the array by radius.
+    // Sort the array by radius.  (Slightly wasteful, as get_std_center
+    // will also sort the data if compute_mcom is called.)
 
-	qsort((void *)rm_table, (size_t)i, sizeof(rm_pair), compare_radii);
+    qsort((void *)rm_table, (size_t)i, sizeof(rm_pair), compare_radii);
 
-	if (modify_com) {
-
-	    // Correct lagr_pos (once) by removing outliers.
-
-	    real r_max = 2*rm_table[(9*n)/10].radius;
-	    real r_max2 = r_max * r_max;
-	    vector new_pos = 0, new_vel = 0;
-	    total_mass = 0;
-	    int i_new = 0;
-	    for_all_daughters(dyn, b, bi) {
-		if (bf == NULL || (*bf)(bi)) {
-		    if (square(bi->get_pos() - lagr_pos) < r_max2) {
-			total_mass += bi->get_mass();
-			new_pos += bi->get_mass() * bi->get_pos();
-			new_vel += bi->get_mass() * bi->get_vel();
-			i_new ++;
-		    }
-		}
-		if (i_new < i) {
-		    if (total_mass > 0) {
-			lagr_pos = new_pos / total_mass;
-			lagr_vel = new_vel / total_mass;
-			strcpy(lagr_string, "modified center of mass");
-			loop = true;
-		    }
-		}
-	    }
-	}
-	modify_com = false;
-
-    } while (loop);
-
-    // Determine Lagrangian radii.
+    // Determine the Lagrangian radii.
 
     // cerr << "Determining Lagrangian radii 1" << endl << flush;
 

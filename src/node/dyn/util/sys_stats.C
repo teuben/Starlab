@@ -1454,7 +1454,7 @@ void sys_stats(dyn* b,
 
 	    // Function compute_core_parameters will look in the dyn story
 	    // for densities and use them if they are current.  It will
-	    // only do n_sq operations if no current densities are found
+	    // only do O(N^2) operations if no current densities are found
 	    // and allow_n_sq_ops is true.
 
 	    if (verbose) {
@@ -1478,7 +1478,7 @@ void sys_stats(dyn* b,
 	// If core parameters were computed, then center now is the mean
 	// density center.  If not, then center is the center of mass.
 	// However, this value of center is presently not used, as the
-	// vector is set equal to lagr_pos below.
+	// vector will be set equal to lagr_pos below.
 	//
 	// The vector lagr_pos is set when the Lagrangian radii are
 	// computed; lagr_pos and the associated Lagrangian radii are
@@ -1525,7 +1525,7 @@ void sys_stats(dyn* b,
 	if(black_hole) {
 	  if (verbose)
 	    cerr << endl
-	         << "  Orbital paremters for massive black holes:"
+	         << "  Orbital parameters for massive black holes:"
 		 << endl;
 	    print_parameters_for_massive_black_holes(b, kT, center, verbose);
 	}	
