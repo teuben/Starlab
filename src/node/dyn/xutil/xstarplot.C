@@ -1,7 +1,9 @@
 
 //// xstarplot:  plot an N-body system in an X environment.
 ////
-//// Options:    -a    specify viewing axis [3 = z]
+//// Options:
+////             -a    specify viewing axis [3 = z]
+////             -c    don't display in the cluster CM frame [work in CM frame]
 ////             -d    dimensionality of plot [2]
 ////             -D    delay time between plots, in ms [0]
 ////             -e    color by energy [no]
@@ -940,7 +942,7 @@ local int xplot_stars(dyn* b, int k, int f_flag)
 
 void  xstarplot(dyn* b, float r_factor, int& k, int d, float lmax,
 		float size, float D, int ce,
-		bool b_flag, bool f_flag, bool t_flag,
+		bool b_flag, bool f_flag, bool t_flag, bool cm_flag,
 		int init_flag)
 {
     int xorigin, yorigin;
@@ -1318,10 +1320,12 @@ void  xstarplot(dyn* b, float r_factor, int& k, int d, float lmax,
 
 //----------------------------------------------------------------------------//
 
-    // Always express all positions and velocities relative to the root node.
-    // (There is no requirement that the root node be at rest at the origin...)
+    // Express all positions and velocities relative to the root node.
+    // There is no requirement that the root node be at rest at the origin,
+    // so the default is to display the cluster in its center of mass frame.
+    // This may not be what we want, so allow an override.
 
-    {
+    if (cm_flag) {
 	vec root_pos = b->get_pos();
 	vec root_vel = b->get_vel();
 	for_all_nodes(dyn, b, bi) {
@@ -2162,6 +2166,7 @@ main(int argc, char** argv)
     float scale = 1.0;
 
     bool  b_flag = TRUE;        // if TRUE, the background is black
+    bool  cm_flag = TRUE;       // if TRUE, work in the cluster CM frame
     bool  f_flag = TRUE;        // if TRUE, the star is solid
     bool  p_flag = FALSE;	// if TRUE, output stdin to stdout
     bool  t_flag = FALSE;	// if TRUE, show tree structure
@@ -2170,13 +2175,15 @@ main(int argc, char** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "a:d:D:efl:pP:rs:t";
+    char* param_string = "a:cd:D:efl:pP:rs:t";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
       switch(c) {
 
 	    case 'a': k = atoi(poptarg);
+		      break;
+	    case 'c': cm_flag = FALSE;
 		      break;
 	    case 'd': d = atoi(poptarg);
 		      break;
@@ -2207,7 +2214,7 @@ main(int argc, char** argv)
     while (b = get_dyn()) {
 	convert_relative_to_absolute(b);
         xstarplot(b, scale, k, d, lmax, rel_point_size, D, cenergy,
-		  b_flag, f_flag, t_flag, gfx_counter++);
+		  b_flag, f_flag, t_flag, cm_flag, gfx_counter++);
 	if (p_flag) put_node(b);
 	rmtree(b);
     }
@@ -2217,5 +2224,5 @@ main(int argc, char** argv)
     // idle, wait to leave
 
     xstarplot(b, scale, k, d, lmax, rel_point_size, D, cenergy,
-	      b_flag, f_flag, t_flag, -1);
+	      b_flag, f_flag, t_flag, cm_flag, -1);
 }
