@@ -51,7 +51,7 @@ install:
 	@echo To install starlab:
 	@echo '    ./configure'
 	@echo '    make config_new'
-	@echo '    source starlab_start'
+	@echo '    source starlab_start   (or  . ./starlab_start.sh)'
 	@echo '    make all'
 
 #..............................................................................
@@ -149,6 +149,8 @@ config_new:
 	$(CP) cshrc.starlab local
 	$(CP) config.h inc
 	$(CP) templates/starlab_setup local
+	$(CP) templates/starlab_setup.sh local
+	$(CP) templates/starlab.sh local
 	@echo "###  Note: patching some Makefiles for SITE=$(SITE)"
 	-(cd src/node/dyn/hdyn/util; cp Makefile.$(SITE) Makefile)
 	-(cd src/node/dyn/hdyn/evolve; cp Makefile.$(SITE) Makefile)

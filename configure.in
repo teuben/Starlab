@@ -195,4 +195,4 @@ AC_CHECK_FUNCS(gethostname gettimeofday select strdup strstr strtod strtol strto
 AC_C_BIGENDIAN
 
 dnl skip Makefile for now
-AC_OUTPUT(cshrc.starlab starlab_start)
+AC_OUTPUT(cshrc.starlab starlab_start starlab_start.sh)
