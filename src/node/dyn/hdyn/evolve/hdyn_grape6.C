@@ -43,8 +43,8 @@
 // Convenient to allow inline functions to be separated out for
 // debugging and profiling purposes.
 
-// #define INLINE	inline
-#define INLINE
+#define INLINE	inline
+//#define INLINE
 
 #define ONE2	0.5
 #define ONE6	0.16666666666666666667
@@ -522,10 +522,17 @@ local INLINE int force_by_grape(xreal xtime,
 	    // we can do for now is to check that inn is within range
 	    // and pot < 0.  Not perfect, but... (Steve, 7/00)
 
-	    if (inn[i] < 0 || inn[i] >= nj || ipot[i] > 0) {
-		error = 42;
-		break;
-	    }
+             if (inn[i] < 0 ||  ipot[i] > 0) {
+                 error = 42;
+                 break;
+             }
+             if (inn[i] >= nj) {
+                 inn[i] = 0;
+                 cerr << "NN forced to zero for particle "<<endl;  
+                 PRI(4); PRC(i); PRC(iindex[i]);
+                 PRL(nodes[i]->format_label());
+                 PRL(nodes[i]->get_pos());
+	     }
 
 	    if (pot_only)
 
@@ -1046,7 +1053,7 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 	// For a node, we will want to compute the perturbers, so we
 	// need a larger value of grape_rnb_sq.  As with coll, only
 	// bother to compute the list if grape_nb_count = 0, unless
-	// we need to rebuild the perturber list.
+	// we are forced to rebuild by an invalid perturber list.
 
 	if (b->get_grape_nb_count() == 0 || !b->get_valid_perturbers()) {
 
@@ -1066,6 +1073,9 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 	    // New code (GRAPE-4 and GRAPE-6 versions; Steve, 12/01):
 
 	    real r_pert2 = perturbation_scale_sq(b, b->get_gamma23());
+
+	    // Note that r_pert2 may be very small for a tightly
+	    // bound binary.
 
 	    hdyn *nn = b->get_nn();
 	    if (nn && nn != b && b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
@@ -1313,12 +1323,13 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    cerr << "    new rnb = " << sqrt(b->get_grape_rnb_sq())
 		 << "  status = 1" << endl;
 #else
+#if 00
 	    // Default short diagnostic message:
-
 	    cerr << func << ": node " << b->format_label()
 		 << " time " << b->get_system_time()
 		 << " n_n " << n_neighbors
 		 << endl << flush;
+#endif
 #endif
 
 	    return 1;
@@ -1355,15 +1366,14 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	hdyn **pl = NULL;
 	real rpfac = 0;
 
-	if (b->is_parent() && b->get_valid_perturbers()) {
+	if (b->is_parent() && !b->get_valid_perturbers()) {
+
+	    // Need to rebuild the perturber list.
 
 	    if (b->get_oldest_daughter()->get_slow())
 		clear_perturbers_slow_perturbed(b);
 
 	    b->new_perturber_list();
-	    // b->set_valid_perturbers(true);	// set in calling function,
-						// used as flag here
-
 	    pl = b->get_perturber_list();
 	    rpfac = b->get_perturbation_radius_factor();
 	}
@@ -1379,6 +1389,8 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 		vector diff = b->get_pred_pos() - bb->get_pred_pos();
 		real d2 = diff * diff;
 
+		// (Re)compute nn and coll here.
+
 		real sum_of_radii = get_sum_of_radii(b, bb);
 		update_nn_coll(b, 100,		// (100 = ID)	    // inlined
 			       d2, bb, dmin_sq, bmin,
@@ -1389,7 +1401,9 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 		// See equivalent code for use without GRAPE in
 		// hdyn_ev.C/flat_calculate_acc_and_jerk.
 
-		if (b->is_parent() && b->get_valid_perturbers()) {
+		if (b->is_parent() && !b->get_valid_perturbers()) {
+
+		    // Update the new perturber list.
 
 		    if (is_perturber(b, bb->get_mass(),
 				     d2, rpfac)) {		    // inlined
@@ -1403,22 +1417,34 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    }
 	}
 
-	if (b->is_parent() && b->get_valid_perturbers()) {
+	if (b->is_parent() && !b->get_valid_perturbers()) {
+
+	    // Found npl perturbers.
 
 	    b->set_n_perturbers(npl);
 
 	    if (npl > MAX_PERTURBERS) {
+
+		// Too many perturbers.
+
 		b->remove_perturber_list();
 
 //		cerr << func << ": too many perturbers for "
 //		     << b->format_label()
 //		     << " -- deleting list" << endl << flush;
 
+	    } else {
+
+		b->set_valid_perturbers(true);
+//		cerr << "valid_perturbers = true #1 for "
+//		     << b->format_label()
+//		     << endl;
 	    }
+
 	}
 
 	if (bmin) {
-	    b->set_nn(bmin);
+	    b->set_nn(bmin);				// overwrite nn
 	    b->set_d_nn_sq(dmin_sq);
 
 
@@ -1438,6 +1464,27 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    b->set_d_coll_sq(dcmin_sq);
 	} else
 	    status = 2;
+
+    } else if (b->is_parent()) {
+
+	// No neighbors OK in this case.  Set up valid zero-length
+	// perturber list and use hardware nearest neighbor as nn
+	// and coll
+
+	b->new_perturber_list();
+	b->set_valid_perturbers(true);
+	b->set_n_perturbers(0);
+
+	if (b->get_nn()) {
+	    b->set_d_coll_sq(b->get_d_nn_sq());
+	    b->set_coll(b->get_nn());
+	} else
+	    b->set_nn(b);
+
+//	cerr << "valid_perturbers = true #2 for "
+//	     << b->format_label()
+//	     << endl;
+
     }
 
 
@@ -1455,7 +1502,8 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
     if (status)
 	b->set_grape_rnb_sq(RNB_INCREASE_FAC*b->get_grape_rnb_sq());
 
-    return status;
+    return status;	// note: status indicates success of nn/coll search,
+			//	 not the validity of the neighbor list
 }
 
 
@@ -1487,6 +1535,17 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 
 	if (bb->get_grape_rnb_sq() > 0) {
 
+//	    if (bb->is_parent()) {
+//		PRI(4); PRC(ip);
+//		cerr << bb->format_label() << " "
+//		     << bb->get_grape_rnb_sq() << " "
+//		     << bb->get_valid_perturbers() << endl;
+//	    }
+
+	    // Note: for a CM node, only reach this point if we want to
+	    // recompute the neighbor lists.  Nodes with valid lists
+	    // will use the hardware nn and skip this section.
+
 	    int count_force = 1;
 	    int status;
 
@@ -1499,25 +1558,34 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 
 		// Neighbor list must be recomputed:
 		//
-		//	status = 1  ==>  decrease radius
-		//	status = 2  ==>  increase radius
+		//	status = 1  ==>  too many neighbors; decrease radius
+		//	status = 2  ==>  too few neighbors; increase radius
 		//
-		// The value of grape_rnb_sq has already been adjusted.
+		// The value of grape_rnb_sq has already been adjusted, and
+		// nn has been set from the GRAPE in either case.
 
-		if (count_force > MAX_FORCE_COUNT
-		    || (status == 2 && bb->get_grape_rnb_sq() > h2_crit)) {
+//		if (bb->is_parent()) PRL(status);
+
+		if (status == 2 && bb->is_parent()) {
+
+		    // Didn't find a neighbor, but we started our search at
+		    // the perturbation radius.  Use the hardware neighbor,
+		    // and assume zero perturbers with no perturbation
+		    // -- already set in get_neighbors_and_adjust_h2(), so
+		    // nothing to do here.
+
+		    break;				// go on to next ip
+
+		} else if (count_force > MAX_FORCE_COUNT
+			   || (status == 2
+			       && bb->get_grape_rnb_sq() > h2_crit)) {
 
 		    // Give up -- can't find a neighbor.  Flag with nn = bb
-		    // (not really necessary, but probably harmless), and set
-		    // perturbers invalid, if relevant.
+		    // (not really necessary, but probably harmless).
 
 		    bb->set_nn(bb);			// kira checks
 							// for nn = bb
 		    bb->set_d_nn_sq(2*h2_crit);
-
-		    if (bb->is_parent())
-			bb->set_valid_perturbers(false);
-
 
 #if 0000
 		    if (bb->name_is("(5394,21337)")
@@ -1527,7 +1595,6 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 			PRC(status); PRL(count_force);
 		    }
 #endif
-
 
 		    break;				// go on to next ip
 
@@ -1541,11 +1608,16 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 
 		    // Reducing rnb for a CM node means that we
 		    // can't construct a valid perturber list from
-		    // the neighbor information, so flag that here.
+		    // the neighbor information.
 
-		    if (status == 1 && bb->is_parent())
-			bb->set_valid_perturbers(false);
+		    if (status == 1 && bb->is_parent()) {
 
+			// bb->set_valid_perturbers(false);	// already set
+
+//			cerr << "valid_perturbers = false, #1 for "
+//			     << bb->format_label()
+//			     << endl;
+		    }
 
 #if 00000
 		    if (bb->name_is("(5394,21337)")
@@ -1555,7 +1627,6 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 			PRL(ilist[ip]);
 		    }
 #endif
-
 
 		    // Recompute just this particle -- it will go in pipe 0.
 
@@ -1583,13 +1654,18 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 					     * bb->get_grape_rnb_sq());
 			count_force++;
 
-			if (bb->is_parent())
-			    bb->set_valid_perturbers(false);
+			if (bb->is_parent()) {
+
+			    // bb->set_valid_perturbers(false);	// already set
+
+//			    cerr << "valid_perturbers = false, #2 for "
+//				 << bb->format_label()
+//				 << endl;
+			}
 
 		    }
 
 		}		// if (count_force...) {} else
-
 
 #if 0000
 		    if (bb->name_is("(5394,21337)")
@@ -1598,7 +1674,6 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 			PRL(bb->get_grape_rnb_sq());
 		    }
 #endif
-
 
 	    }			// while ((status = get_...))
 
@@ -1714,25 +1789,48 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     n_previous_nodes = n_top;
     bool need_neighbors = false;
 
+//    int n_needpertlist = 0;
+
     for (i = 0; i < n_top; i++) {
 
 	hdyn *bb = previous_nodes[i] = current_nodes[i];
 
-	// Set a reasonable h2 value for this node.
+	// Set a reasonable h2 value for this node.  Valid_perturbers
+	// is used in set_grape_neighbor_radius() to force a neighbor
+	// computation for a node that doesn't have a valid list.
 
-	need_neighbors |= set_grape_neighbor_radius(bb, nj_on_grape);
+	bool need_nbrs = set_grape_neighbor_radius(bb, nj_on_grape);
+	need_neighbors |= need_nbrs;
 
-	// Use valid perturbers to indicate whether the neighbor list
-	// should be used to construct a perturber list.
+	// From here on, use valid_perturbers as a flag to indicate
+	// whether the hardware neighbor list should be used to construct
+	// a perturber list.
 
-	if (bb->is_parent())
+	if (need_nbrs && bb->is_parent()) {
+
+	    bb->set_valid_perturbers(false);
+//	    n_needpertlist++;
+
+#if 0
+	    // TEMP ONLY: no perturbers for any binary...
+
+	    if (!bb->get_perturber_list())
+		bb->new_perturber_list();
 	    bb->set_valid_perturbers(true);
+	    bb->set_n_perturbers(0);
+#endif
+
+	}
     }
 
     if (DEBUG) {
 	cerr << func << ":  ";
 	PRC(xtime); PRC(n_next); PRL(n_top);
     }
+
+
+//    PRC(n_top); PRL(n_needpertlist);
+
 
     //------------------------------------------------------------------
 
@@ -1776,16 +1874,18 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	// nn pointers.
 
 	if (get_force_and_neighbors(xtime, current_nodes + i, ni,
-				    nj_on_grape, n_pipes, need_neighbors))
+				    nj_on_grape, n_pipes, need_neighbors)) {
 
 	    // Hardware neighbor list overflow.  Restructure the list,
 	    // reduce neighbor radii, and retry starting with those nodes
 	    // for which colls are actually needed.  Forces and nns are
 	    // OK at this point, but neighbor lists are not.
 
+	    cerr << "  HW nbr overflow, "; PRL(i);
+
 	    i += sort_nodes_and_reduce_rnb(current_nodes+i, ni);
 
-	else if (need_neighbors) {
+	} else if (need_neighbors) {
 
 	    // Neighbor lists are OK.  Get colls and perturber lists.
 
@@ -1801,9 +1901,13 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
     // Update the grape_nb_count flags.
 
+//    int n_gotpertlist = 0;
+
     for (i = 0; i < n_top ; i++) {
 
 	hdyn *bb = current_nodes[i];
+
+//	n_gotpertlist += bb->get_valid_perturbers();
 
 
 #if 0000
@@ -1832,8 +1936,12 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 //	    *** shouldn't be a problem).
 //	    ***						(Steve, 6/01)
 
-	    bb->set_grape_nb_count(0);
+	    bb->set_grape_nb_count(0);		// xx -- every time...
     }
+
+
+//    PRL(n_gotpertlist);
+
 
     if (DEBUG) {
 	cerr << "...leaving " << func << endl << endl << flush;
