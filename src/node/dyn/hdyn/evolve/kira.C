@@ -2352,6 +2352,7 @@ main(int argc, char **argv)
 		  exact, cpu_time_limit,
 		  verbose, save_snap_at_log, snap_save_file, n_stop);
 
+    cerr << endl << "End of run at time " << b->get_system_time() << endl;
 
     //--------------------------------------------------------------------
 
