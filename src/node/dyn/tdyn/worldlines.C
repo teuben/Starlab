@@ -99,7 +99,8 @@ main(int argc, char *argv[])
   
     check_help();
   
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
       
 	    case 'd': dt = atof(poptarg);

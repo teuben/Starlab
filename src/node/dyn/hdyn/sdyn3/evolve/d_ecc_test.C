@@ -210,7 +210,7 @@ main(int argc, char **argv)
     real dt_print = VERY_LARGE_NUMBER;
 
     extern char *poptarg;
-    int  pgetopt(int, char **, char *), c;
+    int  c;
 
     initial_state3 init;
     make_standard_init(init);
@@ -228,7 +228,8 @@ main(int argc, char **argv)
     //           r_stop = 100
     //           no extra output
 
-    while ((c = pgetopt(argc, argv, "A:dDe:m:M:n:opPr:R:s:t:v:")) != -1)
+    while ((c = pgetopt(argc, argv, "A:dDe:m:M:n:opPr:R:s:t:v:",
+		    "$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
 	    case 'A': init.eta = atof(poptarg);

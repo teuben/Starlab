@@ -440,7 +440,8 @@ main(int argc, char **argv) {
       cerr << "arg="<<i<<" "<<argv[i] <<endl;
     }
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1) {
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {
       cerr << "c="<<c<<endl;
 	switch(c) {
 	    case 'A': input.eta = atof(poptarg);

@@ -36,7 +36,8 @@ main(int argc, char *argv[])
 
     // Parse the argument list:
 
-//      while ((c = pgetopt(argc, argv, param_string)) != -1) {
+//      while ((c = pgetopt(argc, argv, param_string,
+//			"$Revision$", _SRC_)) != -1) {
 //  	switch (c) {
 //  	    default:
 //  	    case '?':	params_to_usage(cerr, argv[0], param_string);

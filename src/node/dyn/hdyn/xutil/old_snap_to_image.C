@@ -439,7 +439,8 @@ main(int argc, char** argv)
     int c;
     char* param_string = "1cC:f:F:gGi:Hl:X:x:Y:y:mn:N:p:P:qrs:S:t";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1) {
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {
 	switch (c) {
 	    case '1':	combine = !combine;
 			break;

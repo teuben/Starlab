@@ -1477,7 +1477,8 @@ main(int argc, char** argv)
     char* params = "a:d:D:efl:op:P:rs:t";
     int   c;
 
-    while ((c = pgetopt(argc, argv, params)) != -1)
+    while ((c = pgetopt(argc, argv, params,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case 'a': k = atoi(poptarg);	// projection axis [z]

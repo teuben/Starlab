@@ -149,7 +149,8 @@ void main(int argc, char ** argv) {
     char* comment;
     char* param_string = "a:e:M:m:n:q:s:T:t:c:";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
             case 'a': sma = atof(poptarg);
                       break;

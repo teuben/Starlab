@@ -456,7 +456,7 @@ main(int argc, char **argv)
     char  *timestep_name = "dynamic_timestep";
 
     extern char *poptarg;
-    int  pgetopt(int, char **, char *), c;
+    int  c;
 
     bool  a_flag = FALSE;
     bool  d_flag = FALSE;
@@ -477,7 +477,8 @@ main(int argc, char **argv)
                             //           the time specified.
     bool  z_flag = FALSE;     // to specify termination after n_max steps
 
-    while ((c = pgetopt(argc, argv, "A:c:C:d:D:e:f:n:qr:st:xz:")) != -1)
+    while ((c = pgetopt(argc, argv, "A:c:C:d:D:e:f:n:qr:st:xz:",
+		    "$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
 	    case 'A': a_flag = TRUE;

@@ -921,10 +921,11 @@ main(int argc, char **argv)
     bool  Q_flag = FALSE;
 
     extern char *poptarg;
-    int  pgetopt(int, char **, char *), c;
+    int  c;
 
     while ((c = pgetopt(argc, argv,
-		"A:bc:C:d:D:e:L:m:M:n:N:pPqQr:R:s:S:U:v:x:y:z:")) != -1)
+		"A:bc:C:d:D:e:L:m:M:n:N:pPqQr:R:s:S:U:v:x:y:z:",
+				"$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
 	    case 'A': init.eta = atof(poptarg);

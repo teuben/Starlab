@@ -1171,7 +1171,8 @@ bool parse_sys_stats_main(int argc, char *argv[],
     char* param_string = "0b.Bnel.o";	// note: "v" removed because only the
 					// "verbose = true" option works!
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case '0': break;			// for hdyn compatibility

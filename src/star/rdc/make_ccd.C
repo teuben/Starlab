@@ -775,7 +775,8 @@ main(int argc, char ** argv) {
     int c;
     char* param_string = "A:a:B:bcx:y:d:F:f:p:P:R:sS:L:x:y:N:v";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
         switch(c)
             {
             case 'A': electrons_to_ADU = atof(poptarg);

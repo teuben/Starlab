@@ -226,13 +226,13 @@ main(int argc, char ** argv) {
 
     char  *comment;
     extern char *poptarg;
-    int  pgetopt(int, char **, char *);
 
     check_help();
 
     char* param_string = "m:r:t:";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
         switch(c) {
             case 'm': mass = atof(poptarg);
                       break;

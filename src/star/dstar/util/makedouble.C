@@ -113,7 +113,8 @@ void main(int argc, char ** argv) {
     int c;
     char* param_string = "A:a:E:e:f:l:M:n:R:S:s:T:t:";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
             case 'A': A_flag = true;
 		      a_max = atof(poptarg);

@@ -545,7 +545,8 @@ main(int argc, char ** argv) {
     int c;
     char* param_string = "P:p:S:s:B:A:a:M:m:E:e:fc:t:vRT:";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
 	    case 'A': a_max = atof(poptarg);

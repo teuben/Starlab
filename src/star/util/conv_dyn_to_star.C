@@ -32,7 +32,8 @@ main(int argc, char ** argv) {
     int c;
     char* param_string = "";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();

@@ -119,12 +119,20 @@ local inline char *get_version(char *cvs_id)
     char *end = start;
     while (*end > ' ') end++;
 
-    int n = end-start+1;
-    char *version = new char[n];
-    strncpy(version, start, n-1);
-    version[n-1] = 0;
+    if (*end == ' ') {
+	int n = end-start+1;
+	char *version = new char[n];
+	strncpy(version, start, n-1);
+	version[n-1] = 0;
+	return version;
+    } else {
 
-    return version;
+	// Didn't find another space.  Assume no version was found.
+
+	char *version = new char[4];
+	strcpy(version, "0.0");
+	return version;
+    }
 }
 
 local inline char *get_name(char *source)

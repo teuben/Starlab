@@ -105,13 +105,15 @@ int main(int argc, char ** argv)
     int   seed = 0;
     int   srandinter(int);
     extern char *poptarg;
-    int   pgetopt(int, char **, char *);
+    int   pgetopt(int, char **, char *,
+		    "$Revision$", _SRC_);
 //    local void  binev(double_star *, real, real, int);
     
     if (argc <= 1)
        cerr <<"Default: binev -t 0 -T 23 -a 250 -e 0.25 -M 12 -m 10 -n 1 \n";
  
-    while ((c = pgetopt(argc, argv, "t:n:M:Q:q:A:a:E:e:T:fs:c:")) != -1)
+    while ((c = pgetopt(argc, argv, "t:n:M:Q:q:A:a:E:e:T:fs:c:",
+		    "$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
             case 't': inner.start_time = 

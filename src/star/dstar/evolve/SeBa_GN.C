@@ -233,7 +233,8 @@ void main(int argc, char ** argv) {
     int c;
     char* param_string = "n:N:RDSM:m:x:F:f:A:a:y:G:g:E:e:v:U:u:Q:q:T:I:w:P:p:n:s:";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
             case 'R': random_initialization = true;
 		      break;

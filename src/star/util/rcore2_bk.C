@@ -631,7 +631,8 @@ main(int argc, char **argv)
     char* param_string = "n:Mmeov";	// Note: "v" removed because only the
 					// "verbose" option currently works.
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case 'e': calc_e = !calc_e;

@@ -506,7 +506,8 @@ bool parse_scale_main(int argc, char *argv[],
     int c;
     char* param_string = "0cdm:M:q:Q:e:E:r:R:sS";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case '0': break;			// for hdyn compatibility

@@ -477,7 +477,8 @@ main(int argc, char **argv)
     char* param_string
 	= "a:A:c:C:d:D:e:E:g:m:M:n:N:o:pPq:QR:s:S:t:T:x:X:y:Y:z:";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case 'a': init.a_out = atof(poptarg);

@@ -835,7 +835,8 @@ bool kira_initialize(int argc, char** argv,
 
     // Parse the argument list:
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1) {
+    while ((c = pgetopt(argc, argv, param_string,
+			"$Revision$", _SRC_)) != -1) {
 	switch (c) {
 	    case '0':	force_nogrape = true;
 			break;

@@ -47,7 +47,8 @@ void main(int argc, char **argv)
 
     c_make_standard_init(&init);
 
-    while ((c = c_pgetopt(argc, argv, param_string)) != -1)
+    while ((c = c_pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case 'A': init.eta = atof(poptarg);

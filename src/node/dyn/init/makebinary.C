@@ -392,7 +392,8 @@ int main(int argc, char ** argv)
     int c;
     char* param_string = "f:l:s:o:u:e:";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case 'f': function_select = atoi(poptarg);

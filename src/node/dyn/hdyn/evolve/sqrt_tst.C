@@ -7,7 +7,8 @@ main(int argc, char **argv)
     real s = 0;
     char* param_string = "s:";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1) {
+    while ((c = pgetopt(argc, argv, param_string,
+			"$Revision$", _SRC_)) != -1) {
 	switch (c) {
 	    case 's':	s = atof(poptarg);
 

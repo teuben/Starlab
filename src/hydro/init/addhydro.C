@@ -47,7 +47,8 @@ main(int argc, char ** argv)
     char  *comment;
     extern char *poptarg;
 
-    while ((c = pgetopt(argc, argv, "R:c:")) != -1)
+    while ((c = pgetopt(argc, argv, "R:c:",
+		    "$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
 	    case 'R': R_flag = TRUE;

@@ -1015,9 +1015,9 @@ int main(int argc, char ** argv)   {
 
   char *comment;
   extern char *poptarg;
-  int  pgetopt(int, char **, char *);
 
- while ((c = pgetopt(argc, argv, "a:C:c:e:f:I:M:m:P:p:R:r:S:s:t:v")) != -1)
+ while ((c = pgetopt(argc, argv, "a:C:c:e:f:I:M:m:P:p:R:r:S:s:t:v",
+		 "$Revision$", _SRC_)) != -1)
 
     switch(c)
       {

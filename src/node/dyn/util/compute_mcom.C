@@ -184,7 +184,8 @@ main(int argc, char ** argv)
     real f = 0.9;
     char* param_string = "c:f:";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case 'c': c_flag = TRUE;

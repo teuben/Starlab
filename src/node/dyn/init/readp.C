@@ -37,7 +37,8 @@ int main(int argc, char ** argv)
     bool c_flag = false;
     bool i_flag = false;
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case 'c': c_flag = true;

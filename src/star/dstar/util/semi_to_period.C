@@ -54,7 +54,8 @@ int main(int argc, char ** argv) {
     int c;
     char* param_string = "a:P:M:m:q:";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
             case 'a': semi = atof(poptarg);
                       break;

@@ -297,7 +297,8 @@ main(int argc, char **argv)
     bool  q_flag = FALSE;
     bool  t_flag = FALSE;
     
-    while ((c = pgetopt(argc, argv, "a:c:d:D:e:qt:")) != -1)
+    while ((c = pgetopt(argc, argv, "a:c:d:D:e:qt:",
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 	    case 'a': a_flag = TRUE;
 		      dt = atof(poptarg);

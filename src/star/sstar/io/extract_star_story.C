@@ -208,9 +208,9 @@ main(int argc, char ** argv)
 
     char  *comment;
     extern char *poptarg;
-    int  pgetopt(int, char **, char *);
 
-    while ((c = pgetopt(argc, argv, "M:R:T:t:s:c:")) != -1)
+    while ((c = pgetopt(argc, argv, "M:R:T:t:s:c:",
+		    "$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
             case 'M': M_flag = TRUE;

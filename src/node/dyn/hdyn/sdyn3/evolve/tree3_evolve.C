@@ -91,7 +91,8 @@ main(int argc, char **argv)
     bool  q_flag = FALSE;
     bool  t_flag = FALSE;
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
 	    case 'A': a_flag = TRUE;

@@ -259,7 +259,7 @@ main(int argc, char **argv)
     real snap_cube_size = VERY_LARGE_NUMBER;
 
     extern char *poptarg;
-    int pgetopt(int, char **, char *), c;
+    int c;
 
     bool a_flag = FALSE;
     bool c_flag = FALSE;
@@ -269,7 +269,8 @@ main(int argc, char **argv)
     bool q_flag = FALSE;
     bool t_flag = FALSE;
 
-    while ((c = pgetopt(argc, argv, "a:c:C:d:D:e:qt:")) != -1) {
+    while ((c = pgetopt(argc, argv, "a:c:C:d:D:e:qt:",
+			"$Revision$", _SRC_)) != -1) {
 	switch (c) {
 	    case 'a':
 		a_flag = TRUE;

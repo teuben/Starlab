@@ -1001,7 +1001,8 @@ main(int argc, char **argv)
                            //           the time specified.
     bool  z_flag = FALSE;  // to specify termination after n_max steps
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 	    case 'A': a_flag = TRUE;
 		      eta = atof(poptarg);

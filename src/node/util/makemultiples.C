@@ -494,7 +494,8 @@ int main(int argc, char ** argv)
     int c;
     char* param_string = "d:qf:h:M:m:il:nu:p:Ss:I";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case 'f': binary_fraction = atof(poptarg);

@@ -31,7 +31,8 @@ main(int argc, char *argv[])
     int c;
     char* param_string = "e:f:l:L:u:U:vx:";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 	      case 'e':
 	      case 'x':	x = atof(poptarg);

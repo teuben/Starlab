@@ -369,7 +369,8 @@ main(int argc, char **argv)
     //           r_stop = 100
     //           no extra output
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
 	    case 'A': init.eta = atof(poptarg);

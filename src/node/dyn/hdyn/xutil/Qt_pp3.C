@@ -166,7 +166,8 @@ int main(int argc, char **argv)
 
     int option = 0;
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case 'o': option = atoi(poptarg);

@@ -110,7 +110,8 @@ main(int argc, char** argv)
     char* params = "F:v";
     int   c;
 
-    while ((c = pgetopt(argc, argv, params)) != -1)
+    while ((c = pgetopt(argc, argv, params,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
 	    case 'F': file = true;

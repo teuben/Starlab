@@ -145,7 +145,8 @@ main(int argc, char **argv)
     int c;
     char* param_string = "a:c:d:D:e:qt:x";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+			"$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
 	    case 'a': a_flag = TRUE;

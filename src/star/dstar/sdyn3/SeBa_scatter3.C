@@ -581,10 +581,10 @@ main(int argc, char ** argv)
   //  int srandinter(int);
   char  seedlog[SEED_STRING_LENGTH];
   extern char *poptarg;
-  int  pgetopt(int, char **, char *);
 
   int n_output = 1;
-  while ((c = pgetopt(argc, argv, "c:D:d:n:s:T:t:v:")) != -1)
+  while ((c = pgetopt(argc, argv, "c:D:d:n:s:T:t:v:",
+		  "$Revision$", _SRC_)) != -1)
     switch(c)
       {
       case 'c': c_flag = TRUE;

@@ -350,7 +350,8 @@ main(int argc, char ** argv)
     char * param_string = "A:a:E:e:M:R:Q:T:t:Ss:c:";
     check_help();
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
             case 'A': A_flag = true;

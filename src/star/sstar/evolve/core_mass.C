@@ -32,11 +32,10 @@ void main(int argc, char ** argv) {
     real t_end   = 10000;
     real time = 0;
 
-
     extern char *poptarg;
-    int  pgetopt(int, char **, char *);
 
-    while ((c = pgetopt(argc, argv, "m:n:")) != -1)
+    while ((c = pgetopt(argc, argv, "m:n:",
+		    "$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
             case 'm': m = atof(poptarg);

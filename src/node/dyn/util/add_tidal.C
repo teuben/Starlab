@@ -49,7 +49,8 @@ main(int argc, char *argv[])
 
     // Parse the argument list:
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1) {
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {
 	switch (c) {
 	    case 'c':	c_flag = TRUE;
 			comment = poptarg;

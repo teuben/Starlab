@@ -97,7 +97,8 @@ main(int argc, char **argv)
     exit (1);
   }
     
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 	    case 'R':
 	    case 'r': rc_rvir = atof(poptarg);
