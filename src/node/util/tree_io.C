@@ -207,28 +207,25 @@ void node::print_label(ostream & s)
     s << format_label();
 }
 
-void node::pretty_print_node(ostream & s)
+void node::pretty_print_node(ostream & s)		// default = cerr
 {
-    print_label(s);
+    print_label(s);					// no trailing endl
 }
 
-void node::pretty_print_tree(int depth_level, ostream & s)
+void node::pretty_print_tree(ostream & s,		// default = cerr
+			     int level)			// default = 0
 {
-    int  k = depth_level;
-    while (k--)
-	s << "  ";
+    int  k = level;
+    while (k--)	s << "  ";
+
     pretty_print_node(s);
-    if (mass != 1)
-	s << "        m = " << mass;
+
+    if (mass != 1) s << "        m = " << mass;
     s << endl;
+
     if (is_parent())
 	for_all_daughters(node, this, d)
-	    d->pretty_print_tree(depth_level + 1, s);
-}
-
-void node::pretty_print_tree(ostream & s)
-{
-    pretty_print_tree(0, s);
+	    d->pretty_print_tree(s, level + 1);
 }
 
 void pp(node *b, ostream & s)
@@ -454,7 +451,9 @@ node *get_node(istream& s,		// default = cin
     if (!n)
 	n = get_node_init(s, the_npfp, the_hbpfp, the_sbpfp, use_stories);
 
-    n->check_and_correct_node(true);	// not clear why this works...
+    if (n)
+	n->check_and_correct_node(true);
+
     return n;
 }
 

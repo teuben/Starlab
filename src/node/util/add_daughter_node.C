@@ -21,14 +21,14 @@
 
 #include "node.h"
 
-/*===========================================================================*/
+//===========================================================================
 
 #ifdef TOOLBOX
 
-/*-----------------------------------------------------------------------------
- *  main  --  driver to directly add one extra daughter node.
- *-----------------------------------------------------------------------------
- */
+//---------------------------------------------------------------------------
+//  main  --  driver to directly add one extra daughter node.
+//-------------------------------------------------------------------------
+
 main(int argc, char ** argv)
 {
     int  i;
@@ -47,8 +47,8 @@ main(int argc, char ** argv)
     char* param_string = "c:ei:j:m:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
-	switch(c)
-	    {
+	switch(c) {
+
 	    case 'c': c_flag = TRUE;
 		      comment = poptarg;
 		      break;
@@ -65,13 +65,13 @@ main(int argc, char ** argv)
             case '?': params_to_usage(cerr, argv[0], param_string);
 		      get_help();
 		      exit(1);
-	    }            
+	}
     
-    node * root;    /* root node */
-    node * p;       /* parent node */
-    node * d;       /* older daughter node */
-    node * y;       /* younger daughter node */
-    node * n;       /* new daughter node */
+    node * root;    // root node
+    node * p;       // parent node
+    node * d;       // older daughter node
+    node * y;       // younger daughter node
+    node * n;       // new daughter node
 
     root = get_node();
 
@@ -82,7 +82,7 @@ main(int argc, char ** argv)
         root->log_comment(comment);
     root->log_history(argc, argv);
 
-    if (i_flag == FALSE)   /* default parent: root */
+    if (i_flag == FALSE)   // default parent: root
 	p = root;
     else
 	p = node_with_index(i, root);
@@ -98,27 +98,20 @@ main(int argc, char ** argv)
     d = p->get_oldest_daughter();
     if (d == NULL)
 	p->set_oldest_daughter(n);
-    else
-	{
+    else {
 	y = d->get_younger_sister();
-	while (y)
-	    {
+	while (y) {
 	    d = y;
 	    y = d->get_younger_sister();
-	    }
-	d->set_younger_sister(n);
 	}
+	d->set_younger_sister(n);
+    }
 
     if (e_flag)
 	root->pretty_print_tree(cerr);
 
     put_node(root);
     rmtree(root);
-}
+	}
 
 #endif
-
-/*===========================================================================*/
-
-/* endof: add_daughter_node.C */
-
