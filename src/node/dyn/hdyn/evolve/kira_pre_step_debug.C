@@ -3,7 +3,7 @@
 
 
 #if 0
-    if (t > 82.1421279 && t < 82.142131 && fmod(steps, 1) == 0) {
+    if (t > 82.16960 && t < 82.1696256 && fmod(steps, 1) == 0) {
 
 	cerr << "pre..." << endl;
 	hdyn *top = NULL;
@@ -11,8 +11,7 @@
 	    hdyn *n = next_nodes[ii];
 	    if (n && n->is_valid()) {
 		cerr << n->format_label() << " ";
-		if (n->name_is("(925,6)")) top = n->get_top_level_node();
-		if (n->name_is("925")) top = n->get_top_level_node();
+		if (n->name_is("445")) top = n->get_top_level_node();
 	    }
 	}
 	cerr << endl;

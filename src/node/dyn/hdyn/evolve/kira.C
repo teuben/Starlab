@@ -1357,7 +1357,7 @@ local int integrate_list(hdyn * b,
 		    // adjust_tree_structure() and the requirements of
 		    // perturbed_list.
 
-		    // PRC(adjust_tree); PRL(pert);
+		    // PRC(adjust_tree); PRC(tree_changed); PRL(pert);
 
 		    if (adjust_tree == 1) {
 
