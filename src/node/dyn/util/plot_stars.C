@@ -175,8 +175,12 @@ void plot_stars(dyn * bi,
     for (int j = VBINS-1; j >= 0; j--) {
 	PRI(off);
 	for (int i = 0; i < HBINS; i++) cerr << disp[i][j];
-	if (j < VBINS-1 && m <= n)
-	    cerr << "     " << m << ":  " << list[m++]->format_label();
+	if (j < VBINS-1 && m <= n) {
+	    fprintf(stderr, "   %3d: %7s %10.2e",
+		    m, list[m]->format_label(), list[m++]->get_mass()); 
+	    // cerr << "     " << m << ":  " << list[m]->format_label()
+	    //	    << list[m++]->get_mass();
+	}
 	cerr << endl;
     }
     cerr << endl;

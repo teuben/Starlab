@@ -1019,6 +1019,9 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 	    real r_pert2 = perturbation_scale_sq(b, b->get_gamma23());
 
+	    real scale = binary_scale(b);
+	    PRC(b->format_label()); PRC(scale); PRL(r_pert2);
+
 	    hdyn *nn = b->get_nn();
 	    if (nn && nn != b && b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
 		r_pert2 = max(r_pert2, b->get_d_nn_sq());
@@ -1205,22 +1208,22 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
     int status = 0;
 #ifndef NO_G6_NEIGHBOUR_LIST
     status = g6_get_neighbour_list_(&cluster_id,
-					&pipe,
-					&max_neighbors,
-					&n_neighbors,
-					neighbor_list);
+				    &pipe,
+				    &max_neighbors,
+				    &n_neighbors,
+				    neighbor_list);
 #endif
 
     if (status) {
 
-	// GRAPE found too many neighbors:  n_neighbors > max_neighbors,
+	// GRAPE found too many neighbors:  n_neighbors >= max_neighbors,
 	// so the kira perturber list will overflow.  Flag an error for
 	// now (maybe unnecessary), and modify the neighbor radius.  We
 	// reduce the size of the neighbor sphere to a point that will
-	// still ensure too many perturbers, but which not overflow the
-	// neighbor list array.
+	// still ensure too many perturbers, but which will not overflow
+	// the neighbor list array.
 
-	if (n_neighbors > max_neighbors) {	// should be redundant...
+	if (n_neighbors >= max_neighbors) {	// should be redundant...
 
 	    real rnb_fac = pow(max_neighbors/(real)n_neighbors, 0.6666667);
 	    b->set_grape_rnb_sq(rnb_fac*b->get_grape_rnb_sq());
@@ -1809,11 +1812,11 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
     if (status) {
 
-	// GRAPE has found too many neighbors:  n_neighbors > max_neighbors.
+	// GRAPE has found too many neighbors:  n_neighbors >= max_neighbors.
 	// Attempt to reduce the size of the neighbor sphere to contain
 	// (say) 10*N_DENS stars.
 
-	if (n_neighbors > max_neighbors) {	// should be redundant...
+	if (n_neighbors >= max_neighbors) {	// should be redundant...
 
 	    real rnb_fac = pow(10*N_DENS/(real)n_neighbors, 0.6666667);
 	    b->set_grape_rnb_sq(rnb_fac*b->get_grape_rnb_sq());
@@ -1853,7 +1856,7 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	if (n_neighbors < 2) fac *= 1.6;
 #endif
 
-	real fac = min(2.0, pow((NDENS+3.0)/(1.0+n_neighbors), 1.5));
+	real fac = min(2.0, pow((N_DENS+3.0)/(1.0+n_neighbors), 1.5));
 
 	b->set_grape_rnb_sq(fac * b->get_grape_rnb_sq());
 	return false;
@@ -2089,9 +2092,9 @@ void grape_calculate_densities(hdyn* b,			// root node
     real r90_sq = b->get_d_min_sq() / square(b->get_d_min_fac());
     real rnn_sq = r90_sq * pow((real)nj_on_grape, 4.0/3);
 
-    for (int i = 0; i < n_top; i++)
+    for (int j = 0; j < n_top; j++)
 //	set_grape_density_radius(top_nodes[j], h2_crit);
-	set_grape_density_radius(top_nodes[i], rnn_sq);
+	set_grape_density_radius(top_nodes[j], rnn_sq);
 
     int n_pipes = g6_npipes_();
 

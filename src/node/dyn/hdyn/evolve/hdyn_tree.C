@@ -223,12 +223,12 @@ local bool too_big(hdyn * bi, real limit_sq)
     if (od->get_kepler()) return false;
 
     // Expand this to extend binaries with small perturbation which are
-    // not (yet) officially unperturbed.  May need other checks on nn
-    // distance, timestep, etc...  Use of gamma2 here is imperfect, and
-    // probably should be improved (12/12/01).
+    // not actually unperturbed.  May need other checks on nn distance,
+    // timestep, etc...  (Steve, 12/12/01)
 
     real pert2 = od->get_perturbation_squared();
-    if (pert2 >= 0 && pert2 <= od->get_gamma2()) return false;
+    // if (pert2 >= 0 && pert2 <= od->get_gamma2()) return false;
+    if (pert2 >= 0 && pert2 <= 1.e-10) return false;
 
     bool big = !too_close(od, od->get_younger_sister(), limit_sq, false);
 

@@ -183,8 +183,6 @@ local inline real define_perturbation_radius_factor(hdyn *b,	// 'this' node
     // Note that pert_factor_sq will be gamma23 in normal use, but
     // it may in general take any value.
 
-    pert_fac_sq_save = pert_factor_sq;
-
     // NOTE: removed "min(d_min_sq..." lines (Steve, 12/01).
 
     if (perturber_criterion == 0) {
@@ -220,14 +218,15 @@ local inline real define_perturbation_radius_factor(hdyn *b,	// 'this' node
 // perturbation_scale_sq: return a characteristic squared scale for the
 //			  radius of b's perturber sphere (Steve, 12/01)
 
-local inline perturbation_scale_sq(hdyn *b,
-				   real pert_factor_sq)
+local inline real perturbation_scale_sq(hdyn *b,
+					real pert_factor_sq)
 {
     // Decode the perturber criterion and return the radius that would
     // be applied for a perturber of mass equal to half the mass of b.
     // Basically, we just repeat the action of the previous function,
     // but return rp2.  Keep the function here so we can maintain
-    // consistency if the criteria change.
+    // consistency if the criteria change.  The pert_factor_sq used
+    // here must be the same as that sent to the previous function.
     //
     // Note that we end up calling binary_scale TWICE -- once in the
     // previous function, and again here.  To be fixed...
