@@ -1,52 +1,31 @@
-# 
-#       #=======================================================#     _\|/_
-#      #  __  _____           ___                    ___       #       /|\
-#     #  /      |      ^     |   \  |         ^     |   \     #           _\|/_
-#    #   \__    |     / \    |___/  |        / \    |___/    #             /|\
-#   #       \   |    /___\   |  \   |       /___\   |   \   #  _\|/_
-#  #     ___/   |   /     \  |   \  |____  /     \  |___/  #    /|\     
-# #                                                       #             _\|/_
-##=======================================================#               /|\
-#
-##
-##  src/std/pjt/Makefile
-##.............................................................................
-##    Aug 1996					Peter Teuben
-##.............................................................................
-##
 
-CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC)
-LIBFLAGS	= -L$(LIB) -lstd -lm
-DEPEND_LIBS	= $(LIB)/libstd.a
 
-EXECUTABLES = 
-OBJECT_FILES = program.o getparam.o main.o \
-    p_description.o p_keywords.o p_version.o p_examples.o p_usage.o
+CXXFLAGS = -g
 
-LIBRARY = libstd.a
+ALL = Makefile Makefile.pjt  README.pjt 	program.h $(SRC) 	test1.cc test2.cc
 
-EXTRA_CLEAN = $(LIB)/$(LIBRARY)
 
-#..............................................................................
+SRC = 	getparam.cc main.cc 	program.cc \
+	p_description.cc p_examples.cc p_keywords.cc p_usage.cc p_version.cc \
 
-include $(STARLAB_PATH)/inc/Makefile.worker.inc
 
-#..............................................................................
-#..............................................................................
+OBJ = $(SRC:.cc=.o)
 
-# Local targets:
+help:
+	@echo OBJ = $(OBJ)
 
-TAR = Makefile program.h program.C getparam.C main.C \
-    p_description.C p_keywords.C p_version.C p_examples.C p_usage.C \
-    test1.C nemo.sty latest.tex ui.inc README.pjt
+lib: $(OBJ)
+	ar ruv libp.a $(OBJ)
+
+test1: lib test1.cc
+	g++ -g -o test1 test1.cc libp.a
+
+test2: lib test2.cc
+	g++ -g -o test2 test2.cc libp.a
+
+
+clean:
+	rm -f *.o test1 test2 libp.a
 
 tar:
-	cp program.h ../../../inc/
-	tar cvf pjt.tar $(TAR)
-
-##=======================================================================//
-##  +---------------+        _\|/_        +------------------------------\\
-##  |  the end of:  |         /|\         |  src/std/Makefile
-##  +---------------+                     +------------------------------//
-##========================= STARLAB =====================================\\
-
+	tar cvf pjt.tar $(ALL)
