@@ -47,7 +47,11 @@ local real solve3(real a, real b, real c)
 
 void refine_cluster_mass(dyn *b)
 {
-    if (b->get_tidal_field() == 0) return;
+    if (b->get_external_field() == 0) return;
+    if (b->get_tidal_field() == 0) {
+	// refine_cluster_mass2(b);				// experimental
+	return;
+    }
 
     // Self-consistently determine the total mass within the outermost
     // closed zero-velocity surface.  Use a point-mass approximation for

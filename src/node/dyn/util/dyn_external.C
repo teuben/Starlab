@@ -14,6 +14,11 @@
 //    version 2:
 //.............................................................................
 //
+// Member functions:
+//
+//	real dyn::get_external_scale_sq()
+//	vector dyn::get_external_center();
+//
 // Global functions:
 //
 //	void get_external_acc		(single node)
@@ -312,6 +317,42 @@ local inline real power_law_virial(dyn * b)
 //-------------------------------------------------------------------------
 // General "external" functions:
 //-------------------------------------------------------------------------
+
+// Member functions:
+
+real dyn::get_external_scale_sq()
+{
+    // Just enumerate the possiblilties...
+
+    if (!get_external_field())
+	return 0;
+    else if (get_tidal_field())
+	return 0;
+    else if (get_plummer())
+	return p_scale_sq;
+    else if (get_pl())
+	return pl_scale_sq;
+    else
+	return 0;
+}
+
+vector dyn::get_external_center()
+{
+    // Just enumerate the possiblilties...
+
+    if (!get_external_field())
+	return 0;
+    else if (get_tidal_field())
+	return tidal_center;
+    else if (get_plummer())
+	return p_center;
+    else if (get_pl())
+	return pl_center;
+    else
+	return 0;
+}
+
+// Other functions:
 
 void get_external_acc(dyn * b,
 		      vector pos,
