@@ -25,7 +25,9 @@
   #include "dyn.h"
 
   extern char* yytext;
+  enum section_ { P, D, H, S };
   stack<dyn*> p;
+  stack<section_> section;
   unsigned long lineno = 1;
   vector<double>* v_ptr;
   struct { char* s; size_t n; } story_line;
@@ -58,10 +60,12 @@
 %%
 
 particle:	{ /* $$ = $1 */ } | '(' PARTICLE {
+  section.push(P);
   p.push(static_cast<dyn*>(new_dyn(new_hydrobase, new_starbase, true)));
 }
 		  key_val_pairs log dynamics hydro star particles ')' PARTICLE {
   if (p.size() > 1) $$ = p.top(), p.pop(); else return 0;
+  section.pop();
 };
 
 particles:	  { $$ = 0; } | particles particle {
@@ -72,50 +76,63 @@ particles:	  { $$ = 0; } | particles particle {
 
 log:		  '(' LOG log_story ')' LOG;
 
-log_story:	| log_story LOG_STORY { p.top()->log_comment($2); free($2); };
+log_story:	| log_story LOG_STORY {
+  if (*$2) p.top()->log_comment($2); free($2);
+};
 
-dynamics:	  '(' DYNAMICS key_val_pairs ')' DYNAMICS;
+dynamics:	  '(' DYNAMICS { section.push(D); }
+		  key_val_pairs ')' DYNAMICS { section.pop(); };
 
-hydro:		  '(' HYDRO key_val_pairs ')' HYDRO;
+hydro:		  '(' HYDRO { section.push(H); }
+		  key_val_pairs ')' HYDRO { section.pop(); };
 
-star:		  '(' STAR key_val_pairs ')' STAR;
+star:		  '(' STAR  { section.push(S); }
+		  key_val_pairs ')' STAR { section.pop(); };
 
 key_val_pairs:	| key_val_pairs key_val_pair;
 
 key_val_pair:	  KEYWORD '=' real_vec {
-  if      (!strcmp($1, "i")) p.top()->set_index(int((*$3)[0]));
-  else if (!strcmp($1, "system_time")) p.top()->set_system_time((*$3)[0]);
-  else if (!strcmp($1, "m")) p.top()->set_mass((*$3)[0]);
-  else if (!strcmp($1, "r")) p.top()->set_pos(vec((*$3)[0],(*$3)[1],(*$3)[2]));
-  else if (!strcmp($1, "v")) p.top()->set_vel(vec((*$3)[0],(*$3)[1],(*$3)[2]));
-  else if (!strcmp($1, "a")) p.top()->set_acc(vec((*$3)[0],(*$3)[1],(*$3)[2]));
-  else if (p.size() == 1
-//  Uncomment the following lines if it is desired to retain certain
-//  node-level data (e.g. density).  Note that each new invocation of
-//  add_story_line() may add significantly (5-10%) to the total cost
-//  of reading in a snapshot.
-//
-//	   || !strcmp($1, "density")
-//	   || !strcmp($1, "density_time")
-  ) {
-
-    // save unknown keyword = number data only for the root node (level 1)
-    char line[strlen($1)+2+story_line.n+1];
-    line[0] = '\0';
-    strcpy(stpcpy(stpcpy(line, $1), " ="), story_line.s);
-    add_story_line(p.top()->get_dyn_story(), line);
+  char line[strlen($1)+2+story_line.n+1];
+  line[0] = '\0';
+  strcpy(stpcpy(stpcpy(line, $1), " ="), story_line.s);
+  switch (section.top()) {
+  case P:
+    if      (!strcmp($1, "i")) p.top()->set_index(int((*$3)[0]));
+    else if (!strcmp($1, "N"));
+    else add_story_line(p.top()->get_dyn_story(), line);
+    break;
+  case D:
+    if      (!strcmp($1, "system_time")) p.top()->set_system_time((*$3)[0]);
+    else if (!strcmp($1, "m")) p.top()->set_mass((*$3)[0]);
+    else if (!strcmp($1, "r"))
+      p.top()->set_pos(vec((*$3)[0],(*$3)[1],(*$3)[2]));
+    else if (!strcmp($1, "v"))
+      p.top()->set_vel(vec((*$3)[0],(*$3)[1],(*$3)[2]));
+    else if (!strcmp($1, "a"))
+      p.top()->set_acc(vec((*$3)[0],(*$3)[1],(*$3)[2]));
+    else add_story_line(p.top()->get_dyn_story(), line);
+    break;
+  case H: add_story_line(p.top()->get_hydro_story(), line); break;
+  case S: add_story_line(p.top()->get_star_story(), line); break;
+  default: yyerror("inside unkown section");
   }
   free($1);
   $3->clear();
   *story_line.s = story_line.n = 0;
 }
 		| KEYWORD '=' STRING {
-  // save keyword = string data only for the root node (level 1)
-  if (p.size() == 1) {
-    char line[strlen($1)+3+strlen($3)+1];
-    line[0] = '\0';
-    stpcpy(stpcpy(stpcpy(line, $1), " = "), $3);
-    add_story_line(p.top()->get_dyn_story(), line);
+  char line[strlen($1)+3+strlen($3)+1];
+  line[0] = '\0';
+  stpcpy(stpcpy(stpcpy(line, $1), " = "), $3);
+  switch (section.top()) {
+  case P:
+    if (!strcmp($1, "name")) p.top()->set_name($3);
+    else add_story_line(p.top()->get_dyn_story(), line);
+    break;
+  case D: add_story_line(p.top()->get_dyn_story(), line); break;
+  case H: add_story_line(p.top()->get_hydro_story(), line); break;
+  case S: add_story_line(p.top()->get_star_story(), line); break;
+  default: yyerror("inside unkown section");
   }
   free($1), free($3);
 };
