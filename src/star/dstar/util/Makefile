@@ -28,7 +28,7 @@ DEPEND_LIBS	= $(LIB)/libsstar.a  $(LIB)/libdstar.a  $(LIB)/libhdyn.a \
 		  $(LIB)/libdyn.a $(LIB)/libnode.a $(LIB)/libstd.a \
 		  $(STARLAB_PGPLOTINC)/libpgplot.a 
 
-EXECUTABLES  = semi_to_period roche
+EXECUTABLES  = semi_to_period	# roche # *don't* include roche routinely...
 OBJECT_FILES = dstar_to_node.o semi_to_period.o
 
 LIBRARY = 
