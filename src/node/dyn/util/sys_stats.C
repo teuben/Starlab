@@ -1150,7 +1150,9 @@ bool parse_sys_stats_main(int argc, char *argv[],
 			  bool &calc_e,
 			  bool &n_sq,
 			  bool &out,
-			  bool &verbose)
+			  bool &verbose,
+			  char *cvs_id,
+			  char *source)
 {
     // Parse the sys_stats command-line (used by both dyn and hdyn versions).
 
@@ -1171,8 +1173,7 @@ bool parse_sys_stats_main(int argc, char *argv[],
     char* param_string = "0b.Bnel.o";	// note: "v" removed because only the
 					// "verbose = true" option works!
 
-    while ((c = pgetopt(argc, argv, param_string,
-		    "$Revision$", _SRC_)) != -1)
+    while ((c = pgetopt(argc, argv, param_string, cvs_id, source)) != -1)
 	switch(c) {
 
 	    case '0': break;			// for hdyn compatibility
@@ -1564,7 +1565,8 @@ main(int argc, char **argv)
     if (!parse_sys_stats_main(argc, argv,
 			      which_lagr,
 			      binaries, long_binary_output, B_flag,
-			      calc_e, n_sq, out, verbose)) {
+			      calc_e, n_sq, out, verbose,
+			      "$Revision$", _SRC_)) {
 	get_help();
 	exit(1);
     }

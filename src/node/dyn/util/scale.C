@@ -486,7 +486,8 @@ bool parse_scale_main(int argc, char *argv[],
 		      bool& m_flag, real& m,
 		      bool& q_flag, real& q,
 		      bool& r_flag, real& r,
-		      bool& debug)
+		      bool& debug,
+		      char *cvs_id, char *source)
 {
     // Defaults:
 
@@ -506,8 +507,7 @@ bool parse_scale_main(int argc, char *argv[],
     int c;
     char* param_string = "0cdm:M:q:Q:e:E:r:R:sS";
 
-    while ((c = pgetopt(argc, argv, param_string,
-		    "$Revision$", _SRC_)) != -1)
+    while ((c = pgetopt(argc, argv, param_string, cvs_id, source)) != -1)
 	switch(c) {
 
 	    case '0': break;			// for hdyn compatibility
@@ -575,7 +575,8 @@ main(int argc, char ** argv)
 			  c_flag,
 			  e_flag, e, m_flag, m,
 			  q_flag, q, r_flag, r,
-			  debug)) {
+			  debug,
+			  "$Revision$", _SRC_)) {
 	get_help();
 	exit(1);
     }
