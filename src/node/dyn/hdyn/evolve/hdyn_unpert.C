@@ -2615,8 +2615,6 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	}
     }
 
-    
-
     // Store initial separation, for use below.
 
     real initial_sep_sq = kep->get_separation() * kep->get_separation();
