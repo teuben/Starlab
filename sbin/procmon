@@ -1,0 +1,136 @@
+#!/bin/tcsh -f
+
+# Procmon: monitor a named process at some interval and log the results to
+#	   a file.  Loop without output if the named process is not found.
+#
+# Syntax:	procmon  process_name  monitor_interval  output_file
+#
+# Defaults:	process_name = kira_grape, monitor_interval = 30,
+#		output_file = procmon.out # procmon.process_name.host.time-id
+#
+# Default action is to monitor processes belonging to all users.
+# If a "+" is prepended to process_name, limit the search to $USER.
+# A process name of "." means the default (kira_grape),
+# a process name of "+" means "+default".
+
+set default_name = kira_grape
+
+set id = $0
+set scriptname = $id:t
+
+#-----------------------------------------------------------------------
+#
+# Determine the process name.
+
+set procname = $default_name
+
+if ($#argv > 0) then
+    if (X"$1" == "X+") then
+	set procname = "+$default_name"
+    else if ("X$1" != "X.") then
+	set procname = $1
+    endif
+endif
+
+# Check for a leading "+".
+
+set which = "all"
+alias pscmd 'ps auxww'
+
+set tmp = "`echo $procname | sed 's/^+//'`"
+
+if ("X$tmp" != "X$procname") then
+    set procname = "$tmp"
+    set which = "$USER"
+    alias pscmd 'ps auxww | grep $USER'
+endif
+
+#-----------------------------------------------------------------------
+#
+# Set the monitoring inteval.
+
+set interval = 30
+if ($#argv > 1) set interval = $2
+
+#-----------------------------------------------------------------------
+#
+# Choose an output file name.
+
+if ($#argv > 2) then
+
+    set monfile = "$3"
+
+else
+
+    set date = `date | tr ' ' '_'`
+    set host = `hostname`
+
+    set monfile = $scriptname.$procname.$host.$date
+
+#   Hmmm.  Long file names (with the most significant info near the end)
+#   can be quite annoying.  Revert to a simple standard name for now.
+
+    set monfile = procmon.out
+
+endif
+
+#-----------------------------------------------------------------------
+#
+# echo parameters and start.
+
+echo ""
+echo "Monitoring $which $procname, interval = $interval, output to $monfile"
+
+rm -rf $monfile
+touch $monfile
+
+@ count = 0
+@ running = 0
+
+while (1)
+
+#   Look for the process.
+
+    set tmp = "`pscmd | grep $procname | grep -v grep | grep -v $scriptname`"
+
+    if ("X$tmp" == "X") then
+
+#	Process not found.  Flag termination, then loop without output.
+
+	if ($running) then
+	    date						>> $monfile
+	    echo $procname is not running			>> $monfile
+	    echo ""						>> $monfile
+	endif
+
+	@ count = 0
+	@ running = 0
+
+    else
+
+#	Add a line to the output file.
+
+	date							>> $monfile
+
+	if ($count == 0) then
+	    ps aux | head -1					>> $monfile
+	endif
+
+#	Note: echo $tmp here loses newlines..."
+#	echo "$tmp"						>> $monfile
+
+	pscmd | grep $procname | grep -v grep | grep -v $scriptname \
+								>> $monfile
+	echo ""							>> $monfile
+
+	@ count++
+	if ($count >= 10) then
+	    @ count = 0
+	endif
+
+	@ running = 1
+
+    endif
+
+    sleep $interval
+end

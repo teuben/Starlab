@@ -1,0 +1,215 @@
+#!/bin/tcsh -f
+
+# Mimic minimal plot_data-ish functionality using gnuplot.
+#
+# Options:	-c i j k ...	columns to plot (x y y...) [1 2]
+#		-h header	specify an overall header [none]
+#		-l x1 x2 y1 y2	specify plot limits [automatic]
+#		-L size		specify plot limits [automatic]
+#		-p		toggle points [on]
+#		-P		toggle PostScript output [off]
+#		-s scriptname	save the script in the named file [don't save]
+#		-x		specify x-label [none]
+#		-y		specify y-label [none]
+#		-Y a b ...	specify plot labels ["column j", ...]
+#
+# Postscript output, if any, is sent to stdout.
+
+
+#set echo
+
+if ($#argv > 0 && x$1 == x--help) then
+
+    echo ""
+    echo 'gpl:       minimal subset of gnuplot commands, with data from stdin'
+    echo ""
+    echo 'Options:   -c i j k...     columns to plot (x y1 y2...)       [1 2]'
+    echo '           -h header       specify an overall header         [none]'
+    echo '           -l x1 x2 y1 y2  specify plot limits          [automatic]'
+    echo '           -L size         specify plot limits (+/- L)  [automatic]'
+    echo '           -p              toggle points/lines             [points]'
+    echo '           -P              toggle PostScript output           [off]'
+    echo '           -s script       save the script in the named file   [no]'
+    echo '           -x              specify x-label                   [none]'
+    echo '           -y              specify y-label                   [none]'
+    echo '           -Y a b ...      specify plot labels    ["column j", ...]'
+    echo ""
+
+    exit
+endif
+
+set infile = /tmp/gpl$$.in
+set datafile = /tmp/gpl$$.dat
+onintr cleanup
+
+#-----------------------------------------------------------------------
+
+# Create the datafile.
+
+cat >! $datafile
+
+#-----------------------------------------------------------------------
+
+# Parse the argument list.
+
+set col = (1 2)
+@ l = 1
+set post = 0
+set script = ""
+set xlabel = ""
+set title = ""
+set ylabel = ""
+set Ylabel = ()
+set xlims = ""
+set ylims = ""
+
+@ i = 0
+while ($i < $#argv)
+    @ i++
+    set arg = $argv[$i]
+    if (x$arg == x-c) then
+	set col = ()
+	@ j = $i
+	while ($j < $#argv)
+	    @ j++
+	    set tmp = (`echo $argv[$j] | grep -e -`)
+	    if ($#tmp > 0) then
+		@ i = $j - 1
+		break
+	    else
+		set col = ($col $argv[$j])
+		@ i = $j
+	    endif
+	end
+    else if (x$arg == x-h) then
+	@ i++
+	set title = "$argv[$i]"
+    else if (x$arg == x-l) then
+	@ i++ ; set x1 = $argv[$i]
+	@ i++ ; set x2 = $argv[$i]
+	@ i++ ; set y1 = $argv[$i]
+	@ i++ ; set y2 = $argv[$i]
+	set xlims = "[$x1 : $x2]"
+	set ylims = "[$y1 : $y2]"
+    else if (x$arg == x-L) then
+	@ i++ ; set size = $argv[$i]
+	set xlims = "[-$size : $size]"
+	set ylims = "[-$size : $size]"
+    else if (x$arg == x-p) then
+	@ l = 1 - $l
+    else if (x$arg == x-P) then
+	@ post = 1 - $post
+    else if (x$arg == x-s) then
+	@ i++
+	set script = "$argv[$i]"
+	set infile = "$script"
+    else if (x$arg == x-x) then
+	@ i++
+	set xlabel = "$argv[$i]"
+    else if (x$arg == x-y) then
+	@ i++
+	set ylabel = "$argv[$i]"
+    else if (x$arg == x-Y) then
+	@ j = $i
+	while ($j < $#argv)
+	    @ j++
+	    set tmp = (`echo $argv[$j] | grep -e '^-'`)
+	    if ($#tmp > 0) then
+		@ i = $j - 1
+		break
+	    else
+		set Ylabel = ($Ylabel "$argv[$j]")
+		@ i = $j
+	    endif
+	end
+    endif
+end
+
+if ($#col < 2) goto cleanup
+
+if  ("x$xlabel" == x) then
+    set xlabel = column_$col[1]
+endif
+
+# Want Ylabel to contain 1 less entries than col.  Pad if necessary,
+# with generic labels.
+
+if ($#Ylabel < $#col - 1) then
+    @ j = $#Ylabel + 1
+    while ($j < $#col)
+	@ j++
+	set Ylabel = ($Ylabel column_$col[$j])
+    end
+endif
+
+#echo xlabel = $xlabel
+#echo ylabel = $ylabel
+#echo title = $title
+#echo col = $col, \# = $#col
+#echo Ylabel = $Ylabel, \# = $#Ylabel
+
+#-----------------------------------------------------------------------
+
+# Create and run the input file.
+
+if ($#col > 1) then
+
+    echo set tmargin 2					>! $infile
+    echo set bmargin 4					>> $infile
+    echo set lmargin 10					>> $infile
+    echo set rmargin 9					>> $infile
+
+    if ($post == 1) then
+	echo set term post color 18			>> $infile
+    endif
+#   echo show term					>> $infile
+
+#   Label convention: replace "_" by space.
+
+    set xl = `echo "$xlabel" | tr '_' ' '`
+    echo set xlabel \"$xl\"				>> $infile
+    set yl = `echo "$ylabel" | tr '_' ' '`
+    echo set ylabel \"$yl\"				>> $infile
+
+    set x2l = `echo "$title" | tr '_' ' '`
+    echo set title \"$x2l\"				>> $infile
+
+    if ($l == 1) then
+	set lines = "lines"
+    else
+	set lines = "points"
+    endif
+
+    echo plot "$xlims" "$ylims" \\			>> $infile
+
+    set x = $col[1]
+    @ i = 1
+    @ j = 0
+    while ($i < $#col)
+	@ i++
+	@ j++
+	echo -n "    " \'$datafile\' using {$x}:$col[$i]  >> $infile
+
+#	Label convention: replace "_" by space.
+
+	set yl = "`echo "$Ylabel[$j]" | tr '_' ' '`"
+	echo -n \ title \"$yl\"				>> $infile
+
+	echo -n \ with $lines				>> $infile
+	if ($i < $#col) then
+	    echo ", \"					>> $infile
+	else
+	    echo ""					>> $infile
+	endif
+    end
+
+#   cat $infile
+
+    gnuplot -persist $infile		# X11 output stays visible
+
+endif
+
+#-----------------------------------------------------------------------
+
+cleanup:
+rm -f /tmp/gpl$$.*

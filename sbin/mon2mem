@@ -1,0 +1,7 @@
+#!/bin/tcsh -f
+
+if ($#argv < 1) exit
+
+grep $USER $1 | awk '{print $5, $10;}' \
+	      | tr : . \
+	      | gpl -c 2 1 -x CPU -y mem $argv[2*]
