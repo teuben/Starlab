@@ -4,6 +4,7 @@
 ////
 //// Options:      -M    select black hole mass
 ////                     if <1 mass is read as a fraction
+//// Options:      -i    select black hole identity
 
 //                 Simon Portegies Zwart, MIT November 2000
 
@@ -14,17 +15,27 @@ char  tmp_string[SEED_STRING_LENGTH];
 
 #ifdef TOOLBOX
 
-local void mkblack_hole(dyn* b, real m_bh) {
+local void mkblack_hole(dyn* b, int id, real m_bh) {
 
     b->to_com();
 
     real r_min = VERY_LARGE_NUMBER;
     dyn *bh = NULL;
-    for_all_daughters(dyn, b, bi) {
+    if(id<0) {
+      for_all_daughters(dyn, b, bi) {
 	if(abs(bi->get_pos()) < r_min) {
-	    r_min = abs(bi->get_pos());
-	    bh = bi;
+	  r_min = abs(bi->get_pos());
+	  bh = bi;
 	}
+      }
+    }
+    else {
+      for_all_daughters(dyn, b, bi) {
+	if(bi->get_index() == id) {
+	  bh = bi;
+	  break;
+	}
+      }
     }
 
     PRL(m_bh);
@@ -47,6 +58,8 @@ local void mkblack_hole(dyn* b, real m_bh) {
     }
 
     b->set_mass(m_sum);
+    // Selected black holes keeps same kinetic energy
+    b->set_vel(b->get_vel()/sqrt(m_sum));
 
     sprintf(tmp_string,
 	    "         black hole added, total mass = %8.2f", m_sum); 
@@ -57,27 +70,32 @@ local void mkblack_hole(dyn* b, real m_bh) {
 void main(int argc, char ** argv) {
 
     real m_bh = 0;
+    int id = -1;    // most central particle is selected
 
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "M:";
+    char* param_string = "i:M:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
 	    case 'M': m_bh = atof(poptarg);
 		      break;
+	    case 'i': id = atoi(poptarg);
+		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 		      exit(1);
 	}
-
 
     dyn* b;
     b = get_dyn(cin);
     b->log_history(argc, argv);
 
-    mkblack_hole(b, m_bh);
+    if (id>b->n_leaves())
+      err_exit("selected id exceeds particle number");
+
+    mkblack_hole(b, id, m_bh);
 
     real initial_mass = getrq(b->get_dyn_story(), "initial_mass");
 
