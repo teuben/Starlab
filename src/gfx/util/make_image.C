@@ -3,8 +3,8 @@
 ////               Assume that the numbers are *already* in the range [0,255],
 ////               and are arranged left to right, top to bottom in the frame.
 ////
-////               Use the ImageMagick "convert" program to convert the
-////               image to other formats.
+////               Use gifsicle or the ImageMagick "convert" program to convert
+////               the image to other formats.
 ////
 ////  Options:     -c         expect char input
 ////               -f         expect float input                      [default]
