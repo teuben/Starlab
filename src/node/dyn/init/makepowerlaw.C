@@ -11,18 +11,31 @@
 ////
 ////                     r  -->  sqrt(r^2 + a^2)
 ////
+//// In addition, we allow the possibility that the power-law is cut off
+//// within some radius b, and that there is a point-mass at the center.
+//// The default mass for the central point is the power-law mass within
+//// the cutoff.  The potential is softened to avoid numerical problems.
+//// If b is nonzero, a is set to zero.
+////
 //// We assume that x > 0.  Particle parameters will be chosen so that the
 //// total mass of the N-body system is 1, independent of the actual mass
 //// of the background distribution.  For now, we are interested only in
-//// test particles.
+//// test particles.  The particles are drawn from the power-law distribution,
+//// even within the cutoff radius.  For numerical convenience, we also
+//// allow the possibility of an inner cutoff radius, to limit the number
+//// of stars on very tight orbits.
 ////
 //// Options:     -A    specify the coefficient A [1]
 ////              -a/R  specify scale [1]
+////              -b    cutoff radius [0]
 ////              -c    add a comment to the output snapshot [false]
+////              -e    softening parameter [b/100]
 ////              -i    number the particles sequentially [don't number]
+////              -l    specify inner cutoff radius [0.1]
+////              -m/M  central mass [mass at cutoff]
 ////              -n    specify number of particles [no default]
 ////              -o    echo value of random seed [don't echo]
-////              -r    maximum radius of the N-body system [1]
+////              -r    maximum radius of the N-body system [10]
 ////              -s    specify random seed [random from system clock]
 ////              -x    specify exponent [1]
 ////
@@ -34,11 +47,18 @@
 #ifdef TOOLBOX
 
 local void  makepowerlaw(dyn * root, int n,
-			 real A, real a, real x, real r_max)
+			 real A, real a, real x,
+			 real cutoff, real mass,
+			 real r_min, real r_max)
 {
-    real xi = 1/x, pmass = 1./n, armax = pow(a/r_max, x),
-	 vc = sqrt(3*A*pow(a, x-1)/(3-x));
+    real xi = 1/x, pmass = 1./n, armax = 0, vc;
     root->set_mass(1);
+
+    if (a > 0) {
+	armax = pow(a/r_max, x);
+	vc =sqrt(3*A*pow(a, x-1)/(3-x));	// 3-D vrms at r = a
+    } else
+	vc = sqrt(3*A*pow(cutoff, x-1)/(3-x));	// 3-D vrms at r = cutoff
 
     for_all_daughters(dyn, root, bi) {
 
@@ -50,14 +70,36 @@ local void  makepowerlaw(dyn * root, int n,
 	//
 	//	m(r)  ~  (r/a)^3 (a/r_max)^x	(r < a)
 	//		 (r/r_max)^x		(r > a)
+	//
+	// Use this distribution even inside the cutoff radius.
 
-	real radius;
-	if (randinter(0, 1) < armax)
-	    radius = a*pow(randinter(0, 1), 1./3);
-	else
-	    radius = r_max*pow(randinter(armax, 1), xi);
+	real radius = 0;
+	while (radius < r_min) {	// lower limit for convenience only
+	    if (randinter(0, 1) < armax)
+		radius = a*pow(randinter(0, 1), 1./3);
+	    else
+		radius = r_max*pow(randinter(armax, 1), xi);
+	}
 
-	real costheta = randinter(-1.0, 1.0);
+	real costheta;
+
+	// Details of orbits within the cutoff radius are to be determined.
+	// For now, the orbits form a disk close to the central point mass.
+
+	if (radius > cutoff)
+
+	    // Spherically symmetric.
+
+	    costheta = randinter(-1, 1);
+
+	else {
+
+	    // Progressively force orbits into the x-y plane as r --> 0.
+
+	    real lim = radius/cutoff;
+	    costheta = randinter(-lim, lim);
+	}
+
 	real sintheta = 1 - costheta*costheta;
 	if (sintheta > 0) sintheta = sqrt(sintheta);
 	real phi = randinter(0.0, TWO_PI);
@@ -67,13 +109,54 @@ local void  makepowerlaw(dyn * root, int n,
 				  costheta));
 
 	// Choose velocities to ensure equilibrium in the external field.
+	// Modify the velocity dispersion inside the cutoff to take the
+	// central potential into account.
 
-	real vrms = vc;
-	if (radius > a) vrms *= pow(radius/a, (x-1)/2);
+	real vrms;
 
-        bi->set_vel(vrms*vector(randinter(-1,1),
-				randinter(-1,1),
-				randinter(-1,1)));
+	if (a > 0) {
+
+	    // Note:  scale > 0 ==> cutoff = 0.
+
+	    vrms = vc;
+	    if (radius > a) vrms *= pow(radius/a, (x-1)/2);
+
+	} else {
+
+	    if (radius > cutoff) 
+		vrms = sqrt(3*A*pow(radius, x-1)/(3-x));
+	    else
+		// vrms = sqrt(mass/radius);
+		vrms = max(sqrt(mass/radius), vc);
+	}
+
+	// Play with orbital orientations.  At present, orbits become more
+	// nearly planar and circular as we approach the center.
+
+	if (radius > cutoff) {
+
+	    // Isotropic.
+
+	    bi->set_vel(vrms*vector(randinter(-1,1),
+				    randinter(-1,1),
+				    randinter(-1,1)));
+	} else {
+
+	    // Some handy unit vectors.
+
+	    vector rhat = bi->get_pos()/radius;
+	    vector zhat = vector(0,0,1);
+
+	    vector xyhat = rhat^zhat;		// transverse unit vector
+	    xyhat /= abs(xyhat);		// in the x-y plane
+
+	    real lim = sqrt(radius/cutoff);
+	    real rfrac = randinter(-lim, lim);
+	    real zfrac = randinter(-lim, lim);
+	    real tfrac = sqrt(max(0.0, 1-rfrac*rfrac-zfrac*zfrac));
+
+	    bi->set_vel(vrms*(rfrac*rhat+tfrac*xyhat+zfrac*zhat));
+	}
     }
 
     putrq(root->get_log_story(), "initial_mass", 1.0);
@@ -81,18 +164,18 @@ local void  makepowerlaw(dyn * root, int n,
 
 #define  SEED_STRING_LENGTH  60
 
-#define  FALSE  0
-#define  TRUE   1
-
 main(int argc, char ** argv) {
     int  i;
     int  n;
     int  input_seed, actual_seed;
-    int  c_flag = FALSE;
-    int  i_flag = FALSE;
-    int  n_flag = FALSE;
-    int  o_flag = FALSE;
-    int  s_flag = FALSE;
+    int  a_flag = false;
+    int  c_flag = false;
+    int  e_flag = false;
+    int  i_flag = false;
+    int  m_flag = false;
+    int  n_flag = false;
+    int  o_flag = false;
+    int  s_flag = false;
 
     char  *comment;
     char  seedlog[SEED_STRING_LENGTH];
@@ -100,13 +183,15 @@ main(int argc, char ** argv) {
     real coeff = 1, scale = 1, exponent = 1;
     vector center = 0;
 
-    real r_max = 1;
+    real cutoff = 0, mass = 0, softening = 0;
+
+    real r_max = 10, r_min = 0.1;
 
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "A:a:c:in:oR:r:s:x:";
+    char* param_string = "A:a:b:c:e:il:M:m:n:oR:r:s:x:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -114,21 +199,33 @@ main(int argc, char ** argv) {
 		      break;
 	    case 'a':
 	    case 'R':
+		      a_flag = true;
 		      scale = atof(poptarg);
 		      break;
-	    case 'c': c_flag = TRUE;
+	    case 'b': cutoff = atof(poptarg);
+		      break;
+	    case 'c': c_flag = true;
 		      comment = poptarg;
 		      break;
-	    case 'i': i_flag = TRUE;
+	    case 'e': e_flag = true;
+	    	      softening = atof(poptarg);
 		      break;
-	    case 'n': n_flag = TRUE;
+	    case 'i': i_flag = true;
+		      break;
+	    case 'l': r_min = atof(poptarg);
+		      break;
+	    case 'M':
+	    case 'm': m_flag = true;
+		      mass = atof(poptarg);
+		      break;
+	    case 'n': n_flag = true;
 		      n = atoi(poptarg);
 		      break;
-	    case 'o': o_flag = TRUE;
+	    case 'o': o_flag = true;
                       break;
 	    case 'r': r_max = atof(poptarg);
 		      break;
-	    case 's': s_flag = TRUE;
+	    case 's': s_flag = true;
 		      input_seed = atoi(poptarg);
 		      break;
 	    case 'x': exponent = atof(poptarg);
@@ -138,7 +235,7 @@ main(int argc, char ** argv) {
                       exit(1);
 	}            
     
-    if (n_flag == FALSE) {
+    if (!n_flag) {
         cerr << "makepowerlaw: must specify the number # of";
 	cerr << " particles with -n#" << endl;
 	exit(1);
@@ -152,6 +249,16 @@ main(int argc, char ** argv) {
     if (exponent <= 0 || exponent >= 3) {
         cerr << "makepowerlaw: 0 < x < 3 required" << endl;
 	exit(1);
+    }
+
+    if (cutoff > 0) {
+	if (!m_flag) mass = coeff*pow(cutoff, exponent);
+	if (!e_flag) softening = cutoff/1000;
+	if (a_flag)
+	    cerr << "makepowerlaw: scale = " << scale
+		 << " inconsistent with cutoff = " << cutoff
+		 << "; setting scale = 0" << endl;
+	scale = 0;
     }
 
     // Create a linked list of (labeled) nodes.
@@ -176,11 +283,11 @@ main(int argc, char ** argv) {
 
     // Add comments, etc.
 
-    if (c_flag == TRUE) b->log_comment(comment);
+    if (c_flag) b->log_comment(comment);
 
     b->log_history(argc, argv);
 
-    if (s_flag == FALSE) input_seed = 0;
+    if (!s_flag) input_seed = 0;
     actual_seed = srandinter(input_seed);
 
     if (o_flag) cerr << "makepowerlaw: random seed = " << actual_seed << endl;
@@ -190,7 +297,7 @@ main(int argc, char ** argv) {
 
     // Create dyn data.
 
-    makepowerlaw(b, n, coeff, scale, exponent, r_max);
+    makepowerlaw(b, n, coeff, scale, exponent, cutoff, mass, r_min, r_max);
 
     // Flag actions for use by kira.
 
@@ -199,7 +306,12 @@ main(int argc, char ** argv) {
     putrq(b->get_log_story(), "kira_pl_scale", scale);
     putvq(b->get_log_story(), "kira_pl_center", center);
 
+    putrq(b->get_log_story(), "kira_pl_cutoff", cutoff);
+    putrq(b->get_log_story(), "kira_pl_mass", mass);
+    putrq(b->get_log_story(), "kira_pl_softening", softening);
+
     putiq(b->get_log_story(), "ignore_internal", 1);
+    putrq(b->get_log_story(), "r_reflect", r_max);
 
     put_node(cout, *b);
 }
