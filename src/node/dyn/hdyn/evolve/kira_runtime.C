@@ -279,7 +279,7 @@ local void modify_params(hdyn * b, char * name,
 	//
 	//		-keyword value
 	//
-	// where the keywords a, b, C, d, D, f, g, k, K, N, O, and t are
+	// where the keywords a, b, C, d, D, g, k, K, l, N, O, and t are
 	// permitted (meanings are the same as if specified on the command
 	// line, except that "-t" increments t_end).
 	//
@@ -342,14 +342,14 @@ local void modify_params(hdyn * b, char * name,
 		    new_dt_snap = tmp;
 		}
 
-	    } else if (s = strstr(line, "-f")) {
+	    } else if (s = strstr(line, "-l")) {
 
-		real tmp = atof(s+2);
-		if (tmp > 0 && tmp < 100) {
-		    cerr << "Setting d_min_fac = " << tmp << endl;
-		    b->set_d_min_fac(tmp);
-		    putrq(b->get_log_story(), "d_min_fac", tmp);
-		}
+		// This version is a simple toggle, with minimal checks...
+
+		bool f = b->get_p_friction();
+		f = !f;
+		if (!b->get_plummer()) f = false;
+		b->set_p_friction(f);
 
 	    } else if (s = strstr(line, "-g")) {
 
@@ -378,6 +378,15 @@ local void modify_params(hdyn * b, char * name,
 		    cerr << "Setting maximum slowdown factor = "
 			 << kappa_max << endl;
 		    putiq(b->get_log_story(), "log_max_slow", tmp);
+		}
+
+	    } else if (s = strstr(line, "-l")) {
+
+		real tmp = atof(s+2);
+		if (tmp > 0 && tmp < 100) {
+		    cerr << "Setting d_min_fac = " << tmp << endl;
+		    b->set_d_min_fac(tmp);
+		    putrq(b->get_log_story(), "d_min_fac", tmp);
 		}
 
 	    } else if (s = strstr(line, "-N")) {
