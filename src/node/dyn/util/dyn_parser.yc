@@ -89,7 +89,7 @@ key_val_pair:	  KEYWORD '=' real_vec {
   else if (!strcmp($1, "r")) p.top()->set_pos(vec((*$3)[0],(*$3)[1],(*$3)[2]));
   else if (!strcmp($1, "v")) p.top()->set_vel(vec((*$3)[0],(*$3)[1],(*$3)[2]));
   else if (!strcmp($1, "a")) p.top()->set_acc(vec((*$3)[0],(*$3)[1],(*$3)[2]));
-  else {
+  else if (p.size() == 1) {
     char line[strlen($1)+2+story_line.n+1];
     line[0] = '\0';
     strcpy(stpcpy(stpcpy(line, $1), " ="), story_line.s);
@@ -100,10 +100,12 @@ key_val_pair:	  KEYWORD '=' real_vec {
   *story_line.s = story_line.n = 0;
 }
 		| KEYWORD '=' STRING {
-  char line[strlen($1)+3+strlen($3)+1];
-  line[0] = '\0';
-  stpcpy(stpcpy(stpcpy(line, $1), " = "), $3);
-  add_story_line(p.top()->get_dyn_story(), line);
+  if (p.size() == 1) {
+    char line[strlen($1)+3+strlen($3)+1];
+    line[0] = '\0';
+    stpcpy(stpcpy(stpcpy(line, $1), " = "), $3);
+    add_story_line(p.top()->get_dyn_story(), line);
+  }
   free($1), free($3);
 };
 
