@@ -1,4 +1,4 @@
-//
+
 // white_dwarf.C
 //
 

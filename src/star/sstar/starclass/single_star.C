@@ -162,7 +162,9 @@ void single_star::post_constructor() {
 //    refresh_memory();
     
 //    if (is_binary_component() && get_binary()->get_bin_type()==Detached)
-      if (is_binary_component()) {
+      if (is_binary_component() && 
+	  get_binary()->get_bin_type() != Merged &&
+	  get_binary()->get_bin_type() != Disrupted) {
 	 get_binary()->set_bin_type(Detached);
 	 get_binary()->set_first_contact(false);
       }

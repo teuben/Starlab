@@ -29,9 +29,12 @@ disintegrated::disintegrated(super_giant & g) : single_star(g) {
 	magnetic_field = rotation_period = 0;
 	birth_mass=0;
 
-        if (is_binary_component() &&
-	    get_binary()->get_bin_type()!=Merged) 
-           get_binary()->set_bin_type(Disrupted);
+	if (is_binary_component() &&
+	    get_binary()->get_bin_type()!=Merged) {
+	  get_binary()->set_bin_type(Disrupted);
+	  get_binary()->set_eccentricity(1);
+	  get_binary()->set_semi(0);
+	}
 
          instantaneous_element();
 
@@ -67,13 +70,17 @@ disintegrated::disintegrated(super_giant & g) : single_star(g) {
 	magnetic_field = rotation_period = 0;
 	birth_mass=0;
 
-        if (is_binary_component() &&
-	    get_binary()->get_bin_type()!=Merged) 
-           get_binary()->set_bin_type(Disrupted);
+	if (is_binary_component() &&
+	    get_binary()->get_bin_type()!=Merged) {
+	  get_binary()->set_bin_type(Disrupted);
+	  get_binary()->set_eccentricity(1);
+	  get_binary()->set_semi(0);
+	}
 
          instantaneous_element();
 
 	 post_constructor();
+
 
 	 if (is_binary_component()) {
 	   get_binary()->set_first_contact(false);
@@ -106,9 +113,12 @@ disintegrated::disintegrated(super_giant & g) : single_star(g) {
 	magnetic_field = rotation_period = 0;
 	birth_mass=0;
 
-        if (is_binary_component() &&
-	    get_binary()->get_bin_type()!=Merged)  
-           get_binary()->set_bin_type(Disrupted);
+	if (is_binary_component() &&
+	    get_binary()->get_bin_type()!=Merged) {
+	  get_binary()->set_bin_type(Disrupted);
+	  get_binary()->set_eccentricity(1);
+	  get_binary()->set_semi(0);
+	}
 
          instantaneous_element();
 
