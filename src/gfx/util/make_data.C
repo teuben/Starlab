@@ -3,11 +3,14 @@
 
 #include "stdinc.h"
 
-main()
-{
-  int nx = 128, ny = 128;
+#define N 256
 
-    for (int i = 0; i < nx; i++)
-      for (int j = 0; j < ny; j++)
+main(int argc, char *argv[])
+{
+    int n = N;
+    if (argc > 1) n = atoi(argv[1]);
+
+    for (int i = 0; i < n; i++)
+      for (int j = 0; j < n; j++)
 	  cout << i+j << " ";
 }
