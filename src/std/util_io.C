@@ -88,6 +88,8 @@ int get_data_line(istream & s,char * input_line)
  * matches line.  So matchbracket("(Particle", line) matches "(Particle" or "(P".
  */
 int matchbracket(const char *token, const char *line) {
+  while(*line == ' ' || *line == '\t')
+      line++;
   if(token[0] != line[0] || token[1] != line[1])
     return 0;
   return (line[2] == '\0') || (0 == strcmp(token+2, line+2));
