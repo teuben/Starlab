@@ -575,9 +575,12 @@ local void print_energies(dyn* b,
     cerr.precision(ppp);
 }
 
-local void search_for_binaries(dyn* b, real energy_cutoff, real kT,
-			       vec center, bool verbose,
-			       bool long_binary_output)
+void search_for_binaries(dyn* b,
+			 real energy_cutoff,		// default = 0
+			 real kT,			// default = 0
+			 vec center,			// default = (0,0,0)
+			 bool verbose,			// default = true
+			 bool long_binary_output)	// default = true
 {
     // Search for bound binary pairs among top-level nodes.
 
@@ -605,7 +608,7 @@ local void search_for_binaries(dyn* b, real energy_cutoff, real kT,
 	    }
 	}
 
-    if (!found) cerr << "    (none)\n";
+    if (!found) cerr << "    (none)" << endl;
 }
 
 

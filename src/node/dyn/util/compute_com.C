@@ -28,6 +28,8 @@
 
 #ifndef TOOLBOX
 
+#define DEBUG false
+
 #define TTOL 1.e-6	// arbitrary tolerance
 
 void compute_com(dyn *b, vec& com_pos, vec& com_vel)
@@ -38,6 +40,7 @@ void compute_com(dyn *b, vec& com_pos, vec& com_vel)
 		 b->get_system_time(), TTOL)) {
 	com_pos = getvq(b->get_dyn_story(), "com_pos");
 	com_vel = getvq(b->get_dyn_story(), "com_vel");
+	cerr << "using saved CM quantities" << endl;
 	return;
     }
 
@@ -59,13 +62,26 @@ void compute_com(dyn *b, vec& com_pos, vec& com_vel)
     com_pos += b->get_pos();
     com_vel += b->get_vel();
 
-    // Use HIGH_PRECISION here because these quentities may be used
+    // Use HIGH_PRECISION here because these quantities may be used
     // in detailed calculations elsewhere.
 
+    if (DEBUG) {
+	cerr << "compute_com: writing stories..." << endl << flush;
+	PRL(0);
+    }
     putrq(b->get_dyn_story(), "com_time", b->get_system_time(),
 	  HIGH_PRECISION);
+    if (DEBUG) {
+	PRL(1);
+	PRL(b);
+	PRL(b->format_label());
+	PRL(b->get_dyn_story());
+	PRL(com_pos);
+	b->print_dyn_story(cerr);
+    }
     putvq(b->get_dyn_story(), "com_pos", com_pos,
 	  HIGH_PRECISION);
+    if (DEBUG) PRL(2);
     putvq(b->get_dyn_story(), "com_vel", com_vel,
 	  HIGH_PRECISION);
 }
