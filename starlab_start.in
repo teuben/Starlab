@@ -1,0 +1,11 @@
+#   
+if ($?STARLAB_PATH == 0) then
+  setenv STARLAB_PATH @STARLAB_PATH@
+endif
+source $STARLAB_PATH/local/starlab_setup
+
+if ($?TERM) then
+    echo Starlab version `cat $STARLAB_PATH/VERSION` loaded
+endif
+
+
