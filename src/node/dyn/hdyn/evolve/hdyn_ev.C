@@ -49,8 +49,6 @@
 //	void get_nodes_to_move
 //	void initialize_system_phase1
 //	void correct_acc_and_jerk
-//	void add_tidal
-//	real de_tidal_pot
 //	void clean_up_hdyn_ev
 
 //  More memo...
@@ -3396,92 +3394,6 @@ void correct_acc_and_jerk(hdyn** next_nodes,	// NEW
 }
 
 
-//-----------------------------------------------------------------------------
-//
-// NOTE: The following two functions are the *only* places where
-//	 the tidal field is specified.
-//
-//	 Routines add_tidal and calculate_energies_with_tidal
-//	 MUST be kept consistent when changes are made!
-
-void add_tidal(hdyn * b,
-	       bool pot_only)// default = false
-{
-    // Add a tidal component to the aceleration of body b.
-    // CANNOT neglect the contribution to the jerk.
-    // Also include the tidal potential in pot.
-
-    // ASSUME that b is a top-level node.
-
-    real a1 = b->get_alpha1();
-    if (a1 == 0) return;
-
-    real a3 = b->get_alpha3();
-
-    if (!pot_only) {
-
-	vector da_tidal_centrifugal = -vector(a1*b->get_pred_pos()[0],
-					      0.0,
-					      a3*b->get_pred_pos()[2]);
-
-	vector dj_tidal_centrifugal = -vector(a1*b->get_pred_vel()[0],
-					      0.0,
-					      a3*b->get_pred_vel()[2]);
-
-	vector da_coriolis = 2 * b->get_omega()
-      			       * vector(b->get_pred_vel()[1],
-					-b->get_pred_vel()[0],
-					0.0);
-
-	// Must update acc BEFORE computing dj!
-
-	b->inc_acc(da_tidal_centrifugal + da_coriolis);
-
-	vector dj_coriolis = 2 * b->get_omega()
-      			       * vector(b->get_acc()[1],
-					-b->get_acc()[0],
-					0.0);
-
-	b->inc_jerk(dj_tidal_centrifugal + dj_coriolis);
-
-	// PRL(da_tidal_centrifugal);
-	// PRL(da_coriolis);
-	// PRL(abs(da_tidal_centrifugal)/abs(b->get_acc()));
-
-    }
-
-    real x = b->get_pred_pos()[0];
-    real z = b->get_pred_pos()[2];
-
-    b->inc_pot(0.5*(a1*x*x + a3*z*z));
-}
-
-real de_tidal_pot(hdyn * b)
-{
-    // Determine tidal component to the potential of body b.
-    // ASSUME that tidal_type is set and that b is a top-level node.
-
-    // Add tidal and centrifugal terms for top-level nodes only.
-    // (No potential term for the Coriolis force, note.)
-
-    real a1 = b->get_alpha1();
-    if (a1 == 0) return 0;
-
-    real a3 = b->get_alpha3();
-
-    real dpot = 0;
-    for_all_daughters(hdyn, b, bb) {
-	real x = bb->get_pos()[0];
-	real z = bb->get_pos()[2];
-	real dp = a1*x*x + a3*z*z;
-	dpot += bb->get_mass() * dp;
-    }
-
-    dpot *= 0.5;
-    return dpot;
-}
-
-
 //=============================================================================
 //  driver function for a one-time-step integration of this node
 //=============================================================================
@@ -3511,7 +3423,7 @@ void hdyn::integrate_node(hdyn * root,
 	set_valid_perturbers(false);
 
 	if (tidal_type && is_top_level_node())
-	    add_tidal(this);
+	    add_external(this);
 
 	correct_and_update();			// note: no retry on error
 	// update();

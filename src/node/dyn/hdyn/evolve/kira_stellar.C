@@ -203,10 +203,10 @@ bool evolve_stars(hdyn* b,
 	real mass0 = total_mass(b);
 
 	real epot0, ekin0, etot0;
-	calculate_energies_with_tidal(b, epot0, ekin0, etot0);
+	calculate_energies_with_external(b, epot0, ekin0, etot0);
 
 	if (b->get_kira_diag()->report_stellar_evolution) {
-	    cerr << "After calculate_energies_with_tidal"<<endl;
+	    cerr << "After calculate_energies_with_external"<<endl;
 	    PRC(epot0); PRC(ekin0); PRL(etot0);
 	}
 
@@ -474,7 +474,7 @@ bool evolve_stars(hdyn* b,
 	// predict_loworder_all(b, b->get_system_time());
 
 	real epot, ekin, etot;
-	calculate_energies_with_tidal(b, epot, ekin, etot);
+	calculate_energies_with_external(b, epot, ekin, etot);
 
 	real de_total = etot - etot0;
 

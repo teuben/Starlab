@@ -721,7 +721,7 @@ local int integrate_list(hdyn * b,
 		    bi->set_valid_perturbers(false);
 
 		    if (bi->is_top_level_node() && b->get_tidal_field() > 0)
-			add_tidal(bi);
+			add_external(bi);
 
 		    if (!bi->correct_and_update()) {
 			cerr << endl << "failed to correct error for "
@@ -1378,8 +1378,8 @@ local void print_energy_from_pot(hdyn* b)
 
     int p = cerr.precision(INT_PRECISION);
     PRC(top_pot), PRC(int_pot), PRL(kin);
-    PRL(de_tidal_pot(b));
-    cerr << "energy_from_pot = " << kin+top_pot+int_pot+0.5*de_tidal_pot(b)
+    PRL(de_external_pot(b));
+    cerr << "energy_from_pot = " << kin+top_pot+int_pot+0.5*de_external_pot(b)
 	 << endl;
     cerr.precision(p);
 }

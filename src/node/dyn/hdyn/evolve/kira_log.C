@@ -14,7 +14,7 @@
 //
 //	void print_dstar_params
 //	bool print_dstar_stats
-//	void get_energies_with_tidal
+//	void get_energies_with_external
 //	void refine_cluster_mass
 //	void print_statistics
 //	void update_cpu_counters
@@ -525,15 +525,15 @@ bool print_dstar_stats(dyn* b, bool mass_function,    // b is binary
     return false;
 }
 
-void get_energies_with_tidal(dyn* b, real eps2, 
-			     real &potential, real &kinetic, real &total,
-			     bool cm)
+void get_energies_with_external(dyn* b, real eps2, 
+				real &potential, real &kinetic, real &total,
+				bool cm)
 {
-    // Coerce calculate_energies_with_tidal into the same calling
+    // Coerce calculate_energies_with_external into the same calling
     // sequence as dyn::calculate_energies, for use by sys_stats...
     // Discard eps2 (--> 0).
 
-    calculate_energies_with_tidal((hdyn*)b, kinetic, potential, total, cm);
+    calculate_energies_with_external((hdyn*)b, kinetic, potential, total, cm);
 }
 
 #define G_TOL 1.e-6
@@ -743,7 +743,7 @@ void print_statistics(hdyn* b,
 	      false,			// don't print time
 	      false,			// don't compute energy
 	      false,			// don't allow n^2 ops
-	      get_energies_with_tidal,	// energy calculation function
+	      get_energies_with_external, // energy calculation function
 	      print_dstar_params,	// allow access to dstar_to_kira
 	      print_dstar_stats);	// from dyn sys_stats function
 

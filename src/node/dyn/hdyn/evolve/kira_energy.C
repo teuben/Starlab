@@ -21,12 +21,12 @@
 					// -- beware of runaway neutron
 					// stars!
 
-void calculate_energies_with_tidal(hdyn* b,
-				   real& epot, real& ekin, real& etot,
-				   bool cm,		// default = false
-				   bool use_grape)	// default = true
+void calculate_energies_with_external(hdyn* b,
+				      real& epot, real& ekin, real& etot,
+				      bool cm,		// default = false
+				      bool use_grape)	// default = true
 {
-    // Compute the total energy, including tidal terms; also compute
+    // Compute the total energy, including external terms; also compute
     // the "pot" class data.
 
     // First, get the internal energy (use GRAPE if available).
@@ -35,16 +35,16 @@ void calculate_energies_with_tidal(hdyn* b,
 
     if (b->get_tidal_field() > 0) {
 
-	// Add the tidal contribution to the total potential.
+	// Add the external contribution to the total potential.
 
-	real dpot = de_tidal_pot(b);
+	real dpot = de_external_pot(b);
 	epot += dpot;
 	etot += dpot;
 
 	// Add tidal terms to hdyn::pot of top-level nodes.
 
 	for_all_daughters(hdyn, b, bb)
-	    add_tidal(bb, true);	// "true" ==> pot only.
+	    add_external(bb, true);	// "true" ==> pot only.
 
     }
 }
@@ -59,7 +59,7 @@ void print_recalculated_energies(hdyn* b,
     real ekin = 0;
     real etot = 0;
 
-    calculate_energies_with_tidal(b, epot, ekin, etot);
+    calculate_energies_with_external(b, epot, ekin, etot);
 
     int p = cerr.precision(INT_PRECISION);
     cerr << "Energies: " << epot << " " << ekin << " " << etot;
@@ -71,7 +71,7 @@ void print_recalculated_energies(hdyn* b,
     // effectively flattens all tree structures prior to determining
     // the energy, so close binaries may be very poorly handled).
 
-    calculate_energies_with_tidal(b, epot, ekin, etot, false, false);
+    calculate_energies_with_external(b, epot, ekin, etot, false, false);
     cerr << endl << "Recomputed: " << epot << " " << ekin << " " << etot;
 
 #endif
@@ -84,7 +84,7 @@ void print_recalculated_energies(hdyn* b,
 	cerr << endl << "...retrying..." << endl;
 
 	epot = ekin = etot = 0;
-	calculate_energies_with_tidal(b, epot, ekin, etot);
+	calculate_energies_with_external(b, epot, ekin, etot);
 	cerr << "Energies: " << epot << " " << ekin << " " << etot;
     }
 

@@ -243,7 +243,7 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
 
         for (int i = 0; i < n_next; i++)
 	    if (next_nodes[i]->is_top_level_node())
-	        add_tidal(next_nodes[i]);
+	        add_external(next_nodes[i]);
 
     }
 

@@ -40,7 +40,7 @@ local bool remove_escapers(hdyn* b,
     hdyn** esc_list = new hdynptr[n_esc];
     
     real epot0, ekin0, etot0;
-    calculate_energies_with_tidal(b, epot0, ekin0, etot0);
+    calculate_energies_with_external(b, epot0, ekin0, etot0);
     
     n_esc = 0;
     for_all_daughters(hdyn, b, bj) {
@@ -110,7 +110,7 @@ local bool remove_escapers(hdyn* b,
     if (b->n_leaves() > 1) {
 
 	real epot = 0, ekin = 0, etot = 0;
-	calculate_energies_with_tidal(b, epot, ekin, etot);
+	calculate_energies_with_external(b, epot, ekin, etot);
 
 	cerr << endl;
 	PRI(2); PRC(epot0); PRC(ekin0); PRL(etot0);
