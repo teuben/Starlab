@@ -208,6 +208,55 @@ local inline real plummer_virial(dyn * b)
 // a Plummer field with mass = A):
 //-------------------------------------------------------------------------
 
+
+
+
+//-------------------------------------------------------------------------
+// For now, handle here the bits and pieces related to dynamical friction.
+// *** To be cleaned up!!
+
+static real beta = 0;
+void set_friction_beta(real b) {beta = b;}
+
+static real Mfric = 0;
+void set_friction_mass(real m) {Mfric = m;}
+
+static vector Vfric = 0;
+void set_friction_vel(vector v) {Vfric = v;}
+
+local real density(dyn *b, real r)
+{
+    real A = b->get_pl_coeff();
+    if (A == 0) return 0;
+
+    real a2 = b->get_pl_scale_sq();
+    real x = b->get_pl_exponent();
+
+    return A*x*pow(r*r+a2, 0.5*(x-1))/(4*M_PI*r*r);
+}
+
+local real potential(dyn *b, real r)		// Assume x != 1 for now...
+{
+    real A = b->get_pl_coeff();
+    if (A == 0) return 0;
+
+    real a2 = b->get_pl_scale_sq();
+    real x = b->get_pl_exponent();
+
+    return -A*pow(r*r+a2, 0.5*x-1);
+}
+
+static vector Afric = 0;
+void set_friction_acc(dyn *b, real r)
+{
+    Afric = -beta*Mfric*Vfric*density(b, r)/pow(-potential(b, r), 1.5);
+}
+
+//-------------------------------------------------------------------------
+
+
+
+
 local inline void add_power_law(dyn * b,
 				vector pos,
 				vector vel,
@@ -390,6 +439,10 @@ void get_external_acc(dyn * b,
 
 	if (GETBIT(ext, 0))
 	    add_tidal(b, pos, vel, pot, acc, jerk, pot_only);
+
+	// Add dynamical friction term:
+
+	acc += Afric;
     }
 }
 

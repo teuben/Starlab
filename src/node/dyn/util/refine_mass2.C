@@ -319,6 +319,14 @@ void refine_cluster_mass2(dyn *b,
     putvq(b->get_dyn_story(), "bound_center_pos", center);
     putvq(b->get_dyn_story(), "bound_center_vel", vcenter);
 
+    // Send the relevant data to the dynamical friction code, and compute
+    // the current frictional acceleration.  Could combine these calls, but
+    // keep as is for now.
+
+    set_friction_mass(M_inside);
+    set_friction_vel(vcenter);
+    set_friction_acc(b, abs(center));
+
     // Repeat the inner loop above and flag stars as escapers or not.
 
     int n_mem = 0;
