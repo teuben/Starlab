@@ -20,7 +20,7 @@
 #include "hdyn.h"
 #include "kira_timing.h"
 
-#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
+#include "kira_debug.h"	// (a handy way to turn on blocks of debugging)
 #ifndef T_DEBUG_kira_ev
 #   undef T_DEBUG
 #endif
@@ -238,8 +238,27 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
 		PRL(bi->get_pred_vel());
 	    }
 
+#ifdef KIRA_DEBUG
+	    hdyn *sister = bi->get_binary_sister();
+#else
+	    hdyn *sister = bi->get_younger_sister();	// assume binary tree
+	    if (!sister) {
+		sister = bi->get_elder_sister();
+		if (!sister)
+		    continue;				// really an error...
+	    }
+#endif
+
 	    bi->clear_interaction();
-	    bi->calculate_acc_and_jerk(exact);
+
+	    // Doing these steps here allows us to bypass calculate_acc_and_jerk
+	    // and go directly to calculate_acc_and_jerk_on_low_level_node.
+
+	    bi->set_d_coll_sq(VERY_LARGE_NUMBER);
+	    bi->set_coll(NULL);
+	    sister->set_d_coll_sq(VERY_LARGE_NUMBER);
+	    bi->calculate_acc_and_jerk_on_low_level_node();
+
 	    kc->pert_step++;
 
 	    if (print) {
