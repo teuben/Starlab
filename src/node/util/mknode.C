@@ -1,0 +1,61 @@
+
+//// mknode:  create a linked list of equal-mass nodes.
+////
+//// Options:   -m       specify total mass [1]
+////            -n       specify number of nodes [1]
+
+//	      Steve McMillan, July 1996
+
+#include "node.h"
+
+#ifndef TOOLBOX
+
+node * mknode_mass(int n, real m)
+{
+    node *root = mknode(n);	// Note that sequential labels are always set.
+
+    root->set_mass(m);
+    for_all_daughters(node, root, b) b->set_mass(m/n);
+
+    return root;
+}
+
+#else
+
+void main(int argc, char ** argv)
+{
+    int  n = 1;
+    real m = 1.0;
+
+    check_help();
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "m:n:";
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1)
+	switch(c) {
+
+	    case 'm': m = atof(poptarg);
+		      break;
+	    case 'n': n = atoi(poptarg);
+		      break;
+            case '?': params_to_usage(cerr, argv[0], param_string);
+	    	      get_help();
+		      exit(1);
+	}
+
+    if (m <= 0) err_exit("mknodes: M > 0 required!");
+    if (n <= 0) err_exit("mknodes: N > 0 required!");
+
+    node * root = mknode_mass(n, m);
+
+    root->log_history(argc, argv);
+
+    put_node(cout, *root);
+    rmtree(root);
+}
+
+#endif
+
+/* end of: mknode.c */
