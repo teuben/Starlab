@@ -1405,7 +1405,7 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
     // (Repeats actions taken by get_hdyn() on startup.)
 
     cerr << "calling initialize_unperturbed()" << endl;
-    b->initialize_unperturbed(init);
+    b->initialize_unperturbed();
 
     if (init) b->recompute_unperturbed_steps();
 
