@@ -1,3 +1,4 @@
+#ifndef WIN32
 
 #include "xstarplot.h"
 
@@ -617,3 +618,4 @@ float interp_to_y(float r, float s, float rr, float ss, float y)
 {
     return r + (rr - r) * (y - s) / (ss - s);
 }
+#endif /*!WIN32*/
