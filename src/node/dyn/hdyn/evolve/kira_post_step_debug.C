@@ -2,6 +2,21 @@
 // Place temporary post-step debugging code here, to clean up kira.C.
 
 #if 0
+    if ((t > 1250.854692 && t < 1250.854695)
+	|| (t > 1250.854730 && t < 1250.854732)
+	|| (t > 1250.854800 && t < 1250.854801)
+	|| (t > 1250.8548319)) {
+	for (int ii = 0; ii < n_next; ii++)
+	if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
+	    hdyn *n = next_nodes[ii];
+	    hdyn *top = n->get_top_level_node();
+	    if (node_contains(top, "97")) pp3(top);
+	}
+    }
+#endif
+
+
+#if 0
     if (t > 122.36 && t < 122.37) {
 	for (int ii = 0; ii < n_next; ii++)
 	if (next_nodes[ii] && next_nodes[ii]->is_valid()) {

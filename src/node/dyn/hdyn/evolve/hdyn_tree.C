@@ -253,6 +253,13 @@ local bool too_big(hdyn * bi, real limit_sq)
 //		     **** Used only by adjust_low_level_node.		****
 //		     **** Called twice, with 'this' = either component.	****
 
+
+
+
+static int pp3count = 0;
+
+
+
 hdyn* hdyn::new_sister_node(bool & top_level_combine)
 {
     top_level_combine = false;	// if true, combine top level nodes on return;
@@ -366,6 +373,14 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 	nn_too_close = (perturbation_squared > 1
 			&& distance_to_sister_squared() > d_nn_sq);
 
+
+
+// PRC(format_label()); PRL(perturbation_squared);
+// PRC(distance_to_sister_squared()); PRL(d_nn_sq);
+// PRL(nn_too_close);
+
+
+
 	if (nn_too_close && diag->tree && diag->tree_level > 1) {
 	    cerr << "in new_sister_node for " << format_label()
 		 << " at time " << system_time << ":" << endl;
@@ -396,6 +411,17 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 	// occur -- see hdyn_ev), but do the search generally, anyway.
 
 	hdyn *snn = new_sister->get_nn();
+
+
+
+// Retain all these debugging lines for now (Steve, 9/04).
+
+// PRL(1);
+// PRL(format_label());
+// PRL(new_sister->format_label());
+// if (snn) PRL(snn->format_label());
+
+
 
 	if (snn && snn->is_valid() && !snn->is_leaf()) {
 
@@ -433,7 +459,16 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 	    }
 	}
 
-	// Attach to the highest possible ancestor of new_sister.
+	// Now snn is the leaf closest to new_sister and is new_sister->nn.
+	// Attach to the highest possible ancestor of new_sister.  If snn
+	// is this (or part of this), then we are done.  Otherwise, move
+	// up the tree until new_sister->nn is part of or contains this.
+
+
+// PRL(2);
+// if (snn) PRL(snn->format_label());
+
+
 
 	if (snn && snn->is_valid() && common_ancestor(snn, this) != this) {
 
@@ -441,11 +476,42 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 
 	    do {
 		new_sister = new_sister->get_parent();
+
+
+// PRL(3);
+// PRL(new_sister->format_label());
+// PRL(new_sister->get_nn());
+// if (new_sister->get_nn()) {
+//     PRL(new_sister->get_nn()->format_label());
+//     if (common_ancestor(new_sister->get_nn(), this))
+// 	PRL(common_ancestor(new_sister->get_nn(), this)->format_label());
+// }
+
+
 	    } while(new_sister != root
 		    && new_sister->get_nn() != NULL
 		    && new_sister->get_nn()->is_valid()
 		    && new_sister->parent != parent
-		    && common_ancestor(new_sister->get_nn(), this) != this);
+		    && common_ancestor(new_sister->get_nn(), this) != this
+		    && common_ancestor(new_sister->get_nn(), this)
+				!= new_sister->get_nn());
+
+	    // (Last line above added by Steve 9/04.  The logic here
+	    //  is getting out of hand...)
+
+
+
+// PRL(4);
+// PRL(this);
+// PRL(new_sister);
+// PRL(root);
+// PRL(new_sister->get_nn());
+// PRL(new_sister->parent);
+// PRL(new_sister->get_parent());
+// PRL(parent);
+// PRL(common_ancestor(new_sister, this));
+
+
 
 	    if (new_sister == root
 		|| new_sister->get_nn() == NULL
@@ -453,7 +519,22 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 		|| new_sister->parent == parent
 		|| common_ancestor(new_sister, this)== this
 		|| common_ancestor(new_sister, this)== new_sister
-		) return NULL;
+		) {
+
+
+
+// PRL(5);
+// pp3(get_top_level_node());
+// if (pp3count++ > 100) exit(0);
+// PRL(pp3count);
+
+
+return NULL;
+}
+
+
+// cerr << "OK" << endl;
+
 
 	    if (diag->tree && diag->tree_level > 0) {
 		cerr << "new_sister_node:  ascended tree from "
@@ -462,9 +543,19 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 	    }
 	}
 
+
+
+// PRL(new_sister->format_label());
+
+
+
 	hdyn * ancestor = common_ancestor(this, new_sister);
 
 	if (ancestor->is_root()) {
+
+
+// cerr << "top" << endl;
+
 
 	    top_level_combine = TRUE;
 	    return new_sister;
@@ -480,6 +571,10 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 		}
 	    }
 
+
+// cerr << "check 2" << endl;
+
+
 	    if (new_sister->kep == NULL) {
 		if (diag->tree && diag->tree_level > 0) {
 		    cerr << "new sister node for "; pretty_print_node(cerr);
@@ -487,9 +582,19 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 		    cerr << ") is " ; new_sister->pretty_print_node(cerr);
 		    PRI(2); PRL(top_level_combine);
 		}
+
+
+// cerr << "OK 2" << endl;
+
+
 		return new_sister;
 	    }
 	}
+
+
+// cerr << "oops -- missed!" << endl;
+
+
     }
     return NULL;
 }
@@ -996,19 +1101,22 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 	return;
     }
 
+    bool pp3_at_end = false;
+//    pp3_at_end = (bi->get_time() > 82 && bi->get_time() < 82.5);
+
     if (bi->get_kira_diag()->tree && bi->get_kira_diag()->tree_level > 0) {
         cerr << endl << "combine_low_level_nodes:  combining ";
 	bi->pretty_print_node(cerr);
 	cerr << " and ";
 	bj->pretty_print_node(cerr);
+	int p = cerr.precision(HIGH_PRECISION);
 	cerr << " at time " << bi->get_system_time() << "\n";
+	cerr.precision(p);
+//	pp3_at_end = true;
     }
 
     hdyn *ancestor;
     ancestor = common_ancestor(bi, bj);
-
-    bool pp3_at_end = false;
-//    pp3_at_end = (bi->get_time() > 82 && bi->get_time() < 82.5);
 
 #if 0
     if (bi->get_time() > 2.6 && bi->get_time() < 2.7) {

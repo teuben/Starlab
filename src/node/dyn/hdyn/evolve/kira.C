@@ -1428,12 +1428,18 @@ local void evolve_system(hdyn * b,		// hdyn array
 	}
 #endif
 
-
 	// check_slow_consistency(b);
 
 	// Optionally check the heartbeat...
 
-	if (kd->check_heartbeat && fmod(count, kd->n_check_heartbeat) == 0) {
+	// Not much point continuing if t - t_prev = 0...
+	// Eventually may want more diagnostics.  For now, just quit!
+
+	real dt_true = t - t_prev;
+
+	if (dt_true <= 0
+	    || (kd->check_heartbeat
+		&& fmod(count, kd->n_check_heartbeat) == 0)) {
 	    PRC(count), PRC(t), PRC(t-t_prev), PRL(cpu_time());
 	    for (int i = 0; i < n_next && i < 5; i++)
 		if (next_nodes[i] && next_nodes[i]->is_valid())
@@ -1441,6 +1447,38 @@ local void evolve_system(hdyn * b,		// hdyn array
 			 << " " << next_nodes[i]->get_timestep() << endl;
 	    if (fmod(count, 4*kd->n_check_heartbeat) == 0)
 		print_recalculated_energies(b);
+	}
+
+	if (dt_true <= 0) {
+	    cerr << endl << "time step error at ";
+	    cerr.precision(HIGH_PRECISION);
+	    PRL(b->get_system_time());
+	    PRC(t); PRL(t_prev);
+
+	    cerr << endl << "integration list (n_next = "
+		 << n_next << "):" << endl << endl;
+
+	    for (int ii = 0; ii < n_next; ii++)
+		if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
+		    PRC(ii); PRL(next_nodes[ii]->format_label());
+		    PRI(9); PRL(next_nodes[ii]->get_timestep());
+		    hdyn *top = next_nodes[ii]->get_top_level_node();
+		    PRL(top->format_label());
+		    cerr << "binary properties: " << endl;
+		    for_all_nodes(hdyn, top, bi) {
+			hdyn *od = bi->get_oldest_daughter();
+			if (od) {
+			    print_binary_from_dyn_pair(od,
+					   od->get_younger_sister());
+			    cerr << endl;
+			}
+		    }
+
+		    cerr << endl << "pp3 output:" << endl;
+		    pp3(top);
+		}
+
+	    err_exit("zero effective time step");
 	}
 
 	// Integrate_list handles tree changes -- allows one per step.
