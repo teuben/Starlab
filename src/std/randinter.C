@@ -36,8 +36,8 @@
 //// Usage: randinter N seed
 ////
 //// Options:
-////      first argument = number of "throws of the dice" [no default]
-////      second argument = random seed [take from system clock]
+////     first argument = number of "throws of the dice," N  [no default]
+////     second argument = random seed  [take from system clock]
 ////
 //// Written by Piet Hut and Steve McMillan.
 ////
