@@ -38,4 +38,4 @@ else
 
 endif
 
-echo cleaned up output is in $in.2
+echo cleaned-up output is in $in.2
