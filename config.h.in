@@ -68,6 +68,12 @@
 /* Define if you have the strtoul function.  */
 #undef HAVE_STRTOUL
 
+/* Define if you have the strtoll function.  */
+#undef HAVE_STRTOLL
+
+/* Define if you have the strtoull function.  */
+#undef HAVE_STRTOULL
+
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
 

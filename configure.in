@@ -169,7 +169,6 @@ dnl on linux: check with the command lspci if there is a PCI device
 dnl on dec/OSF:  check for /dev/pcimem0
 dnl --------------------------------------------------------------------
 
-
 dnl Checks for header files.
 AC_PATH_X
 AC_HEADER_STDC
@@ -190,7 +189,7 @@ AC_PROG_GCC_TRADITIONAL
 AC_FUNC_SETVBUF_REVERSED
 AC_FUNC_UTIME_NULL
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS(gethostname gettimeofday select strdup strstr strtod strtol strtoul)
+AC_CHECK_FUNCS(gethostname gettimeofday select strdup strstr strtod strtol strtoul strtoll strtoull)
 
 AC_C_BIGENDIAN
 
