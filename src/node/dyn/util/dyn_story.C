@@ -848,10 +848,10 @@ void check_set_external(dyn *b,
 	if (fric_int < 0)
 	    fric_int = fric_int_snap;
 	else
-	    cerr << "command-line internal friction flag " << fric_int
-		 << (fric_int == fric_int_snap ? "is identical to"
-		     			     : "overrides")
-		 << " value found in input snapshot";
+	    cerr << "command-line flag -f " << fric_int
+		 << (fric_int == fric_int_snap ? " is identical to"
+		     			     : " overrides")
+		 << " value in input snapshot";
     }
 
     if (fric_int > 0) fric_int = 1;
