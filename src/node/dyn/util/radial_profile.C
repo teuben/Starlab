@@ -192,7 +192,7 @@ bool select(dyn *b)
 
 real Q1(dyn *b)					// v^2
 {
-    return v_sq(b, cvel);
+    return speed_sq(b, cvel);
 }
 
 real Q2(dyn *b)					// vt^2
