@@ -34,9 +34,10 @@ typedef struct sn_remnants {
 };
 sn_remnants sn_remnant[NSN_REMNANT];
 
-#define NCOLLISIONS 12
+#define NCOLLISIONS 10
 typedef struct collisions {
   int starid;
+  char name[25];
   real time;
 };
 collisions collision[NCOLLISIONS];
@@ -103,6 +104,7 @@ local void print_camera_on_star(dyn* b, vector com_pos,
     vector cam_pos = b->get_pos() + r_star*b->get_vel();
 
     // Look at the clusters CoM for now.
+//    cam_view[0] = cam_pos;
     cam_view[0] = 0;
     cam_view[1] = 0;
     cam_view[2] = 0;
@@ -204,7 +206,7 @@ local void print_some_data(dyn *b) {
 
   if (b->get_oldest_daughter()) {
 
-    real time = b->get_starbase()->conv_t_dyn_to_star(b->get_system_time());
+    real time = b->get_starbase()->conv_t_dyn_to_star(b->get_real_system_time());
     
     int nts=0, nbs=0, nss=0;
     for_all_daughters(dyn, b, bb)
@@ -294,25 +296,51 @@ local void print_hertzsprung_Russell_diagram(dyn* b, vector cam_pos) {
   }
 }
 
+local void add_collision_effect(dyn *bi, vector pos, real time, 
+				real scale) { 
+
+  for (int i=0; i<NCOLLISIONS; i++) {
+    if(bi->get_name()) {
+      if(!strcmp(bi->get_name(), collision[i].name) && 
+	 time >= collision[i].time && time < collision[i].time+0.125) {
+	 cerr << "Adding collision at time = " << time << endl;
+	 cerr << "object { OStar scale "
+	      << 4 * scale * pow(5 * (0.125 - (time-collision[i].time)), 3)
+	      << " translate < "
+	      << pos[0] << ", " << pos[1] << ", " << pos[2] << " > }"
+	      << endl;
+	 if(collision[i].starid == 0) { // RLOF
+	   cout << "object { KStar scale ";
+	 } 
+	 else { // Collision
+	   cout << "object { OStar scale ";
+	 }
+	   cout << 4 * scale * pow(5 * (0.125 - (time-collision[i].time)), 3)
+	     << " translate < "
+	       << pos[0] << ", " << pos[1] << ", " << pos[2] << " > }"
+		 << endl;
+       }
+     }
+  }
+}
 
 local void print_star(dyn *bi, vector pos,
 		      real scale_L, filter_type filter) {
 
   // To solar radii
   //  vector pos = bi->get_pos() - dc_pos;
-  pos[0] = bi->get_starbase()->conv_r_dyn_to_star(pos[0]);
-  pos[1] = bi->get_starbase()->conv_r_dyn_to_star(pos[1]);
-  pos[2] = bi->get_starbase()->conv_r_dyn_to_star(pos[2]);
+//  pos[0] = bi->get_starbase()->conv_r_dyn_to_star(pos[0]);
+//  pos[1] = bi->get_starbase()->conv_r_dyn_to_star(pos[1]);
+//  pos[2] = bi->get_starbase()->conv_r_dyn_to_star(pos[2]);
 
-  real time = bi->get_starbase()->conv_t_dyn_to_star(bi->get_system_time());
+  real time = bi->get_starbase()->conv_t_dyn_to_star(bi->get_real_system_time());
 
   // And now to parsec
   real Rsun_per_parsec = cnsts.parameters(solar_radius)
                        / cnsts.parameters(parsec);
-  pos[0] *= Rsun_per_parsec;
-  pos[1] *= Rsun_per_parsec;
-  pos[2] *= Rsun_per_parsec;
-  
+//  pos[0] *= Rsun_per_parsec;
+//  pos[1] *= Rsun_per_parsec;
+//  pos[2] *= Rsun_per_parsec;
 
      star_type_spec tpe_class = NAC;
      spectral_class star_class;
@@ -321,7 +349,46 @@ local void print_star(dyn *bi, vector pos,
      real t_cur, m_rel, m_env, m_core, co_core, T_eff, L_eff, p_rot, b_fld;
      real t_rel=0, R_eff=0;
      real M_tot, U, B, V, R, I;	
-     if (bi->get_use_sstar()) {
+
+     if (bi->get_star_story()) {
+//       if (find_qmatch(bi->get_star_story(), "Type")) {
+	  //cerr <<"Reading"<<endl;
+	  //put_dyn(cerr, *bi);
+	  stype = extract_stellar_type_string(
+		      getsq(bi->get_star_story(), "Type"));
+	  M_tot = getrq(bi->get_star_story(), "M_rel");
+	  T_eff = getrq(bi->get_star_story(), "T_eff");
+	  star_class = get_spectral_class(T_eff);
+	  L_eff = getrq(bi->get_star_story(), "L_eff");
+//	}
+//       extract_story_chapter(stype, t_cur, t_rel, m_rel, m_env, 
+//			     m_core, co_core,
+//			     T_eff, L_eff, p_rot, b_fld,
+//			     *bi->get_star_story());
+
+//       PRL(T_eff);
+//       T_eff *= 1000;
+
+//       M_tot = m_env + m_core;
+       sstype = summarize_stellar_type(stype);
+       star_class = get_spectral_class(T_eff);
+       
+//       PRC(L_eff);PRC(T_eff);PRL(M_tot);
+
+       ltm_to_ubvri(log10(L_eff), log10(T_eff), M_tot,
+		     U, B, V, R, I);
+//       PRC(U);PRC(B);PRC(V);PRC(R);PRC(I);
+       
+       if (find_qmatch(bi->get_star_story(), "Class"))
+	 tpe_class = extract_stellar_spec_summary_string(
+             getsq(bi->get_star_story(), "Class"));
+       if (L_eff>0)
+          R_eff = pow(T_eff/cnsts.parameters(solar_temperature), 2)
+	       / sqrt(L_eff);
+     }
+     else if (bi->get_use_sstar()) {
+
+       put_dyn(cerr, *bi);
        	stype = bi->get_starbase()->get_element_type();
 	M_tot  = bi->get_starbase()->conv_m_dyn_to_star(bi->get_mass());
         t_cur = bi->get_starbase()->get_current_time();
@@ -333,28 +400,9 @@ local void print_star(dyn *bi, vector pos,
 	ltm_to_ubvri(log10(L_eff), log10(T_eff), M_tot,
 		     U, B, V, R, I);
 
-     }
-     else if (bi->get_star_story()) {
+//       PRC(L_eff);PRC(T_eff);PRL(M_tot);
+//       PRC(U);PRC(B);PRC(V);PRC(R);PRC(I);
 
-       extract_story_chapter(stype, t_cur, t_rel, m_rel, m_env, 
-			     m_core, co_core,
-			     T_eff, L_eff, p_rot, b_fld,
-			     *bi->get_star_story());
-       T_eff *= 1000;
-
-       M_tot = m_env + m_core;
-       sstype = summarize_stellar_type(stype);
-       star_class = get_spectral_class(T_eff);
-       
-       ltm_to_ubvri(log10(L_eff), log10(T_eff), M_tot,
-		     U, B, V, R, I);
-       
-       if (find_qmatch(bi->get_star_story(), "Class"))
-	 tpe_class = extract_stellar_spec_summary_string(
-             getsq(bi->get_star_story(), "Class"));
-       if (L_eff>0)
-          R_eff = pow(T_eff/cnsts.parameters(solar_temperature), 2)
-	       / sqrt(L_eff);
      }
      else {
        cout << "    No stellar information found for: ";
@@ -430,16 +478,22 @@ local void print_star(dyn *bi, vector pos,
 	 }
        }
 
+  add_collision_effect(bi, pos, time, scale_L); 
+#if 0
      //  Add collisions
-     for (int i=0; i<NCOLLISIONS; i++)
-       if(bi->get_index() == collision[i].starid &&
-	  t_cur >= collision[i].time && t_cur < collision[i].time+0.01) {
+cerr << "Add collisions"<<endl;
+     for (int i=0; i<NCOLLISIONS; i++) {
+       PRC(i);PRC(bi->get_index());PRL(collision[i].starid);
+       if(bi->get_index() == collision[i].starid && 
+	  t_cur >= collision[i].time && t_cur < collision[i].time+0.125) {
 	 cout << "object { OStar scale "
-	      << scale_L * pow(100 * (0.01 - (t_cur-collision[i].time)), 3)
+	      << scale_L * pow(5 * (0.125 - (t_cur-collision[i].time)), 3)
 	      << " translate < "
 	      << pos[0] << ", " << pos[1] << ", " << pos[2]-0.5 << " > }"
 	      << endl;
        }
+     }
+#endif
      
      // The eye works as an exponential detector.
      real logL_eff = scale_L * sqrt(log10(1 + L_eff));
@@ -468,15 +522,26 @@ local void print_star(dyn *bi, vector pos,
 	real RM100 = -15.9099,  RM1 = 4.13746,  RM01 = 13.7278;
 	real IM100 = -25.9089,  IM1 = 3.81839,  IM01 = 12.0133;
 
-	RM100 = -16; RM01 = 14;
-	R = max(0., min(1., (R-RM100)/(RM1-RM100)));
+//	RM100 = -16; RM01 = 14;
+	RM100 = -6; RM01 = 11.4;
+	R = max(0., min(1., (R-RM100)/(RM01-RM100)));
+//	R = (R-RM100)/(RM01-RM100);
+//	PRC(R);
 
-	G = 1 - min(1., max(0., sqrt(abs((V-VM1)/(VM01-VM100)))));
+	VM100 = -5.8; VM01 = 13;
+	G = 1 - min(1., max(0., sqrt(abs((V-VM01)/(VM01-VM100)))));
+//	G = 1 - min(1., max(0., sqrt(abs((V-VM1)/(VM01-VM100)))));
+//	G = 1 - sqrt(abs((V-VM1)/(VM01-VM100)));
+//	PRC(G);
 
-	BM100 = -7; BM01 = 17;
-	B = max(0., min(1., (BM1-B)/(BM01-BM100)));
+//	BM100 = -7; BM01 = 17;
+	BM100 = -7; BM01 = 15;
+	B = pow(max(0., min(1., (BM01-B)/(BM01-BM100))), 2);
+//	B = (BM01-B)/(BM01-BM100);
+//	PRL(B);
 
-	apparent_size = 0.1 * scale_L * (VM01-V)/(VM01-VM100);
+//	apparent_size = 0.1 * scale_L * (VM01-V)/(VM01-VM100);
+	apparent_size = 0.1 * scale_L * logL_eff;
      }
      else {
 
@@ -515,24 +580,27 @@ local void print_star(dyn *bi, vector pos,
        };
      }
      
+  if(apparent_size>0) {
      cout << "object { single_star \n"
           << "         finish { ambient <"
           << R << ", " << G << ", " << B << ">}\n" 
 	  << "         scale " << apparent_size << " translate < "
 	  << pos[0] << ", " << pos[1] << ", " << pos[2] << " > }"
 	  << endl;
+   }
 
      if (tpe_class == Accreting)
        cout << "object { Accretion_Disc scale "
-	    << logL_eff << " translate < "
+	    << 0.05*logL_eff << " translate < "
 	    << pos[0] << ", " << pos[1] << ", " << pos[2] << " > }"
 	    << endl;
+
 }
 
 local void print_node(dyn *bi, vector pos, real mass_scale,
 		      real mmax)  {
 
-  real time = bi->get_system_time();
+  real time = getrq(bi->get_root()->get_dyn_story(), "real_system_time");
 
   real apparent_size = mass_scale * sqrt(bi->get_mass());
   real mmin = 0;
@@ -540,22 +608,91 @@ local void print_node(dyn *bi, vector pos, real mass_scale,
   real R = sqrt((mmax-m)/(mmax-mmin));
   real G = 0.5;
   real B = sqrt(m/(mmax-mmin));
-  if(m<0.001) {
-    R = 0.5;
-    G = 0.5;
-    B = 0.5;
-  }
-  else {
+  if(m>0.0125) { // Red
     R = 1;
     G = 0;
     B = 0;
   }
+  else if(m<0.003125) {
+    R = 0.8;
+    G = 0.8;
+    B = 0.8;
+  }
+  else { // Yellow
+    R = 0.6;
+    G = 0.8;
+    B = 0.196078;
+//    R = 2.50;
+//    G = 2.00;
+//    B = 0.00;
+  }
+#if 0
+  vector cam_pos;
+    cam_pos[0] = 1;
+    cam_pos[1] = 0;
+    cam_pos[2] = 0;
+  real V=100;
+  real v = (V-pos[3])*tan(abs(cam_pos-pos)/pos[3]);
+  R = 1;G=0;B=0;
   cout << "object { simple_star \n"
        << "         finish { ambient <"
-       << R << ", " << G << ", " << B << ">}\n" 
-       << "         scale " << apparent_size << " translate < "
+       << R << ", " << G << ", " << B << ">}\n";
+  cout << "         scale " << apparent_size; 
+  cout << " translate < "
+       << pos[0]-v << ", " << pos[1] << ", " << pos[2] << " > }"
+       << endl;
+  R=0;G=0;B=1;
+  cout << "object { simple_star \n"
+       << "         finish { ambient <"
+       << R << ", " << G << ", " << B << ">}\n";
+  cout << "         scale " << apparent_size; 
+  cout << " translate < "
+       << pos[0]+v << ", " << pos[1] << ", " << pos[2] << " > }"
+       << endl;
+#endif
+
+
+  R=G=B=1;
+  cout << "object { simple_star \n"
+       << "         finish { ambient <"
+       << R << ", " << G << ", " << B << ">}\n";
+  if(time>=25) 
+    cout << "         scale " << 1./(1+0.2*(25-20))  *apparent_size; 
+  else if(time>=20) 
+    cout << "         scale " << 1./(1+0.2*(time-20))  *apparent_size; 
+  else
+    cout << "         scale " << apparent_size; 
+  cout << " translate < "
        << pos[0] << ", " << pos[1] << ", " << pos[2] << " > }"
        << endl;
+
+//  pos[2] -= apparent_size;
+  add_collision_effect(bi, pos, time, mass_scale); 
+//  pos[2] += apparent_size;
+
+#if 0
+     //  Add collisions
+     for (int i=0; i<NCOLLISIONS; i++) {
+//       if(bi->get_index() == collision[i].starid && 
+       if(bi->get_name()) {
+//       PRC(bi->get_index());PRC(bi->get_name());PRL(collision[i].name);
+       if(!strcmp(bi->get_name(), collision[i].name) && 
+	  time >= collision[i].time && time < collision[i].time+0.125) {
+	 cerr << "Adding collision at time = " << time << endl;
+	 cerr << "object { OStar scale "
+	      << 2 *mass_scale * pow(5 * (0.125 - (time-collision[i].time)), 3)
+	      << " translate < "
+	      << pos[0] << ", " << pos[1] << ", " << pos[2]-apparent_size << " > }"
+	      << endl;
+	 cout << "object { OStar scale "
+	      << 2 *mass_scale * pow(5 * (0.125 - (time-collision[i].time)), 3)
+	      << " translate < "
+	      << pos[0] << ", " << pos[1] << ", " << pos[2]-apparent_size << " > }"
+	      << endl;
+       }
+     }
+     }
+#endif
 
 //  cout << "object { single_star \n"
 //       << "         finish { ambient <"
@@ -598,8 +735,10 @@ local void print_povtime(real time,
 
     int p = cout.precision(LOW_PRECISION);
     cout << "text { ttf \"timrom.ttf\" ";
-    if(time>0)
-      cout << "\"Time = " << time << " Myr \" ";
+    if(time==0)
+      cout << "\"Time = " << time << " \" ";
+    else if(time>0)
+      cout << "\"Time = " << time/73.387 << " Myr \" ";
     else
       cout << "\"Time = " << -time << " N-body \" ";
 
@@ -622,6 +761,7 @@ local void print_povray_stars(dyn *b, real mass_limit,
 			      real scale_L,
 			      filter_type filter) {
 
+cerr << "Print STARS"<<endl;
   for (int i=0; i<NNEBULAE; i++) 
     nebula[i].id  = -1;
     
@@ -633,7 +773,7 @@ local void print_povray_stars(dyn *b, real mass_limit,
     if (find_qmatch(b->get_dyn_story(), "density_center_pos")) {
       
       if (getrq(b->get_dyn_story(), "density_center_time")
-	  != b->get_system_time()) {
+	  != b->get_real_system_time()) {
 	warning("mkpovfile: neglecting out-of-date density center");
 	try_com = true;
       } else
@@ -645,13 +785,12 @@ local void print_povray_stars(dyn *b, real mass_limit,
     if (try_com && find_qmatch(b->get_dyn_story(), "com_pos")) {
 
       if (getrq(b->get_dyn_story(), "com_time")
-	  != b->get_system_time()) {
+	  != b->get_real_system_time()) {
 	warning("lagrad: neglecting out-of-date center of mass");
       } else
 	dc_pos = getvq(b->get_dyn_story(), "com_pos");
     }
   }
-
 
   // For now: put denxity center in geometric origin
   dc_pos = 0;
@@ -700,7 +839,8 @@ local void print_povray_bodies(dyn *b, real mass_limit,
     }
   
   if (ns==0) 
-    cout << "            (none)\n";
+    cout << "//            (none)\n";
+
 }
 
 void print_povray_header(dyn* b, vector cam_pos,
@@ -738,25 +878,24 @@ void print_povray_header(dyn* b, vector cam_pos,
   if (camera_on_star_id<=0) {
 
     vector normal;
-    normal[0] = sqrt(pow(abs(cam_pos), 2)
-              -      pow(cam_pos[1], 2)
-              -      pow(cam_pos[2], 2));
     normal[1] = 1;
-    normal[2] = (- cam_pos[0] * normal[0] - cam_pos[1])/cam_pos[2];
 
-    cout << "// Normal to camera " << endl;
-    cout << "   #declare normal_to_camera = < " << normal[0] << ", "
-	                                        << normal[1] << ", "
-	                                        << normal[2] << " >" << endl;
+//    cout << "// Normal to camera " << endl;
+//    cout << "   #declare normal_to_camera = < " << normal[0] << ", "
+//	                                        << normal[1] << ", "
+//	                                        << normal[2] << " >" << endl;
+    cout  << "#declare camera_location  = <0, 0, -1>" << endl;
+    cout << "#declare normal_to_camera = -z" << endl;
+    cout << "#declare camera_up        = y" << endl;
     
     cout << "camera {" << endl
 	 << "   location < " << cam_pos[0] << ", "
                              << cam_pos[1] << ", "
                              << cam_pos[2] << " >" << endl
-	 << "   look_at  <0.0, 0.0,  0.0>" << endl
+	 << "   look_at  <0.0, 0.0, " << cam_pos[2]+5 << ">" << endl
 	 << "   blur_samples " << blur_samples << endl; 
     if (aperture>0)
-      cout << "   focal_point <0, 0,  0>" << endl
+      cout << "   focal_point <0, 0, " << cam_pos[2]+5 << ">" << endl
 	   << "   aperture " << aperture << endl;
     cout << "}" << endl << endl;
 
@@ -768,7 +907,10 @@ void print_povray_header(dyn* b, vector cam_pos,
 //    cout << "#object { Initial_text }\n" << endl;
     //
     
-    real time = b->get_starbase()->conv_t_dyn_to_star(b->get_system_time());
+//    real time = b->get_starbase()->conv_t_dyn_to_star(b->get_real_system_time());
+//    real time = b->get_real_system_time();
+    real time = -1*getrq(b->get_dyn_story(), "real_system_time");
+//    real time = -(20 + 0.015625*(counter-160));
     vector time_pos;
     if(vertical<=400) {         //320x240
       time_pos[0] = -10;
@@ -778,15 +920,17 @@ void print_povray_header(dyn* b, vector cam_pos,
       time_pos[0] = -16;
       time_pos[1] = -11;
     }
-//    time_pos[0] = -4 - vertical * 0.0188;
-//    time_pos[1] = -4 - horizontal * 0.0188;
-//    time_pos[2] = 2.5*(5+cam_pos[2]);
-    time_pos[0] = -16;
-    time_pos[1] = -12;
+//    time_pos[0] = -13;
+//    time_pos[1] = -9.5;
+//    time_pos[2] = 1;
+    time_pos[0] = -7;
+    time_pos[1] = -5;
     time_pos[2] = 1;
 //
-    real scale = 0.2;
-    real depth = 0.25;
+//    real scale = 0.2;
+//    real depth = 0.25;
+    real scale = 0.1;
+    real depth = 0.125;
     print_povtime(time, time_pos, scale, depth);    
       
     if (print_hrd)
@@ -858,39 +1002,136 @@ void print_mpegplayer_param_file(ostream& s,
 void rdc_and_wrt_movie(dyn *b, bool povray, real scale_L, real mmax, 
 		       char fltr) {
 
-  // Fill in the collision database.
-    collision[0].starid = 2; 
-    collision[0].time = 50.8389;
-#if 0
-    collision[1].starid = 2;
-    collision[1].time = 3.09252;
-    collision[2].starid = 3;
-    collision[2].time = 3.093;
-  //  collision[0].starid = 1;
-  //  collision[0].time = 1.65;
-    //  collision[1].starid = 1;
-    //  collision[1].time = 1.68;
-    //  collision[2].starid = 1;
-    //  collision[2].time = 1.73;
-  collision[3].starid = 1;
-  collision[3].time = 1.74;
+    strcpy(collision[0].name, "255a+255b"); 
+    collision[0].starid = 0; 
+    collision[0].time = 2.37956;
+    strcpy(collision[1].name, "576a+576b"); 
+    collision[1].starid = 0;
+    collision[1].time = 3.79467;
+    strcpy(collision[2].name, "463a+463b"); 
+    collision[2].starid = 0;
+    collision[2].time = 8.01511;
+    strcpy(collision[3].name, "1747a+1747b"); 
+  collision[3].starid = 0;
+  collision[3].time = 8.97172;
+  strcpy(collision[4].name, "1a+218b"); 
   collision[4].starid = 1;
-  collision[4].time = 2.2233267;
+  collision[4].time = 9.21207;
+  strcpy(collision[5].name, "1b<+2>"); 
   collision[5].starid = 1;
-  collision[5].time = 2.750325;
+  collision[5].time = 14.0345;
+  strcpy(collision[6].name, "1a<+2>"); 
   collision[6].starid = 1;
-  collision[6].time = 2.89577;
-  collision[7].starid = 1;
-  collision[7].time = 3.357066;
+  collision[6].time = 14.6999;
+  strcpy(collision[7].name, "6a+6b"); 
+  collision[7].starid = 0;
+  collision[7].time = 15.9929;
+  strcpy(collision[8].name, "1b<+3>"); 
   collision[8].starid = 1;
-  collision[8].time = 3.5157569;
-  collision[9].starid = 1;
-  collision[9].time = 3.84768766;
-  collision[10].starid = 1;
-  collision[10].time = 4.16801414;
-  collision[11].starid = 1;
-  collision[11].time = 4.6702693;
+  collision[8].time = 22.9681;
+  strcpy(collision[9].name, "14a+14b"); 
+  collision[9].starid = 26;
+  collision[9].time = 34.916;
 
+#if 0
+  // Fill in the collision database.
+    strcpy(collision[0].name, "1+167"); 
+    collision[0].starid = 167; 
+    collision[0].time = 20.3479;
+    strcpy(collision[1].name, "1<+2>"); 
+    collision[1].starid = 69;
+    collision[1].time = 21.1829;
+    strcpy(collision[2].name, "30+64"); 
+    collision[2].starid = 30;
+    collision[2].time = 21.7115;
+    strcpy(collision[3].name, "1<+3>"); 
+  collision[3].starid = 4;
+  collision[3].time = 23.6172;
+  strcpy(collision[4].name, "1<+4>"); 
+  collision[4].starid = 1435;
+  collision[4].time = 25.2399;
+  strcpy(collision[5].name, "155+938"); 
+  collision[5].starid = 155;
+  collision[5].time = 25.8208;
+  strcpy(collision[6].name, "23+34"); 
+  collision[6].starid = 23;
+  collision[6].time = 26.3169;
+  strcpy(collision[7].name, "6+403"); 
+  collision[7].starid = 6;
+  collision[7].time = 26.4171;
+  strcpy(collision[8].name, "102+483"); 
+  collision[8].starid = 102;
+  collision[8].time = 26.901;
+  strcpy(collision[9].name, "26+1007"); 
+  collision[9].starid = 26;
+  collision[9].time = 27.817;
+  strcpy(collision[10].name, "29+173"); 
+  collision[10].starid = 29;
+  collision[10].time = 28.2324;
+  strcpy(collision[11].name, "1<+6>"); 
+  collision[11].starid = 2;
+  collision[11].time = 28.234;
+  strcpy(collision[12].name, "1<+7>"); 
+  collision[12].starid = 1917;
+  collision[12].time = 28.7764;
+  strcpy(collision[13].name, "1<+8>");  
+  collision[13].starid = 46;
+  collision[13].time = 29.3036;
+  strcpy(collision[14].name, "1<+9>");  
+  collision[14].starid = 1562;
+  collision[14].time = 29.6476;
+  strcpy(collision[15].name, "1<+10>");  
+  collision[15].starid = 0;
+  collision[15].time = 30.3179;
+  strcpy(collision[16].name, "86+123");  
+  collision[16].starid = 0;
+  collision[16].time = 31.8339;
+  strcpy(collision[17].name, "1<+11>");  
+  collision[17].starid = 0;
+  collision[17].time = 31.9796;
+  strcpy(collision[18].name, "2+149");
+  collision[18].starid = 0;
+  collision[18].time = 32.3984;
+  strcpy(collision[19].name, "1<+12>");
+  collision[19].starid = 0;
+  collision[19].time = 32.5874;
+  strcpy(collision[20].name, "1<+13>");
+  collision[20].starid = 0;
+  collision[20].time = 32.7505;
+  strcpy(collision[21].name, "15+19");
+  collision[21].starid = 0;
+  collision[21].time = 32.9756;
+  strcpy(collision[22].name, "1<+14>");
+  collision[22].starid = 0;
+  collision[22].time = 33.4833;
+  strcpy(collision[23].name, "1<+15>");
+  collision[23].starid = 0;
+  collision[23].time = 33.5243;
+  strcpy(collision[24].name, "1<+16>");
+  collision[24].starid = 0;
+  collision[24].time = 33.7629;
+  strcpy(collision[25].name, "1<+17>");
+  collision[25].starid = 0;
+  collision[25].time = 34.4345;
+  strcpy(collision[26].name, "1<+18>");
+  collision[26].starid = 0;
+  collision[26].time = 34.4508;
+  strcpy(collision[27].name, "1<+19>");
+  collision[27].starid = 0;
+  collision[27].time = 34.6628;
+  strcpy(collision[28].name, "1<+20>");
+  collision[28].starid = 0;
+  collision[28].time = 34.7393;
+#endif
+
+
+
+
+
+
+
+
+#if 0
   sn_remnant[0].bh = true;
   sn_remnant[0].id = 4441;
   sn_remnant[0].time = 4.42;
@@ -929,6 +1170,7 @@ main(int argc, char ** argv)
     bool  v_flag = false;      // if TRUE: a comment given on command line
     bool  B_flag = false;  
     bool  print_hrd = false;
+    bool  Stellar = true;
 
     char filter = 'V';
     real aperture    = -1;
@@ -959,14 +1201,16 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "a:B:b:F:f:g:H:hI:L:N:n:W:X:x:Y:y:Z:z:P:T:S:s:c:";
+    char* param_string = "a:Bb:F:f:g:H:hI:L:N:n:W:X:x:Y:y:Z:z:P:T:S:s:c:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c)
 	    {
 	    case 'a': aperture = atof(poptarg);
 	              break;
-	    case 'B': base_type = (SF_base_type)atoi(poptarg);
+//	    case 'B': base_type = (SF_base_type)atoi(poptarg);
+//	              break;
+	    case 'B': Stellar = !Stellar;
 	              break;
 	    case 'b': blur_samples = atoi(poptarg);
 	              break;
@@ -1059,7 +1303,21 @@ main(int argc, char ** argv)
 	  mmax = max(mmax, bi->get_mass());
 	}
 
-      //      addstar(b);                            
+    if(Stellar) {
+       b->set_use_sstar(true);
+       real T_start = 0;
+       if(b->get_starbase()->get_stellar_evolution_scaling()) {
+	 //addstar(b,                             // Note that T_start and
+//		 T_start,                       // Main_Sequence are
+//		 Main_Sequence,                 // defaults. They are
+//		 true);                         // ignored if a star
+       }
+       else {
+	 cerr << "No stellar evolution scaling present"<<endl;
+	 cerr << "Continue with node prescription"<<endl;
+       }
+//       b->get_starbase()->print_stellar_evolution_scaling(cerr);
+     }
       //b->set_use_sstar(true); 
       // Do not make new stars but make sure the starbase is searched.
       //b->set_use_sstar(false);
