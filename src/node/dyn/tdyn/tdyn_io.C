@@ -30,7 +30,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];
 
-    while (get_line(s, input_line), strcmp(END_DYNAMICS, input_line)) {
+    while (get_line(s, input_line), !matchbracket(END_DYNAMICS, input_line)) {
 
 	// Special case:
 
@@ -41,26 +41,18 @@ istream & tdyn::scan_dyn_story(istream & s)
 
 	    // *** Must coordinate with hdyn_io.C. ***
 
-	    real t;
-	    s.read((unsigned char *)&t, sizeof(real));
+	    time = read_unformatted_real( s );
 
-#if 1
-	    // Read doubles.
+	    mass = read_unformatted_real( s );
+	    read_unformatted_vector( s, pos );
+	    read_unformatted_vector( s, vel );
 
-	    s.read((unsigned char *)&mass, sizeof(real));
-	    s.read((unsigned char *)&pos, sizeof(vector));
-	    s.read((unsigned char *)&vel, sizeof(vector));
-#else
-	    // Read floats (2nd four bytes -- very machine dependent!)
+	} else if(streq("t64mpv32 =", input_line)) {
 
-	    s.read((unsigned char *)&mass+4, sizeof(float));
-	    for (int k = 0; k < 3; k++)
-		s.read((unsigned char *)&pos[k]+4, sizeof(float));
-	    for (int k = 0; k < 3; k++)
-		s.read((unsigned char *)&vel[k]+4, sizeof(float));
-#endif
-
-	    time = t;
+	    time = read_unformatted_real( s );
+	    mass = read_unformatted32_real( s );
+	    read_unformatted32_vector( s, pos );
+	    read_unformatted32_vector( s, vel );
 
 	} else {
 
@@ -69,14 +61,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 	    real last_real = false;
 
 	    char keyword[MAX_INPUT_LINE_LENGTH];
-	    char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
-
-	    sscanf(input_line, "%s%s", keyword, should_be_equal_sign);
-	    if (strcmp("=", should_be_equal_sign)) {
-		cerr << "Expected '=', but got '" << should_be_equal_sign
-		     << endl;
-		exit(1);
-	    }
+	    char *val = getequals(input_line, keyword);
 
 	    // See xreal notes in dyn_io.C...
 
@@ -97,9 +82,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 
 		} else {
 
-		    real tmp;
-		    sscanf(input_line, "%*s%*s%lf", &tmp);
-		    real_system_time = system_time = tmp;
+		    real_system_time = system_time = strtod(val, &val);
 
 		}
 
@@ -112,13 +95,11 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    if (read_xreal)
 			time = get_xreal_from_input_line(input_line);
 		    else {
-			real tmp;
-			sscanf(input_line, "%*s%*s%lf", &tmp);
-			time = tmp;
+			time = strtod(val, &val);
 		    }
 
 		} else if (!strcmp("m", keyword))
-		    sscanf(input_line, "%*s%*s%lf", &mass);
+		    mass = strtod(val, &val);
 		else if (!strcmp("r", keyword))
 		    set_vector_from_input_line(pos, input_line);
 		else if (!strcmp("v", keyword))
@@ -129,7 +110,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    set_vector_from_input_line(jerk, input_line);
 		else if (!strcmp("kep", keyword)) {
 		    int i;
-		    sscanf(input_line, "%*s%*s%d", &i);
+		    i = strtol(val, &val, 10);
 		    kep = (kepler*)1;		// just use as a flag for now
 		}
 		else if (!strcmp("defunct", keyword))

@@ -33,19 +33,10 @@ istream & dyn::scan_dyn_story(istream& s)
     char input_line[MAX_INPUT_LINE_LENGTH];
     real last_real = false;
 
-    while (get_line(s,input_line), strcmp(END_DYNAMICS, input_line)) {
+    while (get_line(s,input_line), !matchbracket(END_DYNAMICS, input_line)) {
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
-
-	sscanf(input_line, "%s%s", keyword, should_be_equal_sign);
-
-	if (strcmp("=", should_be_equal_sign)) {
-	    cerr << "scan_dyn_story: expected '=', but got '"
-		 << should_be_equal_sign
-		 << endl;
-	    exit(1);
-	}
+	char *val = getequals(input_line, keyword);
 
     	if (!strcmp("real_system_time", keyword)) {
 
@@ -79,19 +70,17 @@ istream & dyn::scan_dyn_story(istream& s)
 		set_system_time(get_xreal_from_input_line(input_line));
 
 	    } else {
-		real tmp;
 		cerr << "dyn::scan_dyn_story: input "
 		     << "time data type is real"
 		     << endl; 
-		sscanf(input_line, "%*s%*s%lf", &tmp);
-		real_system_time = system_time = tmp;
+		real_system_time = system_time = strtod(val, &val);
 	    }
 	} else {
 
 	    last_real = false;
 
 	    if (!strcmp("m", keyword))
-		sscanf(input_line, "%*s%*s%lf", &mass);
+		mass = strtod(val, &val);
 	    else if (!strcmp("r", keyword))
 		set_vector_from_input_line(pos, input_line);
 	    else if (!strcmp("v", keyword))

@@ -9,15 +9,9 @@ istream & hydrobase::scan_hydro_story(istream& s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];
 
-    while(get_line(s,input_line), strcmp(END_HYDRO, input_line)) {
+    while(get_line(s,input_line), !matchbracket(END_HYDRO, input_line)) {
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
-	sscanf(input_line,"%s%s",keyword,should_be_equal_sign);
-	if(strcmp("=",should_be_equal_sign)){
-	    cerr << "Expected '=', but got '"<< should_be_equal_sign <<"'\n";
-	    exit(1);
-	}
-
+	char *val = getequals(input_line, keyword);
     	add_story_line(hydro_story, input_line);
     }
     return s;

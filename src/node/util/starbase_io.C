@@ -10,19 +10,10 @@ istream & starbase::scan_star_story(istream& s, int level)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];
 
-    while (get_line(s,input_line), strcmp(END_STAR, input_line)) {
+    while (get_line(s,input_line), !matchbracket(END_STAR, input_line)) {
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
-
-	sscanf(input_line, "%s%s", keyword, should_be_equal_sign);
-
-	if (strcmp("=",should_be_equal_sign)) {
-	    cerr << "Expected '=', but got '"<< should_be_equal_sign <<"'\n";
-	    exit(1);
-	}
-
-        real number;
+	char *val = getequals(input_line, keyword);
 
 	// NOTE: The code below is significantly different from the old
 	// version, which used is_root() and appears to have been wrong.
@@ -33,14 +24,14 @@ istream & starbase::scan_star_story(istream& s, int level)
 //	cerr << "node: " << the_node->format_label() << "  "; PRL(level);
 
         if (level == 0 && !strcmp("mass_scale", keyword)) {
-            sscanf(input_line, "%*s%*s%lf", &number);
-            m_conv_star_to_dyn = number;            
+            m_conv_star_to_dyn = strtod(val, &val);
+
         } else if (level == 0 && !strcmp("size_scale", keyword)) {
-            sscanf(input_line, "%*s%*s%lf", &number);
-            r_conv_star_to_dyn = number;            
+            r_conv_star_to_dyn = strtod(val, &val);
+
         } else if (level == 0 && !strcmp("time_scale", keyword)) {
-            sscanf(input_line, "%*s%*s%lf", &number);
-            t_conv_star_to_dyn = number;            
+            t_conv_star_to_dyn = strtod(val, &val);
+
         } else {
 //	    cerr << "Adding " << input_line << " to star story for "
 //		 << get_node()->format_label() << endl;

@@ -69,7 +69,8 @@ istream & node::scan_hydro_story(istream& s)
 	// until the matching END_HYDRO is found.
 
 	char input_line[MAX_INPUT_LINE_LENGTH];
-	while(get_line(s,input_line), strcmp(END_HYDRO, input_line));
+	while(get_line(s,input_line), !matchbracket(END_HYDRO, input_line))
+	    ;
     }
     return s;
 }
@@ -83,7 +84,7 @@ istream & node::scan_star_story(istream& s, int level)
 	// (See hydrobase note above.)
 
 	char input_line[MAX_INPUT_LINE_LENGTH];
-	while (get_line(s,input_line), strcmp(END_STAR, input_line));
+	while (get_line(s,input_line), !matchbracket(END_STAR, input_line));
     }
     return s;
 }
@@ -232,14 +233,14 @@ local node * get_node_recursive(istream& s,
 
     node * elder_sister = (node *)42;	// to make some compilers happy
 
-    while (strcmp(END_PARTICLE, line)) {
-	if (strcmp(START_DYNAMICS, line) == 0) {
+    while (!matchbracket(END_PARTICLE, line)) {
+	if (matchbracket(START_DYNAMICS, line)) {
 	    b->scan_dyn_story(s);			// virtual
-	} else if (strcmp(START_HYDRO, line) == 0) {
+	} else if (matchbracket(START_HYDRO, line)) {
 	    b->scan_hydro_story(s);
-	} else if (strcmp(START_STAR, line) == 0) {
+	} else if (matchbracket(START_STAR, line)) {
 	    b->scan_star_story(s, level);
-	} else if (strcmp(START_LOG, line) == 0) {
+	} else if (matchbracket(START_LOG, line)) {
 
                 // bug: every node gets a log story, but when you see
                 // one from input, you set this to be the new one
@@ -247,7 +248,7 @@ local node * get_node_recursive(istream& s,
 
 	    b->scan_log_story(s, line);
 
-	} else if (strcmp(START_PARTICLE, line) == 0) {
+	} else if (matchbracket(START_PARTICLE, line)) {
 	    node * daughter =
 		get_node_recursive(s, the_npfp, the_hbpfp, the_sbpfp,
 				   use_stories, level+1);
@@ -261,20 +262,13 @@ local node * get_node_recursive(istream& s,
 	    elder_sister = daughter;
 	} else {
 	    char keyword[MAX_INPUT_LINE_LENGTH];
-	    char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
-	    sscanf(line,"%s%s",keyword,should_be_equal_sign);
-	    if (strcmp("=",should_be_equal_sign)) {
-	        cerr << "Expected '=', but got '"
-		     << should_be_equal_sign <<"'\n";
-	    	exit(1);
-	    }
+	    const char *val = getequals(line, keyword);
     	    if (!strcmp("i",keyword)) {
-		int index;
-		sscanf(line,"%*s%*s%d",&index);
+		int index = strtol(val, NULL, 10);
 		b->set_label(index);
 	    } else if (!strcmp("name",keyword)) {
  	        char cptr[MAX_INPUT_LINE_LENGTH];
-		sscanf(line,"%*s%*s%s",cptr);
+		sscanf(val,"%s",cptr);
 	        b->set_label(cptr);
 	    } else if (!strcmp("N",keyword)) {   // N is not read in here;
 		;                                // instead N will be computed
@@ -412,7 +406,6 @@ void put_node(ostream & s, node & b,
 	}
     }
 #endif
-
     put_node_recursive(s, b, print_xreal, short_output);
 }
 
@@ -422,8 +415,8 @@ local void forget_node_recursive(istream& s)
 
     get_line(s, line);
 
-    while(strcmp(END_PARTICLE, line)) {
-	if(strcmp(START_PARTICLE, line) == 0)
+    while(!matchbracket(END_PARTICLE, line)) {
+	if(matchbracket(START_PARTICLE, line))                 
 	    forget_node_recursive(s);
 	get_line(s, line);
     }

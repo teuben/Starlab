@@ -13,12 +13,7 @@ istream & double_star::scan_star_story(istream& s) {
 
     while(get_line(s,input_line), strcmp(END_STAR, input_line)){
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
-	sscanf(input_line,"%s%s",keyword,should_be_equal_sign);
-	if(strcmp("=",should_be_equal_sign)){
-	    cerr << "Expected '=', but got '"<< should_be_equal_sign <<"'\n";
-	    exit(1);
-	}
+	char *val = getequals(input_line, keyword);
     }
 
     return s;

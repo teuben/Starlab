@@ -11,26 +11,21 @@ istream & chydro::scan_hydro_story(istream& s)
 
     while(get_line(s,input_line), strcmp(END_HYDRO, input_line)){
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
-	sscanf(input_line,"%s%s",keyword,should_be_equal_sign);
-	if(strcmp("=",should_be_equal_sign)){
-	    cerr << "Expected '=', but got '"<< should_be_equal_sign <<"'\n";
-	    exit(1);
-	}
+	char *val = getequals(input_line, keyword);
 
     	if(0){   // trick to keep the if() statement, for the else below
 	}else if(!strcmp("R_eff",keyword)){
-	    sscanf(input_line,"%*s%*s%lf",&effective_radius);
+	    effective_radius = strtod(val, &val);
     	}else if(!strcmp("M_core",keyword)){
-	    sscanf(input_line,"%*s%*s%lf",&core_mass);
+	    core_mass = strtod(val, &val);
 	}else if(!strcmp("R_core",keyword)){
-	    sscanf(input_line,"%*s%*s%lf",&core_radius);
+	    core_radius = strtod(val, &val);
 	}else if(!strcmp("mf",keyword)){
-            sscanf(input_line,"%*s%*s%lf",&m_conv_hydro_to_dyn);
+            m_conv_hydro_to_dyn = strtod(val, &val);
 	}else if(!strcmp("rf",keyword)){
-            sscanf(input_line,"%*s%*s%lf",&r_conv_hydro_to_dyn);
+            r_conv_hydro_to_dyn = strtod(val, &val);
 	}else if(!strcmp("tf",keyword)){
-            sscanf(input_line,"%*s%*s%lf",&t_conv_hydro_to_dyn);
+            t_conv_hydro_to_dyn = strtod(val, &val);
 	}else{
 	    add_story_line(hydro_story, input_line);
 	}

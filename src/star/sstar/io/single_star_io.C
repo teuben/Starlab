@@ -14,50 +14,50 @@ istream & single_star::scan_star_story(istream& s)
 
     while(get_line(s,input_line), strcmp(END_STAR, input_line)){
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
-	sscanf(input_line,"%s%s",keyword,should_be_equal_sign);
-	if(strcmp("=",should_be_equal_sign)){
-	    cerr << "Expected '=', but got '"<< should_be_equal_sign <<"'\n";
-	    exit(1);
-	}
+	char *val = getequals(input_line, keyword);
 
         real number;
     	if(0){   // trick to keep the if() statement, for the else below
         }else if(!strcmp("Type",keyword)){
             char str_tpe[MAX_INPUT_LINE_LENGTH];
-            sscanf(input_line,"%*s%*s%s",str_tpe);
+            sscanf(val,"%s",str_tpe);
+
         }else if(!strcmp("Class",keyword)){
             char str_cls[MAX_INPUT_LINE_LENGTH];
-            sscanf(input_line,"%*s%*s%s",str_cls);
+            sscanf(val,"%s",str_cls);
+
         }else if(!strcmp("T_cur",keyword)){
-            sscanf(input_line,"%*s%*s%lf",&number);
-            set_current_time(number);
+            set_current_time( strtod(val,&val) );
+
         }else if(!strcmp("T_rel",keyword)){
-            sscanf(input_line,"%*s%*s%lf",&number);
-            set_relative_age(number);
+            set_relative_age( strtod(val,&val) );
+
         }else if(!strcmp("M_rel",keyword)){
-            sscanf(input_line,"%*s%*s%lf",&number);
-            set_relative_mass(number);
+            set_relative_mass( strtod(val,&val) );
+
         }else if(!strcmp("M_env",keyword)){
-            sscanf(input_line,"%*s%*s%lf",&number);
-            set_envelope_mass(number);
+            set_envelope_mass( strtod(val,&val) );
+
         }else if(!strcmp("M_core",keyword)){
-            sscanf(input_line,"%*s%*s%lf",&number);
-            set_core_mass(number);
+            set_core_mass( strtod(val,&val) );
+
         }else if(!strcmp("M_COcore",keyword)){
-            sscanf(input_line,"%*s%*s%lf",&number);
-            set_COcore_mass(number);
+            set_COcore_mass( strtod(val,&val) );
+
         }else if(!strcmp("T_eff",keyword)){
-            sscanf(input_line,"%*s%*s%lf",&number);
+            number = strtod(val,&val);
+	    /* XXX ignore value?? */
+
         }else if(!strcmp("L_eff",keyword)){
-            sscanf(input_line,"%*s%*s%lf",&number);
-            set_luminosity(number);
+            set_luminosity( strtod(val,&val) );
+
         }else if(!strcmp("P_rot",keyword)){       // Experimental extra 
-	  sscanf(input_line,"%*s%*s%lf",&number); // information for 
-	  set_rotation_period(number);            // radio pulsars.
-        }else if(!strcmp("B_fld",keyword)){
-	  sscanf(input_line,"%*s%*s%lf",&number);
-	  set_magnetic_field(number);
+	  					  // information for 
+	  set_rotation_period( strtod(val,&val) );// radio pulsars.
+
+        } else if(!strcmp("B_fld",keyword)){
+	  set_magnetic_field( strtod(val,&val) );
+
 	}else{
 	    add_story_line(star_story, input_line);
 	}
@@ -112,43 +112,41 @@ void extract_line_text(stellar_type& type, real& t_cur, real& t_rel,
 		       story& s)
     {
 
-        char keyword[MAX_INPUT_LINE_LENGTH];
-        char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
         char line [MAX_INPUT_LINE_LENGTH];
 	char type_string[MAX_INPUT_LINE_LENGTH];
+
         strcpy(line, s.get_text());
-        sscanf(line,"%s%s",keyword,should_be_equal_sign);
-        if(strcmp("=",should_be_equal_sign)){
-            cerr << "Expected '=', but got '"<< should_be_equal_sign <<"'\n";
-            exit(1);
-        }
+        char keyword[MAX_INPUT_LINE_LENGTH];
+        char *val = getequals(line, keyword);
+
 
         real number;
         if(0){   // trick to keep the if() statement, for the else below
         }else if(!strcmp("Type",keyword)){
             char str_tpe[MAX_INPUT_LINE_LENGTH];
-            sscanf(line,"%*s%*s%s",type_string); 
+            sscanf(val,"%s",type_string); 
 	    type = extract_stellar_type_string(type_string);
         }else if(!strcmp("T_cur",keyword)){
-            sscanf(line,"%*s%*s%lf",&t_cur);
+            t_cur = strtod(val,&val);
         }else if(!strcmp("T_rel",keyword)){
-            sscanf(line,"%*s%*s%lf",&t_rel);
+            t_rel = strtod(val,&val);
         }else if(!strcmp("M_rel",keyword)){
-            sscanf(line,"%*s%*s%lf",&m_rel);
+            m_rel = strtod(val,&val);
         }else if(!strcmp("M_env",keyword)){
-            sscanf(line,"%*s%*s%lf",&m_env);
+            m_env = strtod(val,&val);
         }else if(!strcmp("M_core",keyword)){
-            sscanf(line,"%*s%*s%lf",&m_core);
+            m_core = strtod(val,&val);
         }else if(!strcmp("M_COcore",keyword)){
-            sscanf(line,"%*s%*s%lf",&co_core);
+            co_core = strtod(val,&val);
         }else if(!strcmp("T_eff",keyword)){
-            sscanf(line,"%*s%*s%lf",&t_eff);
+            t_eff = strtod(val,&val);
         }else if(!strcmp("L_eff",keyword)){
-            sscanf(line,"%*s%*s%lf",&l_eff);
+            l_eff = strtod(val,&val);
         }else if(!strcmp("P_rot",keyword)){       // Experimental extra 
-	    sscanf(line,"%*s%*s%lf",&p_rot);     // information for 
+	    p_rot = strtod(val,&val);     	  // information for 
+						  // radio pulsars
         }else if(!strcmp("B_fld",keyword)){       // Only for neutron stars
-  	    sscanf(line,"%*s%*s%lf",&b_fld);
+  	    b_fld = strtod(val,&val);
         }
 
     }

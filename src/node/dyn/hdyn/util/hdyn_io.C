@@ -104,14 +104,7 @@ istream & hdyn::scan_dyn_story(istream & s)
     while (get_line(s, input_line), strcmp(END_DYNAMICS, input_line)) {
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
-
-	sscanf(input_line, "%s%s", keyword, should_be_equal_sign);
-	if (strcmp("=", should_be_equal_sign)) {
-	    cerr << "Expected '=', but got '" << should_be_equal_sign
-		 << endl;
-	    exit(1);
-	}
+	char *val = getequals(input_line, keyword);
 
 	// See xreal notes in dyn_io.C...
 
@@ -132,13 +125,11 @@ istream & hdyn::scan_dyn_story(istream & s)
 		//     << endl; 
 		set_system_time(get_xreal_from_input_line(input_line));
 	    } else {
-		real tmp;
 		cerr << "hdyn::scan_dyn_story: input "
 		     << "time data type is real"
 		     << endl; 
-		sscanf(input_line, "%*s%*s%lf", &tmp);
 
-		real_system_time = system_time = tmp;
+		real_system_time = system_time = strtod(val, &val);
 	    }
 	    // PRC(system_time); xprint(system_time);
 
@@ -151,15 +142,13 @@ istream & hdyn::scan_dyn_story(istream & s)
 		if (read_xreal)
 		    time = get_xreal_from_input_line(input_line);
 		else {
-		    real tmp;
-		    sscanf(input_line, "%*s%*s%lf", &tmp);
-		    time = tmp;
+		    time = strtod(val, &val);
 		}
 
 	    } else if (!strcmp("dt", keyword))
-		sscanf(input_line, "%*s%*s%lf", &timestep);
+		timestep = strtod(val, &val);
 	    else if (!strcmp("m", keyword))
-		sscanf(input_line, "%*s%*s%lf", &mass);
+		mass = strtod(val, &val);
 	    else if (!strcmp("r", keyword))
 		set_vector_from_input_line(pos, input_line);
 	    else if (!strcmp("v", keyword)) {
@@ -168,15 +157,15 @@ istream & hdyn::scan_dyn_story(istream & s)
 	    } else if (!strcmp("a", keyword))
 		set_vector_from_input_line(acc, input_line);
 	    else if (!strcmp("pot", keyword))
-		sscanf(input_line, "%*s%*s%lf", &pot);
+		pot = strtod(val, &val);
 	    else if (!strcmp("R_eff", keyword))
-		sscanf(input_line, "%*s%*s%lf", &radius);
+		radius = strtod(val, &val);
 	    else if (!strcmp("steps", keyword))
-		sscanf(input_line, "%*s%*s%lf", &steps);
+		steps = strtod(val, &val);
 	    else if (!strcmp("dir_f", keyword))
-		sscanf(input_line, "%*s%*s%lf", &direct_force);
+		direct_force = strtod(val, &val);
 	    else if (!strcmp("indir_f", keyword))
-		sscanf(input_line, "%*s%*s%lf", &indirect_force);
+		indirect_force = strtod(val, &val);
 
 	    // NOTE:  Complete initialization of unperturbed and slow
 	    // binary structures requires knowledge of the tree structure
@@ -187,9 +176,9 @@ istream & hdyn::scan_dyn_story(istream & s)
 	    // Unperturbed motion:
 
 	    else if (!strcmp("dt_u", keyword))
-		sscanf(input_line, "%*s%*s%lf", &unperturbed_timestep);
+		unperturbed_timestep = strtod(val, &val);
 	    else if (!strcmp("full_u", keyword))
-		sscanf(input_line, "%*s%*s%d", &fully_unperturbed);
+		fully_unperturbed = strtol(val, &val, 10);
 
 	    // Slow binary motion:
 
@@ -199,8 +188,7 @@ istream & hdyn::scan_dyn_story(istream & s)
 		// recognize and reconstruct the slow structure is attached
 		// to the ELDER sister only.
 
-		int k;
-		sscanf(input_line, "%*s%*s%d", &k);
+		int k = strtol(val, &val, 10);
 
 		if (k > 1) {
 
@@ -217,25 +205,19 @@ istream & hdyn::scan_dyn_story(istream & s)
 	    } else if (!strcmp("slow_t_init", keyword)) {
 
 		if (slow) {
-		    real tmp;
-		    sscanf(input_line, "%*s%*s%lf", &tmp);
-		    slow->set_t_init(tmp);
+		    slow->set_t_init( strtod(val,&val) );
 		}
 
 	    } else if (!strcmp("slow_t_apo", keyword)) {
 
 		if (slow) {
-		    real tmp;
-		    sscanf(input_line, "%*s%*s%lf", &tmp);
-		    slow->set_t_apo(tmp);
+		    slow->set_t_apo( strtod(val,&val) );
 		}
 
 	    } else if (!strcmp("slow_tau", keyword)) {
 
 		if (slow) {
-		    real tmp;
-		    sscanf(input_line, "%*s%*s%lf", &tmp);
-		    slow->set_tau(tmp);
+		    slow->set_tau( strtod(val,&val) );
 		    slow->init_tau_pred();
 		}
 
@@ -273,6 +255,7 @@ ostream & hdyn::print_dyn_story(ostream & s,
     put_story_header(s, DYNAMICS_ID);
 
     int precision = 0;
+    int use_floats = 0;
 
     // Short_output options (see also write_unformatted):
     //
@@ -319,37 +302,28 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
 	    // *** Must coordinate with tdyn_io.C. ***
 
-	    s << "tmpv =" << endl;
-	    real t = (real)system_time;
-	    s.write((unsigned char *)&t, sizeof(real));
+	    vector & putpos = pos;
+	    vector & putvel = vel;
 
-#if 1
-	    // Write doubles.
-
-	    s.write((unsigned char *)&mass, sizeof(real));
-	    if (short_output == 1) {
-		s.write((unsigned char *)&pos, sizeof(vector));
-		s.write((unsigned char *)&vel, sizeof(vector));
-	    } else {
-		s.write((unsigned char *)&pred_pos, sizeof(vector));
-		s.write((unsigned char *)&pred_vel, sizeof(vector));
+	    if(short_output == 2) {
+		putpos = pred_pos;
+		putvel = pred_vel;
 	    }
-#else
-	    // Write floats (2nd four bytes -- very machine dependent!)
 
-	    s.write((unsigned char *)&mass+4, sizeof(float));
-	    if (short_output == 1) {
-		for (int k = 0; k < 3; k++)
-		    s.write((unsigned char *)&pos[k]+4, sizeof(float));
-		for (int k = 0; k < 3; k++)
-		    s.write((unsigned char *)&vel[k]+4, sizeof(float));
+	    if(use_floats) {
+		s << "t64mpv32 =" << endl;
+		write_unformatted_real( s, system_time );
+		write_unformatted32_real( s, mass );
+		write_unformatted32_vector( s, putpos );
+		write_unformatted32_vector( s, putvel );
 	    } else {
-		for (int k = 0; k < 3; k++)
-		    s.write((unsigned char *)&pred_pos[k]+4, sizeof(float));
-		for (int k = 0; k < 3; k++)
-		    s.write((unsigned char *)&pred_vel[k]+4, sizeof(float));
+		// Write doubles.
+		s << "tmpv =" << endl;
+		write_unformatted_real( s, system_time );
+		write_unformatted_real( s, mass );
+		write_unformatted_vector( s, putpos );
+		write_unformatted_vector( s, putvel );
 	    }
-#endif
 
 	    // Use kep as a flag here (careful!).
 

@@ -16,22 +16,15 @@ istream& node::scan_dyn_story(istream& s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];
 
-    while (get_line(s,input_line), strcmp(END_DYNAMICS, input_line)) {
+    while (get_line(s,input_line), !matchbracket(END_DYNAMICS, input_line)) {
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
-
-	sscanf(input_line, "%s%s", keyword,should_be_equal_sign);
-
-	if (strcmp("=", should_be_equal_sign)) {
-	    cerr << "Expected '=', but got '"<< should_be_equal_sign <<"'\n";
-	    exit(1);
-	}
+	char *val = getequals(input_line, keyword);
 
     	if (0) {   // trick to keep the else if() statements homogeneous
 
     	    }else if(!strcmp("m",keyword)){
-		sscanf(input_line,"%*s%*s%lf",&mass);
+		mass = strtod(val, &val);
 	    }else{
 		add_story_line(dyn_story, input_line);
 	    }

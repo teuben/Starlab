@@ -14,30 +14,25 @@ istream & sdyn::scan_dyn_story(istream& s)
 
     while(get_line(s,input_line), strcmp(END_DYNAMICS, input_line)){
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
-	sscanf(input_line,"%s%s",keyword,should_be_equal_sign);
-	if(strcmp("=",should_be_equal_sign)){
-	    cerr << "Expected '=', but got '"<< should_be_equal_sign <<"'\n";
-	    exit(1);
-	}
+	char *val = getequals(input_line, keyword);
 
     	if(0){   // trick to keep the else if() statements homogeneous
     	    }else if(!strcmp("m",keyword)){
-		sscanf(input_line,"%*s%*s%lf",&mass);
+		mass = strtod(val, &val);
 	    }else if(!strcmp("r",keyword)){
 		set_vector_from_input_line(pos,input_line);
 	    }else if(!strcmp("v",keyword)){
 		set_vector_from_input_line(vel,input_line);
 	    }else if(!strcmp("t",keyword)){
-		sscanf(input_line,"%*s%*s%lf",&time);
+		time = strtod(val, &val);
 	    }else if(!strcmp("dt",keyword)){
-		sscanf(input_line,"%*s%*s%lf",&timestep);
+		timestep = strtod(val, &val);
 	    }else if(!strcmp("a",keyword)){
 		set_vector_from_input_line(acc,input_line);
 	    }else if(!strcmp("j",keyword)){
 		set_vector_from_input_line(jerk,input_line);
 	    }else if(!strcmp("pot",keyword)){
-		sscanf(input_line,"%*s%*s%lf",&pot);
+		pot = strtod(val, &val);
 	    }else{
 		add_story_line(dyn_story, input_line);
 	    }

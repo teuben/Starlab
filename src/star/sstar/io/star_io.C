@@ -20,12 +20,7 @@ istream & star::scan_star_story(istream& s)
     while(get_line(s,input_line), strcmp(END_STAR, input_line)){
 //    while(get_line(s,input_line), strcmp(compare_string,input_line)){
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
-	sscanf(input_line,"%s%s",keyword,should_be_equal_sign);
-	if(strcmp("=",should_be_equal_sign)){
-	    cerr << "Expected '=', but got '"<< should_be_equal_sign <<"'\n";
-	    exit(1);
-	}
+	getequals(input_line, keyword);
     	add_story_line(star_story, input_line);
     }
     return s;
