@@ -2,8 +2,8 @@
 //// split_particles:  split specified particles in input snapshot into
 ////                   binaries having specified orbital properties.
 ////
-//// Usage:  split_particles  [-s #] -l l1 -a a1 -e e1 -E E1 -q q1 \ 
-////                                 -l l2 -a a2 -e e2 -E E2 -q q2 \ 
+//// Usage:  split_particles  [-s #] -l l1 -a a1 -e e1 -E E1 -q q1 \   ~
+////                                 -l l2 -a a2 -e e2 -E E2 -q q2 \   ~
 ////                                 (etc.)
 ////
 //// Options:    -s    specify random seed [random from system clock]
@@ -17,13 +17,13 @@
 ////
 //// The "-E" option takes precedence over the "-a" option.
 ////
-//// Naming convention: particle X is split into components Xa and Xb.
+//// Naming convention: particle X is split into components X1 and X2.
 //// Splitting may be applied recursively to produce multiple systems,
 //// e.g.
 ////
 ////        split_particles -l 1 -a 0.1 -e 0 -l 1b -a 0.01 -e 0.5
 ////
-//// creates a triple system (1a, (1ba, 1bb)).
+//// creates a triple system (11, (121, 122)).
 ////
 //// Unlike mkscat, structure is never implicit, but must be created
 //// from the top down.
@@ -41,7 +41,7 @@
 
 // split_particle: Split the specified node into a binary with the specified
 //                 parameters.  All unspecified orbit elements are chosen
-//               randomly.  Newly created leaves have names "na" and "nb",
+//                 randomly.  Newly created leaves have names "n1" and "n2",
 //                 where "n" is the name of the leaf being split.
 
 local bool split_particle(dyn* bi, real ecc, real sma,
@@ -167,7 +167,7 @@ local void scale_energy(real energy, int N, real M, real E)
 local void check_and_initialize(dyn* b, char* label,
 				real eccentricity, real energy,
 				real semi_major_axis, real mass_ratio,
-				bool iname)
+				bool iname, bool verbose = true)
 {
     if (eccentricity < 0)
 	eccentricity = sqrt(randinter(0,1));	// Thermal distribution
@@ -198,7 +198,8 @@ local void check_and_initialize(dyn* b, char* label,
 
     if (bi == NULL) {
 
-	cerr << "Warning: particle \"" << label << "\" not found.\n";
+	cerr << "split_particles: warning: particle \"" << label
+	     << "\" not found." << endl;
 
     } else {
 
@@ -213,7 +214,12 @@ local void check_and_initialize(dyn* b, char* label,
 
 	if (!split_particle(bi, eccentricity, semi_major_axis,
 			    mass_ratio, iname))
-	    err_exit("fatal error");
+	    err_exit("split_particles: fatal error");
+
+	if (verbose) {
+	    cerr << "split particle \"" << label << "\"" << endl;
+	    PRC(semi_major_axis); PRC(eccentricity); PRL(mass_ratio);
+	}
     }
 }
 
