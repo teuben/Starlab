@@ -8,12 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// grow_black_hole: Replaces the inner -M mass in stars for a single 
-////                black hole with the same mass.
+//// Replace the specified inner mass in stars with a single black hole
+//// of the same mass.
 ////                
+//// Usage:  grow_black_hole [OPTIONS]
 ////
-//// Options:      -M    select black hole mass
-////                     if <1 mass is read as a fraction
+//// Options:
+////        -M    select black hole mass (if <1 mass is read as a fraction)
+////
+//// Written by Simon Portegies Zwart
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //                 Simon Portegies Zwart, MIT June 2000
 

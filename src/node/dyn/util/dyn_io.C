@@ -490,15 +490,10 @@ void put_col(dyn* root, ostream& s) {
 #else
 main(int argc, char** argv)
 {
-    dyn *b;
     check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
-    extern char *poptarg;
-    int c;
-    char* param_string = "c:";
-
-    while ((c = pgetopt(argc, argv, param_string,
-		    "$Revision$", _SRC_)) != -1) {}
+    dyn *b;
 
     while (b = get_dyn()) {
 	cout << "TESTING put_dyn:" << endl;

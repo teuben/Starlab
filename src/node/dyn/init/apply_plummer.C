@@ -8,11 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// apply_plummer:  Apply a Plummer-model spatial  and velocity distribution
-////                 to an existing snapshot, without scaling.  Masses are
-////                 left unchanged.
+//// Apply a Plummer-model spatial and velocity distribution to an
+//// existing snapshot, without scaling.  Masses are left unchanged.
 ////
-//// Options:     -s    specify random seed [random from system clock]
+//// Usage:  apply_plummer [OPTIONS] < input > output
+////
+//// Options:
+////         -s    specify random seed [random from system clock]
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 // For details on model construction, see notes in makeplummer.C
 // Steve McMillan, July 1996

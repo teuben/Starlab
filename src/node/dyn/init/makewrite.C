@@ -8,17 +8,20 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makewrite:  Turn a text file into a snapshot.  Used in some
-////             demonstrations only.  File may be read top to
-////             bottom or left to right.
+//// Turn a text file into a snapshot.  Used in some demonstrations only.
+//// File may be read top to bottom or left to right.
 ////
-//// Options:  -c    add a comment to the output snapshot              [false]
+//// Usage:  makewrite [OPTIONS]
+////
+//// Options:
+////           -c    add a comment to the output snapshot              [false]
 ////           -C    output data in 'col' format                          [no]
 ////           -d    toggle direction: top-bottom/left-right      [left-right]
 ////           -s    random seed                          [from system cloock]
 ////           -v    random velocity scale                                 [0]
 ////
-//// Example:  banner -w 40 STARLAB | makewrite -c "STARLAB"
+//// Examples:
+//// banner -w 40 STARLAB | makewrite -c "STARLAB"
 
 #include "dyn.h"
 #include <ctype.h>

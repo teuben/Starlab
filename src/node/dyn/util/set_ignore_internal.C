@@ -29,14 +29,7 @@
 main(int argc, char *argv[])
 {
     check_help();
-
-    extern char *poptarg;
-    extern char *poparr[];
-    int c;
-    char* param_string = "c:";
-
-    while ((c = pgetopt(argc, argv, param_string,
-		    "$Revision$", _SRC_)) != -1) {}
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
     dyn *b = get_dyn();
     if (b == NULL) err_exit("Can't read input snapshot");

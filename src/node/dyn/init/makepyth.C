@@ -8,11 +8,18 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makepyth:  set up a 3-body system corresponding to the Pythagorean problem.
+//// Set up a 3-body system corresponding to the Pythagorean problem.
 ////
-//// Options:    -c    add a comment to the output snapshot [false]
+//// Usage:  makepyth [OPTIONS]
+////
+//// Options:
+////             -c    add a comment to the output snapshot [false]
 ////             -C    output data in 'col' format [no]
 ////             -i    number the particles sequentially [don't number]
+////
+//// Written by Piet Hut.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  Nov 1994   Piet Hut               email: piet@iassns.bitnet
 //                          Institute for Advanced Study, Princeton, NJ, USA

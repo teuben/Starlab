@@ -8,12 +8,19 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makeheavystar:  Double the mass of one or more stars in a snapshot
-////               to approximate the presence of a binary.
+//// Double the mass of one or more stars in a snapshot to
+//// approximate the presence of a binary.
 ////
-//// Options:      -f    specify fraction of stars to double [0.1]
-////               -l    specify lower mass limit (unused) [1]
-////               -s    specify random seed [random from system clock]
+//// Usage:  makeheavystar [OPTIONS]
+////
+//// Options:
+////           -f    specify fraction of stars to double [0.1]
+////           -l    specify lower mass limit (unused) [1]
+////           -s    specify random seed [random from system clock]
+////
+//// Written by Kimberly Engle.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 // Kimberly Engle, November 1997
 

@@ -8,12 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makeblack_hole: Replaces the star closest to com with a black hole
+//// Replace the star closest to com by a black hole.
 ////                
+//// Usage:  makeblack_hole [OPTIONS]
 ////
-//// Options:      -M    select black hole mass
-////                     if <1 mass is read as a fraction
-//// Options:      -i    select black hole identity
+//// Options:
+////      -M    select black hole mass; if <1 mass is read as a fraction
+////      -i    select black hole identity
+////
+//// Written by Simon Portegies Zwart.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //                 Simon Portegies Zwart, MIT November 2000
 

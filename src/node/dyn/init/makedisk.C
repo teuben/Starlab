@@ -8,16 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makedisk: construct a near-keplerian disk, with N low-mass objects
-////         orbiting a single massive object on almost circular paths.
+//// Construct a near-keplerian disk, with N low-mass objects
+//// orbiting a single massive object on almost circular paths.
 ////
-//// Units:  masses are measured in millions of solar masses
-////         lengths are measured in parsecs
+//// Units:  masses are measured in millions of solar masses,
+//// lengths are measured in parsecs.  Hence (with G = 1) the
+//// time unitis 1.49e4 yr and the velocity unit is 65.7 km/s.
 ////
-////              ==> (G = 1) time unit = 1.49e4 yr
-////                          vel. unit = 65.7 km/s
+//// Usage:  makedisk [OPTIONS]
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// Options:
+////              -c    add a comment to the output snapshot [false]
 ////              -C    output data in 'col' format [no]
 ////              -i    number the particles sequentially [don't number]
 ////              -l    specify particle radius [0]
@@ -30,6 +31,10 @@
 ////              -s    specify random seed [random from system clock]
 ////              -v    specify 3-D disk velocity dispersion [0]
 ////              -V    verbose mode [off]
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #define G	6.67e-8		// cgs units
 #define PC	3.086e18	// cm

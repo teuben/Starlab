@@ -8,10 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makenode:  create a linked list of equal-mass nodes.
+//// Create a linked list of equal-mass nodes.
 ////
-//// Options:   -m       specify total mass [1]
-////            -n       specify number of nodes [1]
+//// Usage:  cutrandomsample [OPTIONS]
+////
+//// Options:
+////       -m       specify total mass [1]
+////       -n       specify number of nodes [1]
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //	      Steve McMillan, July 1996
 

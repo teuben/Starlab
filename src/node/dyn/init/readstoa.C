@@ -8,16 +8,27 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// readstoa:  convert NEMO "stoa" format (N, ndim, time,
-////                                        mass[i], i = 1,...,N,
-////                                        pos[i],  i = 1,...,N,
-////                                        vel[i],  i = 1,...,N)
-////            data into a Starlab snapshot.
+//// Convert NEMO "stoa" format:
 ////
-//// Options:     -i    number the particles sequentially [don't number]
-//// Options:     -w    Write stoa insted of reading it
+////           (N, ndim, time,
+////            mass[i], i = 1,...,N,
+////            pos[i],  i = 1,...,N,
+////            vel[i],  i = 1,...,N)
+////
+//// data into a Starlab snapshot.
+////
+//// Usage:  readstoa [OPTIONS]
+////
+//// Options:
+////           -i    number the particles sequentially [don't number]
+////           -w    write stoa insted of reading it
+////
+//// Written by Jun Makino.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
-//	      Jun Makino, Aug 1996
+
+//   Jun Makino, Aug 1996
 
 #include "dyn.h"
 

@@ -1,16 +1,34 @@
 
-//// readgadget:  convert GADGET unformatted snapshot output  
-////                                        (N, ndim, time,
-////                                        mass[i], i = 1,...,N,
-////                                        pos[i],  i = 1,...,N,
-////                                        vel[i],  i = 1,...,N)
-////              into a Starlab snapshot.
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
+//// Convert GADGET unformatted snapshot output:
 ////
-//// Options:     -i    number the particles sequentially [don't number]
-//// Options:     -w    Write GADGET snapshot insted of reading it
-//
-//            First version: Piero Spinnato, April 2002
-//            converted to starlab: SPZ in Amsterdam May 2002
+////              (N, ndim, time,
+////               mass[i], i = 1,...,N,
+////               pos[i],  i = 1,...,N,
+////               vel[i],  i = 1,...,N)
+////
+//// into a Starlab snapshot.
+////
+//// Usage:  readgadget [OPTIONS]
+////
+//// Options:
+////              -i    number the particles sequentially [don't number]
+////              -w    Write GADGET snapshot insted of reading it
+////
+//// Written by Piero Spinnato and Simon Portegies Zwart.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
+//   First version: Piero Spinnato, April 2002
+//   converted to starlab: SPZ in Amsterdam May 2002
 
 #include "dyn.h"
 
@@ -540,7 +558,7 @@ void main(int argc, char ** argv)
   bool w_flag = false;
 
   while ((c = pgetopt(argc, argv, param_string,
-		  "$Revision$", _SRC_)) != -1)
+		      "$Revision$", _SRC_)) != -1)
     switch(c) {
 
     case 'i': i_flag = true;

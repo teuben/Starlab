@@ -8,15 +8,13 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makepowerlaw: construct a system of test particles drawn from a
-////               power-law mass distribution, in virial equilibrium
-////               with the field due to that distribution.  The mass
-////               distribution is of the form:
+//// Construct a system of test particles drawn from a power-law mass
+//// distribution, in virial equilibrium with the field due to that
+//// distribution.  The mass distribution is of the form:
 ////
-////                     M(r)  =  A r^x		(0 < x < 3)
+////               M(r)  =  A r^x		(0 < x < 3)
 ////
-////               except that r is modified to include a softening scale
-////               parameter:
+//// except that r is modified to include a softening scale parameter:
 ////
 ////                     r  -->  sqrt(r^2 + a^2)
 ////
@@ -35,7 +33,13 @@
 //// in test particles.  The particles are currently always drawn from the
 //// power-law distribution, even within the cutoff radius.
 ////
-//// Options:     -A    specify the coefficient A [1]
+//// The output snapshot will have the external field already enabled, and
+//// will contain a flag to disable internal interactions.
+////
+//// Usage:  makepowerlaw [OPTIONS]
+////
+//// Options:
+////              -A    specify the coefficient A [1]
 ////              -a/R  specify scale [1]
 ////              -b    cutoff radius [0]
 ////              -c    add a comment to the output snapshot [false]
@@ -51,8 +55,9 @@
 ////              -s    specify random seed [random from system clock]
 ////              -x    specify exponent [1]
 ////
-//// The output snapshot will have the external field already enabled, and
-//// will contain a flag to disable internal interactions.
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "dyn.h"
 

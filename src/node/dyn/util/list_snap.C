@@ -26,16 +26,10 @@
 main(int argc, char ** argv)
 {
     check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
     dyn *b = NULL;
     int count = 0;
-
-    extern char *poptarg;
-    int c;
-    char* param_string = "c:";
-
-    while ((c = pgetopt(argc, argv, param_string,
-		    "$Revision$", _SRC_)) != -1) {}
 
     while (b = get_dyn()) {
 

@@ -8,41 +8,54 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makebinary:  Complete the binary formation process by adding binary
-////            orbits to an existing binary tree.  It is assumed that
-////            the binary tree structure and all masses have already
-////            been set (e.g. by makesecondary), and that positions and
-////            velocities of all top-level nodes are already known.
+//// Complete the binary formation process by adding binary orbits to an
+//// existing binary tree.  It is assumed that the binary tree structure
+//// and all masses have already been set (e.g. by makesecondary), and
+//// that positions and velocities of all top-level nodes are already known.
 ////
-////            If possible, use the system parameters to scale the
-////            binary parameters.
-////
-//// Options:   -f    function select option [3]
-////                      1    angular momentum per unit reduced mass
-////                           (L^2 = am[1-e^2]), solar units
-////                      2    semi-major axis or peri/apo, solar units
-////                      3    energy
-////            -e    maximum eccentricity [1]
-////            -l    lower limit on selected binary parameter [1]
-////            -o    specify interpretation of limits [1]
-////                      -f 1:
-////                              1    angular momentum
-////                              2    angular momentum, detached binary
-////                      -f 2:        [in Rsun]
-////                              1    semi-major axis 
-////                              2    semi-major axis, detached and hard
-////                                   note: -u gives an upper limit on sma
-////                              3    -l ==> peri, -u ==> apo, and detached
-////                      -f 3:        [in N-body units]
-////                              1    |binary energy|
-////                              2    |binary energy| per unit reduced mass
-////                              3    |binary energy| per unit binary mass
-////            -s    specify random seed [take from system clock]
-////            -u    upper limit on selected binary parameter [1]
-////
+//// If possible, use the system parameters to scale the binary parameters.
 //// If the total system energy is already known (saved in the snapshot
 //// dyn story), then energies are in units of kT.  Otherwise, energies
 //// are in absolute units.
+////
+//// Usage:  makebinary [OPTIONS]
+////
+//// Options:
+////            -f    function select option [3]
+////
+////                  1: angular momentum per unit reduced mass
+////                  (L^2 = am[1-e^2]), solar units;
+////
+////                  2: semi-major axis or peri/apo, solar units;
+////
+////                  3: energy
+////
+////            -e    maximum eccentricity [1]
+////            -l    lower limit on selected binary parameter [1]
+////
+////            -o    specify interpretation of limits [1]
+////
+////                  (-f 1)
+////                  1: angular momentum,
+////                  2: angular momentum, detached binary
+////
+////                  (-f 2) [unit: Rsun]
+////                  1: semi-major axis,
+////                  2: semi-major axis, detached and hard
+////                  (note: -u gives an upper limit on sma),
+////                  3: -l gives peri, -u gives apo, and detached
+////
+////                  (-f 3) [N-body units]
+////                  1: |binary energy|,
+////                  2: |binary energy| per unit reduced mass,
+////                  3: |binary energy| per unit binary mass
+////
+////            -s    specify random seed [take from system clock]
+////            -u    upper limit on selected binary parameter [1]
+////
+//// Written by Steve McMillan and Simon Portegies Zwart.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   Steve McMillan, July 1996
 //   Modified by SPZ 21 April 1998

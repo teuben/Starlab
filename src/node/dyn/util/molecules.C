@@ -2037,13 +2037,7 @@ local void  wrap_string(char substring[BUFF_LENGTH],
 main(int argc, char ** argv)
 {
     check_help();
-
-    extern char *poptarg;
-    int c;
-    char* param_string = "c:";
-
-    while ((c = pgetopt(argc, argv, param_string,
-		    "$Revision$", _SRC_)) != -1) {}
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
     if (argc != 1) {
 	cerr << "molecules: no arguments allowed\n";

@@ -8,12 +8,15 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makeking: construct a King model.
+//// Construct a King model.
 ////
-//// Options:     -b    specify Steve's rescaling parameter (< 1) [0]
+//// Usage:  makeking [OPTIONS]
+////
+//// Options:
+////              -b    specify Steve's rescaling parameter (< 1) [0]
 ////                    [models with b > 0 are just rescaled King models;
-////                     models with b < 0 approach isothermal spheres
-////                     as b --> -infinity]
+////                    models with b < 0 approach isothermal spheres
+////                    as b --> -infinity]
 ////              -c    add a comment to the output snapshot [false]
 ////              -C    output data in 'col' format [no]
 ////              -i    number the particles sequentially [don't number]
@@ -22,14 +25,18 @@
 ////              -o    echo value of random seed [don't echo]
 ////              -s    specify random seed [random from system clock]
 ////              -T    test options (print to cerr) [0]
-////                        1: print King model, with unit central
-////                            density and core radius, and exit
-////                        2: print King model, scaled to unit mass
-////				and virial radius, and exit
-////                        3: test realized velocity distribution
+////                      1: print King model, with unit central
+////                      density and core radius, and exit;
+////                      2: print King model, scaled to unit mass
+////                      and virial radius, and exit;
+////                      3: test realized velocity distribution
 ////              -u    leave final N-body system unscaled
-////                        [scale to E=-1/4, M = 1, R = 1]
+////                    [scale to E=-1/4, M = 1, R = 1]
 ////              -w    specify King dimensionless depth [no default]
+////
+//// Written by Steve McMillan and Kimberly Engle.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 // version 1:  June 1997    Kimberly Engle
 //                          email: kim@galileo.physics.drexel.edu

@@ -8,23 +8,8 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// split_particles:  split specified particles in input snapshot into
-////                   binaries having specified orbital properties.
-////
-//// Usage:  split_particles  [-s #] -l l1 -a a1 -e e1 -E E1 -q q1 \   ~
-////                                 -l l2 -a a2 -e e2 -E E2 -q q2 \   ~
-////                                 (etc.)
-////
-//// Options:    -s    specify random seed [random from system clock]
-////             -i    use "a" and "b" instead of "1" and "2" [false]
-////             -l    specify label of next particle to split [no default]
-////             -a    specify semi-major axis of current binary [0.1]
-////             -e    specify eccentricity of current binary [random]
-////             -E    specify energy of current binary [0]
-////             -q    specify mass ratio (secondary[b]/primary[a]) of
-////                   the current binary [1]
-////
-//// The "-E" option takes precedence over the "-a" option.
+//// Split the specified particles in input snapshot into binaries having
+//// specified orbital properties.
 ////
 //// Naming convention: particle X is split into components X1 and X2.
 //// Splitting may be applied recursively to produce multiple systems,
@@ -36,6 +21,24 @@
 ////
 //// Unlike mkscat, structure is never implicit, but must be created
 //// from the top down.
+////
+//// Usage:  split_particles  [-s #] -l l1 -a a1 -e e1 -E E1 -q q1  -l l2 (etc.)
+////
+//// Options:
+////             -s    specify random seed [random from system clock]
+////             -i    use "a" and "b" instead of "1" and "2" [false]
+////             -l    specify label of next particle to split [no default]
+////             -a    specify semi-major axis of current binary [0.1]
+////             -e    specify eccentricity of current binary [random]
+////             -E    specify energy of current binary [0]
+////             -q    specify mass ratio (secondary[b]/primary[a]) of
+////                   the current binary [1]
+////
+//// The "-E" option takes precedence over the "-a" option.
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 // Only the main routine and check_and_initialize (at end) differ
 // from the functions in split_particle.
@@ -239,6 +242,9 @@ local void check_and_initialize(dyn* b, char* label,
 
 int main(int argc, char ** argv)
 {
+    check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
+
     real energy = DEFAULT_ENERGY;
     real eccentricity = DEFAULT_ECC;
     real semi_major_axis = DEFAULT_SMA;
@@ -252,8 +258,6 @@ int main(int argc, char ** argv)
 
     int random_seed = 0;
     char seedlog[64];
-
-    check_help();
 
     dyn* b;
     b = get_dyn();

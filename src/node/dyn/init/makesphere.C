@@ -8,11 +8,19 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makesphere: construct a simple homogeneous sphere, with (default)
+//// Construct a simple homogeneous sphere, with (default)
 ////
 ////              M = 1, T/U = -1/2, E = -1/4.
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// If the "-u" flag is set, the particles are left unscaled, with
+//// masses 1/n, positions uniformly distributed in a sphere of radius R,
+//// and velocities uniformly distributed in a range giving approximate
+//// virial equilibrium.
+////
+//// Usage:  makesphere [OPTIONS]
+////
+//// Options:
+////              -c    add a comment to the output snapshot [false]
 ////              -C    output data in 'col' format [no]
 ////              -i    number the particles sequentially [don't number]
 ////              -l    write sphere radius to dyn story [don't write]
@@ -22,10 +30,9 @@
 ////              -s    specify random seed [random from system clock]
 ////              -u    leave unscaled [scale to E=-1/4, M = 1, R = 1]
 ////
-////  If the "-u" flag is set, the particles are left unscaled, with
-////  masses 1/n, positions uniformly distributed in a sphere of radius R,
-////  and velocities uniformly distributed in a range giving approximate
-////  virial equilibrium.
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "dyn.h"
 

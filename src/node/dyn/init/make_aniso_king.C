@@ -8,30 +8,7 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// make_aniso_king: construct an anisotropic King model.
-////
-//// Options:     -a    specify alpha1 [-0.0009]
-////              -A    specify "Oort A"
-////              -b    specify alpha3/alpha1 [-1/3]
-////              -B    specify "Oort B"
-////              -c    add a comment to the output snapshot [false]
-////              -C    output data in 'col' format [no]
-////              -F    specify tidal field type as in kira [1]
-////                        1: point-mass
-////                        2: isothermal halo
-////                        3: Galactic disk
-////                        4: Custom (input Oort constants A and B,
-////                           and local density in 232 Msun/pc^3    
-////              -i    number the particles sequentially [don't number]
-////              -n    specify number of particles [no default]
-////              -o    echo value of random seed [don't echo]
-////              -s    specify random seed [random from system clock]
-////              -T    test options [0]
-////                        1: print the King model to cerr
-////                        2: save model and surface brightness profiles
-////              -u    leave final N-body system unscaled
-////                        [scale to E=-1/4, M = 1, R = 1]
-////              -w    specify King dimensionless depth [no default]
+//// Construct an anisotropic King model.
 ////
 //// The resulting model fills its Roche lobe in the specified tidal
 //// field.  Its length scale is set by G = M = 1 and the value of alpha1.
@@ -43,6 +20,36 @@
 ////
 //// When scaling, the tidal potential is taken into account in determining
 //// the virial radius.
+////
+//// Usage:  make_aniso_king [OPTIONS]
+////
+//// Options:
+////              -a    specify alpha1 [-0.0009]
+////              -A    specify "Oort A"
+////              -b    specify alpha3/alpha1 [-1/3]
+////              -B    specify "Oort B"
+////              -c    add a comment to the output snapshot [false]
+////              -C    output data in 'col' format [no]
+////              -F    specify tidal field type as in kira [1]
+////                    1: point-mass;
+////                    2: isothermal halo;
+////                    3: Galactic disk;
+////                    4: Custom (input Oort constants A and B,
+////                    and local density in units of 232 Msun/pc^3)   
+////              -i    number the particles sequentially [don't number]
+////              -n    specify number of particles [no default]
+////              -o    echo value of random seed [don't echo]
+////              -s    specify random seed [random from system clock]
+////              -T    test options [0]
+////                    1: print the King model to cerr;
+////                    2: save model and surface brightness profiles
+////              -u    leave final N-body system unscaled
+////                    [scale to E=-1/4, M = 1, R = 1]
+////              -w    specify King dimensionless depth [no default]
+////
+//// Written by Douglas Heggie and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 // version 1:  Jul 1998     Steve McMillan
 //	       Jan 1999	    steve@zonker.drexel.edu

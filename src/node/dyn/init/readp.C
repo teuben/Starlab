@@ -8,16 +8,25 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// readp:  convert ASCII "dumbp" format (mass1, pos1, vel1,
-////                                       mass2, pos2, vel2,
-////                                       mass3, pos3, vel3,
-////                                       etc.)
+//// Convert ASCII "dumbp" format:
 ////
-////         data into a Starlab snapshot (flat tree).
-////         This is the inverse function to dumbp.
+////                    (mass1, pos1, vel1,
+////                     mass2, pos2, vel2,
+////                     mass3, pos3, vel3,
+////                    etc.)
 ////
-//// Options:     -c    add a comment to the output snapshot [false]
+//// data into a Starlab snapshot (flat tree).  This is the inverse
+//// function to dumbp.
+////
+//// Usage:  readp [OPTIONS]
+////
+//// Options:
+////              -c    add a comment to the output snapshot [false]
 ////              -i    number the particles sequentially [don't number]
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //	     Steve McMillan, July 1999
 
