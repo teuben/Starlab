@@ -66,7 +66,7 @@
 //  These functions still update nn and d_nn_sq (which are supplied as
 //  arguments, not the class members)
 //  Thus, if these functions are called to determine nn without preceding
-//  call to (e.g.)  flat_calculate_acc_and_jerk, d_nn_sq must be initialized
+//  call to (e.g.) flat_calculate_acc_and_jerk, d_nn_sq must be initialized
 //  to some large number.
 //
 //  The pointer coll and  d_coll_sq are initialized in the following three

@@ -195,7 +195,7 @@ bool evolve_stars(hdyn* b,
 	if (b->get_kira_diag()->report_stellar_evolution) 
 	    cerr << "After synchronize_tree" << endl;
 
-	predict_loworder_all(b, b->get_system_time());	    // Unnecessary??
+	predict_loworder_all(b, b->get_system_time());	    // unnecessary??
 
 	if (b->get_kira_diag()->report_stellar_evolution) 
 	    cerr << "After predict_loworder_all" << endl;
