@@ -195,48 +195,72 @@ AC_ARG_WITH(qt-dir,
 
 if test -z "$qt" -o "x$qt" = "xyes"; then
 
+    good_qt=yes
+
     if test -z "$qt_dir"; then
         AC_MSG_CHECKING(whether QTDIR environment variable is set)
 	if test "x$QTDIR" = "x"; then
 	    AC_MSG_RESULT(no)
 	    if test "x$qt" = "xyes"; then
-	       AC_MSG_ERROR([Qt was selected with --with-qt but QTDIR isn't set.
+	       AC_MSG_ERROR([Qt selected with --with-qt but QTDIR not set.
 Please set environment QTDIR or use --with-qt-dir=QTDIR.])
 	    fi
+	    AC_MSG_NOTICE(*** disabling Qt ***)
+	    good_qt=no
 	else
 	    AC_MSG_RESULT([$QTDIR])
 	    qt_dir="$QTDIR"
         fi
     fi
 
-    CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
-    LDFLAGS="$LDFLAGS -L$qt_dir/lib"
-    AC_SUBST(MOC, [$qt_dir/bin/moc])
-    AC_CHECK_LIB(qt, main, [AC_DEFINE(HAVE_LIBQT, 1,
-   	[Define to 1 if you have the `qt' library (-lqt).])])
+    if test "x$good_qt" = "xyes"; then
 
-    if test "x$ac_cv_lib_qt_main" = "xyes"; then
-	AC_MSG_CHECKING(whether Qt is version 3 or newer)
-        AC_PREPROC_IFELSE(
-	    [AC_LANG_PROGRAM(
+#	We want Qt and have a Qt directory name.  Substitute MOC here, but
+#	check that the library is valid before completing the configuration.
+
+	AC_SUBST(MOC, [$qt_dir/bin/moc])
+	AC_CHECK_LIB(qt, main, [good_qt="yes"])
+
+	if test "x$good_qt" = "xyes"; then
+
+#	    LIbrary is valid, but we need version 3 of libqt.
+
+	    AC_MSG_CHECKING(whether Qt is version 3 or newer)
+            AC_PREPROC_IFELSE(
+		[AC_LANG_PROGRAM(
 [#include <qglobal.h>
 #if QT_VERSION < 0x030000
 #  error Qt is too old
 #endif])],
-	    [AC_MSG_RESULT(yes); good_qt=yes],
-	    [AC_MSG_RESULT(no);
-	        if test "x$qt" = "xyes"; then
-	            AC_MSG_ERROR([Qt was selected but it is older than version 3
+		[AC_MSG_RESULT(yes); good_qt=yes],
+		[AC_MSG_RESULT(no);
+		    if test "x$qt" = "xyes"; then
+			AC_MSG_ERROR([Qt selected, but older than version 3
 Please update Qt, or do not enable it with --with-qt.])
-	        else
-		    good_qt=no
-		fi])
-    elif test "x$qt" = "xyes"; then
-    	AC_MSG_ERROR([Qt was selected but a test program failed to compile
-See `config.log' for more details.])
-    fi
+		    else
+			AC_MSG_NOTICE(*** disabling Qt ***)
+			good_qt=no
+		    fi])
 
+	    if test "x$good_qt" = "xyes"; then
+
+#		Everything seems OK, finally add Qt configuration.
+
+		CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
+		LDFLAGS="$LDFLAGS -L$qt_dir/lib"
+
+		AC_DEFINE(HAVE_LIBQT, 1,
+		      [Define to 1 if you have the `qt' library (-lqt).])
+	    fi
+
+	elif test "x$qt" = "xyes"; then
+    	    AC_MSG_ERROR([Qt was selected but a test program failed to compile.
+See `config.log' for more details.])
+	fi
+    fi
 fi
+
+# For conditional builds in various Makefiles.
 AM_CONDITIONAL(HAVE_LIBQT, [test "x$good_qt" = "xyes"])
 
 #--------------------------------------------------------------------------
