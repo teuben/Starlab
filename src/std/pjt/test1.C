@@ -60,7 +60,7 @@ starlab_main()
 
     if (o_flag) cerr << "mkplummer: random seed = " << seed << endl;
 
-    sprintf(seedlog, "         random number generator seed = %d",seed);
+    sprintf(seedlog, "       random number generator seed = %d",seed);
     cout << "COMMENT:" << seedlog << endl;
     cout << "nbody = " << n << endl;
     cout << "mfrac = " << mfrac <<endl;

@@ -84,6 +84,8 @@ local int  eff_length(char * s)
 #define  DATE_TOT_LENGTH   INTRO_LENGTH + STARLAB_LENGTH + VERSION_LENGTH \
                        + DATE_STR_LENGTH + DATE_SEP_LENGTH + VERSION_SEP_LENGTH
 
+#define USER_HEAD " (user "
+
 /*-----------------------------------------------------------------------------
  *  gethist  --  returns a newly allocated string containing the date at which
  *               the command of the calling program was given, and the full
@@ -113,6 +115,15 @@ char *gethist(int argc, char ** argv)
     n += argc;                    /* one for each white space delimiter,     */
 				  /* and a final NULL to end the hist_string */
 
+    // Added by Steve (7/01):
+
+    char *user_part = getenv("USER");
+    int user_length = 0;
+
+    if (user_part) user_length = strlen(user_part) + strlen(USER_HEAD) + 1;
+    //									')'
+
+    n += user_length;
     hist_string = new char[n];
     
     if (hist_string == NULL)
@@ -132,12 +143,26 @@ char *gethist(int argc, char ** argv)
 	   STARLAB_PART);
     strcpy(hist_string + INTRO_LENGTH + DATE_STR_LENGTH + DATE_SEP_LENGTH
 	   + STARLAB_LENGTH, VERSION_PART);
+
+    if (user_part) {
+
+	// Add in the name of the user running the program:
+
+	char tmp[1024];
+	strcpy(tmp, USER_HEAD);
+	strcat(tmp, user_part);
+	strcat(tmp, ")");
+
+	strcpy(hist_string + INTRO_LENGTH + DATE_STR_LENGTH + DATE_SEP_LENGTH
+	   + STARLAB_LENGTH + VERSION_LENGTH, tmp);
+    }
+
     strcpy(hist_string + INTRO_LENGTH + DATE_STR_LENGTH + DATE_SEP_LENGTH
-	   + STARLAB_LENGTH + VERSION_LENGTH, VERSION_SEPARATOR);
+	   + STARLAB_LENGTH + VERSION_LENGTH + user_length, VERSION_SEPARATOR);
 /*
  * write the command line:
  */
-    j = DATE_TOT_LENGTH;
+    j = DATE_TOT_LENGTH + user_length;
     for (i = 0; i < argc; i++)
 	{
 	k = 0;

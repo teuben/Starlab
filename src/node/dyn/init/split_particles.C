@@ -39,7 +39,7 @@
 
 // split_particle: Split the specified node into a binary with the specified
 //                 parameters.  All unspecified orbit elements are chosen
-//                 randomly.  Newly created leaves have names "na" and "nb",
+//               randomly.  Newly created leaves have names "na" and "nb",
 //                 where "n" is the name of the leaf being split.
 
 local bool split_particle(dyn* bi, real ecc, real sma, real mass_ratio)
@@ -279,7 +279,7 @@ void main(int argc, char ** argv)
 		    	  random_seed = atoi(argv[++i]);
 			  int actual_seed = srandinter(random_seed);
 			  sprintf(seedlog,
-				  "         random number generator seed = %d",
+				  "       random number generator seed = %d",
 				  actual_seed);
 			  b->log_comment(seedlog);
 		          }

@@ -74,7 +74,7 @@ main(int argc, char ** argv)
 
     cerr << "jiggle: random seed = " << actual_seed << endl;
 
-    sprintf(seedlog, "         random number generator seed = %d", actual_seed);
+    sprintf(seedlog, "       random number generator seed = %d", actual_seed);
 
     dyn *b;
 

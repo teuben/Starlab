@@ -103,7 +103,7 @@ void main(int argc, char ** argv) {
 	}
 
     int actual_seed = srandinter(random_seed);
-    sprintf(seedlog, "         random number generator seed = %d",actual_seed);
+    sprintf(seedlog, "       random number generator seed = %d",actual_seed);
 
     if (m_flag) 
        mass_ratio = m_sec / m_prim;

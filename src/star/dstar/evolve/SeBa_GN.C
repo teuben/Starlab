@@ -328,7 +328,7 @@ void main(int argc, char ** argv) {
     delete qfc;
 
     actual_seed = srandinter(input_seed);
-    sprintf(seedlog, "         random number generator seed = %d",actual_seed);
+    sprintf(seedlog, "       random number generator seed = %d",actual_seed);
 
     // (GN Feb  1 2000) ios added
     //  ifstream infile(input_filename);

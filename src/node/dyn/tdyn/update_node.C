@@ -97,6 +97,9 @@ local inline void update_node(worldbundle *wb,
 
 		    // Create a real kepler structure.
 
+//		    cerr << "creating new kepler for " << bb->format_label()
+//			 << " at time " << b->get_time() << endl;
+
 		    kepler * k = new kepler;
 
 		    k->set_circular_binary_limit(1.e-6);	// ~arbitrary

@@ -458,7 +458,7 @@ main(int argc, char ** argv)
 	cerr << "mk_aniso_king: random seed = " << actual_seed << endl;
 
     sprintf(tmp_string,
-	    "         random number generator seed = %d",
+	    "       random number generator seed = %d",
 	    actual_seed);
     b->log_comment(tmp_string);
 

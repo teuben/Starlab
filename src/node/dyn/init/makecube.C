@@ -140,7 +140,7 @@ main(int argc, char ** argv) {
 
     if (o_flag) cerr << "mkcube: random seed = " << actual_seed << endl;
 
-    sprintf(seedlog, "         random number generator seed = %d",actual_seed);
+    sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
     if (n > 0) mkcube(b, n, u_flag);

@@ -349,7 +349,7 @@ void main(int argc, char ** argv)
 
     int actual_seed = srandinter(random_seed);
 
-    sprintf(seedlog, "         random number generator seed = %d",actual_seed);
+    sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
     mkmass(b, mf, m_lower, m_upper, exponent, m_total, renumber_stars);	

@@ -90,7 +90,7 @@ void main(int argc, char ** argv)
     //    int actual_seed = srandinter(random_seed);
 
     //    sprintf(seedlog,
-    //            "         random number generator seed = %d",actual_seed);
+    //            "       random number generator seed = %d",actual_seed);
     //    b->log_comment(seedlog);
 
     mkheavystar(b, fraction_doubled, lower_limit, mass_ratio);

@@ -179,7 +179,7 @@ void main(int argc, char ** argv) {
 
     if (n <= 0) err_exit("mkdyn: N > 0 required!");
     int actual_seed = srandinter(random_seed);
-    sprintf(seedlog, "         random number generator seed = %d",actual_seed);
+    sprintf(seedlog, "       random number generator seed = %d",actual_seed);
 
     dyn *b;
 

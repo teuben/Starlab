@@ -393,7 +393,7 @@ main(int argc, char ** argv)
 	    }            
     
     int actual_seed = srandinter(random_seed);
-    sprintf(seedlog, "         random number generator seed = %d",actual_seed);
+    sprintf(seedlog, "       random number generator seed = %d",actual_seed);
 
        dyn* b = get_dyn(cin);
 
@@ -413,7 +413,7 @@ main(int argc, char ** argv)
 	   }
 
           if (A_flag || a_flag || E_flag || e_flag) 
-             random_initialization=true;
+           random_initialization=true;
        adddouble(b, t_start, type, random_initialization, 
 	         a_min, a_max, e_min, e_max);
        put_dyn(cout, *b);	

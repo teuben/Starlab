@@ -351,7 +351,7 @@ void main(int argc, char ** argv) {
     delete qfc;
 
     actual_seed = srandinter(input_seed);
-    sprintf(seedlog, "         random number generator seed = %d",actual_seed);
+    sprintf(seedlog, "       random number generator seed = %d",actual_seed);
 
     ifstream infile(input_filename);
     if(I_flag) {

@@ -59,7 +59,7 @@ starlab_main()
           cout << "argv[" << i << "] = " << argv[i] << endl;
     }
 
-    sprintf(seedlog, "         random number generator seed = %d",seed);
+    sprintf(seedlog, "       random number generator seed = %d",seed);
     cout << "COMMENT:" << seedlog << endl;
     cout << "nbody = " << n << endl;
     cout << "nrad = " << nr << endl;

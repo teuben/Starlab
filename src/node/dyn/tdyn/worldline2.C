@@ -151,7 +151,7 @@ local inline void update_interpolated_tree(worldbundle *wb,
 	else {
 	    ww = wb->find_worldline(bb);
 	    if (!ww)
-		cerr << "create_interpolated_tree2: error:"
+		cerr << "update_interpolated_tree: error:"
 		     << "can't find worldline of subtree member."
 		     << endl;
 	}

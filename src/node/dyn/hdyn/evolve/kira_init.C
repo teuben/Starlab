@@ -1041,7 +1041,7 @@ bool kira_initialize(int argc, char** argv,
 	    input_seed = 0;                         // default
         actual_seed = srandinter(input_seed);
         sprintf(seedlog,
-		"         random number generator seed = %d",actual_seed);
+		"       random number generator seed = %d",actual_seed);
         b->log_comment(seedlog);
 	cerr << "Initial random seed = " << actual_seed << endl;
     }

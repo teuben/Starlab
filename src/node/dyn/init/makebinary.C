@@ -402,7 +402,7 @@ void main(int argc, char ** argv)
 
     int actual_seed = srandinter(random_seed);
 
-    sprintf(seedlog, "         random number generator seed = %d",
+    sprintf(seedlog, "       random number generator seed = %d",
 	    actual_seed);
     b->log_comment(seedlog);
 

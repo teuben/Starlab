@@ -149,7 +149,7 @@ main(int argc, char ** argv) {
 
     if (o_flag) cerr << "mksphere: random seed = " << actual_seed << endl;
 
-    sprintf(seedlog, "         random number generator seed = %d",actual_seed);
+    sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
     if (n > 0) mksphere(b, n, u_flag);

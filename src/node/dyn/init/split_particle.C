@@ -11,7 +11,7 @@
 
 // split_particle: Split the specified node into a binary with the specified
 //                 parameters.  All unspecified orbit elements are chosen
-//                 randomly.  Newly created nodes have names "n1" and "n2",
+//               randomly.  Newly created nodes have names "n1" and "n2",
 //                 where "n" is the name of the node being split.
 
 local bool split_particle(dyn* bi, real ecc, real sma, real mass_ratio)
@@ -176,7 +176,7 @@ void main(int argc, char ** argv)
     int actual_seed = srandinter(random_seed);
 
     sprintf(seedlog,
-	    "         random number generator seed = %d",actual_seed);
+	    "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
     if (eccentricity < 0)

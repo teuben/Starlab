@@ -266,7 +266,7 @@ main(int argc, char ** argv)
     actual_seed = srandinter(input_seed);
 
     if (o_flag) cerr << "mkdisk: random seed = " << actual_seed << endl;
-    sprintf(seedlog, "         random number generator seed = %d",actual_seed);
+    sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
     mkdisk(b, n,

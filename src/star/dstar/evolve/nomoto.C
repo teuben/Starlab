@@ -134,7 +134,7 @@ void main(int argc, char ** argv) {
     if (n <= 0) err_exit("mknodes: N > 0 required!");
 
     actual_seed = srandinter(input_seed);
-    sprintf(seedlog, "         random number generator seed = %d",actual_seed);
+    sprintf(seedlog, "       random number generator seed = %d",actual_seed);
 
     // Create flat tree 
     node *root  = mknode(n);
