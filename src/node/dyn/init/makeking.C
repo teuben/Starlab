@@ -793,19 +793,30 @@ local void makeking(dyn * b, int n, real w0, bool n_flag, bool u_flag, int test)
 	if (n_flag)
 	    bi->set_mass(1.0/n);
 
-	real p;
-	setpos(bi, p);
-	setvel(bi, p);
+	real pot;
+	setpos(bi, pot);
+	setvel(bi, pot);
 
 	// Unit of length = rc.
 	// Unit of velocity = sig.
 
 	bi->scale_vel(sig);
-
     }
 
     // System is in virial equilibrium in a consistent set of units
     // with G, core radius, and total mass = 1.
+
+    // Convenient to have the "unscaled" system (-u on the command line)
+    // be as close to standard units as possible, so rescale here to force
+    // the virial radius to 1.  (Steve, 9/04)
+
+    real xfac = 1/rvirial;
+    real vfac = 1/sqrt(xfac);
+
+    for_all_daughters(dyn, b, bi) {
+	bi->set_pos(xfac*bi->get_pos());
+	bi->set_vel(vfac*bi->get_vel());
+    }
 
     // Transform to center-of-mass coordinates and optionally
     // scale to standard parameters.
