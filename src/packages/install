@@ -3,14 +3,23 @@
 # Install public-domain packages distributed as is with Starlab.
 
 echo Making gifsicle
+set dir = gifsicle-1.40
 set log = gifsicle-install.log
 
-cd gifsicle-1.40
-./configure					>! ../$log
-make clean					>> ../$log
-make						>> ../$log
+if (! -d $dir) then
+    if (-e $dir.tar.gz) then
+	tar xzf $dir.tar.gz
+    endif
+endif
 
-cd src
-mv gifdiff gifsicle gifview $STARLAB_PATH/sbin
-cd ../..
+if (-d $dir) then
+    cd $dir
+    ./configure					>! ../$log
+    make clean					>> ../$log
+    make					>> ../$log
+
+    cd src
+    mv gifdiff gifsicle gifview $STARLAB_PATH/sbin
+    cd ../..
+endif
 
