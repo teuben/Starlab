@@ -166,14 +166,67 @@ local inline void add_plummer(dyn *b,
 // Add dynamical friction term.
 
 local inline void add_friction(dyn *b,
-		  vec pos, 
-		  vec vel, 
-		  real& pot, 
-		  vec& acc, 
-		  vec& jerk, 
-		  bool pot_only) 
+			       vec pos,
+			       vec vel,
+			       real& pot,
+			       vec& acc,
+			       vec& jerk,
+			       bool pot_only)
 {
-    // (Not implemented.)
+    // Preliminary code by F-C Lin (2004).
+
+    real M = b->get_p_mass();
+    if (M == 0) return;
+
+    real mass = b->get_mass();		// scale the mass of black hole??
+    real speed = sqrt(square(vel));
+    real a2 = b->get_p_scale_sq();
+  
+    vec dx = pos + b->get_root()->get_pos() - b->get_p_center();
+
+    real r2 = square(dx) + a2;
+    real r1 = sqrt(r2);
+    real sigma2 = sqrt(M/r1);
+                                       
+    real p_density = (0.2387324*M/pow(a2,1.5))*pow(1+square(dx)/a2,-2.5);
+					// 0.2387324 = 3/(4*pi)
+    real p_core_dens = 0.2387324*M/pow(a2,1.5);
+  
+    real rhalf = getrq(b->get_root()->get_dyn_story(), "rhalf");
+    real core_dens = getrq(b->get_root()->get_dyn_story(), "core_dens");
+
+    if (core_dens > p_core_dens)
+	if (square(dx) < square(rhalf)) return;
+
+    real beta = 1.6;			// calibration from N-body experiments
+
+    real ffac = beta*40*M_PI*p_density*mass;	// assume logLamda = 10
+    real X = speed/sigma2;
+
+    vec da = 0, dj = 0;
+
+    if (X > 0.1) {
+
+	real erfterm = (erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
+	real ffact = ffac*erfterm*pow(speed,-3);
+	da = -ffact*vel;
+	dj = -ffac*(erfterm*(pow(speed,-3)*acc
+			     - 3*pow(speed,-5)*(vel*acc)*vel)
+		    + 4*pow(X,3)/sqrt(M_PI)*exp(-X*X)
+		      		*(vel*acc)*pow(speed,-5)*vel);
+
+    } else {
+
+	real ffact = ffac* 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
+	da = -ffact*vel;
+	dj = -ffact*acc;
+
+    }
+
+    // Apply cutoff/gradual reduction here...
+
+    acc += da;
+    jerk += dj;
 }
 
 local inline real plummer_pot(dyn *b,
