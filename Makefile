@@ -149,6 +149,7 @@ config_new:
 	$(CP) cshrc.starlab local
 	$(CP) config.h inc
 	$(CP) templates/starlab_setup local
+	@echo "###  Note: patching some Makefiles for SITE=$(SITE)"
 	-(cd src/node/dyn/hdyn/util; cp Makefile.$(SITE) Makefile)
 	-(cd src/node/dyn/hdyn/evolve; cp Makefile.$(SITE) Makefile)
 

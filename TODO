@@ -26,18 +26,20 @@ Some issues for starlab4   (*'s have been done, -'s are to be done)
   not clean. Perhaps it should assume no STARLAB_PATH ?? Alternatively, there
   is starlab_end, which could be called..... (automatically?)
 
-- use flags in a consistent way, such that -I and -L additions are not needed
+? use flags in a consistent way, such that -I and -L additions are not needed
   in the makefiles. In particular, linking X11 application in starlab3 has:
 	-L$(STARLAB_X11LIB) -lX11 $(STARLAB_XLIB)
   and I needed to make it
 	$(STARLAB_X11LIB) $(STARLAB_XLIB)
 
 - to solve the makefile.SITE issue in src/node/dyn/hdyn/util and
-  src/node/dyn/hdyn/evolve i suggest we use a SITE variable in the makefile,
+  src/node/dyn/hdyn/evolve (for now) we use a SITE variable in the makefile,
   look at the Makefile's config_new target. In general, we could also solve
   this using two STARLAB_GRAPE_* variables? See cshrc.starlab.in for comments.
 
-- update TOOLS
+- update TOOLS, this is longer overdue. There are now 117 binaries in the bin.
+  Tools has about 60, of which some are not even in existence anymore
+  (e.g. xstarplot3)
 	
 - use of the CPP preprocessor is only guarenteed for .c files... we use .F
   but i've seen  for gnu
@@ -61,3 +63,10 @@ Some issues for starlab4   (*'s have been done, -'s are to be done)
   confusing what to do when something has been modified. The best is still to open
   a new shell. If everything is done through a makedefs type solution, changes are
   immediate.
+
+- gcc 3.0 does not compile starlab, lotsa errors. 
+
+- CC native sun compiler has problems with starlab too.  (CC 4.2, but that's actually 
+	getting to be an old compiler too).
+
+- gcc on solaris has multiple defined macros. Some compile flag???

@@ -136,6 +136,10 @@ AC_SUBST(PVM_LIB)
 AC_SUBST(PVM_INC)
 
 dnl --------------------------------------------------------------------
+dnl figure out grape configuration
+dnl on linux: check with the command lspci if there is a PCI device
+dnl on dec/OSF:  check for /dev/pcimem0
+dnl --------------------------------------------------------------------
 
 
 dnl Checks for header files.

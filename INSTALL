@@ -10,26 +10,35 @@ the time the following should work:
 	make sure
 
 sometimes you may need to run configure (of config.status) again, and 
-logout/in again (or source the correct files)
+logout/in again (or source the correct files):
+
+	config.status			# re-create startup files (locally)
+	make diff_new			# check if those files differ from yours
+
+or if configure has changed itself:
+
+	configure
+	make diff_new
 
 --------------------------------------------------------------------------------
 
 First time install of starlab 4.x 
 
-1)  Choose to take a blessed ('stable') release in the form of a compressed
-    tar file, or be on the bleeding edge, use CVS access:
-
+1)  First of you need to choose to take a blessed ('stable') release in the form of a
+    compressed tar file, or be on the bleeding edge, and use CVS access. So, choose:
+    
 	goto step 2a) or 2b)
 
-2a) Obtain a tarball from the archive:
+2a) Obtain the latest a tarball from the archive:
 
-	tar zxf starlab_4.0.2.tar.gz
-	cd starlab_4.0.2
+	ncftpget http://www.manybody.org/...
+	tar zxf starlab_4.0.tar.gz
+	cd starlab_4.0
 	
 	(goto step 3a)
 
-2b) CVS access (developers, but for guest, use the password "guest", which
-	gives you read-only access)
+2b) CVS access (developers have their own account, but for guest, use the password "guest", 
+        which gives you read-only access)
 
 	setenv CVSROOT :pserver:guest@akash.astro.umd.edu:/home/cvsroot
 	cvs login
@@ -56,9 +65,10 @@ First time install of starlab 4.x
 
 	configure
 	make config_new [SITE=linux]       (other optional names: .....)
-		(this is stilfl nasty, a SITE name must be given to
+		(this is still nasty, a SITE name must be given to
 		copy Makefile.$SITE to Makefile; otherwise hdyn in this
- 		case will not be built)
+ 		case will not be built. Check out the Makefile.* extensions
+		in 
 	source starlab_start
 	make all
 	
@@ -203,3 +213,27 @@ First time install of starlab 4.x
 
  - For some sample programs, see "starlab/etc/demo"
 
+
+
+---
+
+Here is a list of builds that seem to go ok :
+
+nemo (Peter's rh62 laptop w/ gcc 2.95.3)	Linux nemo 2.2.17-14 #1 Mon Feb 5 18:48:50 EST 2001 i686 unknown
+	gcc 2.95.3
+xxxx (Steve's rh61 laptop)
+	???
+oeroeboeroe (Simon's dec alpha, 500MHz)		OSF1 oeroeboeroe.mit.edu V4.0 878 alpha
+	egcs 2.91.66
+xxx  (Piet's rh70 laptop)			Linux piet-lp 2.2.16-22 #1 Tue Aug 22 16:49:06 EDT 2000 i686 unknow
+	2.96 20000731
+margaux (Jun's dec alpha)			OSF1 margaux V4.0 1229 alpha
+	gcc 2.7.2.1
+
+
+---
+
+Still to test:
+
+merlot (Steve's dec alpha)			OSF1 merlot V4.0 564 alpha
+	2.7.2.3.f.1

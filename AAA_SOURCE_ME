@@ -1,11 +1,29 @@
-
+#
 # Source this file to install and build Starlab from scratch.
-# All command-line arguments are passed to 'make config_new'
+#
+# Usage:	source AAA_SOURCE_ME  [options]
+#
+# Note: All command-line arguments are passed to 'make config_new'
+
+#
+# It is not foolproof, but still intended as such. If it does not work, keep 
+# the install.log and study it (or email the authors). Most of the time you
+# will need to edit the local/cshrc.starlab file, source it, and try the
+# 'make all' again
+#
+
+set stat=0
+
+#	make sure the script runs from the current directory
+if (! -e AAA_SOURCE_ME && ! -e starlab_start.in) then
+   @ stat++
+   goto done
+endif
 
 rm -f install.log >& /dev/null
 touch install.log
 
-set stat = 0
+
 echo \(Sending output to install.log\)
 
 if (! -e starlab_start) then
@@ -58,3 +76,9 @@ else
     echo Install failed: stat = $stat
 endif
 
+
+
+done:
+    if ($stat) then
+       echo "### $stat errors occured during execution of the AAA_SOURCE_ME script"
+    endif
