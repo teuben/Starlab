@@ -93,7 +93,7 @@ set dirs = (`find . -type d $p | egrep -v "$excl"`)
 # Some definitions to limit the lengths of some following lines.
 
 set x = config.h
-xset sbin_ex = "`make -s -C sbin exelist1`"
+set sbin_ex = "`make -s -C sbin exelist1`"
 alias gr egrep
 
 # (Not clear just how likely we are to run into a limit here in the length
