@@ -59,8 +59,8 @@
 
 #define NEW 0
 
-#define INLINE 
-//#define INLINE inline
+//#define INLINE 
+#define INLINE inline
 
 #ifndef TOOLBOX
 

@@ -31,8 +31,8 @@
 
 #define NEW 1
 
-#define INLINE 
-//#define INLINE inline
+//#define INLINE 
+#define INLINE inline
 
 #ifndef TOOLBOX
 
@@ -138,9 +138,14 @@ local INLINE void update_interpolated_tree(worldbundle *wb,
     // or end of the worldbundle time range), which can slow the code
     // significantly.
     //
-    // FIX: Save snd compare the previous s rather than t_int.
+    // FIX: Save and compare the previous s rather than t_int.
 
-    bool rebuild = (t_int <= s->get_t_start() || t_int >= s->get_t_end());
+    // bool rebuild = (t_int <= s->get_t_start() || t_int >= s->get_t_end());
+
+    // Probably only need the last part of this test...
+
+    bool rebuild = (t_int < s->get_t_start() || t_int > s->get_t_end()
+		    || w->get_current_segment() != s);
 
     // Rebuild/update the current subtree.  Start by finding the base
     // node (containing all relevant tree information) for this particle,
@@ -149,7 +154,7 @@ local INLINE void update_interpolated_tree(worldbundle *wb,
     // Need to be careful with top-level tdyn nodes, as they
     // generally won't have parent nodes (no root), so standard
     // functions like is_top_level_node() and get_top_level_node()
-    // will fail.
+    // may fail.
 
     tdyn *bn = s->get_first_event();
     tdyn *top = bn;
@@ -251,6 +256,9 @@ local INLINE void update_interpolated_tree(worldbundle *wb,
 	    }
 	}
     }
+
+    w->set_current_segment(s);		// note that only w has segment set;
+					// other subtree members are unchanged
 }
 
 // For center tracking.  The position and velocity of the current
@@ -492,6 +500,9 @@ local void interpolate_tree(worldbundle *wb, real t, real t_int,
 			 << w->get_id() << endl;
 		}
 
+		// Could in principle speed this up if we save the previous
+		// segment visited for this worldline (in normal use)...
+
 		segment *s = w->get_first_segment();
 		while (s && s->get_t_end() < t) s = s->get_next();
 
@@ -532,7 +543,8 @@ local void interpolate_tree(worldbundle *wb, real t, real t_int,
     }
 }
 
-#define EPS 1.e-12
+#define EPS  1.e-12
+#define EPS1 1.e-12				// kludge -- should be 0
 
 local bool trim(worldbundle *wb, real& t)
 {
@@ -545,14 +557,14 @@ local bool trim(worldbundle *wb, real& t)
     real dt = t - wb->get_t_max();
     if (dt > EPS)
 	return false;
-    else if (dt > -EPS)			// kludge...
-	t = wb->get_t_max() - EPS;
+    else if (dt > -EPS1)
+	t = wb->get_t_max() - EPS1;
 
     dt = t - wb->get_t_min();
     if (dt < -EPS)
 	return false;
-    else if (dt < EPS)			// kludge...
-	t = wb->get_t_min() + EPS;
+    else if (dt < EPS1)
+	t = wb->get_t_min() + EPS1;
 
     return true;
 }

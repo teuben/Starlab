@@ -20,8 +20,8 @@ local inline void attach_new_node(worldbundle *wb, worldline *ww,
 
     // Replace by alloc_pdyn() if we do our own memory management.
 
-    // Attach curr to the tree.  Don't use add_node, as it will
-    // create a tree with nodes in the reverse order!
+    // Attach curr to the tree.  Don't use add_node except for the first
+    // node, as it will create a tree with nodes in reverse order!
 
     if (bb == top) {
 

@@ -7,7 +7,7 @@ local inline void update_node(worldbundle *wb,
     // bb to the node curr in the interpolated tree.  For convenience,
     // top is the top-level node of bb.
 
-    tdyn *b = find_event(bb, t);
+    tdyn *b = find_event(bb, t);	// speed up by saving last event...
     pdyn *curr = ww->get_tree_node();
 
     if (debug)
