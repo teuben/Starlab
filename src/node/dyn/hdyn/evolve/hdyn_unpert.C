@@ -3088,9 +3088,9 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    real r = abs(npos - ppos);
 	    real vsq = square(nvel - pvel);
 
-	    real e = mu*(0.5*vsq - m/r);
+	    real E = mu*(0.5*vsq - m/r);
 
-	    if (e < 0) {
+	    if (E < 0) {
 
 		// Need kT for comparison.  Only going to do this rarely, so
 		// just do it the hard way.  (Could save kT in the story...)
@@ -3099,28 +3099,31 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		real kin = 0;
 		for_all_daughters(hdyn, get_root(), bb) {
 		    ntop++;
-		    kin += bb->get_mass()*sqtare(bb->get_pred_vel());
+		    kin += bb->get_mass()*square(bb->get_pred_vel());
 		}
 		real kT = 2*kin/(3*ntop);
 
-		if (e < -0.1*kT) {
+		if (E < -0.05*kT) {	// conservative -- will improve
 
 		    // ***** Randomize the binary orientation. *****
 
 		    rotate_kepler(kep);
 		    update_dyn_from_kepler();
 
-		    if (verbose)
+		    if (verbose) {
+			int p = cerr.precision(HIGH_PRECISION);
 			cerr << endl
 			     << "integrate_unperturbed_motion: "
 			     << "applied random rotation to "
 			     << parent->format_label()
-			     << " at time " << system_time
-			     << endl;
+			     << endl
+			     << "    at time " << system_time << "  ";
+			cerr.precision(p);
+			PRL(E/kT);
+		    }
 		}
 	    }
 	}
-
 #endif
 
 	// Start by correcting any perturber lists containing the CM.
