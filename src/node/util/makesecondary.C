@@ -1,11 +1,11 @@
 
-//// mksecondary:  Create binary secondary components for randomly
+//// makesecondary:  Create binary secondary components for randomly
 ////               selected stars in the input snapshot, placing the
 ////               results in a binary tree.  Only secondary masses
 ////               are set here; orbital parameters are set by
-////               dyn::mkbinary.  No attempt is made to maintain any
+////               dyn::makebinary.  No attempt is made to maintain any
 ////               existing mass or energy scaling.  Use scale after
-////               this function is called, but before mkbinary, if
+////               this function is called, but before makebinary, if
 ////               it is desired to specify energies in kT units.
 ////
 //// Options:      -f    specify binary fraction [0.1]
@@ -142,7 +142,7 @@ local real add_secondary(node* original, real mass_ratio,
 local void warning(real mmin, real lower_limit) {
 
   cerr << "WARNING:" << endl;
-  cerr << "       local void mksecondary(node*, real, real, bool)" << endl;
+  cerr << "       local void makesecondary(node*, real, real, bool)" << endl;
   cerr << "       actual minimum mass " << mmin
        << " is larger than lower limit " << lower_limit << ";" << endl;
   cerr << "       continuing execution with true minimum mass" << endl;
@@ -188,7 +188,7 @@ local int check_indices(node *b)
 
     if (!all_ok) {
 
-	cerr << "    mksecondary: assigning numeric indices to nodes" << endl;
+	cerr << "    makesecondary: assigning numeric indices to nodes" << endl;
 
 	for_all_leaves(node, b, bb) {
 	    if (bb->get_index() <= 0)
@@ -205,7 +205,7 @@ local int check_indices(node *b)
     return nmax;
 }
 
-local void mksecondary(node* b, real binary_fraction,
+local void makesecondary(node* b, real binary_fraction,
 		       real min_mprim, real max_mprim,
 		       real lower_limit, real upper_limit, 
 		       bool force_index, bool q_flag, bool ignore_limits,
@@ -412,9 +412,9 @@ void main(int argc, char ** argv)
     if (!u_flag && q_flag) upper_limit = 1;
 
     if (binary_fraction < 0 || binary_fraction > 1)
-        err_exit("mksecondary: Illegal binary fraction");
+        err_exit("makesecondary: Illegal binary fraction");
     if (q_flag && lower_limit > 1)
-        err_exit("mksecondary: Illegal minimum mass for secondary");
+        err_exit("makesecondary: Illegal minimum mass for secondary");
     if (q_flag && lower_limit < 0) {
         cerr << "Negative mass ratio not allowed; use -l 0" << endl;
 	lower_limit = 0;
@@ -445,7 +445,7 @@ void main(int argc, char ** argv)
     sprintf(seedlog, "       random number generator seed = %d", actual_seed);
     b->log_comment(seedlog);
 
-    mksecondary(b, binary_fraction, min_mprim, max_mprim, 
+    makesecondary(b, binary_fraction, min_mprim, max_mprim, 
 		lower_limit, upper_limit, force_index, q_flag,
 		ignore_limits, split);
 
