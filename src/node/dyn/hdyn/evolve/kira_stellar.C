@@ -66,7 +66,7 @@ local void dissociate_binary(hdyn* bi)
     // is currently handled as a single slow episode followed by
     // a fast episode.
 
-    bi->update_dyn_from_kepler();
+    bi->update_dyn_from_kepler();	// updates kepler to current time
 
     // Note that this update will in general produce a tidal error since it
     // changes the phase of an unperturbed binary.  However, this error will
@@ -234,6 +234,7 @@ bool evolve_stars(hdyn* b,
 
 		    // Note: dm is the CHANGE in mass of the binary system.
 		    // It may be positive or negative.
+
 		    // Sudden_mass_loss is the mass LOST by the system
 		    // in an impulsive fashion.  It is always positive,
 		    // by convention.
@@ -246,12 +247,12 @@ bool evolve_stars(hdyn* b,
 		    real dm_fast  = dm1_fast + dm2_fast;
 		    real dm_slow  = dm - dm_fast;
 
-		    if (dm != 0 || dm_slow != 0 || dm_slow != 0) {
+		    if (dm != 0 || dm_slow != 0 || dm_fast != 0) {
 
 			if (b->get_kira_diag()->report_stellar_evolution &&
 			    (abs(dm)      >= MINIMUM_REPORT_MASS_LOSS ||
 			     abs(dm_slow) >= MINIMUM_REPORT_MASS_LOSS ||
-			     abs(dm_slow) >= MINIMUM_REPORT_MASS_LOSS)) {
+			     abs(dm_fast) >= MINIMUM_REPORT_MASS_LOSS)) {
 
 			    cerr << "Binary evolution mass loss from "
 				 << bi->format_label();
@@ -283,7 +284,6 @@ bool evolve_stars(hdyn* b,
 
 			((double_star*)(parent->get_starbase()))->dump(cerr);
 
-			// bi->get_kepler()->print_all(cerr);
 			cerr.precision(p);
 		    }
 
@@ -356,7 +356,6 @@ bool evolve_stars(hdyn* b,
 #endif
 		    }
 			    
-
 		    if (b->get_kira_diag()->report_stellar_evolution &&
 			abs(dm_slow) >= MINIMUM_REPORT_MASS_LOSS &&
 			b->get_kira_diag()->report_binary_mass_loss) {
@@ -388,6 +387,18 @@ bool evolve_stars(hdyn* b,
 
 			b->get_kira_counters()->step_dmfast++;
 			dissociate_binary(bi);
+
+			// Do NOT use the time step associated with bi, as
+			// it refers to the phase at which the unperturbed
+			// motion began and may be inappropriate to the
+			// phase now.  Recompute using kepler_step().
+
+			real kep_dt = kepler_step(bi);
+			real dt = bi->get_timestep();
+
+			while (dt > kep_dt) dt /= 2;
+
+			bi->set_timestep(dt/2);		// (2 = safety factor)
 		    }
 
 		} else if (bi->is_leaf() && !bi->get_use_dstar()) {
@@ -399,9 +410,18 @@ bool evolve_stars(hdyn* b,
 		    if (b->get_kira_diag()->report_stellar_evolution)
 			cerr << "evolve_stars: SN in non-dstar binary "
 			     << bi->format_label() << endl;
-		    dissociate_binary(bi);
-		}
 
+		    dissociate_binary(bi);
+
+		    // Recompute time step (see notes above).
+
+		    real kep_dt = kepler_step(bi);
+		    real dt = bi->get_timestep();
+
+		    while (dt > kep_dt) dt /= 2;
+
+		    bi->set_timestep(dt/2);
+		}
 
 	    }	// end if (bb->get_kepler()) { ...
 
@@ -497,8 +517,6 @@ bool evolve_stars(hdyn* b,
 		    pp3(bi->get_top_level_node(), cerr);
 		}
 
-		// See if we need to recompute acc
-
 	    }	// end if (bi->is_valid()) { ...
 
 	}	// end for_all_leaves(hdyn, b, bi) { ...
@@ -548,8 +566,18 @@ bool evolve_stars(hdyn* b,
 
     // test_kepler(b);
 
-//    pp3("(21,100021)");
-//    pp3("(23,100023)");
+    // pp3("(21,100021)");
+    // pp3("(23,100023)");
+
+
+//      if (b11 && b11->get_kepler()) {
+//  	cerr << "*************************************" << endl;
+//  	PRL(0);
+//  	b11->get_kepler()->print_all(cerr);
+//  	pp3(b11->get_parent());
+//  	cerr << "*************************************" << endl;
+//      }
+
 
     if (b->get_kira_diag()->report_stellar_evolution) {
 	cerr << "\nEnd of evolve_stars: "; PRL(correct_dynamics);
