@@ -24,6 +24,7 @@ skip:
 	        echo -n '|' ; else echo "" ; fi \
 	done
 
+maintainer-clean:
 distclean:
 clean:
 	@/bin/rm -f $(EXECUTABLES)

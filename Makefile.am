@@ -257,14 +257,11 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		src/node/util/story_test.C \
 		src/node/util/test.C \
 		src/node/util/Testfile \
-		src/packages/autoconf-2.59.tar.gz \
-		src/packages/automake-1.8.5.tar.gz \
 		src/packages/banner-1.3.2.tar.gz \
 		src/packages/clean-autotools \
 		src/packages/gifsicle-1.40.tar.gz \
 		src/packages/install-autotools \
 		src/packages/install-packages \
-		src/packages/libtool-1.5.6.tar.gz \
 		src/packages/Makefile \
 		src/packages/package-list \
 		src/packages/shhmsg-1.4.1.tar.gz \
