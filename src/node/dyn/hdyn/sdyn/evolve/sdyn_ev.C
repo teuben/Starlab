@@ -1,4 +1,3 @@
-
 // sdyn_ev.C
 // member functions for the sdyn class that are related to orbit integration.
 //
@@ -92,9 +91,9 @@ void sdyn::accumulate_new_acc_and_jerk_from_new(
 	    if (r2 < (radius + bj->get_radius()) 
 		   * (radius + bj->get_radius())) {
 		collision_flag = code_collision_flag(this, bj);
-		//cerr << "Collision occured" << endl;
-		//PRC(sqrt(r2));PRC(radius);PRC(bj->get_radius());
-		//PRL(radius + bj->get_radius());
+		cerr << "Collision occured" << endl;
+		PRC(sqrt(r2));PRC(radius);PRC(bj->get_radius());
+		PRL(radius + bj->get_radius());
 	    }
 
 	    real r2inv = 1.0/(r2 + eps2);

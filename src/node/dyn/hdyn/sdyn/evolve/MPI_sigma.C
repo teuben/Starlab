@@ -64,11 +64,11 @@ void execute_sigma_experiment(sigma_input &input) {
 
   int myid=0, nproc;
   initialize_MPI(myid, nproc);
-
+  
   PRC(myid);PRL(nproc);
-
+  
   scatter_exp experiment; 
-
+  
   MPI_Datatype inputtype = input.initialize_data_structures_MPI();
   MPI_Datatype scatter_exp_type = experiment.initialize_data_structures_MPI();
 
@@ -128,22 +128,23 @@ local void slave_part_of_experiment(sigma_input input,
 
   cerr.precision(6);
   if (input.debug) cerr << endl;
-
+  
   if(input.verbose==2) {
+    
     cerr << "*** Final system configuration (time = " 
 	 << b->get_time() << "):\n";
     cerr << "Final Normal form:  ";
     print_normal_form(b, cerr);
-
+    
     ppn(b, cerr);
     vector center = b->get_pos();
     print_structure_recursive(b, 0., center, true, true, 4);
-
+    
     cerr << "Energy error = " << experiment.get_energy_error() << endl;
   }
-
+  
   print_scatter_specific_information(b, input, experiment);
-
+  
   delete b;
 
 }
@@ -166,7 +167,7 @@ void slave_process(int master,
 
       request_for_data = myid;
       //      cerr << "Slave " << myid << " requests new job "<<endl;
-
+      
       MPI::COMM_WORLD.Send(&request_for_data, length, MPI::INT, master, 
 			   DATA_REQUEST_TAG);
       MPI::COMM_WORLD.Recv(&data_available, length, MPI::INT, master, 
@@ -197,7 +198,7 @@ void slave_process(int master,
 
       //      cerr << "Slave " << myid << " received data (now working) "<<endl;
       slave_part_of_experiment(input, experiment);
-	
+      
       //      cerr << "Slave " << myid << " requests to send data "<<endl;
       sending_data = myid;
       MPI::COMM_WORLD.Send(&sending_data, length, MPI::INT, master, 
@@ -206,14 +207,14 @@ void slave_process(int master,
 			     master, DATA_COMING_TAG);
     }
     while(true);
-
+    
 }
 #else
 void slave_process(int master, 
 		   sigma_input &input, MPI_Datatype inputtype,
 		   scatter_exp &experiment, MPI_Datatype scatter_exp_type) {
-
-      slave_part_of_experiment(input, experiment);
+  
+  slave_part_of_experiment(input, experiment);
 }
 #endif
 
@@ -400,15 +401,16 @@ int master_process(sigma_out & out,
 main(int argc, char **argv) {
 
   sigma_input input;
-
+  
   // identical binary collision
   //char* default_init  
   //      = "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
-
-    char* default_init  
-      = "-M 0.66667 -rm 3 -S 30 -v 0 -t -r1 0 -r2 0 -e 0 -q 0.5 -p -a 1 -q 1 -r1 0 -r2 0";        // Iota Ori Probleem 
-
-
+  
+  char* default_init  
+    = "-M 0.66667 -rm 3 -S 30 -v 0 -t -r1 0 -r2 0 -e 0 -q 0.5 -p -a 1 -q 1 -r1 0 -r2 0";        
+  // Iota Ori Probleem 
+  
+  
   // I-orionis problem with zero radii stars
   //char* default_init  
   // = "-M 0.5 -v 0 -r 1 -t -r1 0 -r2 0 -q 0.5 -p -a 1 -q 0.00001 -r1 0 -r2 0";        

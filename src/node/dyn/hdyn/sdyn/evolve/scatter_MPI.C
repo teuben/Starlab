@@ -523,6 +523,11 @@ void master_process(scatter_input &input, MPI_Datatype inputtype,
 	 << "  sqrt(min_min_ssd) = " 
 	 << sqrt(experiment.get_min_min_ssd()) << endl;
 
+    cerr << "Minimal distance to nearest neighbors" << endl;
+    for(int i=0; i<experiment.get_nstar(); i++) {
+      // print information about minimal distance to next stellar surface
+      PRC(experiment.get_min_nn_label()[i]);PRL(experiment.get_min_nn_dr2()[i]);
+    }
 
       hi->add_scatter_hist(experiment, 0);
 

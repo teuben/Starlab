@@ -4,15 +4,15 @@ scatter_hist* initialize_scatter_hist(sdyn* b) {
 
   if(b == NULL)
     return NULL;
-
+  
   scatter_hist* hi = new scatter_hist();
-
+  
   hi->init_scatter_exp(b);
   hi->final_scatter_exp(b);
   hi->set_id_scenario(1);
   hi->set_n_found(0);
   hi->set_resonance(false);
-
+  
   return hi;
 }
 
@@ -70,11 +70,11 @@ scatter_hist* scatter_hist::contains(scatter_hist *hi) {
 
 void scatter_hist::add_scatter_hist(scatter_exp he, int zone) {
 
-    scatter_hist *hi = new scatter_hist(he);
-    if (!hi) {
-      cerr << "hi==NULL in add_scatter_hist(istream& s)" << endl;
-      exit(-1);
-    }
+  scatter_hist *hi = new scatter_hist(he);
+  if (!hi) {
+    cerr << "hi==NULL in add_scatter_hist(istream& s)" << endl;
+    exit(-1);
+  }
 
     if(hi->get_initial_form() == NULL || hi->get_final_form() == NULL)
       return;

@@ -133,16 +133,24 @@ real merge_collisions(sdyn * b, int ci)
 	    for (sdyn * bj = bi->get_younger_sister(); bj != NULL; 
 		 bj = bj->get_younger_sister()) {
 
+	            //condition for a collision
 		if ( abs(bi->get_pos() - bj->get_pos())
 		      < (bi->get_radius() + bj->get_radius()) ) {
 
+		  cerr << "In merge_collisions: a collision occured" << endl;
+		  PRC(bi->get_name());PRL(bj->get_name());
+	      
+		  //cerr << "Prior to b->flatten_node in merge_collisions" << endl;
 		  b->flatten_node();
 		  real kin, pot;
 		  real etot_init = calculate_energy_from_scratch(b, kin, pot);
+		  ///cerr << "Prior to make_tree in merge_collisions" << endl;
 		  make_tree(b, 1, 1, 2, false);
 
 		  merge(bi, bj);
+		  //	  cerr << "Post merge in merge_collisions" << endl;
 		  b->flatten_node();
+		  //	  cerr << "Post b-flatte_node in merge_collisions" << endl;
 		  real etot_final = calculate_energy_from_scratch(b, kin, pot);
 		  make_tree(b, 1, 1, 2, false);
 		  real merger_de = etot_final - etot_init;

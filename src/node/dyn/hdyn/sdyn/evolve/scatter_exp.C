@@ -10,8 +10,11 @@
 
 void scatter_exp::initialize_to_zero() {
 
-	 min_min_ssd = VERY_LARGE_NUMBER;
-	 min_min_time = 0;
+  min_min_ssd = VERY_LARGE_NUMBER;
+  min_min_time = 0;
+  min_nn_dr2 = NULL;
+  min_nn_label = NULL;
+  min_nn_of_label = NULL;
         
   //  initial_form = new char[255];
   //  final_form = new char[255];
@@ -235,6 +238,11 @@ void scatter_exp::init_scatter_exp(sdyn* b) {
   strcpy(&initial_form[0], get_normal_form(b));
   n_initial = b->n_leaves();
   //  final_form = NULL;
+
+  // allocate space to keep track of nn's and their names
+  min_nn_dr2 = new real[n_initial];
+  min_nn_label = new int[n_initial];
+  min_nn_of_label = new int[n_initial];
 }
 
 void scatter_exp::final_scatter_exp(sdyn* b) {
@@ -249,6 +257,17 @@ void scatter_exp::final_scatter_exp(sdyn* b) {
   n_final = b->n_leaves();
   sd = classify_scatter();
 
+  //cerr << "Update min_nn_dr2 for experiment in final_scatter_exp()" << endl;
+  
+  int i=0;
+  for_all_leaves(sdyn, b, bi) {
+    min_nn_label[i] = bi->get_min_nn_label();
+    min_nn_dr2[i] = bi->get_min_nn_dr2();
+    min_nn_of_label[i] = bi->get_index();
+
+    i++;
+  }
+  
 }
 
 
@@ -294,7 +313,7 @@ int scatter_exp::count_multiplicity() {
     bn = Starlab::max(bn, b);
   }
   if(b!=0)
-    cerr << "Not encough braces found in scatter_exp::count_mulitplicity()"
+    cerr << "Not enough braces found in scatter_exp::count_mulitplicity()"
 	 << endl;
 
   return bn;

@@ -70,6 +70,16 @@ class scatter_exp {
     real min_min_ssd;              // minimum distance squared
     real min_min_time;             // time at mimimun distance
 
+    // Add information about minimal distance to next stellar surface
+    // and information about which star is near to what other.
+    // That information should be initialized in 
+    // scatter.C 
+    
+
+    real *min_nn_dr2;    // minimum-ever nearest neighbor distance squared
+    int *min_nn_label;   // identity of nearest-ever neighbor
+    int *min_nn_of_label; // we should also keep track of the one who'se nn this is..
+
     real energy_error;
     real angular_momentum_error;
     real sigma;                   // breakdown of cross-section by type
@@ -145,7 +155,19 @@ class scatter_exp {
 	 n_found = exp.n_found;
 	 sigma_err_sq = exp.sigma_err_sq;
 	 sigma = exp.sigma;
+
+	 // copy nn's
+	 // Note that n_star can be smaller than n_initial and larger than n_final
+	 min_nn_dr2 = new real[n_initial];
+	 min_nn_label = new int[n_initial];
+	 min_nn_of_label = new int[n_initial];
+	 for(i=0; i<n_initial; i++) {
+	   min_nn_dr2[i] = exp.min_nn_dr2[i];
+	   min_nn_label[i] = exp.min_nn_label[i];
+	   min_nn_of_label[i] = exp.min_nn_of_label[i];
+	 }
        }
+
        scatter_exp(istream &s) {
 	 initialize_to_zero();
 
@@ -165,6 +187,12 @@ class scatter_exp {
        ~scatter_exp() {
 	 //	 if(initial_form) delete []initial_form;
 	 //	 if(final_form) delete []final_form;
+	 if(min_nn_dr2)
+	   delete []min_nn_dr2;
+	 if(min_nn_label)
+	   delete []min_nn_label;
+	 if(min_nn_of_label)
+	   delete []min_nn_of_label;
        }
 
   void initialize_to_zero();
@@ -172,6 +200,10 @@ class scatter_exp {
   void set_min_min_ssd(real m) {min_min_ssd = m;}
   real get_min_min_ssd() {return min_min_ssd;}
   real get_min_min_time() {return min_min_time;}
+
+  real *get_min_nn_dr2() {return min_nn_dr2;}
+  int *get_min_nn_label() {return min_nn_label;}
+  int *get_min_nn_of_label() {return min_nn_of_label;}
 
   void set_nstar(int n) {n_star = n;}
   int get_nstar() {return n_star;}

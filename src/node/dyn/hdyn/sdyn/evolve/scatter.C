@@ -127,10 +127,8 @@ void scatter(sdyn* b, real eta,
       cerr.precision(9), cerr << " (energy = " << kin + pot << "):\n";
       cerr.precision(6);
     }
-
     
     // Check to see if the scattering is over.
-    
     if (cpu_time_check < 0
 	&& cpu_time() - cpu_save > abs(cpu_time_check)) {
       cerr <<" tcpu>tcpu_check"<<endl;
@@ -138,7 +136,6 @@ void scatter(sdyn* b, real eta,
     }
     
     if(t>=dt_out) {
-
       real ekin, epot;
       calculate_energy(b, ekin, epot);
       if(debug==1) {
@@ -152,7 +149,6 @@ void scatter(sdyn* b, real eta,
     
     if(t>=t_end) {
       cerr << "Early termination"<<endl;
-
       experiment.set_scatter_discriptor(stopped);
       experiment.set_stop(true);
       real ekin, epot;
@@ -196,6 +192,13 @@ void scatter(sdyn* b, real eta,
   //PRL(etot_error);
 
   experiment.set_min_min_ssd(min_min_ssd);
+  // here we want to initialize the 
+  // experiment.set_....
+  // information about minimal distance to next stellar surface
+  // and information about which star is near to what other.
+  // see scatter_exp.h for more details.
+  // printing is done in scatter_MPI.C in the function master_process
+  // near the location where min_min_ssd is printed.
 
   make_tree(b, DYNAMICS, STABILITY, K_MAX, debug);
   
@@ -204,6 +207,7 @@ void scatter(sdyn* b, real eta,
   //PRL(experiment.get_final_form());
 
 }
+
 
 #if 0
 
@@ -222,105 +226,105 @@ void scatter(sdyn* b, scatter_input input,
   real ttf = input.tidal_tol_factor;
   real snap_cube_size = input.snap_cube_size;
   int debug = input.debug;
-
+  
   experiment.init_scatter_exp(b); 
-
+  
   real de_merge = 0;
   int stop_at_cpu = 0;
   real cpu_save = cpu_time();
   bool terminate = false;
-
+  
   real t_out = b->get_time_offset();
-  real t_end = delta_t + (real)b->get_time_offset(); // is xreal
-  PRC(t_out);PRL(t_end); 
-
-  char previous_form[255];
-  char current_form[255];
-  strcpy(current_form, get_normal_form(b));
-
-  real kin=0, pot=0;
-  b->flatten_node();
-  real etot_init = calculate_energy_from_scratch(b, kin, pot); 
-  make_tree(b, DYNAMICS, STABILITY, K_MAX, debug);
-
-  for (real t = 0; t <= delta_t; t += DT_CHECK) {
-    PRC(t);
-    terminate = tree_evolve(b,  DT_CHECK, dt_out, dt_snap, 
-			    snap_cube_size, 
-			    eta, cpu_time_check);
-
-    calculate_energy(b, kin, pot);
-    if (debug) {
+   real t_end = delta_t + (real)b->get_time_offset(); // is xreal
+   PRC(t_out);PRL(t_end); 
+   
+   char previous_form[255];
+   char current_form[255];
+   strcpy(current_form, get_normal_form(b));
+   
+   real kin=0, pot=0;
+   b->flatten_node();
+   real etot_init = calculate_energy_from_scratch(b, kin, pot); 
+   make_tree(b, DYNAMICS, STABILITY, K_MAX, debug);
+   
+   for (real t = 0; t <= delta_t; t += DT_CHECK) {
+     PRC(t);
+     terminate = tree_evolve(b,  DT_CHECK, dt_out, dt_snap, 
+			   snap_cube_size, 
+			   eta, cpu_time_check);
+   
+   calculate_energy(b, kin, pot);
+   if (debug) {
       cerr.precision(6), cerr << "\nStatus at time " << b->get_time();
-      cerr.precision(9), cerr << " (energy = " << kin + pot << "):\n";
-      cerr.precision(6);
+    cerr.precision(9), cerr << " (energy = " << kin + pot << "):\n";
+    cerr.precision(6);
     }
-
+    
     
     // Check to see if the scattering is over.
     
     if (cpu_time_check < 0
-	&& cpu_time() - cpu_save > abs(cpu_time_check)) return;
-    
-    if(b->get_time()>=t_out) {
-      cerr<< " terminate on t_out" << b->get_time()<<endl;
-      real ekin, epot;
-      calculate_energy(b, ekin, epot);
-      if(input.verbose==1) {
-
+	 && cpu_time() - cpu_save > abs(cpu_time_check)) return;
+     
+     if(b->get_time()>=t_out) {
+	  cerr<< " terminate on t_out" << b->get_time()<<endl;
+	real ekin, epot;
+	calculate_energy(b, ekin, epot);
+	if(input.verbose==1) {
+	
 	cerr << "Time = " << b->get_time() 
-	     << "  Etot = " << ekin + epot 
-	     << "  Tinf = " << ekin/epot << endl;
+	   << "  Etot = " << ekin + epot 
+	   << "  Tinf = " << ekin/epot << endl;
       }
       t_out += dt_out;
-    }
-    
-    if(b->get_time()>=t_end) {
-      cerr << "Early termination"<<endl;
+	}
+	
+	if(b->get_time()>=t_end) {
+	cerr << "Early termination"<<endl;
       experiment.set_scatter_discriptor(stopped);
-      experiment.set_stop(true);
+       experiment.set_stop(true);
       real ekin, epot;
       calculate_energy(b, ekin, epot);
-      cerr << "Time = " << b->get_time() 
-	   << "  Etot = " << ekin + epot << endl;
-      break;
-    }
-    
-    int coll_flag = 2;
-    de_merge += merge_collisions(b, coll_flag);
-    
-    make_tree(b, DYNAMICS, STABILITY, K_MAX, false);
-    
-    int unbound = extend_or_end_scatter(b, ttf, false);
-    if(unbound==2) {   // two body system is bound but we stop anyway
-      experiment.set_final_bound(true);
-      unbound = 1;   // but stop anyway
-    }
-    //bool unbound = tree_is_unbound(b, ttf, false);
+       cerr << "Time = " << b->get_time() 
+	    << "  Etot = " << ekin + epot << endl;
+       break;
+	   }
+      
+      int coll_flag = 2;
+	   de_merge += merge_collisions(b, coll_flag);
+	   
+	   make_tree(b, DYNAMICS, STABILITY, K_MAX, false);
+	   
+	   int unbound = extend_or_end_scatter(b, ttf, false);
+	   if(unbound==2) {   // two body system is bound but we stop anyway
+	     experiment.set_final_bound(true);
+	   unbound = 1;   // but stop anyway
+	   }
+	   //bool unbound = tree_is_unbound(b, ttf, false);
     //make_tree(b, DYNAMICS, STABILITY, K_MAX, debug);
-    if (unbound || terminate) break;
+	   if (unbound || terminate) break;
     
-    //	if(experiment.get_form_changes()>1) 
+     //	if(experiment.get_form_changes()>1) 
     //	  cerr << "Resonant encounter: " << get_normal_form(b) << endl;
-    strcpy(previous_form, current_form);
-    strcpy(current_form, get_normal_form(b));
-    if(strcmp(previous_form, current_form))
-      experiment.inc_form_changes();
-    
-    //	print_normal_form(b, cerr);
-  }
-  
-  b->flatten_node();
-  real etot_error = calculate_energy_from_scratch(b, kin, pot) 
+     strcpy(previous_form, current_form);
+     strcpy(current_form, get_normal_form(b));
+     if(strcmp(previous_form, current_form))
+       experiment.inc_form_changes();
+     
+      //	print_normal_form(b, cerr);
+    }
+   
+   b->flatten_node();
+   real etot_error = calculate_energy_from_scratch(b, kin, pot) 
     - etot_init - de_merge;
-  experiment.set_energy_error(etot_error);
+   experiment.set_energy_error(etot_error);
   
-  make_tree(b, DYNAMICS, STABILITY, K_MAX, debug);
+    make_tree(b, DYNAMICS, STABILITY, K_MAX, debug);
+   
+   // add final report
+   experiment.final_scatter_exp(b);
   
-  // add final report
-  experiment.final_scatter_exp(b);
-
-}
+  }
 #endif
 
 #else
@@ -346,21 +350,20 @@ void slave_part_of_experiment(scatter_input input,
   make_tree(b, !DYNAMICS, STABILITY, K_MAX, input.debug);
   
   // Initial output:
-    
   cerr << "*** Initial configuration (random seed = "
        << get_initial_seed() << "):\n";
   print_normal_form(b, cerr);
   b->set_name("root");
-  //ppn(b, cerr);
+
     
   vector center = b->get_pos();
   print_structure_recursive(b, 0., center, true, true, 4);
     
   // Integrate the system to completion:
-  
   scatter(b, input, experiment);
 
- 
+
+  // Final output:
   cerr.precision(6);
   if (input.debug) cerr << endl;
 
@@ -371,21 +374,29 @@ void slave_part_of_experiment(scatter_input input,
   ppn(b, cerr);
   //	vector center = b->get_pos();
   print_structure_recursive(b, 0., center, true, true, 4);
+  
+  cerr << "Nearest neighbor information." << endl;
+  for(int i=0; i<experiment.get_n_initial(); i++) {
+    cerr << " id= " << experiment.get_min_nn_of_label()[i] << " with id= " 
+	 << experiment.get_min_nn_label()[i] << " at distance " 
+	 << experiment.get_min_nn_dr2()[i] << endl;
+  }
 
   cerr << "Energy error = " << experiment.get_energy_error() << endl;
 
   cerr << "Final Normal form:  ";
   print_normal_form(b, cerr);
+
   cerr << "\n\n"; 
-    //
+  //
 }
 
 
 void master_part_of_experiment(scatter_input input,
 			       scatter_exp &experiment) {
-
+  
   int random_seed = srandinter(input.seed, input.n_rand);
-
+  
   // initialize scatter_hist
   sdyn *b = mkscat(input.init_string);
   scatter_hist *hi = initialize_scatter_hist(b);
@@ -395,23 +406,19 @@ void master_part_of_experiment(scatter_input input,
   int n_exp = 0;
   real de = 0;
   for (n_exp = 0; n_exp < input.n_experiments; n_exp++) {
-
-  
+    
     if (input.n_experiments > 1) cerr << "Experiment #" << n_exp+1 
 				      << ": " << "\n";
-    
     slave_part_of_experiment(input, experiment);
-
+    
     hi->add_scatter_hist(experiment, 0);
     cerr << "scatter history" << flush << endl;
     hi->put_scatter_hist(cerr, false);
     cerr << " N done = " << n_exp+1 << endl;
   }
-
 }
 
 void execute_scatter_experiment(scatter_input input) {
-
 
   scatter_exp experiment; 
 
@@ -431,15 +438,12 @@ main(int argc, char **argv)
 {
 
   scatter_input input;
-//  char* default_init  
-//    = "-M 0.879 -rm 3 -v 0.0071 -t -r1 0.0508 -r2 0.0348 -e 0 -q 0.567 -p -a 1 -q 1 -r1 0.0394 -r2 0.0394";        // Iota Ori Probleem 
-
-    char* default_init  
-      = "-M 0.66667 -rm 3 -S 30 -v 0 -t -r1 0 -r2 0 -e 0 -q 0.5 -p -a 1 -q 1 -r1 0 -r2 0";        // Iota Ori Probleem 
-
+  //  char* default_init  
+  //    = "-M 0.879 -rm 3 -v 0.0071 -t -r1 0.0508 -r2 0.0348 -e 0 -q 0.567 -p -a 1 -q 1 -r1 0.0394 -r2 0.0394";        // Iota Ori Probleem 
+  
   // identical binary collision
-    //char* default_init  
-    //= "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
+  char* default_init  
+    = "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
 
   strcpy(&input.init_string[0], default_init);
 

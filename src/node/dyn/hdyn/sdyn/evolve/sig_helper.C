@@ -17,7 +17,6 @@
 #define DEFAULT_TIDAL_TOL_FACTOR 1e-6
 
 // Pretty-print a scatter profile:
-
 void print_profile(ostream & s, scatter_profile & p, int prec)
 {
     s.precision(prec);
@@ -74,28 +73,27 @@ void print_profile(ostream & s, scatter_profile & p, int prec)
 
 void make_standard_profile(scatter_profile & prof)
 {
-
-    prof.init_string = "-M 1 -v 2 -t -p";    // head on collision
-    prof.mt = 1;
-    prof.mp = 1;				// mass of projectile binary
-    prof.ap = 1;                            // semi major axis of projectile 
-    prof.peri = -1;  			// maximum pericenter distance
-    prof.rho = -1;			        // selected impact parameter
-    prof.rho_sq_min = -1;			// minimum impact parameter squared
-    prof.rho_sq_max = -1;			// maximum impact parameter squared
-    prof.v_inf = 1;                         // velocity at infinity
+  prof.init_string = "-M 1 -v 2 -t -p";    // head on collision
+  prof.mt = 1;
+  prof.mp = 1;				// mass of projectile binary
+  prof.ap = 1;                            // semi major axis of projectile 
+  prof.peri = -1;  			// maximum pericenter distance
+  prof.rho = -1;			        // selected impact parameter
+  prof.rho_sq_min = -1;			// minimum impact parameter squared
+  prof.rho_sq_max = -1;			// maximum impact parameter squared
+  prof.v_inf = 1;                         // velocity at infinity
     
-    prof.r1 = 0;				// radius of primary
-    prof.r2 = 0;				// radius of secondary
-    prof.r3 = 0;				// radius of third star
-    prof.tidal_tol_factor = DEFAULT_TIDAL_TOL_FACTOR;
-    prof.rho_flag = 0;			// choice of random or user-specified
-                                   // 	impact parameter
-    prof.ecc_flag = 0;			// choice random or user-specified
-    				//	eccentricity
-    prof.ecc = 0;				// eccentricity if specified by user
-    prof.eta = DEFAULT_ETA;			// overall/initial accuracy parameter
-    
+  prof.r1 = 0;				// radius of primary
+  prof.r2 = 0;				// radius of secondary
+  prof.r3 = 0;				// radius of third star
+  prof.tidal_tol_factor = DEFAULT_TIDAL_TOL_FACTOR;
+  prof.rho_flag = 0;			// choice of random or user-specified
+  // 	impact parameter
+  prof.ecc_flag = 0;			// choice random or user-specified
+  //	eccentricity
+  prof.ecc = 0;				// eccentricity if specified by user
+  prof.eta = DEFAULT_ETA;			// overall/initial accuracy parameter
+  
 }
 
 // Turn a scatter profile into a default initial state:
@@ -426,14 +424,14 @@ void print_sigma(sigma_out & out, real v2) {
   cerr << endl;
   for(i=0; i<72; i++) cerr << "-";
   cerr << endl;
-
+  
     cerr << "Scenario count: " << endl;
     out.hi->put_scatter_hist(cerr);
-
+    
     cerr << endl;
     for (i = 0; i < 72; i++) cerr << "-";
     cerr << endl;
-
+    
     cerr.precision(6);
     cerr << "\n   rho_max = " << out.rho_max
 	 << "  i_max = " << out.i_max << endl;
@@ -457,10 +455,10 @@ void print_sigma(sigma_out & out, real v2) {
 
     for (i = 0; i < N_OSC_BIN; i++) cerr << " " << out.osc_counter[i];
     cerr << endl;
-
+    
 
     // Raw counts:
-
+    
     cerr << endl << "raw counts:\n\n";
     print_sigma_counts(out);
 
@@ -505,7 +503,7 @@ real zone_area(sigma_out& out, int i)	{        // (without the PI)
 
 real zone_density(sigma_out& out, int i)
 {
-    return out.trials_per_zone / zone_area(out, i);
+  return out.trials_per_zone / zone_area(out, i);
 }
 
 real zone_weight(sigma_out& out, scatter_exp* hi, int i)
@@ -699,26 +697,26 @@ local void pp(sdyn* b, ostream & s, int level = 0) {
 int single_scatter(sdyn* b, scatter_input input, 
 		   scatter_exp &experiment) {
 
-#if 0
-  real eta = input.eta;
-  real delta_t = input.delta_t;
-  real dt_out = input.dt_out;
-  real cpu_time_check = input.cpu_time_check;
-  real dt_snap = input.dt_snap;
-  real ttf = input.tidal_tol_factor;
-  real snap_cube_size = input.snap_cube_size;
-  int debug = input.debug;
-
+  /*
+    real eta = input.eta;
+    real delta_t = input.delta_t;
+    real dt_out = input.dt_out;
+    real cpu_time_check = input.cpu_time_check;
+    real dt_snap = input.dt_snap;
+    real ttf = input.tidal_tol_factor;
+    real snap_cube_size = input.snap_cube_size;
+    int debug = input.debug;
+    
   return single_scatter(b, experiment,
-			eta, delta_t, dt_out,
+  eta, delta_t, dt_out,
 			cpu_time_check,
 			dt_snap,
 			ttf, 
 			snap_cube_size,
 			debug);
-}
+			}
 
-int single_scatter(sdyn *b,
+			int single_scatter(sdyn *b,
 		   scatter_exp &experiment,
 		   real eta, real delta_t, real dt_out,
 		   real cpu_time_check,
@@ -726,11 +724,11 @@ int single_scatter(sdyn *b,
 		   real ttf, 
 		   real snap_cube_size,
 		   int debug) {
-#endif
-    // Perform a scattering experiment with initialized nbody b
+  */
+  // Perform a scattering experiment with initialized nbody b
     // result = false if the outcome is a "non-resonant preservation".
     // (terminology from scatter3
-
+  
   scatter(b, input, experiment);
   //    scatter(b, eta, delta_t, dt_out, cpu_time_check, dt_snap, 
   //	    ttf, snap_cube_size, debug, experiment);

@@ -38,9 +38,9 @@ void print_scatter_specific_information(sdyn *b,
     MPI::COMM_WORLD.Send(&request_for_data, length, MPI::INT,
 			 master, WRITE_READY_TAG);
     //    cerr << "process " << myid << " finished output"<<endl;
-
+    
   }
-
+  
 }
 
 #else // No MPI
@@ -60,7 +60,7 @@ void print_scatter_specific_information(sdyn *b,
     ppn(b, cerr);
     vector center = b->get_pos();
     print_structure_recursive(b, 0., center, true, true, 4);
-
+    
   }
 }
 #endif
@@ -69,7 +69,14 @@ void print_scatter_specific_information(sdyn *b,
 void print_scatter_specific_information(sdyn *b,
 					sigma_input input, 
 					scatter_exp experiment) {
-// do nothing
+
+  // Print nearest neighbor information
+  cerr << "Nearest neighbor information." << endl;
+  for(int i=0; i<experiment.get_n_initial(); i++) {
+    cerr << " id= " << experiment.get_min_nn_of_label()[i] << " with id= " 
+	 << experiment.get_min_nn_label()[i] << " at distance " 
+	 << experiment.get_min_nn_dr2()[i] << endl;
+  }
 }
 #endif
 #endif
