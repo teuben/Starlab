@@ -404,19 +404,30 @@ bool black_hole::super_nova() {
       suddenly_lost_mass = envelope_mass;
 
       bool hit_companion = FALSE;
+      real v_disp = 600;
+      if (get_use_hdyn()) {
+       // decide on kick velocity scaling
+       // standard Pac. disperson is 600 km/s
+
+	  if(cnsts.parameters(scale_kick_to_escape_velocity)>0) {
+	      real r = get_r_conv_star_to_dyn();
+	      r = cnsts.parameters(Rsun)/(r*cnsts.parameters(parsec));
+	      real t = 1/get_t_conv_star_to_dyn();
+	      real vd = r/t;
+	      v_disp *= vd/cnsts.parameters(scale_kick_to_escape_velocity); 
+	      cerr << "Kick_velocity_dispersion = " << v_disp << endl;
+	  }
+      }
 
       // Impulse kick
-      real impulse_kick = 
-	   cnsts.parameters(kanonical_neutron_star_mass)/core_mass;
+      if(cnsts.parameters(impulse_kick_for_black_holes)) {
+	  v_disp *= cnsts.parameters(kanonical_neutron_star_mass)/core_mass;
+      }
 
-      // Energy kick
-      // real energy_kick = sqrt(impulse_kick);
-  
-  
-      real v_kick  = cnsts.super_nova_kick(no_velocity_kick);
+      real v_kick = cnsts.super_nova_kick(Paczynski_velocity_kick, v_disp);
+//    real v_kick  = cnsts.super_nova_kick(no_velocity_kick);
 
-//      real v_kick  = impulse_kick
-//                     * cnsts.super_nova_kick(Paczynski_velocity_kick);
+
 
       real theta_kick = acos(1-2*random_angle(0, 1));
       real phi_kick   = random_angle(0, cnsts.mathematics(two_pi));

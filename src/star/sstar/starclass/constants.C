@@ -250,6 +250,8 @@ bool stellar_evolution_constants::parameters(boolean_parameter pb) {
              break;
         case proto_star_to_binary:                     return false;
              break;						    
+        case impulse_kick_for_black_holes:             return true;
+             break;						    
         default:
 	     cerr << "\nNo recognized option in "
 		     "stellar_evolution_constants::"
@@ -332,6 +334,8 @@ real stellar_evolution_constants::parameters(model_parameter pm) {
         case rejuvenation_exponent:                    return 1;
 	      break;
         case spiral_in_time:                           return 0.0005; // Myr
+	      break;
+        case scale_kick_to_escape_velocity:            return 25;   // km/s
 	      break;
         default:
 	     cerr << "\nNo recognized option in "
