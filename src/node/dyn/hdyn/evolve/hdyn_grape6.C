@@ -433,11 +433,11 @@ local INLINE int force_by_grape(xreal xtime,
 
     for (int i = 0; i < ni; i++) {
 
-	hdyn *ni = nodes[i];
+	hdyn *nni = nodes[i];
 
-//	PRC(i); PRL(ni);
+//	PRC(i); PRL(nni);
 
-	iindex[i] = ni->get_grape_index();
+	iindex[i] = nni->get_grape_index();
 
 	// New version suggested by Jun (May 8 2001) to prevent the
 	// "call Jun" message.  Implemented by SPZ.  Corrected by Steve.
@@ -449,18 +449,19 @@ local INLINE int force_by_grape(xreal xtime,
             // Nodes in this case are leaves, not necessarily top-level.
 	    // Don't extrapolate in this case (see 11/02 note below).
 
-            ipos[i] = hdyn_something_relative_to_root(ni,
+            ipos[i] = hdyn_something_relative_to_root(nni,
 //						      &hdyn::get_pred_pos);
 						      &hdyn::get_pos);
 
         } else
-            ipos[i]   = ni->get_pred_pos();
+            ipos[i]   = nni->get_pred_pos();
 
-        ivel[i]   = ni->get_pred_vel();
-	iacc[i]   = ni->get_old_acc();
-	ijerk[i]  = ONE6*ni->get_old_jerk();
-        ipot[i]   = ni->get_pot();
-        ih2[i]    = ni->get_grape_rnb_sq();
+        ivel[i]   = nni->get_pred_vel();
+	iacc[i]   = nni->get_old_acc();
+//	ijerk[i]  = ONE6*nni->get_old_jerk();
+	ijerk[i]  = nni->get_old_jerk();
+        ipot[i]   = nni->get_pot();
+        ih2[i]    = nni->get_grape_rnb_sq();
 
 	// Must take care of pot, acc, and jerk.  Quite expensive to
 	// check the abs of a vector, so try more indirect tests first.
@@ -471,7 +472,7 @@ local INLINE int force_by_grape(xreal xtime,
 	//
 	// Note that these tests won't catch NaN values...
 
-	if (ni->is_top_level_node()) {
+	if (nni->is_top_level_node()) {
 
 	    if (abs(ipot[i]) <= VERY_SMALL_NUMBER
 		|| abs(abs(iacc[i][0])) <= VERY_SMALL_NUMBER) {
@@ -508,17 +509,17 @@ local INLINE int force_by_grape(xreal xtime,
 	    // any of pot, acc, or jerk is usable for scaling purposes.
 	    // Choose quantities appropriate to the nearest neighbor.
 
-	    hdyn *sis = ni->get_younger_sister();
-	    if (!sis) sis = ni->get_elder_sister();
+	    hdyn *sis = nni->get_younger_sister();
+	    if (!sis) sis = nni->get_elder_sister();
 	    real m = sis->get_mass();
 	    real r, r2;
 
-	    kepler *k = ni->get_kepler();
+	    kepler *k = nni->get_kepler();
 	    if (k) {
 		r = k->get_separation();
 		r2 = r*r;
 	    } else {
-		r2 = square(ni->get_pos() - sis->get_pos());
+		r2 = square(nni->get_pos() - sis->get_pos());
 		r = sqrt(r2);
 	    }
 
@@ -531,11 +532,12 @@ local INLINE int force_by_grape(xreal xtime,
 	if (DEBUG > 1) {
 //	if (pot_only && i < 10) {
 	    if (i > 0) cerr << endl;
-	    PRI(4); PRC(i); PRC(iindex[i]); PRL(ni->format_label());
+	    PRI(4); PRC(i); PRC(iindex[i]); PRL(nni->format_label());
 	    PRI(4); PRL(ipos[i]);
 	    PRI(4); PRL(ivel[i]);
 	    PRI(4); PRL(iacc[i]);
 	    PRI(4); PRL(ijerk[i]);
+	    PRI(4); PRL(ipot[i]);
 	}
 
     }
@@ -592,7 +594,7 @@ local INLINE int force_by_grape(xreal xtime,
 	    // we can do for now is to check that inn is within range
 	    // and pot < 0.  Not perfect, but... (Steve, 7/00)
 
-             if (inn[i] < 0 ||  ipot[i] > 0) {
+             if (inn[i] < 0 || ipot[i] > 0) {
                  error = 42;
                  break;
              }
@@ -602,6 +604,15 @@ local INLINE int force_by_grape(xreal xtime,
                  PRI(4); PRC(i); PRC(iindex[i]);
                  PRL(nodes[i]->format_label());
                  PRL(nodes[i]->get_pos());
+	     }
+
+	     if (DEBUG > 1) {
+		 if (i > 0) cerr << endl;
+		 PRI(4); PRC(i); PRC(iindex[i]);
+		 PRL(nodes[i]->format_label());
+		 PRI(4); PRL(iacc[i]);
+		 PRI(4); PRL(ijerk[i]);
+		 PRI(4); PRC(pot_only); PRC(ipot[i]); PRL(inn[i]);
 	     }
 
 	    if (pot_only)
@@ -614,12 +625,6 @@ local INLINE int force_by_grape(xreal xtime,
 		real d_nn_sq = 0;
 
 		if (DEBUG > 1) {
-		    if (i > 0) cerr << endl;
-		    PRI(4); PRC(i); PRC(iindex[i]);
-		    	    PRL(nodes[i]->format_label());
-		    PRI(4); PRL(iacc[i]);
-		    PRI(4); PRL(ijerk[i]);
-		    PRI(4); PRL(ipot[i]);
 		    PRI(4); PRC(inn[i]); PR(nn);
 		}
 
@@ -641,7 +646,7 @@ local INLINE int force_by_grape(xreal xtime,
 			cerr << endl;
 		}
 
-		if (DEBUG > 1) {
+		if (DEBUG > 2) {
 		    hdyn *true_nn = find_and_print_nn(nodes[i]);
 		    if (true_nn != nn)
 			cerr << "    *** error: nn != true_nn" << endl;
@@ -661,7 +666,7 @@ local INLINE int force_by_grape(xreal xtime,
 #endif
 
 
-		if (DEBUG > 1) {
+		if (DEBUG > 2) {
 
 		    // Cross-check:
 
