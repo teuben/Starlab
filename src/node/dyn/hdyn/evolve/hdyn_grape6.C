@@ -11,6 +11,7 @@
 //  hdyn_grape6.C:  functions to use GRAPE-6.
 //
 //    version 1:  Jul 2000   Steve McMillan, Jun Makino
+//    version 2:  Dec 2001   Steve McMillan
 //.............................................................................
 //
 //	Externally visible functions (note that the GRAPE version
@@ -96,6 +97,7 @@ static bool grape_was_used_to_calculate_potential = false;
 //		hw_err_exit
 
 
+
 local void reattach_grape(real time, char *id, kira_options *ko)
 
 // Reattach the GRAPE-6.
@@ -121,6 +123,7 @@ local void reattach_grape(real time, char *id, kira_options *ko)
 }
 
 
+
 local INLINE void send_j_node_to_grape(hdyn *b, bool predict = false)
 
 // Send node b to the GRAPE-6 j-particle list.
@@ -185,6 +188,7 @@ local INLINE void send_j_node_to_grape(hdyn *b, bool predict = false)
 }
 
 
+
 local int initialize_grape_arrays(hdyn *b,		// root node
 				  bool reset_counters = true,
 				  bool predict = false)
@@ -261,6 +265,7 @@ local int initialize_grape_arrays(hdyn *b,		// root node
 }
 
 
+
 local hdyn *find_and_print_nn(hdyn *b)
 {
     real d2min = VERY_LARGE_NUMBER;
@@ -286,6 +291,7 @@ local hdyn *find_and_print_nn(hdyn *b)
 }
 
 
+
 local void reset_grape(hdyn *b)					// root node
 
 // Perform a "hard" reset of the grape interface to try to recover
@@ -312,6 +318,7 @@ local void reset_grape(hdyn *b)					// root node
 }
 
 
+
 // These arrays are actually local to force_by_grape, but it is convenient
 // to make them globally accessible in order to permit cleanup.
 
@@ -324,6 +331,8 @@ static real   *ipot   = NULL;
 static real   *ih2    = NULL;
 static int    *inn    = NULL;
 static real   eps2    = 0;
+
+//-------------------------------------------------------------------------
 
 local INLINE int force_by_grape(xreal xtime,
 				hdyn *nodes[], int ni,
@@ -340,11 +349,13 @@ local INLINE int force_by_grape(xreal xtime,
 //		grape_calculate_densities()			// global
 
 {
+    static char *func = "force_by_grape";
+
     if (ni <= 0) return 0;
     if (ni > n_pipes) err_exit("force_by_grape: ni too large\n");
 
     if (DEBUG > 1) {
-	cerr << "  force_by_grape:  ";
+	cerr << "  " << func << ":  ";
 	PRC(xtime); PRC(ni); PRC(nj); PRL(pot_only);
     }
 
@@ -563,9 +574,10 @@ local INLINE int force_by_grape(xreal xtime,
 		nodes[i]->set_d_nn_sq(d_nn_sq);
 
 
-#if 1
-		if (streq(nodes[i]->format_label(), "(5394,21337)")) {
-		    cerr << "hdyn_grape6:  ";
+#if 0000
+		if (nodes[i]->name_is("(5394,21337)")
+		     || nodes[i]->name_is("(21337,5394)")) {
+		    cerr << func << ": ";
 		    PRC(nodes[i]); PRC(inn[i]); PRC(nn); PRL(d_nn_sq);
 		}
 #endif
@@ -600,7 +612,7 @@ local INLINE int force_by_grape(xreal xtime,
 	// Make NRETRY attempts (recursively) to reset and correct the
 	// error before returning a "true" error condition.
 
-	cerr << "*** force_by_grape(" << level << "):  hardware error "
+	cerr << "*** " << func << "(" << level << "):  hardware error "
 	     << error << " at time " << time << ",  ni = " << ni << endl;
 
 	if (level < NRETRY) {
@@ -614,7 +626,7 @@ local INLINE int force_by_grape(xreal xtime,
     }
 
     if (DEBUG > 1) {
-	cerr << "  ...leaving force_by_grape(" << level <<"):  ";
+	cerr << "  ...leaving " << func << "(" << level <<"):  ";
 	PRL(error);
     }
 
@@ -622,6 +634,7 @@ local INLINE int force_by_grape(xreal xtime,
 }
 
 
+
 local void hw_err_exit(char *func, int id, hdyn *b)
 
 // Exit following a serious hardware error...
@@ -650,13 +663,15 @@ local void hw_err_exit(char *func, int id, hdyn *b)
 
 
 
-//  **********************************************************************
-//  *									 *
-//  * Globally visible GRAPE-6 functions (and dedicated local helpers).  *
-//  *									 *
-//  **********************************************************************
+//  *************************************************************************
+//  *************************************************************************
+//  **									   **
+//  **  Globally visible GRAPE-6 functions (and dedicated local helpers).  **
+//  **									   **
+//  *************************************************************************
+//  *************************************************************************
 
-
+
 //  **********************************************************************
 //  *                                                                    *
 //  *  check_release_grape:  Accessor for GRAPE release/attach.          *
@@ -715,6 +730,7 @@ local inline bool use_cm_approx(hdyn *bb)
 }
 
 
+
 local int send_all_leaves_to_grape(hdyn *b,		// root node
 				   real& e_unpert,	// unperturbed energy
 				   bool cm = false)	// use CM approx
@@ -801,6 +817,7 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 }
 
 
+
 local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 					int nj,
 					bool cm = false)	// CM approx
@@ -861,13 +878,15 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 }
 
 
-//  *****************************
-//  *****************************
-//  ***                       ***
-//  ***  The global function  ***
-//  ***                       ***
-//  *****************************
-//  *****************************
+
+//						*****************************
+//						*****************************
+//						***                       ***
+//						***  The global function  ***
+//						***                       ***
+//						*****************************
+//						*****************************
+
 
 void grape_calculate_energies(hdyn *b,			// root node
 			      real &epot,
@@ -957,6 +976,8 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 // Called by:	grape_calculate_acc_and_jerk()			// global
 
 {
+    static char *func = "set_grape_neighbor_radius";
+
     b->set_grape_rnb_sq(0.0);
 
     if (b->is_leaf()) {
@@ -1027,9 +1048,6 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 	    real r_pert2 = perturbation_scale_sq(b, b->get_gamma23());
 
-	    real scale = binary_scale(b);
-	    PRC(b->format_label()); PRC(scale); PRL(r_pert2);
-
 	    hdyn *nn = b->get_nn();
 	    if (nn && nn != b && b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
 		r_pert2 = max(r_pert2, b->get_d_nn_sq());
@@ -1044,6 +1062,7 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 }
 
 
+
 local INLINE bool get_force_and_neighbors(xreal xtime,
 					  hdyn *nodes[], int ni,
 					  int nj_on_grape, int n_pipes,
@@ -1056,9 +1075,11 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 // occurs.
 
 // Called by:	get_coll_and_perturbers				// local
+//		grape_calculate_acc_and_jerk			// global
 
 {
     static char *func = "get_force_and_neighbors";
+
     if (ni <= 0) return false;
 
 //    cerr << "entering " << func << ": ";
@@ -1132,6 +1153,7 @@ local INLINE bool get_force_and_neighbors(xreal xtime,
 }
 
 
+
 local INLINE swap(hdynptr ilist[], int i, int j)
 {
     hdyn *tmp = ilist[i];
@@ -1148,9 +1170,9 @@ local INLINE int sort_nodes_and_reduce_rnb(hdynptr ilist[], int ni)
 // Called by:	grape_calculate_acc_and_jerk()			// global
 
 {
+    static char *func = "sort_nodes_and_reduce_rnb";
 
-    cerr << "In sort_nodes_and_reduce_rnb()"
-	 << " after neighbor-list overflow at time "
+    cerr << "In " << func << "() after neighbor-list overflow at time "
 	 << ilist[0]->get_system_time() << endl;
 
     int inext = ni;
@@ -1189,6 +1211,7 @@ local INLINE int sort_nodes_and_reduce_rnb(hdynptr ilist[], int ni)
 }
 
 
+
 // Neighbor list space is shared by get_neighbors_and_adjust_h2 (acc_and_jerk)
 // and count_neighbors_and_adjust_h2 (densities) -- will probably be merged.
 
@@ -1205,6 +1228,8 @@ static int neighbor_list[MAX_NEIGHBORS];
 // be correctly set.  The size of the neighbor sphere must be reduced
 // if overflow occurs, or else the nn pointers will be unreliable.
 
+//-------------------------------------------------------------------------
+
 local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
 // Set nn, coll, d_nn_sq and d_coll_sq, for particle b (pipe specified),
@@ -1220,7 +1245,9 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 // Called by:	get_coll_and_perturbers()			// local
 
 {
-    // Get the list of neighbors from the GRAPE, if available.
+    static char *func = "get_neighbors_and_adjust_h2";
+
+    // Get the list of b's neighbors from the GRAPE, if available.
 
     int n_neighbors = 0;
     int status = 0;
@@ -1242,27 +1269,47 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	// still ensure too many perturbers, but which will not overflow
 	// the neighbor list array.
 
+	// Note from Steve (12/01): Looks like n_neighbors returns equal
+	// to max_neighbors when overflow occurs, so we can't use the
+	// value of n_neighbors to reduce grape_rnb_sq.  Instead, just
+	// reduce the neighbor radius by a factor of 2.
+
 	if (n_neighbors >= max_neighbors) {	// should be redundant...
 
-	    real rnb_fac = pow(max_neighbors/(real)n_neighbors, 0.6666667);
-	    b->set_grape_rnb_sq(rnb_fac*b->get_grape_rnb_sq());
+	    // real rnb_fac = pow(max_neighbors/(real)n_neighbors, 0.6666667);
+	    // b->set_grape_rnb_sq(rnb_fac*b->get_grape_rnb_sq());
 
-	    cerr << "get_neighbors_and_adjust_h2: "
-		 << "neighbor list overflow for "
+	    b->set_grape_rnb_sq(0.25*b->get_grape_rnb_sq());
+
+#if 0
+	    cerr << func << ":  neighbor list overflow for "
 		 << b->format_label() << " (pipe "
 		 << pipe << ")" << endl;
-	    PRC(n_neighbors); PRC(max_neighbors);
-	    cerr << "new rnb = " << sqrt(b->get_grape_rnb_sq()) << endl;
+	    cerr << "    at time " << b->get_system_time() << "  ";
+	    PRC(n_neighbors); PRL(max_neighbors);
+	    cerr << "    new rnb = " << sqrt(b->get_grape_rnb_sq())
+		 << "  status = 1" << endl;
+#else
+	    // Default short diagnostic message:
+
+	    cerr << func << ": node " << b->format_label()
+		 << " time " << b->get_system_time()
+		 << " n_n " << n_neighbors
+		 << endl << flush;
+#endif
 
 	    return 1;
 	}
     }
 
-#if 1
-    if (b->name_is("(5394,21337)")) {
-	PRC(b); PRC(b->get_grape_rnb_sq()); PRL(n_neighbors);
+
+#if 0000
+    if (b->name_is("(5394,21337)") || b->name_is("(21337,5394)")) {
+	cerr << func << ": "; PRL(b);
+	PRI(4); PRC(b->get_grape_rnb_sq()); PRL(n_neighbors);
     }
 #endif
+
 
     status = 2;
 
@@ -1348,8 +1395,8 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    b->set_d_nn_sq(dmin_sq);
 
 
-#if 1
-	    if (streq(b->format_label(), "(5394,21337)")) {
+#if 0000
+	    if (b->name_is("(5394,21337)") || b->name_is("(21337,5394)")) {
 		cerr << "get_nbrs:  ";
 		PRC(b); PRC(bmin); PRL(dmin_sq);
 	    }
@@ -1366,10 +1413,19 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    status = 2;
     }
 
+
+#if 0000
+    if (b->name_is("(5394,21337)") || b->name_is("(21337,5394)")) {
+	cerr << func << ": ";
+	PRC(b->get_grape_rnb_sq()); PRL(n_neighbors);
+    }
+#endif
+
+
     // If no nearest neighbor or coll is found, enlarge the neighbor-sphere
     // radius and try again.
 
-    if (!status)
+    if (status)
 	b->set_grape_rnb_sq(RNB_INCREASE_FAC*b->get_grape_rnb_sq());
 
     return status;
@@ -1391,9 +1447,11 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 // Called by:	grape_calculate_acc_and_jerk()			// global
 
 {
+    static char *func = "get_coll_and_perturbers";
+
     int inext = 0;
 
-//    cerr << "get_coll_and_perturbers: "; PRL(ni);
+//    cerr << func << ": "; PRL(ni);
 
     for (int ip = 0; ip < ni; ip++) {
 
@@ -1402,15 +1460,22 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 
 	if (bb->get_grape_rnb_sq() > 0) {
 
-	    int count_force = 0;
+	    int count_force = 1;
 	    int status;
 
-	    while (!(status = get_neighbors_and_adjust_h2(bb, pipe))) {
+	    while ((status = get_neighbors_and_adjust_h2(bb, pipe))) {
+
+//		if (bb->is_parent()) {
+//		    PRC(bb->get_time()); PRC(bb->format_label()); PRL(status);
+//		    PRC(count_force); PRL(bb->get_grape_rnb_sq());
+//		}
 
 		// Neighbor list must be recomputed:
 		//
 		//	status = 1  ==>  decrease radius
 		//	status = 2  ==>  increase radius
+		//
+		// The value of grape_rnb_sq has already been adjusted.
 
 		if (count_force > MAX_FORCE_COUNT
 		    || (status == 2 && bb->get_grape_rnb_sq() > h2_crit)) {
@@ -1427,9 +1492,10 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 			bb->set_valid_perturbers(false);
 
 
-#if 1
-		    if (streq(bb->format_label(), "(5394,21337)")) {
-			cerr << "get_coll:  setting nn = bb for ";
+#if 0000
+		    if (bb->name_is("(5394,21337)")
+			 || bb->name_is("(21337,5394)")) {
+			cerr << func << ":  setting nn = bb for ";
 			PRC(bb); PRL(bb->get_d_nn_sq());
 			PRC(status); PRL(count_force);
 		    }
@@ -1454,22 +1520,24 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 			bb->set_valid_perturbers(false);
 
 
-#if 1
-		    if (streq(bb->format_label(), "(5394,21337)")) {
-			cerr << "get_coll_and_perturbers:"
-			     << " recomputing force for ";
+#if 00000
+		    if (bb->name_is("(5394,21337)")
+			 || bb->name_is("(21337,5394)")) {
+			cerr << func << ": recomputing force for ";
 			PRC(ip); PRL(bb);
 			PRL(ilist[ip]);
 		    }
 #endif
 
 
-		    pipe = 1;
-		    ip = ni;	// force exit from "for" loop
+		    // Recompute just this particle -- it will go in pipe 0.
+
+		    pipe = 0;
+		    ip = ni;			// force exit from "for" loop
 
 		    while (get_force_and_neighbors(xtime,
 						   &bb,
-						   pipe,
+						   1,
 						   nj_on_grape, n_pipes,
 						   true)) {
 
@@ -1495,7 +1563,17 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 
 		}		// if (count_force...) {} else
 
-	    }			// while (!get_...)
+
+#if 0000
+		    if (bb->name_is("(5394,21337)")
+			 || bb->name_is("(21337,5394)")) {
+			cerr << func << ": repeating while loop with ";
+			PRL(bb->get_grape_rnb_sq());
+		    }
+#endif
+
+
+	    }			// while ((status = get_...))
 
 	}			// if (bb->get_grape_rnb_sq()...)
 
@@ -1507,13 +1585,14 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 
 
 
-//  *****************************
-//  *****************************
-//  ***                       ***
-//  ***  The global function  ***
-//  ***                       ***
-//  *****************************
-//  *****************************
+//						*****************************
+//						*****************************
+//						***                       ***
+//						***  The global function  ***
+//						***                       ***
+//						*****************************
+//						*****************************
+
 
 void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 				  int n_next,
@@ -1698,6 +1777,14 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
 	hdyn *bb = current_nodes[i];
 
+
+#if 0000
+	if (bb->name_is("(5394,21337)")
+	    || bb->name_is("(21337,5394)"))
+	    cerr << "leaving " << func << endl << endl << flush;
+#endif
+
+
 	// Frequency of coll checks is every fourth force calculation.
 	// xx Frequency of perturber checks is every other force calculation.
 
@@ -1797,6 +1884,7 @@ local INLINE void set_grape_density_radius(hdyn *b, real rnn_sq)
 }
 
 
+
 local void check_neighbors(hdyn *b, real rnb_sq, int indent = 0)
 
 // (The hard way...)
@@ -1814,9 +1902,7 @@ local void check_neighbors(hdyn *b, real rnb_sq, int indent = 0)
 
 
 
-// Density is based on the 12th nearest neighbor.
-
-#define N_DENS	12
+#define N_DENS	12	// density is based on the 12th nearest neighbor
 
 local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
@@ -1845,7 +1931,8 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
 	// GRAPE has found too many neighbors:  n_neighbors >= max_neighbors.
 	// Attempt to reduce the size of the neighbor sphere to contain
-	// (say) 10*N_DENS stars.
+	// (say) 10*N_DENS stars.  Note (Steve, 12/01) that n_neighbors
+	// returns equal to max_neighbors in case of overflow.
 
 	if (n_neighbors >= max_neighbors) {	// should be redundant...
 
@@ -1952,6 +2039,7 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 }
 
 
+
 local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 				int ni, real h2_crit,
 				int nj_on_grape, int n_pipes)
@@ -2073,13 +2161,14 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 
 
 
-//  *****************************
-//  *****************************
-//  ***                       ***
-//  ***  The global function  ***
-//  ***                       ***
-//  *****************************
-//  *****************************
+//						*****************************
+//						*****************************
+//						***                       ***
+//						***  The global function  ***
+//						***                       ***
+//						*****************************
+//						*****************************
+
 
 void grape_calculate_densities(hdyn* b,			// root node
 			       real h2_crit)		// default = 4

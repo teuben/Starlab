@@ -805,9 +805,10 @@ local int integrate_list(hdyn * b,
 		// Note that old_acc = acc at the end of a step.
 
 
-#if 1
+#if 0000
 		if (bi->is_parent()
-		    && streq(bi->format_label(), "(5394,21337)")) {
+		    && (bi->name_is("(5394,21337)")
+			|| bi->name_is("(21337,5394)"))) {
 		    cerr << endl;
 		    pp3(bi);
 		    cerr << endl;
