@@ -107,6 +107,8 @@ void  compute_density(dyn * b,      	// pointer to N-body system or node
 	}
 
 	// Search bodies dd to find k-th nearest neighbor.
+	// May be slow if the original list is long -- qsort should
+	// perhaps be used.
 
 	// for_all_leaves(dyn, b, dd) {
 	// for_all_daughters(dyn, b, dd) {
