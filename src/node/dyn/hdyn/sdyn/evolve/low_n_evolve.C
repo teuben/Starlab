@@ -6,7 +6,7 @@
 ////               -C    specify cube size for snapshot output [10]
 ////               -d    specify log output interval [none]
 ////               -D    specify snapshot output interval [none]
-////               -e    specify softening parameter [0.05]
+////               -e    specify softening parameter [0.0]
 ////               -f    specify constant or dynamic timesteps [constant]
 ////               -n    specify number of iterations in symmetrization [0]
 ////               -q    quiet output [verbose]
@@ -52,6 +52,7 @@ void step(sdyn * b,        // sdyn array
 	  real dt,         // time step of the integration 
 	  real max_dt,     // maximum time step (till end of the integration)
 	  int & end_flag,  // to flag that integration end is reached
+	  int & coll_flag,  // to flag that collision has occured
 	  tfp the_tfp,     // timestep function pointer
 	  int n_iter,      // number of iterations
           int x_flag,      // exact-time termination flag
@@ -90,6 +91,7 @@ void step(sdyn * b,        // sdyn array
     t += new_dt;
 
     if (collision_flag) end_flag = 1;
+    coll_flag = collision_flag;
 }
 
 void initialize(sdyn * b,        // sdyn array                   
@@ -271,9 +273,9 @@ local void delete_node(sdyn* b)
 
 // pp: Recursively pretty-print a node:
 
-local void pp(sdyn* b, ostream & s, int level = 0) {
+void pp(sdyn* b, ostream & s, int level = 0) {
 
-    int p = s.precision(4);
+    s.precision(4);
 
     for (int i = 0; i < 2*level; i++) s << " ";
 
@@ -283,13 +285,12 @@ local void pp(sdyn* b, ostream & s, int level = 0) {
       << b->get_vel() <<endl;
 
     for_all_daughters(sdyn, b, daughter) pp(daughter, s, level + 1);	
-
-    cerr.precision(p);
 }
+
 
 #define N_STEP_CHECK 1000 // Interval for checking CPU time
 
-void low_n_evolve(sdyn * b,       // sdyn array
+bool low_n_evolve(sdyn * b,       // sdyn array
 		  real delta_t,   // time span of the integration
 		  real dt_out,    // output time interval
 		  real dt_snap,   // snapshot output interval
@@ -306,7 +307,11 @@ void low_n_evolve(sdyn * b,       // sdyn array
 		  sdyn_print_fp   // pointer to external print function
 		       print)
     {
+
+    bool terminate = false;
+
     real t = b->get_time();
+    real tr = t + b->get_time_offset();  // total real time in N-body units
 
     real t_end = t + delta_t;      // final time, at the end of the integration
     real t_out = t + dt_out;       // time of next diagnostic output
@@ -323,14 +328,14 @@ void low_n_evolve(sdyn * b,       // sdyn array
     start_up(b, n_steps);
     initialize(b, eps);
 
-    int p = cerr.precision(HIGH_PRECISION);
+    cerr.precision(16);
 
     real ekin, epot;
     calculate_energy(b, ekin, epot);
 
     if (t_out <= t_end && n_steps == 0)
 	{
-	cerr << "Time = " << t << "  n_steps = " << n_steps
+	  cerr << "Time = " << t << " " << tr << "  n_steps = " << n_steps
 	    << "  Etot = " << ekin + epot << endl;
 	}
 
@@ -341,6 +346,7 @@ void low_n_evolve(sdyn * b,       // sdyn array
 	}
 
     int end_flag = 0;
+    int coll_flag = 0;
     while (t < t_end && !end_flag)
 	{
         real max_dt = t_end - t;
@@ -353,7 +359,8 @@ void low_n_evolve(sdyn * b,       // sdyn array
 	    dt = max_dt;
 	    }
 
-        step(b, t, eps, eta, dt, max_dt, end_flag, the_tfp, n_iter,
+        step(b, t, eps, eta, dt, max_dt, end_flag, coll_flag, 
+	     the_tfp, n_iter,
 	     x_flag, s_flag);
 	b->set_time(t);                  // should be prettified some time soon
 	for_all_daughters(sdyn, b, bi)
@@ -362,12 +369,18 @@ void low_n_evolve(sdyn * b,       // sdyn array
 	n_steps += 1;
 	count_steps++;
 
+	if(coll_flag>=1) {
+	  //cerr << "Collision has occured: " << coll_flag << endl;
+	  terminate = false;
+	  return terminate;
+	}
+
 //      Check for (trivial) output to cerr...
 
-	if (t >= t_out)
+	if (t >= t_out && n_steps==0)
 	    {
 	    calculate_energy(b, ekin, epot);
-	    cerr << "Time = " << t << "  n_steps = " << n_steps
+	    cerr << "Time = " << t << " " << tr << "  n_steps = " << n_steps
 		 << "  Etot = " << ekin + epot << endl;
 	    t_out += dt_out;
 	    }
@@ -412,30 +425,37 @@ void low_n_evolve(sdyn * b,       // sdyn array
 	if (count_steps >= N_STEP_CHECK) {
 	    count_steps = 0;
 
-//	    if (b->get_n_steps() > MAX_N_STEPS) return;
+	    // added (SPZ: 12 Oct 2000)
+	    if (b->get_n_steps() > MAX_N_STEPS) {
+	      //return;
+	      cerr << "Terminate after " << b->get_n_steps() 
+		   << " steps" << endl;
+	      terminate = true;
+	      }
 
 	    if (cpu_time() - cpu_save > abs(cpu_time_check)) {
 		cpu_save = cpu_time();
 		calculate_energy(b, ekin, epot);
-		int p = cerr.precision(STD_PRECISION);
+		cerr.precision(6);
 		cerr << "low_n3_evolve:  CPU time = " << cpu_save - cpu_init;
-		cerr.precision(HIGH_PRECISION);
+		cerr.precision(13);
 		cerr << "  time = " << t;
-		cerr.precision(p);
+		cerr.precision(6);
 		cerr << "  offset = " << b->get_time_offset() << endl;
 		cerr << "                n_steps = " << n_steps
 		     << "  Etot = " << ekin + epot
 		     << "  dt = " << dt
 		     << endl << flush;
 
-		if (cpu_time_check < 0) return;
+		if (cpu_time_check < 0) return terminate;
 
 		}
 	    }
 	}
+ 
+   clean_up(b, n_steps);       // too late for snapshot?
 
-    clean_up(b, n_steps);       // too late for snapshot?
-    cerr.precision(p);
+    return terminate;
 
     }
 

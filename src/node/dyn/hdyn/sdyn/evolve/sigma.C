@@ -1,83 +1,140 @@
 
-// sigma.C: outline only...
+//// sigma:   Determine all cross-sections for N-body scattering.
+////          Use scatter in a Monte-Carlo fashion to compute cross-
+////          sections of interest given the overall parameters of the
+////          binary-single star interaction.
+////
+////          Units: G = 1, binary mass = 1, binary semi-major axis = 1.
+////
+////
+//// Options:   -A    specify accuracy parameter [0.02]
+////            -c    specify CPU time check, in hours [1]
+////            -C    specify snap cube size [10]
+////            -d    specify maximum trial density [1]
+////            -D    specify snap output interval [none]
+////            -e    specify initiasl binary eccentricity [thermal]
+////            -g    specify tidal tolerance [1.e-6]
+////            -I    output intermediate cross sections [true]
+////            -m    specify secondary mass (binary mass = 1) [0.5]
+////            -M    specify incomer mass [0.5]
+////            -N    specify random number count [0]
+////            -o    specify outer orbit orientation [random]
+////            -p    print raw counts [false]
+////            -q    minimal output [false]
+////            -Q    intermediate amount of output [false]
+////            -s    specify random seed [taken from system clock]
+////            -v    specify incomer velocity at infinity [0 ==> Etot = 0]
+////            -V    maximize output [false]
+////            -x    specify primary radius [0]
+////            -y    specify secondary radius [0]
+////            -z    specify incomer radius [0]
 
-#include "sdyn.h"
+// Starlab application:  get_sigma.
 
-typedef struct _element {char* id;
-			 int counter;
-			 struct _element *next;	// singly-linked list
-		     } list_element;
+#include "sigma_MPI.h"
 
-list_element* locate_string(list_element* e, char* string)
-{
-    // Find the list element indexed by the specified string.
+#ifdef TOOLBOX
 
-    while (e) {
-	if (!strcmp(string, e->id)) return e;
-	e = e->next;
-    }
-    return NULL;
-}
+main(int argc, char **argv) {
 
-list_element* add_element(list_element* e, char* string)
-{
-    // Add a new element to the end of the list.
+  sigma_input input;
 
-    if (e) {
-	while (e->next) e = e->next;
-	list_element* add = new list_element;
-	e->next = add;
-	e = add;
-    } else
-	e = new list_element;
+  // identical binary collision
+  char* default_init  
+        = "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
+
+
+  // I-orionis problem with zero radii stars
+  //char* default_init  
+  // = "-M 0.5 -v 0 -r 1 -t -r1 0 -r2 0 -q 0.5 -p -a 1 -q 0.00001 -r1 0 -r2 0";        
+
+  // Simplified I-orionis problem with zero radii stars
+  //char* default_init  
+  //  = "-M 0.66667 -v 0 -r 1 -t -r1 0 -r2 0 -q 0.50 -p -a 1 -q 1 -r1 0 -r2 0";
+
+  // Simplified I-orionis problem with non-zero radii stars
+  //  char* default_init  
+  //      = "-M 0.879 -v 2 -r 1 -t -r1 0.0508 -r2 0.0348 -q 0.567 -p -a 1 -q 1 -r1 0.0394 -r2 0.0394";
+
+  strcpy(&input.init_string[0], default_init);
+
+    check_help();
+
+    real  delta_t = VERY_LARGE_NUMBER;       // time span of the integration
+    real  dt_out = VERY_LARGE_NUMBER;       // time output interval
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "A:c:C:d:D:e:g:Ii:m:M:N:pqQs:t:v:V:";
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1)
+	switch(c) {
+	    case 'A': input.eta = atof(poptarg);
+		      break;
+	    case 'c': input.cpu_time_check = 3600*atof(poptarg);
+	                                     // (Specify in hours)
+		      break;
+#if 0
+	    case 'C': if (!pvm) 
+			  input.snap_cube_size = atof(poptarg);
+	    	      else
+			  cerr << "\"-C\" option disallowed in PVM mode\n";
+		      break;
+#endif
+	    case 'd': input.max_trial_density = atof(poptarg);
+		      break;
+	    case 'D': input.dt_out = atof(poptarg);
+#if 0
+	    case 'D': if (!pvm) {
+			  input.dt_snap = atof(poptarg);
+	    	      } else
+			  cerr << "\"-D\" option disallowed in PVM mode\n";
+		      break;
+#endif
+		      //	    case 'e': input.ecc = atof(poptarg);
+		      //		      input.ecc_flag = 1;
+		      //		      break;
+	    case 'g': input.tidal_tol_factor = atof(poptarg);
+		      break;
+		      //case 'I': intermediate_sigma = 1 - intermediate_sigma;
+		      //break;
+	    case 'i': strcpy(input.init_string, poptarg);
+		      break;
+	    case 'M': input.pmass = atof(poptarg);
+		      break;
+	    case 'm': input.pmass = atof(poptarg);
+		      break;
+	    case 'N': input.n_rand = atoi(poptarg);
+		      break;
+		      // case 'p': print_counts = 1 - print_counts;
+		      // break;
+#if 0
+	    case 'q': if (scatter_summary_level > 0)
+		          scatter_summary_level = 0;
+		      else
+			  scatter_summary_level = 1;
+		      break;
+	    case 'Q': if (scatter_summary_level > 0)
+		          scatter_summary_level = 0;
+		      else
+			  scatter_summary_level = 2;
+		      break;
+#endif
+	    case 's': input.seed = atoi(poptarg);
+		      break;
+	    case 't': input.delta_t = atof(poptarg);
+		      break;
+	    case 'v': input.v_inf = atof(poptarg);
+		      break;
+   	    case 'V': //input.debug = atoi(poptarg);
+	              input.verbose = atoi(poptarg);
+		      break;
+            case '?': params_to_usage(cerr, argv[0], param_string);
+		      get_help();
+	}
+
+    execute_sigma_experiment(input);
     
-    e->id = new char[strlen(string)];
-    strcpy(e->id, string);
-
-    e->counter = 1;
-    e->next = NULL;
-
-    return e;
 }
 
-void print_results(list_element* e)
-{
-    while (e) {
-	cerr << e->id << "  " << e->counter << endl;
-	e = e->next;
-    }
-}
-
-main()
-{
-    list_element* start = NULL;
-
-    for (;;) { 	// loop over experiments
-
-	// Perform the experiment:
-
-	sdyn* b = next_system(...);
-	scatter(b,...);
-
-	// Determine the normal form of the outcome:
-
-	char* normal_form = get_normal_form(b);
-
-	// Add the results to the linked list:
-
-	list_element* e = locate_string(start, normal_form);
-
-	if (!e) {
-
-	    // Add a new element, or initialize the list:
-
-	    list_element* temp = add_element(start, normal_form);
-	    if (start == NULL) start = temp;
-
-	} else
-
-	    e->counter++;	// Just increment the counter
-    }
-
-    print_results(start);
-}
+#endif

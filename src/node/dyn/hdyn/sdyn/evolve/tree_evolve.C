@@ -25,7 +25,7 @@
 #define N_ITER    	     1
 #define	N_MAX		    -1
 
-void tree_evolve(sdyn * b,        // sdyn array
+bool tree_evolve(sdyn * b,        // sdyn array
 		 real delta_t,    // time span of the integration
 		 real dt_out,     // output time interval
 		 real dt_snap,    // snapshot output interval
@@ -37,6 +37,8 @@ void tree_evolve(sdyn * b,        // sdyn array
 {
     b->flatten_node();
 
+    bool terminate = false;
+
     // Use offset times within the integrator to avoid roundoff. Reset
     // before returning.
 
@@ -45,13 +47,15 @@ void tree_evolve(sdyn * b,        // sdyn array
     b->begin_offset_time(t_offset);
     for_all_daughters(sdyn, b, bb) bb->begin_offset_time(t_offset);
 
-    low_n_evolve(b, delta_t, dt_out, dt_snap, snap_cube_size,
+    terminate = low_n_evolve(b, delta_t, dt_out, dt_snap, snap_cube_size,
 		 SOFTENING, eta, X_FLAG, TIMESTEP_CRITERION,
 		 S_FLAG, N_ITER, N_MAX,
 		 cpu_time_check, dt_print, p);
 
     b->end_offset_time();
     for_all_daughters(sdyn, b, bbb) bbb->end_offset_time();
+
+    return terminate;
 }
 
 #else

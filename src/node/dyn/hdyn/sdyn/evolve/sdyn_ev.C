@@ -5,6 +5,65 @@
 
 #include "sdyn.h"
 
+local int code_collision_flag(sdyn *bi, sdyn *bj) {
+
+#if 0
+  if(bi==bj) {
+    cerr << "bi==bj in code_collision_flag()" << endl;
+    exit(-1);
+  }
+
+  //  cerr << "Collision occured between " << bi->get_index() 
+  //       <<  " and " << bj->get_index() << endl;
+  real r = abs(bi->get_pos() - bj->get_pos());
+  //  PRC(r);PRC(bi->get_radius());PRC(bj->get_radius());
+  //  cerr << "At time = " << bi->get_system_time() << endl;
+
+  int imin = min(bi->get_index(), bj->get_index());
+  int imax = max(bi->get_index(), bj->get_index());
+  if(imin==imax) {
+    cerr << "imin==imax in code_collision_flag()"<< endl;
+    exit(-1);
+  }
+
+  int ci = -1;
+  switch(imin) {
+  case 1: if(imax==2)      ci = 1;
+          else if(imax==3) ci = 2;
+          else             ci = 3;
+          break;
+  case 2: if(imax==3)      ci = 4;
+          else             ci = 5;
+    break;
+  case 3:                  ci = 6;
+    break;
+  default:  cerr << "No default value in code_collision_flag()" << endl;
+    exit(-1);
+  };
+
+#endif  
+  int ci = 2;
+  return ci;
+}
+
+
+local void pp(sdyn* b, ostream & s, int level = 0) {
+
+    s.precision(4);
+
+    for (int i = 0; i < 2*level; i++) s << " ";
+
+    b->pretty_print_node(s);
+    s << " \t"<< b->get_mass() << " \t"
+      << b->get_pos() << "   "
+      << b->get_vel() <<endl;
+
+    for (sdyn * daughter = b->get_oldest_daughter();
+	 daughter != NULL;
+	 daughter = daughter->get_younger_sister())
+	pp(daughter, s, level + 1);	
+}
+
 void sdyn::accumulate_new_acc_and_jerk_from_new(
 			sdyn * bj,                  // n-body system pointer
 			real eps2,                  // softening length squared
@@ -21,8 +80,14 @@ void sdyn::accumulate_new_acc_and_jerk_from_new(
 	    vector d_pos = new_pos - bj->get_new_pos();
 	    vector d_vel = new_vel - bj->get_new_vel();
 	    real r2 = d_pos*d_pos;
-	    if (r2 < (radius + bj->get_radius()) * (radius + bj->get_radius()))
-		collision_flag = 1;
+	    if (r2 < (radius + bj->get_radius()) 
+		   * (radius + bj->get_radius())) {
+		collision_flag = code_collision_flag(this, bj);
+		//cerr << "Collision occured" << endl;
+		//PRC(sqrt(r2));PRC(radius);PRC(bj->get_radius());
+		//PRL(radius + bj->get_radius());
+	    }
+
 	    real r2inv = 1.0/(r2 + eps2);
 	    real a3 = -3.0*(d_pos*d_vel)*r2inv;
 	    real rinv = sqrt(r2inv);
@@ -52,15 +117,16 @@ void sdyn::accumulate_new_acc_and_jerk_from_new(
 
 	    real inverse_free_fall_time_squared = 
 		r2inv * rinv * (mass + bj->get_mass());
-	    if (min_free_fall_time_sq * inverse_free_fall_time_squared > 1)
+	    if (min_free_fall_time_sq == VERY_LARGE_NUMBER ||
+		min_free_fall_time_sq * inverse_free_fall_time_squared > 1)
 		min_free_fall_time_sq = 1/inverse_free_fall_time_squared;
 	    }
     }
 
 void sdyn::calculate_new_acc_and_jerk_from_new(sdyn * b, real eps_squared,
 					       int  no_diag_flag,
-					       int  & collision_flag)
-    {
+					       int  & collision_flag) {
+
     if(oldest_daughter != NULL)
 	{
 	collision_flag = 0;

@@ -1,76 +1,5 @@
 
-//// mkscat:  write a general scattering configuration to cout.
-////
-////          Starting from the top-level (scattering) orbit, whose
-////          components are referred to as the projectile (p) and the
-////          target (t), the command line is interpreted to specify
-////          orbital parameters and successively subdivide each
-////          component into binary substructure.  Substructure is
-////          indicated by numbers attached to p or t.  Thus, if p
-////          is split into components, they are p1 and p2.  If p1 is
-////          further split, its components are p11 and p12, and so on.
-////
-////          The target mass is taken to be 1.
-////          All orbital phases and orientations are chosen randomly.
-////
-////          The order in which the options are specified is critical.
-////
-//// Top-level options:
-////
-////          -M    specify projectile mass [1]
-////          -R    specify projectile radius [0]
-////          -r    specify orbit impact parameter [0]
-////          -rm   specify orbit pericenter [no default]
-////          -S    specify initial separation [none specified]
-////          -v    specify relative velocity at infinity [1]
-////
-//// New node:
-////
-////          -p    split projectile according to parameters that follow
-////          -t    split target according to parameters that follow
-////          -p1   split the first component of p (p1) according to
-////                   parameters that follow
-////          -p2   split the second component of p (p2) according to
-////                   parameters that follow
-////          -t1   split the first component of t (t1) according to
-////                   parameters that follow
-////          (etc.)
-////
-//// Parameters for binary currently under construction:
-////
-////          -a    specify semi-major axis [1/10 parent, or 1 for t or p]
-////          -e    specify eccentricity [0]
-////          -P0   non-planar orbits [default]
-////          -P+   planar prograde orbits [no]
-////          -P-   planar retrograde orbits [no]
-////          -P    toggle between non-planar and planar prograde
-////          -q    specify mass ratio [1]
-////          -r1   specify radius of first component [0]
-////          -r2   specify radius of second component [0]
-////
-//// Note that, if a particle such as "p12" is chosen to be split, and
-//// no such particle has yet been defined, this will force the splitting
-//// of p into p1 and p2, and then p1 into p11 and p12, as necessary,
-//// according to the following default rules:
-////
-////                semi-major axis =  1/10 parent semi-major axis
-////                eccentricity    =  0
-////                mass ratio      =  1
-////                component radii =  0
-////
-//// Other parameters:
-////
-////          -d    debug mode [false]
-////          -s    specify initial random seed [take from system clock]
-////
-//// Example:
-////
-//// mkscat -M 2 -r 1 -v 2 -t -e 0.5 -p12 -q .3 -e 0.1 -a 0.4 -p12 -a .01 ...
-////        ^^^^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
-////       top-level orbit    parameters for (t1, t2) binary   split p, p1...
-
-#include "scatter.h"
-
+#include "../evolve/sigma.h"
 #ifndef TOOLBOX
 
 #define DEFAULT_MASS_RATIO 1
@@ -79,8 +8,8 @@
 #define SMA_REDUCE 10
 #define DEFAULT_R1 0
 #define DEFAULT_R2 0
-
 #define TIDAL_TOL_FACTOR 1e-6
+
 
 local void pp(sdyn* b, ostream & s, int level = 0) {
 
@@ -109,6 +38,9 @@ local void initialize_root(sdyn* root, real v_inf,
 			   real r_init,
 			   real projectile_mass, real projectile_radius) {
 
+  //  cerr << "Root: " << endl;
+    //PRC(v_inf);PRC(rho_sq_min);PRC(rho_sq_max);PRC(peri);PRC(r_init);
+    //    PRC(projectile_mass);PRL(projectile_radius);
     // Explicitly state target mass and radius:
 
     // NOTE that this will give unit radius to the target star in
@@ -136,10 +68,15 @@ local void initialize_root(sdyn* root, real v_inf,
     // Exactly one of rho_sq_max and peri should be < 0.
 
     if (rho_sq_max*peri > 0) err_exit("Inconsistent initial conditions.");
+
+    if(rho_sq_min<0)
+      rho_sq_min = 0;
     
     real rho_max = -1;
     if(rho_sq_max>0)
       rho_max = sqrt(rho_sq_max);
+    //    PRL(v_inf);
+    //    PRL(peri);
 
     if (peri > 0) {
 	if (v_inf > 0)
@@ -149,6 +86,7 @@ local void initialize_root(sdyn* root, real v_inf,
     }
     // Adjusted by (SPZ: 11 Oct 2000)
     // randomize rho \propto \sqrt{rho_max^2}
+    //    PRL(rho_sq_min);PRL(rho_max);
     real rho = sqrt(randinter(rho_sq_min, pow(rho_max, 2)));
     //    PRL(rho);
 
@@ -157,6 +95,9 @@ local void initialize_root(sdyn* root, real v_inf,
     real energy = .5 * v_inf * v_inf;
     real ang_mom = rho * v_inf;
 
+    //    PRC(energy);PRC(ang_mom);PRC(v_inf);PRL(rho);
+    //    PRL(ang_mom);
+ 
     real ecc = (energy == 0 ? 1	: sqrt( 1 + 2 * energy
 				              * pow(ang_mom/m_total, 2)));
 
@@ -168,6 +109,7 @@ local void initialize_root(sdyn* root, real v_inf,
 
     // Don't use mean_anomaly = 0 here (see scatter3.C):
 
+    //PRC(m_total);PRC(energy);PRC(ecc);PRL(virial_ratio);
     make_standard_kepler(k, 0, m_total, energy, ecc, virial_ratio, -0.001, 1);
 
     // Radius for "unperturbed" inner binary:
@@ -382,206 +324,7 @@ sdyn* next_leaf(sdyn* b)
     return (b == NULL ? (sdyn*)NULL : first_leaf(b->get_younger_sister()));
 }
 
-sdyn* mkscat(int argc, char **argv) {
-
-    // Establish standard configuration and names:
-
-    sdyn* root = mksdyn(2);	// Top-level (unbound) scattering orbit.
-    root->set_name("r");
-    root->set_index(-1);	// Undo indexing effect of mksdyn...
-
-    sdyn* target = root->get_oldest_daughter();
-    target->set_name("t");
-    target->set_index(-1);
-
-    sdyn* projectile = target->get_younger_sister();
-    projectile->set_name("p");
-    projectile->set_index(-1);
-
-    sdyn* current = root;	// Node currently under consideration.
-
-    // Establish defaults for the top level:
-
-    real projectile_mass = 1;	// Note convention: projectile and target have
-    real projectile_radius = 0;	// 		    EQUAL masses by default.
-    real v_inf = 1;
-    real rho = 0;
-    real rho_sq = 0;
-    real peri = -1;
-    real initial_separation = VERY_LARGE_NUMBER;
-
-    real mass_ratio = DEFAULT_MASS_RATIO;   // Parameters to use when the
-    real ecc = DEFAULT_ECC;		    // next binary is built
-    real sma = DEFAULT_SMA;
-    real r1 = DEFAULT_R1;
-    real r2 = DEFAULT_R2;
-
-    int  planar = 0;
-    bool debug = FALSE;
-
-    // First scan the argument list to get the actual random seed used:
-
-    int  seed = 0;
-    int i = 0;
-    int random_seed;
-    while (++i < argc)
-	if (argv[i][0] == '-' && argv[i][1] == 's') {
-	  seed = atoi(argv[++i]);
-	  if(seed!=0) 
-	    random_seed = srandinter(seed);
-	  else
-	    cerr << "Seed not re-initialized" << endl;
-	  seed = -1;
-	}
-    if(seed>0) 
-      random_seed = srandinter(seed);
-
-    // Now parse the rest of the command line and initialize the system.
-
-    i = 0;
-    while (++i < argc) if (argv[i][0] == '-')
-	switch (argv[i][1]) {
-
-	    // Top-level parameters:
-
-	    case 'M': if (current != root) cerr <<
-		        "Too late to initialize projectile mass!\n";
-		      projectile_mass = atof(argv[++i]);
-		      break;
-	    case 'R': projectile_radius = atof(argv[++i]);
-		      break;
-	    case 'r': switch(argv[i][2]) {
-			  case '\0':    if (current != root) cerr <<
-			      "Too late to initialize impact parameter!\n";
-					rho = atof(argv[++i]);
-					rho_sq = rho*rho;
-					peri = -1;
-					break;
-			  case 'm':    if (current != root) cerr <<
-			      "Too late to initialize pericenter!\n";
-					peri = atof(argv[++i]);
-					rho = -1;
-					rho_sq = -1;
-					break;
-			  case '1':	r1 = atof(argv[++i]);
-					break;
-			  case '2':	r2 = atof(argv[++i]);
-					break;
-			  default:      cerr << "Incorrect 'r' flag ignored\n";
-					break;
-		      }
-		      break;
-	    case 'S': initial_separation = atof(argv[++i]);
-		      break;
-	    case 'v': if (current != root) cerr <<
-		        "Too late to initialize velocity at infinity!\n";
-		      v_inf = atof(argv[++i]);
-		      break;
-
-	    // Begin accumulating parameters on a new node:
-
-	    case 'p':
-	    case 't': if (current == root)
-			  initialize_root(root, v_inf, rho_sq, rho_sq, peri,
-					  initial_separation,
-					  projectile_mass, projectile_radius);
-		      else
-			  split_particle(current, ecc, sma, planar,
-					 mass_ratio, r1, r2);
-
-		      current = locate_label_and_set_defaults(root,
-							      &argv[i][1],
-							      planar);
-		      if (current == NULL) err_exit("Illegal node name.");
-
-		      // Reset the defaults (note that planar isn't reset):
-
-		      mass_ratio = DEFAULT_MASS_RATIO;
-		      //		      ecc = DEFAULT_ECC;
-		      ecc = sqrt(randinter(0, 1));
-		      sma = -1;	       	// Impossible value
-		      r1 = DEFAULT_R1;
-		      r2 = DEFAULT_R2;
-
-		      break;
-
-	    // Binary parameters:
-
-	    case 'a': sma = atof(argv[++i]);
-		      break;
-	    case 'e': ecc = atof(argv[++i]);
-		      break;
-	    case 'q': mass_ratio = atof(argv[++i]);
-		      break;
-
-	    case 'P': switch(argv[i][2]) {
-		          case '-':	planar = -1;
-					break;
-		          case '0':	planar = 0;
-					break;
-		          case '+':	planar = 1;
-					break;
-		          case '\0':	if (planar == 0)
-			                    planar = 1;
-					else
-					  planar = 0;
-					break;
-			  default:      cerr << "Incorrect 'P' flag ignored\n";
-					break;
-		      }
-			break;
-
-	    case 'd': debug = 1 - debug;
-		      break;
-	    case 's': break;
-
-            default:  cerr << "usage: mkscat [-d] [-s #]"
-		           << " [-M #] [-r #] [-rm #] [-v #] [-R #] [-S #]"
-		           << " [ -t/p... [-a #] [-e #] [-q #] [-P[+/-]"
-			   << " [-r1 #] [-r2 #] ] [-t/p... ...]"
-			   << endl;
-		      exit(1);
-	}
-
-    // Initialize the last piece:
-
-    if (current == root)
-	initialize_root(root, v_inf, rho_sq, rho_sq, peri, initial_separation,
-			projectile_mass, projectile_radius);
-    else
-	split_particle(current, ecc, sma, planar,
-		       mass_ratio, r1, r2);
-
-    // Finally, assign sequential indices to the particles, for the
-    // convenience of xstarplot and other display/reduction programs.
-
-    int id = 0;
-    sdyn* b = first_leaf(root);
-    while (b) {
-	b->set_index(++id);
-	b = next_leaf(b);
-    }
-
-//----------------------------------------------------------------------------
-
-    root->log_history(argc, argv);
-
-    char seedlog[80];
-    sprintf(seedlog, "           random seed = %d",
-	    random_seed);
-    root->log_comment(seedlog);
-
-    if (0) {
-	cerr << "mkscat: pretty-print system (seed = "
-	     << random_seed << "):\n";
-	pp(root, cerr);
-    }
-
-    return root;
-}
-
-sdyn* mkscat(int argc, char **argv, scatter_profile &prof) {
-
+sdyn* mkscat(int argc, char **argv, sigma_input &input) {
 
     // Establish standard configuration and names:
 
@@ -645,28 +388,27 @@ sdyn* mkscat(int argc, char **argv, scatter_profile &prof) {
 	    case 'M': if (current != root) cerr <<
 		        "Too late to initialize projectile mass!\n";
 		      projectile_mass = atof(argv[++i]);
-		      prof.mp = projectile_mass;
+		      input.pmass = projectile_mass;
 		      break;
 	    case 'R': projectile_radius = atof(argv[++i]);
-	              prof.ap = projectile_radius;
 		      break;
 	    case 'r': switch(argv[i][2]) {
 			  case '\0':    if (current != root) cerr <<
 			      "Too late to initialize impact parameter!\n";
-			                if(prof.rho_sq_max<0 && prof.peri<0) {
+			                if(input.rho_sq_max<0 && input.peri<0) {
 					  rho = atof(argv[++i]);
 					  peri = -1;
-					  prof.rho_sq_max = rho*rho;
-					  prof.peri = -1;
+					  input.rho_sq_max = rho*rho;
+					  input.peri = -1;
 			                }
 					break;
 			  case 'm':    if (current != root) cerr <<
 			      "Too late to initialize pericenter!\n";
-			                if(prof.rho_sq_max<0 && prof.peri<0) {
+			                if(input.rho_sq_max<0 && input.peri<0) {
 					  peri = atof(argv[++i]);
 					  rho = -1;
-					  prof.peri = peri;
-					  prof.rho_sq_max = rho;
+					  input.peri = peri;
+					  input.rho_sq_max = rho;
 					}
 					break;
 			  case '1':	r1 = atof(argv[++i]);
@@ -681,9 +423,9 @@ sdyn* mkscat(int argc, char **argv, scatter_profile &prof) {
 		      break;
 	    case 'v': if (current != root) cerr <<
 		        "Too late to initialize velocity at infinity!\n";
-	              if(prof.rho_sq_max<0 && prof.peri<0) {
+	              if(input.rho_sq_max<0 && input.peri<0) {
 			v_inf = atof(argv[++i]);
-			prof.v_inf = v_inf;
+			input.v_inf = v_inf;
 		      }
 		      break;
 
@@ -691,9 +433,9 @@ sdyn* mkscat(int argc, char **argv, scatter_profile &prof) {
 
 	    case 'p':
 	    case 't': if (current == root)
-			  initialize_root(root, prof.v_inf, 
-					  prof.rho_sq_min, prof.rho_sq_max, 
-					  prof.peri,
+			  initialize_root(root, input.v_inf, 
+					  input.rho_sq_min, input.rho_sq_max, 
+					  input.peri,
 					  initial_separation,
 					  projectile_mass, projectile_radius);
 		      else
@@ -709,7 +451,8 @@ sdyn* mkscat(int argc, char **argv, scatter_profile &prof) {
 
 		      mass_ratio = DEFAULT_MASS_RATIO;
 		      //		      ecc = DEFAULT_ECC;
-		      ecc = sqrt(randinter(0, 1));
+		      //ecc = sqrt(randinter(0, 1));
+		      ecc = -1;
 		      sma = -1;	       	// Impossible value
 		      r1 = DEFAULT_R1;
 		      r2 = DEFAULT_R2;
@@ -757,8 +500,8 @@ sdyn* mkscat(int argc, char **argv, scatter_profile &prof) {
     // Initialize the last piece:
 
     if (current == root)
-	initialize_root(root, prof.v_inf, prof.rho_sq_min, prof.rho_sq_max, 
-			prof.peri, 
+	initialize_root(root, input.v_inf, input.rho_sq_min, input.rho_sq_max, 
+			input.peri, 
 			initial_separation,
 			projectile_mass, projectile_radius);
     else
@@ -793,6 +536,7 @@ sdyn* mkscat(int argc, char **argv, scatter_profile &prof) {
     return root;
 }
 
+#define MAX_ARGS 256
 #define TEXT_BUFFER_SIZE 1024
 
 static char temp[TEXT_BUFFER_SIZE];	// argv will point into this array
@@ -828,9 +572,7 @@ void parse_string(char* s, int& argc, char* argv[]) {
 }
 
 
-#define MAX_ARGS 256
-
-sdyn* mkscat(char* s, scatter_profile &prof) {	
+sdyn* mkscat(char* s, sigma_input &input) {	
                                     // Character string interface to mkscat
     int argc;
     char* argv[MAX_ARGS];
@@ -838,26 +580,7 @@ sdyn* mkscat(char* s, scatter_profile &prof) {
     parse_string(s, argc, argv);
     if (argc > MAX_ARGS) err_exit("Too many arguments.");
 
-    return mkscat(argc, argv, prof);
+    return mkscat(argc, argv, input);
 }    
-
-sdyn* mkscat(char* s) {   // Character string interface to mkscat
-
-    int argc;
-    char* argv[MAX_ARGS];
-
-    parse_string(s, argc, argv);
-    if (argc > MAX_ARGS) err_exit("Too many arguments.");
-
-    return mkscat(argc, argv);
-}    
-
-#else
-
-main(int argc, char** argv) {
-    check_help();
-    //    sdyn * root = mkscat(argc, argv);
-    //    put_sdyn(cout, *root);
-}
 
 #endif

@@ -17,8 +17,9 @@
 ////                     Use negative value to prevent mkscat from
 ////                     reinitializing the random number sequence.
 
-#include "scatter.h"
-//#include "sdyn.h"
+#include "mpi++.h"
+//#include "scatter4.h"
+#include "sdyn4.h"
 #include "sigma.h"
 
 #ifndef TOOLBOX
@@ -33,7 +34,8 @@ ostream& operator<<(ostream& s, scatter_input& i) {
   s << " tol= " << i.tidal_tol_factor  << endl;
   s << " Cs= " << i.snap_cube_size << " dt cpu= " << i.cpu_time_check << endl;
   s << " e_exp= " << i.n_experiments << endl;
-  s << " rnd= " << i.seed << " "<< i.n_rand <<" "<< i.pipe  << " "<< i.debug;
+  s << " rnd= " << i.seed << " "<< i.n_rand <<" "<<i.n_rand_inc<<" "
+    << i.pipe  << " "<< i.debug;
 
   return s;
 
@@ -89,7 +91,6 @@ void scatter(sdyn* b, scatter_input input,
 
   real t_out = b->get_time_offset();
   real t_end = delta_t + b->get_time_offset();
-  PRC(t_out);PRL(t_end); 
 
   char previous_form[255];
   char current_form[255];
@@ -101,7 +102,7 @@ void scatter(sdyn* b, scatter_input input,
   make_tree(b, DYNAMICS, STABILITY, K_MAX, debug);
 
   for (real t = 0; t <= delta_t; t += DT_CHECK) {
-    PRC(t);
+
     terminate = tree_evolve(b,  DT_CHECK, dt_out, dt_snap, 
 			    snap_cube_size, 
 			    eta, cpu_time_check);
@@ -120,15 +121,11 @@ void scatter(sdyn* b, scatter_input input,
 	&& cpu_time() - cpu_save > abs(cpu_time_check)) return;
     
     if(b->get_time()>=t_out) {
-      cerr<< " terminate on t_out" << b->get_teim()<<endl;
       real ekin, epot;
       calculate_energy(b, ekin, epot);
-      if(input.verbose==1) {
-
-	cerr << "Time = " << b->get_time() 
-	     << "  Etot = " << ekin + epot 
-	     << "  Tinf = " << ekin/epot << endl;
-      }
+      cerr << "Time = " << b->get_time() 
+	   << "  Etot = " << ekin + epot 
+	   << "  Tinf = " << ekin/epot << endl;
       t_out += dt_out;
     }
     
@@ -171,6 +168,7 @@ void scatter(sdyn* b, scatter_input input,
   real etot_error = calculate_energy_from_scratch(b, kin, pot) 
     - etot_init - de_merge;
   experiment.set_energy_error(etot_error);
+  PRL(etot_error);
   
   make_tree(b, DYNAMICS, STABILITY, K_MAX, debug);
   
@@ -185,6 +183,11 @@ void scatter(sdyn* b, scatter_input input,
 void slave_part_of_experiment(scatter_input input,
 			      scatter_exp &experiment) {
 
+  cerr << "Slave "<< MPI::COMM_WORLD.Get_rank() << endl;
+
+  int random_seed = srandinter(input.seed, input.n_rand);
+  PRC(random_seed);PRC(input.seed);PRC(input.n_rand);PRL(input.n_rand_inc);
+
   cerr << "Random seed = " << get_initial_seed()
        << "  n_rand = " << get_n_rand() << flush << "\n";
     
@@ -195,11 +198,10 @@ void slave_part_of_experiment(scatter_input input,
     
   real kin, pot;
   real etot_init = calculate_energy_from_scratch(b, kin, pot);
-  if(input.verbose==1) {
-    cerr << "Time = " << 0 << "  Etot = " << kin + pot 
-	 << " (" << kin << ", " << pot
-	 << ")  Tinf = " << kin/pot << endl;
-  }
+  cerr << "Time = " << 0 
+       << "  Etot = " << kin + pot 
+       << " (" << kin << ", " << pot
+       << ")  Tinf = " << kin/pot << endl;
   make_tree(b, !DYNAMICS, STABILITY, K_MAX, input.debug);
   
   // Initial output:
@@ -237,65 +239,264 @@ void slave_part_of_experiment(scatter_input input,
     //
 }
 
+void slave_process(int master, 
+		   scatter_input &input, MPI_Datatype inputtype,
+		   scatter_exp &experiment, MPI_Datatype scatter_exp_type) {
 
-void master_part_of_experiment(scatter_input input,
-			       scatter_exp &experiment) {
+  cerr << "I am slave "<< endl;
 
+  int myid = MPI::COMM_WORLD.Get_rank();
+  MPI::Status status;
+
+  cerr << "I am slave " << myid << endl;
+
+    
+  int length = 1;
+  int tag;
+
+  if(myid<=input.n_experiments) {
+
+    do {
+
+      cerr << "Waiting for master to send data " << endl;
+
+      MPI::COMM_WORLD.Recv(&input, length, inputtype, master, 
+			   MPI::ANY_TAG, status);
+      PRC(myid);PRC(tag);
+      PRC(status.Get_source());PRL(status.Get_tag());
+
+      cerr << "Receive input from master " << flush << endl;
+      MPI::COMM_WORLD.Recv(&experiment, length, scatter_exp_type, master, 
+      			   MPI::ANY_TAG, status);
+      PRC(myid);PRC(tag);
+      PRC(status.Get_source());PRL(status.Get_tag());
+
+      tag = status.Get_tag();
+      if(tag<0) {
+	cerr << "I " << myid<<" Receive Stop sign from master " 
+	     <<flush << endl;
+	break;
+      }
+      cerr << "Receive experiment from master " <<flush << endl;
+
+      cerr << "Slave starts working "<<endl;
+      PRC(myid);PRL(tag);
+
+      if(tag>=0) {
+
+	slave_part_of_experiment(input, experiment);
+	
+	cerr << "Hello (" << tag << ") Simon from processor "<< myid << endl;
+	cerr << "Slave " << myid << " send back data " << endl;
+
+	status.Set_source(myid);
+	status.Set_tag(tag);
+      
+	PRC(myid);PRC(tag);
+	PRC(status.Get_source());PRL(status.Get_tag());
+	MPI::COMM_WORLD.Send(&experiment, length, scatter_exp_type, 
+			     master, tag);
+      }
+    }
+    while(tag>=0);
+  }
+cerr << "Slave "<<myid<<" ends"<<endl;
+}
+
+
+void master_process(scatter_input &input, MPI_Datatype inputtype,
+		    scatter_exp &experiment, MPI_Datatype scatter_exp_type) {
+
+  cerr << "I am the master"<<endl;
+
+  int myid = MPI::COMM_WORLD.Get_rank();
+  int nproc = MPI::COMM_WORLD.Get_size();
+  MPI::Status status;
+
+  cerr << "initialize scatter_hist" << endl;
+
+  // Initialize random number generator
   int random_seed = srandinter(input.seed, input.n_rand);
-
+  input.n_rand_inc = get_n_rand() - input.n_rand; 
+  PRL(input.n_rand_inc);
+  
   // initialize scatter_hist
   sdyn *b = mkscat(input.init_string);
   scatter_hist *hi = initialize_scatter_hist(b);
   delete b;
   b = NULL;
-  
+
+  input.n_rand_inc = get_n_rand() - input.n_rand; 
+  PRL(input.n_rand_inc);
+
+  int length = 1;
+  int tag;
+  int nsend = 0;
+  int i;
+
+  int sender;
   int n_exp = 0;
-  real de = 0;
-  for (n_exp = 0; n_exp < input.n_experiments; n_exp++) {
 
-  
-    if (input.n_experiments > 1) cerr << "Experiment #" << n_exp+1 
+  int slave;
+  for (n_exp = 1; n_exp < nproc; n_exp++) {
+
+    if(n_exp>input.n_experiments)
+      break;
+
+    if (input.n_experiments > 1) cerr << "Experiment #" << n_exp
 				      << ": " << "\n";
-    
-    slave_part_of_experiment(input, experiment);
 
+    tag = n_exp;
+    slave = n_exp;
+    cerr << "send tag " << tag << " and body to slave "<< slave <<endl;
+
+    cerr <<" Increase random seed" << endl;
+    input.n_rand += input.n_rand_inc;
+    PRC(input.n_rand);PRL(input.n_rand_inc);
+
+    status.Set_source(myid);
+    status.Set_tag(tag);
+
+    MPI::COMM_WORLD.Send(&input, length, inputtype, slave, tag);
+    cerr << "Send input to slave " << slave <<  flush << endl;
+    MPI::COMM_WORLD.Send(&experiment, length, scatter_exp_type, slave, tag);
+    cerr << "Send experiment to slave " << slave <<  endl;
+    nsend++;
+  }
+
+  cerr  << "all slaves working"<<endl;
+
+  for(i=1; i<=input.n_experiments; i++) {
+
+    int accept_all_senders = MPI::ANY_SOURCE;
+    int accept_all_tags = MPI::ANY_TAG;
+    status.Set_source(accept_all_senders);
+    status.Set_tag(accept_all_tags);
+
+    cerr << "waiting for receiveing data from slave " <<endl;
+    MPI::COMM_WORLD.Recv(&experiment, length, scatter_exp_type, 
+    			 accept_all_senders, accept_all_tags, status);
+    sender = status.Get_source();
+    tag    = status.Get_tag();
+    PRC(sender);PRL(tag);
+
+    // process received information from slave.
     hi->add_scatter_hist(experiment, 0);
     cerr << "scatter history" << flush << endl;
     hi->put_scatter_hist(cerr, false);
-    cerr << " N done = " << n_exp+1 << endl;
-  }
+    cerr << " N done = " << n_exp << endl;
 
+    if(nsend<input.n_experiments) {
+
+      cerr << "Send more data to slave " << sender << endl;
+      nsend++;
+      n_exp++;
+      tag = nsend;
+
+      cerr <<" Increase random seed" << endl;
+      input.n_rand += input.n_rand_inc;
+      PRC(input.n_rand);PRL(input.n_rand_inc);
+
+      status.Set_source(myid);
+      status.Set_tag(tag);
+
+      MPI::COMM_WORLD.Send(&input, length, inputtype, sender, tag);
+      MPI::COMM_WORLD.Send(&experiment, length, scatter_exp_type, sender, tag);
+    }
+    else { 
+
+      PRC(status.Get_source());PRL(status.Get_tag());
+
+      cerr << "Tell slave " << sender << " to stop " <<endl;
+      
+      tag = -1;
+      status.Set_source(myid);
+      status.Set_tag(tag);
+
+      MPI::COMM_WORLD.Send(&input, length, inputtype, sender, tag);
+      MPI::COMM_WORLD.Send(&experiment, length, scatter_exp_type, sender, tag);
+    }
+  }
+  cerr << "Master ends"<<endl;
 }
+
 
 void execute_scatter_experiment(scatter_input input) {
 
+  int argc = 0;
+  char ** argv = NULL;
+  MPI::Init(argc, argv);
+  int myid = MPI::COMM_WORLD.Get_rank();
+  int nproc = MPI::COMM_WORLD.Get_size();
+
+  // MPI definition of datatype input_type
+  int inputblockcounts[3] = {255, 7, 6};
+  MPI_Datatype ntypes[3];
+  MPI::Aint displs[3];
+  MPI_Datatype inputtype;
+
+  MPI_Address(&input.init_string, &displs[0]);
+  MPI_Address(&input.delta_t, &displs[1]);
+  MPI_Address(&input.n_experiments, &displs[2]);
+  ntypes[0] = MPI::CHAR;
+  ntypes[1] = MPI::DOUBLE;
+  ntypes[2] = MPI::INT;
+  displs[1] -= displs[0];
+  displs[2] -= displs[0];
+  displs[0] = 0;
+
+  MPI_Type_struct(3, inputblockcounts, displs, ntypes, &inputtype);
+  MPI_Type_commit(&inputtype);
+
+  cerr << "Data type inputtype defined in process " << myid << endl;
 
   scatter_exp experiment; 
 
-  int myid = 0;
-  int master = 0;
+  // MPI definition of datatype scatter_exp
+  int charlength = 2*255;
+  int reallength = 4;
+  int intlength = 10 + 2*N_RHO_ZONE_MAX + N_STEP_BIN + N_OSC_BIN;
+  int boolength = 3;
+  int blockcounts[3] = {charlength, reallength, intlength+boolength};
+  MPI::Aint exp_displs[3];
+  MPI_Datatype scatter_exp_type;
 
+  MPI_Address(experiment.get_initial_form(), &exp_displs[0]);
+  MPI_Address(experiment.get_time_ptr(), &exp_displs[1]);
+  MPI_Address(experiment.get_scatter_discriptor_ptr(), &exp_displs[2]);
+  MPI_Datatype nexp_types[3] = {MPI::CHAR, MPI::DOUBLE, MPI::INT};
+  exp_displs[1] -= exp_displs[0];
+  exp_displs[2] -= exp_displs[0];
+  exp_displs[0] = 0;
+
+  MPI_Type_struct(3, blockcounts, exp_displs, nexp_types, &scatter_exp_type);
+  MPI_Type_commit(&scatter_exp_type);
+
+  cerr << "Data type scatter_exp_type defined in process " << myid << endl;
+
+  int master = 0;
   if(myid==master) {
-    master_part_of_experiment(input, experiment);
+    master_process(input, inputtype, 
+		   experiment, scatter_exp_type);
   }
   else {
-    slave_part_of_experiment(input, experiment);
+    slave_process(master, 
+		  input, inputtype, 
+		  experiment, scatter_exp_type);
   }
+
+  MPI::Finalize();
 
 }
 
-main(int argc, char **argv)
-{
+main(int argc, char **argv) {
 
   scatter_input input;
-//  char* default_init  
-//    = "-M 0.879 -rm 3 -v 0.0071 -t -r1 0.0508 -r2 0.0348 -e 0 -q 0.567 -p -a 1 -q 1 -r1 0.0394 -r2 0.0394";        // Iota Ori Probleem 
-
-  // identical binary collision
   char* default_init  
-    = "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
+    = "-M 0.879 -rm 3 -v 2 -r 1 -t -r1 0.0508 -r2 0.0348 -e 0 -q 0.567 -p -a 1 -q 1 -r1 0.0394 -r2 0.0394";        // Iota Ori Probleem 
 
   strcpy(&input.init_string[0], default_init);
+//  input.init_string = default_init;	
 
   bool D_flag = false;
   check_help();
