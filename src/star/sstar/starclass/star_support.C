@@ -190,7 +190,7 @@ char* type_string(spectral_class class_tpe) {
          case bh:			return "bh";
          case bd:			return "bd";
          case di:			return "di";
-         case bin:			return "bin";
+         case binary_star:		return "bin";
          default:			return " ";
       }
    }
@@ -245,7 +245,7 @@ char* type_short_string(spectral_class class_tpe) {
          case bh:
          case bd:
          case di:
-         case bin:
+         case binary_star:
          default:			return "N";
       }
    }

@@ -163,7 +163,7 @@ void star_state::init_star_state(star* str) {
      else if(type==Disintegrated)
         class_tpe = di;
      else if(type==Double)
-        class_tpe = bin;
+        class_tpe = binary_star;
      else
         class_tpe = no_spectral_class;
 
@@ -210,7 +210,7 @@ void star_state::make_star_state(star* str) {
      else if(type==Disintegrated)
         class_tpe = di;
      else if(type==Double)
-        class_tpe = bin;
+        class_tpe = binary_star;
      else
         class_tpe = no_spectral_class;
 
