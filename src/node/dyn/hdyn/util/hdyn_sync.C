@@ -170,9 +170,16 @@ main(int argc, char **argv)
 	//
 	// Templates:
 
+	// May need to modify the unperturbed times by the same increment
+	// as the other times...
+
+	xreal dt = (xreal)41 - system_time;
+
 	// Top-level nodes:
 
 	b->set_system_time(41);
+	b->set_time(41);		// bad that these can differ...
+
 	for_all_daughters(hdyn, b, bb) {
 
 	    // ...
@@ -201,8 +208,9 @@ main(int argc, char **argv)
 
 		// ...
 
-		if (bb->get_time() == system_time)
-		    bb->set_time(41);
+		real t = bb->get_time()+dt;
+		bb->set_time(t);
+		bb->get_younger_sister()->set_time(t);
 	    }
 
 	put_node(cout, *b);
