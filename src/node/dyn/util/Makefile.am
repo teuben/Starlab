@@ -33,7 +33,7 @@ libdyn_1_la_SOURCES = compute_com.C compute_density.C compute_max_cod.C \
     dyn_stats.C dyn_story.C dyn_tt.C flatten.C lagrad.C merge_low.C scale.C \
     sys_stats.C to_com.C set_com.C plot_stars.C get_std_center.C refine_mass.C \
     refine_mass2.C add_plummer.C add_power_law.C radial_density.C \
-    radial_vdisp.C radial_profile.C wrappers.C dyn_lexer.ll dyn_parser.yy \
+    radial_vdisp.C radial_profile.C wrappers.C dyn_parser.yy dyn_lexer.ll \
     radial_numdensity.C
 
 compute_com_CPPFLAGS = -DTOOLBOX
