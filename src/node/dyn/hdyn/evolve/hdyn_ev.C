@@ -1812,6 +1812,7 @@ inline void accumulate_acc_and_jerk(hdyn* b,
 int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 				      bool make_perturber_list)
 {
+
 #ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "    flat_calculate_acc_and_jerk for "
@@ -1839,31 +1840,68 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 
     int n_top = 0;
 
+    // Note special care in interpreting radius.  This code is duplicated
+    // in function get_sum_of_radii (kira_encounter.C).
+
+    real rad = get_radius();
+    bool is_bh = false;
+    if (rad < 0) {
+	is_bh = true;
+	rad = -rad;
+    }
+
+    // The use of get_pred_pos() and get_pred_vel() below will trigger
+    // calls to predict_loworder() even though no prediction is
+    // necessary here, as that was done previously.  Most of the time
+    // the function will return without making a prediction, but the 
+    // cumulative effect of all these calls within the inner loop can be
+    // substantial.  Could replace by member functions get_nopred_xxx(),
+    // which simply return the vector without prediction, but simpler just
+    // to  access bi->pred_pos and bi->pred_vel directly.   Steve (1/05)
+
     for_all_daughters(hdyn, b, bi) {
 
 	n_top++;
 
 	if (bi != this) {
 
-	    vec d_pos = bi->get_pred_pos() - pred_pos;
-	    vec d_vel = bi->get_pred_vel() - pred_vel;
+	    // Determine the sum of the radii for use in finding the
+	    // coll.  Note that we do NOT check the story for black hole
+	    // information -- now the default for get_sum_of_radii().
+
+	    vec d_pos = bi->pred_pos - pred_pos;
+	    vec d_vel = bi->pred_vel - pred_vel;
 	    accumulate_acc_and_jerk(bi,				// (inlined)
 				    d_pos, d_vel,
 				    eps2, acc, jerk, pot, distance_squared);
 
-//	    if (time > 252 && time < 252.1 && name_is("3")) {
-//		cerr << "after " << bi->format_label() << endl;
-//		int pr = cerr.precision(HIGH_PRECISION);
-//		PRL(acc);
-//		PRL(jerk);
-//		cerr.precision(pr);
-//	    }
+	    // Note from Steve (1/05)L:  Must be careful in this loop to
+	    // avoid extra function calls or memory accesses that may
+	    // cause cache misses.  Best to confine calculations to data
+	    // close to the basic dynamical quantities, and to inline any
+	    // functions used.  Specifically, the use of black hole tidal
+	    // radii below can cause significant performance degradation
+	    // if not handled carefully.  In the absence of a GRAPE, this
+	    // is the innermost loop that dominates the total cost of the
+	    // integration.
 
-	    // Note that the nn and coll passed to update_nn_coll here
-	    // are the actual pointers, so this update changes the
-	    // data in b.
+	    // Determine the sum of the radii for use in finding coll.
+	    // Don't look in the starbase or the log story for flags.
 
-	    real sum_of_radii = get_sum_of_radii(this, bi);
+	    real radi = bi->radius;
+	    bool bi_is_bh = false;
+	    if (radi < 0) {
+		bi_is_bh = true;
+		radi = -radi;
+	    }
+
+	    real sum_of_radii
+		= compute_sum_of_radii(this, rad, is_bh,
+				       bi, radi, bi_is_bh);	// (inlined)
+
+	    // The nn and coll passed to update_nn_coll here are the actual
+	    // pointers, so this update changes the data in b.  
+
 	    update_nn_coll(this, 1,		// (1 = ID)	// (inlined)
 			   distance_squared, bi, d_nn_sq, nn,
 			   sum_of_radii, d_coll_sq, coll);
