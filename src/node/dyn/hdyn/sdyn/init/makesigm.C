@@ -298,6 +298,8 @@ local sdyn* locate_label_and_set_defaults(sdyn* root, char* label, int planar) {
 // first_leaf: return a pointer to the first leaf descended from the
 //             specified node.
 
+// functions removed by SPZ&AG on 15Okt2002
+#if 0
 sdyn* first_leaf(sdyn* b)
 {
     while (b->get_oldest_daughter()) b = b->get_oldest_daughter();
@@ -323,6 +325,8 @@ sdyn* next_leaf(sdyn* b)
 
     return (b == NULL ? (sdyn*)NULL : first_leaf(b->get_younger_sister()));
 }
+
+#endif
 
 sdyn* mkscat(int argc, char **argv, sigma_input &input) {
 
@@ -546,6 +550,7 @@ static char* name = "parse_string";	// Any name will do...
 //               substrings, using the same conventions as argc and argv
 //               in UNIX (0 --> "parse_string").
 
+#if 0
 void parse_string(char* s, int& argc, char* argv[]) {
 
     int length = strlen(s);
@@ -570,7 +575,7 @@ void parse_string(char* s, int& argc, char* argv[]) {
 	}
     }
 }
-
+#endif
 
 sdyn* mkscat(char* s, sigma_input &input) {	
                                     // Character string interface to mkscat

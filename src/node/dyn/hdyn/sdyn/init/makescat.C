@@ -142,15 +142,21 @@ local void initialize_root(sdyn* root, real v_inf,
       rho_max = sqrt(rho_sq_max);
 
     if (peri > 0) {
+      rho_sq_min = 0;
 	if (v_inf > 0)
 	    rho_max = peri * sqrt(1 + 2*m_total/(peri*v_inf*v_inf));
 	else
 	    rho_max = peri;
+
+	rho_sq_max = pow(rho_max, 2);
     }
-    // Adjusted by (SPZ: 11 Oct 2000)
+    // Adjusted by (SPZ&&AG: 15 Oct 2002)
     // randomize rho \propto \sqrt{rho_max^2}
-    real rho = sqrt(randinter(rho_sq_min, pow(rho_max, 2)));
-    //    PRL(rho);
+    if(rho_sq_min<0) {
+       err_exit("rho_sq_min<0");
+    }
+    real rho = sqrt(randinter(rho_sq_min, rho_sq_max));
+    PRC(rho_sq_min);PRC(rho_sq_max);PRL(rho);
 
     // Note: Unit of velocity is v_g, not v_crit (identical for equal masses)
 

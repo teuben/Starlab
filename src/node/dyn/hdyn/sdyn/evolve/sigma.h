@@ -134,6 +134,7 @@ typedef  void (*print_fp)(real, sigma_out &, int);
 
 void get_sigma(sigma_input &input, MPI_Datatype inputtype,
 	       scatter_exp &experiment, MPI_Datatype scatter_exp_type);
+
 #if 0
 void get_sigma(real max_dens, scatter_profile &, sigma_out &,
 	       real eta, real delta_t, real dt_out, 

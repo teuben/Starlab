@@ -65,6 +65,8 @@ void execute_sigma_experiment(sigma_input &input) {
   int myid=0, nproc;
   initialize_MPI(myid, nproc);
 
+  PRC(myid);PRL(nproc);
+
   scatter_exp experiment; 
 
   MPI_Datatype inputtype = input.initialize_data_structures_MPI();
@@ -430,7 +432,14 @@ main(int argc, char **argv) {
     int c;
     char* param_string = "A:c:C:d:D:e:g:Ii:m:M:N:pqQs:t:v:V:";
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    cerr << "We enter the command line master"<<endl;
+
+    for(int i=0; i<argc; i++) {
+      cerr << "arg="<<i<<" "<<argv[i] <<endl;
+    }
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1) {
+      cerr << "c="<<c<<endl;
 	switch(c) {
 	    case 'A': input.eta = atof(poptarg);
 		      break;
@@ -463,9 +472,13 @@ main(int argc, char **argv) {
    	    case 'V': //input.debug = atoi(poptarg);
 	              input.verbose = atoi(poptarg);
 		      break;
-            case '?': params_to_usage(cerr, argv[0], param_string);
+            case '?': 
+    cerr << "We enter going to exit....."<<endl;
+
+	            params_to_usage(cerr, argv[0], param_string);
 	      //		      get_help();
 	}
+    }
 
     execute_sigma_experiment(input);
     

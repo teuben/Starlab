@@ -35,7 +35,7 @@ OBJECT_FILES = low_n_evolve.o sdyn_ev.o tree_evolve.o sdyn_ev.o \
 	       scatter_exp.o scatter_hist.o \
 	       multiscatter.o tree_evolve.o sig_helper.o \
 	       scatter_merge.o extend_or_end.o \
-	       specific_function.o scatter.o
+	       specific_function.o scatter.o 
 
 BIN = .
 STARLAB_LIB = $(STARLAB_PATH)/lib
@@ -58,7 +58,7 @@ LIBFLAGS_MPI	=  -L. -L$(STARLAB_LIB) -lsdyn -lhdyn -l_dyn_ -ldyn -lnode -lstd -l
 
 .SUFFIXES:	$(SUFFIXES) .mpi .mpio
 
-MPI_EXECUTABLES = scatter_MPI.mpi 
+MPI_EXECUTABLES = scatter_MPI.mpi MPI_sigma.mpi
 
 MPI_OBJECTS = low_n_evolve.mpio sdyn_ev.mpio \
 	       scatter_exp.mpio scatter_hist.mpio \
