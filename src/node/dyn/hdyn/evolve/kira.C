@@ -1,4 +1,3 @@
-
 //#define DUMP_DATA 1	// uncomment to allow detailed TMP_DUMP output
 
        //=======================================================//    _\|/_
@@ -571,7 +570,7 @@ local void merge_and_correct(hdyn* b, hdyn* bi, hdyn* bcoll, int full_dump)
     PRC(bi), PRC(bcoll), PRL(bi->get_parent());
     PRL(bi->get_parent()->format_label());
     PRL(cpu_time());
-    pp3(bcoll);
+    // pp3(bcoll);
 
     // Note from Steve (9/01): Modified merge_nodes() to accept the
     // full_dump flag.  For a simple merger, could place the put_node()
@@ -605,8 +604,8 @@ local hdyn* check_and_merge(hdyn* bi, int full_dump)
     hdyn * bcoll;
     if ((bcoll = bi->check_merge_node()) != NULL) {
 
-	cerr << "check_and_merge: "; PRL(bcoll);
-	pp3(bcoll);
+	cerr << "check_and_merge: "; PRL(bcoll->format_label());
+	// pp3(bcoll);
 
 	hdyn* b = bi->get_root();
 
@@ -729,11 +728,20 @@ local int integrate_list(hdyn * b,
     }
 #endif
 
-    n_list_top_level = 
-	calculate_acc_and_jerk_for_list(b, next_nodes, n_next, t_next,
+    // NEW FORMULATION (Steve, 4/03): calculate_acc_and_jerk_for_list()
+    // will partially sort the list as it goes, placing the low-level
+    // nodes at the start.  Return value now is the number of low-level
+    // nodes on the list.  Note also the change in arguments.
+
+    int n_low = 
+	calculate_acc_and_jerk_for_list(next_nodes, n_next, t_next,
 					exact, tree_changed,
 					reset_force_correction,  // not used
 					restart_grape);
+    n_list_top_level = n_next - n_low;
+
+    // Next loop through top-level nodes must turn off the
+    // on_integration_list() flags...
 
 #ifdef CPU_COUNTERS
     cpu_prev = cpu;
@@ -766,6 +774,8 @@ local int integrate_list(hdyn * b,
 	hdyn *bi = next_nodes[i];
 
 	if (bi && bi->is_valid()) {
+
+	    bi->clear_on_integration_list();  // cleanup: see note in kira_ev.C
 
 #ifdef CPU_COUNTERS
 	    cpu = cpu_time();
@@ -2421,13 +2431,14 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 
 #if 0
-	for (int ii = 0; ii < n_next; ii++) {
-	    hdyn *bb = next_nodes[ii];
-	    if (bb && (bb->name_is("25140") || bb->name_is("32223"))) {
-		cerr << endl << "PRE..." << endl;
-		pp3((hdyn*)node_with_name("32223", b));
-		pp3((hdyn*)node_with_name("25140", b));
-		break;
+	if (t > 85.30960501 && t < 85.30960504) {
+	    for (int ii = 0; ii < n_next; ii++) {
+		hdyn *bb = next_nodes[ii];
+		if (bb && node_contains(bb->get_top_level_node(), "829")) {
+		    cerr << endl << "PRE..." << endl;
+		    pp3(bb->get_top_level_node());
+		    break;
+		}
 	    }
 	}
 #endif
@@ -2439,6 +2450,24 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	int ds = integrate_list(b, next_nodes, n_next, exact,
 				tree_changed, n_list_top_level,
 				full_dump, r_reflect);
+
+
+#if 0
+	if (t >= 0.952164 && t <= 0.952273) {
+	    cerr << endl; PRL(t);
+	    cerr << "nodes: ";
+	    for (int ii = 0; ii < n_next; ii++) {
+		if (next_nodes[ii] && next_nodes[ii]->is_valid())
+		    cerr << next_nodes[ii]->format_label() << " ";
+	    }
+	    cerr << endl; 	    
+	    print_recalculated_energies(b);
+	    if (n_next <= 2 && next_nodes[0]
+		&& node_contains(next_nodes[0]->get_top_level_node(), "44"))
+		pp3(next_nodes[0]->get_top_level_node());
+	}
+#endif
+
 
 	if (n_list_top_level > 0) {
 
@@ -2479,13 +2508,15 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 
 #if 0
-	for (int ii = 0; ii < n_next; ii++) {
-	    hdyn *bb = next_nodes[ii];
-	    if (bb && (bb->name_is("25140") || bb->name_is("32223"))) {
-		cerr << "POST..." << endl;
-		pp3((hdyn*)node_with_name("32223", b));
-		pp3((hdyn*)node_with_name("25140", b));
-		break;
+	if (t > 85.30960501 && t < 85.30960504) {
+	    for (int ii = 0; ii < n_next; ii++) {
+		hdyn *bb = next_nodes[ii];
+		if (bb && bb->is_valid()
+		    && node_contains(bb->get_top_level_node(), "829")) {
+		    cerr << endl << "POST..." << endl;
+		    pp3(bb->get_top_level_node());
+		    break;
+		}
 	    }
 	}
 #endif
