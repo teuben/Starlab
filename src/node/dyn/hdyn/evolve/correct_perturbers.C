@@ -141,7 +141,14 @@ local int expand_perturber_list(hdyn* bi, hdyn* bb, bool verbose)
 	hdyn* p = plist[i];
 	if (plist[i] == bb) {
 
-	    if (verbose) check_format_and_print(bi);
+	    if (verbose) {
+		if (counter == 0)
+		    cerr << endl
+			 << "expand_perturber_lists at time "
+			 << bb->get_system_time() << " to resolve "
+			 << bb->format_label() << ":";
+		check_format_and_print(bi);
+	    }
 
 	    // Should only be expanding unperturbed binaries.  Flag
 	    // expansion of perturbed binaries.
@@ -188,13 +195,7 @@ void expand_perturber_lists(hdyn* b, hdyn* bb,	// bb is CM node
 {
     if (bb->is_leaf()) return;
 
-    if (verbose) {
-	cerr << endl
-	     << "expand_perturber_lists at time "
-	     << b->get_system_time() << " to resolve "
-	     << bb->format_label() << ":";
-	counter = 0;
-    }
+    if (verbose) counter = 0;
 
     int np = 0;
     if (ALLOW_LOW_LEVEL_PERTURBERS) {
@@ -205,10 +206,5 @@ void expand_perturber_lists(hdyn* b, hdyn* bb,	// bb is CM node
 	for_all_daughters(hdyn, b, bi)
 	    if (bi != bb && bi->get_valid_perturbers())
 		np += expand_perturber_list(bi, bb, verbose);
-    }
-
-    if (verbose) {
-	if (counter == 0) cerr << "  (no changes)";
-	cerr << endl;
     }
 }
