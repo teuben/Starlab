@@ -1,8 +1,10 @@
 
 #include "stdinc.h"
 
-main()
+main(int argc, char *argv[])
 {
+    check_help();
+
 #if 0
     long long i = 1;
     int n = 0;

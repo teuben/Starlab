@@ -1,31 +1,30 @@
-/*
- *  red_stellar system.C: reduce some useful information from the
- *  			 stellar system
- *.............................................................................
- *    version 1:  Jan 1997   Simon Portegies Zwart   email: spz@astro.uva.nl
- *.............................................................................
- *  non-local function: 
- *  all functions are local
- *.............................................................................
- *  Input options:
- *     -B:	Binning option of the Lagrangian radii.
- *     -C:	Cut off creterium, mass, luminosity, number of stars.
- *     -l:      Lower luminosity limit (see below).
- *     -n:	Number of Lagrangian radii bins.
- *		Might for some choises be forced.
- *     -O:      Output option, what information should be studied.
- *     -o:	Output the story with data written in root.
- *     -S:      Sort option, on what parameter must information be sorted.
- *.............................................................................
- *  Conserning the Lower luminosity limit option (-l, see above).
- *    Currently this option is only applied to the sorting functions.
- *    This means that the binning (using Lagrangian radii) is applied
- *    on all cluster members.
- *    whether or not this is realistic depends on the application.
- *    Consequently, the luminosity cut-off does not affect the
- *    Lagrangian radii.
- *.............................................................................
- */
+
+////  red_stellar system.C: reduce some useful information from the
+////  			    stellar system
+//.............................................................................
+//    version 1:  Jan 1997   Simon Portegies Zwart   email: spz@astro.uva.nl
+//.............................................................................
+//  non-local function: 
+//  all functions are local
+////
+////  Input options:
+////     -B:	Binning option of the Lagrangian radii.
+////     -C:	Cut off criterion, mass, luminosity, number of stars.
+////     -l:      Lower luminosity limit (see below).
+////     -n:	Number of Lagrangian radii bins.
+////		Might for some choises be forced.
+////     -O:      Output option, what information should be studied.
+////     -o:	Output the story with data written in root.
+////     -S:      Sort option, on what parameter must information be sorted.
+////
+////  Concerning the Lower luminosity limit option (-l, see above).
+////  Currently this option is only applied to the sorting functions.
+////  This means that the binning (using Lagrangian radii) is applied
+////  on all cluster members.
+////  whether or not this is realistic depends on the application.
+////  Consequently, the luminosity cut-off does not affect the
+////  Lagrangian radii.
+
 #include "stardyn_util.h"
 
 #ifdef TOOLBOX
@@ -74,6 +73,8 @@ local void rearrange_mf(dyn* b) {
  */
 main(int argc, char ** argv)
 {
+  check_help();
+
   char  *comment;
   bool verbatim = false;
   bool  c_flag = FALSE;      /* if TRUE: a comment given on command line   */
