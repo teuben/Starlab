@@ -14,8 +14,6 @@
 
 local void freezebin(dyn * b, real fac)
 {
-    dyn * bi;
-
     for_all_daughters(dyn, b, bi)
 	if (bi->is_parent()) bi->scale_vel(fac);
 }

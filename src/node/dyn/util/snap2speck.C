@@ -10,7 +10,7 @@
 
 main(int argc, char** argv)
 {
-    dyn *root, *ni;
+    dyn *root;
 
     check_help();
 

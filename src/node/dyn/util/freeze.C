@@ -13,8 +13,6 @@
 
 local void freeze(dyn * b, real fac)
 {
-    dyn * bi;
-
     for_all_daughters(dyn, b, bi)
 	bi->scale_vel(fac);
 }
