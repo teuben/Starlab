@@ -45,6 +45,8 @@
 //	vector get_pos(tdyn *b, tdyn *bn, real t)
 //	pdyn *create_interpolated_tree(worldbundle *wb, real t)
 //
+//	real physical_mass_scale()
+//
 //----------------------------------------------------------------------
 
 #include "worldline.h"
@@ -458,7 +460,7 @@ real mass_scale_factor()
 // tree changes are handled...).
 
 worldbundle *read_bundle(istream &s,
-			 int verbose)		// default = 0
+			 int verbose)			// default = 0
 {
     // Read a bundle of worldlines, from root dump to root dump.
 

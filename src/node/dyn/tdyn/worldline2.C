@@ -18,7 +18,8 @@
 // Other externally visible functions:
 //
 //	pdyn *create_interpolated_tree2(worldbundle *wb, real t)
-//	real physical_mass_scale()
+//	vector get_center_pos()
+//	vector get_center_vel()
 //
 //----------------------------------------------------------------------
 
@@ -219,6 +220,18 @@ local inline void update_interpolated_tree(worldbundle *wb,
     }
 }
 
+// For center tracking:
+
+static vector center_pos = 0;
+vector get_center_pos()	{return center_pos;}
+
+static vector center_vel = 0;
+vector get_center_vel()	{return center_vel;}
+
+local void update_center(worldline *w, real t)
+{
+}
+
 #define EPS 1.e-12
 
 pdyn *create_interpolated_tree2(worldbundle *wb, real t,
@@ -287,7 +300,9 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
 
     if (!root) root = new pdyn(NULL, NULL, false);
     root->set_system_time(t);
-    root->set_pos(0);
+
+    root->set_pos(0);			// unnecessary, but not wrong...
+    root->set_vel(0);
 
     // Establish root as the global root node (should clean up problems
     // with "top_level_node" functions...).  Stored in location 0 of the
@@ -295,7 +310,11 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
 
     root->set_root(root);
     bundle[0]->set_tree_node(root);
-    bundle[0]->set_t_curr(t);
+    // bundle[0]->set_t_curr(t);	// will be set in the loop below
+
+    // Update the center position and velocity.
+
+    update_center(bundle[0], t);
 
     // Loop through remaining worldlines and take action for leaves only.
     // Logic: we are really dealing with top-level nodes, but we don't know
@@ -303,7 +322,12 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
     // of a clump of particles, we update the entire clump, and flag all
     // components accordingly.
 
-    for (int i = 1; i < wb->get_nw(); i++) {
+    // Handle the interpolation of the root node here too...
+    // Root acc and jerk have been set up on input, so just
+    // interpolate them as worldline 0 in the following loop.
+
+    // for (int i = 1; i < wb->get_nw(); i++) {
+    for (int i = 0; i < wb->get_nw(); i++) {
 
 	worldline *w = bundle[i];
 
@@ -313,7 +337,7 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
 
 	    real id = w->get_id();
 
-	    if (id >= 1 && id < 2) {
+	    if (i == 0 || (id >= 1 && id < 2)) {
 
 		// Worldline w represents a leaf.  Locate its current segment.
 
@@ -336,11 +360,28 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
 		// that does not exist at time t.  Particle worldlines
 		// should be continuous -- check in debugging mode...
 
-		if (s)
-		    update_interpolated_tree(wb, w, s,
-					     root, t, t_int,
-					     vel, debug);
-		else if (debug)
+		if (s) {
+		    if (i == 0) {
+
+			// Root node.
+
+			tdyn *b = s->get_first_event();
+			update_node(wb, w, t, b, b, vel, debug);
+
+			center_pos = root->get_pos();
+			center_vel = root->get_vel();
+
+			// PRC(b->get_pos());
+			// PRL(center_pos);
+
+		    } else
+
+			// Update entire clump of nodes, if necessary.
+
+			update_interpolated_tree(wb, w, s,
+						 root, t, t_int,
+						 vel, debug);
+		} else if (debug)
 		    cerr << "NULL segment for leaf..." << endl;
 	    }
 	}
