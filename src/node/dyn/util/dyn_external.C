@@ -293,13 +293,17 @@ local real potential(dyn *b, real r)		// background potential;
     real a2 = b->get_pl_scale_sq();
     real x = b->get_pl_exponent();
 
-    return -A*pow(r*r+a2, 0.5*x-1);
+#ifdef OLD_ERROR_VERSION_5OCT2001
+    return -A*pow(r*r+a2, 0.5*x-1);		// *** wrong! ***
+#else
+    return -A*pow(r*r+a2, 0.5*(x-1))/(x-1);
+#endif
 }
 
 static vector Afric = 0;			// frictional acceleration
 void set_friction_acc(dyn *b, real r)
 {
-    if (beta != 0) {
+    if (beta > 0) {
 
 	real sigma2 = sqrt(-2*potential(b, r)/3);  // this is sqrt(2) * sigma;
 						   // assume virial equilibrium
@@ -312,6 +316,9 @@ void set_friction_acc(dyn *b, real r)
 	real coeff = 4*M_PI*beta*logLambda(b, r);
 #endif
 
+	PRC(r); PRC(sigma2); PRC(V); PRL(X);
+	PRL(erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
+
 	if (X > 0.1)
 
 	    Afric = -coeff * Mfric * Vcm * density(b, r) * pow(V, -3)
@@ -322,6 +329,8 @@ void set_friction_acc(dyn *b, real r)
 
 	    Afric = -coeff * Mfric * Vcm * density(b, r)
 			   * 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
+
+	PRL(Afric);
 
 #if 1
 	cerr << endl << "set_friction_acc: "; PRL(Afric);

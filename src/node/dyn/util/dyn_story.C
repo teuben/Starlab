@@ -190,7 +190,7 @@ real get_initial_virial_radius(dyn* b,
 	    r_virial = -1;
 
 	    if (verbose && rvir_msg)
-		cerr << "get_initial_virial_radius:  "
+		cerr << "**** get_initial_virial_radius:  "
 		     << "initial_rvirial unknown (set with scale)" << endl;
 #else
 	    r_virial = 1;
