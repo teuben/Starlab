@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# wsl:  Where in Starlab can I find $last  ?
+#	Pass preceding arguments as switches to grep.
+#
+# Versions:	wsl		Full search
+#		wsll		Full search, list filenames only
+#		wsl_node	Search node part only
+#		wsll_node	Search node part, list filenames only
+#		wsl_star	Search star part only
+#		wsll_star	Search star part, list filenames only
+
+if [ $# = 0 ]; then exit; fi
+
+# Problem: $0 is wsl in sbin, full pathname otherwise...  The system
+# seems to pick up the name by which it was found in the path search,
+# except that the "./" is dropped if it is in the current directory.
+
+short=" "
+srcdir="src"
+
+name=$0
+
+case "$name" in
+  *wsll|*wsll_*) short="-l" ;;
+esac
+
+case "$name" in
+  *_star) srcdir="src/star" ;;
+  *_node) srcdir="src/node" ;;
+esac
+
+cd $STARLAB_PATH
+
+(find inc -name '*\.h' -print; \
+ find $srcdir -name Makefile -print; \
+ find $srcdir -name '*\.[cCfFh]' -print; \
+ find src/gfx/Local* -print ) \
+	| xargs grep $short "$@" /dev/null
