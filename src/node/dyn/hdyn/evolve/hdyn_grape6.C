@@ -2707,7 +2707,7 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	    // for which colls are actually needed.  Forces and nns are
 	    // OK at this point, but neighbor lists are not.
 
-	    cerr << "  HW nbr overflow, "; PRL(i);
+	    cerr << func << ": HW nbr overflow, "; PRC(i); PRL(xtime);
 
 #ifdef T_DEBUG
 	    if (in_debug_range) {
@@ -3551,8 +3551,15 @@ void grape_calculate_densities(hdyn* b,			// root node
 	// Get the forces on particles i through i + ni - 1, determine
 	// their neighbors and hence their densities.
 
-	// Code follows that in grape_calculate_acc_and_jerk.
-	// May be possible to combine the two...
+	// Get_densities operates on the entire group of ni particles
+	// until all densities are known, the hardware neighbor list
+	// overflows, or an iteration count is exceeded.  The current
+	// version represents a substantial speedup over its predecessor,
+	// and is quite simple to debug.  If more speed is needed, could
+	// modify the procedure again to follow the "rolling window"
+	// approach used in grape_calculate_acc_and_jerk, but that may
+	// be significantly more complicated.  May even be possible to
+	// combine the two functions...  (Steve, 3/03)
 
 	if (get_densities(b->get_system_time(),
 			  top_nodes + i, ni, h2_crit,
