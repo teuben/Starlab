@@ -77,12 +77,12 @@ local void evolve_the_stars(node* bi, const real end_time) {
     real current_time = ((star*)bi->get_starbase())->get_current_time();
     real time_step    =  bi->get_starbase()->get_evolve_timestep();
     
-    PRC(end_time);PRC(current_time);PRC(time_step);
+    //    PRC(end_time);PRC(current_time);PRC(time_step);
 
     //  SPZ 20 Aug 2004: Just trying this, as it did not seem to work properly
     while (end_time>current_time+time_step) {
       //  while (end_time>current_time) {
-      cerr << "running loop at " << time_step << " for star " << bi->get_index() << endl;
+      //      cerr << "running loop at " << time_step << " for star " << bi->get_index() << endl;
 
        bi->get_starbase()->evolve_element(current_time+time_step);
        bi->get_starbase()->evolve_element(
