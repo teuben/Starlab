@@ -63,6 +63,8 @@ void main_sequence::update() {
 // of stars. Should be updated after mass accretion
 // (SPZ+GN: 1 Oct 1998)
 void main_sequence::update_wind_constant() {
+
+
   
 #if 0
   if (relative_mass >= cnsts.parameters(massive_star_mass_limit)) {
@@ -122,10 +124,16 @@ void main_sequence::update_wind_constant() {
 
   wind_constant = Starlab::max(wind_constant, 0.0);
 
+  //  cerr << "main_sequence" << endl;
+  //  PRL(wind_constant);
+
 }
 
 // Adjust radius & luminosity at relative_age
 void main_sequence::instantaneous_element() {
+
+  //  cerr << "Main sequence: Insantaneous element"<<endl;
+  //  PRL(wind_constant);
 
     real alpha, beta, gamma, delta, kappa, lambda;
 
@@ -171,13 +179,14 @@ void main_sequence::instantaneous_element() {
 // the model described by Eggleton et al. 1989.
 void main_sequence::evolve_element(const real end_time) {
 
-  //   cerr << "void main_sequence::evolve_element(T="<<end_time<<")"<<endl;
-  //   cerr << identity<<" "<<luminosity<<" "<<radius<<endl;
+  //    cerr << "void main_sequence::evolve_element(T="<<end_time<<")"<<endl;
+  //    cerr << identity<<" "<<luminosity<<" "<<radius<<endl;
+  //    PRL(wind_constant);
 
     real alpha, beta, gamma, delta, kappa, lambda;
 
-    //   PRC(current_time);PRC(end_time);PRL(relative_age);
-    //   PRL(next_update_age);
+    //    PRC(current_time);PRC(end_time);PRL(relative_age);
+    //    PRL(next_update_age);
 
     real dt = end_time - current_time;
     current_time = end_time;

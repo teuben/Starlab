@@ -77,7 +77,7 @@ single_star * new_single_star(stellar_type type,	// All defaults are
   element->initialize(id, t_cur, t_rel, m_rel, m_tot, m_core, co_core);
 
   element->post_constructor();
-      
+
   return element;
 }
 
@@ -220,6 +220,7 @@ void single_star::initialize(int id, real t_cur,
   instantaneous_element();
 
   update();
+
 }
 
 // Determine size of stellar core from fits to
@@ -1556,6 +1557,7 @@ void single_star::stellar_wind(const real dt) {
        -  pow((relative_time-dt)/end_time,
 	      cnsts.parameters(massive_star_mass_loss_law)));
 
+  //  PRC(wind_mass);
   // Previous second term according to GN.
   //	           -  pow((prev_rel_time)/end_time,
   //			cnsts.parameters(massive_star_mass_loss_law)));
@@ -1647,6 +1649,8 @@ void single_star::update_wind_constant() {
 
   wind_constant = Starlab::max(wind_constant, 0.0);
 
+  //  cerr << "single_star" << endl;
+  //  PRL(wind_constant);
 
 }
 
