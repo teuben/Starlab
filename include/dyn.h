@@ -451,18 +451,20 @@ void compute_mass_radii(dyn*);
 void compute_mass_radii_percentiles(dyn*);
 void compute_mass_radii_quartiles(dyn*);
 
+void set_lagr_cutoff_mass(dyn *b, real frac);
+real get_lagr_cutoff_mass();
+real print_lagrangian_radii(dyn* b,
+			    int which_lagr = 2,
+			    bool verbose = true,
+			    int which_star = 0,
+			    bool noprint = false);
+
 typedef bool boolfn(dyn*);
 void compute_general_mass_radii(dyn*, int,
 				bool nonlin = false,
 				boolfn *bf = NULL);
 
 // From sys_stats.C:
-
-real print_lagrangian_radii(dyn* b,
-			    int which_lagr = 2,
-			    bool verbose = true,
-			    int which_star = 0,
-			    bool noprint = false);
 
 bool parse_sys_stats_main(int argc, char *argv[],
 			  int  &which_lagr,
