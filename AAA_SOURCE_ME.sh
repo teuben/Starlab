@@ -65,7 +65,7 @@ echo '++++++++++++++++++++++++++++++++++++++++' >> install.log
 
 if [ $stat -eq 0 ]; then
     echo -n Testing kira...
-    kira --help 2> /dev/null
+    kira --help > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         echo 'OK :-)'
     else
