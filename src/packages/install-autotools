@@ -9,8 +9,17 @@ if ($#argv > 0) then
     else
 	set p = $1
     endif
+
     set pre = "--prefix=$p"
+
+    # We will update the search hash after each tool, since automake
+    # installation may require the installed autoconf.  First add the
+    # target bin directory to the search path.
+
+    set path = ($p/bin $path)
 endif
+
+echo Package prefix flag is \"$pre\"
 
 # Build the autotools (isn't standardization wonderful?):
 
@@ -29,4 +38,6 @@ foreach tool (autoconf automake libtool)
     make				>>& ../$log
     make install			>>& ../$log
     cd ..
+
+    rehash
 end
