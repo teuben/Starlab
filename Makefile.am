@@ -115,6 +115,7 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		sbin/procmon \
 		sbin/qt_major_version \
 		sbin/README \
+		sbin/readlink.c \
 		sbin/remove_options \
 		sbin/remove_starlab_bin \
 		sbin/reset_list \
