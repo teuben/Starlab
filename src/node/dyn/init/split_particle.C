@@ -11,7 +11,7 @@
 
 // split_particle: Split the specified node into a binary with the specified
 //                 parameters.  All unspecified orbit elements are chosen
-//               randomly.  Newly created nodes have names "n1" and "n2",
+//                 randomly.  Newly created nodes have names "n1" and "n2",
 //                 where "n" is the name of the node being split.
 
 local bool split_particle(dyn* bi, real ecc, real sma, real mass_ratio)
@@ -93,8 +93,8 @@ local bool split_particle(dyn* bi, real ecc, real sma, real mass_ratio)
 
     d1->set_name(bi->get_name());
     d2->set_name(bi->get_name());
-    strcat(d1->get_name(), "a");
-    strcat(d2->get_name(), "b");
+    strcat(d1->get_name(), "1");
+    strcat(d2->get_name(), "2");
 
     return true;
 }

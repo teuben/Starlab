@@ -2,11 +2,12 @@
 //// split_particles:  split specified particles in input snapshot into
 ////                   binaries having specified orbital properties.
 ////
-//// Usage:  split_particles  [-s #] -l l1 -a a1 -e e1 -E E1 -q q1 \			~
-////                                 -l l2 -a a2 -e e2 -E E2 -q q2 \			~
+//// Usage:  split_particles  [-s #] -l l1 -a a1 -e e1 -E E1 -q q1 \ 
+////                                 -l l2 -a a2 -e e2 -E E2 -q q2 \ 
 ////                                 (etc.)
 ////
 //// Options:    -s    specify random seed [random from system clock]
+////             -i    use "a" and "b" instead of "1" and "2" [false]
 ////             -l    specify label of next particle to split [no default]
 ////             -a    specify semi-major axis of current binary [0.1]
 ////             -e    specify eccentricity of current binary [random]
@@ -32,6 +33,7 @@
 // The repeated functions will end up in a library someday...
 
 // Steve McMillan, August 1996
+//		   June 2002
 
 #include "dyn.h"
 
@@ -42,7 +44,8 @@
 //               randomly.  Newly created leaves have names "na" and "nb",
 //                 where "n" is the name of the leaf being split.
 
-local bool split_particle(dyn* bi, real ecc, real sma, real mass_ratio)
+local bool split_particle(dyn* bi, real ecc, real sma,
+			  real mass_ratio, bool iname)
 {
     if (bi->get_oldest_daughter() != NULL) {
 	cerr << "Can't split a binary node!\n";
@@ -121,8 +124,13 @@ local bool split_particle(dyn* bi, real ecc, real sma, real mass_ratio)
 
     d1->set_name(bi->get_name());
     d2->set_name(bi->get_name());
-    strcat(d1->get_name(), "a");
-    strcat(d2->get_name(), "b");
+    if (iname) {
+      strcat(d1->get_name(), "1");
+      strcat(d2->get_name(), "2");
+    } else {
+      strcat(d1->get_name(), "a");
+      strcat(d2->get_name(), "b");
+    }
 
     return true;
 }
@@ -158,7 +166,8 @@ local void scale_energy(real energy, int N, real M, real E)
 
 local void check_and_initialize(dyn* b, char* label,
 				real eccentricity, real energy,
-				real semi_major_axis, real mass_ratio)
+				real semi_major_axis, real mass_ratio,
+				bool iname)
 {
     if (eccentricity < 0)
 	eccentricity = sqrt(randinter(0,1));	// Thermal distribution
@@ -202,7 +211,8 @@ local void check_and_initialize(dyn* b, char* label,
 
 	// If a real error occurs, terminate the data flow.
 
-	if (!split_particle(bi, eccentricity, semi_major_axis, mass_ratio))
+	if (!split_particle(bi, eccentricity, semi_major_axis,
+			    mass_ratio, iname))
 	    err_exit("fatal error");
     }
 }
@@ -218,6 +228,8 @@ void main(int argc, char ** argv)
     real eccentricity = DEFAULT_ECC;
     real semi_major_axis = DEFAULT_SMA;
     real mass_ratio = DEFAULT_Q;
+
+    bool iname = true;
 
     char label[64];
     label[0] = '\0';
@@ -248,6 +260,9 @@ void main(int argc, char ** argv)
 
 		case 'E': energy = atof(argv[++i]);
 			  break;
+			  
+		case 'i': iname = !iname;
+			  break;
 
 		case 'l': if (previous_label)
 
@@ -256,7 +271,8 @@ void main(int argc, char ** argv)
 
 		    	      check_and_initialize(b, label,
 						   eccentricity, energy,
-						   semi_major_axis, mass_ratio);
+						   semi_major_axis, mass_ratio,
+						   iname);
 
 			  strcpy(label, argv[++i]);
 
@@ -292,7 +308,8 @@ void main(int argc, char ** argv)
     if (previous_label)
 	check_and_initialize(b, label,
 			     eccentricity, energy,
-			     semi_major_axis, mass_ratio);
+			     semi_major_axis, mass_ratio,
+			     iname);
 
     put_dyn(cout, *b);
 }
