@@ -351,14 +351,19 @@ config: configure
 
 config_extra:	config_new
 
-HDYN = linux
+#			generic site is called 'linux', works on most machines
+SITE = linux
 
 config_new:
+	-mkdir bin lib local	
 	$(CP) cshrc.starlab local
 	$(CP) config.h inc
 	$(CP) templates/starlab_setup local
-	-(cd src/node/dyn/hdyn/util; cp Makefile.$(HDYN) Makefile)
-	-(cd src/node/dyn/hdyn/evolve; cp Makefile.$(HDYN) Makefile)
+	-(cd src/node/dyn/hdyn/util; cp Makefile.$(SITE) Makefile)
+	-(cd src/node/dyn/hdyn/evolve; cp Makefile.$(SITE) Makefile)
+
+find_site:
+	find . -name Makefile.$(SITE) -print
 
 diff_new:
 	-$(DIFF) cshrc.starlab local
@@ -382,7 +387,7 @@ DIST_DIR = starlab_$(STARLAB_VERSION)
 
 dist:
 	rm -rf $(DIST_DIR)
-	cvs -q export -D tomorrow -d $(DIST_DIR) starlab 2>&1 /tmp/starlabdist.log
+	cvs -q export -D tomorrow -d $(DIST_DIR) starlab 2>&1 > /tmp/starlabdist.log
 	tar -cf $(DIST_DIR).tar $(DIST_DIR)
 	gzip $(DIST_DIR).tar
 	rm -rf $(DIST_DIR)
