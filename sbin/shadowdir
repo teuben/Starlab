@@ -58,9 +58,9 @@ if ($#dlist > 0) then
 	set mlist = (`find . -name Makefile`)
 	if ($#mlist > 0) then
 	    @ i = 0
-	    foreach m ($precious)
-	    foreach M ($mlist)
-		set tmp = (`echo $M | grep $m`)
+	    foreach p ($precious)
+	    foreach m ($mlist)
+		set tmp = (`echo $m | grep $p`)
 		if ("X$tmp" != "X") then
 		    if (! -l $tmp) then
 
@@ -100,7 +100,7 @@ if ($#dlist > 0) then
 
 #	Order of traversal by find should ensure that parent
 #	directories precede their children on the list.
-
+ 
 	if (! -d $sub) then
 	    mkdir $sub
 #	    echo Created $sub
@@ -114,6 +114,14 @@ if ($#dlist > 0) then
 #   source and header files.
 
     foreach sub ($dlist)
+
+#	Check if Makefile should not be linked.
+
+	set link_make = 1
+	foreach p ($precious)
+	    set tmp = `echo $sub | grep $p`
+	    if (X$tmp != X) set link_make = 0
+	end
 
 #	List relevant files in just directory $dir/$sub.
 #	(Note special Starlab cases for setup...)
@@ -132,7 +140,11 @@ if ($#dlist > 0) then
 	if ($#flist > 0) then
 	    foreach file ($flist)
 		if (-e $dir/$sub/$file) then
-		    ln -s $dir/$sub/$file $shadow/$sub/$file
+		    if ($link_make == 1 || $file != Makefile) then
+			ln -s $dir/$sub/$file $shadow/$sub/$file
+		    else
+			echo Skipping $sub/$file
+		    endif
 		endif
 	    end
 	    echo "    " $#flist links in $sub
