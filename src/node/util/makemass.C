@@ -8,7 +8,7 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// mkmass:  Add a mass spectrum to an input snapshot.  Existing
+//// makemass:Add a mass spectrum to an input snapshot.  Existing
 ////          node masses are overwritten.
 ////
 //// Options:   -e/E/x/X  exponent [-2.35 (Salpeter)]
@@ -271,7 +271,7 @@ mass_function extract_mass_function_type_string(char* type_string) {
      else if (!strcmp(type_string, "Unknown"))
         type = Unknown_MF;
      else {
-	 cerr << "No proper mass function indicated in mkmass."<<endl;
+	 cerr << "No proper mass function indicated in makemass."<<endl;
 	 exit(-1);
      }
 
@@ -318,7 +318,7 @@ local int compare_mass(const void * pi, const void * pj)
         return(0);
 }
 
-local void mkmass(node* b, mass_function mf,
+local void makemass(node* b, mass_function mf,
 		  real m_lower, real m_upper,
 		  real exponent, real total_mass, bool renumber_stars) {
 
@@ -344,7 +344,7 @@ local void mkmass(node* b, mass_function mf,
 #if 0
       nm_pair_ptr nm_table = new nm_pair[n];
       if (nm_table == NULL) {
-	cerr << "mkmass: "
+	cerr << "makemass: "
 	     << "not enough memory left for nm_table\n";
 	return;
       }
@@ -446,7 +446,7 @@ int main(int argc, char ** argv)
     if (m_lower <= 0 ||
 	m_upper <= 0 ||
 	m_lower > m_upper)
-	err_exit("mkmass: Illegal mass limits");
+	err_exit("makemass: Illegal mass limits");
 
     if (F_flag)
       mf = extract_mass_function_type_string(mfc);
@@ -462,7 +462,7 @@ int main(int argc, char ** argv)
     sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
-    mkmass(b, mf, m_lower, m_upper, exponent, m_total, renumber_stars);	
+    makemass(b, mf, m_lower, m_upper, exponent, m_total, renumber_stars);	
     real initial_mass = getrq(b->get_log_story(), "initial_mass");
 
     if (initial_mass > -VERY_LARGE_NUMBER)
