@@ -19,7 +19,7 @@ CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC_STAR) -I$(INC)
 LIBFLAGS	= -L$(LIB) -lsstar -lstd -lm
 DEPEND_LIBS	= $(LIB)/libsstar.a $(LIB)/libstd.a
 
-EXECUTABLES = 
+EXECUTABLES =
 OBJECT_FILES = star_io.o single_star_io.o \
 	       extract_star_story.o
 

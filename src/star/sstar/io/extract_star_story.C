@@ -9,12 +9,12 @@
 //=======================================================//              /|\ ~
 
 /*
- *  addstar.C: creates a star part for each body
+ *  extract_star_story.C: creates a star part for each body
  *.............................................................................
  *    version 1.0:  Apr 1993   Piet Hut, Steve McMillan, Jun Makino
  *.............................................................................
  *  This file includes the following non-local functions:
- *    addstar - creates a star part for each node
+ *    addstar1 - creates a star part for each node
  *.............................................................................
  */
 #include "main_sequence.h"
@@ -117,17 +117,17 @@ void extract_story_chapter(char* type, real& t_cur, real& t_rel,
 }
 
 /*-----------------------------------------------------------------------------
- *  addstar  -- for all particles, add a star part using "new star()".
+ *  addstar1  -- for all particles, add a star part using "new star()".
  *-----------------------------------------------------------------------------
  */
-void  addstar(node * b, real t_rel, stellar_type type,
-                        real mf=1, real rf=1, real tf=1) {
+void  addstar1(node * b, real t_rel, stellar_type type,
+	       real mf, real rf, real tf) {		// defaults = 1
       node * bi;
 
       if (b->get_oldest_daughter() != NULL)
   	 for (bi=b->get_oldest_daughter(); bi != NULL;
 	                                   bi=bi->get_younger_sister())
-	    addstar(bi, t_rel, type, mf, rf, tf);
+	    addstar1(bi, t_rel, type, mf, rf, tf);
       else {
          int id = b->get_index();
          real t_cur=0, t_rel=0, m_rel=1, m_env=0, m_core=0.01, co_core=0;
@@ -232,7 +232,7 @@ main(int argc, char ** argv)
 		      comment = poptarg;
 		      break;
             case '?': cerr <<
-		      "usage: addstar [-t #] [-T #] [-c \"..\"]\n";
+		      "usage: extract_star_story [-t #] [-T #] [-c \"..\"]\n";
 		      exit(1);
 	    }
 
@@ -243,7 +243,7 @@ main(int argc, char ** argv)
             b->log_comment(comment);
         b->log_history(argc, argv);
 
-	addstar(b, t_rel, type, mf, rf, tf);
+	addstar1(b, t_rel, type, mf, rf, tf);
 
 	put_node(b);
 	delete b;
