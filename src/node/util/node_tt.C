@@ -394,7 +394,9 @@ node * node_with_name(char* s, node * top)	// recursive; default top = NULL
     if (!top) return NULL;
     node * n = top;
 
-    if (n->get_name() != NULL && streq(n->get_name(), s)) return n;
+    // cerr << "node_with_name: "; PRC(s); PRL(n->format_label());
+
+    if (streq(n->format_label(), s)) return n;
 
     if (n->get_oldest_daughter() != NULL) {
 	for_all_daughters(node, n, nn) {
