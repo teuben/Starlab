@@ -77,7 +77,7 @@
 
 local sdyn3 * init_to_sdyn3(initial_state3 & init, final_state3 & final)
 {
-    set_kepler_tolerance(2);
+    set_kepler_tolerance(3);	// limit number of warnings
 
     kepler k1;		// inner binary.
 
