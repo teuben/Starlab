@@ -1,5 +1,5 @@
 LDFLAGS = -lm
-EXECUTABLES = check_dep earliest_time latest_time strings sqrt trn
+EXECUTABLES = check_dep earliest_time latest_time sqrt # strings trn
 
 all:	$(EXECUTABLES)
 
