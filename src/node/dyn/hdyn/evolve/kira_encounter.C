@@ -5,31 +5,35 @@
 
 real get_sum_of_radii(hdyn* bi, hdyn* bj) {
 
-    real sum_of_radii;
+    // by default
+    real sum_of_radii = bi->get_radius()+bj->get_radius();
 
     // For black hole use tidal horizon instead of radius
-    if(find_qmatch(bi->get_log_story(), "black_hole") &&
-       getiq(bi->get_log_story(), "black_hole")==1 &&
-       !find_qmatch(bj->get_log_story(), "black_hole")) {
-	
-	sum_of_radii = bj->get_radius()
-	             * (1+pow(bi->get_mass()/bj->get_mass(), ONE_THIRD));
-    }
-    else if(find_qmatch(bj->get_log_story(), "black_hole") &&
-	    getiq(bj->get_log_story(), "black_hole")==1) {
-	
-	sum_of_radii = bi->get_radius()
-                     * (1+pow(bj->get_mass()/bi->get_mass(), ONE_THIRD));
-    }
-    else {
-	sum_of_radii = bi->get_radius()+bj->get_radius();
-    }
-    
+    if(bi->get_starbase()->get_element_type() == Black_Hole ||
+       (find_qmatch(bi->get_log_story(), "black_hole") &&
+        getiq(bi->get_log_story(), "black_hole")==1)) {
+
+        if(!(bi->get_starbase()->get_element_type() == Black_Hole ||
+             find_qmatch(bj->get_log_story(), "black_hole"))) {
+
+            sum_of_radii = 2 * bj->get_radius()
+                * (pow(bi->get_mass()/bj->get_mass(), ONE_THIRD));
+	  }
+      }
+    else if(bj->get_starbase()->get_element_type() == Black_Hole ||
+            (find_qmatch(bj->get_log_story(), "black_hole") &&
+             getiq(bj->get_log_story(), "black_hole")==1)) {
+
+        sum_of_radii = 2 * bi->get_radius()
+            * (pow(bj->get_mass()/bi->get_mass(), ONE_THIRD));
+      }
+
     return sum_of_radii;
-}
+  }
 
 real print_encounter_elements(hdyn* bi, hdyn* bj,
-			      char* s) 		    // default = "Collision"
+			      char* s, 		    // default = "Collision"
+			      bool verbose = true)
 {
     kepler k;
     initialize_kepler_from_dyn_pair(k, bi, bj, true);	// minimal kepler
@@ -38,7 +42,7 @@ real print_encounter_elements(hdyn* bi, hdyn* bj,
     cerr << endl;
     cerr << s << " at time = " << bi->get_time();
 
-    if (bi->get_use_sstar()) {
+    if (bi->get_use_sstar() && verbose) {
 
 	cerr << " ("
 	     << bi->get_starbase()->conv_t_dyn_to_star(bi->get_time())
@@ -65,18 +69,27 @@ real print_encounter_elements(hdyn* bi, hdyn* bj,
 
     } else {
 
-	cerr << " between " << bi->format_label();
-	cerr << " and " << bj->format_label();
-
+      cerr << " between " << bi->format_label();
+      if(bi->get_starbase()->get_element_type() == Black_Hole ||
+	 (find_qmatch(bi->get_log_story(), "black_hole") &&
+	  getiq(bi->get_log_story(), "black_hole")==1))
+	cerr << " [bh] ";
+      
+      cerr << " and " << bj->format_label();
+      if(bj->get_starbase()->get_element_type() == Black_Hole ||
+	 (find_qmatch(bj->get_log_story(), "black_hole") &&
+	  getiq(bj->get_log_story(), "black_hole")==1))
+	cerr << " [bh] ";
+      
     }
 
     cerr << endl;
 
     if (k.get_energy() < 0) {
-        cerr << "     Orbital parameters:" << endl;
+        cerr << "     Orbital parameters: ";
 
         print_binary_params(&k, bi->get_mass(), 0.0,
-			    abs(bi->get_pos()), true, 10, 10);
+			    abs(bi->get_pos()), verbose, 10, 10);
 	cerr << endl;
     }
     else

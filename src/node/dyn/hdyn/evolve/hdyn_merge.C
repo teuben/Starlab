@@ -17,6 +17,7 @@
 //
 //  Externally visible functions:
 //
+//      void   hdyn::merge_logs_after_collision
 //	hdyn*  hdyn::merge_nodes
 //	bool   hdyn::check_merge_node
 //
@@ -159,6 +160,148 @@ local hdyn* apply_tidal_dissipation(hdyn* bi, hdyn* bj, kepler k)
     return NULL;
 }
 
+// Flag close encounter distances between stars.  Output occurs on any
+// unbound encounter, and on the first encounter in a bound system.
+
+local void print_perioapo_clustron(hdyn* bi) {
+
+  hdyn *bj = bi->get_root();
+
+  real d2cd_2 = -1;
+  real d2cd_1 = -1;
+  real d2cd   = -1;
+
+    // Variables:	bi is star, bj is cluster com
+    //			pa_time is time of previous coll
+    //			d2cd is squared distance to cluster com
+    //			d2cd_1 is previous d2cd
+    //			d2cd_2 is previous d2cd_1
+    //			pcp_time is time of last periclustron
+    //			pca_time is time of last apoclustron
+    //			pcp_cntr counts bound periclustron
+    //			pca_cntr counts bound apoclustron
+    //
+    // All but bi and bj are stored in the bi log story.
+
+#if 0
+    cerr << "\nIn print_close_encounter with bi =  " << bi->format_label()
+	 << "  at time " << bi->get_system_time() << endl;
+    cerr << "     "; print_coll(bi,2);
+    cerr << "     "; print_nn(bi,2); 
+    cerr << "     (bj = " << bj->format_label();
+    cerr << ":  coll = "; print_coll(bj);
+    cerr << ",  nn = "; print_nn(bj); cerr << ")" << endl;
+
+#endif
+  
+    // Retrieve coll information from the log story.
+
+    d2cd_2 = getrq(bi->get_log_story(), "d2cd_1");
+    d2cd_1 = getrq(bi->get_log_story(), "d2cd");
+    d2cd   = square(bi->get_pos() - bj->get_pos());
+
+//    PRC(bi->format_label());PRC(d2cd_2);PRC(d2cd_1);PRL(d2cd);
+
+    if (d2cd_2 > 0) {
+
+      if (d2cd_2 > d2cd_1 && d2cd >= d2cd_1) {    // just passed pericluctron
+
+	int pcp_cntr = 0;
+	real E = get_total_energy(bi, bj);
+
+	if (E > 0) {
+
+	  // Always print unbound encounter elements.
+
+	  print_encounter_elements(bi, bj, "Perioclustron", false);
+
+	}
+	else {
+	  if (find_qmatch(bi->get_log_story(), "pcp_cntr")) 
+	    pcp_cntr = getiq(bi->get_log_story(), "pcp_cntr");
+
+	  pcp_cntr++;
+	  
+	  if (pcp_cntr == 1) 
+	    print_encounter_elements(bi, bj, "First periclustron", false);
+	  else
+	    print_encounter_elements(bi, bj, "Periclustron", false);
+	}
+
+	// Save data on last pericenter (bound or unbound).
+	// Note that an unbound pericenter resets pcc_cntr to zero.
+
+	putiq(bi->get_log_story(), "pcp_cntr", pcp_cntr);
+	putrq(bi->get_log_story(), "pcp_time", bi->get_time());  
+	
+      }
+      else if (d2cd_2 < d2cd_1 && d2cd <= d2cd_1) { //just passed apocluctron
+
+	int pca_cntr = 0;
+	real E = get_total_energy(bi, bj);
+
+	if (E > 0) {
+
+	  // Always print unbound encounter elements.
+	  
+	  print_encounter_elements(bi, bj, "Apoclustron", false);
+
+	}
+	else {
+	  if (find_qmatch(bi->get_log_story(), "pca_cntr")) 
+	    pca_cntr = getiq(bi->get_log_story(), "pca_cntr");
+
+	  pca_cntr++;
+
+	  if (pca_cntr == 1) 
+	    print_encounter_elements(bi, bj, "First apoclustron", false);
+	  else
+	    print_encounter_elements(bi, bj, "Apoclustron", false);
+	}
+
+	// Save data on last pericenter (bound or unbound).
+	// Note that an unbound pericenter resets pca_cntr to zero.
+
+	putiq(bi->get_log_story(), "pca_cntr", pca_cntr);
+	putrq(bi->get_log_story(), "pca_time", bi->get_time());  
+      }
+      else {
+	  
+	// Unlikely multiple encounter(?).  Has been known to occur
+	// when one incoming star overtakes another.
+
+	//	  cerr << endl << "print_close_encounter:  "
+	//	       << "bi = " << bi->format_label()
+	//	       << " at time " << bi->get_system_time() << endl;
+	//	  cerr << "     current coll = " << bj->format_label();
+	//	  cerr << endl;
+	//	  cerr << "  (periclustron counter = "
+	//	       << getiq(bi->get_log_story(), "pcp_cntr") << ")\n";
+      }
+
+    }
+
+    putrq(bi->get_log_story(), "d2cd_1", d2cd_1);  
+    putrq(bi->get_log_story(), "d2cd", d2cd);  
+    //    putrq(bi->get_log_story(), "pcd_time", bi->get_time());  
+
+#if 0
+    cerr << "\nAt end of print_close_encounter at time "
+	 << bi->get_system_time() << endl;
+    cerr << "bi = " << bi->format_label();
+#endif
+
+}
+
+hdyn* hdyn::check_periapo_node() {
+
+  // for now only for single stars.
+  //  if (is_leaf() && (is_top_level_node() || parent->is_top_level_node())
+
+    print_perioapo_clustron(this);
+
+}
+
 
 hdyn* hdyn::check_merge_node()
 {
@@ -295,6 +438,20 @@ local void correct_nn_pointers(hdyn * b, hdyn ** list, int n, hdyn * cm)
 	}
     }
 }
+
+void hdyn::merge_logs_after_collision(hdyn *bi, hdyn* bj) {
+
+  // log only the moment of the last merger
+  putrq(get_log_story(), "last_merger_time", bi->get_time());
+  
+  if(find_qmatch(bi->get_log_story(), "black_hole"))
+    putiq(get_log_story(), "black_hole",
+	  getiq(bi->get_log_story(), "black_hole"));
+  else if(find_qmatch(bj->get_log_story(), "black_hole"))
+    putiq(get_log_story(), "black_hole",
+	  getiq(bj->get_log_story(), "black_hole"));
+}
+
 
 #define CONSTANT_DENSITY	1	// Should be a parameter...
 #define MASS_LOSS		0.0

@@ -22,7 +22,7 @@ DEPEND_LIBS	= $(LIB)/libstd.a $(LIB)/libnode.a $(LIB)/libdyn.a
 EXECUTABLES	= mkcube mkdisk mkplummer mkpyth mksphere mkwrite \
 		  addplummer mkbinary split_particles mkking \
 	 	  mkheavystar mk_aniso_king readp readstoa \
-	          mkplanetary
+	          mkplanetary mkblack_hole grow_black_hole
 
 OBJECT_FILES =
 

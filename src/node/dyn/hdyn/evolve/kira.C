@@ -139,6 +139,7 @@
 //	S. McMillan, S. Portegies Zwart	 3/98
 //	S. McMillan, S. Portegies Zwart	 7/98
 //	S. McMillan			 8/98
+//	S. Portegies Zwart	        12/00
 //
 // NOTE:  ALL direct references to USE_GRAPE are confined to
 //	  this file (referenced externally via the functions below).
@@ -161,6 +162,8 @@
 #include "star/dstar_to_kira.h"
 
 #define INITIAL_STEP_LIMIT  0.0625	// Arbitrary limit on the first step
+
+#define CHECK_PERI_APO_CLUSTER          // Follow individual stellar orbits.
 
 static kira_counters kc_prev; 
 static bool dbg = false;
@@ -544,6 +547,15 @@ local void merge_and_correct(hdyn* b, hdyn* bi, hdyn* bcoll)
     cerr << "----------" << endl;
 }
 
+local void check_periapo(hdyn * bi) {
+
+  // just book keeping for stellar orbits.
+
+#ifdef CHECK_PERI_APO_CLUSTER
+  bi->check_periapo_node();
+#endif
+}
+
 local hdyn* check_and_merge(hdyn* bi)
 {
     hdyn * bcoll;
@@ -909,6 +921,9 @@ local int integrate_list(hdyn * b,
 	hdyn *bi = next_nodes[i];
 
 	if (bi && bi->is_valid()) {
+
+	    // first check for peri- or apoclustron passage
+	    check_periapo(bi);
 
 	    hdyn* bcoll = check_and_merge(bi);
 
