@@ -22,13 +22,15 @@ DEPEND_LIBS	= $(LIB)/libsstar.a  $(LIB)/libdstar.a $(LIB)/librdc.a \
 	          $(LIB)/libdyn.a $(LIB)/libnode.a   $(LIB)/libstd.a \
 		  -L$(STARLAB_CFITSIOLIB)/libcfitsio.a
 
-EXECUTABLES = rdc_SeBa makepovfile rs_findtype rs_snapshot \
+EXECUTABLES = rdc_SeBa rs_findtype rs_snapshot \
 	      rs_population rs_scenarios rs_birthrate \
 	      rs_countsn rs_reorder
+#		makepovfile
 
 # make_ccd	# removed by Steve, 8/01 -- no fitsio.h
 
-OBJECT_FILES =  makepovfile.o SeBa_hist.o
+OBJECT_FILES =  
+#		SeBa_hist.o makepovfile.o
 
 #OBJECT_FILES = sint.o
 # N.B. sint.o suppressed until bugs in sint.C are repaired...
