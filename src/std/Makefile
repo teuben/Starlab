@@ -15,7 +15,7 @@
 ##.............................................................................
 ##
 
-CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) -O1
+CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC)
 LIBFLAGS	= -L$(LIB) -lstd -lm
 DEPEND_LIBS	= $(LIB)/libstd.a
 
