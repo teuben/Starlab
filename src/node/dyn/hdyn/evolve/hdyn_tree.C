@@ -577,9 +577,9 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 	// Dump out the "before" system (bi and bj), for use in 4tree
 	// applications, with "defunct" flags attached (final "3").
 
-//	cerr << "combine_top_level_nodes: time " << bi->get_system_time();
-//	cerr << "  put_node for " << endl << "    " << bi->format_label();
-//	cerr << " and " << bj->format_label() << endl;
+      //cerr << "combine_top_level_nodes: time " << bi->get_system_time();
+      //cerr << "  put_node for " << endl << "    " << bi->format_label();
+      //cerr << " and " << bj->format_label() << endl;
 
 	put_node(cout, *bi, false, 3);
 	put_node(cout, *bj, false, 3);
@@ -652,9 +652,9 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
 	predict_loworder_all(bj->get_parent(), bj->get_system_time());
 
-//	cerr << "combine_top_level_nodes: time " << bi->get_system_time();
-//	cerr << "  put_node for " << bj->get_parent()->format_label()
-//	     << endl;
+	cerr << "combine_top_level_nodes: time " << bi->get_system_time();
+	cerr << "  put_node for " << bj->get_parent()->format_label()
+	     << endl;
 
 	put_node(cout, *bj->get_parent(), false, 2);
     }

@@ -217,6 +217,19 @@ int  pgetopt(int argc, char ** argv, char * optstr)
     return option_char;
 }
 
+
+/*-----------------------------------------------------------------------------
+ *  pskipopt  --  each call to  pskipopt()  inclements the internal pointer
+ *                used by pgetopt by one, to skip next argument. This function
+ *                is useful when an option takes more than one parameter.
+ *----------------------------------------------------------------------------
+ */
+
+void pskipopt()
+{
+    argv_counter ++;
+}
+
 #else
 
 void main(char argc, char ** argv)
