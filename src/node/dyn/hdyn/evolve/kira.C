@@ -2826,12 +2826,6 @@ local void recompute_perturber_lists(hdyn *b, bool verbose = false)
 
 main(int argc, char **argv) {
 
-  hdyn *b = NULL;
-  kira (arc, argv, b);
-}
-
-  kira(int argc, char **argv) {
-{
     check_help();
 
     // Parameters to be passed directly to kira:
