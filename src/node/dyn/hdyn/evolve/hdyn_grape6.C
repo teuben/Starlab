@@ -649,6 +649,7 @@ local inline bool use_cm_approx(hdyn *bb)
 	// its energy if the estimated tidal effect of its neighbors
 	// is enegligible.  For now, accept any unperturbed binary.
 
+//	cerr << "CM approx: "; PRL(bb->format_label());
 	return true;
     }
     return false;
@@ -681,12 +682,27 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 	// unperturbed multiples!  For efficiency, keep and return a
 	// running sum of all internal energies excluded.
 
+	bool reset_bb = false;
+
 	while (use_cm_approx(bb)) {
 	    hdyn *sis = bb->get_younger_sister();
 	    hdyn *par = bb->get_parent();
 	    real reduced_mass = bb->get_mass()*sis->get_mass()/par->get_mass();
 	    e_unpert += reduced_mass * bb->get_kepler()->get_energy();
 	    bb = par;
+	    reset_bb = true;
+	}
+
+	// Must be careful to avoid an infinite loop (because of the
+	// logic used by for_all_leaves():
+
+	if (reset_bb) {
+//	    PRL(e_unpert);
+//	    PRL(bb->format_label());
+	    bb = bb->get_oldest_daughter()->get_younger_sister()->next_node(b);
+//	    PRL(bb);
+	    if (!bb) break;
+//	    PRL(bb->format_label());
 	}
 
 	// For now, let GRAPE index = address.
@@ -791,6 +807,20 @@ void grape_calculate_energies(hdyn *b,				// root node
     epot = ekin = etot = 0;
 
     for_all_leaves(hdyn, b, bb) {
+
+	// Logic here follows that in send_all_leaves_to_grape().
+
+	bool reset_bb = false;
+
+	while (use_cm_approx(bb)) {
+	    bb = bb->get_parent();
+	    reset_bb = true;
+	}
+	if (reset_bb) {
+	    bb = bb->get_oldest_daughter()->get_younger_sister()->next_node(b);
+	    if (!bb) break;
+	}
+
 	real mi = bb->get_mass();
 	epot += 0.5*mi*bb->get_pot();
 	vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
