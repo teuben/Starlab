@@ -812,13 +812,14 @@ bool kira_initialize(int argc, char** argv,
     // requirement for the daughters (e.g. makes dealing with external fields
     // much simpler).  The member functions offset_com() and reset_com()
     // perform the transformations between these two equivalent descriptions
-    // of the system.  We transform root to the origin here.  We must always
-    // make the reverse transformation before writing data to disk to maintain
-    // the external representation..
-
-    cerr << "offsetting system to place root node at (0,0,0)" << endl;
-    b->offset_com();
-
+    // of the system.  We must always make the reverse transformation before
+    // writing data to disk to maintain the external representation.
+    //
+    // (From Steve, 7/04.)  Previously, we transformed the root node to lie
+    // at the origin here, by explicitly calling offset_com().  However, we
+    // now do this in get_hdyn(), so *all* internal hdyn data follow the
+    // kira convention of having the root node at rest at (0,0,0).
+    //
     // ======================================================================
 
     // Other preliminaries:

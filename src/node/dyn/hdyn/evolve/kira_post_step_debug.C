@@ -1,13 +1,14 @@
 
 // Place temporary post-step debugging code here, to clean up kira.C.
 
+
 #if 0
-    if (t > 252 && t < 252.1) {
-	cerr << endl;
+    if (t_prev == 252) {
 	int ppost = cerr.precision(20);
+	cerr << endl;
 	for (int ii = 0; ii < n_next; ii++) {
 	    hdyn *n = next_nodes[ii];
-	    if (n && n->is_valid() && n->name_is("3")) {
+	    if (n && n->is_valid()) {
 		PRC(n->format_label());
 		PRL(n->get_next_time());
 		pp3(n);

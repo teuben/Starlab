@@ -136,9 +136,63 @@ void hdyn::print_static(ostream& s)		// default = cerr
     s << "max_slow_perturbation_sq = " << max_slow_perturbation_sq << endl;
 }
 
+// *** NOTE: check_and_correct_node() is no longer inherited from the
+// *** dyn class.  For restart purposes, we don't want to change the
+// *** input data in any way, other than restoring the center of mass
+// *** offset (discussed below).  Thus, we can check for consistency
+// *** in the snapshot file, but we do not alter it.
 
-// *** NOTE: check_and_correct_node() is inherited from the dyn class. ***
+bool hdyn::check_and_correct_node(bool verbose)	// default = false
+{
+    // cerr << "hdyn::check_and_correct_node: "; PRL(this);
 
+    bool ok = true;
+
+    if (oldest_daughter) {		// for hdyn, check that masses,
+					// pos and vel are all consistent
+	real m = 0;
+	vec p = 0, v = 0;
+	bool low = false;
+
+	for_all_daughters(hdyn, this, bb) {
+	    if (bb->oldest_daughter)
+		ok &= bb->check_and_correct_node(verbose);
+	    real mm = bb->get_mass();
+	    m += mm;
+	    p += mm*bb->get_pos();
+	    v += mm*bb->get_vel();
+	}
+	if (!ok) low = true;
+
+	if (!twiddles(m, mass)) ok = false;
+	if (!twiddles(abs(p), 0)) ok = false;
+	if (!twiddles(abs(v), 0)) ok = false;
+
+	mass = m;
+	if (m > 0) {
+	    p /= m;
+	    v /= m;
+	}
+
+	if (!ok && verbose && parent == NULL) {
+	    cerr << "check_and_correct_node: found ";
+	    if (low)
+		cerr << "low-level";
+	    else
+		cerr << "top-level";
+	    cerr << " mass/pos/vel inconsistency" << endl;
+	    PRC(mass); PRL(m);
+	    PRL(p);
+	    PRL(v);
+	}
+    }
+
+    // Checking over.  As of 7/04, we always place the root node at rest
+    // at the origin for hdyn internal data (SMcM).
+
+    if (is_root()) offset_com();
+    return ok;
+}
 
 // Allow user to turn off timestep checking...
 
@@ -327,8 +381,8 @@ void set_complete_system_dump(bool d)			// default = true
 
 // Another (sort of) kludge...  We want the output to have the root node be
 // the center of mass of the top-level nodes.  This is standard elsewhere in
-// Starlab, but is not the case in kira, for operational reasons.  Thus we
-// do the offsetting at output time.  An extra complication is that tdyn
+// Starlab, but is not the case in hdyn/kira, for operational reasons.  Thus
+// we do the offsetting at output time.  An extra complication is that tdyn
 // output relies on the full dump performed earlier.  We save the system
 // center of mass each time we do a complete system dump from the root node.
 // The saved data are used for every pos and vel output, defining the root

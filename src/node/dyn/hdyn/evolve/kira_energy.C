@@ -158,7 +158,7 @@ void print_recalculated_energies(hdyn *b,
     // Here, epot includes both external and internal potential energy
     // terms, and ekin includes the kinetic energy of the center of mass.
 
-    int p = cerr.precision(INT_PRECISION);
+    int p = cerr.precision(HIGH_PRECISION);
     cerr << "Energies: " << epot << " " << ekin << " " << etot;
 
 #if 0

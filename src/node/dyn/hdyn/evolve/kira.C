@@ -861,8 +861,6 @@ local void evolve_system(hdyn * b,		// hdyn array
 
 	//=================================================================
 
-	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 	if (full_dump && ttmp > t_esc_check) {
 
 	    // 2. Flag escapers (full_dump mode only).  System may or may not
@@ -1047,6 +1045,14 @@ local void evolve_system(hdyn * b,		// hdyn array
 
 	    // *** REQUIRE dt_reinit >= dt_sync. ***
 
+	    // Offset and reset here mimic what happens to data on output
+	    // and restart, where the com pos and vel are subtracted off
+	    // by put_node(), then added back by get_node(), which may
+	    // cause the original and restarted data to differ in the last
+	    // decimal place.
+
+	    b->reset_com();
+	    b->offset_com();
 	    full_reinitialize(b, t, verbose, false);
 	    tree_changed = true;
 
@@ -1460,28 +1466,6 @@ local void evolve_system(hdyn * b,		// hdyn array
 
 	    bool tmp = evolve_stars(b, full_dump);
 
-
-
-
-//  	    if (b->get_system_time() >= 1.48437
-//  		&& b->get_system_time() <= 1.5) {
-//  		hdyn *bb = (hdyn*)node_with_name("11", b);
-//  		if (!bb) {
-//  		    cerr << "node 11 is null..." << endl;
-//  		    for_all_nodes(hdyn, b, bbb)
-//  			if (bbb->name_is("11")) {
-//  			    bb = bbb;
-//  			    break;
-//  			}
-//  		    if (!bb)
-//  			cerr << "still null..." << endl;
-//  		}
-//  		pp3(bb->get_top_level_node());
-//  	    }
-
-
-
-
 #ifdef T_DEBUG
 	    if (IN_DEBUG_RANGE(ttmp)) {
 		if (tmp)
@@ -1498,7 +1482,6 @@ local void evolve_system(hdyn * b,		// hdyn array
 	    // print_energy_from_pot(b);	// should be free, but
 						// doesn't quite work...
 
-
 #if 0
 
 	    real tstellev = VERY_LARGE_NUMBER;
@@ -1510,7 +1493,6 @@ local void evolve_system(hdyn * b,		// hdyn array
 
 
 #endif
-
 
 	}
 
