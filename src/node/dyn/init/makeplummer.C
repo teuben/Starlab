@@ -24,12 +24,14 @@
 ////              -u    leave unscaled [scale to E=-1/4, M = 1, R = 1]
 ////
 //// On exit, the final system is shifted to place its center of mass at
-//// rest at the origin of coordinates.
+//// rest at the origin of coordinates.  Unscaled systems will be in
+//// approximate virial equilibrium, based on the continuum limit.
 
 //............................................................................
 //   version 1:  July 1989   Piet Hut               email: piet@iassns.bitnet
 //                           Institute for Advanced Study, Princeton, NJ, USA
-//   version 2:  Dec 1992   Piet Hut  --  adopted to the new C++-based starlab
+//   version 2:  Dec  1992   Piet Hut  --  adapted to the new C++-based Starlab
+//   version 3:  Sep  2004   Steve McMillan -- corrected long-standing bug!
 //............................................................................
 //    litt: S.J. Aarseth, M. Henon and R. Wielen (1974),
 //          Astron. and Astrophys. 37, p. 183.
@@ -66,7 +68,7 @@ local void  makeplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
 //  Calculating the coordinates is easiest in STRUCTURAL units;
 //  conversion to VIRIAL units will be performed below.
 //
-//   Recipe for scaling to the proper system of units:
+//  Recipe for scaling to the proper system of units:
 //
 //  Since G = M = 1, if we switch from a coordinate system with
 //  length unit  r_old  to a coordinate system with length unit  r_new ,
@@ -77,12 +79,12 @@ local void  makeplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
 //  should transform inversely proportional to the positions,
 //  since  GM = 1  (cf. a relation such as  v*v = G*M/r ).
 //
-//  To summarize: If
-//                       r_unit(new) = C * r_unit(old)  ,
-//                then
-//                       pos(new) = (1/C) * pos(old)
-//                and
-//                       vel(new) = sqrt(C) * vel(old)  .
+//  Thus, if
+//              r_unit(new) = C * r_unit(old),
+//  then
+//              pos(new) = (1/C) * pos(old)
+//  and
+//              vel(new) = sqrt(C) * vel(old).
 
     scalefactor = 16.0 / (3.0 * PI);
     inv_scalefactor = 1.0 / scalefactor;
@@ -99,15 +101,7 @@ local void  makeplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
 	    mfrac = mrfrac;          // mfrac = min(mfrac, m(rfrac))
     }
 
-
-    // Now construct the individual particles.  Note that the "raw"
-    // Plummer model has a virial radius of approximately 1.695 units
-    // and is close to virial equilibrium.  Include this factor so
-    // that the unscaled model (-u) is already almost in standard
-    // units.
-
-    real xfac = 1/1.695;
-    real vfac = 1/sqrt(xfac);
+    // Now construct the individual particles.
 
     for (i = 0, bi = b->get_oldest_daughter(); i < n;
          i++, bi = bi->get_younger_sister()) {
@@ -121,7 +115,7 @@ local void  makeplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
         m_min = (i * mfrac)/n;
         m_max = ((i+1) * mfrac)/n;
 	real rrrr = randinter(m_min, m_max);
-	radius = xfac / sqrt( pow (rrrr, -2.0/3.0) - 1.0);
+	radius = 1 / sqrt( pow (rrrr, -2.0/3.0) - 1);
 
 	// Note that this procedure arranges the particles approximately
 	// in order of increasing distance fro the cluster center, which may
@@ -132,8 +126,8 @@ local void  makeplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
 	phi = randinter(0.0, TWO_PI);
 
         bi->set_pos(vec(radius * sin( theta ) * cos( phi ),
-			   radius * sin( theta ) * sin( phi ),
-			   radius * cos( theta )));
+			radius * sin( theta ) * sin( phi ),
+			radius * cos( theta )));
 
 	// The velocity coordinates are determined using von Neumann's
 	// rejection technique, cf. Aarseth et al. (1974), eq. (A4,5).
@@ -158,13 +152,35 @@ local void  makeplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
 
 	// If y < g(x), proceed to calculate the velocity components:
 
-	velocity = vfac* x * sqrt(2.0) * pow( 1.0 + radius*radius, -0.25);
+	velocity = x * sqrt(2.0) * pow( 1.0 + radius*radius, -0.25);
 	theta = acos(randinter(-1.0, 1.0));
 	phi = randinter(0.0,TWO_PI);
 
         bi->set_vel(vec(velocity * sin( theta ) * cos( phi ),
 			   velocity * sin( theta ) * sin( phi ),
 			   velocity * cos( theta )));
+    }
+
+    // The "raw" Plummer model just constructed has a virial radius of
+    // approximately 1.695 units and is close to virial equilibrium.
+    // Incorporate this factor into the basic model so that the unscaled
+    // model (-u on the command line) is already almost in standard
+    // units.  (The correct value is 16 / 3 PI = 1.6977, but the default
+    // choice of mfrac makes the system slightly too compact.)  This is
+    // convenient in situations where exact scaling may be too expensive.
+
+    // Note from Steve (9/04).  The old way of doing this was INCORRECT,
+    // as the scaled value of radius was used in computing the velocity.
+    // As a result, the velocity distribution was not quite right...
+    // Separating the rescaling completely from the generation of the
+    // particle data eliminates this error.
+
+    real xfac = 1/1.695;
+    real vfac = 1/sqrt(xfac);
+
+    for_all_daughters(dyn, b, bi) {
+	bi->set_pos(xfac*bi->get_pos());
+	bi->set_vel(vfac*bi->get_vel());
     }
 
     // Transform to center-of-mass coordinates, and scale to standard
@@ -209,7 +225,7 @@ local void swap(dyn* bi, dyn* bj)
     }
 }
 
-// Original reshuffling code was O(N^2)!  Modified by Steve, July 2000.
+// Original reshuffling code was O(N^2)!  Fixed by Steve, July 2000.
 
 local void reshuffle_all(dyn* b, int n)
 {
