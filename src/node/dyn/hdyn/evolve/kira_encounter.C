@@ -33,70 +33,97 @@ real get_sum_of_radii(hdyn* bi, hdyn* bj) {
 
 real print_encounter_elements(hdyn* bi, hdyn* bj,
 			      char* s, 		    // default = "Collision"
-			      bool verbose /* = true */)
+			      bool verbose)	    // default = true
 {
     kepler k;
     initialize_kepler_from_dyn_pair(k, bi, bj, true);	// minimal kepler
 							// -- no phase info
 
-    cerr << endl;
-    cerr << s << " at time = " << bi->get_time();
+    // Note from Steve (9/04):  If the energy is positive, we only want
+    // to print the information once.  Apparently it is possible for
+    // "wiggles" in the orbit (or imprecise data storage?) to cause this
+    // function to be called several times.  Address this by printing
+    // only if bi->time and bj->time are less than the time needed to
+    // separate to twice the current radius (set below).
 
-    if (bi->get_use_sstar() && verbose) {
+    bool print = true;
+    real t = bi->get_time();
 
-	cerr << " ("
-	     << bi->get_starbase()->conv_t_dyn_to_star(bi->get_time())
-	     << " [Myr])";
-	cerr << " between \n"
-	     << "     " << bi->format_label() << " (";
-	put_state(make_star_state(bi), cerr);
-	cerr << "; M = " << bi->get_starbase()->get_total_mass()
-	     << " [Msun], "
-	     << " R = " << bi->get_starbase()->get_effective_radius()
-	     << " [Rsun]) and\n"
-	     << "     " << bj->format_label()
-	     << " (";
-	put_state(make_star_state(bj), cerr);
-	cerr << "; M = " << bj->get_starbase()->get_total_mass()
-	     << " [Msun], "
-	     << " R = " << bj->get_starbase()->get_effective_radius()
-	     << " [Rsun]) "
-	     <<"\n     at distance "
-	     << k.get_periastron()
-	     << " ("
-	     << bi->get_starbase()->conv_r_dyn_to_star(k.get_periastron())
-	     << " [Rsun]).";
+    if (k.get_energy() < 0)
+	if (find_qmatch(bi->get_log_story(), "coll_tskip")
+	    && find_qmatch(bj->get_log_story(), "coll_tskip")) {
+	    real ti = getrq(bi->get_log_story(), "coll_tskip");
+	    real tj = getrq(bj->get_log_story(), "coll_tskip");
+	    if (ti < VERY_LARGE_NUMBER && tj < VERY_LARGE_NUMBER
+		&& t < ti || t < tj) print = false;
+	}
 
-    } else {
-
-      cerr << " between " << bi->format_label();
-      if(bi->get_starbase()->get_element_type() == Black_Hole ||
-	 (find_qmatch(bi->get_log_story(), "black_hole") &&
-	  getiq(bi->get_log_story(), "black_hole")==1))
-	cerr << " [bh] ";
-      
-      cerr << " and " << bj->format_label();
-      if(bj->get_starbase()->get_element_type() == Black_Hole ||
-	 (find_qmatch(bj->get_log_story(), "black_hole") &&
-	  getiq(bj->get_log_story(), "black_hole")==1))
-	cerr << " [bh] ";
-
-      cerr << "\n     at distance " << k.get_periastron();
-      
-    }
-
-    cerr << endl;
-
-    if (k.get_energy() < 0) {
-        cerr << "     Orbital parameters: ";
-
-        print_binary_params(&k, bi->get_mass(), 0.0,
-			    abs(bi->get_pos()), verbose, 10, 10);
+    if (print) {
 	cerr << endl;
-    }
-    else
-	cerr << "     E = " << k.get_energy() << endl;
+	cerr << s << " at time = " << bi->get_time();
+
+	if (bi->get_use_sstar() && verbose) {
+
+	    cerr << " ("
+		 << bi->get_starbase()->conv_t_dyn_to_star(bi->get_time())
+		 << " [Myr])";
+	    cerr << " between \n"
+		 << "     " << bi->format_label() << " (";
+	    put_state(make_star_state(bi), cerr);
+	    cerr << "; M = " << bi->get_starbase()->get_total_mass()
+		 << " [Msun], "
+		 << " R = " << bi->get_starbase()->get_effective_radius()
+		 << " [Rsun]) and\n"
+			    << "     " << bj->format_label()
+				<< " (";
+	    put_state(make_star_state(bj), cerr);
+	    cerr << "; M = " << bj->get_starbase()->get_total_mass()
+		 << " [Msun], "
+		 << " R = " << bj->get_starbase()->get_effective_radius()
+		 << " [Rsun]) "
+		 <<"\n     at distance "
+		 << k.get_periastron()
+		 << " ("
+		 << bi->get_starbase()->conv_r_dyn_to_star(k.get_periastron())
+		 << " [Rsun]).";
+
+	} else {
+
+	    cerr << " between " << bi->format_label();
+	    if(bi->get_starbase()->get_element_type() == Black_Hole ||
+	       (find_qmatch(bi->get_log_story(), "black_hole") &&
+		getiq(bi->get_log_story(), "black_hole")==1))
+		cerr << " [bh] ";
       
+	    cerr << " and " << bj->format_label();
+	    if(bj->get_starbase()->get_element_type() == Black_Hole ||
+	       (find_qmatch(bj->get_log_story(), "black_hole") &&
+		getiq(bj->get_log_story(), "black_hole")==1))
+		cerr << " [bh] ";
+
+	    cerr << "\n     at distance " << k.get_periastron();
+      
+	}
+
+	cerr << endl;
+
+	if (k.get_energy() < 0) {
+	    cerr << "     Orbital parameters: ";
+
+	    print_binary_params(&k, bi->get_mass(), 0.0,
+				abs(bi->get_pos()), verbose, 10, 10);
+	    cerr << endl;
+	}
+	else {
+	    cerr << "     E = " << k.get_energy() << endl;
+	    real coll_tskip = k.pred_advance_to_radius(2*k.get_periastron());
+	    PRL(coll_tskip);
+	    putrq(bi->get_log_story(), "coll_tskip", coll_tskip);
+	    putsq(bi->get_log_story(), "coll_cpt", bj->format_label());
+	    putrq(bj->get_log_story(), "coll_tskip", coll_tskip);
+	    putsq(bj->get_log_story(), "coll_cpt", bi->format_label());
+	}
+    }
 
     return k.get_energy();
 }
