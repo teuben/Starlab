@@ -506,7 +506,7 @@ void mkrandom_binary( real m_min,  real m_max,
     real r_prim = zero_age_main_sequnece_radius(m_prim);
 
     if(e_max>=1 && ef!=Equal_ecc) 
-	e_max = Starlab::max(e_min, Starlab::min(1., 1 - r_prim/a_max));
+	e_max = Starlab::max(e_min, Starlab::min(1., 1 - (r_prim+r_sec)/a_max));
 
     ecc = get_random_eccentricity(e_min, e_max, ef, m_prim+m_sec);
     //    PRL(ecc);
@@ -671,7 +671,7 @@ void main(int argc, char ** argv) {
     real a_exp = -1;
     char *efc = new char[64];
     ecc_distribution ef = Thermal_Distribution;
-    real e_min = -1;    // allow detection of constant eccentricity
+    real e_min = 0;    // allow detection of constant eccentricity
     real e_max = 1;
     real e_exp;
 

@@ -215,7 +215,7 @@ int main(int argc, char ** argv) {
     real a_exp = -1;                           
     char *efc = new char[64];
     ecc_distribution ef = Thermal_Distribution;
-    real e_min = -1;    // allow detection of constant eccentricity
+    real e_min = 0;    // allow detection of constant eccentricity
     real e_max = 1;
     real e_exp;
 
