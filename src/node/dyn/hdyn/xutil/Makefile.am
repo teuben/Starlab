@@ -20,7 +20,7 @@ pkglib_LTLIBRARIES = libxhdyn.la
 bin_PROGRAMS = snap_to_image
 
 if !NO_X
-    bin_PROGRAMS += xstarplot
+    bin_PROGRAMS += hxstarplot
 endif
 
 # Note that Qt_pp3 contains code to check for Qt, so OK to include
@@ -42,10 +42,10 @@ if HAVE_LIBQT
 endif
 
 snap_to_image_LDADD = ../libhdyn.la ../../../../gfx/libgfx.la
-xstarplot_LDADD = ../libhdyn.la ../../../../gfx/libgfx.la
+hxstarplot_LDADD = ../libhdyn.la ../../../../gfx/libgfx.la
 
 snap_to_image_SOURCES = snap_to_image.C
-xstarplot_SOURCES = xstarplot.C gfx_util.C dyn_util.C
+hxstarplot_SOURCES = hxstarplot.C gfx_util.C dyn_util.C
 
 .PHONY: libs
 libs: libxhdyn.la

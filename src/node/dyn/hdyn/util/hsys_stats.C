@@ -12,13 +12,13 @@
 // The only difference between this program and the dyn version is that
 // possible GRAPE and dstar extensions are used here.
 
-//// sys_stats:  This is the "hdyn" (kira output) version of sys_stats.
-////             It contains all of the "dyn" sys_stats functionality (and
-////             will work with standard dyn data files), but includes
-////             additional functions specific to the hdyn class.
+//// hsys_stats:  This is the "hdyn" (kira output) version of sys_stats.
+////              It contains all of the "dyn" sys_stats functionality (and
+////              will work with standard dyn data files), but includes
+////              additional functions specific to the hdyn class.
 ////
-////             Print out various diagnostic statistics on the input system.
-////             These include:
+////              Print out various diagnostic statistics on the input system.
+////              These include:
 ////
 ////                 system time, number, mass, mass distribution
 ////                 relaxation time

@@ -8,9 +8,9 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\
 
-//// scale: (re)scale an N-body system to specified M, Q (=T/U), R, or E.
-////         This version is identical to the dyn "scale", except that
-////         GRAPE-4 or GRAPE-6 is used if available.
+//// hscale: (re)scale an N-body system to specified M, Q (=T/U), R, or E.
+////          This hdyn version is identical to the dyn "scale", except that
+////          GRAPE-4 or GRAPE-6 is used if available.
 
 //  Steve McMillan, July 2000; revised July 2001, June 2004
 

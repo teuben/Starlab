@@ -1,5 +1,5 @@
 
-//// xstarplot:  Plot an N-body system in an X environment.
+//// hxstarplot:  Plot an N-body system in an X environment.
 ////
 ////             This is the "hdyn" (kira output) version of xstarplot.
 ////             It contains all of the "dyn" xstarplot functionality

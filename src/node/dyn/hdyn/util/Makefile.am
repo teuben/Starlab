@@ -17,35 +17,35 @@
 ##
 
 noinst_LTLIBRARIES = libhdyn-1.la
-bin_PROGRAMS = hdyn_pp3 reset_counters sys_stats scale get_densities
+bin_PROGRAMS = hdyn_pp3 reset_counters hsys_stats hscale get_densities
 
 libhdyn_1_la_SOURCES = hdyn_io.C hdyn_init.C hdyn_kepler.C hdyn_pp3.C \
     hdyn_tt.C kira_diag.C kira_options.C reset_counters.C
 
 hdyn_pp3_CPPFLAGS = -DTOOLBOX
 reset_counters_CPPFLAGS = -DTOOLBOX
-sys_stats_CPPFLAGS = -DTOOLBOX
-scale_CPPFLAGS = -DTOOLBOX
+hsys_stats_CPPFLAGS = -DTOOLBOX
+hscale_CPPFLAGS = -DTOOLBOX
 get_densities_CPPFLAGS = -DTOOLBOX
 
 hdyn_pp3_LDADD = ../libhdyn.la
 reset_counters_LDADD = ../libhdyn.la
-sys_stats_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la
-scale_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la
+hsys_stats_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la
+hscale_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la
 get_densities_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la
 
 hdyn_pp3_SOURCES = hdyn_pp3.C
 reset_counters_SOURCES = reset_counters.C
-sys_stats_SOURCES = sys_stats.C
-scale_SOURCES = scale.C
+hsys_stats_SOURCES = hsys_stats.C
+hscale_SOURCES = hscale.C
 get_densities_SOURCES = get_densities.C
 
 if HAVE_GRAPE
-  sys_stats_LDADD += $(GRAPE_LIBS)
-  scale_LDADD += $(GRAPE_LIBS)
+  hsys_stats_LDADD += $(GRAPE_LIBS)
+  hscale_LDADD += $(GRAPE_LIBS)
   get_densities_LDADD += $(GRAPE_LIBS)
   AM_LDFLAGS = $(GRAPE_LDFLAGS)
 endif
-sys_stats_LDADD += ../stubs/libstubs.la
-scale_LDADD += ../stubs/libstubs.la
+hsys_stats_LDADD += ../stubs/libstubs.la
+hscale_LDADD += ../stubs/libstubs.la
 get_densities_LDADD += ../stubs/libstubs.la
