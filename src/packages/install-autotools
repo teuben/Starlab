@@ -3,46 +3,50 @@
 # Set the prefix, or use a default (option x or default).  Note that
 # STARLAB_PATH must be set for the default option to work.
 
-set pre = ""
-if ($#argv > 0) then
-    if (x$1 == xx || x$1 == xdefault) then
-	if ($?STARLAB_PATH == 0) then
-	    echo STARLAB_PATH not set
-	    exit
-	endif
-	set p = $STARLAB_PATH/usr
-    else
-	set p = $1
+set flag = "default"
+if ($#argv > 0) set flag = $1
+
+if (x$flag == xx || x$flag == xdefault) then
+    if ($?STARLAB_PATH == 0) then
+	echo STARLAB_PATH not set
+	exit
     endif
-
-    set pre = "--prefix=$p"
-
-    # We will update the search path after each tool build, since
-    # automake and libtool installation may require the installed
-    # version of autoconf.  First add the target bin directory to
-    # the search path.
-
-    set path = ($p/bin $path)
+    set p = $STARLAB_PATH/usr
+else
+    set p = $flag
 endif
 
-echo Package prefix flag is \"$pre\"
+set pre = "--prefix=$p"
+
+# We will update the search path after each tool build, since
+# automake and libtool installation may require the installed
+# version of autoconf.  First add the target bin directory to
+# the search path.
+
+set path = ($p/bin $path)
+
+echo package prefix flag is \"$pre\"
 
 # (Re)build the autotools (isn't standardization wonderful?):
 
 ./clean-autotools
 
-foreach tool (autoconf automake libtool)
+# See which tool packagesexist.
 
-    echo Unpacking $tool
-    gunzip -c $tool*.tar.gz | tar xzf -
+set tools = (`find -name autoconf\*.tar.gz \
+		-o -name automake\*.tar.gz \
+		-o -name libtool\*.tar.gz  | sed "s/.tar.gz//"`)
 
-    set dir = $tool*[0-9]
+foreach dir ($tools)
+
+    echo unpacking $dir
+    gunzip -c $dir.tar.gz | tar xf -
 
     if (-d $dir) then
 
-	echo Installing $tool
+	echo installing $dir
 	set log = $dir.install.log
-	echo Installation log is $log
+	echo installation log is $log
 
 	chdir $dir
 	./configure $pre			>&! ../$log

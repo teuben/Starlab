@@ -4,10 +4,15 @@
 # but little extra effort in rebuilding from scratch, so just delete the
 # directory completely.
 
-foreach tool (autoconf automake libtool)
+# See which tool directories exist.
 
-    echo Cleaning $tool
-    set dir = $tool*[0-9]
+set tools = (`find -name autoconf\* -type d -prune \
+		-o -name automake\* -type d -prune \
+		-o -name libtool\*  -type d -prune`)
+
+foreach dir ($tools)
+
+    echo cleaning $dir
     if (-d $dir) then
 
 	/bin/rm -rf $dir
