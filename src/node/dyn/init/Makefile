@@ -43,7 +43,7 @@ OBJECT_FILES	= makesphere.o
 LIBRARY		= libdyn.a
 
 aking.o:	aking.f
-	$(STARLAB_FORTRAN_COMPILE) $(STARLAB_FORTRAN_FLAGS) -g3 -c aking.f
+	$(STARLAB_FORTRAN_COMPILE) $(STARLAB_FORTRAN_FLAGS) -c aking.f
 
 make_aniso_king:	make_aniso_king.C aking.o
 	$(STARLAB_CCC) $(CFLAGS) \

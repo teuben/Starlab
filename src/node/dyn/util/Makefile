@@ -15,7 +15,7 @@
 ##.............................................................................
 ##
 
-CFLAGS		=  $(STARLAB_CCC_FLAGS) -I$(INC) -g3
+CFLAGS		=  $(STARLAB_CCC_FLAGS) -I$(INC)
 
 #LIBFLAGS	= -L$(LIB) -ldyn -lnode -lstd -lm
 
