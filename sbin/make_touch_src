@@ -15,8 +15,13 @@ fi
 suf="$1"
 shift
 for file in "$@"; do
-    src=`expr match "$file" '\(.*\)\.o$'`$suf
-    if [ ! -f "$src" ]; then
+    root=`expr match "$file" '\(.*\)\.o$'`
+    src=$root$suf
+    lex=$root.l
+    yacc=$root.yc
+#   Create zero length source file if no source exists and no
+#   possibility of building it.
+    if [ ! -f "$src" -a ! -f $lex -a ! -f $yacc ]; then
 	touch "$src"
     fi
 done

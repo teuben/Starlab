@@ -1,14 +1,10 @@
 #!/bin/sh
-# (tcsh necessary with Redhat Linux, v. 4.x...)
 #
 # Starlab make helper.
 #
 # Compile a C++ source file $1 iff it is non-null.
 # Other arguments give compile command, switches, etc.
-#
-# NOTE: It might be best to make this a Bourne-shell script, for
-#       the sake of efficiency.
-#
+
 if [ $# -lt 2 ]; then
     echo "Usage: $0  srcfile.C  compiler opts ..." >&2
     exit 1
