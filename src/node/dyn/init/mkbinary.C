@@ -82,6 +82,34 @@ local void add_dynamics(dyn* cm, real ecc, real energy)
     secondary->set_vel(m1 * k.get_rel_vel() / m_total);
 }
 
+real zero_age_main_sequnece_radius(const real mass) {
+
+    real alpha, beta, gamma, delta, kappa, lambda;
+
+    real log_mass = log10(mass);
+
+    if (mass > 1.334) {
+
+	alpha = 0.1509 + 0.1709*log_mass;
+	beta  = 0.06656 - 0.4805*log_mass;
+	gamma = 0.007395 + 0.5083*log_mass;
+	delta = (0.7388*pow(mass, 1.679) - 1.968*pow(mass, 2.887))
+    	      / (1.0 - 1.821*pow(mass, 2.337));
+    } 
+    else {
+      
+	alpha = 0.08353 + 0.0565*log_mass;
+	beta  = 0.01291 + 0.2226*log_mass;
+	gamma = 0.1151 + 0.06267*log_mass;
+	delta = pow(mass, 1.25) * (0.1148 + 0.8604*mass*mass)
+              / (0.04651 + mass*mass);
+    }
+
+    real radius = delta;
+
+    return radius;
+}
+
 local real roche_radius(const real m1, const real m2) {
 
   real q = m1/m2;
@@ -99,8 +127,11 @@ local real minimum_semi_major_axis(dyn* b1, dyn* b2)
 
     // Use stellar mass as radius indicater.
     // mkbinary known little about stars
-    real rs_prim = b1->get_starbase()->conv_r_star_to_dyn(ms_prim);
-    real rs_sec  = b2->get_starbase()->conv_r_star_to_dyn(ms_sec);
+    real rs_prim = zero_age_main_sequnece_radius(ms_prim);
+    real rs_sec = zero_age_main_sequnece_radius(ms_sec);
+
+    // real rs_prim = b1->get_starbase()->conv_r_star_to_dyn(ms_prim);
+    // real rs_sec  = b2->get_starbase()->conv_r_star_to_dyn(ms_sec);
   
     real sma_prim = rs_prim/roche_radius(ms_prim, ms_sec);
     real sma_sec = rs_sec/roche_radius(ms_sec, ms_prim);
