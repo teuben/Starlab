@@ -677,6 +677,9 @@ void log_output(hdyn * b,
 	 << "               vel = " << b->get_vel() << endl;
     cerr << endl;
 
+    // Do energy output here using known data; sys_stats can only compute
+    // energies using the front end, so suppress that option below.
+
     print_recalculated_energies(b, true, true);
 
     // Note: on return from print_recalculated_energies, hdyn::pot
