@@ -1055,6 +1055,10 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 	    // Note that this may cause overflow...
 
 	    b->set_grape_rnb_sq(r_pert2);
+
+//	    cerr << func << ": computing perturbers for node "
+//		 << b->format_label() << endl << flush;
+
 	}
     }
 
@@ -1385,8 +1389,12 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    b->set_n_perturbers(npl);
 
 	    if (npl > MAX_PERTURBERS) {
-		b->set_valid_perturbers(false);
-		delete [] b->get_perturber_list();
+		b->remove_perturber_list();
+
+//		cerr << func << ": too many perturbers for "
+//		     << b->format_label()
+//		     << " -- deleting list" << endl << flush;
+
 	    }
 	}
 
@@ -1656,6 +1664,7 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     }
 
     if (restart) {
+//	cerr << "restarting GRAPE at time " << xtime << endl << flush;
 	nj_on_grape = initialize_grape_arrays(root, !grape_reattached);
 	n_previous_nodes = 0;
     }
