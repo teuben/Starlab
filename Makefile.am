@@ -48,7 +48,7 @@ pkginclude_HEADERS = include/bound3.h include/chydro.h include/config.h \
 EXTRA_DIST = doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
     scripts/kira_test scripts/kira_xdemo scripts/make_binary_demo \
     scripts/make_stellar_demo local/grape.sh.examples local/grape.sh.template \
-    developer-install-starlab \
+    install-starlab \
 etc \
 EXAMPLES \
 sbin/add_options \
@@ -278,14 +278,14 @@ src/node/util/rmnode.C \
 src/node/util/story_test.C \
 src/node/util/test.C \
 src/node/util/Testfile \
-src/packages/autoconf-2.59 \
-src/packages/automake-1.8.5 \
+src/packages/autoconf-2.59.tar.gz \
+src/packages/automake-1.8.5.tar.gz \
 src/packages/banner-1.3.2.tar.gz \
 src/packages/clean-autotools \
 src/packages/gifsicle-1.40.tar.gz \
 src/packages/install-autotools \
 src/packages/install-packages \
-src/packages/libtool-1.5.6 \
+src/packages/libtool-1.5.6.tar.gz \
 src/packages/Makefile \
 src/packages/package-list \
 src/packages/shhmsg-1.4.1.tar.gz \

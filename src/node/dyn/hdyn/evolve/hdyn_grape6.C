@@ -3107,6 +3107,9 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 //  *****  should be incorporated here too.                          *****
 //  **********************************************************************
 
+#define N_DENS	12	// density is based on the 12th nearest neighbor
+#define USE_MASS_DENSITY	false
+
 local INLINE void set_grape_density_radius(hdyn *b, real rnn_sq)
 
 // For a single particle, try to adjust the initial radius so that
@@ -3177,7 +3180,7 @@ local INLINE void set_grape_density_radius(hdyn *b, real rnn_sq)
     // (and note that compute_density will not be called later).
 
     if (rnn_sq <= 0)
-	compute_density(b, 0, NULL, 0);
+	compute_density(b, 0, USE_MASS_DENSITY, NULL, 0);
 
 #ifdef T_DEBUG
     if (in_debug_range && T_DEBUG_LEVEL > 0)
@@ -3203,8 +3206,6 @@ local void check_neighbors(hdyn *b, real rnb_sq, int indent = 0)
 }
 
 
-
-#define N_DENS	12	// density is based on the 12th nearest neighbor
 
 local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
@@ -3352,7 +3353,8 @@ local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe)
     }
 #endif
 
-    compute_density(b, N_DENS, dynlist, n_neighbors);	// writes to dyn story
+    compute_density(b, N_DENS, USE_MASS_DENSITY,	// writes to dyn story
+		    dynlist, n_neighbors);
 
 #ifdef T_DEBUG
     if (in_debug_range && T_DEBUG_LEVEL > 0) {
@@ -3481,7 +3483,7 @@ local INLINE bool old_get_densities(xreal xtime, hdyn *nodes[],
 			// Neighbor sphere is too big.  Expect status = 1.
 			// Write zero density to the dyn story.
 
-			compute_density(bb, 0, NULL, 0);
+			compute_density(bb, 0, USE_MASS_DENSITY, NULL, 0);
 
 #ifdef T_DEBUG
 			if (in_debug_range && T_DEBUG_LEVEL > 0) {
@@ -3619,7 +3621,7 @@ local INLINE int get_densities(xreal xtime, hdyn *nodes[],
 		    cerr << endl;
 
 		    bb->set_grape_rnb_sq(0);
-		    compute_density(bb, 0, NULL, 0);
+		    compute_density(bb, 0, USE_MASS_DENSITY, NULL, 0);
 		}
 	    }
 
@@ -3717,7 +3719,7 @@ local INLINE int get_densities(xreal xtime, hdyn *nodes[],
 			    // Write zero density to the dyn story and stop
 			    // further density calculations.
 
-			    compute_density(bb, 0, NULL, 0);
+			    compute_density(bb, 0, USE_MASS_DENSITY, NULL, 0);
 			    bb->set_grape_rnb_sq(0);
 
 #ifdef T_DEBUG

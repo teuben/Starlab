@@ -405,6 +405,7 @@ void print_recalculated_energies(dyn *, int, real, real e_corr = 0);
 
 void compute_density(dyn* b,
 		     int k = 12,
+		     bool use_mass = false,
 		     dyn** list = NULL,
 		     int n_list = 0);
 

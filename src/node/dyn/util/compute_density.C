@@ -58,10 +58,11 @@ local void write_density(dyn *d, int k, real density)
     putrq(d->get_dyn_story(), "density", density);
 }
 
-void  compute_density(dyn * b,      	// pointer to N-body system or node
-		      int k,		// use kth nearest neighbor [12]
-		      dyn ** list,	// list of neighbor nodes to work from
-		      int n_list)	// number of nodes on the list
+void  compute_density(dyn * b,	      // pointer to N-body system or node
+		      int k,	      // use kth nearest neighbor [12]
+		      bool use_mass,  // use mass density [no]
+		      dyn ** list,    // list of neighbor nodes to work from [0]
+		      int n_list)     // number of nodes on the list [0]
 
 // If list = NULL [default] or n_list = 0, use the entire system.
 
@@ -187,12 +188,12 @@ void  compute_density(dyn * b,      	// pointer to N-body system or node
 		      && neighbor_dist_sq[k] < VERY_LARGE_NUMBER) {
 		real volume = (4.0/3.0) * PI * pow(neighbor_dist_sq[k], 1.5);
 		if (volume > 0) {
-//		    density = (k - 1) / volume;	    // ApJ, 298, 80 (1985)
+//		    density = (k - 1) / volume;		// ApJ, 298, 80 (1985)
 
 		    real mass = 0;   
 		    for(int m=1; m<k; m++) // exclude self and outermost stars.
 			mass += neighbor_mass[k]; 
-		    density = mass/volume;    // ApJ, 298, 80 (1985)
+		    density = mass/volume;		// ApJ, 298, 80 (1985)
 		}
 	    }
 	}

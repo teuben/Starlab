@@ -1494,6 +1494,9 @@ static real rnb_sq_prev = 0;
 static int  nnb_prev = 0;
 static int  nnb_count = 0;
 
+#define N_DENS	12	// density is based on the 12th nearest neighbor
+#define USE_MASS_DENSITY	false
+
 local bool count_neighbors_and_adjust_h2(int chip, hdyn *b)
 {
     int nnb = h3nblist_(&nboards, &chip, h3nb);		// get neighbor list
@@ -1648,7 +1651,8 @@ local bool count_neighbors_and_adjust_h2(int chip, hdyn *b)
 	}
     }
 
-    compute_density(b, 12, dynlist, nnb);	// writes to dyn story
+    compute_density(b, N_DENS, USE_MASS_DENSITY,	// writes to dyn story
+		    dynlist, nnb);
 
     // Compute_density sometimes fails to write the proper info to
     // the dyn story.  Reason and circumstances still unknown.
@@ -1841,7 +1845,8 @@ local int get_densities_for_list(xreal time, int ni, hdynptr list[],
 
 		    // Function compute_density() writes to the  dyn story.
 
-		    compute_density(bb, 12, dynlist, nnb);
+		    compute_density(bb, N_DENS, USE_MASS_DENSITY,
+				    dynlist, nnb);
 		    delete [] dynlist;
 
 		    done[i] = true;
