@@ -1,0 +1,1 @@
+(kira -D -7 -d 10 -t 10 | xstarplot -m -t -l 1 -P 0.5) >& /dev/null
