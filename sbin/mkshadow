@@ -1,6 +1,6 @@
 #!/bin/csh -f
 
-# Make a shadow directory of the specified Starlab directory.
+# Make or update a shadow directory of the specified Starlab directory.
 # Usage:
 #	    mkshadow  source-directory  shadow-directory
 #
@@ -14,6 +14,9 @@
 # Updated to reflect Starlab's new configure/make structure by Steve (9/04).
 # Best to run this script before Starlab has been configured or built,
 # then work in the shadow directory.
+#
+# Note that the update option will add new links if they are needed, but
+# will NOT remove links to files that no longer exist.
 
 if ($#argv > 0 && ("x$1" == "x-h" || "x$1" == "x--help")) then
     echo Usage: mkshadow source-directory shadow-directory
@@ -38,34 +41,47 @@ else if (-e $dst) then
     set bad = 2
 endif
 
+set update = 0
 if ($bad != 0) then
-    echo -n "Delete $dst (y or n)? [n] "
+    if ($bad == 1) then
+	echo -n "Delete (d) or update (u) $dst? [quit] "
+    else
+	echo -n "Delete (d) $dst? [quit] "
+    endif
     set resp = $<
-    if ("x$resp" == "xy" || "x$resp" == "xY") then
+    if ("x$resp" == "xd") then
 	/bin/rm -rf $dst
+    else if ("x$resp" == "xu" && $bad == 1) then
+	set update = 1
     else
 	exit
     endif
 endif
 
-echo Shadowing directory $src with $dst
+if ($update == 0) then
+    echo Shadowing directory $src with $dst
+else
+    echo Updating shadow directory $dst \(shadowing $src\)
+endif
 
 #--------------------------------------------------------------------------
 
 # We are ready to start linking dst to src.  Start by listing the
-# directories and files to shadow.  Don't include CVS.
+# directories and files to shadow.  Don't include CVS, and go to some
+# trouble to avoid other local files needed by or created by the
+# configure/make build process.
 
 set curr = $PWD
 cd $src
 
-set dirs  = (`find . -type d -print | egrep -v '/CVS$|/local$|/config$'`)
+set dirs = (`find . -type d -print | egrep -v '/CVS$|/local$|/config$|\....s$|/tmp$|^./autom4|^./usr'`)
 
 # The list of files to link excludes local and config, which always copied.
 
 set files = ( \
   `find include src -name '*.[hcCfF]' -print -o -name '*.[ly][ly]' -print` \
   `find doc etc sbin scripts src/packages -name CVS -prune -o -type f -print` \
-  `/bin/ls -d [A-Z]* *.ac install* *.{m4,in} | egrep -v 'Makefile|CVS|HOST'` \
+  `/bin/ls -d [A-Z]* *.ac install-* *.{m4,in} | egrep -v 'Makefile|CVS|HOST'` \
   `find . -name Makefile.am -print` `/bin/ls include/stamp-h.in` \
 )
 
@@ -75,15 +91,32 @@ echo Found $#dirs directories and $#files files in directory $src
 
 #--------------------------------------------------------------------------
 
-mkdir $dst
+if (! -d $dst) then
+    if ($update == 1) then
+	echo Can\'t find shadow directory $dst		# can't happen?
+	exit
+    else
+	mkdir $dst
+    endif
+endif
+
 echo Making shadow directories in $dst \(1 dot per directory\):
+set newdir = 0
+
 foreach dir ($dirs)
     echo -n "."
-    mkdir -p $dst/$dir
+    if (! -d $dst/$dir) then
+	mkdir -p $dst/$dir
+	if ($update == 1) then
+	    @ newdir++
+	endif
+    endif
 end
 echo ""
+if ($update == 1) echo Created $newdir new directories
 
 echo Creating links from $dst to $src \(1 dot per 10 links\):
+set newlink = 0
 
 # Don't use foreach here since the number of entries in files may be large.
 
@@ -97,10 +130,14 @@ while ($i < $#files)
 	echo -n "."
 	@ n = 0
     endif
-    ln -s $cwd/$src/$file $cwd/$dst/$file >& /dev/null	# avoid errors on
-							# repeated file name
+    if (! -e $cwd/$dst/$file) then
+	ln -s $cwd/$src/$file $cwd/$dst/$file >& /dev/null  # avoid errors on
+							    # repeated file name
+	@ newlink++
+    endif
 end
 echo ""
+if ($update == 1) echo Created $newlink new links
 echo ""
 
 # Explicitly copy the "local" and "config" directories (excluding CVS)
@@ -109,10 +146,12 @@ echo ""
 foreach dir (local config)
     echo Copying $dir
     set dstdir = $dst/$dir
-    if (-e $dstdir) then
+    if (-e $dstdir && $update == 0) then
 	rm -r -f $dstdir
     endif
-    mkdir $dstdir
+    if (! -e $dstdir) then
+	mkdir $dstdir
+    endif
     foreach file (`find $src/$dir -name CVS -prune -o -type f -print`)
 	cp -p $file $dstdir
     end
