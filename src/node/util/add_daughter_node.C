@@ -8,14 +8,21 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// add_daughter_node:  add one extra node to the tree structure in the
-////                     input snapshot, under a specified node.
+//// Add one extra node to the tree structure in the input snapshot,
+//// under a specified node.
 ////
-//// Options:     -c     add a comment to snapshot [false]
-////              -e     echo tree structure [false]
-////              -i     specify index of node to add to [root]
-////              -j     specify index for new node [none]
-////              -m     specify node mass [1]
+//// Usage: mass_dist [OPTIONS]
+////
+//// Options:
+////          -c     add a comment to snapshot [false]
+////          -e     echo tree structure [false]
+////          -i     specify index of node to add to [root]
+////          -j     specify index for new node [none]
+////          -m     specify node mass [1]
+////
+//// Written by Piet Hut.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  Dec 1994   Piet Hut
 

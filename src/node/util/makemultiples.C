@@ -1,46 +1,57 @@
 
-//// makemultiples:  Create binary secondary, triple tertiairy, 
-////               quadruple quadrple, quintuple quintuple, etc, etc, etc.
-////               components for randomly
-////               selected stars in the input snapshot, placing the
-////               results in a hierarchical tree.  Only the masses
-////               of the hierarchical components 
-////               are set here; orbital parameters are set by
-////               dyn::makeorbits.  No attempt is made to maintain any
-////               existing mass or energy scaling.  Use scale after
-////               this function is called, but before makeorbits, if
-////               it is desired to specify energies in kT units.
-////               If it is desired to scale orbital parameters in stellar 
-////               units call add_stars before makeorbits.
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
+//// Create binary secondary, triple tertiary, quadruple quadruple,
+//// quintuple quintuple, etc, etc, etc. components for randomly
+//// selected stars in the input snapshot, placing the results in a
+//// hierarchical tree.  Only the masses of the hierarchical components 
+//// are set here; orbital parameters are set by dyn::makeorbits.  No
+//// attempt is made to maintain any existing mass or energy scaling.
+//// Use scale after this function is called, but before makeorbits, if
+//// it is desired to specify energies in kT units. If it is desired to
+//// scale orbital parameters in stellar units call add_stars before
+//// makeorbits.
 ////
-//// Options:      -d    specify depth: -d 2 allows binary hierarchies [2]
-////                                    -d 3 allows triples, etc.
+//// Usage: makemultiples [OPTIONS]
+////
+//// Options:
+////               -d    specify depth: [2] 2: allow binary hierarchies;
+////                     3: allow triples, etc.
 ////               -f    specify binary fraction [0.1]
 ////               -h    speficy fraction of hierarchies [0.1]
 ////                     fraction of triples, quadruples etc, are all 
 ////                     relative to the fraction of the lower order system.
-////                     I.e., if -f 0.5 -h 0.2, then 20% of the binaries 
+////                     i.e., if -f 0.5 -h 0.2, then 20% of the binaries 
 ////                     will be triples, 20% of the triples will be 
 ////                     quadruples, etc.
 ////               -i    use (a,b) as component indices [false]
-////               -l    specify lower limit on mass ratio or 
-////                                               secondary mass [0]
+////               -l    specify lower limit on mass ratio secondary mass [0]
 ////               -M    specify upper limit for primaries to be binaries [inf]
 ////               -m    specify lower limit for primaries to be binaries [0]
 ////               -p    split fraction of primaries [0.5]
-////               -q    select choice of minimum mass ratio [false]
-////                         if true, secondary mass ratio is chosen
-////                             uniformly on [lower_limit, upper_limit]
-////                         if false, secondary mass is chosen uniformly
-////                             on [mmin, primary_mass], where mmin and
-////                             mmax are specified on the command line
+////               -q    select choice of minimum mass ratio [false]:
+////                     if true, secondary mass ratio is chosen uniformly
+////                     on [lower_limit, upper_limit];
+////                     if false, secondary mass is chosen uniformly on
+////                     on [mmin, primary_mass], where mmin and mmax are
+////                     specified on the command line
 ////               -S    split primary star [false]
-
 ////               -s    specify random seed [random from system clock]
 ////               -u    specify upper limit on mass ratio or 
-////                                           secondary mass [1 or m_primary]
+////                     secondary mass [1 or m_primary]
 ////
-//                 Simon Portegies Zwart, Amsterdam, 6 June 2003
+//// Written by Simon Portegies Zwart.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
+//   Simon Portegies Zwart, Amsterdam, 6 June 2003
 
 #include "node.h"
 

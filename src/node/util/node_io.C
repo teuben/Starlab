@@ -8,9 +8,14 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// node_io:  Starlab node I/O functions.
+//// Test/check Starlab node I/O functions.
 ////
-//// Options:  none
+//// Options:
+//// None.
+////
+//// Written by Piet Hut and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "node.h"
 #include "util_io.h"
@@ -105,6 +110,7 @@ ostream& node::print_dyn_story(ostream& s,
 main(int argc, char** argv)
 {
     check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
     node *b;
     while (b = get_node()) {

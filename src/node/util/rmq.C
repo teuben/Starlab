@@ -8,13 +8,20 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// rmq:  remove a quantity from the dyn (or star or hydro) story
-////       of the input snapshot(s) (FLAT TREE ONLY).
+//// Remove a quantity from the dyn (or star or hydro) story of the
+//// input snapshot(s) (FLAT TREE ONLY).
 ////
-//// Options:    -c     add a comment to snapshot [false]
+//// Usage rmq [OPTIONS]
+////
+//// Options:
+////             -c     add a comment to snapshot [false]
 ////             -q     specify the quantity to remove [no default]
 ////             -h     remove from hydro story [false]
 ////             -s     remove from star story [false]
+////
+//// Written by Piet Hut.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  Jan 1993   Piet Hut
 

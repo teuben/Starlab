@@ -8,13 +8,19 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// snapprune:  pass through only one out of every k snapshots from
-////             the input stream.
+//// Pass through only one out of every k snapshots from the input stream.
 ////
-//// Options:    -c    add comment to snapshots [false]
+//// Usage snapprune [OPTIONS]
+////
+//// Options:
+////            -c    add comment to snapshots [false]
 ////             -k    specify k [2]
 ////             -s    specify random seed [random from system clock]
 ////             -x    specify output snapshot after which to exit [at end]
+////
+//// Written by Piet Hut.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  Nov 1994   Piet Hut
 

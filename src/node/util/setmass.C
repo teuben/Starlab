@@ -8,13 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// setmass:  set masses of specified particle(s) in input snapshot
-////           to specified values.
+//// Set masses of specified particle(s) in input snapshot to specified values.
 ////
 //// Usage:  setmass -l l1 -m mass1 -l l2 -m mass2 ...
 ////
-//// Options:    -l    specify label of next particle to modify [no default]
-////             -m    specify new mass for particle [no default]
+//// Options:
+////         -l    specify label of next particle to modify [no default]
+////         -m    specify new mass for particle [no default]
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 // Steve McMillan, July 1998
 
@@ -59,6 +63,7 @@ int main(int argc, char ** argv)
     label[0] = '\0';
 
     check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
     node *b;
     b = get_node();

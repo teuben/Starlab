@@ -8,10 +8,14 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// print_normal:  print out the tree structure of the input
-////                snapshot(s) in normal form.
+//// Print out the tree structure of the input snapshot(s) in normal form.
 ////
-//// Options:       none
+//// Options:
+//// None.
+////
+//// Written by Piet Hut and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "node.h"
 
@@ -136,6 +140,7 @@ main(int argc, char ** argv)
     node *root;    // root node
 
     check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
     while (root = get_node())
 	{

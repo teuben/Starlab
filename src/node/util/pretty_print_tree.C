@@ -8,9 +8,14 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// pretty_print_tree:  print out the tree structure of the input snapshot(s).
+//// Print out the tree structure of the input snapshot(s).
 ////
-//// Options:     none
+//// Options:
+//// None.
+////
+//// Written by Piet Hut and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  Dec 1994   Piet Hut
 
@@ -29,6 +34,7 @@ main(int argc, char ** argv)
     node *root;    // root node
 
     check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
     while (root = get_node()) {
 	root->pretty_print_tree();

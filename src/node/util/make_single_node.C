@@ -8,13 +8,20 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// mk_single_node:  create a single node, to which other nodes can be
-////                  added later, using `add_daughter_node'.
+//// Create a single node, to which other nodes can be added later,
+//// using `add_daughter_node'.
 ////
-//// Options:    -c  comment            optional comment
+//// Usage: make_single_node [OPTIONS]
+////
+//// Options:
+////             -c  comment            optional comment
 ////             -m  mass               optional mass [1]
 ////             -i                     label nodes
 ////
+//// Written by Piet Hut and Peter Teuben.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
 
 //   version 1:  Dec 1994   Piet Hut
 //               1998-11-25 Peter Teuben        fixed help

@@ -8,36 +8,41 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makesecondary:  Create binary secondary components for randomly
-////               selected stars in the input snapshot, placing the
-////               results in a binary tree.  Only secondary masses
-////               are set here; orbital parameters are set by
-////               dyn::makebinary.  No attempt is made to maintain any
-////               existing mass or energy scaling.  Use scale after
-////               this function is called, but before makebinary, if
-////               it is desired to specify energies in kT units.
+//// Create binary secondary components for randomly selected stars
+//// in the input snapshot, placing the results in a binary tree.
+//// Only secondary masses are set here; orbital parameters are set
+//// by dyn::makebinary.  No attempt is made to maintain any existing
+//// mass or energy scaling.  Use scale after this function is called,
+//// but before makebinary, if it is desired to specify energies in
+///// kT units.
 ////
-//// Options:      -f    specify binary fraction [0.1]
-////                             for stars with mass >= spacified with -m
-////               -i    use (a,b) as component indices [false]
-////               -I    don't limit masses to primary mass range [false]
-////               -l    specify lower limit on mass ratio or 
-////                                               secondary mass [0]
-////               -M    specify upper limit for primaries to be binaries [inf]
-////               -m    specify lower limit for primaries to be binaries [0]
-////               -q    select choice of minimum mass ratio [false]
-////                         if true, secondary mass ratio is chosen
-////                             uniformly on [lower_limit, upper_limit]
-////                         if false, secondary mass is chosen uniformly
-////                             on [mmin, primary_mass], where mmin and
-////                             mmax are specified on the command line
-////               -S    split primary star [false]
-////               -s    specify random seed [random from system clock]
-////               -u    specify upper limit on mass ratio or 
-////                                           secondary mass [1 or m_primary]
+//// Usage: makesecondary [OPTIONS]
+////
+//// Options:
+////          -f    specify binary fraction [0.1] for stars with
+////                mass >= value specified with -m
+////          -i    use (a,b) as component indices [false]
+////          -I    don't limit masses to primary mass range [false]
+////          -l    specify lower limit on mass ratio or secondary mass [0]
+////          -M    specify upper limit for primaries to be binaries [inf]
+////          -m    specify lower limit for primaries to be binaries [0]
+////          -q    select choice of minimum mass ratio [false]:
+////                if true, secondary mass ratio is chosen uniformly
+////                on [lower_limit, upper_limit];
+////                if false, secondary mass is chosen uniformly on
+////                [mmin, primary_mass], where mmin and mmax are
+////                specified on the command line
+////          -S    split primary star [false]
+////          -s    specify random seed [random from system clock]
+////          -u    specify upper limit on mass ratio or 
+////                secondary mass [1 or m_primary]
+////
+//// Written by Steve McMillan and Simon Portegies Zwart.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
-//		   Steve McMillan, July 1996
-//                 Simon Portegies Zwart, Tokyo, December 1997
+//   Steve McMillan, July 1996
+//   Simon Portegies Zwart, Tokyo, December 1997
 
 #include "node.h"
 

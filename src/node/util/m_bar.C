@@ -8,13 +8,20 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// m_bar:  determine the mean mass of a power-law mass distribution.
+//// Cdetermine the mean mass of a power-law mass distribution.
 ////
-//// Options:   -f        multiply result by this factor [1]
+//// Usage: m_bar [OPTIONS]
+////
+//// Options:
+////            -f        multiply result by this factor [1]
 ////            -e/x      exponent [-2.35 (Salpeter)]
 ////            -l/L      lower mass limit [1]
 ////            -u/U      upper mass limit [1]
 ////             -v       set verbose mode [false]
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "stdinc.h"
 

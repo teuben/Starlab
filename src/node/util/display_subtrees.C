@@ -8,10 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// display_subtrees:  output all subtrees in input snapshot(s), neglecting
-////                    the root and top-level nodes.
+//// Output all subtrees in input snapshot(s), neglecting the root
+//// and top-level nodes.
 ////
-//// Options:     -c    add a comment to snapshot [false]
+//// Usage: mass_dist [OPTIONS]
+////
+//// Options:
+////         -c    add a comment to snapshot [false]
+////
+//// Written by Piet Hut.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //   version 1:  Nov 1994   Piet Hut
 

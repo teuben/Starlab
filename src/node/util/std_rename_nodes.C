@@ -5,13 +5,18 @@
     //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
   //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
- //                                                       //            _\|/_
+ //                                                      //            _\|/_
 //=======================================================//              /|\ ~
 
-//// std_rename_nodes:  Rename all CM nodes bottom up to reflect the standard
-////                    Starlab naming scheme (a,b).
+//// Rename all CM nodes bottom up to reflect the standard Starlab
+//// naming scheme (a,b).
 ////
-//// Options:      none
+//// Options:
+//// None.
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 //		   Steve McMillan, Sep 2003
 

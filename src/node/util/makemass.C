@@ -8,27 +8,35 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makemass:Add a mass spectrum to an input snapshot.  Existing
-////          node masses are overwritten.
+//// Add a mass spectrum to an input snapshot.  Existing node masses
+//// are overwritten.
 ////
-//// Options:   -e/E/x/X  exponent [-2.35 (Salpeter)]
-////            -F/f      mass function option: 1) Power-law [default]
-////                                            2) Miller & Scalo
-////                                            3) Scalo
-////                                            4) Kroupa
-////                                            5) GdeMarchi
-////            Option -F requires one of the following strings:
-////                      (Power_Law, Miller_Scalo, 
-////                       Scalo, Kroupa, GdeMarchi)
-////                   -f requires the appropriate interger.
-////            -i        (re)number stellar index from highest to lowest mass.
-////            -l/L      lower mass limit [1]
-////            -m/M      scale to specified total mass [don't scale]
-////            -u/U      upper mass limit [1]
-////            -s        random seed
+//// If only one mass limit is set, the other is automatically forced
+//// to the same value.
 ////
-//// If only one mass limit is set, the other is automatically forced to the
-//// same value.
+//// Usage: mass_dist [OPTIONS]
+////
+//// Options:
+////         -e/E/x/X  exponent [-2.35 (Salpeter)]
+////          -F/f      mass function option:
+////                       (1) Power-law [default]
+////                       (2) Miller & Scalo
+////                       (3) Scalo
+////                       (4) Kroupa
+////                       (5) GdeMarchi
+////                    Option -F requires one of the following strings:
+////                    (Power_Law, Miller_Scalo, Scalo, Kroupa, GdeMarchi).
+////                    Option -f requires the appropriate integer.
+////          -i        (re)number stellar index from highest to lowest mass.
+////          -l/L      lower mass limit [1]
+////          -m/M      scale to specified total mass [don't scale]
+////          -u/U      upper mass limit [1]
+////          -s        random seed
+////
+//// Written by Steve McMillan and Simon Portegies Zwart.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
 
 //++ Note: The conversion factor for scaling between dynamical and stellar masss
 //++       is properly set in the output snapshot.

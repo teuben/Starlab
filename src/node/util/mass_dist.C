@@ -8,10 +8,17 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// mass_dist:  compute a mass histogram from the input snapshot(s).
+//// Compute a mass histogram from the input snapshot(s).
 ////
-//// Options:    -b    specify number of bins [25; 0 is OK]
+//// Usage: mass_dist [OPTIONS]
+////
+//// Options:
+////             -b    specify number of bins [25; 0 is OK]
 ////             -v    toggle verbose mode [off]
+////
+//// Written by Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "node.h"
 
