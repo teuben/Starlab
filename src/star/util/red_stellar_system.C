@@ -139,7 +139,8 @@ local bool visible_object(star_table star, real l_min) {
   // bool visible = (star.L_eff>l_min?1:0);
 
   bool visible = false;
-  if (star.L_eff>=l_min && star_type != Inert_Remnant)
+  if (star.L_eff>=l_min
+      && (int)star_type != (int)Inert_Remnant)	// casts added by Steve!!
     visible = true;
 
   // However, remnants are only visible if l_min is very small.
