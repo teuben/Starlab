@@ -63,18 +63,18 @@ all:	sbins .libs bins
 
 sbins:
 	@echo '==>' making sbin
-	@cd sbin ; make $(STARLAB_MAKEFLAGS) all ; cd ..
+	@cd sbin ; ${MAKE} $(STARLAB_MAKEFLAGS) all ; cd ..
 	@if [ -d etc ] ; then true ; else mkdir etc ; fi
 	@if [ -d etc/lab ] ; then true ; else mkdir etc/lab ; fi
 
 #..............................................................................
 
 .libs:
-	@make libs
+	@${MAKE} libs
 
 libs:
 	@if [ -d lib ] ; then true ; else mkdir lib ; fi
-	@cd src ; make $(STARLAB_MAKEFLAGS) lib ; cd ..
+	@cd src ; ${MAKE} $(STARLAB_MAKEFLAGS) lib ; cd ..
 	@touch .libs
 	@echo libs done
 
@@ -85,20 +85,20 @@ libs:
 
 bins:	.libs
 	@if [ -d bin ] ; then true ; else mkdir bin ; fi
-	@cd sbin ; make $(STARLAB_MAKEFLAGS) all ; cd ..
-	@cd src ; make $(STARLAB_MAKEFLAGS) bin ; cd ..
+	@cd sbin ; ${MAKE} $(STARLAB_MAKEFLAGS) all ; cd ..
+	@cd src ; ${MAKE} $(STARLAB_MAKEFLAGS) bin ; cd ..
 	@echo bins done
 
 #..............................................................................
 
 alt:
-	@cd src/alt ; make $(STARLAB_MAKEFLAGS) all ; cd ../..
-	@cd src/hydro/alt ; make $(STARLAB_MAKEFLAGS) all ; cd ../../..
+	@cd src/alt ; ${MAKE} $(STARLAB_MAKEFLAGS) all ; cd ../..
+	@cd src/hydro/alt ; ${MAKE} $(STARLAB_MAKEFLAGS) all ; cd ../../..
 
 #..............................................................................
 
 usr:
-	@cd usr ; make $(STARLAB_MAKEFLAGS) all ; cd ..
+	@cd usr ; ${MAKE} $(STARLAB_MAKEFLAGS) all ; cd ..
 
 #..............................................................................
 
@@ -141,7 +141,7 @@ tar:	tar0
 # Use hide_exe and show_exe in sbin to avoid carrying around executables.
 
 tar0:
-	@make list_tar0 | grep -v 'make\[.\]' \
+	@${MAKE} list_tar0 | grep -v 'make\[.\]' \
 			| grep -v cxx_repository > tar0_tmp_file
 	@check_make0 tar0_tmp_file
 	@rm -f tar0_tmp_file
@@ -155,12 +155,12 @@ do_tar0:
 		src/node/dyn/hdyn/evolve/Makefile.export
 	@$(MV) src/node/dyn/hdyn/util/Makefile \
 		src/node/dyn/hdyn/util/Makefile.export
-	@(cd sbin ; make hide_exe > /dev/null) >/dev/null
+	@(cd sbin ; ${MAKE} hide_exe > /dev/null) >/dev/null
 	@tarfile=`date '+%y%m%d%H'`.s_tar_lab_$(STARLAB_VERSION)_0.$(CEXT); \
 		echo Tar file is $$tarfile; \
-		make list_tar0| grep -v 'make\[.\]' > tar0_tmp_file;	\
+		${MAKE} list_tar0| grep -v 'make\[.\]' > tar0_tmp_file;	\
 		sbin/do_big_tar tar0_tmp_file  | $(COMPRESS) -c > $$tarfile
-	@(cd sbin ; make show_exe > /dev/null) >/dev/null
+	@(cd sbin ; ${MAKE} show_exe > /dev/null) >/dev/null
 	@$(MV) src/node/dyn/hdyn/evolve/Makefile.export \
 		src/node/dyn/hdyn/evolve/Makefile
 	@$(MV) src/node/dyn/hdyn/util/Makefile.export \
@@ -198,29 +198,29 @@ autosave:	autosave0
 # autosave0: same as tar0, but with a standard file name:
 
 autosave0:
-	@check_autosave0 `make list_tar0 | grep -v 'make\[.\]'`
+	@check_autosave0 `${MAKE} list_tar0 | grep -v 'make\[.\]'`
 
 do_autosave0:
-	@(cd sbin ; make hide_exe)
-	@(tar cf - `make list_tar0 | grep -v 'make\[.\]'`		\
+	@(cd sbin ; ${MAKE} hide_exe)
+	@(tar cf - `${MAKE} list_tar0 | grep -v 'make\[.\]'`		\
 		| $(COMPRESS) -c > autosave$(STARLAB_VERSION).tar0.$(CEXT)) \
 		2> /dev/null
-	@(cd sbin ; make show_exe)
+	@(cd sbin ; ${MAKE} show_exe)
 
 #..............................................................................
 
 tar1:
-	@(cd sbin ; make hide_exe)
+	@(cd sbin ; ${MAKE} hide_exe)
 	@if [ -d alt ] ; then (cd src/alt; $(MAKEWALK) tar nbody1 nbody5) ; fi
-	@(tar cf - `make list_tar1 | grep -v 'make\[.\]'` 		\
+	@(tar cf - `${MAKE} list_tar1 | grep -v 'make\[.\]'` 		\
 		| $(COMPRESS) -c > 					\
 		  `date '+%y%m%d%H'`.s_tar_lab_$(STARLAB_VERSION)_1.$(CEXT)) \
 		2> /dev/null
 	@if [ -d alt ] ; then (cd src/alt; $(RM) -f *.tar > /dev/null) ; fi
-	@(cd sbin ; make show_exe)
+	@(cd sbin ; ${MAKE} show_exe)
 
 list_tar1:
-	@echo [A-Z]* make_log templates doc sbin/[a-z]* sbin/[A-Z]*
+	@echo [A-Z]* ${MAKE} templates doc sbin/[a-z]* sbin/[A-Z]*
 	@find inc src -name 'nbody?' -prune -o -name '[A-Z]*' -print
 	@find inc src -name 'nbody?' -prune -o -name '*.[CcFfh]' -print
 	@find etc -name lab -prune -o -name '[A-Z]*' -print
@@ -228,14 +228,14 @@ list_tar1:
 #..............................................................................
 
 tar2:
-	@(cd sbin ; make hide_exe)
+	@(cd sbin ; ${MAKE} hide_exe)
 	@if [ -d alt ] ; then (cd src/alt; $(MAKEWALK) tar nbody1 nbody5); fi
-	@(tar cf - `make list_tar2 | grep -v 'make\[.\]'`		\
+	@(tar cf - `${MAKE} list_tar2 | grep -v 'make\[.\]'`		\
 		| $(COMPRESS) -c > 					\
 		  `date '+%y%m%d%H'`.s_tar_lab_$(STARLAB_VERSION)_2.$(CEXT)) \
 		2> /dev/null
 	@if [ -d alt ] ; then (cd src/alt; $(RM) -f *.tar > /dev/null) ; fi
-	@(cd sbin ; make show_exe)
+	@(cd sbin ; ${MAKE} show_exe)
 
 list_tar2:
 	@echo [A-Z]* make_log templates doc sbin/[a-z]* sbin/[A-Z]*
@@ -248,13 +248,13 @@ list_tar2:
 # autosave2: same as tar2, but with a standard file name:
 
 autosave2:
-	@(cd sbin ; make hide_exe)
+	@(cd sbin ; ${MAKE} hide_exe)
 	@if [ -d alt ] ; then (cd src/alt; $(MAKEWALK) tar nbody1 nbody5); fi
-	@(tar cf - `make list_tar2 | grep -v 'make\[.\]'`		\
+	@(tar cf - `${MAKE} list_tar2 | grep -v 'make\[.\]'`		\
 		| $(COMPRESS) -c > autosave$(STARLAB_VERSION).tar2.$(CEXT)) \
 		2> /dev/null
 	@if [ -d alt ] ; then (cd src/alt; $(RM) -f *.tar > /dev/null) ; fi
-	@(cd sbin ; make show_exe)
+	@(cd sbin ; ${MAKE} show_exe)
 
 #..............................................................................
 
@@ -267,7 +267,7 @@ autosave2:
 #	5. src/node, but not src/node/dyn and below.
 
 tarmin:
-	@(cd sbin ; make hide_exe)
+	@(cd sbin ; ${MAKE} hide_exe)
 	@(tar cf - Makefile templates README doc			    \
 		`cat inc/min.inc`					    \
 		`find sbin/* 	-name "*[~#]" -prune -o			    \
@@ -282,22 +282,22 @@ tarmin:
 		| $(COMPRESS) -c >					    \
 		  `date '+%y%m%d%H'`.s_tar_lab_$(STARLAB_VERSION)_min.$(CEXT)) \
 		2> /dev/null
-	@(cd sbin ; make show_exe)
+	@(cd sbin ; ${MAKE} show_exe)
 
 #..............................................................................
 
 # tar_curr: Make a tarfile for the current "build" configuration.
 
 tar_curr:
-	@(cd sbin ; make hide_exe)
+	@(cd sbin ; ${MAKE} hide_exe)
 	@(cd templates ; $(MV) cshrc.starlab .cshrc.starlab; \
 		         $(CP) ../local/cshrc.starlab .)
-	@(tar cf - `make tarlist`					 \
+	@(tar cf - `${MAKE} tarlist`					 \
 		| $(COMPRESS) -c > 					 \
 		`date '+%y%m%d%H'`.s_tar_lab_$(STARLAB_VERSION).$(CEXT)) \
 		2> /dev/null
 	@(cd templates ; $(MV) .cshrc.starlab cshrc.starlab)
-	@(cd sbin ; make show_exe)
+	@(cd sbin ; ${MAKE} show_exe)
 
 # List files to tar, given current "build" preferences.
 
@@ -319,15 +319,15 @@ clean:
 #..............................................................................
 
 cleanalt:
-	@echo '==>' descending to $(PWD)/src, to execute' ' "make cleanalt"
-	@cd src ; make cleanalt ; cd ..
+	@echo '==>' descending to $(PWD)/src, to execute' ' "${MAKE} cleanalt"
+	@cd src ; ${MAKE} cleanalt ; cd ..
 
 #..............................................................................
 
 cleanbin:
 	-$(RM) -f bin/*
-	@echo '==>' descending to $(PWD)/src, to execute' ' "make cleanbin"
-	@cd src ; make cleanbin ; cd ..
+	@echo '==>' descending to $(PWD)/src, to execute' ' "${MAKE} cleanbin"
+	@cd src ; ${MAKE} cleanbin ; cd ..
 
 #..............................................................................
 #..............................................................................
