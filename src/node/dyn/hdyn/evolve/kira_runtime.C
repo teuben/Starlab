@@ -17,6 +17,7 @@
 //	bool check_runtime
 
 #include "hdyn.h"
+#include "kira_defaults.h"
 #include <unistd.h>
 
 local void clean_up_file(char* name)
@@ -516,19 +517,19 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 		       || (s = strstr(line, "perturber_c")))
 
 		b->get_kira_options()->perturber_criterion
-		    = get_value(s, 1);
+		    = get_value(s, DEFAULT_PERTURBER_CRITERION);
 
 	    else if ((s = strstr(line, "optimize_scheduling"))
 		       || (s = strstr(line, "optimize_s")))
 
 		b->get_kira_options()->optimize_scheduling
-		    = get_value(s, 1);
+		    = get_value(s, DEFAULT_OPTIMIZE_SCHEDULING);
 
 	    else if ((s = strstr(line, "optimize_block"))
 		     || (s = strstr(line, "optimize_b")))
 
 		b->get_kira_options()->optimize_block
-		    = get_value(s, 1);
+		    = get_value(s, DEFAULT_OPTIMIZE_BLOCK);
 
 
 	    //  ***  allow_unperturbed and allow_multiples are  ***
@@ -539,101 +540,101 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 		     || (s = strstr(line, "min_u")))
 
 		b->get_kira_options()->min_unpert_steps
-		    = get_value(s, 5);
+		    = get_value(s, DEFAULT_MIN_UNPERT_STEPS);
 
 	    else if ((s = strstr(line, "full_merge_tol_for_close"))
 		     || (s = strstr(line, "full_merge_tol_"))
 		     || (s = strstr(line, "full_merge_close")))
 
 		b->get_kira_options()->full_merge_tol_for_close_binary
-		    = get_value(s, 1.e-4);
+		    = get_value(s, DEFAULT_FULL_MERGE_TOL_FOR_CLOSE_BINARY);
 
 	    else if ((s = strstr(line, "full_merge_tolerance"))
 		     || (s = strstr(line, "full_m")))
 
 		b->get_kira_options()->full_merge_tolerance
-		    = get_value(s, 1.e4);
+		    = get_value(s, DEFAULT_FULL_MERGE_TOLERANCE);
 
 	    else if ((s = strstr(line, "relax_factor"))
 		     || (s = strstr(line, "relax")))
 
 		b->get_kira_options()->relax_factor
-		    = get_value(s, 10.0);
+		    = get_value(s, DEFAULT_RELAX_FACTOR);
 
-	    else if ((s = strstr(line, "partial_merge_tolerance"))
+	    else if ((s = strstr(line, "partial_merge_factor"))
 		     || (s = strstr(line, "partial_m")))
 
-		b->get_kira_options()->partial_merge_tolerance
-		    = get_value(s, 0.01);
+		b->get_kira_options()->partial_merge_factor
+		    = get_value(s, DEFAULT_PARTIAL_MERGE_FACTOR);
 
 	    else if ((s = strstr(line, "multiple_merge_tolerance"))
 		     || (s = strstr(line, "multiple")))
 
 		b->get_kira_options()->multiple_merge_tolerance
-		    = get_value(s, 1.e6);
+		    = get_value(s, DEFAULT_MULTIPLE_MERGE_TOLERANCE);
 
 	    else if ((s = strstr(line, "unconditional_stable_fac"))
 		     || (s = strstr(line, "uncond"))
 		     || (s = strstr(line, "stable")))
 
 		b->get_kira_options()->unconditional_stable_fac
-		    = get_value(s, 5.0);
+		    = get_value(s, DEFAULT_UNCONDITIONAL_STABLE_FAC);
 
 	    else if ((s = strstr(line, "partial_stable_fac"))
 		     || (s = strstr(line, "partial_s")))
 
 		b->get_kira_options()->partial_stable_fac
-		    = get_value(s, 30.0);
+		    = get_value(s, DEFAULT_PARTIAL_STABLE_FAC);
 
 	    else if ((s = strstr(line, "aarseth_stable_fac"))
 		     || (s = strstr(line, "aarseth_s"))
 		     || (s = strstr(line, "aarseth_f")))
 
 		b->get_kira_options()->aarseth_stable_fac
-		    = get_value(s, 2.8);
+		    = get_value(s, DEFAULT_AARSETH_STABLE_FAC);
 
 	    else if ((s = strstr(line, "use_aarseth_criterion"))
 		     || (s = strstr(line, "use_a"))
 		     || (s = strstr(line, "aarseth")))
 
 		b->get_kira_options()->use_aarseth_criterion
-		    = get_value(s, 1);
+		    = get_value(s, DEFAULT_USE_AARSETH_CRITERION);
 
 	    else if ((s = strstr(line, "close_criterion"))
 		     || (s = strstr(line, "close")))
 
 		b->get_kira_options()->close_criterion
-		    = get_value(s, 2);
+		    = get_value(s, DEFAULT_CLOSE_CRITERION);
 
 	    else if ((s = strstr(line, "allow_keplstep"))
 		     || (s = strstr(line, "allow_k")))
 
 		b->get_kira_options()->allow_keplstep
-		    = get_value(s, 1);
+		    = get_value(s, DEFAULT_ALLOW_KEPLSTEP);
 
 	    else if ((s = strstr(line, "use_old_correct_acc_and_jerk"))
 		     || (s = strstr(line, "use_old")))
 
 		b->get_kira_options()->use_old_correct_acc_and_jerk
-		    = get_value(s, 1);
+		    = get_value(s, DEFAULT_USE_OLD_CORRECT_ACC_AND_JERK);
 
 	    else if ((s = strstr(line, "grape_check_count"))
 		     || (s = strstr(line, "grape_ch")))
 
 		b->get_kira_options()->grape_check_count
-		    = get_value(s, 15000);
+		    = get_value(s, DEFAULT_GRAPE_CHECK_COUNT);
 
 	    else if ((s = strstr(line, "grape_max_cpu"))
 		     || (s = strstr(line, "grape_m")))
 
 		b->get_kira_options()->grape_max_cpu
-		    = get_value(s, 15.0);
+		    = get_value(s, DEFAULT_GRAPE_MAX_CPU);
 
 	    else if ((s = strstr(line, "use_perturbed_list"))
 		     || (s = strstr(line, "use_p")))
 
 		b->get_kira_options()->use_perturbed_list
-		    = get_value(s, 1);
+		    = get_value(s, DEFAULT_USE_PERTURBED_LIST);
 
 	}
 

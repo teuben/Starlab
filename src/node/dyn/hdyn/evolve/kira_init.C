@@ -16,20 +16,9 @@
 //	bool kira_initialize
 
 #include "star/dstar_to_kira.h"
-
-#define		DEFAULT_ETA		0.1
-#define		DEFAULT_GAMMA		1.e-7
-#define		DEFAULT_DMIN		0.25
-#define		DEFAULT_LAG		2.5
-
-#define		DEFAULT_DT		10
-#define		DEFAULT_DT_REINIT	1
-#define		DEFAULT_DT_FULLDUMP	1
-#define		DEFAULT_DT_LOG		1
-#define		DEFAULT_DT_SSTAR	0.015625
+#include "kira_defaults.h"
 
 #define		LONG_BINARY_OUT		10
-
 #define		SEED_STRING_LENGTH	60
 
 #define Rsun_pc 2.255e-8	// R_sun/1 parsec = 6.960e+10/3.086e+18;
