@@ -1,5 +1,5 @@
 /*
- *  red_stelar system.C: reduce some usefull information from the
+ *  red_stellar system.C: reduce some useful information from the
  *  			 stellar system
  *.............................................................................
  *    version 1:  Jan 1997   Simon Portegies Zwart   email: spz@astro.uva.nl
@@ -36,11 +36,11 @@
 //  compare_parameters  --  compare parameters of two particles
 //-----------------------------------------------------------------------------
 
-local int compare_parameters(const real* pi, const real* pj)
+local int compare_parameters(const void* pi, const void* pj)
 {
-  if ((*pi) > (*pj))
+  if ((*(const real *)pi) > (*(const real *)pj))
     return(1);
-  else if ((*pi) < (*pj))
+  else if ((*(const real *)pi) < (*(const real *)pj))
     return(-1);
   else
     return(0);
