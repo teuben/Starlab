@@ -430,7 +430,10 @@ void hdyn::setup_binary_node()
 
 	    if (!od || od->kep) {
 
-		timestep = Starlab::min(timestep, bb->timestep);
+		real dt = bb->time + bb->timestep - time;
+
+		if (dt > 0)
+		    while (timestep > dt) timestep /= 2;
 
 		// Treat unperturbed CM as a leaf as far as the time
 		// step is concerned, but check its unpertubed time step
@@ -439,7 +442,7 @@ void hdyn::setup_binary_node()
 		// the unperturbed system.
 
 		if (od) {
-		    real dt = od->time + od->unperturbed_timestep - time;
+		    dt = od->time + od->unperturbed_timestep - time;
 		    if (dt > 0)
 			while (timestep > dt) timestep /= 2;
 		    bb = od->get_younger_sister();
