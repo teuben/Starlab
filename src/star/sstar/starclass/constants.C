@@ -204,6 +204,8 @@ real stellar_evolution_constants::parameters(stellar_mass_limits pm) {
              break;                                
 	case minimum_main_sequence:              return 0.075;
              break;                              // for pop III: 0.095 [Msun] 
+	case maximum_planet_mass:                return 0.00314;
+             break;                              // Lynden-Bell&O'Dwyer2001
 	case helium_dwarf_mass_limit:            return 0.45;
              break;                                
 	case carbon_dwarf_mass_limit:            return 1.2;

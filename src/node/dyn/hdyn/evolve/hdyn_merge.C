@@ -27,6 +27,8 @@
 #include <star/dstar_to_kira.h>
 #include <star/single_star.h>
 
+#define CALCULATE_POST_COLLISION_ON_GRAPE true
+
 // Local function (incomplete).
 
 local hdyn* apply_tidal_dissipation(hdyn* bi, hdyn* bj, kepler k)
@@ -716,9 +718,12 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
     // causes a not so very strange error.
     
     real epot, ekin, etot;
-    //calculate_energies(get_root(), eps2, epot, ekin, etot);	//dyn function
+#ifdef CALCULATE_POST_COLLISION_ON_GRAPE
     // replaced by GRAPE friendly function (SPZ, March 2001)
-    calculate_internal_energies(get_root(), epot, ekin, etot); 
+    //calculate_internal_energies(get_root(), epot, ekin, etot); 
+#else
+    calculate_energies(get_root(), eps2, epot, ekin, etot);	//dyn function
+#endif
     PRC(epot); PRC(ekin); PRL(etot);
     
     real de_total = etot - etot0;

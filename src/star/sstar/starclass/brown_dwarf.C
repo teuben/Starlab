@@ -44,10 +44,28 @@ brown_dwarf::brown_dwarf(main_sequence & m) : single_star(m) {
 
 void brown_dwarf::instantaneous_element() {
 
-     luminosity = 1.e-4; 
+    //Burrows & Libert 1993, J. Rev. Mod. Phys. 65, 301
+    luminosity = 938 * pow(relative_mass, 2.64); 
+    if(relative_age>1)
+	luminosity = 938 * pow(relative_mass, 2.64) / pow(relative_age, 1.3);
 
-     core_radius = radius = 0.1;
-       
+    if(get_element_type() == Planet) {
+	
+	// Lynden-Bell, D. & O'Dwyer, J.P., 2001, astro-ph/0104450
+	real mp_max = cnsts.parameters(maximum_planet_mass);
+	real y = relative_mass/mp_max;
+	radius = 1.50*pow(relative_mass, cnsts.mathematics(one_third))
+	              / (1+pow(y, 2));
+    }
+    else {
+
+	radius = 0.1;
+    }
+
+    core_radius = 0.1*radius;
+    if(envelope_mass==0)
+	radius = core_radius;
+
      update();
 }
 
@@ -59,12 +77,8 @@ void brown_dwarf::evolve_element(const real end_time) {
 
         next_update_age = relative_age + cnsts.safety(maximum_timestep);
 
-	//Burrows & Libert 1993, J. Rev. Mod. Phys. 65, 301
-	luminosity = 938 * pow(relative_mass, 2.64); 
-	if(relative_age>1)
-	  luminosity = 938 * pow(relative_mass, 2.64) / pow(relative_age, 1.3);
+	instantaneous_element();
 
-        core_radius = radius = 0.1;
        
         update();
      }
@@ -187,7 +201,7 @@ real brown_dwarf::gyration_radius_sq() {
 
 stellar_type brown_dwarf::get_element_type() {
   
-  if (get_total_mass() < 0.1*cnsts.parameters(minimum_main_sequence))
+  if (relative_mass < cnsts.parameters(maximum_planet_mass))
       return Planet;
     else
       return Brown_Dwarf;

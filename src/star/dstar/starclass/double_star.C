@@ -809,6 +809,11 @@ bool  double_star::stable(star* st) {	// default = NULL
 //	Single stellar angular momentum should be smaller than
 //	1/3-th the binary angular momentum.
 
+    // do not allow mass transfer between planets
+//    if(st->get_total_mass() < 2*cnsts.safety(minimum_mass_step)) {
+//	return false;
+//    }
+
   real J_star;
   if(st) {
     J_star = st->angular_momentum();
@@ -1271,10 +1276,12 @@ void double_star::recursive_binary_evolution(real dt,
 		cerr << "\tFirst contact" << endl;
 
 	      first_contact=true;
-	      donor->first_roche_lobe_contact_story(
-		     accretor->get_element_type());
-	      accretor->first_roche_lobe_contact_story(
-	                donor->get_element_type());
+
+	      // Swithced off for now (SPZ June 2001)
+	      //donor->first_roche_lobe_contact_story(
+		//     accretor->get_element_type());
+	      //accretor->first_roche_lobe_contact_story(
+	       //         donor->get_element_type());
 	      cerr << "First Roche-lobe contact for: ";
 	      put_state();
 	      cerr << endl;
@@ -2394,20 +2401,21 @@ real double_star::zeta(star * donor,
        ma_dot = accretor->accretion_limit(md_dot, dt);
 #endif
 
-       real md_dot = cnsts.safety(minimum_mass_step);
-       // PRC(md_dot);PRC(donor_timescale);PRL(donor->get_relative_mass());
+       real md_dot = min(donor->get_envelope_mass(), 
+			 cnsts.safety(minimum_mass_step));
+       //PRC(md_dot);PRC(donor_timescale);PRL(donor->get_relative_mass());
        real dt = md_dot * donor_timescale/donor->get_relative_mass();
        real ma_dot = accretor->accretion_limit(md_dot, dt);
 
        real M_old = get_total_mass();
        real old_donor_mass = donor->get_total_mass();
        real old_accretor_mass = accretor->get_total_mass();
-       //real q_old = old_accretor_mass/old_donor_mass;
+       real q_old = old_accretor_mass/old_donor_mass;
 
        real M_new = get_total_mass() - md_dot +  ma_dot;
        real new_donor_mass = donor->get_total_mass() - md_dot;
        real new_accretor_mass = accretor->get_total_mass() + ma_dot;
-       //real q_new = new_accretor_mass/new_donor_mass;
+       real q_new = new_accretor_mass/new_donor_mass;
 
        real a_fr, new_semi;
        real beta = cnsts.parameters(specific_angular_momentum_loss);
@@ -2424,8 +2432,12 @@ real double_star::zeta(star * donor,
 						      ->get_total_mass(),
 						      semi);
 
+       //PRC(magnetic_braking_aml);PRL(grav_rad_aml);
+       //PRC(dt);PRC(semi);
        a_dot = 2*dt*semi*(magnetic_braking_aml+grav_rad_aml);
+       //PRC(a_dot);
        new_semi += a_dot;
+       //PRL(a_dot);
        
        real rl = roche_radius(donor);
 
@@ -2433,19 +2445,20 @@ real double_star::zeta(star * donor,
 				new_donor_mass,
 				new_accretor_mass);
 
+       //PRC(new_semi);PRC(rl_d);PRL(rl);
        real d_lnr = (rl_d - rl)/rl;
        real d_lnm = (new_donor_mass - donor->get_total_mass()) 
 	          /  donor->get_total_mass();
      
        real zeta = d_lnr/d_lnm;
 
-//       PRC(M_old);PRL(M_new);
-//       PRC(old_donor_mass);PRL(new_donor_mass);
-//       PRC(old_accretor_mass);PRL(new_accretor_mass);
+       //PRC(M_old);PRL(M_new);
+       //PRC(old_donor_mass);PRL(new_donor_mass);
+       //PRC(old_accretor_mass);PRL(new_accretor_mass);
 
-//       PRC(a_dot);PRC(dt);PRC(semi);PRL(new_semi);
-//       PRC(rl);PRC(rl_d);PRC(d_lnr);PRL(d_lnm);
-//       PRL(zeta);
+       //PRC(a_dot);PRC(dt);PRC(semi);PRL(new_semi);
+       //PRC(rl);PRC(rl_d);PRC(d_lnr);PRL(d_lnm);
+       //PRL(zeta);
 
        return zeta;
      }
