@@ -233,11 +233,16 @@ main(int argc, char *argv[]) {
     long long pat, start = -1;
     double systime = -1;
     int postprefix = 0;
+    char *prog = argv[0];
 
-    if(argc <= 1 && isatty(0)) {
+    if((argc <= 1 && isatty(0)) || (argc>1 && argv[1][0] == '-' && argv[1][1] != 'a')) {
 	fprintf(stderr, "Usage: %s [-a] [file.kira] > outfile.kira\n\
 Converts an ASCII kira (tdyn) output stream to binary (tmpv, TL) form.\n\
-With -a option, converts to (indented) ASCII form instead.\n", argv[0]);
+With -a option, converts to (indented) ASCII form instead.\n\
+In any case, for each root-level synchronizing snapshot, reports (to stderr)
+the time, and starting and ending byte offsets in the output stream,
+for easy indexing.\n",
+			argv[0]);
 	exit(1);
     }
     if(argc > 1 && !strcmp(argv[1], "-a")) {
@@ -246,8 +251,9 @@ With -a option, converts to (indented) ASCII form instead.\n", argv[0]);
     }
     if(argc > 1 && 0!=strcmp(argv[1], "-")) {
 	if(freopen(argv[1], "r", stdin) == NULL) {
-	    fprintf(stderr, "%s: cannot open input: ", argv[1]);
+	    fprintf(stderr, "%s: %s: cannot open input: ", prog, argv[1]);
 	    perror("");
+	    fprintf(stderr, "Run %s with no arguments for help.\n", prog);
 	    exit(1);
 	}
     }
