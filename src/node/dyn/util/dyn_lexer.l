@@ -22,6 +22,12 @@
 	#include "dyn.h"
 	#include "dyn_parser.H"
 
+	// we define this ourselves due to the peeking at the first character
+	// in get_dyn() after which read(2) wouldn't work right
+	#define YY_INPUT(buf, result, max_size) \
+	  if ((result = fread(buf, 1, max_size, yyin)) < 0 ) \
+	    YY_FATAL_ERROR("input in flex scanner failed");
+
 	extern unsigned long lineno;
 	extern struct { char* s; size_t n; } story_line;
 
@@ -44,6 +50,7 @@ Hydro		return HYDRO;
 Star		return STAR;
 
 <LOG_TEXT>.*\n							{
+// log story: swallow everything up until ")Log"
   ++lineno;
   if (const char* const c = strstr(yytext, ")Log")) {
     // this is necessary because yyless is a macro that segfaults otherwise
@@ -57,18 +64,21 @@ Star		return STAR;
 }
 
 <VALUE>[[:alpha:]_(][[:alnum:]_(,)[:blank:]]*			{
+// alphanumeric string with parentheses, underscores, commas, and whitespace
   yylval.string = strdup(yytext);
   BEGIN INITIAL;
   return STRING;
 }
 
 [[:alpha:]_][[:alnum:]_]*					{
+// alphanumeric string with underscores
   yylval.string = strdup(yytext);
   BEGIN VALUE;
   return KEYWORD;
 }
 
 [-+]?([[:digit:]]*\.)?[[:digit:]]+([eE][-+]?[[:digit:]]+)?	{
+// floating point number
   yylval.real = atof(yytext);
   story_line.s =
     static_cast<char*>(realloc(story_line.s, (story_line.n+=1+yyleng)+1));

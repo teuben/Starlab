@@ -276,7 +276,6 @@ dyn *get_dyn(istream & s,		// default = cin
   case NUL:
     fast = getenv("STARLAB_USE_FDYN");		// fast input off by default
     format = ungetc(getc(stdin), stdin) == '(' ? DYN : COL;
-    fflush(stdin);
     return get_dyn(s, the_hbpfp, the_sbpfp, use_stories);
   }
 }
