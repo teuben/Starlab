@@ -133,6 +133,14 @@ void hdyn::print_static(ostream& s)		// default = cerr
     s << "max_slow_perturbation_sq = " << max_slow_perturbation_sq << endl;
 }
 
+bool hdyn::check_and_correct_node(bool verbose)	// default = true
+{
+    // Annoying that we have to add this.  Maybe there is a way
+    // to avoid it...?
+
+    return dyn::check_and_correct_node(verbose);
+}
+
 // Allow user to turn off timestep checking...
 
 static bool check_timestep = true;
@@ -364,8 +372,8 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
     if (complete_system_dump && is_root()) {
 	compute_com(this, fulldump_com_pos, fulldump_com_vel);
-	fulldump_com_pos -= pos;				// relative to root
-	fulldump_com_vel -= vel;
+	fulldump_com_pos -= pos;				// relative
+	fulldump_com_vel -= vel;				// to root
     }
 
     if (write_unformatted && short_short) {
@@ -395,7 +403,7 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	if (is_root()) {
 	    putpos += fulldump_com_pos;
 	    putvel += fulldump_com_vel;
-	} else {
+	} else if (is_top_level_node()) {
 	    putpos -= fulldump_com_pos;
 	    putvel -= fulldump_com_vel;
 	}
@@ -430,7 +438,7 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	if (is_root()) {
 	    pos += fulldump_com_pos;
 	    vel += fulldump_com_vel;
-	} else {
+	} else if (is_top_level_node()) {
 	    pos -= fulldump_com_pos;
 	    vel -= fulldump_com_vel;
 	}
