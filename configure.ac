@@ -210,7 +210,7 @@ AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
 # starlab_start file, but it is unclear how to distinguish between various
 # shells.  The $SHELL variable will apparently always be /bin/sh here.  We need
 # something that identifies the shell used by the user running configure.  If
-# such a variable could be identified, then the following code would work.
+# such a variable could be identified, then the following code would work...
 
 # Assume that if $SHELL is defined and contains csh we are a C-shell or
 # something similar.  Anything else is treated as a Bourne shell.
@@ -223,12 +223,12 @@ AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
 #    fi
 #fi
 
-# But it doesn't, so just link to the csh version (which is consistent with
-# previous usage in any case.)
-
-echo linking starlab_start to starlab_start.$shell
+# ...but it doesn't, so just link to the csh version (which is consistent
+# with previous usage in any case.)
 
 shell=csh
+
+echo linking starlab_start to starlab_start.$shell
 
 cd $STARLAB_SOURCE_PATH
 ln -f -s starlab_start.$shell starlab_start
@@ -237,6 +237,6 @@ ln -f -s starlab_start.$shell starlab_start
 # have execute permission.  To be fixed.  Following workaround doesn't
 # seem to work...
 
-chmod +x ./sbin/sremake
+chmod a+x ./sbin/sremake
 
 AC_OUTPUT

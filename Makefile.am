@@ -118,12 +118,13 @@ sbin/rget \
 sbin/routines.c \
 sbin/send_tar \
 sbin/shadowdir \
+sbin/sinstall \
 sbin/show \
 sbin/skn \
 sbin/slow_tail \
 sbin/smake \
-sbin/sremake \
 sbin/sqrt.c \
+sbin/sremake \
 sbin/starlab_compare \
 sbin/starlab-do2.cfg \
 sbin/strindex \
