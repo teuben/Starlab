@@ -158,10 +158,10 @@ void print_binary_from_dyn_pair(dyn* bi, dyn* bj,
     initialize_kepler_from_dyn_pair(k, bi, bj);
 
     dyn *primary = bi, *secondary = bj;
-    if (bj->get_mass() > bi->get_mass()) {
-	primary = bj;
-	secondary = bi;
-    }
+//    if (bj->get_mass() > bi->get_mass()) {
+//	primary = bj;
+//	secondary = bi;
+//    }
 
     if (verbose) PRI(4);
     cerr << "(";
