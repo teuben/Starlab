@@ -63,6 +63,8 @@
 ////                        based on input snapshot data [allow]
 ////              -O    save (and overwrite) extra snapshot at each output [no]
 ////              -q    specify initial virial ratio [0.5]
+////              -r    specify initial virial radius (may not be
+////                        specified in the input snap) [no]
 ////              -R    specify snapshot file for (re)start [none: use stdin]
 ////              -s    specify random seed [take from system clock]
 ////              -S    turn on stellar evolution [off][*]

@@ -965,7 +965,13 @@ bool kira_initialize(int argc, char** argv,
 			break;
             case 'Q':	err_exit("kira: -Q option removed: use add_tidal");
 	       		break;
-	    case 'r':	err_exit("kira: -r option removed: use scale");
+	    case 'r':	// err_exit("kira: -r option removed: use scale");
+
+			// Not desirable to use this option -- better to
+			// set with scale -- but retain just in case.
+
+			r_virial_set = true;
+			input_r_virial = atof(poptarg);	    
 			break;
 	    case 'R':	// err_exit("kira: -R option removed: use add_star");
 			break;
@@ -1176,6 +1182,11 @@ bool kira_initialize(int argc, char** argv,
     real initial_r_virial = get_initial_virial_radius(b, verbose,
 						      r_virial_set,
 						      input_r_virial);
+
+    // NOTE: important that initial_r_virial be set, as several other
+    // startup functions depend on it.  Reinstated the '-r' option, in
+    // case no previous function has determined the virial radius.
+    //						(Steve, 10/01)
 
     //----------------------------------------------------------------------
 
