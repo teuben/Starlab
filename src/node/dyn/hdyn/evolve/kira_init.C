@@ -32,7 +32,7 @@
 
 #define		SEED_STRING_LENGTH	60
 
-#define Rsun_pc 2.255e-8	// R= _sun/1 parsec = 6.960e+10/3.086e+18;
+#define Rsun_pc 2.255e-8	// R_sun/1 parsec = 6.960e+10/3.086e+18;
 
 local void initialize_index(node * b, bool verbose)
 {
@@ -787,9 +787,33 @@ bool kira_initialize(int argc, char** argv,
 
     kira_system_id(argc, argv);
 
+    // Make a preliminary pass over the argument list to check for
+    // an input file:
+
+    char infile[256];
+    bool read_from_file = false;
+
+    for (int i = 0; i < argc; i++)
+	if (argv[i][0] == '-' && argv[i][1] == 'R') {
+	    strcpy(infile, argv[++i]);
+	    read_from_file = true;
+	}
+
     // Read in a snapshot:
 
-    b = get_hdyn(cin);
+    if (read_from_file) {
+	ifstream s(infile);
+	if (!s) {
+	    cerr << "Data file " << infile << " not found." << endl;
+	    exit(1);
+	}
+	cerr << "Input file is " << infile << endl;
+	b = get_hdyn(s);
+    } else {
+	cerr << "Reading input from stdin" << endl;
+	b = get_hdyn(cin);
+    }
+
     if (b == NULL) err_exit("Can't read input snapshot");
 
     // NOTE: get_hdyn() reads in the hdyn tree structure using get_node()
@@ -932,7 +956,7 @@ bool kira_initialize(int argc, char** argv,
 	       		break;
 	    case 'r':	err_exit("kira: -r option removed: use scale");
 			break;
-	    case 'R':	err_exit("kira: -R option removed: use add_star");
+	    case 'R':	// err_exit("kira: -R option removed: use add_star");
 			break;
             case 's':	s_flag = true;
 			input_seed = atoi(poptarg);
@@ -984,14 +1008,8 @@ bool kira_initialize(int argc, char** argv,
     correct_multiples(b, verbose);
     initialize_index(b, verbose);
 
-
-
-
     set_friction_beta(friction_beta);
     cerr << "Dynamical friction beta = " << friction_beta << endl;
-
-
-
 
     //----------------------------------------------------------------------
 
