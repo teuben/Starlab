@@ -43,7 +43,10 @@ if (-e configure) then
 
     set Qt = ""
     set qt = `sbin/qt_major_version`
-    if (x$qt == "x" || $qt < 3) set Qt = "--without-qt"
+    if (x$qt == "x" || $qt < 3) then
+	set Qt = "--without-qt"
+	unsetenv QTDIR		# just in case...
+    endif
 
     # Perform the usual configuration process:
 
