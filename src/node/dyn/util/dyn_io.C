@@ -150,58 +150,61 @@ istream & dyn::scan_dyn_story(istream& s)
 	char keyword[MAX_INPUT_LINE_LENGTH];
 	const char *val = getequals(input_line, keyword);
 
-    	if (!strcmp("real_system_time", keyword)) {
+	if (val) {
 
-	    read_xreal = true;
-	    last_real = true;
+	    if (!strcmp("real_system_time", keyword)) {
 
-	    // We don't know anything about parent nodes yet, so it is
-	    // not easy to know if we are the root node.  Rule: if we
-	    // find real_system_time, assume that we should read an
-	    // xreal as system_time.  Otherwise, read it as real.
-	    // The tortuous logic is to keep the determination of
-	    // which choice we should make completely local.
-	    //
-	    // Unfortunately, this logic must be duplicated in all
-	    // other *dyn::scan_dyn_story functions (see _dyn_io.C,
-	    // hdyn_io.C, sdyn3_io.C)...
+		read_xreal = true;
+		last_real = true;
 
-	} else if (!strcmp("system_time", keyword)) {
+		// We don't know anything about parent nodes yet, so it is
+		// not easy to know if we are the root node.  Rule: if we
+		// find real_system_time, assume that we should read an
+		// xreal as system_time.  Otherwise, read it as real.
+		// The tortuous logic is to keep the determination of
+		// which choice we should make completely local.
+		//
+		// Unfortunately, this logic must be duplicated in all
+		// other *dyn::scan_dyn_story functions (see _dyn_io.C,
+		// hdyn_io.C, sdyn3_io.C)...
 
-	    // Check input format before reading.
+	    } else if (!strcmp("system_time", keyword)) {
 
-	    if (!last_real) read_xreal = false;
+		// Check input format before reading.
 
-	    if (read_xreal) {
+		if (!last_real) read_xreal = false;
 
-		//cerr << "dyn::scan_dyn_story: input "
-		//     << "time data type is xreal"
-		//     << endl;
+		if (read_xreal) {
 
-		// The following should set real_system_time too...
+		    //cerr << "dyn::scan_dyn_story: input "
+		    //     << "time data type is xreal"
+		    //     << endl;
 
-		set_system_time(get_xreal_from_input_line(input_line));
+		    // The following should set real_system_time too...
 
+		    set_system_time(get_xreal_from_input_line(input_line));
+
+		} else {
+
+		    //cerr << "dyn::scan_dyn_story: input "
+		    //     << "time data type is real"
+		    //     << endl;
+
+		    real_system_time = system_time = strtod(val, NULL);
+		}
 	    } else {
 
-		//cerr << "dyn::scan_dyn_story: input "
-		//     << "time data type is real"
-		//     << endl;
+		last_real = false;
 
-		real_system_time = system_time = strtod(val, NULL);
+		if (!strcmp("m", keyword))
+		    mass = strtod(val, NULL);
+		else if (!strcmp("r", keyword))
+		    set_vector_from_input_line(pos, input_line);
+		else if (!strcmp("v", keyword))
+		    set_vector_from_input_line(vel, input_line);
+		else
+		    add_story_line(dyn_story, input_line);
 	    }
-	} else {
-
-	    last_real = false;
-
-	    if (!strcmp("m", keyword))
-		mass = strtod(val, NULL);
-	    else if (!strcmp("r", keyword))
-		set_vector_from_input_line(pos, input_line);
-	    else if (!strcmp("v", keyword))
-		set_vector_from_input_line(vel, input_line);
-	    else
-		add_story_line(dyn_story, input_line);
 	}
     }
 

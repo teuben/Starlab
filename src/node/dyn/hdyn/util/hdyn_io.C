@@ -213,136 +213,139 @@ istream & hdyn::scan_dyn_story(istream & s)
 	char keyword[MAX_INPUT_LINE_LENGTH];
 	const char *val = getequals(input_line, keyword);
 
-	// See xreal notes in dyn_io.C...
+	if (val) {
 
-  	if (!strcmp("real_system_time", keyword)) {
+	    // See xreal notes in dyn_io.C...
 
-	    read_xreal = true;
-	    last_real = true;
+	    if (!strcmp("real_system_time", keyword)) {
 
-	} else if (!strcmp("system_time", keyword)) {
+		read_xreal = true;
+		last_real = true;
 
-	    // Check input format before reading.
+	    } else if (!strcmp("system_time", keyword)) {
 
-	    if (!last_real) read_xreal = false;
+		// Check input format before reading.
 
-	    if (read_xreal) {
+		if (!last_real) read_xreal = false;
 
-		//cerr << "hdyn::scan_dyn_story: input "
-		//     << "time data type is xreal"
-		//     << endl;
+		if (read_xreal) {
 
-		set_system_time(get_xreal_from_input_line(input_line));
+		    //cerr << "hdyn::scan_dyn_story: input "
+		    //     << "time data type is xreal"
+		    //     << endl;
 
-		// Note dangerous to separate root time and system time
-		//   -- should probably never be different...
+		    set_system_time(get_xreal_from_input_line(input_line));
 
-		// PRL(input_line);
-		// PRL(system_time);
-		// xprint(system_time);
+		    // Note dangerous to separate root time and system time
+		    //   -- should probably never be different...
+
+		    // PRL(input_line);
+		    // PRL(system_time);
+		    // xprint(system_time);
+
+		} else {
+
+		    // if (sizeof(xreal) != sizeof(real))	// crude test...
+		    //     cerr << "hdyn::scan_dyn_story: input "
+		    //		<< "time data type is real"
+		    //		<< endl;
+
+		    real_system_time = system_time = strtod(val, NULL);
+
+		}
+		// PRC(system_time); xprint(system_time);
 
 	    } else {
 
-//		if (sizeof(xreal) != sizeof(real))	// crude test...
-//		    cerr << "hdyn::scan_dyn_story: input "
-//			 << "time data type is real"
-//			 << endl;
+		last_real = false;
 
-		real_system_time = system_time = strtod(val, NULL);
+		if (!strcmp("t", keyword)) {
 
+		    if (read_xreal)
+			time = get_xreal_from_input_line(input_line);
+		    else
+			time = strtod(val, NULL);
+
+		} else if (!strcmp("dt", keyword))
+		    timestep = strtod(val, NULL);
+		else if (!strcmp("m", keyword))
+		    mass = strtod(val, NULL);
+		else if (!strcmp("r", keyword))
+		    set_vector_from_input_line(pos, input_line);
+		else if (!strcmp("v", keyword)) {
+		    set_vector_from_input_line(vel, input_line);
+		    posvel = pos*vel;
+		} else if (!strcmp("a", keyword))
+		    set_vector_from_input_line(acc, input_line);
+		else if (!strcmp("pot", keyword))
+		    pot = strtod(val, NULL);
+		else if (!strcmp("R_eff", keyword))
+		    radius = strtod(val, NULL);
+		else if (!strcmp("steps", keyword))
+		    steps = strtod(val, NULL);
+		else if (!strcmp("dir_f", keyword))
+		    direct_force = strtod(val, NULL);
+		else if (!strcmp("indir_f", keyword))
+		    indirect_force = strtod(val, NULL);
+
+		// NOTE:  Complete initialization of unperturbed and slow
+		// binary structures requires knowledge of the tree structure
+		// that is available only after the entire tree has been
+		// read in.  The get_hdyn() macro completes the setup of
+		// these parameters after the tree is known.
+
+		// Unperturbed motion:
+
+		else if (!strcmp("dt_u", keyword))
+		    unperturbed_timestep = strtod(val, NULL);
+		else if (!strcmp("full_u", keyword))
+		    fully_unperturbed = strtol(val, NULL, 10);
+
+		// Slow binary motion:
+
+		else if (!strcmp("slow_kappa", keyword)) {
+
+		    // Component of a slow binary.  The information needed to
+		    // recognize and reconstruct the slow structure is attached
+		    // to the ELDER sister only.
+
+		    int k = strtol(val, NULL, 10);
+
+		    if (k > 1) {
+
+			// Create the slow structure.  Note that we won't need
+			// to apply modifications to acc or the sister data.
+
+			slow = new slow_binary(k);
+			slow->set_dtau(timestep/k);
+
+			// t_init, t_apo, and tau will be set in due course...
+
+		    }
+
+		} else if (!strcmp("slow_t_init", keyword)) {
+
+		    if (slow) {
+			slow->set_t_init( strtod(val,NULL) );
+		    }
+
+		} else if (!strcmp("slow_t_apo", keyword)) {
+
+		    if (slow) {
+			slow->set_t_apo( strtod(val,NULL) );
+		    }
+
+		} else if (!strcmp("slow_tau", keyword)) {
+
+		    if (slow) {
+			slow->set_tau( strtod(val,NULL) );
+			slow->init_tau_pred();
+		    }
+
+		} else
+
+		    add_story_line(dyn_story, input_line);
 	    }
-	    // PRC(system_time); xprint(system_time);
-
-	} else {
-
-	    last_real = false;
-
-	    if (!strcmp("t", keyword)) {
-
-		if (read_xreal)
-		    time = get_xreal_from_input_line(input_line);
-		else
-		    time = strtod(val, NULL);
-
-	    } else if (!strcmp("dt", keyword))
-		timestep = strtod(val, NULL);
-	    else if (!strcmp("m", keyword))
-		mass = strtod(val, NULL);
-	    else if (!strcmp("r", keyword))
-		set_vector_from_input_line(pos, input_line);
-	    else if (!strcmp("v", keyword)) {
-		set_vector_from_input_line(vel, input_line);
-		posvel = pos*vel;
-	    } else if (!strcmp("a", keyword))
-		set_vector_from_input_line(acc, input_line);
-	    else if (!strcmp("pot", keyword))
-		pot = strtod(val, NULL);
-	    else if (!strcmp("R_eff", keyword))
-		radius = strtod(val, NULL);
-	    else if (!strcmp("steps", keyword))
-		steps = strtod(val, NULL);
-	    else if (!strcmp("dir_f", keyword))
-		direct_force = strtod(val, NULL);
-	    else if (!strcmp("indir_f", keyword))
-		indirect_force = strtod(val, NULL);
-
-	    // NOTE:  Complete initialization of unperturbed and slow
-	    // binary structures requires knowledge of the tree structure
-	    // that is available only after the entire tree has been
-	    // read in.  The get_hdyn() macro completes the setup of
-	    // these parameters after the tree is known.
-
-	    // Unperturbed motion:
-
-	    else if (!strcmp("dt_u", keyword))
-		unperturbed_timestep = strtod(val, NULL);
-	    else if (!strcmp("full_u", keyword))
-		fully_unperturbed = strtol(val, NULL, 10);
-
-	    // Slow binary motion:
-
-	    else if (!strcmp("slow_kappa", keyword)) {
-
-		// Component of a slow binary.  The information needed to
-		// recognize and reconstruct the slow structure is attached
-		// to the ELDER sister only.
-
-		int k = strtol(val, NULL, 10);
-
-		if (k > 1) {
-
-		    // Create the slow structure.  Note that we won't need
-		    // to apply modifications to acc or the sister data.
-
-		    slow = new slow_binary(k);
-		    slow->set_dtau(timestep/k);
-
-		    // t_init, t_apo, and tau will be set in due course...
-
-		}
-
-	    } else if (!strcmp("slow_t_init", keyword)) {
-
-		if (slow) {
-		    slow->set_t_init( strtod(val,NULL) );
-		}
-
-	    } else if (!strcmp("slow_t_apo", keyword)) {
-
-		if (slow) {
-		    slow->set_t_apo( strtod(val,NULL) );
-		}
-
-	    } else if (!strcmp("slow_tau", keyword)) {
-
-		if (slow) {
-		    slow->set_tau( strtod(val,NULL) );
-		    slow->init_tau_pred();
-		}
-
-	    } else
-
-		add_story_line(dyn_story, input_line);
 	}
     }
 

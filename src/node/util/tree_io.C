@@ -328,21 +328,25 @@ local node *get_node_recursive(istream& s,
 	    daughter->set_parent(b);
 	    elder_sister = daughter;
 	} else {
+
 	    char keyword[MAX_INPUT_LINE_LENGTH];
 	    const char *val = getequals(line, keyword);
-    	    if (!strcmp("i",keyword)) {
-		int index = strtol(val, NULL, 10);
-		b->set_label(index);
-	    } else if (!strcmp("name",keyword)) {
- 	        char cptr[MAX_INPUT_LINE_LENGTH];
-		sscanf(val,"%s",cptr);
-	        b->set_label(cptr);
-	    } else if (!strcmp("N",keyword)) {   // N is not read in here;
-		;                                // instead N is recomputed
-	    }                                    // at output time.
-	    else {
-		cerr << line <<" unexpected\n";
-	        exit(1);
+
+	    if (val) {
+		if (!strcmp("i",keyword)) {
+		    int index = strtol(val, NULL, 10);
+		    b->set_label(index);
+		} else if (!strcmp("name",keyword)) {
+		    char cptr[MAX_INPUT_LINE_LENGTH];
+		    sscanf(val,"%s",cptr);
+		    b->set_label(cptr);
+		} else if (!strcmp("N",keyword)) {   // N is not read in here;
+		    ;                                // instead N is recomputed
+		}                                    // at output time.
+		else {
+		    cerr << line <<" unexpected\n";
+		    exit(1);
+		}
 	    }
         }
         get_line(s, line);

@@ -42,20 +42,23 @@ istream & pdyn::scan_star_story(istream & s, int level)
 	char keyword[MAX_INPUT_LINE_LENGTH];
 	const char *val = getequals(input_line, keyword);
 
-	if (!strcmp("S", keyword)) {
+	if (val) {
 
-//	    char cptr[MAX_INPUT_LINE_LENGTH];
-//	    sscanf(val,"%s",cptr);
-//	    set_stellar_type(cptr);
+	    if (!strcmp("S", keyword)) {
 
-	    stellar_type = strtol(val, NULL, 10);
+		// char cptr[MAX_INPUT_LINE_LENGTH];
+		// sscanf(val,"%s",cptr);
+		// set_stellar_type(cptr);
 
-	} else if (!strcmp("T", keyword))
-	    temperature = strtod(val, NULL);
-	else if (!strcmp("L", keyword))
-	    luminosity = strtod(val, NULL);
+		stellar_type = strtol(val, NULL, 10);
 
-	// Ignore everything else -- no stories!
+	    } else if (!strcmp("T", keyword))
+		temperature = strtod(val, NULL);
+	    else if (!strcmp("L", keyword))
+		luminosity = strtod(val, NULL);
+
+	    // Ignore everything else -- no stories!
+	}
     }
     return s;
 }
@@ -79,42 +82,45 @@ istream & pdyn::scan_dyn_story(istream & s)
 	char keyword[MAX_INPUT_LINE_LENGTH];
 	const char *val = getequals(input_line, keyword);
 
-	// See xreal notes in dyn_io.C...
+	if (val) {
 
-	// PRL(keyword);
+	    // See xreal notes in dyn_io.C...
 
-	switch(keyword[0]) {
-	    case 'a':
+	    // PRL(keyword);
 
-		// Acceleration:
+	    switch(keyword[0]) {
 
-		if (!strcmp("a", keyword)) {
-		    set_vector_from_input_line(acc, input_line);
-		    break;
-		}
-		goto other;
+		case 'a':
+
+		    // Acceleration:
+
+		    if (!strcmp("a", keyword)) {
+			set_vector_from_input_line(acc, input_line);
+			break;
+		    }
+		    goto other;
 	
-	    case 'L':
+		    case 'L':
 
-		// Luminosity:
+			// Luminosity:
 
-		if (!strcmp("L", keyword)) {
-		    luminosity = strtod(val, NULL);
-		    break;
-		}
-		goto other;
+			if (!strcmp("L", keyword)) {
+			    luminosity = strtod(val, NULL);
+			    break;
+			}
+		    goto other;
 
-	    case 'm':
+		    case 'm':
 
-		// Mass:
+			// Mass:
 
-		if (!strcmp("m", keyword)) {
-		    mass = strtod(val, NULL);
-		    break;
-		}
-		goto other;
+			if (!strcmp("m", keyword)) {
+			    mass = strtod(val, NULL);
+			    break;
+			}
+		    goto other;
 	
-	    case 'r':
+		    case 'r':
 
 		// Position:
 
@@ -141,134 +147,138 @@ istream & pdyn::scan_dyn_story(istream & s)
 		}
 		goto other;
 
-	    case 's':
+		    case 's':
 
-		// System time:
+			// System time:
 
-		if (!strcmp("system_time", keyword)) {
+			if (!strcmp("system_time", keyword)) {
 
-		    // Check input format before reading.
-		    // If we see "system_time" and haven't ever encountered
-		    // "real_system_time", then all our times are plain
-		    // "real"s.
+			    // Check input format before reading.
+			    // If we see "system_time" and haven't encountered
+			    // "real_system_time", then all our times are plain
+			    // "real"s.
 
-		    if (!last_real) read_xreal = false;
-		    reading_root = true;
+			    if (!last_real) read_xreal = false;
+			    reading_root = true;
 
-		    if (read_xreal) {
+			    if (read_xreal) {
 
-			set_system_time(get_xreal_from_input_line(input_line));
+				set_system_time(
+				    get_xreal_from_input_line(input_line));
 
-		    } else {
+			    } else {
 
-			real_system_time = system_time = strtod(val, NULL);
+				real_system_time = system_time
+				    = strtod(val, NULL);
 
+			    }
+			    break;
+			}
+		    goto other;
+	
+		    case 'S':
+
+			// Stellar type:
+
+			if (!strcmp("S", keyword)) {
+
+			    // char cptr[MAX_INPUT_LINE_LENGTH];
+			    // sscanf(val,"%s",cptr);
+			    // set_stellar_type(cptr);
+
+			    stellar_type = strtol(val, NULL, 10);
+			    break;
+			}
+		    goto other;
+	
+		    case 't':
+
+			if (!strcmp("tmpv", keyword)) {
+
+			    // Read time, mass, pos, vel as unformatted data.
+			    // Input time is real, independent of USE_XREAL.
+
+			    // *** Must coordinate with hdyn_io.C. ***
+
+			    real time = read_unformatted_real( s );
+			    mass = read_unformatted_real( s );
+
+			    if (!reading_root) {
+
+				read_unformatted_vector( s, pos );
+				read_unformatted_vector( s, vel );
+
+			    } else {
+
+				// Root pos and vel used for center tracking.
+
+				read_unformatted_vector( s, tmp );
+				read_unformatted_vector( s, tmp );
+
+			    }
+			    break;
+			}
+
+		    if (!strcmp("t64mpv32", keyword)) {
+			real time = read_unformatted_real( s );
+			mass = read_unformatted32_real( s );
+
+			if (!reading_root) {
+
+			    read_unformatted32_vector( s, pos );
+			    read_unformatted32_vector( s, vel );
+
+			} else {
+
+			    // Root pos and vel are used for center tracking.
+
+			    read_unformatted_vector( s, tmp );
+			    read_unformatted_vector( s, tmp );
+
+			}
+			break;
 		    }
-		    break;
-		}
-		goto other;
+		    goto other;
 	
-	    case 'S':
+		    case 'T':
 
-		// Stellar type:
+			if (!strcmp("TL", keyword)) {
 
-		if (!strcmp("S", keyword)) {
+			    // Short output always uses floats for T and L.
 
-//		    char cptr[MAX_INPUT_LINE_LENGTH];
-//		    sscanf(val,"%s",cptr);
-//		    set_stellar_type(cptr);
+			    temperature = read_unformatted32_real( s );
+			    luminosity = read_unformatted32_real( s );
+			    break;
+			}
 
-		    stellar_type = strtol(val, NULL, 10);
-		    break;
-		}
-		goto other;
-	
-	    case 't':
+		    // Temperature:
 
-		if (!strcmp("tmpv", keyword)) {
-
-		    // Read time, mass, pos, and vel as unformatted data.
-		    // Input time will be real, independent of USE_XREAL.
-
-		    // *** Must coordinate with hdyn_io.C. ***
-
-		    real time = read_unformatted_real( s );
-		    mass = read_unformatted_real( s );
-
-		    if (!reading_root) {
-
-			read_unformatted_vector( s, pos );
-			read_unformatted_vector( s, vel );
-
-		    } else {
-
-			// Root pos and vel are used for center tracking.
-
-			read_unformatted_vector( s, tmp );
-			read_unformatted_vector( s, tmp );
-
+		    if (!strcmp("T", keyword)) {
+			temperature = strtod(val, NULL);
+			break;
 		    }
-		    break;
-		}
+		    goto other;
 
-		if (!strcmp("t64mpv32", keyword)) {
-		    real time = read_unformatted_real( s );
-		    mass = read_unformatted32_real( s );
+		    case 'v':
 
-		    if (!reading_root) {
+			// Velocity:
 
-			read_unformatted32_vector( s, pos );
-			read_unformatted32_vector( s, vel );
-
-		    } else {
-
-			// Root pos and vel are used for center tracking.
-
-			read_unformatted_vector( s, tmp );
-			read_unformatted_vector( s, tmp );
-
-		    }
-		    break;
-		}
-		goto other;
+			if (!strcmp("v", keyword)) {
+			    if (!reading_root)
+				set_vector_from_input_line(vel, input_line);
+			    else
+				set_vector_from_input_line(tmp, input_line);
+			    break;
+			}
+		    goto other;
 	
-	    case 'T':
+		    default:
+			other:
 
-		if (!strcmp("TL", keyword)) {
-
-		    // Short output always uses floats for T and L.
-
-		    temperature = read_unformatted32_real( s );
-		    luminosity = read_unformatted32_real( s );
-		    break;
+		    // else
+		    //    add_story_line(dyn_story, input_line);  // no stories!
+			    ;
 		}
-
-		// Temperature:
-
-		if (!strcmp("T", keyword)) {
-		    temperature = strtod(val, NULL);
-		    break;
-		}
-		goto other;
-
-	    case 'v':
-
-		// Velocity:
-
-		if (!strcmp("v", keyword)) {
-		    if (!reading_root)
-			set_vector_from_input_line(vel, input_line);
-		    else
-			set_vector_from_input_line(tmp, input_line);
-		    break;
-		}
-		goto other;
-	
-	    default:
-	      other:
-		// else
-		//    add_story_line(dyn_story, input_line);	// no stories!
-		;
 	}
     }
     return s;
@@ -286,346 +296,353 @@ istream & tdyn::scan_dyn_story(istream & s)
 	char keyword[MAX_INPUT_LINE_LENGTH];
 	const char *val = getequals(input_line, keyword);
 
-	// See xreal notes in dyn_io.C...
+	if (val) {
 
-	// PRL(keyword);
+	    // See xreal notes in dyn_io.C...
 
-	switch(keyword[0]) {
-	    case 'a':
+	    // PRL(keyword);
 
-		// Acceleration:
+	    switch(keyword[0]) {
+		case 'a':
 
-		if (!strcmp("a", keyword)) {
-		    set_vector_from_input_line(acc, input_line);
-		    break;
-		}
-		goto other;
+		    // Acceleration:
+
+		    if (!strcmp("a", keyword)) {
+			set_vector_from_input_line(acc, input_line);
+			break;
+		    }
+		    goto other;
 	
-	    case 'b':
+		    case 'b':
 
-		// Alternate center tracking (root node only).  Save all
-		// "center" quantities as stories for possible future use.
+			// Alternate center tracking (root node only).  Save all
+			// "center" quantities as stories for possible use.
 
-		if (reading_root) {
+			if (reading_root) {
 
-		    vec tmp;
+			    vec tmp;
 
-		    if (!strcmp("bound_center_pos", keyword)) {
-			set_vector_from_input_line(tmp, input_line);
+			    if (!strcmp("bound_center_pos", keyword)) {
+				set_vector_from_input_line(tmp, input_line);
 
-			// Create a dyn story if none exists...
+				// Create a dyn story if none exists...
 
-			if (!dyn_story)
-			    dyn_story = mk_story_chapter(DYNAMICS_ID);
+				if (!dyn_story)
+				    dyn_story = mk_story_chapter(DYNAMICS_ID);
 
-			putvq(dyn_story, "bound_center_pos", tmp);
+				putvq(dyn_story, "bound_center_pos", tmp);
+				break;
+			    }
+
+			    if (!strcmp("bound_center_vel", keyword)) {
+				set_vector_from_input_line(tmp, input_line);
+
+				if (!dyn_story)
+				    dyn_story = mk_story_chapter(DYNAMICS_ID);
+
+				putvq(dyn_story, "bound_center_vel", tmp);
+				break;
+			    }
+			}
+		    goto other;
+
+		    case 'c':
+
+			// Center tracking (root node only).  We will save any
+			// "center" quantities to the root node pos and vel, and
+			// save all such quantities as stories too.
+
+			if (reading_root) {
+
+			    if (!strcmp("center_pos", keyword)) {
+				set_vector_from_input_line(pos, input_line);
+
+				// Create a dyn story if none exists...
+
+				if (!dyn_story)
+				    dyn_story = mk_story_chapter(DYNAMICS_ID);
+
+				putvq(dyn_story, "center_pos", pos);
+				break;
+			    }
+
+			    if (!strcmp("center_vel", keyword)) {
+				set_vector_from_input_line(vel, input_line);
+
+				if (!dyn_story)
+				    dyn_story = mk_story_chapter(DYNAMICS_ID);
+
+				putvq(dyn_story, "center_vel", vel);
+				break;
+			    }
+
+			    if (!strcmp("center_type", keyword)) {
+				int type = strtol(val, NULL, 10);
+
+				if (!dyn_story)
+				    dyn_story = mk_story_chapter(DYNAMICS_ID);
+
+				putiq(dyn_story, "center_type", type);
+				break;
+			    }
+			}
+		    goto other;
+
+		    case 'd':
+
+			// Bookkeeping:
+
+			if (!strcmp("defunct", keyword)) {
+			    defunct = true;
+			    break;
+			}
+		    goto other;
+
+		    case 'e':
+
+			// Cluster escaper flag:
+
+			if (!strcmp("esc", keyword)) {
+
+			    // Use the prev pointer for temporary storage.
+			    // Careful!!
+			    // Note: NULL means that esc is false.
+
+			    // The esc flag is redundant, as all necessary
+			    // information is contained in t_esc (below).
+
+			    int esc = strtol(val, NULL, 10);
+			    if (esc == 1) prev = (tdyn*) 42;
+			    break;
+			}
+		    goto other;
+	
+		    case 'j':
+
+			// Jerk:
+
+			if (!strcmp("j", keyword)) {
+			    set_vector_from_input_line(jerk, input_line);
+			    break;
+			}
+		    goto other;
+	
+		    case 'k':
+
+			// Kepler flag (1 = unperturbed, 2 = lightly perturbed):
+
+			if (!strcmp("kep", keyword)) {
+			    int i;
+			    i = strtol(val, NULL, 10);
+			    kep = (kepler*)i;
+			    break;
+			}
+		    goto other;
+
+		    case 'L':
+
+			// Luminosity:
+
+			if (!strcmp("L", keyword)) {
+			    luminosity = strtod(val, NULL);
+			    break;
+			}
+		    goto other;
+
+		    case 'm':
+
+			// Mass:
+
+			if (!strcmp("m", keyword)) {
+			    mass = strtod(val, NULL);
+			    break;
+			}
+		    goto other;
+	
+		    case 'r':
+
+			// Position:
+
+			if (!strcmp("r", keyword)) {
+			    if (!reading_root)
+				set_vector_from_input_line(pos, input_line);
+			    else
+				set_vector_from_input_line(tmp, input_line);
+			    break;
+			}
+
+		    // Real system time:
+
+		    if (!strcmp("real_system_time", keyword)) {
+
+			// "real_system_time" (a) gives the root-node time in
+			// real format and (b) serves as a flag that all other
+			// times are given in xreal form.
+
+			read_xreal = true;
+			last_real = true;
+			reading_root = true;
+			break;
+		    }
+		    goto other;
+
+		    case 's':
+
+			// System time:
+
+			if (!strcmp("system_time", keyword)) {
+
+			    // Check input format before reading.
+			    // If we see "system_time" and haven't encountered
+			    // "real_system_time", then all our times are plain
+			    // "real"s.
+
+			    if (!last_real) read_xreal = false;
+			    reading_root = true;
+
+			    if (read_xreal) {
+
+				set_system_time(
+				    get_xreal_from_input_line(input_line));
+
+			    } else {
+
+				real_system_time = system_time
+				    = strtod(val, NULL);
+
+			    }
+			    break;
+			}
+		    goto other;
+	
+		    case 'S':
+
+			// Stellar type:
+
+			if (!strcmp("S", keyword)) {
+
+			    // char cptr[MAX_INPUT_LINE_LENGTH];
+			    // sscanf(val,"%s",cptr);
+			    // set_stellar_type(cptr);
+
+			    stellar_type = strtol(val, NULL, 10);
+			    break;
+			}
+		    goto other;
+	
+		    case 't':
+
+			// Time:
+
+			if (!strcmp("t", keyword)) {
+			    if (read_xreal)
+				time = get_xreal_from_input_line(input_line);
+			    else {
+				time = strtod(val, NULL);
+			    }
+			    break;
+			}
+
+		    if (!strcmp("tmpv", keyword)) {
+
+			// Read time, mass, pos, and vel as unformatted data.
+			// Input time will be real, independent of USE_XREAL.
+
+			// *** Must coordinate with hdyn_io.C. ***
+
+			time = read_unformatted_real( s );
+			mass = read_unformatted_real( s );
+
+			if (!reading_root) {
+
+			    read_unformatted_vector( s, pos );
+			    read_unformatted_vector( s, vel );
+
+			} else {
+
+			    // Root pos and vel are used for center tracking.
+
+			    read_unformatted_vector( s, tmp );
+			    read_unformatted_vector( s, tmp );
+
+			}
 			break;
 		    }
 
-		    if (!strcmp("bound_center_vel", keyword)) {
-			set_vector_from_input_line(tmp, input_line);
+		    if (!strcmp("t64mpv32", keyword)) {
+			time = read_unformatted_real( s );
+			mass = read_unformatted32_real( s );
 
-			if (!dyn_story)
-			    dyn_story = mk_story_chapter(DYNAMICS_ID);
+			if (!reading_root) {
 
-			putvq(dyn_story, "bound_center_vel", tmp);
-			break;
-		    }
-		}
-		goto other;
+			    read_unformatted32_vector( s, pos );
+			    read_unformatted32_vector( s, vel );
 
-	    case 'c':
+			} else {
 
-		// Center tracking (root node only).  We will save any
-		// "center" quantities to the root node pos and vel, and
-		// save all such quantities as stories too.
+			    // Root pos and vel are used for center tracking.
 
-		if (reading_root) {
+			    read_unformatted_vector( s, tmp );
+			    read_unformatted_vector( s, tmp );
 
-		    if (!strcmp("center_pos", keyword)) {
-			set_vector_from_input_line(pos, input_line);
-
-			// Create a dyn story if none exists...
-
-			if (!dyn_story)
-			    dyn_story = mk_story_chapter(DYNAMICS_ID);
-
-			putvq(dyn_story, "center_pos", pos);
+			}
 			break;
 		    }
 
-		    if (!strcmp("center_vel", keyword)) {
-			set_vector_from_input_line(vel, input_line);
+		    // Escape time.
 
-			if (!dyn_story)
-			    dyn_story = mk_story_chapter(DYNAMICS_ID);
+		    if (!strcmp("t_esc", keyword)) {
 
-			putvq(dyn_story, "center_vel", vel);
+			// Another kludge...  Careful again!!
+			// Return t_esc pointed to by t_next.
+			// MUST be sure to delete it on return.
+
+			real *t_esc = new real;
+			*t_esc = strtod(val, NULL);
+
+			next = (tdyn *)t_esc;
+		    }		
+		    goto other;
+	
+		    case 'T':
+
+			if (!strcmp("TL", keyword)) {
+
+			    // Short output always uses floats for T and L.
+
+			    temperature = read_unformatted32_real( s );
+			    luminosity = read_unformatted32_real( s );
+			    break;
+			}
+
+		    // Temperature:
+
+		    if (!strcmp("T", keyword)) {
+			temperature = strtod(val, NULL);
 			break;
 		    }
+		    goto other;
 
-		    if (!strcmp("center_type", keyword)) {
-			int type = strtol(val, NULL, 10);
+		    case 'v':
 
-			if (!dyn_story)
-			    dyn_story = mk_story_chapter(DYNAMICS_ID);
+			// Velocity:
 
-			putiq(dyn_story, "center_type", type);
-			break;
-		    }
-		}
-		goto other;
-
-	    case 'd':
-
-		// Bookkeeping:
-
-		if (!strcmp("defunct", keyword)) {
-		    defunct = true;
-		    break;
-		}
-		goto other;
-
-	    case 'e':
-
-		// Cluster escaper flag:
-
-		if (!strcmp("esc", keyword)) {
-
-		    // Use the prev pointer for temporary storage.  Careful!!
-		    // Note: NULL means that esc is false.
-
-		    // The esc flag is largely redundant, as all necessary
-		    // information is contained in t_esc (below).
-
-		    int esc = strtol(val, NULL, 10);
-		    if (esc == 1) prev = (tdyn*) 42;
-		    break;
-		}
-		goto other;
+			if (!strcmp("v", keyword)) {
+			    if (!reading_root)
+				set_vector_from_input_line(vel, input_line);
+			    else
+				set_vector_from_input_line(tmp, input_line);
+			    break;
+			}
+		    goto other;
 	
-	    case 'j':
+		    default:
+			other:
 
-		// Jerk:
-
-		if (!strcmp("j", keyword)) {
-		    set_vector_from_input_line(jerk, input_line);
-		    break;
+		    // else
+		    //    add_story_line(dyn_story, input_line);  // no stories
+			    ;
 		}
-		goto other;
-	
-	    case 'k':
-
-		// Kepler flag (1 = unperturbed, 2 = lightly perturbed):
-
-		if (!strcmp("kep", keyword)) {
-		    int i;
-		    i = strtol(val, NULL, 10);
-		    kep = (kepler*)i;
-		    break;
-		}
-		goto other;
-
-	    case 'L':
-
-		// Luminosity:
-
-		if (!strcmp("L", keyword)) {
-		    luminosity = strtod(val, NULL);
-		    break;
-		}
-		goto other;
-
-	    case 'm':
-
-		// Mass:
-
-		if (!strcmp("m", keyword)) {
-		    mass = strtod(val, NULL);
-		    break;
-		}
-		goto other;
-	
-	    case 'r':
-
-		// Position:
-
-		if (!strcmp("r", keyword)) {
-		    if (!reading_root)
-			set_vector_from_input_line(pos, input_line);
-		    else
-			set_vector_from_input_line(tmp, input_line);
-		    break;
-		}
-
-		// Real system time:
-
-		if (!strcmp("real_system_time", keyword)) {
-
-		    // "real_system_time" (a) gives the root-node time in
-		    // real format and (b) serves as a flag that all other
-		    // times are given in xreal form.
-
-		    read_xreal = true;
-		    last_real = true;
-		    reading_root = true;
-		    break;
-		}
-		goto other;
-
-	    case 's':
-
-		// System time:
-
-		if (!strcmp("system_time", keyword)) {
-
-		    // Check input format before reading.
-		    // If we see "system_time" and haven't ever encountered
-		    // "real_system_time", then all our times are plain
-		    // "real"s.
-
-		    if (!last_real) read_xreal = false;
-		    reading_root = true;
-
-		    if (read_xreal) {
-
-			set_system_time(get_xreal_from_input_line(input_line));
-
-		    } else {
-
-			real_system_time = system_time = strtod(val, NULL);
-
-		    }
-		    break;
-		}
-		goto other;
-	
-	    case 'S':
-
-		// Stellar type:
-
-		if (!strcmp("S", keyword)) {
-
-//		    char cptr[MAX_INPUT_LINE_LENGTH];
-//		    sscanf(val,"%s",cptr);
-//		    set_stellar_type(cptr);
-
-		    stellar_type = strtol(val, NULL, 10);
-		    break;
-		}
-		goto other;
-	
-	    case 't':
-
-		// Time:
-
-		if (!strcmp("t", keyword)) {
-		    if (read_xreal)
-			time = get_xreal_from_input_line(input_line);
-		    else {
-			time = strtod(val, NULL);
-		    }
-		    break;
-		}
-
-		if (!strcmp("tmpv", keyword)) {
-
-		    // Read time, mass, pos, and vel as unformatted data.
-		    // Input time will be real, independent of USE_XREAL.
-
-		    // *** Must coordinate with hdyn_io.C. ***
-
-		    time = read_unformatted_real( s );
-		    mass = read_unformatted_real( s );
-
-		    if (!reading_root) {
-
-			read_unformatted_vector( s, pos );
-			read_unformatted_vector( s, vel );
-
-		    } else {
-
-			// Root pos and vel are used for center tracking.
-
-			read_unformatted_vector( s, tmp );
-			read_unformatted_vector( s, tmp );
-
-		    }
-		    break;
-		}
-
-		if (!strcmp("t64mpv32", keyword)) {
-		    time = read_unformatted_real( s );
-		    mass = read_unformatted32_real( s );
-
-		    if (!reading_root) {
-
-			read_unformatted32_vector( s, pos );
-			read_unformatted32_vector( s, vel );
-
-		    } else {
-
-			// Root pos and vel are used for center tracking.
-
-			read_unformatted_vector( s, tmp );
-			read_unformatted_vector( s, tmp );
-
-		    }
-		    break;
-		}
-
-		// Escape time.
-
-		if (!strcmp("t_esc", keyword)) {
-
-		    // Another kludge...  Careful again!!
-		    // Return t_esc pointed to by t_next.
-		    // MUST be sure to delete it on return.
-
-		    real *t_esc = new real;
-		    *t_esc = strtod(val, NULL);
-
-		    next = (tdyn *)t_esc;
-		}		
-		goto other;
-	
-	    case 'T':
-
-		if (!strcmp("TL", keyword)) {
-
-		    // Short output always uses floats for T and L.
-
-		    temperature = read_unformatted32_real( s );
-		    luminosity = read_unformatted32_real( s );
-		    break;
-		}
-
-		// Temperature:
-
-		if (!strcmp("T", keyword)) {
-		    temperature = strtod(val, NULL);
-		    break;
-		}
-		goto other;
-
-	    case 'v':
-
-		// Velocity:
-
-		if (!strcmp("v", keyword)) {
-		    if (!reading_root)
-			set_vector_from_input_line(vel, input_line);
-		    else
-			set_vector_from_input_line(tmp, input_line);
-		    break;
-		}
-		goto other;
-	
-	    default:
-	      other:
-		// else
-		//    add_story_line(dyn_story, input_line);	// no stories
-		;
 	}
     }
     return s;

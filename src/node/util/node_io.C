@@ -75,13 +75,16 @@ istream& node::scan_dyn_story(istream& s)
 	char keyword[MAX_INPUT_LINE_LENGTH];
 	const char *val = getequals(input_line, keyword);
 
-    	if (0) {   // trick to keep the else if() statements homogeneous
+	if (val) {
+
+	    if (0) {   // trick to keep the else if() statements homogeneous
 
     	    }else if(!strcmp("m",keyword)){
 		mass = strtod(val, NULL);
 	    }else{
 		add_story_line(dyn_story, input_line);
 	    }
+	}
     }
     return s;
 }

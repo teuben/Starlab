@@ -24,27 +24,30 @@ istream & starbase::scan_star_story(istream& s, int level)
 	char keyword[MAX_INPUT_LINE_LENGTH];
 	const char *val = getequals(input_line, keyword);
 
-	// NOTE: The code below is significantly different from the old
-	// version, which used is_root() and appears to have been wrong.
-	// The problem is that, because of the logic of get_node_recursive,
-	// is_root can't be used because the parent pointers haven't yet
-	// been set.  Fix is to include level as an additional parameter.
+	if (val) {
 
-//	cerr << "node: " << the_node->format_label() << "  "; PRL(level);
+	    // NOTE: The code below is significantly different from the old
+	    // version, which used is_root() and appears to have been wrong.
+	    // The problem is that, because of the logic of get_node_recursive,
+	    // is_root can't be used because the parent pointers haven't yet
+	    // been set.  Fix is to include level as an additional parameter.
 
-        if (level == 0 && !strcmp("mass_scale", keyword)) {
-            m_conv_star_to_dyn = strtod(val, NULL);
+	    // cerr << "node: " << the_node->format_label() << "  "; PRL(level);
 
-        } else if (level == 0 && !strcmp("size_scale", keyword)) {
-            r_conv_star_to_dyn = strtod(val, NULL);
+	    if (level == 0 && !strcmp("mass_scale", keyword)) {
+		m_conv_star_to_dyn = strtod(val, NULL);
 
-        } else if (level == 0 && !strcmp("time_scale", keyword)) {
-            t_conv_star_to_dyn = strtod(val, NULL);
+	    } else if (level == 0 && !strcmp("size_scale", keyword)) {
+		r_conv_star_to_dyn = strtod(val, NULL);
 
-        } else {
-//	    cerr << "Adding " << input_line << " to star story for "
-//		 << get_node()->format_label() << endl;
-	    add_story_line(star_story, input_line);
+	    } else if (level == 0 && !strcmp("time_scale", keyword)) {
+		t_conv_star_to_dyn = strtod(val, NULL);
+
+	    } else {
+//		cerr << "Adding " << input_line << " to star story for "
+//		     << get_node()->format_label() << endl;
+		add_story_line(star_story, input_line);
+	    }
 	}
     }
     return s;

@@ -20,51 +20,54 @@ istream & sdyn3::scan_dyn_story(istream & s)
 	char keyword[MAX_INPUT_LINE_LENGTH];
 	const char *val = getequals(input_line, keyword);
 
-	// See xreal notes in dyn_io.C...
+	if (val) {
 
-    	if (!strcmp("real_system_time", keyword)) {
+	    // See xreal notes in dyn_io.C...
 
-	    read_xreal = true;
-	    last_real = true;
+	    if (!strcmp("real_system_time", keyword)) {
 
-	} else if (!strcmp("system_time", keyword)) {
+		read_xreal = true;
+		last_real = true;
 
-	    // Check input format before reading.
+	    } else if (!strcmp("system_time", keyword)) {
 
-	    if (!last_real) read_xreal = false;
+		// Check input format before reading.
 
-	    if (read_xreal)
-		system_time = get_xreal_from_input_line(input_line);
-	    else
-		system_time = strtod(val, NULL);
-
-	} else {
-
-	    last_real = false;
-
-	    if (!strcmp("t", keyword)) {
+		if (!last_real) read_xreal = false;
 
 		if (read_xreal)
-		    time = get_xreal_from_input_line(input_line);
+		    system_time = get_xreal_from_input_line(input_line);
 		else
-		    time = strtod(val, NULL);
+		    system_time = strtod(val, NULL);
 
-	    } else if (!strcmp("m", keyword))
-		mass = strtod(val, NULL);
-	    else if (!strcmp("r", keyword))
-		set_vector_from_input_line(pos, input_line);
-	    else if (!strcmp("v", keyword))
-		set_vector_from_input_line(vel, input_line);
-	    else if (!strcmp("dt", keyword))
-		timestep = strtod(val, NULL);
-	    else if (!strcmp("a", keyword))
-		set_vector_from_input_line(acc, input_line);
-	    else if (!strcmp("j", keyword))
-		set_vector_from_input_line(jerk, input_line);
-	    else if (!strcmp("pot", keyword))
-		pot = strtod(val, NULL);
-	    else
-		add_story_line(dyn_story, input_line);
+	    } else {
+
+		last_real = false;
+
+		if (!strcmp("t", keyword)) {
+
+		    if (read_xreal)
+			time = get_xreal_from_input_line(input_line);
+		    else
+			time = strtod(val, NULL);
+
+		} else if (!strcmp("m", keyword))
+		    mass = strtod(val, NULL);
+		else if (!strcmp("r", keyword))
+		    set_vector_from_input_line(pos, input_line);
+		else if (!strcmp("v", keyword))
+		    set_vector_from_input_line(vel, input_line);
+		else if (!strcmp("dt", keyword))
+		    timestep = strtod(val, NULL);
+		else if (!strcmp("a", keyword))
+		    set_vector_from_input_line(acc, input_line);
+		else if (!strcmp("j", keyword))
+		    set_vector_from_input_line(jerk, input_line);
+		else if (!strcmp("pot", keyword))
+		    pot = strtod(val, NULL);
+		else
+		    add_story_line(dyn_story, input_line);
+	    }
 	}
     }
 
