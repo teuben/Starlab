@@ -2,18 +2,20 @@
 README:
 
 - We assume that the variable STARLAB_PATH points to the top-level
-  installation directory (i.e. the one containing this file).
+  installation directory (i.e. the one containing this file).  GRAPE
+  users should read the GRAPE section below before starting the
+  configure/build process.
 
 - Installation proceeds in GNU standard way:
 
-	./configure --prefix=install-dir
+	./configure --prefix=install-dir --other-options
 	make
 	make install
 
   See the INSTALL file in this directory for more information.  The
   current default install-dir is
 
-	$STARLAB_PATH/usr.
+	$STARLAB_PATH/usr
 
 - However, Starlab now makes heavy use of GNU "autotools," namely
   aucoconf, automake, and libtool.  Unless you are sure that your
@@ -47,6 +49,33 @@ README:
 
 	$STARLAB_PATH/sbin
 
+
+GRAPE SYSTEMS:
+
+- It is very difficult for the configure script to infer automatically
+  the existence of a GRAPE or to determine the appropriate GRAPE
+  libraries and other settings to use.  If you have a GRAPE, you will
+  have to place that information in the file
+
+	$STARLAB_PATH/local/grape.sh
+
+  This file is a simple shell script that sets a few variables used
+  to build the Makefiles.  So that it cannot be overwritten by a new
+  release after you have created it, the script itself is not distributed
+  with the Starlab package.  However, a template is distributed in
+
+	$STARLAB_PATH/local/grape.sh.template
+
+  and a collection of examples from various GRAPE sites is contained
+  in
+
+	$STARLAB_PATH/local/grape.sh.examples
+
+  You will have to rerun configure after creating or changing this
+  script, so you will probably want to make these changes BEFORE building
+  the system!  If you don't have a GRAPE, do nothing, and Starlab will
+  by default build a system without GRAPE acceleration.
+  
 
 PROGRAMMERS:
 
