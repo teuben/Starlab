@@ -1787,6 +1787,10 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 	    // b->set_grape_rnb_sq(rnb_sq);
 
+	    // Do this here, rather than in the prologue (Steve, 8/03).
+
+	    b->new_perturber_list();
+
 	    // New code (GRAPE-4 and GRAPE-6 versions; Steve, 12/01):
 
 	    real r_pert2 = perturbation_scale_sq(b, b->get_gamma23());
@@ -3008,6 +3012,8 @@ int grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
 	} else {
 
+//	    *** Perturber frequency currently = 1.
+//	    ***
 //	    *** If we reduce the frequency of perturber checks, then we
 //	    *** must be sure to restore the CMs on the perturber list,
 //	    *** as the correction to the CM force depends on it...
