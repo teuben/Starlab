@@ -20,7 +20,10 @@ SUBDIRS = lux lux++ util #libs draw
 
 pkglib_LTLIBRARIES = liblux.la
 
-liblux_la_LDFLAGS = $(X_PRE_LIBS) -lX11 $(X_EXTRA_LIBS) -lpng -lm
+liblux_la_LDFLAGS = $(X_PRE_LIBS) -lX11 $(X_EXTRA_LIBS) -lm
+if HAVE_LIBPNG
+  liblux_la_LDFLAGS += -lpng
+endif
 liblux_la_LIBADD = lux/liblux-1.la lux++/liblux-2.la util/liblux-3.la
 liblux_la_SOURCES =
 

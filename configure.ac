@@ -4,7 +4,7 @@
 AC_PREREQ(2.59)
 AC_INIT(Starlab, 4.3, [steve@physics.drexel.edu])
 AC_CONFIG_AUX_DIR(config)
-#AC_CONFIG_MACRO_DIR(local)    # not implemented yet as of 2.59
+AC_CONFIG_MACRO_DIR(local)
 AC_CONFIG_HEADERS(include/config.h)
 AC_CONFIG_SRCDIR(src/std/util_math.C)
 AC_LANG([C++])
@@ -15,9 +15,9 @@ AM_INIT_AUTOMAKE([1.8 gnu no-exeext nostdinc std-options])
 # but I don't quite understand how ac_top_srcdir/top_srcdir work
 CPPFLAGS="$CPPFLAGS -I$PWD/include -I$PWD/include/star"
 AC_ARG_ENABLE(xreal,
-	AS_HELP_STRING([--enable-xreal], use the xreal type [[[default=no]]]),
-	[AC_DEFINE(USE_XREAL, 1,
-		[Define to 1 if you want to enable the xreal type. Although this significantly increases precision, it also incurs a substantial performance penalty.])])
+    AS_HELP_STRING([--enable-xreal], use the xreal type [[[default=no]]]),
+    [AC_DEFINE(USE_XREAL, 1,
+        [Define to 1 if you want to enable the xreal type. Although this significantly increases precision, it also incurs a substantial performance penalty.])])
 # Another HUGE FIXME - pgetopt() must be replaced by getopt_long()
 #CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__ -D_COMPILE_DATE_=__DATE__"
 CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"
@@ -36,40 +36,75 @@ AC_PROG_YACC
 AC_PROG_INSTALL
 
 # Checks for libraries.
-AC_ARG_WITH(qt, AS_HELP_STRING([--with-qt], use Qt [[[default=yes]]]),
-		[qt="$withval"])
-AC_ARG_WITH(qt-dir,
-	AS_HELP_STRING([--with-qt-dir=QTDIR], directory where Qt is installed),
-        [qt_dir="$withval"])
-if test -z "$qt" -o "x$qt" = "xyes"; then
-   if test -z "$qt_dir"; then
-      AC_MSG_CHECKING(whether QTDIR environment variable is set)
-      if test "x$QTDIR" = "x"; then
-	 AC_MSG_RESULT(no)
-	 if test "x$qt" = "xyes"; then
-	    AC_MSG_ERROR([Qt was selected with --with-qt but QTDIR isn't set.
-Please set QTDIR or use --with-qt-dir.])
-	 fi
-      else
-	AC_MSG_RESULT([$QTDIR])
-	qt_dir="$QTDIR"
-      fi
-   fi
-   CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
-   LDFLAGS="$LDFLAGS -L$qt_dir/lib"
-   AC_SUBST(MOC, [$qt_dir/bin/moc])
-   AC_CHECK_LIB(qt, main, [AC_DEFINE(HAVE_LIBQT, 1,
-   	[Define to 1 if you have the `qt' library (-lqt).])])
-   if test "x$ac_cv_lib_qt_main" != "xyes" -a "x$qt" = "xyes"; then
-	 AC_MSG_ERROR([Qt was selected but a test program failed to compile
+m4_include([local/grape.m4])
+AC_ARG_WITH(grape,
+    AS_HELP_STRING([--with-grape], use the GRAPE [[[default=yes]]]),
+    [grape="$withval"])
+if test -z "$grape" -o "x$grape" = "xyes"; then
+    AC_SUBST(GRAPE_CPPFLAGS, "GRAPE_CPPFLAGS_")
+    AC_SUBST(GRAPE_LDFLAGS, "GRAPE_LDFLAGS_")
+    AC_SUBST(GRAPE_LIBS, "GRAPE_LIBS_")
+    OCPPFLAGS="$CPPFLAGS"
+    OLDFLAGS="$LDFLAGS"
+    CPPFLAGS="$CPPFLAGS $GRAPE_CPPFLAGS"
+    LDFLAGS="$LDFLAGS $GRAPE_LDFLAGS"
+    AC_CHECK_LIB(g6lx, g6_open_, grape6=yes, grape6=no)
+    if test "x$grape6" = "xno"; then
+        AC_CHECK_LIB(g4x, h3open_, grape4=yes, grape4=no)
+    fi
+    if test "x$grape6" = "xno" -a "x$grape4" = "xno"; then
+        if test "x$grape" = "xyes"; then
+            AC_MSG_ERROR([GRAPE was selected but a test program failed to compile.
+Please make sure correct paths are specified in `local/grape.m4'.
 See `config.log' for more details.])
-   fi
+        fi
+    else
+        AC_DEFINE(SHARE_GRAPE, 1, [Define to 1 if you want to release the GRAPE hardware periodically.])
+	grape=yes
+    fi
+    CPPFLAGS="$OCPPFLAGS"
+    LDFLAGS="$OLDFLAGS"
+fi
+AM_CONDITIONAL(HAVE_GRAPE, [test "x$grape" = "xyes"])
+
+AC_ARG_WITH(png, AS_HELP_STRING([--with-png], use PNG format [[[default=yes]]]),
+    [png="$withval"])
+if test -z "$png" -o "x$png" = "xyes"; then
+    AC_CHECK_LIB(png, main, [AC_DEFINE(HAVE_LIBPNG, 1,
+        [Define to 1 if you have the `png' library (-lpng).])])
+fi
+AM_CONDITIONAL(HAVE_LIBPNG, [test "x$ac_cv_lib_png_main" = "xyes"])
+
+AC_ARG_WITH(qt, AS_HELP_STRING([--with-qt], use Qt [[[default=yes]]]),
+    [qt="$withval"])
+AC_ARG_WITH(qt-dir,
+    AS_HELP_STRING([--with-qt-dir=QTDIR], directory where Qt is installed),
+    [qt_dir="$withval"])
+if test -z "$qt" -o "x$qt" = "xyes"; then
+    if test -z "$qt_dir"; then
+        AC_MSG_CHECKING(whether QTDIR environment variable is set)
+	if test "x$QTDIR" = "x"; then
+	    AC_MSG_RESULT(no)
+	    if test "x$qt" = "xyes"; then
+	       AC_MSG_ERROR([Qt was selected with --with-qt but QTDIR isn't set.
+Please set QTDIR or use --with-qt-dir.])
+	    fi
+	else
+	    AC_MSG_RESULT([$QTDIR])
+	    qt_dir="$QTDIR"
+        fi
+    fi
+    CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
+    LDFLAGS="$LDFLAGS -L$qt_dir/lib"
+    AC_SUBST(MOC, [$qt_dir/bin/moc])
+    AC_CHECK_LIB(qt, main, [AC_DEFINE(HAVE_LIBQT, 1,
+   	[Define to 1 if you have the `qt' library (-lqt).])])
+    if test "x$ac_cv_lib_qt_main" != "xyes" -a "x$qt" = "xyes"; then
+	AC_MSG_ERROR([Qt was selected but a test program failed to compile
+See `config.log' for more details.])
+    fi
 fi
 AM_CONDITIONAL(HAVE_LIBQT, [test "x$ac_cv_lib_qt_main" = "xyes"])
-
-AC_CHECK_LIB(png, main, [AC_DEFINE(HAVE_LIBPNG, 1,
-		  [Define to 1 if you have the `png' library (-lpng).])])
-AM_CONDITIONAL(HAVE_LIBPNG, [test "x$ac_cv_lib_png_main" = "xyes"])
 
 # Checks for header files.
 AC_LANG_PUSH(C)

@@ -30,15 +30,26 @@ get_densities_CPPFLAGS = -DTOOLBOX
 
 hdyn_pp3_LDADD = ../libhdyn.la
 reset_counters_LDADD = ../libhdyn.la
-sys_stats_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la \
-    ../stubs/libstubs.la
-scale_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la \
-    ../stubs/libstubs.la
-get_densities_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la \
-    ../stubs/libstubs.la
+sys_stats_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la
+scale_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la
+get_densities_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la
 
 hdyn_pp3_SOURCES = hdyn_pp3.C
 reset_counters_SOURCES = reset_counters.C
 sys_stats_SOURCES = sys_stats.C
 scale_SOURCES = scale.C
 get_densities_SOURCES = get_densities.C
+
+if HAVE_GRAPE
+  sys_stats_CPPFLAGS += $(GRAPE_CPPFLAGS)
+  scale_CPPFLAGS += $(GRAPE_CPPFLAGS)
+  get_densities_CPPFLAGS += $(GRAPE_CPPFLAGS)
+  sys_stats_LDADD += $(GRAPE_LIBS)
+  scale_LDADD += $(GRAPE_LIBS)
+  get_densities_LDADD += $(GRAPE_LIBS)
+  AM_LDFLAGS = $(GRAPE_LDFLAGS)
+else
+  sys_stats_LDADD += ../stubs/libstubs.la
+  scale_LDADD += ../stubs/libstubs.la
+  get_densities_LDADD += ../stubs/libstubs.la
+endif
