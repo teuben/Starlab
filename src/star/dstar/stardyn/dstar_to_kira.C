@@ -1,5 +1,15 @@
-// dstar_to_kira.C 
 
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
+// dstar_to_kira.C 
+//
 // Set of dstar functions referenced by dstar_kira (and associated
 // hdyn functions).
 //
@@ -62,8 +72,8 @@ local bool need_dstar(hdyn* bi)
 }
 
 // safety function, but not used in practice.
-bool other_urgent_binary_matters(hdyn *bi) {  // bi is binary CoM
-  
+bool other_urgent_binary_matters(hdyn *bi)  		// bi is binary CM
+{
     bool update_binary = false;
      
     starbase *cm = bi->get_starbase();
@@ -112,8 +122,8 @@ local void evolve_an_unperturbed_binary(hdyn *bi,	// bi is binary CM
 					bool& check_binary_mass,
 					bool& check_binary_sma,
 					bool& check_binary_merger,
-					bool force_evolve=false) {
-  
+					bool force_evolve=false)
+{ 
     check_binary_mass = check_binary_sma = check_binary_merger = false;
 
     real old_dyn_mass, old_dyn_sma;
@@ -216,8 +226,8 @@ local real initial_binary_period(double_star * ds)
 
 // Helper version of delete_double -- overloaded!
 
-local void delete_double(hdyn *b) {			// b is binary CM
-  
+local void delete_double(hdyn *b)			// b is binary CM
+{
     if (REPORT_DEL_DOUBLE) {
 	cerr << "Unsafe double_star deletion: "<<endl;
 	b->pretty_print_node(cerr); cerr << endl;
@@ -367,10 +377,12 @@ local void delete_double(hdyn *b,		    // b is binary CM
 	     << "(binary: "<< od->get_time() <<")"<< endl; 
 	cerr.precision(p);
 
-	cerr << "merging nodes..." << endl << flush;
-      
+//	cerr << "merging nodes(1)..." << endl << flush;
+
 	od->merge_nodes(bcoll, full_dump);
 	update_dynamics[0] = true;
+
+//	cerr << "...done" << endl << flush;
       
 	// Components are not deleted in merge_nodes.  Do this now.
 	// Also, if unperturbed binaries are resolved in perturber lists,
@@ -607,9 +619,22 @@ bool binary_evolution(hdyn *b,		// root node
 			cerr << " at time " << b->get_time() << endl;
 			cerr.precision(p);
 
-			cerr << "merging nodes..." << endl;
+// 			cerr << endl << "computing energies before merger:"
+// 			     << endl << flush;
+// 			real epot0, ekin0, etot0;
+// 			calculate_energies_with_external(b, epot0,
+// 							 ekin0, etot0);
+// 			cerr << "OK" << endl << endl << flush;
+//			cerr << "merging nodes(2)..." << endl;
 
 			bi->merge_nodes(bcoll, full_dump);
+
+//			cerr << "...done" << endl << flush;
+// 			cerr << endl << "computing energies after merger (#1):"
+// 			     << endl << flush;
+// 			calculate_energies_with_external(b, epot0,
+// 							 ekin0, etot0);
+// 			cerr << "OK" << endl << endl << flush;
 
 			// Components are not deleted by merge_nodes.  Do this
 			// here, and adjust perturber lists if necessary.
@@ -626,6 +651,12 @@ bool binary_evolution(hdyn *b,		// root node
 
 			delete bi;
 			delete bcoll;
+
+// 			cerr << endl << "computing energies after merger (#2):"
+// 			     << endl << flush;
+// 			calculate_energies_with_external(b, epot0,
+// 							 ekin0, etot0);
+// 			cerr << "OK" << endl << endl << flush;
 
 			// Looks as though everything is now taken care of
 			// in case of a merger.  The binary is replaced by
@@ -673,8 +704,6 @@ bool binary_evolution(hdyn *b,		// root node
 void update_kepler_from_binary_evolution(hdyn* the_binary_node, 
 					 real dm_fast)
 {
-    // Very practical!  Kepler is attached to the daughters.
-
     if (REPORT_EVOLVE_DOUBLE)
 	((double_star*)(the_binary_node->get_starbase()))->dump(cerr);
 

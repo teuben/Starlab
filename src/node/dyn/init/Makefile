@@ -27,7 +27,8 @@ EXECUTABLES	= makecube makedisk makeplummer makepyth makesphere makewrite \
 		  addplummer makebinary split_particles makeking \
 	 	  makeheavystar readp readstoa \
 	          makeplanetary makeblack_hole grow_black_hole \
-		  make_aniso_king makepowerlaw
+		  make_aniso_king makepowerlaw \
+	          cutrandomsample
 
 # (Steve 9/01: place mk_aniso_king last, as the build may break on new systems.)
 

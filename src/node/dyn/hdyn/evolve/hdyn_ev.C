@@ -2184,17 +2184,13 @@ void hdyn::check_add_perturber(hdyn* p, vector& this_pos)
 
 void hdyn::create_low_level_perturber_list(hdyn* pnode)
 {
-    valid_perturbers = true;
-    if (perturber_list == NULL)
-	perturber_list = new hdyn *[MAX_PERTURBERS];
+    new_perturber_list();
 
     perturbation_radius_factor
 	= define_perturbation_radius_factor(this, gamma23);
 
     vector this_pos = hdyn_something_relative_to_root(this,
 						      &hdyn::get_pred_pos);
-    n_perturbers = 0;
-
     // First add sisters, aunts, etc. up to pnode...
 
     hdyn* p = this;
@@ -2209,12 +2205,13 @@ void hdyn::create_low_level_perturber_list(hdyn* pnode)
     for (int i = 0; i < pnode->n_perturbers; i++)
 	check_add_perturber(pnode->perturber_list[i], this_pos);
 
-    if (n_perturbers > MAX_PERTURBERS) {
+    valid_perturbers = true;
 
-	valid_perturbers = false;
-	delete [] perturber_list;
+    if (n_perturbers > MAX_PERTURBERS)
 
-    } else {
+	remove_perturber_list();
+
+    else {
 
 // 	if (get_top_level_node()->n_leaves() >= 4) {
 // 	    cerr << ">>>> this->"; PRL(format_label());
@@ -2595,15 +2592,46 @@ void hdyn::top_level_node_prologue_for_force_calculation(bool exact)
 				       !USE_POINT_MASS,
 				       NULL,		// no perturbers
 				       this);		// node to charge
+
     } else if (is_parent()) {
 
 	// Set up computation of perturber list.
 
-	if (perturber_list == NULL)
-	    perturber_list = new hdyn *[MAX_PERTURBERS];
+// 	if (system_time > 169.2975) {
+
+// 	    cerr << "hdyn_ev: " << 41121 << endl << flush;
+// 	    pp3(this);
+
+// 	    cerr << "about to make a new tmp real array" << endl << flush;
+// 	    real *xxx = new real[MAX_PERTURBERS];
+// 	    PRL(xxx);
+// 	    xxx[0] = 42;
+// 	    delete [] xxx;
+
+// 	    cerr << "about to make a new tmp hdynptr array" << endl << flush;
+// 	    hdynptr *yyy = new hdynptr[MAX_PERTURBERS];
+// 	    PRL(yyy);
+// 	    yyy[0] = (hdynptr)42;
+// 	    delete [] yyy;
+
+// 	    cerr << "about to make real hdynptr array" << endl << flush;
+// 	}
+
+	new_perturber_list();
+
+// 	if (system_time > 169.2975) {
+// 	    PRL(perturber_list);
+// 	    cerr << "hdyn_ev: " << 41122 << endl << flush;
+// 	}
 
 	perturbation_radius_factor
 		= define_perturbation_radius_factor(this, gamma23);
+
+// 	if (system_time > 169.2975) {
+// 	    PRL(perturbation_radius_factor);
+// 	    cerr << "hdyn_ev: " << 41123 << endl << flush;
+// 	}
+
     }
 }
 
@@ -3010,6 +3038,7 @@ local inline void apply_correction(hdyn * bj, hdyn * bi)
 	    cerr << "apply_correction: adding " << bj->format_label();
 	    cerr << " to slow_perturbed list of " << bi->format_label()
 		 << endl;
+	    bj->print_perturber_list(cerr);
 
 	    s = bi->add_slow_perturbed(bj, kd->slow_perturbed);
 	}
@@ -3536,7 +3565,7 @@ void hdyn::integrate_node(hdyn * root,
 }
 
 void synchronize_tree(hdyn * b)			// update all top-level nodes
-{
+{						// better to use GRAPE if we can
     if (!b->is_root())
 	b->synchronize_node();
 

@@ -237,6 +237,7 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
 	    if (n && n->is_valid())
 		n->clear_on_integration_list();
 	}
+
     }
 
 #ifdef TIME_INTERNAL
@@ -295,6 +296,8 @@ void calculate_acc_and_jerk_on_all_top_level_nodes(hdyn * b)
 				    false,	// called before tree changes
 				    reset_force_correction, // no longer used
 				    restart_grape);
+
+    delete [] list;
 }
 
 
@@ -317,6 +320,8 @@ void initialize_system_phase2(hdyn * b,
 			      int call_id,	// default = 0
 			      bool set_dt)	// default = true
 {
+//    cerr << "initialize_system_phase2: "; PRL(call_id);
+
     dbg_message("initialize_system_phase2", b);
 
     if (!b->is_root()) {

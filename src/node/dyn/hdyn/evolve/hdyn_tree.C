@@ -529,30 +529,32 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 {
     // Combine two top-level nodes into a binary.  Original node names
     // and addresses are retained, so neighboring perturber lists are
-    // unaffected.
+    // unaffected.  bi is the node whose step caused the change; bj is
+    // its nearest neighbor.  For obscure reasons, the new CM node
+    // will be (bj, bi).
 
     if (bi->get_kira_diag()->tree) {
 
-        cerr << endl << "combine_top_level_nodes: combining ",
-	bi->pretty_print_node(cerr);
-	cerr << " with ", bj->pretty_print_node(cerr);
-	cerr << " at time " << bj->get_system_time();
+        cerr << endl << "combine_top_level_nodes: attaching ",
+	bj->pretty_print_node(cerr);
+	cerr << " to ", bi->pretty_print_node(cerr);
+	cerr << " at time " << bi->get_system_time();
 
 	if (bj->get_kira_diag()->tree_level > 0) {
 
 	    cerr << endl;
 	    pp2(bi, cerr);
-	    print_binary_from_dyn_pair(bi, bj);
+	    print_binary_from_dyn_pair(bj, bi);
 	    cerr << endl;
-	    if (bi->is_parent()) {
-		print_binary_from_dyn_pair(bi->get_oldest_daughter(),
-					   bi->get_oldest_daughter()
-					     ->get_younger_sister());
-		cerr << endl;
-	    }
 	    if (bj->is_parent()) {
 		print_binary_from_dyn_pair(bj->get_oldest_daughter(),
 					   bj->get_oldest_daughter()
+					     ->get_younger_sister());
+		cerr << endl;
+	    }
+	    if (bi->is_parent()) {
+		print_binary_from_dyn_pair(bi->get_oldest_daughter(),
+					   bi->get_oldest_daughter()
 					     ->get_younger_sister());
 		cerr << endl;
 	    }
@@ -567,18 +569,18 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
 		if (bj->get_kira_diag()->tree_level > 2) {
 		    cerr << endl;
-		    put_node(cerr, *bi, bi->get_kira_options()->print_xreal);
 		    put_node(cerr, *bj, bj->get_kira_options()->print_xreal);
+		    put_node(cerr, *bi, bi->get_kira_options()->print_xreal);
 		}
 
 		cerr << endl;
-		plot_stars(bi);
+		plot_stars(bj);
 	    }
 
 	} else {
 
 	    cerr << endl << "                         ";
-	    print_relative_energy_and_period(bi, bj);
+	    print_relative_energy_and_period(bj, bi);
 	    cerr << endl;
 	}
     }
@@ -633,7 +635,7 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 		}
 	}
 
-    create_binary_from_toplevel_nodes(bi, bj);
+    create_binary_from_toplevel_nodes(bi, bj);		// --> (bj, bi)
 
     // Copy any slow_perturbed lists to the new top-level node, and
     // delete the low-level lists.
@@ -665,6 +667,7 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     // halve_timestep(bi);
     // halve_timestep(bj);
+
     halve_timestep(bj->get_parent());	// parent step should be less than the
 					// daughter steps so that the parent
 					// perturber list is computed before
@@ -674,10 +677,9 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
     bj->init_pred();
     bj->get_parent()->init_pred();
 
-    // For diagnostic output...
-    init_predictor_tree(bj->get_parent());
+    init_predictor_tree(bj->get_parent());	// for diagnostic output...
 
-    check_merge_esc_flags(bi, bj);
+    check_merge_esc_flags(bj, bi);
 
     if (full_dump) {
 
@@ -1378,7 +1380,7 @@ int hdyn::adjust_tree_structure(int full_dump)		// default = 0
 
 		if (status > 1) status += 2;
 		if (old_top_level_node != get_top_level_node())
-		    get_top_level_node()->clear_perturber_list();
+		    get_top_level_node()->zero_perturber_list();
 
 	    } else {
 

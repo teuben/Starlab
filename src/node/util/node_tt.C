@@ -4,6 +4,18 @@
 
 #include "node.h"
 
+void node::null_pointers()
+{
+    // Clear all pointers (don't touch what they point to)
+    // -- for use in cleaning up temporary nodes...  Careful!!
+
+    name = NULL;
+    parent = oldest_daughter = elder_sister = younger_sister = NULL;
+    log_story = dyn_story = NULL;
+    hbase = NULL;
+    sbase = NULL;
+}
+
 int node::n_daughters()
 {
     if(oldest_daughter == NULL){

@@ -23,6 +23,8 @@ if [ $# -lt 3 ]; then
     exit 1
 fi
 
+#set -e
+
 srcstem="$1"
 outfile="$2"
 huh="$3"

@@ -25,6 +25,19 @@
 
 #ifndef TOOLBOX
 
+void hdyn::null_pointers()
+{
+    // Clear all pointers (don't touch what they point to)
+    // -- for use in cleaning up temporary nodes...  Careful!!
+
+    nn = coll = NULL;
+    n_perturbers = 0;
+    perturber_list = NULL;
+    valid_perturbers = false;
+
+    _dyn_::null_pointers();
+}
+
 // Note from Steve 8/20/98.  This is based on the node version, but is
 // modified to include the possiblilty of treating unperturbed centers
 // of mass as leaves.
@@ -402,7 +415,7 @@ void hdyn::setup_binary_node()
     }
 
     // Set up physical quantities of the parent node.
-    // Note that pot, old_acc, old_jerk are not set -- must be recalculated.
+    // Note that pot is not set -- must be recalculated.
 
     time = older_daughter->time;
     timestep = min(older_daughter->timestep, younger_daughter->timestep);
@@ -417,6 +430,7 @@ void hdyn::setup_binary_node()
     jerk = f1 * older_daughter->jerk + f2 * younger_daughter->jerk;
 
     store_old_force();
+
     pred_pos = f1 * older_daughter->pred_pos + f2 * younger_daughter->pred_pos;
     pred_vel = f1 * older_daughter->pred_vel + f2 * younger_daughter->pred_vel;
 
@@ -780,6 +794,7 @@ void move_node(hdyn * node_to_move,
     // cerr << "in move_node" << endl << flush;
 
     // Make a copy of node_to_move prior to any tree operations.
+    // Code here is all very murky, mainly to avoid compiler problems...
 
     static hdyn tmp;		// NECESSARY to avoid an occasional unexplained
 			        // Bus Error on return with g++ version 2.2.2!!
@@ -832,6 +847,11 @@ void move_node(hdyn * node_to_move,
 
     node_to_move->get_parent()->set_time(place_to_insert->get_time());
     node_to_move->get_parent()->set_timestep(place_to_insert->get_timestep());
+
+    // Clear all pointers in tmp.  (Don't attempt to follow *any*
+    // of them, as they point into *node_to_move.)
+
+    tmp.null_pointers();
 
     // cerr << "leaving move_node" << endl << flush;
 }

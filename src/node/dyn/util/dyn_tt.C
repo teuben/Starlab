@@ -4,6 +4,16 @@
 
 #include "dyn.h"
 
+void dyn::null_pointers()
+{
+    // Clear all pointers (don't touch what they point to)
+    // -- for use in cleaning up temporary nodes...  Careful!!
+
+    kep = NULL;
+
+    node::null_pointers();
+}
+
 bool dyn::nn_stats(real energy_cutoff, real kT,
 		   vector center, bool verbose,
 		   bool long_binary_output,	// default = true

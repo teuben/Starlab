@@ -513,7 +513,8 @@ void hdyn::print_perturber_list(ostream & s, char* pre)
 {
     // NOTE: 'this' is a binary center of mass.
 
-    s << pre << "perturber list of " << format_label() << flush;
+    s << pre << "perturber list of " << format_label()
+      << " [" << perturber_list << "]" << flush;
 
     if (!valid_perturbers || perturber_list == NULL) {
 	s << " is invalid" << endl;

@@ -26,6 +26,17 @@
 
 static bool read_xreal = false;
 
+void _dyn_::null_pointers()
+{
+    // Clear all pointers (don't touch what they point to)
+    // -- for use in cleaning up temporary nodes...  Careful!!
+
+    slow = NULL;
+    sp =NULL;
+
+    dyn::null_pointers();
+}
+
 istream & _dyn_::scan_dyn_story(istream & s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];

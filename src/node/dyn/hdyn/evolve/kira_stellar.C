@@ -186,9 +186,8 @@ bool evolve_stars(hdyn* b,
 	// but unperturbed binaries will just have been advanced
 	// (see evolve_system in kira.C).
 	//
-	// Note that synchronize_tree() does NOT touch unperturbed
-	// binaries.  (Actually, synchronize_tree appears to handle
-	// only top-level nodes.)
+	// Note that (kira_)synchronize_tree() does NOT touch unperturbed
+	// binaries (handles only top-level nodes.)
 
 	synchronize_tree(b);
 

@@ -588,12 +588,15 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     // Compute energies prior to merger, for bookkeeping purposes:
 
     cerr << "calculating energies..." << endl << flush;
-
     real epot0, ekin0, etot0;
 
-    //calculate_energies(get_root(), eps2, epot0, ekin0, etot0);//dyn function
-    // replaced by GRAPE friendly function (SPZ, March 2001)
-    kira_calculate_internal_energies(get_root(), epot0, ekin0, etot0);
+    // calculate_energies(get_root(), eps2, epot0, ekin0, etot0); //dyn function
+    // replaced by GRAPE-friendly function (SPZ, March 2001)
+    // kira_calculate_internal_energies(get_root(), epot0, ekin0, etot0);
+    // Replaced with ..._with_external by Steve, Jan 02, to maintain
+    // continuity in pot and avoid GRAPE warning messages.
+
+    calculate_energies_with_external(get_root(), epot0, ekin0, etot0);
     PRC(epot0); PRC(ekin0); PRL(etot0);
 
     hdyn* cm = get_parent();
@@ -675,6 +678,12 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	((star*)(primary->sbase))->dump(cerr, false);
 	((star*)(secondary->sbase))->dump(cerr, false);
 	
+// 	real tmp1, tmp2, tmp3;
+// 	cerr << endl << "computing energies #1:"
+// 	     << endl << flush;
+// 	calculate_energies_with_external(get_root(), tmp1, tmp2, tmp3);
+// 	cerr << "OK" << endl << endl << flush;
+
 	if (!merge_with_primary(dynamic_cast(star*, primary->sbase),
 			        dynamic_cast(star*, secondary->sbase))) {
 	    primary = bcoll;
@@ -722,6 +731,12 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     cerr << "new node name = " << cm->format_label() << endl;
     PRL(cpu_time());
 
+//     real tmp1, tmp2, tmp3;
+//     cerr << endl << "computing energies #2:"
+// 	 << endl << flush;
+//     calculate_energies_with_external(get_root(), tmp1, tmp2, tmp3);
+//     cerr << "OK" << endl << endl << flush;
+
     correct_leaf_for_change_of_mass(cm, dm);
     if (cm->mass < 0) {
 	cerr << "check and merge, negative mass ";
@@ -737,20 +752,36 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 					  &hdyn::inc_vel);
 
     cm->set_oldest_daughter(NULL);
+    cm->remove_perturber_list();
+
+    PRL(cm->get_sp());
+    PRL(get_kepler());
+    PRL(get_slow());
+    PRL(get_sp());
+    PRL(bcoll->get_slow());
+    PRL(bcoll->get_sp());
 
     // Do not try to free memory by simply
     //		delete bcoll;
     //		delete this;
-    // causes a not so very strange error.
+    // -- causes a (not so very) strange error.
+
+//     cerr << endl << "computing energies #3:"
+// 	 << endl << flush;
+//     calculate_energies_with_external(get_root(), tmp1, tmp2, tmp3);
+//     cerr << "OK" << endl << endl << flush;
 
     real epot, ekin, etot;
-#ifdef CALCULATE_POST_COLLISION_ON_GRAPE
-    cerr << "calculate post collision on GRAPE"<<endl;
-    // replaced by GRAPE friendly function (SPZ, March 2001)
-    kira_calculate_internal_energies(get_root(), epot, ekin, etot);
-#else
-    calculate_energies(get_root(), eps2, epot, ekin, etot);	//dyn function
-#endif
+
+// #ifdef CALCULATE_POST_COLLISION_ON_GRAPE
+//     cerr << "calculate post collision on GRAPE"<<endl;
+//     // replaced by GRAPE friendly function (SPZ, March 2001)
+//     kira_calculate_internal_energies(get_root(), epot, ekin, etot);
+// #else
+//     calculate_energies(get_root(), eps2, epot, ekin, etot);	//dyn function
+// #endif
+
+    calculate_energies_with_external(get_root(), epot, ekin, etot);
     PRC(epot); PRC(ekin); PRL(etot);
 
     real de_total = etot - etot0;
@@ -773,6 +804,11 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     hdyn* root = cm->get_root();
     xreal time = cm->time;
 
+//     cerr << endl << "computing energies #4:"
+// 	 << endl << flush;
+//     calculate_energies_with_external(get_root(), tmp1, tmp2, tmp3);
+//     cerr << "OK" << endl << endl << flush;
+
     // Special treatment of case cm->mass = 0.
 
     if (cm->mass <= 0) {
@@ -793,6 +829,11 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     //
     // Probably should perform these checks within merge_nodes.
 
+//     cerr << endl << "computing energies #5:"
+// 	 << endl << flush;
+//     calculate_energies_with_external(get_root(), tmp1, tmp2, tmp3);
+//     cerr << "OK" << endl << endl << flush;
+
     hdynptr del[2];
     del[0] = this;
     del[1] = bcoll;
@@ -806,10 +847,18 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
     if (cm->on_perturbed_list()) {
 	cerr << "Removing " << cm->format_label()
-	     << " from perturbed list " << endl;
+	     << " from perturbed binary list " << endl;
 	cm->remove_from_perturbed_list();
     } else
-	cerr << cm->format_label() << " not on perturbed list " << endl;
+	cerr << cm->format_label() << " not on perturbed binary list (OK)"
+	     << endl;
+
+    cerr << endl;
+
+//     cerr << endl << "computing energies #6:"
+// 	 << endl << flush;
+//     calculate_energies_with_external(get_root(), tmp1, tmp2, tmp3);
+//     cerr << "OK" << endl << endl << flush;
 
     if (full_dump) {
 	hdyn *top = cm->get_top_level_node();

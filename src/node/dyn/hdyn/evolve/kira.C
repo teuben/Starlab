@@ -1,5 +1,8 @@
 
-//#define DUMP_DATA 1	// uncomment to allow detailed TMP_DUMP output
+#define T_DEBUG 169.5		// track progress through the main integration
+#undef  T_DEBUG  		// loop after time T_DEBUG if defined
+
+//#define DUMP_DATA 1		// uncomment to allow detailed TMP_DUMP output
 
        //=======================================================//    _\|/_
       //  __  _____           ___                    ___       //      /|\ ~
@@ -480,9 +483,10 @@ local inline void check_set_slow(hdyn *bi)
     // and elder_sister are all NULL.
 
     // Criteria:	(0) bound!
-    //			(1) perturbation less than cutoff
-    //			(2) just passed apastron
-    //			(3) components are single or unperturbed
+    //			(1) perturber list is valid
+    //			(2) perturbation less than cutoff
+    //			(3) just passed apastron
+    //			(4) components are single or unperturbed
     //
     // Apply these (inline) tests before passing control to the real
     // startup function.
@@ -493,6 +497,7 @@ local inline void check_set_slow(hdyn *bi)
 	&& (bi->is_leaf() || bi->get_oldest_daughter()->get_kepler())
 	&& (bi->get_younger_sister()->is_leaf()
 	    || bi->get_younger_sister()->get_kepler())
+	&& bi->get_valid_perturbers()
 	&& bi->get_perturbation_squared()
 		< bi->get_max_slow_perturbation_sq()/2
 	&& bi->passed_apo()
@@ -703,10 +708,18 @@ local int integrate_list(hdyn * b,
     for (int k = 0; k < kmax; k++) {
 #endif
 
+#ifdef T_DEBUG
+//if (sys_t > T_DEBUG) cerr << 41 << endl << flush;
+#endif
+
     calculate_acc_and_jerk_for_list(b, next_nodes, n_next, t_next,
 				    exact, tree_changed,
 				    reset_force_correction,  // no longer used
 				    restart_grape);
+
+#ifdef T_DEBUG
+//if (sys_t > T_DEBUG) cerr << 42 << endl << flush;
+#endif
 
 #ifdef TIME_LIST
     }
@@ -722,6 +735,7 @@ local int integrate_list(hdyn * b,
 #endif
 
     bool diag = false;
+
     for (i = 0; i < n_next; i++) {
 
 	hdyn *bi = next_nodes[i];
@@ -733,7 +747,15 @@ local int integrate_list(hdyn * b,
 		if (diag) cerr << " perturbed correction for "
 		               << bi->format_label() << endl;
 
+#ifdef T_DEBUG
+//if (sys_t > T_DEBUG) cerr << 43 << endl << flush;
+#endif
+
 		if (!bi->correct_and_update()) {
+
+#ifdef T_DEBUG
+//if (sys_t > T_DEBUG) cerr << 44 << endl << flush;
+#endif
 
 		    // A problem has occurred during the step, presumably
 		    // because of a hardware error on the GRAPE.
@@ -896,8 +918,9 @@ local int integrate_list(hdyn * b,
     }
 #endif
 
-
-
+#ifdef T_DEBUG
+//if (sys_t > T_DEBUG) cerr << 45 << endl << flush;
+#endif
 
 #if 111111
     if (r_reflect > 0) {
@@ -924,8 +947,9 @@ local int integrate_list(hdyn * b,
     }
 #endif
 
-
-
+#ifdef T_DEBUG
+//if (sys_t > T_DEBUG) cerr << 46 << endl << flush;
+#endif
 
     // Complete all steps before modifying binary structure...
 
@@ -1015,6 +1039,10 @@ local int integrate_list(hdyn * b,
 	}
     }
 
+#ifdef T_DEBUG
+//if (sys_t > T_DEBUG) cerr << 47 << endl << flush;
+#endif
+
     // Probably makes more sense to check for encounters for all stars
     // before testing for mergers, tree changes, etc. (Steve, 3/24/00).
 
@@ -1103,6 +1131,10 @@ local int integrate_list(hdyn * b,
 	    }
 	}
     }
+
+#ifdef T_DEBUG
+//if (sys_t > T_DEBUG) cerr << 48 << endl << flush;
+#endif
 
     if (reinitialize) {
 
@@ -1293,9 +1325,14 @@ local int integrate_list(hdyn * b,
 
 		    if (cm_list && n_list > 0) {
 			for (int j = 0; j < n_next; j++) {
-			    if (!next_nodes[j]->is_valid())
+			    if (!next_nodes[j]->is_valid()) {
+
+// 				cerr << "next_nodes[" <<j<< "] = "
+// 				     << next_nodes[j]
+// 				     << " is no longer valid" << endl;
+
 				next_nodes[j] = NULL;
-			    else
+			    } else
 				for (int k = 0; k < n_list; k++)
 				    if (next_nodes[j] == cm_list[k]) {
 					next_nodes[j] = NULL;
@@ -1744,14 +1781,53 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     // Initialize the system.  This is somewhat redundant, as immediate
     // reinitialization is scheduled within the while loop.  However,
-    // we need to know the time steps for fast_get_nodes_to_move().
+    // we need to know time steps for fast_get_nodes_to_move().
 
     full_reinitialize(b, t, verbose);
 
     bool tree_changed = true;	// used by fast_get_nodes_to_move;
     				// set by integration/evolution routines
 
+
+
+real *xxx = NULL;
+hdynptr *yyy = NULL;
+PRC(xxx); PRL(yyy);
+
+
+
     while (t <= t_end) {
+
+#ifdef T_DEBUG
+if (b->get_system_time() >= T_DEBUG) {
+
+//     pp3(b);
+
+//     cerr << "00" << endl << flush;
+//     for_all_daughters(hdyn, b, bb)
+//     if (bb->is_parent()) pp3(bb);
+//     cerr << "01" << endl << flush;
+
+//     cerr << "about to make a new real array" << endl << flush;
+//     xxx = new real[MAX_PERTURBERS];
+//     PRL(xxx);
+//     delete [] xxx;
+
+     cerr << "0000" << endl << flush;
+
+    cerr << "about to make a new real array" << endl << flush;
+    xxx = new real[MAX_PERTURBERS];
+    PRL(xxx);
+    delete [] xxx;
+
+    cerr << "about to make a new hdynptr array" << endl << flush;
+    yyy = new hdynptr[MAX_PERTURBERS];
+    PRL(yyy);
+    delete [] yyy;
+
+    if (b->get_system_time() >= 170.5) exit(0);
+}
+#endif
 
 	int n_next;
 	xreal ttmp;
@@ -1759,6 +1835,42 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	// Create the new time step list.
 
 	fast_get_nodes_to_move(b, next_nodes, n_next, ttmp, tree_changed);
+
+
+#ifdef T_DEBUG
+if (ttmp > T_DEBUG) {
+
+    cerr << 1 << endl << flush;
+
+    int p = cerr.precision(HIGH_PRECISION);
+    cerr << "evolve_system: "; PRC(n_next); PRL(ttmp);
+    if (n_next < 4) {
+	PRI(15);
+	for (int ii = 0; ii < n_next; ii++)
+	    cerr << next_nodes[ii]->format_label() << " ";
+	cerr << endl << flush;
+    }
+    cerr.precision(p);
+}
+#endif
+
+    bool quit_now = false;
+    hdyn *bad = NULL;
+    for (int ii = 0; ii < n_next; ii++) {
+	if (!next_nodes[ii]->is_valid()) {
+	    cerr << "next_node[" << ii << "] = " << next_nodes[ii]
+		 << " is invalid" << endl << flush;
+	    bad = next_nodes[ii];
+	    quit_now = true;
+	}
+    }
+    if (quit_now) {
+	for_all_nodes(hdyn, b, bb)
+	    if (bb == bad) cerr << "invalid node contained within the tree"
+				<< endl;
+	err_exit("invalid node(s) on timestep list.");
+    }
+
 
 	// New order of actions (Steve, 7/01):
 	//
@@ -2020,6 +2132,10 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	// Proceed to the next step.
 
+#ifdef T_DEBUG
+if (ttmp > T_DEBUG) cerr << 2 << endl << flush;
+#endif
+
 	if (ttmp < t)
 	    backward_step_exit(b, ttmp, t, next_nodes, n_next);
 	    
@@ -2033,6 +2149,10 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	b->set_time(t);
 
 	// Take a new step to time t (now system_time):
+
+#ifdef T_DEBUG
+if (ttmp > T_DEBUG) cerr << 3 << endl << flush;
+#endif
 
 #ifndef USE_GRAPE
 	
@@ -2094,9 +2214,34 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	}
 
+#ifdef T_DEBUG
+if (ttmp > T_DEBUG) {
+
+     cerr << 4 << endl << flush;
+
+//      cerr << "about to make a new real array" << endl << flush;
+//      xxx = new real[MAX_PERTURBERS];
+//      xxx[0] = 42;
+//      PRL(xxx);
+//      delete [] xxx;
+
+}
+#endif
+
 	int ds = integrate_list(b, next_nodes, n_next, exact,
 				tree_changed, full_dump,
 				r_reflect);
+
+//     for (int ii = 0; ii < n_next; ii++) {
+// 	if (!next_nodes[ii] || !next_nodes[ii]->is_valid()) {
+// 	    cerr << "next_node[" << ii << "] = " << next_nodes[ii]
+// 		 << " is now invalid" << endl << flush;
+// 	}
+//     }
+
+#ifdef T_DEBUG
+if (ttmp > T_DEBUG) cerr << 49 << endl << flush;
+#endif
 
 	bool force_energy_check = false;
 	if (ds < 0) {
@@ -2111,6 +2256,10 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	if (force_energy_check)
 	    count = 4*kd->n_check_heartbeat
 			* (floor(count / (4*kd->n_check_heartbeat)) + 1);
+
+#ifdef T_DEBUG
+if (ttmp > T_DEBUG) cerr << 5 << endl << flush;
+#endif
 
 	if (full_dump == 1) {
 
@@ -2278,16 +2427,24 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	// -- pros and cons exist for either choice; details are still
 	// under investigation).
 
+#ifdef T_DEBUG
+if (ttmp > T_DEBUG) cerr << 6 << endl << flush;
+#endif
+
 	if (fmod(b->get_system_time(), dt_sstar) == 0.0
 	    && b->get_use_sstar())  {
 
-	   //cerr << "pre SE at t = " << b->get_system_time() << endl;
-	   //print_recalculated_energies(b);
-
-	    tree_changed |= evolve_stars(b, full_dump);
-
-	   //cerr << "post SE at t = " << b->get_system_time() << endl;
+	   // cerr << "pre SE at t = " << b->get_system_time() << endl;
 	   // print_recalculated_energies(b);
+
+	    bool tmp = evolve_stars(b, full_dump);
+//	    if (tmp)
+//		cerr << "tree change caused by evolve_stars at time "
+//		     << b->get_system_time() << endl << flush;
+	    tree_changed |= tmp;
+
+	    // cerr << "post SE at t = " << b->get_system_time() << endl;
+	    // print_recalculated_energies(b);
 
 	    // print_energy_from_pot(b);	// should be free, but
 						// doesn't quite work...
@@ -2304,6 +2461,10 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    check_release_grape(ko, t);
 	}
 
+#endif
+
+#ifdef T_DEBUG
+if (ttmp > T_DEBUG) cerr << 7 << endl << flush;
 #endif
 
 	// Miscellaneous checks (see kira_runtime.C):
@@ -2356,6 +2517,9 @@ local void evolve_system(hdyn * b,	       // hdyn array
 }
 
 
+
+#include <unistd.h>				// for termination below...
+#include <signal.h>
 
 main(int argc, char **argv)
 {
@@ -2413,29 +2577,49 @@ main(int argc, char **argv)
 	 << endl;
 
     //--------------------------------------------------------------------
+    // For unknown reasons, neomuscat sometimes dumps core at end of run...
+    //--------------------------------------------------------------------
+
+    // exit(0);			// may still cause a core dump...
+
+    // kill(getpid(), 9);    	// dumb, but brute force works!
+
+    //--------------------------------------------------------------------
 
     // Clean up static data (to make it easier for ccmalloc to find
     // real memory leaks).
 
+    cerr << endl << "cleaning up hdyn_schedule" << endl << flush;
     clean_up_hdyn_schedule();
+
+    cerr << "cleaning up hdyn_ev" << endl << flush;
     clean_up_hdyn_ev();
+
+    cerr << "cleaning up kira_ev" << endl << flush;
     clean_up_kira_ev();
 
 #if defined(USE_GRAPE)
+    cerr << "cleaning up hdyn_grape" << endl << flush;
     clean_up_hdyn_grape();
 #endif
 
+    cerr << "cleaning up next_nodes" << endl << flush;
     if (next_nodes) delete [] next_nodes;
 
+    cerr << "cleaning up kira_counters" << endl << flush;
     if (b->get_kira_counters()) delete b->get_kira_counters();
+
+    cerr << "cleaning up perturbed_list" << endl << flush;
     if (b->get_perturbed_list()) delete [] b->get_perturbed_list();
+
+    cerr << "cleanup complete" << endl << flush;
 
     // rmtree(b);
     // rmtree(b, false);	// experiment: don't delete root node
 
     //--------------------------------------------------------------------
-    // for unknown reasons, merlot & halley dump core at end of run if
-    // rmtree is used.  *** TO BE FIXED... ***
+    // For unknown reasons, merlot & halley dump core at end of run if
+    // rmtree is used.
     //--------------------------------------------------------------------
 
 }
