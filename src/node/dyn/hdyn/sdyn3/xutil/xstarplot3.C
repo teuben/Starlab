@@ -840,7 +840,7 @@ local void check_for_input(unsigned long win, sdyn3* b,
 
 		    for_all_leaves(sdyn3, b, bi)
 			for (int kk = 0; kk < 3; kk++)
-			    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]
+			    lmax3d = Starlab::max(lmax3d, abs(bi->get_pos()[kk]
 						     - local_offset[kk]));
 		
 		    // Round lmax3d up to something reasonable:
@@ -1357,7 +1357,7 @@ void xstarplot(sdyn3* b, float scale, int k, int d, float lmax,
 
 	    for_all_leaves(sdyn3, b, bi)
 		for (int kk = 0; kk < 3; kk++)
-		    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]));
+		    lmax3d = Starlab::max(lmax3d, abs(bi->get_pos()[kk]));
 
 	    // Round lmax3d up to something reasonable:
 

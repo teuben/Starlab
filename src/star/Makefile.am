@@ -16,8 +16,10 @@
 ##..............................................................................
 ##
 
-SUBDIRS = sstar dstar util # rdc
+SUBDIRS = sstar dstar util
 
-#if !NO_X
-#   SUBDIRS += xutil
-#endif
+# rdc # don't put # on the previous line, as it will suppress xutil too!
+
+if !NO_X
+   SUBDIRS += xutil
+endif

@@ -7,6 +7,16 @@
 #	no_x
 #
 # Note that numerous autoconf cache (ac_cv_xxx) variables are also used.
+#
+# The following automake variables are set (checked in numerous Makefile.am).
+#
+#	HAVE_F77	if we have a usable Fortran compiler
+#	USE_SDYN3	if we have elected to include the sdyn3 code
+#	USE_SDYN	if we have elected to include the sdyn code
+#	HAVE_GRAPE	if we have a GRAPE (4 or 6)
+#	HAVE_LIBPNG	if the PNG libraries are available
+#	NO_X		if we DO NOT have X
+#	HAVE_LIBQT	if we have a usable Qt installation
 
 AC_PREREQ(2.59)
 m4_include([version.m4])
@@ -330,6 +340,7 @@ AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
     src/node/dyn/hdyn/sdyn/util/Makefile src/node/dyn/hdyn/sdyn/init/Makefile \
     src/node/dyn/hdyn/sdyn/evolve/Makefile src/node/dyn/hdyn/sdyn3/Makefile \
     src/node/dyn/hdyn/sdyn3/util/Makefile \
+    src/node/dyn/hdyn/sdyn3/xutil/Makefile \
     src/node/dyn/hdyn/sdyn3/evolve/Makefile src/node/dyn/tdyn/Makefile \
     src/star/Makefile src/star/sstar/Makefile \
     src/star/sstar/starclass/Makefile src/star/sstar/io/Makefile \

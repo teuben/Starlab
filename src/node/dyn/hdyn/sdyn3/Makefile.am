@@ -18,9 +18,9 @@
 
 SUBDIRS = util evolve
 
-#if !NO_X
-#   SUBDIRS += xutil
-#endif
+if !NO_X
+   SUBDIRS += xutil
+endif
 
 pkglib_LTLIBRARIES = libsdyn3.la
 

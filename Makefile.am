@@ -55,6 +55,7 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		sbin/gpl \
 		sbin/hide \
 		sbin/index \
+		sbin/ints.c \
 		sbin/kiraformat.c \
 		sbin/kiraindex.c \
 		sbin/kn \
@@ -350,12 +351,18 @@ LIBDIRS = src/std \
 	  src/node/dyn/hdyn \
 	  src/node/dyn/hdyn/xutil \
 	  src/node/dyn/hdyn/stubs \
-	  src/node/dyn/hdyn/sdyn \
-	  src/node/dyn/hdyn/sdyn3 \
 	  src/star/sstar \
 	  src/star/dstar \
 	  src/hydro \
 	  src/gfx
+
+if USE_SDYN3
+    LIBDIRS += src/node/dyn/hdyn/sdyn3
+endif
+
+if USE_SDYN
+    LIBDIRS += src/node/dyn/hdyn/sdyn
+endif
 
 .PHONY: libs
 libs:
@@ -363,7 +370,3 @@ libs:
 	    echo Making libs in $$dir; \
 	    $(MAKE) $(AM_MAKEFLAGS) -C $$dir libs; \
 	done
-
-
-
-

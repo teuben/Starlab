@@ -19,8 +19,7 @@
 bin_PROGRAMS = xhrdplot
 
 xhrdplot_CPPFLAGS = -DTOOLBOX
-
-xhrdplot_LDADD = ../sstar/starclass/libsstar.la \
-    ../../node/dyn/hdyn/util/libhdyn.la
-
+xhrdplot_LDADD = ../sstar/libsstar.la \
+		 ../../node/dyn/hdyn/libhdyn.la \
+		 ../../gfx/libgfx.la
 xhrdplot_SOURCES = xhrdplot.C gfx_util.C dyn_util.C hrd_util.C

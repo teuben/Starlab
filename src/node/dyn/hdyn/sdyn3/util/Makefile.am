@@ -22,7 +22,5 @@ bin_PROGRAMS = sdyn3_io
 libsdyn3_1_la_SOURCES = sdyn3_io.C
 
 sdyn3_io_CPPFLAGS = -DTOOLBOX
-
 sdyn3_io_LDADD = ../libsdyn3.la
-
 sdyn3_io_SOURCES = sdyn3_io.C

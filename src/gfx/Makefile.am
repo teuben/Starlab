@@ -34,9 +34,11 @@ if HAVE_LIBPNG
 endif
 
 libgfx_la_LIBADD = util/libgfx-1.la
+
 if !NO_X
     libgfx_la_LIBADD += lux/libgfx-2.la lux++/libgfx-3.la
 endif
+
 libgfx_la_SOURCES =
 
 AM_LDFLAGS = $(X_LIBS)
