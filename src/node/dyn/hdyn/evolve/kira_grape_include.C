@@ -250,8 +250,9 @@ void kira_synchronize_tree(hdyn *b)
     for (int i = 0; i < n_next; i++)
 	next_nodes[i]->set_on_integration_list();
 
-    if (ko->use_old_correct_acc_and_jerk || !ko->use_perturbed_list)
-	correct_acc_and_jerk(b, false);			// old version
+    if (ko->use_old_correct_acc_and_jerk || !ko->use_perturbed_list) {
+	bool reset = false;
+	correct_acc_and_jerk(b, reset);			// old version
     else
 	correct_acc_and_jerk(next_nodes, n_next);	// new version
 
@@ -276,7 +277,7 @@ void kira_synchronize_tree(hdyn *b)
 
     // Apply corrector and redetermine timesteps.
 
-    for (i = 0; i < n_next; i++) {
+    for (int i = 0; i < n_next; i++) {
 	hdyn *bi = next_nodes[i];
 	bi->correct_and_update();
 	bi->init_pred();
