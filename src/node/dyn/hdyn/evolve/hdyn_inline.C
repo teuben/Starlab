@@ -98,7 +98,10 @@ local inline void update_nn_coll(hdyn *this_node, int id,
 //
 // and
 //
-//	    r_bin  =  min(d_min, max(a, rij)).
+//	    r_bin  =  max(a, rij).
+//
+// (Note: we used to have r_bin  =  min(d_min, max(a, rij)), which is OK if
+//  rij is never greater than d_min, but this may not always be the case.)
 //
 // This is OK for roughly equal-mass binaries, but it doesn't take
 // masses into account -- IMPORTANT when a wide mass range exists.
@@ -173,25 +176,32 @@ local inline real define_perturbation_radius_factor(hdyn *b,	// 'this' node
 						    real pert_factor_sq)
 {
     int  perturber_criterion = b->get_kira_options()->perturber_criterion;
-    real d_min_sq = b->get_d_min_sq();
+    // real d_min_sq = b->get_d_min_sq();
     real r_bin = binary_scale(b);
     real m_bin = b->get_mass();
 
     // Note that pert_factor_sq will be gamma23 in normal use, but
     // it may in general take any value.
 
+    pert_fac_sq_save = pert_factor_sq;
+
+    // NOTE: removed "min(d_min_sq..." lines (Steve, 12/01).
+
     if (perturber_criterion == 0) {
 
 	// Distance criterion:
 
-	return pert_factor_sq * min(d_min_sq, r_bin * r_bin);
+	// return pert_factor_sq * min(d_min_sq, r_bin * r_bin);
+	return pert_factor_sq * r_bin * r_bin;
 
     } else if (perturber_criterion == 1) {
 
-	// Perturbation criterion (store rp^3 and include mass factor):
 
-	real rp2 = pert_factor_sq * min(d_min_sq, r_bin * r_bin);
-	return 2 * pow(rp2, 1.5) / m_bin;
+	// real rp2 = pert_factor_sq * min(d_min_sq, r_bin * r_bin);
+	real rp2 = pert_factor_sq * r_bin * r_bin;
+
+	// return 2 * pow(rp2, 1.5) / m_bin;
+	return 2 * rp2 * sqrt(rp2) / m_bin;
 
     } else if (perturber_criterion == 2) {
 
@@ -199,10 +209,33 @@ local inline real define_perturbation_radius_factor(hdyn *b,	// 'this' node
 	// criterion, but storing rp^3 instead of rp^2; alternatively,
 	// it is the perturbation criterion without the mass factor:
 
-	real rp2 = pert_factor_sq * min(d_min_sq, r_bin * r_bin);
-	return pow(rp2, 1.5);
+	// real rp2 = pert_factor_sq * min(d_min_sq, r_bin * r_bin);
+	real rp2 = pert_factor_sq * r_bin * r_bin;
 
+	// return pow(rp2, 1.5);
+	return rp2 * sqrt(rp2);
     }
+}
+
+// perturbation_scale_sq: return a characteristic squared scale for the
+//			  radius of b's perturber sphere (Steve, 12/01)
+
+local inline perturbation_scale_sq(hdyn *b,
+				   real pert_factor_sq)
+{
+    // Decode the perturber criterion and return the radius that would
+    // be applied for a perturber of mass equal to half the mass of b.
+    // Basically, we just repeat the action of the previous function,
+    // but return rp2.  Keep the function here so we can maintain
+    // consistency if the criteria change.
+    //
+    // Note that we end up calling binary_scale TWICE -- once in the
+    // previous function, and again here.  To be fixed...
+
+    if (!b->get_oldest_daughter()) return 0;
+
+    real r_bin = binary_scale(b);
+    return pert_factor_sq * r_bin * r_bin;
 }
 
 // is_perturber: check the perturbation criterion.
@@ -256,7 +289,8 @@ local inline real crit_separation_cubed(hdyn *b,	// binary CM node
     real d_min_sq = b->get_d_min_sq();
     int  perturber_criterion = b->get_kira_options()->perturber_criterion;
 
-    real d3 = pow(min(d_min_sq, r_bin * r_bin), 1.5) / gamma;
+    real d2 = min(d_min_sq, r_bin * r_bin);
+    real d3 = d2 * sqrt(d2) / gamma;
 
     if (perturber_criterion == 0
 	|| (perturber_criterion == 2 && m_pert <= 0.5 * m_bin))

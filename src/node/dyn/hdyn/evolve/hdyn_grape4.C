@@ -1053,31 +1053,27 @@ local void set_grape4_neighbour_radius(hdyn * b, int nj_on_grape)
 	// If it does have non-zero valid perturber list,
 	// the perturbation radius should be used.
 
-	real r_bin = 2*binary_scale(b);
-
+	// Old code (wrong unless we use a distance criterion for
+	// perturbers):
+	//
+	// real r_bin = 2*binary_scale(b);
+	//
 	// Use of binary_scale() here is potentially quite inefficient...
+	//
+	// real r_pert2 = max(b->get_perturbation_radius_factor(),
+	//		      r_bin*r_bin);
 
-	real r_pert2 = max(b->get_perturbation_radius_factor(),
-			   r_bin*r_bin);
+	// New code (GRAPE-4 and GRAPE-6 versions; Steve, 12/01):
 
-	// Probably want to clean up the extra distance limits applied
-	// to perturbation_radius_factor()...  The extra condition here
-	// is to ensure that the harp search radius includes the entire
-	// binary.  The choice may only be relevant to GRAPE code, as
-	// the non-GRAPE version will check all top-level nodes, and the
-	// perturbation_radius condition *ought* to pick up perturbers.
+	real r_pert2 = perturbation_scale_sq(b, b->get_gamma23());
 
-	if (b->get_nn() != NULL
-	    && b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
+	hdyn *nn = b->get_nn();
+	if (nn && nn != b && b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
+	    r_pert2 = max(r_pert2, b->get_d_nn_sq());
 
-	    b->set_grape_rnb_sq(max(r_pert2, b->get_d_nn_sq()));
+	// Note that this may cause overflow...
 
-	else
-
-	    b->set_grape_rnb_sq(r_pert2);
-
-	// Note that this can cause overflow, resulting in
-	// not_valid_perturber anyway...
+	b->set_grape_rnb_sq(r_pert2);
 
 	nb_check_counter[hindex] = 0;
     }

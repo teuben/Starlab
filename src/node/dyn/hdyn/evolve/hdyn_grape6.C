@@ -942,7 +942,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 //  ***********************************************************************
 
 
-local INLINE bool set_grape_neighbor_radius(hdyn * b)
+local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 // Adjust the GRAPE neighbor radius to some reasonable value.
 
@@ -973,8 +973,22 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b)
 	    // to use the nn distance as well.
 
 	    if (b->get_nn() && b->get_nn() != b
-		&& b->get_d_nn_sq() < 0.1*VERY_LARGE_NUMBER)
+		&& b->get_d_nn_sq() < 0.1*VERY_LARGE_NUMBER) {
+
 		rnb_sq = max(rnb_sq, b->get_d_nn_sq());
+
+	    } else {
+
+		// Node does not know its nearest neighbor.
+		// Note connections between d_min, r90, and rnn.
+
+		real r90_sq = b->get_d_min_sq() / square(b->get_d_min_fac());
+		real rnn_sq = r90_sq * pow((real)nj_on_grape, 4.0/3);
+
+		// NB: rnn_sq ~ square of the average interparticle spacing.
+
+		rnb_sq = max(rnb_sq, rnn_sq);
+	    }
 
 	    b->set_grape_rnb_sq(rnb_sq);
 	}
@@ -986,21 +1000,32 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b)
 	// bother to compute the list if grape_nb_count = 0, unless
 	// we need to rebuild the perturber list.
 
-	// Note that the code that follows is essentially similar to
-	// the 'leaf' code above.
-
 	if (b->get_grape_nb_count() == 0 || !b->get_valid_perturbers()) {
 
-	    real rnb_sq = b->get_perturbation_radius_factor();
+	    // Old code:
+	    //
+	    // real rnb_sq = b->get_perturbation_radius_factor();
 
 	    // If the node has a valid nearest neighbor pointer, use
 	    // the nn distance as well.
 
-	    if (b->get_nn() && b->get_nn() != b
-		&& b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
-		rnb_sq = max(rnb_sq, b->get_d_nn_sq());
+	    // if (b->get_nn() && b->get_nn() != b
+	    //	&& b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
+	    //	rnb_sq = max(rnb_sq, b->get_d_nn_sq());
 
-	    b->set_grape_rnb_sq(rnb_sq);
+	    // b->set_grape_rnb_sq(rnb_sq);
+
+	    // New code (GRAPE-4 and GRAPE-6 versions; Steve, 12/01):
+
+	    real r_pert2 = perturbation_scale_sq(b, b->get_gamma23());
+
+	    hdyn *nn = b->get_nn();
+	    if (nn && nn != b && b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
+		r_pert2 = max(r_pert2, b->get_d_nn_sq());
+
+	    // Note that this may cause overflow...
+
+	    b->set_grape_rnb_sq(r_pert2);
 	}
     }
 
@@ -1560,7 +1585,7 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
 	// Set a reasonable h2 value for this node.
 
-	need_neighbors |= set_grape_neighbor_radius(bb);
+	need_neighbors |= set_grape_neighbor_radius(bb, nj_on_grape);
 
 	// Use valid perturbers to indicate whether the neighbor list
 	// should be used to construct a perturber list.
@@ -1679,7 +1704,12 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 //  *                                                                    *
 //  **********************************************************************
 
-local INLINE void set_grape_density_radius(hdyn *b, real h2_max)
+//  **********************************************************************
+//  *****  NOTE that the "new" density algorithm from hdyn_grape4.C  *****
+//  *****  should be incorporated here too.                          *****
+//  **********************************************************************
+
+local INLINE void set_grape_density_radius(hdyn *b, real rnn_sq)
 
 // For a single particle, try to adjust the initial radius so that
 // it will contain just ~10-20 neighbors (set r = 3*d_nn, if known).
@@ -1693,13 +1723,46 @@ local INLINE void set_grape_density_radius(hdyn *b, real h2_max)
 
 	// Node seems to have a valid nearest neighbor pointer.
 
-	b->set_grape_rnb_sq(9 * b->get_d_nn_sq());
+	// Old code:
+	//
+	// b->set_grape_rnb_sq(9 * b->get_d_nn_sq());
 
-    } else
+	// New code (from GRAPE-4 version):
 
-	// Node does not know its nearest neighbor.
+	// Modify the initial guess for particles with a close nn.
 
-	b->set_grape_rnb_sq(9 * pow(b->get_d_min_sq(), 1.0/3.0));  // (??)
+	if (DEBUG) {
+	    cerr << "nn OK for " << b->format_label() << ",  ";
+	    PRC(rnn_sq); PRL(sqrt(b->get_d_nn_sq()));
+	    PRL(b->get_nn()->format_label());
+	}
+
+#if 0
+	if (b->get_d_nn_sq() < rnn_sq)
+	    rnn_sq = sqrt(rnn_sq * b->get_d_nn_sq());	// empirical
+	else
+	    rnn_sq = b->get_d_nn_sq();
+#endif
+
+	rnn_sq = 5*b->get_d_nn_sq();
+
+    } else {
+
+	// Node does not know its nearest neighbor.  Value of d_nn_sq
+	// is where the neighbor search stopped.
+
+	// Old:
+	//
+	// b->set_grape_rnb_sq(9 * pow(b->get_d_min_sq(), 1.0/3.0));  // (??)
+
+	rnn_sq = 4*max(rnn_sq, b->get_d_nn_sq());
+
+	if (DEBUG)
+	    cerr << "no nn for " << b->format_label() << ",  ";
+    }
+
+    b->set_grape_rnb_sq(rnn_sq);
+    if (DEBUG) PRL(sqrt(b->get_grape_rnb_sq()));
 }
 
 local void check_neighbors(hdyn *b, real rnb_sq, int indent = 0)
@@ -1777,10 +1840,22 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 		 << sqrt(b->get_grape_rnb_sq()) << ")" << endl;
 	}
 
-	real fac = 2;
-	if (n_neighbors < 4) fac = 4;
-	b->set_grape_rnb_sq(fac * b->get_grape_rnb_sq());
+	// Old:
+	//
+	// real fac = 2;
+	// if (n_neighbors < 4) fac = 4;
 
+#if 0
+	real fac = 1.25;
+	if (n_neighbors < 12) fac *= 1.25;
+	if (n_neighbors < 8) fac *= 1.6;
+	if (n_neighbors < 4) fac *= 1.6;
+	if (n_neighbors < 2) fac *= 1.6;
+#endif
+
+	real fac = min(2.0, pow((NDENS+3.0)/(1.0+n_neighbors), 1.5));
+
+	b->set_grape_rnb_sq(fac * b->get_grape_rnb_sq());
 	return false;
     }
 
@@ -2005,8 +2080,18 @@ void grape_calculate_densities(hdyn* b,			// root node
 
     // Set h2 values.
 
-    for (int j = 0; j < n_top; j++)
-	set_grape_density_radius(top_nodes[j], h2_crit);
+    // New code from GRAPE-4 version:
+
+    // Determine rnn_sq ~ square of the average interparticle spacing,
+    // for use as a scale in setting h2.  Note the connections between
+    // d_min, r90, and rnn.
+
+    real r90_sq = b->get_d_min_sq() / square(b->get_d_min_fac());
+    real rnn_sq = r90_sq * pow((real)nj_on_grape, 4.0/3);
+
+    for (int i = 0; i < n_top; i++)
+//	set_grape_density_radius(top_nodes[j], h2_crit);
+	set_grape_density_radius(top_nodes[i], rnn_sq);
 
     int n_pipes = g6_npipes_();
 
