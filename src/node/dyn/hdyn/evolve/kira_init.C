@@ -760,6 +760,8 @@ bool kira_initialize(int argc, char** argv,
     real q_vir = 0.5;           // virial ratio (instead of time scaling)
     real T_start = 0;
 
+    real friction_beta = 0;
+
     real sec = 0, smc = 0, stc = 0;
     bool sec_flag = false;
     bool smc_flag = false;
@@ -878,7 +880,8 @@ bool kira_initialize(int argc, char** argv,
 	    case 'f':	d_min = atof(poptarg);
 			d_min_flag = true;
 			break;
-	    case 'F':	err_exit("kira: -F option removed: use add_tidal");
+	    case 'F':	//err_exit("kira: -F option removed: use add_tidal");
+			friction_beta = atof(poptarg);
 			break;
 	    case 'g':	lag_factor = atof(poptarg);
 			lag_flag = true;
@@ -968,6 +971,15 @@ bool kira_initialize(int argc, char** argv,
 
     correct_multiples(b, verbose);
     initialize_index(b, verbose);
+
+
+
+
+    set_friction_beta(friction_beta);
+    cerr << "Dynamical friction beta = " << friction_beta << endl;
+
+
+
     
     //----------------------------------------------------------------------
 
