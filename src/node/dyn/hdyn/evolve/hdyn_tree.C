@@ -227,7 +227,8 @@ local bool too_big(hdyn * bi, real limit_sq)
     // distance, timestep. etc...  Use of gamma2 here is imperfect, and
     // probably should be improved (12/12/01).
 
-    if (od->get_perturbation_squared() == od->get_gamma2()) return false;
+    real pert2 = od->get_perturbation_squared();
+    if (pert2 >= 0 && pert2 <= od->get_gamma2()) return false;
 
     bool big = !too_close(od, od->get_younger_sister(), limit_sq, false);
 
