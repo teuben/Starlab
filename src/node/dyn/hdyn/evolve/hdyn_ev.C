@@ -601,10 +601,10 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 
 
 
-//*****	TEMPORARY!!  Arbitrarily reduce low-level steps by a factor of 2,
+//*****	TEMPORARY!!  Arbitrarily reduce low-level steps by some factor,
 //***** to facilitate timing checks of low-level steps.
 //
-//    if (b->is_low_level_node()) newstep /= 2;
+//    if (b->is_low_level_node()) newstep /= 32;
 //
 //*****
 //*****

@@ -133,6 +133,7 @@ local void reattach_grape(real time, char *id, kira_options *ko)
 	    cerr << "GRAPE successfully attached"
 		 << endl << flush;
 	}
+	PRL(cpu_time());
 }
 
 
@@ -746,8 +747,10 @@ void check_release_grape(kira_options *ko, xreal time, bool verbose)
 	int p = cerr.precision(STD_PRECISION);
 	cerr << endl << "Releasing GRAPE-6 at time " << time << " after ";
 	cerr.precision(2);
-	cerr << cpu_time() - ko->grape_last_cpu <<" CPU sec" << endl;
+	real current_cpu = cpu_time();
+	cerr << current_cpu - ko->grape_last_cpu <<" CPU sec" << endl;
 	cerr.precision(p);
+	PRL(current_cpu);
 
 	g6_close_(&cluster_id);
 	grape_is_open = false;
