@@ -408,8 +408,9 @@ main(int argc, char **argv)
     check_help();
 
     extern char *poptarg;
+    extern char *poparr[];
     int c;
-    char* param_string = "A:bc:C:d:D:e:g:l:L::m:M:n:N:o:pPqQr:R:s:S:U:v:x:y:z:";
+    char* param_string = "A:bc:C:d:D:e:g:l:L::m:M:n:N:o:pPqQr:R:s:S:U:v:x:X:::y:z:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -418,7 +419,7 @@ main(int argc, char **argv)
 		      break;
 	    case 'b': b_flag = 1 - b_flag;
 		      break;
-	    case 'c': cpu_time_check = 3600*atof(poptarg);// (Specify in hours)
+	    case 'c': cpu_time_check = 3600*atof(poptarg); // (set in hours)
 		      break;
 	    case 'C': snap_cube_size = atof(poptarg);
 		      break;
@@ -434,8 +435,8 @@ main(int argc, char **argv)
 		      break;
 	    case 'l': init.r_init_min = atof(poptarg);
 		      break;
-	    case 'L': init.cpu_limit = atof(poptarg);
-		      init.snap_limit = atoi(poptarg);
+	    case 'L': init.cpu_limit = atof(poparr[0]);
+		      init.snap_limit = atoi(poparr[1]);
 		      break;
 	    case 'm': init.m2 = atof(poptarg);
 		      break;
@@ -470,6 +471,10 @@ main(int argc, char **argv)
 	    case 'v': init.v_inf = atof(poptarg);
 		      break;
 	    case 'x': init.r1 = atof(poptarg);
+		      break;
+	    case 'X': init.r1 = atof(poparr[0]);
+		      init.r2 = atof(poparr[1]);
+		      init.r3 = atof(poparr[2]);
 		      break;
 	    case 'y': init.r2 = atof(poptarg);
 		      break;
