@@ -1,20 +1,18 @@
 //
-// "Program" is the command line user interface class.
-//
-// It currently lives in $STARLAB_PATH/src/std/pjt but will move into
-// $STARLAB_PATH/src/std when things are ironed out.
-// The code however is already being added to the 'std' library libstd.a
+// "Program" is a command line user interface class.
 //
 //
-#include <iostream.h>
-#include "stdinc.h"
-#include "stdarg.h"
+#include <iostream>
+#include <string>
 
 #ifndef _PROGRAM_H
 #define _PROGRAM_H
 
+#define end_of_keywords  "end_of_keywords"
 
-typedef char *string;		// this should really become a class
+// static string my_null_string;
+
+using namespace std;
 
 				// "Keyword" should also become a class
 
@@ -46,10 +44,10 @@ class Program {			// NOTE: one instance of this class will exist
 
     //
 
-    string package;             // optional package name (NEMO, STARLAB)
+    string package;             // optional package name (NEMO, STARLAB, CARMA)
     string progname;            // short program name without path
-    int argc;                   // argument count, for completeness
-    string *argv;               // 0 terminated array of CL strings
+    int argc;                   // (from main) argument count
+    string *argv;               // (from main) array of CL strings
 
     int nkeys;			// number of keywords + 1
     Keyword *keys;		// 0=not used 1=first keyword etc.
@@ -64,7 +62,7 @@ class Program {			// NOTE: one instance of this class will exist
 
     // Initialize and program flow
 
-    void init(int argc, string *argv);
+    void init(int argc, char *argv[]);
     void append(string skeyvalhelp);
     void parse(void);
     int go(void);
@@ -83,7 +81,7 @@ class Program {			// NOTE: one instance of this class will exist
     int dec_error(void);	// decrement and return error_level
 
     int get_argc(void);
-    char **get_argv(void);
+    string *get_argv(void);
 
   private:
 
@@ -91,29 +89,32 @@ class Program {			// NOTE: one instance of this class will exist
     int error_level;            //  error= or $XXX_ERROR
     int help_level;             //  help=  or $XXX_HELP
 
-    void set_debug(string);	// set 
-    void set_error(string);
-    void set_help(string);
+    void set_debug(const string);	// set 
+    void set_error(const string);
+    void set_help(const string);
 
     void help(void);
     void addkey(int, string, int);
-    int findkey(string);
+    int findkey(const string);
 
 };
 
 //  getparam.C
 
-extern int    hasvalue(string);
-extern int    isdefault(string);
+extern bool   hasvalue(const string);
+extern bool   isdefault(const string);
 
-extern string getparam(string);
-extern real   getrparam(string);
-extern int    getiparam(string);
+extern string getparam(const string);
+extern double getdparam(const string);
+extern int    getiparam(const string);
+extern bool   getbparam(const string);
 
-extern int    getflag(string);
+extern bool   getflag(const string);
 
 extern int    get_argc(void);
-extern char **get_argv(void);
+extern string *get_argv(void);
+
+//  not sure if we should use these 
 
 extern void   Error(char * ...);
 extern void   Warning(char *, ...);
