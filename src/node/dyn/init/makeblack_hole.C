@@ -13,10 +13,10 @@
 //// Usage:  makeblack_hole [OPTIONS]
 ////
 //// Options:
+////      -c    add comment to snapshot
 ////      -M    select black hole mass; if <1 mass is read as a fraction
 ////      -r    select black hole position
-////      -v    select black hole velocity
-////      -f    flag for seting black hole prameters
+////      -v    select black hole velocity [relative to circular speed]
 ////      -i    select black hole identity
 ////
 //// Written by Simon Portegies Zwart.
@@ -173,8 +173,10 @@ int main(int argc, char ** argv) {
       if (id>b->n_leaves())
 	err_exit("selected id exceeds particle number");
 
-      if(v_flag)
-	v_bh *= sqrt(vcirc2(b, abs(r_bh)));
+      if(v_flag) {
+	real v_disp = sqrt(2.);
+	v_bh = v_bh * v_disp * sqrt(vcirc2(b, abs(r_bh)));
+      }
 
       makeblack_hole(b, id, m_bh, r_flag, r_bh, v_flag, v_bh);
 
