@@ -34,7 +34,7 @@
 
 #define DEBUG	0
 
-// Allow possibility of no neighborlist (former SPZ convention
+// Allow possibility of no neighbor list (former SPZ convention
 // reversed by Steve, 6/01):
 
 //#define NO_G6_NEIGHBOUR_LIST
@@ -919,7 +919,8 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b)
 	    // If the node has a valid nearest neighbor pointer, try
 	    // to use the nn distance as well.
 
-	    if (b->get_nn() && b->get_d_nn_sq() < 0.1*VERY_LARGE_NUMBER)
+	    if (b->get_nn() && b->get_nn() != b
+		&& b->get_d_nn_sq() < 0.1*VERY_LARGE_NUMBER)
 		rnb_sq = max(rnb_sq, b->get_d_nn_sq());
 
 	    b->set_grape_rnb_sq(rnb_sq);
@@ -942,7 +943,8 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b)
 	    // If the node has a valid nearest neighbor pointer, use
 	    // the nn distance as well.
 
-	    if (b->get_nn() && b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
+	    if (b->get_nn() && b->get_nn() != b
+		&& b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER)
 		rnb_sq = max(rnb_sq, b->get_d_nn_sq());
 
 	    b->set_grape_rnb_sq(rnb_sq);
@@ -1602,7 +1604,7 @@ local INLINE void set_grape_density_radius(hdyn *b, real h2_max)
 // Called by:	grape_calculate_densities()			// global
 
 {
-    if (b->get_nn() != NULL
+    if (b->get_nn() != NULL && b->get_nn() != b
 	&& b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER
 	&& b->get_d_nn_sq() > 0) {
 
