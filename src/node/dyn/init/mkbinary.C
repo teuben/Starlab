@@ -85,8 +85,8 @@ local void add_dynamics(dyn* cm, real ecc, real energy)
 local real roche_radius(const real m1, const real m2) {
 
   real q = m1/m2;
-  real q1_3 = pow(q, cnsts.mathematics(one_third));
-  real q2_3 = pow(q1_3, 2);   //pow(mr, TWO_THIRD);
+  real q1_3 = pow(q, ONE_THIRD);
+  real q2_3 = pow(q1_3, 2);   
   
   return 0.49*q2_3/(0.6*q2_3 + log(1 + q1_3));
 }
@@ -100,7 +100,7 @@ local real minimum_semi_major_axis(dyn* b1, dyn* b2)
     real rs_sec  = b2->get_starbase()->conv_r_star_to_dyn(ms_sec);
   
     real sma_prim = rs_prim/roche_radius(ms_prim, ms_sec);
-    real sma_sec = rs_sec/roche_radius(ms_sec, mp_prim);
+    real sma_sec = rs_sec/roche_radius(ms_sec, ms_prim);
 
     return max(sma_prim, sma_sec);
 }
