@@ -24,7 +24,7 @@ EXECUTABLES	= makecube makedisk makeplummer makepyth makesphere mkwrite \
 	 	  mkheavystar mk_aniso_king readp readstoa \
 	          mkplanetary mkblack_hole grow_black_hole
 
-OBJECT_FILES	= mksphere.o
+OBJECT_FILES	= makesphere.o
 LIBRARY		= libdyn.a
 
 aking.o:	aking.f
