@@ -337,7 +337,7 @@ real stellar_evolution_constants::parameters(model_parameter pm) {
 	      break;
         case spiral_in_time:                           return 0.0005; // Myr
 	      break;
-        case scale_kick_to_escape_velocity:            return 0;   // km/s
+        case scale_kick_to_escape_velocity:            return 25;   // km/s
 	      break;
         default:
 	     cerr << "\nNo recognized option in "
