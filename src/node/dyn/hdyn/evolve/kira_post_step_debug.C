@@ -3,16 +3,20 @@
 
 
 #if 0
-    if (t > 81.621720 && t < 81.621785 && fmod(steps, 1) == 0) {
+    if (((t > 81.814 && t < 81.815) || (t > 81.829 && t < 81.832))
+	 && fmod(steps, 1) == 0) {
+
 	for (int ii = 0; ii < n_next; ii++) {
 	    if (next_nodes[ii] && next_nodes[ii]->is_valid())
 		cerr << next_nodes[ii]->format_label() << " ";
 	}
 	cerr << endl; 
+
 	int p = cerr.precision(HIGH_PRECISION);
 	PRC(t); 
 	cerr.precision(p);
 	print_recalculated_energies(b);
+
     }
 #endif
 
