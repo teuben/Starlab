@@ -32,6 +32,7 @@
 //// initialization.  In case of doubt, read the log file!
 ////
 //// Options:     -a    specify accuracy parameter [0.1][*]
+////              -A    enable "alternate" output [off]
 ////              -b    specify frequency of full binary output, in (integer)
 ////                    units of the log output interval
 ////                                  [10; no argument or 0 ==> no output]
