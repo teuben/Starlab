@@ -106,12 +106,6 @@ void  compute_density(dyn * b,      	// pointer to N-body system or node
     neighbor_dist_sq = new real[k+1];
     neighbor_mass = new real[k+1];
 
-
-
-	// **** Problem with k = 12?? ****
-
-
-
     // Set first body d for which density is to be computed.
 
     // for_all_leaves(dyn, b, d) {	// The density is now defined
@@ -196,7 +190,7 @@ void  compute_density(dyn * b,      	// pointer to N-body system or node
 //		    density = (k - 1) / volume;	    // ApJ, 298, 80 (1985)
 
 		    real mass = 0;   
-		    for(int m=1; m<k; m++) // exclude seld and outer most stars.
+		    for(int m=1; m<k; m++) // exclude self and outermost stars.
 			mass += neighbor_mass[k]; 
 		    density = mass/volume;    // ApJ, 298, 80 (1985)
 		}
