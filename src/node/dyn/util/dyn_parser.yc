@@ -134,8 +134,7 @@ key_val_pair:	  KEYWORD '=' real_vec {
   free($1);
   $3->clear();
   //vals.clear();
-  *(story_line.s) = '\0';
-  story_line.n = 0;
+  *story_line.s = story_line.n = 0;
 }
 		| KEYWORD '=' STRING {
   /*
