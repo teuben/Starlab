@@ -38,8 +38,8 @@ void hdyn::update_kepler_from_hdyn()
 
     kep->set_time(time);
     kep->set_total_mass(parent->get_mass());
-    kep->set_rel_pos(pos - sister->pos);
-    kep->set_rel_vel(vel - sister->vel);
+    kep->set_rel_pos(sister->pos - pos);
+    kep->set_rel_vel(sister->vel - vel);
     kep->initialize_from_pos_and_vel();
 
     sister->kep = kep;
