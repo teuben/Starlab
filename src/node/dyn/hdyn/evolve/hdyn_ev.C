@@ -1322,7 +1322,7 @@ bool hdyn::correct_and_update()
 	    //			    old acc and jerk and continue
 	    //			flag, recompute acc and jerk, and continue  <--
 
-	    cerr << endl << endl;
+	    cerr << endl;
 	    // exit(0);
 
 	    // Flag the problem.
