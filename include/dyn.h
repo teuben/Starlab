@@ -475,7 +475,8 @@ bool parse_sys_stats_main(int argc, char *argv[],
 			  bool &calc_e,
 			  bool &n_sq,
 			  bool &out,
-			  bool &verbose);
+			  bool &verbose,
+			  char *cvs_id, char *source);
 void check_addstar(dyn* b);
 void sys_stats(dyn* root,
 	       real energy_cutoff = 1,
@@ -560,7 +561,8 @@ bool parse_scale_main(int argc, char *argv[],
 		      bool& m_flag, real& m,
 		      bool& q_flag, real& q,
 		      bool& r_flag, real& r,
-		      bool& debug);
+		      bool& debug,
+		      char *cvs_id, char *source);
 void scale(dyn *b, real eps,
 	   bool c_flag,
 	   bool e_flag, real e,
