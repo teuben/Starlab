@@ -1942,12 +1942,11 @@ local INLINE int get_force_and_neighbors(xreal xtime,
 
 	    // An error has occurred.  Flag it and take appropriate action...
 
-	    cerr << func << ":  error getting GRAPE neighbor data: ";
+	    cerr << endl << func << ":  error getting GRAPE neighbor data: ";
 	    PRL(status);
 
 
 	    PRC(ni); PRC(nj_on_grape); PRL(n_pipes);
-	    PRC(need_neighbors); PRL(nodes[0]);
 	    for (int i = 0; i < ni; i++) {
 		cerr << i << " " << nodes[i] << " "; PRL(nodes[i]->is_valid());
 		if (nodes[i]->is_valid())
@@ -1982,7 +1981,8 @@ local INLINE int get_force_and_neighbors(xreal xtime,
 
 		if (level < NRETRY) {
 
-		    cerr << "Resetting GRAPE and retrying..." << endl;
+		    cerr << "Resetting GRAPE and retrying...";
+		    PRC(level); PRL(NRETRY);
 		    reset_grape(nodes[0]->get_root());
 
 		    error = get_force_and_neighbors(xtime, nodes, ni,
@@ -2291,8 +2291,8 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
 				// Correct the value of rpfac (0.8 is caution).
 
-				real sc = perturber_rescale(b, nsc);
-				rpfac *= sc;
+				real rescale = perturber_rescale(b, nsc);
+				rpfac *= rescale;
 
 				// Check that we will enclose enough low-level
 				// perturbers -- flag if not (best we can do).
@@ -2345,7 +2345,7 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 				    cerr << "time " << b->get_system_time()
 					 << ", ";
 				    cerr.precision(p);
-				    PRC(n_neighbors); PRC(ntot); PRL(sc);
+				    PRC(n_neighbors); PRC(ntot); PRL(rescale);
 #endif
 
 				    int count = 0;
@@ -2698,6 +2698,8 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 							  1,
 							  nj_on_grape, n_pipes,
 							  true)) {
+
+			PRL(stat);
 
 			if (stat == 2) {
 
