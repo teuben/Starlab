@@ -746,7 +746,7 @@ void split_top_level_node(hdyn * bi,
 				       bi->get_oldest_daughter()
 				         ->get_younger_sister());
 
-#if 1
+#if 0
 	    cerr << endl;
 	    PRL(bi->get_oldest_daughter()->get_perturbation_squared());
 	    hdyn *pnode = bi->get_oldest_daughter()->find_perturber_node();
