@@ -95,6 +95,7 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 
 	    // Note that top_level_node_prologue_for_force_calculation()
 	    // does the *entire* calculation in the case exact = true.
+	    // For exact = false it does almost nothing...
 
 	    if (!ignore_internal)
 		bi->top_level_node_prologue_for_force_calculation(exact);
@@ -111,7 +112,7 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 		predict_loworder_all(bi->get_top_level_node(), sys_t);
 	}
 
-	if (ignore_internal) {
+	if (ignore_internal && (low || !exact)) {
 
 	    // Set flags in case of no internal forces...
 
@@ -138,7 +139,134 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
     }
 #endif
 
-    // Complete the low-level force calculations.
+    // Complete the top-level force calculation (now top-level nodes
+    // run from n_low to n_next-1):
+
+    if (n_low < n_next) {
+
+	if (tree_changed)
+	    restart_grape = true;
+
+#ifdef T_DEBUG
+	if (IN_DEBUG_RANGE(sys_t)) {
+	    cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 3
+		 << endl << flush;
+	}
+#endif
+
+	int n_top = 1;
+
+	// Calculate top-level forces.  Note new return value from
+	// kira_calculate_top_level_acc_and_jerk() (Steve, 4/03).
+
+	// Top_level force calculation uses
+	//
+	//	grape_calculate_acc_and_jerk()
+	//
+	// or
+	//
+	//	top_level_node_real_force_calculation()
+	//
+	// as appropriate.
+
+	if (!exact && !ignore_internal)
+	    n_top = kira_calculate_top_level_acc_and_jerk(next_nodes+n_low,
+							  n_next-n_low,
+							  time, restart_grape);
+
+//   if (sys_t >= 44.15329 && sys_t <= 44.1533) {
+//     cerr << "after top-level acc_and_jerk" << endl;
+//     pp3(next_nodes[0]->get_top_level_node());
+//   }
+
+#ifdef T_DEBUG
+	if (IN_DEBUG_RANGE(sys_t)) {
+	    cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 4
+		 << endl << flush;
+	}
+#endif
+
+	// Complete calculation of top-level accs and jerks by correcting
+	// for C.M. interactions.
+
+	if (!exact) {
+
+	    // Note: correct_acc_and_jerk() now checks list membership to
+	    // determine if correction is needed.
+
+	    // The new version of correct_acc_and_jerk appears to work, but
+	    // retain the possibility of reverting to the old version until we
+	    // are sure there are no problems.  Results of the two versions
+	    // are similar, but *not* identical.
+
+	    // On_integration_list flags are for use by correct_acc_and_jerk(),
+	    // to ensure that we only correct interactions between objects on
+	    // the list.  Should be unset immediately on return, but see the
+	    // note below.
+
+	    n_top--;
+
+	    // Epilogue operations.
+
+	    for (int i = n_low; i < n_next; i++) {
+
+		hdyn *bi = next_nodes[i];
+
+		// Epilogue force calculation mostly performs CM corrections
+		// and cleans up the perturber list.
+
+		bi->inc_direct_force(n_top);		// direct force counter
+		bi->top_level_node_epilogue_force_calculation();
+		bi->set_on_integration_list();
+	    }
+
+	    if (ko->use_old_correct_acc_and_jerk || !ko->use_perturbed_list)
+
+		correct_acc_and_jerk(b,			// old version
+				     reset_force_correction);
+	    else
+
+		correct_acc_and_jerk(next_nodes+n_low,	// new version
+				     n_next-n_low);
+
+	    // Don't unset the "on_integration_list" flags here, because
+	    // the loop through memory may cost more than it is worth.
+	    // *** Must unset these flags in the calling function. ***
+
+	    // for (int i = n_low; i < n_next; i++)
+	    //     next_nodes[i]->clear_on_integration_list();
+
+	}
+
+#ifdef T_DEBUG
+	if (IN_DEBUG_RANGE(sys_t)) {
+	    cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 5
+		 << endl << flush;
+	}
+#endif
+
+	// Add external forces, if any, to top-level nodes.
+
+	if (b->get_external_field() > 0) {
+
+	    for (int i = n_low; i < n_next; i++) {
+
+		hdyn *bb = next_nodes[i];
+
+		real pot;
+		vec acc, jerk;
+		get_external_acc(bb, bb->get_pred_pos(), bb->get_pred_vel(),
+				 pot, acc, jerk);
+		bb->inc_pot(pot);
+		bb->inc_acc(acc);
+		bb->inc_jerk(jerk);
+	    }
+	}
+    }
+
+    // Everything is done for top-level nodes.  Complete the low-level
+    // force calculations.  Do this at the end, so any recomputation of
+    // top-level perturber lists has already occurred.
 
     if (!ignore_internal) {
 
@@ -192,142 +320,15 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 
 #ifdef T_DEBUG
     if (IN_DEBUG_RANGE(sys_t)) {
-	cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 3
+	cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 6
 	     << endl << flush;
     }
 #endif
 
-    // Everything is done for low-level nodes.  Complete the top-level
-    // force calculation (now top-level nodes run from n_low to n_next-1):
-
-    if (n_low < n_next) {
-
-	// Prologue operations.
-
-	for (int i = n_low; i < n_next; i++) {
-
-	    hdyn *bi = next_nodes[i];
-	    predict_loworder_all(bi, sys_t);
-
-	    bi->clear_interaction();
-
-	    // Note that top_level_node_prologue_for_force_calculation()
-	    // does the *entire* calculation in the case exact = true.
-
-	    bi->top_level_node_prologue_for_force_calculation(exact);
-
-	    if (!exact && ignore_internal) {
-		bi->set_nn(bi);
-		bi->set_coll(bi);
-		bi->set_d_nn_sq(VERY_LARGE_NUMBER);
-	    }
-	    bi->inc_steps();
-	}
-
-	if (tree_changed)
-	    restart_grape = true;
-
-#ifdef T_DEBUG
-	if (IN_DEBUG_RANGE(sys_t)) {
-	    cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 4
-		 << endl << flush;
-	}
-#endif
-
-	int n_top = 1;
-
-	// Calculate top-level forces.  Note new return value from
-	// kira_calculate_top_level_acc_and_jerk() (Steve, 4/03).
-
-	// Top_level force calculation uses grape_calculate_acc_and_jerk or
-	// top_level_node_real_force_calculation, as appropriate.
-
-	if (!exact && !ignore_internal)
-	    n_top = kira_calculate_top_level_acc_and_jerk(next_nodes+n_low,
-							  n_next-n_low,
-							  time, restart_grape);
-
-#ifdef T_DEBUG
-	if (IN_DEBUG_RANGE(sys_t)) {
-	    cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 5
-		 << endl << flush;
-	}
-#endif
-
-	// Complete calculation of top-level accs and jerks by correcting
-	// for C.M. interactions.
-
-	if (!exact) {
-
-	    // Note: correct_acc_and_jerk() now checks list membership to
-	    // determine if correction is needed.
-
-	    // The new version of correct_acc_and_jerk appears to work, but
-	    // retain the possibility of reverting to the old version until we
-	    // are sure there are no problems.  Results of the two versions
-	    // are similar, but *not* identical.
-
-	    // On_integration_list flags are for use by correct_acc_and_jerk(),
-	    // to ensure that we only correct interactions between objects on
-	    // the list.  Should be unset immediately on return, but see the
-	    // note below.
-
-	    n_top--;
-
-	    // Epilogue operations.
-
-	    for (int i = n_low; i < n_next; i++) {
-
-		hdyn *bi = next_nodes[i];
-
-		bi->inc_direct_force(n_top);		// direct force counter
-		bi->top_level_node_epilogue_force_calculation();
-		bi->set_on_integration_list();
-	    }
-
-	    if (ko->use_old_correct_acc_and_jerk || !ko->use_perturbed_list)
-
-		correct_acc_and_jerk(b,			// old version
-				     reset_force_correction);
-	    else
-
-		correct_acc_and_jerk(next_nodes+n_low,	// new version
-				     n_next-n_low);
-
-	    // Don't unset the "on_integration_list" flags here, because
-	    // the loop through memory may cost more than it is worth.
-	    // *** Must unset these flags in the calling function. ***
-
-	    // for (int i = n_low; i < n_next; i++)
-	    //     next_nodes[i]->clear_on_integration_list();
-
-	}
-
-#ifdef T_DEBUG
-	if (IN_DEBUG_RANGE(sys_t)) {
-	    cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 6
-		 << endl << flush;
-	}
-#endif
-
-	// Add external forces, if any, to top-level nodes.
-
-	if (b->get_external_field() > 0) {
-
-	    for (int i = n_low; i < n_next; i++) {
-
-		hdyn *bb = next_nodes[i];
-
-		real pot;
-		vec acc, jerk;
-		get_external_acc(bb, bb->get_pred_pos(), bb->get_pred_vel(),
-				 pot, acc, jerk);
-		bb->inc_pot(pot);
-		bb->inc_acc(acc);
-		bb->inc_jerk(jerk);
-	    }
-	}
-    }
+//   if (sys_t >= 44.15329 && sys_t <= 44.1533) {
+//     cerr << "after low-level acc_and_jerk" << endl;
+//     pp3(next_nodes[0]->get_top_level_node());
+//   }
 
     return n_low;
 }
