@@ -218,7 +218,8 @@ local INLINE void update_node(worldbundle *wb,
 	    }
 	}
 
-#if 1
+#if 0		// turn this on to enable new kep2 stuff, but the new code
+		// is incompatible with the old buggy kira output format...
 
     // (thinking aloud...)
     //
