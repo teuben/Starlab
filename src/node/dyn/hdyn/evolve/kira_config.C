@@ -57,13 +57,15 @@ unsigned int kira_config(hdyn *b,
     //
     // Could also check for the existence of the PCIbus interface
     // card, but we currently have no definitive test that a working
-    // GRAPE is actually attached to it.  To check for the card on a,
+    // GRAPE is actually attached to it.  To check for the card on a
     // linux system, use "lspci -v" and look for a "9060" (GRAPE-4)
     // or "9080" (GRAPE-6) device.  Probably better to do this as a
     // configuration option.
 
     if (h3npipe_() > 0) true_config += 1;	// GRAPE-4 check
     if (g6_npipes_() > 0) true_config += 2;	// GRAPE-6 check
+
+    // PRL(true_config);
 
     // (Add further determining factors here.)
 
