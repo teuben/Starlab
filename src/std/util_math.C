@@ -1,6 +1,15 @@
 
 #include "stdinc.h"
 
+bool twiddles(real a, real b,
+	      real eps)		// default = 1.e-12
+{
+    if (a == b || 2*abs(a-b) <= eps*(abs(a)+abs(b)))
+	return true;
+    else
+	return false;
+}
+
 real adjust_number_to_power(real newstep, real max_step_size)
 {
     real tmp = 1.0;
