@@ -46,7 +46,7 @@ enum cut_option {lagrangian_number_radii,
 };
 
 enum output_option {velocity_anisotropy, dispersion_velocity, number_of_stars,
-		    number_of_star_types, total_mass, mass_over_light,
+		    number_of_star_types, total_mass_out, mass_over_light,
 		    mean_mass, number_density, mass_density
 };
 
@@ -124,7 +124,7 @@ local bool check_input_option(bin_option binning, cut_option
   case number_of_stars:
   case number_of_star_types:
   case mass_over_light:
-  case total_mass:
+  case total_mass_out:
   case mean_mass:
     output_choice = TRUE;
     break;
@@ -976,7 +976,7 @@ local star_table_ptr sort_stellar_parameter(dyn * b, int nzones, int &n,
 
   stellar_type type=NAS;
   story* st=NULL;
-  real t_cur, t_rel, m_rel, m_env, m_core, t_eff, l_eff, p_rot, b_fld;
+  real t_cur, t_rel, m_rel, m_env, m_core, co_core, t_eff, l_eff, p_rot, b_fld;
 
   if (n==0)
     n = b->n_daughters();
@@ -1014,6 +1014,7 @@ local star_table_ptr sort_stellar_parameter(dyn * b, int nzones, int &n,
     st = bi->get_starbase()->get_star_story();
     extract_story_chapter(type, t_cur, t_rel, 
 		      m_rel, m_env, m_core,
+		      co_core,
 		      t_eff, l_eff,
 		      p_rot, b_fld,
 		      *st);
@@ -1025,6 +1026,7 @@ local star_table_ptr sort_stellar_parameter(dyn * b, int nzones, int &n,
     table[i].m_rel = m_rel;
     table[i].m_tot = m_env+m_core;
     table[i].m_core = m_core;
+	// XXX co_core too?
     table[i].T_eff = t_eff;
     table[i].L_eff = l_eff;
     table[i].vel = bi->get_vel() -dc_vel; 
@@ -1152,7 +1154,7 @@ local void red_stellar_system(dyn* b, int nzones,
     mass_over_light_ratio(table, n, zones, nzones,
 			  l_min, scale_flag, verbatim);
     break;
-  case total_mass:
+  case total_mass_out:
     total_stellar_mass(table, n, zones, nzones, l_min, scale_flag, verbatim);
     break;
   case mean_mass:
