@@ -648,6 +648,28 @@ local void kira_system_id(int argc, char** argv)
     // cerr << endl;
 }
 
+#define MASS_TOL 1.e-12
+
+local void check_total_mass(hdyn *b, bool reset = true)
+{
+    // Check that the mass of b is equal to the sum of its leaves,
+    // and optionally correct if not the case.
+
+    real total_mass = 0;
+    for_all_leaves(hdyn, b, bi) total_mass += bi->get_mass();
+
+    if (total_mass > 0) {
+	if (abs(b->get_mass()/total_mass - 1) > MASS_TOL) {
+	    cerr << endl << "*** Root mass disagrees with total mass" << endl;
+	    PRI(4); PRC(b->get_mass()); PRL(total_mass);
+	    if (reset) {
+		cerr << "    resetting..." << endl;
+		b->set_mass(total_mass);
+	    }
+	}
+    }
+}
+
 bool kira_initialize(int argc, char** argv,
 		     hdynptr& b,	// hdyn root node
 		     real& delta_t,	// time span of the integration
@@ -1101,6 +1123,13 @@ bool kira_initialize(int argc, char** argv,
     real initial_r_virial = get_initial_virial_radius(b, verbose,
 						      r_virial_set,
 						      input_r_virial);
+
+    //----------------------------------------------------------------------
+
+    // Check and reset the total mass, just in case...
+    // Don't check individual nodes for now (Steve, 4/11/01).
+
+    check_total_mass(b);
 
     //----------------------------------------------------------------------
 
