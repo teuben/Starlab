@@ -13,6 +13,7 @@
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
 ////              -C    force col output [take from input format]
+////              -v    print diagnostic info [no info]
 
 //   version 1:  March 1994   Piet Hut
 
@@ -28,25 +29,23 @@
 //                      corresponding quantities of the node-to-be-unbundled;
 //                      the other physical quantities of the daughters remain
 //                      unchanged, while those of the node-to-be-unbundled are
-//                      be discarded.
+//                      to be discarded.
 //                 note:
-//                      the parent, daughter and grand daughters really should
+//                      the parent, daughters, and granddaughters really should
 //                      be synchronized in time; to be implemented.
 //-----------------------------------------------------------------------------
 
-local void  unbundle_node(dyn * ud)
+local int unbundle_node(dyn *ud)
 {
-    dyn * parent;
-    parent = ud->get_parent();
+    dyn *parent = ud->get_parent();
 
     if (parent == NULL)
-	err_exit("unbundle() : no parent for this node");
+	err_exit("unbundle(): no parent for this node");
 
-    dyn * od;
-    od = ud->get_oldest_daughter();
+    dyn *od = ud->get_oldest_daughter();
 
     if (od == NULL)
-	return;                         // nothing left to unbundle
+	return 0;                         // nothing left to unbundle
 
     vec pos = ud->get_pos();
     vec vel = ud->get_vel();
@@ -58,8 +57,7 @@ local void  unbundle_node(dyn * ud)
 
     // pointer adjustments:
 
-    dyn * elder_sister;
-    elder_sister = ud->get_elder_sister();
+    dyn *elder_sister = ud->get_elder_sister();
 
     if (elder_sister == NULL)
 	parent->set_oldest_daughter(od);
@@ -68,8 +66,8 @@ local void  unbundle_node(dyn * ud)
 	od->set_elder_sister(elder_sister);
     }
 
-    dyn * d = od;
-    dyn * pd;
+    dyn *d = od;
+    dyn *pd;
 
     while (d) {
 	d->set_parent(parent);
@@ -77,8 +75,7 @@ local void  unbundle_node(dyn * ud)
 	d = d->get_younger_sister();
     }
     
-    dyn * younger_sister;
-    younger_sister = ud->get_younger_sister();
+    dyn *younger_sister = ud->get_younger_sister();
 
     if (younger_sister) {
 	younger_sister->set_elder_sister(pd);
@@ -86,23 +83,27 @@ local void  unbundle_node(dyn * ud)
     }
 
     delete ud;
+    return 1;
 }
 
-/*-----------------------------------------------------------------------------
- *  flatten_node  --  
- *-----------------------------------------------------------------------------
- */
-void  dyn::flatten_node()
+//-----------------------------------------------------------------------------
+//  flatten_node  --  
+//-----------------------------------------------------------------------------
+
+int dyn::flatten_node()
 {
+    int n_flat = 0;
+
     for_all_daughters(dyn, this, d) {
 	if (d->is_grandparent())
-	    d->flatten_node();
+	    n_flat += d->flatten_node();
 
-	unbundle_node(d);
+	n_flat += unbundle_node(d);
     }
+    return n_flat;
 }
 
-/*===========================================================================*/
+//=============================================================================
 
 #else
 
@@ -114,21 +115,24 @@ main(int argc, char ** argv)
 {
     bool  c_flag = false;
     bool  C_flag = false;
+    bool  verbose = false;
     char  *comment;
 
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:C";
+    char* param_string = "c:Cv";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
 
-	    case 'c': c_flag = TRUE;
+	    case 'c': c_flag = true;
 		      comment = poptarg;
 		      break;
-	    case 'C': C_flag = TRUE;
+	    case 'C': C_flag = true;
+		      break;
+	    case 'v': verbose = true;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
@@ -145,9 +149,14 @@ main(int argc, char ** argv)
 
 	if (C_flag) b->set_col_output(true);
 
-        b->flatten_node();
+        int n_flat = b->flatten_node();
+
+	if (verbose)
+	    cerr << "time = " << b->get_system_time() << ", "
+		 << n_flat << " nodes flattened" << endl;
+
 	put_dyn(b);
-	delete b;
+	rmtree(b);
     }
 }
 
