@@ -90,7 +90,14 @@ local void  mkplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
     }
 
 
-    // Now construct the individual particles:
+    // Now construct the individual particles.  Note that the "raw"
+    // Plummer model has a virial radius of approximately 1.695 units
+    // and is close to virial equilibrium.  Include this factor so
+    // that the unscaled model (-u) is already almost in standard
+    // units.
+
+    real xfac = 1/1.695;
+    real vfac = 1/sqrt(xfac);
 
     for (i = 0, bi = b->get_oldest_daughter(); i < n;
          i++, bi = bi->get_younger_sister()) {
@@ -104,7 +111,7 @@ local void  mkplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
         m_min = (i * mfrac)/n;
         m_max = ((i+1) * mfrac)/n;
 	real rrrr = randinter(m_min, m_max);
-	radius = 1.0 / sqrt( pow (rrrr, -2.0/3.0) - 1.0);
+	radius = xfac / sqrt( pow (rrrr, -2.0/3.0) - 1.0);
 
 	// Note that this procedure arranges the particles approximately
 	// in order of increasing distance fro the cluster center, which may
@@ -141,7 +148,7 @@ local void  mkplummer(dyn * b, int n, real mfrac, real rfrac, bool u_flag)
 
 	// If y < g(x), proceed to calculate the velocity components:
 
-	velocity = x * sqrt(2.0) * pow( 1.0 + radius*radius, -0.25);
+	velocity = vfac* x * sqrt(2.0) * pow( 1.0 + radius*radius, -0.25);
 	theta = acos(randinter(-1.0, 1.0));
 	phi = randinter(0.0,TWO_PI);
 
