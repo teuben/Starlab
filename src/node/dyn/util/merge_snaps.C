@@ -87,7 +87,7 @@ main(int argc, char ** argv)
 
     root->set_com();
 
-    if (root->get_system_time() == 0) {
+    if (root->get_system_time() == 0.0) {
 
 	// Rewrite initial_mass if it exists.  Delete initial_total_energy
 	// and initial_rvirial.

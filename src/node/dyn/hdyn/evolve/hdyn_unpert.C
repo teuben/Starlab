@@ -4087,7 +4087,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	real ttmp = time+100*peristep;
 
 	if (binary_type != NOT_APPROACHING
-	     && (peristep < 1.e-12 || ttmp-time == 0)) {
+	     && (peristep < 1.e-12 || ttmp-(real)time == 0)) {
 
 	    int prec = cerr.precision(HIGH_PRECISION);
 	    cerr << endl << "short time step: "; PRL(time);
