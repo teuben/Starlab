@@ -1365,11 +1365,13 @@ bool parse_sys_stats_main(int argc, char *argv[],
 
     extern char *poptarg;
     int c;
-    char* param_string = "b.Bnel.o";	// note: "v" removed because only the
+    char* param_string = "0b.Bnel.o";	// note: "v" removed because only the
 					// "verbose = true" option works!
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
+
+	    case '0': break;			// for hdyn compatibility
 
 	    case 'b': {int b = 1;
 		      if (poptarg) b = atoi(poptarg);

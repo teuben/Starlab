@@ -70,6 +70,24 @@ main(int argc, char **argv)
 {
     check_help();
 
+    // Look for "local" command-line arguments first.  Note that the
+    // dyn version is explicitly coded to accept and ignore this option.
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "0";
+
+    bool force_nogrape = false;
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1) {
+	switch (c) {
+	    case '0':	force_nogrape = true;
+			break;
+	}
+    }
+
+    // Parse the remaining options using the dyn version parser.
+
     bool binaries, long_binary_output, B_flag, verbose, out, n_sq, calc_e;
     int which_lagr;
 
@@ -84,6 +102,7 @@ main(int argc, char **argv)
     }
 
     bool conf = false;
+
     // Loop over input until no more data remain.
 
     hdyn *b;
@@ -97,7 +116,12 @@ main(int argc, char **argv)
 	    unsigned int config = kira_config(b);	// default settings
 	    kira_print_config(config);
 
-	    if (!n_sq) {
+	    if (config && force_nogrape) {
+		kira_config(b, 0);
+		cerr << "GRAPE suppressed" << endl;
+	    }
+
+ 	    if (!n_sq) {
 
 	        if (!b->has_grape()) {
 		    // calc_e = false;

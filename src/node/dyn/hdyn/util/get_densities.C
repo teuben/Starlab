@@ -10,7 +10,8 @@
 
 //// get_densities: compute densities of top-level nodes.
 ////                Densities are saved in node dyn stories.
-////                Only runs on GRAPE systems.
+////                Only actually does the computation if a GRAPE
+////                is attached.
 
 //  Steve McMillan, June 2004
 
@@ -22,11 +23,33 @@ main(int argc, char ** argv)
 {
     check_help();
 
+    extern char *poptarg;
+    int c;
+    char* param_string = "0";
+
+    bool force_nogrape = false;
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1) {
+	switch (c) {
+	    case '0':	force_nogrape = true;
+			break;
+
+	    default:
+	    case '?':	params_to_usage(cerr, argv[0], param_string);
+			return false;
+	}
+    }
+
     hdyn *b = get_hdyn();
     b->log_history(argc, argv);
 
     unsigned int config = kira_config(b);	// default settings
     kira_print_config(config);
+
+    if (config && force_nogrape) {
+        kira_config(b, 0);
+        cerr << "GRAPE suppressed" << endl;
+    }
 
     vec cod_pos, cod_vel;
     kira_calculate_densities(b, cod_pos, cod_vel);

@@ -505,10 +505,12 @@ bool parse_scale_main(int argc, char *argv[],
 
     extern char *poptarg;
     int c;
-    char* param_string = "cdm:M:q:Q:e:E:r:R:sS";
+    char* param_string = "0cdm:M:q:Q:e:E:r:R:sS";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
+
+	    case '0': break;			// for hdyn compatibility
 
 	    case 'c': c_flag = true;
 		      break;

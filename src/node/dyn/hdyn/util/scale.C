@@ -26,6 +26,24 @@ main(int argc, char ** argv)
 {
     check_help();
 
+    // Look for "local" command-line arguments first.  Note that the
+    // dyn version is explicitly coded to accept and ignore this option.
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "0";
+
+    bool force_nogrape = false;
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1) {
+	switch (c) {
+	    case '0':	force_nogrape = true;
+			break;
+	}
+    }
+
+    // Parse the remaining options using the dyn version parser.
+
     real m = 0, q = -1, e = 0, r = 0;
     real eps = 0;
 
@@ -50,6 +68,11 @@ main(int argc, char ** argv)
 
     unsigned int config = kira_config(b);	// default settings
     kira_print_config(config);
+
+    if (config && force_nogrape) {
+        kira_config(b, 0);
+        cerr << "GRAPE suppressed" << endl;
+    }
 
     scale(b, eps, c_flag, e_flag, e, m_flag, m, q_flag, q, r_flag, r,
 	  debug, kira_top_level_energies);
