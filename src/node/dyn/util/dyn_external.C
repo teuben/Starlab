@@ -270,18 +270,21 @@ local real logLambda(dyn *b, real r)
 	    mass_unit = b->get_starbase()->conv_m_dyn_to_star(1);
 
     // Only case where this is meaningful is the power-law field.
-
+    real LogLambda;
     if (beta <= 0 || !b->get_pl())
-	return 0;
+	LogLambda = 0;
 
     if (mass <= 0)				// no physical mass scale
-	return 1;
-
-    else
+	LogLambda = 1;
+    else {
 
 	// Use M(<r), assuming <m> = 1 Msun.
+	LogLambda = 6.6; // Spinnato et al 2003
 
-	return log(LAMBDA_FAC*mass(b, r)*mass_unit);
+//	return log(LAMBDA_FAC*mass(b, r)*mass_unit);
+    }
+
+    return LogLambda;
 }
 
 local real potential(dyn *b, real r)		// background potential;

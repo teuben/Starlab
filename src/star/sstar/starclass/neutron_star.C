@@ -333,7 +333,7 @@ bool neutron_star::super_nova() {
 
      bool hit_companion = FALSE;
       
-      real v_disp = 0;
+      real v_disp = 300;
       if (get_use_hdyn()) {
        // decide on kick velocity scaling
        // standard Pac. disperson is 600 km/s

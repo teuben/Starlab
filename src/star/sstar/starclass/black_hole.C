@@ -1,3 +1,5 @@
+
+
 //
 // black_hole.C
 //
@@ -407,7 +409,7 @@ bool black_hole::super_nova() {
       suddenly_lost_mass = envelope_mass;
 
       bool hit_companion = FALSE;
-      real v_disp = 0;
+      real v_disp = 300;
       if (get_use_hdyn()) {
        // decide on kick velocity scaling
        // standard Pac. disperson is 600 km/s
