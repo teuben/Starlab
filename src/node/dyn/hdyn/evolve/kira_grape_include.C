@@ -127,19 +127,24 @@ void kira_top_level_energies(dyn *b, real eps2,
 			    true);
 }
 
-void kira_calculate_top_level_acc_and_jerk(hdyn ** next_nodes,
-					   int n_next,
-					   xreal time,
-					   bool & restart_grape)
+int kira_calculate_top_level_acc_and_jerk(hdyn ** next_nodes,
+					  int n_next,
+					  xreal time,
+					  bool & restart_grape)
 {
     // Switch between GRAPE and non-GRAPE determination of the forces
     // on the particles in the specified list.  Called only by 
     // calculate_acc_and_jerk_for_list() in kira_ev.C.
 
+    // New return value (as of 4/03) is the number of top-level nodes
+    // in the system.
+
+    int n_top = 0;
+
 #if defined(USE_GRAPE)
 
-    grape_calculate_acc_and_jerk(next_nodes, n_next,
-				 time, restart_grape);
+    n_top = grape_calculate_acc_and_jerk(next_nodes, n_next,
+					 time, restart_grape);
     restart_grape = false;
 
 #else
@@ -147,10 +152,12 @@ void kira_calculate_top_level_acc_and_jerk(hdyn ** next_nodes,
     for (int i = 0; i < n_next; i++) {
 	hdyn *bi = next_nodes[i];
 	if (bi->is_top_level_node())
-	    bi->top_level_node_real_force_calculation();
+	    n_top = bi->top_level_node_real_force_calculation();
     }
 
 #endif
+
+    return n_top;
 }
 
 void kira_compute_densities(hdyn* b, vector& cod_pos, vector& cod_vel)
@@ -217,12 +224,17 @@ void kira_synchronize_tree(hdyn *b,
 	 << "synchronizing tree using GRAPE at time " << sys_t
 	 << endl << flush;
 
-    int n_next = 0;
-    for_all_daughters(hdyn, b, bi)
+    // Note: no need to set time steps here, and in fact GRAPE will complain
+    // if j-particle times and timesteps are not consistent...
+
+    int n_next = 0, n_top = 0;
+    for_all_daughters(hdyn, b, bi) {
+	n_top++;
 	if (bi->get_time() < sys_t) {
-	    bi->set_timestep(sys_t - bi->get_time());
+//	    bi->set_timestep(sys_t - bi->get_time());	// unnecessary and bad
 	    n_next++;
 	}
+    }
 
     hdyn **next_nodes = new hdynptr[n_next];
     n_next = 0;
@@ -242,10 +254,9 @@ void kira_synchronize_tree(hdyn *b,
     bool restart_grape = false;
     grape_calculate_acc_and_jerk(next_nodes, n_next, sys_t, restart_grape);
 
-    int ntop = get_n_top_level();
     for (int i = 0; i < n_next; i++) {
 	hdyn *bi = next_nodes[i];
-	bi->inc_direct_force(ntop-1);
+	bi->inc_direct_force(n_top-1);
 	bi->top_level_node_epilogue_force_calculation();
 	bi->inc_steps();
     }
@@ -285,22 +296,53 @@ void kira_synchronize_tree(hdyn *b,
 
     // Apply corrector and redetermine timesteps.
 
+    real st = sys_t;
+
     for (int i = 0; i < n_next; i++) {
 	hdyn *bi = next_nodes[i];
 	bi->correct_and_update();
 	bi->init_pred();
 	bi->store_old_force();
+
+	// As in synchronize_tree, make sure time step is consistent with
+	// system_time (= time).
+
+	real timestep = bi->get_timestep();
+
+	int iter = 0;
+	while (fmod(st, timestep) != 0) {
+	    if (iter++ > 30) break;
+	    timestep *= 0.5;
+	}
+
+	if (iter > 20) {
+	    cerr << "kira_synchronize_tree: " << bi->format_label() << " ";
+	    PRL(iter);
+	    PRI(4); PRC(fmod(st, timestep)); PRL(timestep);
+	}
+
+	bi->set_timestep(timestep);
     }
 
     delete [] next_nodes;
 
-    // Deal with low-level nodes.
+    // Top-level nodes are all synchronized.  Deal with low-level nodes.  
 
     if (sync_low_level) {
 	for_all_daughters(hdyn, b, bi) {
 	    hdyn *od = bi->get_oldest_daughter();
-	    if (od && !od->get_kepler())
+	    if (od && !od->get_kepler()) {
+
+		// Synchronizing od will also synchronize its sister,
+		// but call synchronize_tree explicitly to ensure that
+		// substructure is properly handled.
+
 		synchronize_tree(od);
+
+		hdyn *yd = od->get_younger_sister();
+		if (yd) synchronize_tree(yd);		// else error?
+
+	    }
 	}
     }
 
