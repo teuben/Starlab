@@ -21,11 +21,12 @@
 //#define DUMP_DATA 1	// uncomment to allow detailed TMP_DUMP output
 
 
-//// kira:  Hermite N-body integrator with evolving hierarchical tree
-////        structure, stellar and binary evolution, and an arbitrary
-////        external field.
+//// Hermite N-body integrator with evolving hierarchical tree structure,
+//// stellar and binary evolution, and an arbitrary external field.  The
+//// program reads a snapshot from standard input and writes snapshot(s)
+//// to standard output.  Periodic log output is sent to standard error.
 ////
-//// Basic options are as follows.  Default values for a new simulation
+//// Basic options are listed below.  Default values for a new simulation
 //// are indicated in square brackets.  For restart (continuation of a
 //// previous kira calculation), the defaults for many options [*] are
 //// determined from the input snapshot, making it possible to continue
@@ -42,27 +43,31 @@
 //// parameter settings adopted and any modifications made during
 //// initialization.  In case of doubt, read the log file!
 ////
-//// Options:     -0    force non-GRAPE operation, if relevant
+//// Usage: kira [OPTIONS] < infile > output
+////
+//// Options:
+////              -0    force non-GRAPE operation, if relevant
 ////              -a    specify accuracy parameter [0.1][*]
 ////              -A    enable "alternate" output [off]
 ////              -b    specify frequency of full binary output, in (integer)
 ////                    units of the log output interval
-////                                  [10; no argument or 0 ==> no output]
+////                    [10; no argument or 0 ==> no output]
 ////              -B    turn on binary evolution [off][*]
 ////              -c    include comment [none]
 ////              -C    specify GRAPE release interval, in seconds [15]
 ////              -d    specify log output interval [1][*]
-////              -D    specify snapshot interval [end of run]
-////                    special values: xN: formatted full dump, frequency N
-////                                    XN: unformatted full dump, frequency N
-////                                    full/all: same as x1
-////                                    b: track binary changes only (formatted)
-////                                    B: track binary changes (unformatted)
+////              -D    specify snapshot interval [end of run]. 
+////                    Special values:
+////                                xN: formatted full dump, frequency N;
+////                                XN: unformatted full dump, frequency N;
+////                                full/all: same as x1;
+////                                b: track binary changes only (formatted);
+////                                B: track binary changes (unformatted);
 ////              -e    specify softening length [0][*]
 ////              -E    use exact calculation [false]
 ////              -f    turn on/off internal dynamical friction on stars [0][*]
 ////              -F    turn on external dynamical friction on the cluster,
-////                        and optionally specify a scaling coefficient [none]
+////                    and optionally specify a scaling coefficient [none]
 ////              -g    specify hysteresis factor [2.5][*]
 ////              -G    specify initial stripping radius [none][*]
 ////              -h    specify stellar-evolution time step [0.015625 = 1/64][*]
@@ -71,16 +76,16 @@
 ////              -k    specify perturbation factor [1.e-7][*]
 ////              -K    specify log2(maximum slowdown factor) (integer): [0][*]
 ////              -l    specify close-encounter distance [0.25 --> 0.25/N][*]
-////                        [**** option renamed from -f, 7/04 ****]
+////                    [option renamed from -f, 7/04]
 ////              -L    specify CPU time limit, in seconds [none]
 ////              -n    stop at specified number of particles [5]
 ////              -N    specify frequency of CPU check output [50000]
 ////              -o    prevent kira from overriding some settings (BGSu)
-////                        based on input snapshot data [allow]
+////                    based on input snapshot data [allow]
 ////              -O    save (and overwrite) extra snapshot at each output [no]
 ////              -q    specify initial virial ratio [0.5]
 ////              -r    specify initial virial radius (may not be
-////                        specified in the input snap) [no]
+////                    specified in the input snap) [no]
 ////              -R    specify snapshot file for (re)start [none: use stdin]
 ////              -s    specify random seed [take from system clock]
 ////              -S    turn on stellar evolution [off][*]
@@ -92,15 +97,19 @@
 ////              -x    toggle output of extended-precision time [on]
 ////              -X    specify escaper removal timescale [reinit][*]
 ////              -y    specify stellar encounter criterion
-////                                  [0 N-body units or solar radii][*]
+////                    [0 N-body units or solar radii][*]
 ////              -z    specify stellar merger criterion [0 stellar radii][*]
 ////              -Z    specify stellar tidal dissipation criterion
-////                                  [0 stellar radii][*]
+////                    [0 stellar radii][*]
 ////
 //// As a convenient shorthand, any "dt" interval specified less than zero
 //// is interpreted as a power of 2, i.e. "-d -3" sets dt_log = 0.125.  In
 //// the case of dt_snap, this will also cause snapshot data to be written
 //// immediately on restart (usually we wait until time dt_snap).
+////
+//// Written by J. Makino, S. McMillan, S. Portegies Zwart, and P. Hut, .
+////
+//// Report bugs to starlab@sns.ias.edu.
 
 // Level-2 help:
 
@@ -166,11 +175,11 @@
 //++
 //++      -r    specify initial virial radius in code units
 //++                          [1; take from input snap if present]
-////
-////	J. Makino, S. McMillan, P. Hut, S. Portegies Zwart	12/92-6/04
-////
-////	Major top-level reorganization to remove compile-time
-////	GRAPE selection, S. McMillan				6/04
+
+//	J. Makino, S. McMillan, P. Hut, S. Portegies Zwart	12/92-6/04
+//
+//	Major top-level reorganization to remove compile-time
+//	GRAPE selection, S. McMillan				6/04
 
 
 
