@@ -59,22 +59,30 @@ foreach dir ($autoconf $automake $libtool)
 	if ($#tmp == 0) then
 
 #	    Tool exists on the current search path.  Check its version.
+#	    Note that, for automake at least, even --version can fail if
+#	    the tool is relocated, as the location of its configuration
+#	    file is hardcoded...
 
 	    alias t $tool
 	    set tmp = (`t --version | grep $tool`)
 
 #	    The following is very specific to the current format of the
-#	     --version output.  NEED TO MONITOR THIS...
+#	     --version output.  NEED TO MONITOR THIS.
 
-	    set v = $tmp[4]
+	    if ($#tmp > 3) then
 
-#	    Local package version is version, existing version is v.
-#	    Test whether we should supercede the installed version.
-#	    Assume that a simple lexical comparison will suffice.
+		set v = $tmp[4]
 
-	    set build = `echo $version \
-			| awk -v v=$v '{print ($1 > v ? 1 : 0);}'`
+#	 	Local package version is version, existing version is v.
+#	    	Test whether we should supercede the installed version.
+#	    	Assume that a simple lexical comparison will suffice.
 
+#	    	(Don't split this command -- some shells don't like it...)
+
+		set build = \
+		    `echo $version | awk -v v=$v '{print ($1 > v ? 1 : 0);}'`
+
+	    endif
 	endif
     endif
 
