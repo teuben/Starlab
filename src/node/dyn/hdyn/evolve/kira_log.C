@@ -406,18 +406,24 @@ local void print_timestep_stats(hdyn* b, int max_count = N_MISMATCH)
 
     if (n > NBOT+NTOP) {
 
-	// Print out NBOT shortest perturbed time steps.
+        int nb = NBOT;
+	if (nb > np) nb = np;
 
-	cerr << endl << "  " << NBOT << " shortest perturbed time steps:"
+	// Print out nb shortest perturbed time steps.
+
+	cerr << endl << "  " << nb << " shortest perturbed time steps:"
 	     << endl << endl;
 
 	qsort((void *)list_dt, (size_t)np, sizeof(dt_pair), compare_dt);
 
-	for (i = 0; i < NBOT; i++)
-	    fprintf(stderr, "    %3d.     %-15s  %.4e\n",
-		    i+1,
-		    list_dt[i].b->format_label(),
-		    list_dt[i].dt);
+	for (i = 0; i < nb; i++)
+	    if (list_dt[i].b)
+	        fprintf(stderr, "    %3d.     %-15s  %.4e\n",
+			i+1,
+			list_dt[i].b->format_label(),
+			list_dt[i].dt);
+	    else
+	        fprintf(stderr, "    %3d.     NULL\n", i+1);
 
 	// Print out NBOT shortest effective block steps.
 
