@@ -32,7 +32,7 @@ int get_std_center(dyn *b, vector& pos, vector& vel,
 		!= b->get_system_time()) {
 
 	    if (verbose)
-	      warning("get_std_center: neglecting out-of-date density center");
+	      warning("get_std_center: ignoring out-of-date density center");
 
 	} else {
 
@@ -56,21 +56,25 @@ int get_std_center(dyn *b, vector& pos, vector& vel,
 		    != b->get_system_time()) {
 
 		if (verbose)
-		    warning("get_std_center: neglecting out-of-date mcom");
+		    warning("get_std_center: ignoring out-of-date mcom");
 
 	    } else {
 
 		pos = getvq(b->get_dyn_story(), "mcom_pos");
 		vel = getvq(b->get_dyn_story(), "mcom_vel");
+
+		which = 2;
 	    }
 
-	} else
+	}
+
+	if (which == 0) {
 
 	    // Compute the modified center of mass.
 
 	    compute_mcom(b, pos, vel);
-
-	which = 2;
+	    which = 2;
+	}
     }
 
     putrq(b->get_dyn_story(), "std_center_time", b->get_system_time());
