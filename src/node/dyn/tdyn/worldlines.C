@@ -13,7 +13,7 @@
 ////    options:
 ////          -B starting  worldbundle [0]
 ////          -b ending worldbundle [all]
-////          -dt output timestep [1/64]
+////          -d output timestep [1/64]
 ////          -t output worldline at time t [not specified]
 ////
 ////     input: worldbundle output file from kira
