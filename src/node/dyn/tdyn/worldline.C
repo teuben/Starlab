@@ -22,6 +22,7 @@
 //	worldbundle::worldbundle(tdyn *b)
 //	void worldbundle::print()
 //	void worldbundle::dump()
+//	void worldbundle::get_n_daughters()
 //	int worldbundle::find_index(real id)
 //	int worldbundle::find_index(char *name)
 //	int worldbundle::find_index(pdyn *b)
@@ -311,6 +312,16 @@ void worldbundle::dump(int offset)	// default = 0
 	get_worldline(i)->dump(offset);
     }
 }
+
+int worldbundle::get_n_daughters()
+{
+    // Return the number of daughters of the first event of the
+    // root worldline of this worldbundle.
+
+    return get_worldline(0)->get_first_segment()
+			   ->get_first_event()->n_daughters();
+}
+
 //======================================================================
 
 int worldbundle::find_index(real id)
@@ -1138,7 +1149,9 @@ pdyn *create_interpolated_tree(worldbundle *wb, real t,
 
     // Create a root node.
 
-    pdyn *root = new pdyn(NULL, NULL, false);
+    // pdyn *root = new pdyn(NULL, NULL, false);
+    pdyn *root = alloc_pdyn(NULL, NULL, false);
+
     root->set_system_time(t);
     root->set_pos(0);
 

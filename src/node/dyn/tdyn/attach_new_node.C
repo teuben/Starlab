@@ -16,7 +16,8 @@ local inline void attach_new_node(worldbundle *wb, worldline *ww,
 	     << bb->get_time() << " "
 	     << bb->format_label() << endl;
 
-    pdyn *curr = new pdyn(NULL, NULL, false);
+    // pdyn *curr = new pdyn(NULL, NULL, false);
+    pdyn *curr = alloc_pdyn(NULL, NULL, false);
 
     // Attach curr to the tree.  Don't use add_node, as it will
     // create a tree with nodes in the reverse order!

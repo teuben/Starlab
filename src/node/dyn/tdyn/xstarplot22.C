@@ -524,7 +524,7 @@ local int plot_all_stars(DYN* b, int f_flag)
 		}
 	    }
 	}
-	delete p;
+	delete [] p;
     }
     return n_stars;
 }
@@ -1981,7 +1981,7 @@ main(int argc, char** argv)
     // print_worldlines(wh, nh);
     // print_escapes(wh, nh);
 
-    set_center(wh, nh, 1, true);
+    set_center(wh, nh, 0, true);
     PRC(get_center()); PRL(get_center_id());
 
     // Now display the data.

@@ -14,7 +14,7 @@
 ##    Sep 2000					Steve McMillan
 #..............................................................................
 
-OBJECT_FILES = tdyn_io.o tdyn_tt.o worldline.o worldline2.o
+OBJECT_FILES = pdyn_alloc.o tdyn_io.o tdyn_tt.o worldline.o worldline2.o
 
 LIBRARY = libtdyn.a
 
@@ -26,7 +26,7 @@ NON_CCC_EXECUTABLES =
 DEPEND_LIBS	= $(LIB)/libtdyn.a $(LIB)/libdyn.a $(LIB)/libnode.a \
 		  $(LIB)/libstd.a
 
-CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC) $(STARLAB_GFX_CFLAGS) -g
+CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC) $(STARLAB_GFX_CFLAGS)
 
 CPPFLAGS = 
 
