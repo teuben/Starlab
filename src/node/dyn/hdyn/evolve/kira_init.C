@@ -719,7 +719,8 @@ bool kira_initialize(int argc, char** argv,
 		     bool& verbose,
 		     bool& save_snap_at_log,
 		     char* snap_save_file,
-		     int& n_stop)	// n to terminate simulation
+		     int& n_stop,	// n to terminate simulation
+		     bool& alt_flag)	// enable alternative output
 {
 
     // Establish defaults for parameters (static class members or
@@ -760,7 +761,9 @@ bool kira_initialize(int argc, char** argv,
     verbose = true;
 
     save_snap_at_log = false;
-    n_stop = 10;
+    n_stop = DEFAULT_N_STOP;
+
+    alt_flag = DEFAULT_ALT;
 
     int max_slow = 0;
     bool max_slow_flag = false;
@@ -806,7 +809,7 @@ bool kira_initialize(int argc, char** argv,
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"*:a:b.Bc:C:d:D:e:E:f:F.g:G:h:iI:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvW:xX:y:z:Z:";
+"*:a:Ab.Bc:C:d:D:e:E:f:F.g:G:h:iI:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvW:xX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
@@ -867,6 +870,11 @@ bool kira_initialize(int argc, char** argv,
 	    case 'a':	eta = atof(poptarg);
 			eta_flag = true;
 			break;
+	    case 'A':	alt_flag = true;
+	    		cerr << endl
+			     << "Additional log output enabled"
+			     << endl;
+			break;
 	    case 'b':	if (poptarg)
 			   long_binary_out = max(0, atoi(poptarg));
 			else
@@ -921,7 +929,7 @@ bool kira_initialize(int argc, char** argv,
 				set_write_unformatted(true);
 
 			    cerr << endl
-				 << "*** binary tracking on ***"
+				 << "Binary tracking on"
 				 << endl;
 
 			} else{
@@ -1064,8 +1072,8 @@ bool kira_initialize(int argc, char** argv,
 	} else
 
 	    cerr << endl
-		 << "*** Ignoring internal forces "
-		 << "-- external field only ***"
+		 << "Ignoring internal forces "
+		 << "-- external field only"
 		 << endl;
 
 	b->set_ignore_internal(true);

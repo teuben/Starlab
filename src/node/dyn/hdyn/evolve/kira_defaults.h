@@ -15,6 +15,9 @@
 #define	DEFAULT_DT_LOG				1.0
 #define	DEFAULT_DT_SSTAR			0.015625
 
+#define DEFAULT_N_STOP				5
+#define DEFAULT_ALT				false
+
 // Used in util/kira_options.C and evolve/kira_runtime.C:
 
 #define DEFAULT_PRINT_XREAL			true

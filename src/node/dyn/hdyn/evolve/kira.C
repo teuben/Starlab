@@ -1697,7 +1697,9 @@ local void evolve_system(hdyn * b,	       // hdyn array
 			 bool verbose,
 			 bool save_snap_at_log, // save snap at log output
 			 char* snap_save_file, // filename to save in
-			 int n_stop)	       // when to stop
+			 int n_stop,	       // when to stop
+			 bool alt_flag)	       // enable alternative output
+
 {
     // Modified order in which output/snapshots/reinitialization/etc. are
     // performed -- Steve, 7/01
@@ -1893,9 +1895,11 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     dt_alt1 = 0;			// default: suppress
 
-//    dt_alt1 = 1./32;
-    dt_alt2 = 1;
-    dt_alt3 = 3;
+    if (alt_flag) {
+	dt_alt1 = 1./32;		// hardwired options...
+	dt_alt2 = 1;
+	dt_alt3 = 3;
+    }
 
     t_alt1 = 0;
     t_alt2 = 0;
@@ -2374,6 +2378,8 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	}
 #endif
 
+	// Take the block step.
+
 	int n_list_top_level = 0;
 	int ds = integrate_list(b, next_nodes, n_next, exact,
 				tree_changed, n_list_top_level,
@@ -2760,12 +2766,15 @@ main(int argc, char **argv)
     char snap_save_file[256];
     int  n_stop;		// n to terminate simulation
 
+    bool alt_flag;
+
     if (!kira_initialize(argc, argv,
 			 b, delta_t, dt_log, long_binary_out,
 			 dt_snap, dt_sstar,
 			 dt_esc, dt_reinit, dt_fulldump,
 			 exact, cpu_time_limit, verbose,
-			 save_snap_at_log, snap_save_file, n_stop))
+			 save_snap_at_log, snap_save_file,
+			 n_stop, alt_flag))
 	get_help();
 
     // b->to_com();	// don't modify input data -- use tool to do this
@@ -2783,7 +2792,8 @@ main(int argc, char **argv)
     evolve_system(b, delta_t, dt_log, long_binary_out,
 		  dt_snap, dt_sstar, dt_esc, dt_reinit, dt_fulldump,
 		  exact, cpu_time_limit,
-		  verbose, save_snap_at_log, snap_save_file, n_stop);
+		  verbose, save_snap_at_log, snap_save_file,
+		  n_stop, alt_flag);
 
     cerr << endl << "End of run at time " << b->get_system_time()
 	 << endl
