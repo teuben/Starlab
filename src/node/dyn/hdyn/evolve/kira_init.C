@@ -723,6 +723,9 @@ bool kira_initialize(int argc, char** argv,
 		     bool& alt_flag)	// enable alternative output
 {
 
+    // (Probably should create a class/structure to cope with these
+    // command-line arguments -- Steve, 7/02.)
+
     // Establish defaults for parameters (static class members or
     // carried back explicitly).  Probably not really necessary to
     // initialize here, as class variables have already been set
