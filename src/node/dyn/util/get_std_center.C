@@ -19,7 +19,7 @@
 
 #ifndef TOOLBOX
 
-int get_std_center(dyn *b, vector& pos, vector& vel,
+int get_std_center(dyn *b, vec& pos, vec& vel,
 		   bool verbose)			// default = false
 {
     int which = 0;
@@ -87,7 +87,7 @@ int get_std_center(dyn *b, vector& pos, vector& vel,
 int get_std_center(dyn *b,
 		   bool verbose)		// default = false
 {
-    vector pos, vel;
+    vec pos, vel;
     return get_std_center(b, pos, vel, verbose);
 }
 

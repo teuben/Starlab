@@ -25,24 +25,24 @@ local void set_orientation(kepler &k, phase3 &p)
 
     // Construct the normal vector:
 
-    vector n = vector(sin_theta*cos(p.phi), sin_theta*sin(p.phi), mu);
+    vec n = vec(sin_theta*cos(p.phi), sin_theta*sin(p.phi), mu);
 
     // Construct unit vectors a and b perpendicular to n:
 
-    vector temp = vector(1, 0, 0);
-    if (abs(n[0]) > .5) temp = vector(0, 1, 0);	// temp is not parallel to n
+    vec temp = vec(1, 0, 0);
+    if (abs(n[0]) > .5) temp = vec(0, 1, 0);	// temp is not parallel to n
     if (n[2] < 0) temp = -temp;
 
-    vector b = n ^ temp;
+    vec b = n ^ temp;
     b /= abs(b);
-    vector a = b ^ n;
+    vec a = b ^ n;
     if (n[2] < 0) a = -a;	// Force (a, b) to be (x, y) for n = +/-z
     
     // Construct *random* unit vectors l and t perpendicular to each
     // other and to n (psi = 0 ==> periastron along a):
 
-    vector l = cos(p.psi)*a + sin(p.psi)*b;
-    vector t = n ^ l;
+    vec l = cos(p.psi)*a + sin(p.psi)*b;
+    vec t = n ^ l;
 
     k.set_orientation(l, t, n);
     k.initialize_from_shape_and_phase();
@@ -270,8 +270,8 @@ local void extend_orbits(sdyn3 * b1, sdyn3 * b2, sdyn3 * b3)
     
     // Center of mass position and velocity of the inner binary:
     
-    vector cmr = (m1 * b1->get_pos() + m2 * b2->get_pos()) / m12;
-    vector cmv = (m1 * b1->get_vel() + m2 * b2->get_vel()) / m12;
+    vec cmr = (m1 * b1->get_pos() + m2 * b2->get_pos()) / m12;
+    vec cmv = (m1 * b1->get_vel() + m2 * b2->get_vel()) / m12;
     
     outer.set_rel_pos(b3->get_pos() - cmr);
     outer.set_rel_vel(b3->get_vel() - cmv);
@@ -329,13 +329,13 @@ local int escape(sdyn3 * bi, sdyn3 * bj, sdyn3 * bk,
 
     // Center of mass position and velocity of j-k "binary":
 
-    vector cmr = (mj * bj->get_pos() + mk * bk->get_pos()) / mjk;
-    vector cmv = (mj * bj->get_vel() + mk * bk->get_vel()) / mjk;
+    vec cmr = (mj * bj->get_pos() + mk * bk->get_pos()) / mjk;
+    vec cmv = (mj * bj->get_vel() + mk * bk->get_vel()) / mjk;
 
     // Return immediately if third particle is approaching binary.
 
-    vector dv = bi->get_vel() - cmv;
-    vector dr = bi->get_pos() - cmr;
+    vec dv = bi->get_vel() - cmv;
+    vec dr = bi->get_pos() - cmr;
 
     if (dr*dv <= 0) return 0;
 
@@ -473,10 +473,10 @@ void set_merger_dyn(sdyn3 * bn, sdyn3 * bi, sdyn3 * bj)
     bn->set_acc((mi*bi->get_acc() + mj*bj->get_acc())*m_inv);
     bn->set_jerk((mi*bi->get_jerk() + mj*bj->get_jerk())*m_inv);
 
-    vector d_pos = bi->get_pos() - bj->get_pos();
+    vec d_pos = bi->get_pos() - bj->get_pos();
     real rij = sqrt(d_pos*d_pos);
 
-    vector d_vel = bi->get_vel() - bj->get_vel();
+    vec d_vel = bi->get_vel() - bj->get_vel();
     real vij2 = d_vel*d_vel;
 
     real eij_pot = -mi * mj / rij;
@@ -617,7 +617,7 @@ local int extend_or_end_scatter3(sdyn3 * b, real r_stop,
     real mu23 = m2 * m3 / (m2 + m3);
     real mu31 = m3 * m1 / (m3 + m1);
 
-    vector dv = b2->get_vel() - b1->get_vel();
+    vec dv = b2->get_vel() - b1->get_vel();
     real k12 = 0.5 * mu12 * dv * dv;
     real vr12 = dv * (b2->get_pos() - b1->get_pos());
 
@@ -864,14 +864,14 @@ void scatter3(initial_state3 & init,
     
     // First look at 1-2 vector:
 
-    vector dx = b1->get_pos() - b2->get_pos();
+    vec dx = b1->get_pos() - b2->get_pos();
     cout << ++count
 	 << "  " << 180*atan2(dx[1], dx[0])/PI
 	 << "  " << dx[2]/abs(dx);
 
     // Then the outer orbit:
 
-    vector cm = (b1->get_mass()*b1->get_pos()
+    vec cm = (b1->get_mass()*b1->get_pos()
 	           + b2->get_mass()*b2->get_pos())
 	             / (b1->get_mass() + b2->get_mass());
     dx = b3->get_pos() - cm;

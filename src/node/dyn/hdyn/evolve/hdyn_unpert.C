@@ -446,9 +446,9 @@ local inline real dt_perturbers(hdyn *b)
 	    // Time estimate is a combination of the free-fall and
 	    // crossing times.
 
-	    vector dpos = top->get_pos() - p->get_pos();
-	    vector dvel = top->get_vel() - p->get_vel();
-	    vector dacc = top->get_acc() - p->get_acc();
+	    vec dpos = top->get_pos() - p->get_pos();
+	    vec dvel = top->get_vel() - p->get_vel();
+	    vec dacc = top->get_acc() - p->get_acc();
 
 	    real dr = abs(dpos);
 	    real vr = dvel * dpos / dr;
@@ -1040,7 +1040,7 @@ bool hdyn::is_stable(int& status,
     real dv2 = square(c->get_vel());
 
     if (dx2 > 0 && dv2 > 0) {
-	vector n_inner = c->get_pos() ^ c->get_vel() / sqrt(dx2 * dv2);
+	vec n_inner = c->get_pos() ^ c->get_vel() / sqrt(dx2 * dv2);
 	cos_i = n_inner * outerkep.get_normal_unit_vector();
     }
 

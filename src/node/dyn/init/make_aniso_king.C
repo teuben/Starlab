@@ -136,8 +136,8 @@ local void make_aniso_king(dyn * b, int n, real w0, real alpha1, real alpha3,
     for_all_daughters(dyn, b, bi) {
 
 	bi->set_mass(m[i]);
-	bi->set_pos(vector(x[i], y[i], z[i]));
-	bi->set_vel(vector(vx[i], vy[i], vz[i]));
+	bi->set_pos(vec(x[i], y[i], z[i]));
+	bi->set_vel(vec(vx[i], vy[i], vz[i]));
 
 	i++;
     }

@@ -22,8 +22,8 @@
 //			 int center_number, bool verbose)
 //	int get_center()
 //	char *get_center_id(int center_number)
-//	vector get_center_pos()
-//	vector get_center_vel()
+//	vec get_center_pos()
+//	vec get_center_vel()
 //
 //----------------------------------------------------------------------
 
@@ -409,11 +409,11 @@ char *set_center(worldbundleptr wh[],	// entire worldbundle array
     return get_center_id(which_center);
 }
 
-static vector center_pos = 0;
-vector get_center_pos()	{return center_pos;}
+static vec center_pos = 0;
+vec get_center_pos()	{return center_pos;}
 
-static vector center_vel = 0;
-vector get_center_vel()	{return center_vel;}
+static vec center_vel = 0;
+vec get_center_vel()	{return center_vel;}
 
 // Membership determination:
 

@@ -58,12 +58,12 @@ local dyn* read_stoa(bool i_flag) {
     root->set_mass(total_mass);
 
     for_all_daughters(dyn, root, b) {
-	vector pos; cin >> pos; 
+	vec pos; cin >> pos; 
 	b->set_pos(pos);
     }
 
     for_all_daughters(dyn, root, b){
-	vector vel; cin >> vel; 
+	vec vel; cin >> vel; 
 	b->set_vel(vel);
     }
 

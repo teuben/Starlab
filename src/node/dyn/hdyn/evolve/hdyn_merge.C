@@ -57,8 +57,8 @@ local hdyn* apply_tidal_dissipation(hdyn* bi, hdyn* bj, kepler k)
 	warning("apply_tidal_dissipation: stars not past periastron");
 
     real m_tot = bi->get_mass() + bj->get_mass();
-    vector r_rel = k.get_rel_pos();
-    vector v_rel = k.get_rel_vel();
+    vec r_rel = k.get_rel_pos();
+    vec v_rel = k.get_rel_vel();
 
     real de_diss = 0;
     for_all_daughters(hdyn, bi->get_parent(), bb) {
@@ -128,9 +128,9 @@ local hdyn* apply_tidal_dissipation(hdyn* bi, hdyn* bj, kepler k)
     r_rel = k.get_rel_pos();
     v_rel = k.get_rel_vel();
 
-    vector r_com = (bi->get_mass()*bi->get_pos()
+    vec r_com = (bi->get_mass()*bi->get_pos()
 		     + bj->get_mass()*bj->get_pos()) / m_tot;
-    vector v_com = (bi->get_mass()*bi->get_vel()
+    vec v_com = (bi->get_mass()*bi->get_vel()
 		     + bj->get_mass()*bj->get_vel()) / m_tot;
 
     // Adjust positions and velocities of the interacting stars.
@@ -714,7 +714,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     // pp3(cm->get_root(), cerr);
 
     real dm;
-    vector dv;
+    vec dv;
 
     if (!use_sstar) {
 
@@ -728,7 +728,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	if (randinter(0, 1) < 0.5) sinth = -sinth;
 	real phi = TWO_PI*randinter(0, 1);
 	dv = KICK_VELOCITY * sqrt(cm->mass/cm->radius)
-			   * vector(sinth*cos(phi),
+			   * vec(sinth*cos(phi),
 				    sinth*sin(phi),
 				    costh);
 
@@ -909,7 +909,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     PRC(epot); PRC(ekin); PRL(etot);
 
     real de_total = etot - etot0;
-    vector vcm = hdyn_something_relative_to_root(cm, &hdyn::get_vel);
+    vec vcm = hdyn_something_relative_to_root(cm, &hdyn::get_vel);
     real de_kick = 0.5 * cm->mass * (vcm*vcm - square(vcm-dv));
     real de_int = -etot_int;
 

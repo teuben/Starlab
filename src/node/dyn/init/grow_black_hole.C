@@ -49,7 +49,7 @@ real radius_containting_mass(dyn * b, real mass) {
     // Otherwise, use modified center of mass, if known and up to date.
     // Otherwise, use the geometric center.
 
-    vector lagr_pos = 0, lagr_vel = 0;
+    vec lagr_pos = 0, lagr_vel = 0;
     bool try_com = true;
     bool modify_com = false;
 
@@ -136,9 +136,9 @@ void merge_bh_with_coll(dyn *bh, dyn *bcoll) {
 
     real f1 = bh->get_mass() / mass;
     real f2 = bcoll->get_mass() / mass;
-    vector pos = f1 * bh->get_pos() + f2 * bcoll->get_pos();
-    vector vel = f1 * bh->get_vel() + f2 * bcoll->get_vel();
-    vector acc = f1 * bh->get_acc() + f2 * bcoll->get_acc();
+    vec pos = f1 * bh->get_pos() + f2 * bcoll->get_pos();
+    vec vel = f1 * bh->get_vel() + f2 * bcoll->get_vel();
+    vec acc = f1 * bh->get_acc() + f2 * bcoll->get_acc();
 
     // Set up the physical coordinates of the daughters.
 

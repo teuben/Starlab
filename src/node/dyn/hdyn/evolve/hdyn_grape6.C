@@ -196,18 +196,18 @@ local INLINE void send_j_node_to_grape(hdyn *b,
     if (dt <= 0) dt = 1;
     real m = b->get_mass();
 
-    vector pos;
+    vec pos;
     if (computing_energy)
 	pos = hdyn_something_relative_to_root(b, &hdyn::get_pos);
     else
 	pos = b->get_pos();
 
-    vector vel = b->get_vel();
+    vec vel = b->get_vel();
 
-    vector a2 = ONE2 * b->get_acc();		// would be more efficient
-    vector j6 = ONE6 * b->get_jerk();		// to store these in hdyn...
+    vec a2 = ONE2 * b->get_acc();		// would be more efficient
+    vec j6 = ONE6 * b->get_jerk();		// to store these in hdyn...
 
-    vector k18 = b->get_k_over_18();		// is stored in hdyn
+    vec k18 = b->get_k_over_18();		// is stored in hdyn
 
 #ifdef T_DEBUG
     if (in_debug_range && T_DEBUG_LEVEL > 1) {
@@ -381,10 +381,10 @@ local void reset_grape(hdyn *b)					// root node
 // to make them globally accessible in order to permit cleanup.
 
 static int    *iindex = NULL;
-static vector *ipos   = NULL;
-static vector *ivel   = NULL;
-static vector *iacc   = NULL;
-static vector *ijerk  = NULL;
+static vec *ipos   = NULL;
+static vec *ivel   = NULL;
+static vec *iacc   = NULL;
+static vec *ijerk  = NULL;
 static real   *ipot   = NULL;
 static real   *ih2    = NULL;
 static int    *inn    = NULL;
@@ -432,10 +432,10 @@ local INLINE int force_by_grape(xreal xtime,
 	// Create the i-particle arrays.
 
 	iindex = new int[n_pipes];
-	ipos   = new vector[n_pipes];
-	ivel   = new vector[n_pipes];
-	iacc   = new vector[n_pipes];
-	ijerk  = new vector[n_pipes];
+	ipos   = new vec[n_pipes];
+	ivel   = new vec[n_pipes];
+	iacc   = new vec[n_pipes];
+	ijerk  = new vec[n_pipes];
 	ipot   = new real[n_pipes];
 	ih2    = new real[n_pipes];
 	inn    = new int[n_pipes];
@@ -521,8 +521,8 @@ local INLINE int force_by_grape(xreal xtime,
 		    // messages from the GRAPE.  Large values should cause
 		    // underflow and no messages.
 
-		    iacc[i]   = vector(1);
-		    ijerk[i]  = vector(100);
+		    iacc[i]   = vec(1);
+		    ijerk[i]  = vec(100);
 
 		    // Hmmm.  Increasing these numbers seems to increase
 		    // the number of error messages...
@@ -885,7 +885,7 @@ local inline bool use_cm_approx(hdyn *bb, real d_crit)
 	    hdyn *sis = bb->get_younger_sister();
 	    if (sis) {
 
-		vector dx = bb->get_pos() - sis->get_pos();
+		vec dx = bb->get_pos() - sis->get_pos();
 
 		if (abs(dx[0]) < d_crit
 		    && abs(dx[1]) < d_crit
@@ -1038,8 +1038,8 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 		if (bb->get_kepler())
 		    e_unpert += reduced_mass * bb->get_kepler()->get_energy();
 		else {
-		    vector dx = bb->get_pos() - sis->get_pos();
-		    vector dv = bb->get_vel() - sis->get_vel();
+		    vec dx = bb->get_pos() - sis->get_pos();
+		    vec dv = bb->get_vel() - sis->get_vel();
 		    e_unpert += reduced_mass * (0.5*square(dv)
 						- par->get_mass()/abs(dx));
 		}
@@ -1325,7 +1325,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 	    hdyn *bb = e_nodes[i];
 	    real mi = bb->get_mass();
 	    epot += 0.5*mi*bb->get_pot();
-	    vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
+	    vec vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
 	    ekin += 0.5*mi*vel*vel;
 
 #if 0
@@ -1361,14 +1361,14 @@ void grape_calculate_energies(hdyn *b,			// root node
 
 	    real mi = bb->get_mass();
 	    epot += 0.5*mi*bb->get_pot();
-	    vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
+	    vec vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
 	    ekin += 0.5*mi*vel*vel;
 	}
     } else {
 	for_all_daughters(hdyn, b, bb) {
 	    real mi = bb->get_mass();
 	    epot += 0.5*mi*bb->get_pot();
-	    vector vel = bb->get_vel();
+	    vec vel = bb->get_vel();
 	    ekin += 0.5*mi*vel*vel;
 	}
     }
@@ -1450,8 +1450,8 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 		if (bb->get_kepler())
 		    e_unpert += reduced_mass * bb->get_kepler()->get_energy();
 		else {
-		    vector dx = bb->get_pos() - sis->get_pos();
-		    vector dv = bb->get_vel() - sis->get_vel();
+		    vec dx = bb->get_pos() - sis->get_pos();
+		    vec dv = bb->get_vel() - sis->get_vel();
 		    e_unpert += reduced_mass * (0.5*square(dv)
 						- par->get_mass()/abs(dx));
 		}
@@ -1652,7 +1652,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 
 	    real mi = bb->get_mass();
 	    epot += 0.5*mi*bb->get_pot();
-	    vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
+	    vec vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
 	    ekin += 0.5*mi*vel*vel;
 	}
 
@@ -1662,7 +1662,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 	for_all_daughters(hdyn, b, bb) {
 	    real mi = bb->get_mass();
 	    epot += 0.5*mi*bb->get_pot();
-	    vector vel = bb->get_vel();
+	    vec vel = bb->get_vel();
 	    ekin += 0.5*mi*vel*vel;
 	}
     }
@@ -2179,7 +2179,7 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
 	    if (bb != b) {		// bb = b shouldn't occur...
 
-		vector diff = b->get_pred_pos() - bb->get_pred_pos();
+		vec diff = b->get_pred_pos() - bb->get_pred_pos();
 		real diff2 = diff * diff;
 
 		// (Re)compute nn and coll here.
@@ -2281,7 +2281,7 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 				    // use the first MAX_PERTURBERS items as
 				    // representative of the whole.
 				    
-				    vector pos = b->get_pred_pos();
+				    vec pos = b->get_pred_pos();
 				    int npold = MAX_PERTURBERS;
 				    int npnew = MAX_PERTURBERS+1;
 
@@ -3279,7 +3279,7 @@ local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 #ifdef T_DEBUG
 	if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	    if (bb != b) {
-		vector diff = b->get_pred_pos() - bb->get_pred_pos();
+		vec diff = b->get_pred_pos() - bb->get_pred_pos();
 		real diff2 = diff * diff;
 		d_max = Starlab::max(d_max, diff2);
 	    }

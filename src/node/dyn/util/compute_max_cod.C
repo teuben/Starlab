@@ -39,7 +39,7 @@
 
 #define MAX_COUNT 5
 
-void compute_max_cod(dyn *b, vector& pos, vector& vel)
+void compute_max_cod(dyn *b, vec& pos, vec& vel)
 {
     real max_density = 0;
     bool print_message = true;
@@ -87,7 +87,7 @@ void compute_max_cod(dyn *b, vector& pos, vector& vel)
 
 void compute_max_cod(dyn *b)
 {
-    vector pos, vel;
+    vec pos, vel;
     compute_max_cod(b, pos, vel);
 }
 

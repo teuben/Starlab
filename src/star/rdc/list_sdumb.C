@@ -27,7 +27,7 @@ local void combine_ubvri(real Up, real Bp, real Vp, real Rp, real Ip,
 
 #endif
 
-local bool star_is_bound(hdyn* b, vector& cod_vel) {
+local bool star_is_bound(hdyn* b, vec& cod_vel) {
 
   bool bound = false;
   if (0.5*square(b->get_vel()-cod_vel) + b->get_pot() < 0) 
@@ -37,12 +37,12 @@ local bool star_is_bound(hdyn* b, vector& cod_vel) {
 
 }
 
-local void get_UBVRI_of_star(hdyn *bi, vector pos,
+local void get_UBVRI_of_star(hdyn *bi, vec pos,
 	real &Us, real &Bs, real &Vs, real &Rs, real &Is) {
 
 
   // To solar radii
-  //  vector pos = bi->get_pos() - dc_pos;
+  //  vec pos = bi->get_pos() - dc_pos;
   pos[0] = bi->get_starbase()->conv_r_dyn_to_star(pos[0]);
   pos[1] = bi->get_starbase()->conv_r_dyn_to_star(pos[1]);
   pos[2] = bi->get_starbase()->conv_r_dyn_to_star(pos[2]);
@@ -104,18 +104,18 @@ local void get_UBVRI_of_star(hdyn *bi, vector pos,
      }
 }
 
-local void print_star(hdyn *bi, bool bound, vector pos, vector vel,
+local void print_star(hdyn *bi, bool bound, vec pos, vec vel,
 		      real &Up, real &Bp, real &Vp, real &Rp, real &Ip, 
 		      bool verbose) { 
 
 
   int id = bi->get_index();
 
-  //  vector cod_vel = 0;
+  //  vec cod_vel = 0;
   //  bool bound = star_is_bound(bi, cod_vel);
 
   // To solar radii
-  //  vector pos = bi->get_pos() - dc_pos;
+  //  vec pos = bi->get_pos() - dc_pos;
   pos[0] = bi->get_starbase()->conv_r_dyn_to_star(pos[0]);
   pos[1] = bi->get_starbase()->conv_r_dyn_to_star(pos[1]);
   pos[2] = bi->get_starbase()->conv_r_dyn_to_star(pos[2]);
@@ -228,16 +228,16 @@ local void print_star(hdyn *bi, bool bound, vector pos, vector vel,
      Ip=I;
 }
 
-local int print_binary_recursive(hdyn *b, vector dc_pos, vector dc_vel,
+local int print_binary_recursive(hdyn *b, vec dc_pos, vec dc_vel,
 	real &U, real &B, real &V, real &R, real &I, bool verbose) { 
 
   int nb = 0;
   if (b->get_oldest_daughter()) {
     
-    vector r_com  = b->get_pos() - dc_pos;
-    vector v_com  = b->get_vel() - dc_vel;
-//    vector r_com  = dyn_something_relative_to_root(b, &dyn::get_pos) -dc_pos;
-//    vector v_com  = dyn_something_relative_to_root(b, &dyn::get_vel) -dc_vel;
+    vec r_com  = b->get_pos() - dc_pos;
+    vec v_com  = b->get_vel() - dc_vel;
+//    vec r_com  = dyn_something_relative_to_root(b, &dyn::get_pos) -dc_pos;
+//    vec v_com  = dyn_something_relative_to_root(b, &dyn::get_vel) -dc_vel;
 
     real m_tot = b->get_starbase()->conv_m_dyn_to_star(b->get_mass());
     //    PRC(m_tot);PRC(r_com);PRL(v_com);
@@ -261,7 +261,7 @@ local int print_binary_recursive(hdyn *b, vector dc_pos, vector dc_vel,
 	// Such as Arches star cluster models.
 	//        print_star(bb, bb->get_pos()-r_com, bb->get_vel()-v_com,
 	//           U, B, V, R, I, verbose);
-	vector nul = 0;
+	vec nul = 0;
 	bool bound = star_is_bound(bb, nul);
         print_star(bb, bound, bb->get_pos(), bb->get_vel(),
 	           U, B, V, R, I, verbose);
@@ -273,7 +273,7 @@ local int print_binary_recursive(hdyn *b, vector dc_pos, vector dc_vel,
   return nb;
 }
 
-local void print_integrated_cluster(hdyn *b, vector dc_pos,
+local void print_integrated_cluster(hdyn *b, vec dc_pos,
 	                            real r_min, real r_max,
 	                            real v_min, real v_max,
 	real &U, real &B, real &V, real &R, real &I,
@@ -282,11 +282,11 @@ local void print_integrated_cluster(hdyn *b, vector dc_pos,
 
   int nb = 0;
   real rcom;
-  vector r;
+  vec r;
   real m_tot = 0;
   if (b->get_oldest_daughter()) {
 
-    vector r_com  = b->get_pos() - dc_pos;
+    vec r_com  = b->get_pos() - dc_pos;
 
     real Uc, Bc, Vc, Rc, Ic;
     Uc=Bc=Vc=Rc=Ic=VERY_LARGE_NUMBER;
@@ -371,8 +371,8 @@ main(int argc, char ** argv)
     int count = 0;
 
     bool cod, try_com = false;
-    vector dc_pos = 0;
-    vector dc_vel = 0;
+    vec dc_pos = 0;
+    vec dc_vel = 0;
     while (b = get_hdyn()) {
 
 	real rd_min = b->get_starbase()->conv_r_star_to_dyn(r_min);

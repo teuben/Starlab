@@ -174,7 +174,7 @@ void print_coll(hdyn* b,
 }
 
 bool hdyn::nn_stats(real energy_cutoff, real kT,
-		    vector center, bool verbose,
+		    vec center, bool verbose,
 		    bool long_binary_output,		// default = true
 		    int which)				// default = 0
 {
@@ -207,7 +207,7 @@ bool hdyn::nn_stats(real energy_cutoff, real kT,
     real M = mass + nn->mass;
     if (M <= 0) return false;
 
-    vector dx, dv;
+    vec dx, dv;
 
     if (parent == nn->parent) {
 
@@ -353,9 +353,9 @@ void check_consistency_of_node(hdyn * node,
 	cerr << " is not a binary node \n";
 	return;
     }
-    vector d = (first_child->*get_something) ()
+    vec d = (first_child->*get_something) ()
 	        - (second_child->*get_something) ();
-    vector cm = (first_child->*get_something) () * first_child->get_mass()
+    vec cm = (first_child->*get_something) () * first_child->get_mass()
 	        + (second_child->*get_something) () * second_child->get_mass();
     real mass_of_node = first_child->get_mass() + second_child->get_mass();
 
@@ -529,8 +529,8 @@ void create_binary_from_toplevel_nodes(hdyn *bi, hdyn *bj)
     bj->get_parent()->setup_binary_node();
 }
 
-local vector change_of_absolute_something_of_parent(hdyn * node,
-						    vector & dx,
+local vec change_of_absolute_something_of_parent(hdyn * node,
+						    vec & dx,
 						    real dm,
 						    hdyn_VMF_ptr something)
 {
@@ -538,8 +538,7 @@ local vector change_of_absolute_something_of_parent(hdyn * node,
 	 / (node->get_mass() + node->get_binary_sister()->get_mass() + dm);
 }
 
-local void adjust_relative_something_of_sister(vector
-					         absolute_change_of_parent,
+local void adjust_relative_something_of_sister(vec absolute_change_of_parent,
 					       real dm,
 					       hdyn * node,
 					       hdyn_MF_ptr inc_something)
@@ -554,7 +553,7 @@ local void adjust_relative_something_of_sister(vector
 
 local void adjust_parent_and_sister(hdyn * node,
 				    hdyn * ancestor,
-				    vector d_something,
+				    vec d_something,
 				    real dm,
 				    hdyn_VMF_ptr get_something,
 				    hdyn_MF_ptr inc_something,
@@ -562,7 +561,7 @@ local void adjust_parent_and_sister(hdyn * node,
 {
 //    cerr << "in adjust_parent_and_sister...\n" << flush;
 
-    vector d_parent = 0;
+    vec d_parent = 0;
 
     if (node != ancestor) {
 	if(node->is_low_level_node()){
@@ -620,7 +619,7 @@ void remove_node_and_correct_upto_ancestor(hdyn * ancestor, hdyn * node)
     } else {
 
 	real dm = -node->get_mass();
-	vector dz;
+	vec dz;
 	dz = 0;
 
 	hdyn *parent = node->get_parent();
@@ -667,14 +666,14 @@ void remove_node_and_correct_upto_ancestor(hdyn * ancestor, hdyn * node)
     }
 }
 
-vector something_relative_to_ancestor(hdyn * bj,
+vec something_relative_to_ancestor(hdyn * bj,
 				      hdyn * bi,
 				      hdyn_VMF_ptr get_something)
 {
 #ifdef DEBUG
     cerr << "something_relative_to_ancestor\n";
 #endif
-    vector d_something = 0;
+    vec d_something = 0;
     for (hdyn * b = bi; b != bj; b = b->get_parent()) {
 	if (b == NULL) {
 	    cerr << "something_relative_to_ancestor: Error, bj is not the "
@@ -686,7 +685,7 @@ vector something_relative_to_ancestor(hdyn * bj,
     return d_something;
 }
 
-vector hdyn_something_relative_to_root(hdyn * bi,
+vec hdyn_something_relative_to_root(hdyn * bi,
 				       hdyn_VMF_ptr get_something)
 {
 #ifdef DEBUG
@@ -701,7 +700,7 @@ vector hdyn_something_relative_to_root(hdyn * bi,
 
     else {
 
-	vector d_something = 0;
+	vec d_something = 0;
 	for (hdyn * b = bi; b->get_parent() != NULL; b = b->get_parent()) {
 	    if (b == NULL)
 		err_exit(
@@ -712,7 +711,7 @@ vector hdyn_something_relative_to_root(hdyn * bi,
     }
 }
 
-local vector relative_something(hdyn * ancestor,
+local vec relative_something(hdyn * ancestor,
 				hdyn * bj,
 				hdyn * bi,
 				hdyn_VMF_ptr get_something)
@@ -772,7 +771,7 @@ local void insert_node_and_correct_upto_ancestor(hdyn *ancestor,
 
 	real dm = node->get_mass();
 	node->set_mass(0);
-	static vector dx, dv, da, dj;
+	static vec dx, dv, da, dj;
 	dx = dv = da = dj = 0;
 
 	adjust_parent_and_sister(node, ancestor, dx, dm,
@@ -804,7 +803,7 @@ void correct_leaf_for_change_of_mass(hdyn * node, real dm)
 {
     hdyn *parent = node->get_parent();
     hdyn *ancestor = node->get_root();
-    static vector dx, dv, da, dj;
+    static vec dx, dv, da, dj;
     dx = dv = da = dj = 0;
     if(node->is_low_level_node()){
 	adjust_parent_and_sister(node, ancestor, dx, dm,
@@ -833,7 +832,7 @@ void correct_leaf_for_change_of_mass(hdyn * node, real dm)
 }
 
 void correct_leaf_for_change_of_vector(hdyn * node,
-				       vector d_something,
+				       vec d_something,
 				       hdyn_VMF_ptr get_something,
 				       hdyn_MF_ptr inc_something)
 {

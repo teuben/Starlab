@@ -75,7 +75,7 @@ void scatter(sdyn* b, scatter_input input,
 
 local real calculate_angular_mometum_from_scratch(sdyn* b) {
 
-  vector L = 0;
+  vec L = 0;
   for_all_leaves(sdyn, b, bi) {
     L += bi->get_mass()*(bi->get_pos()^bi->get_vel());
   }
@@ -356,7 +356,7 @@ void slave_part_of_experiment(scatter_input input,
   b->set_name("root");
 
     
-  vector center = b->get_pos();
+  vec center = b->get_pos();
   print_structure_recursive(b, 0., center, true, true, 4);
     
   // Integrate the system to completion:
@@ -372,7 +372,7 @@ void slave_part_of_experiment(scatter_input input,
   print_normal_form(b, cerr);
   b->set_name("root");
   ppn(b, cerr);
-  //	vector center = b->get_pos();
+  //	vec center = b->get_pos();
   print_structure_recursive(b, 0., center, true, true, 4);
   
   cerr << "Nearest neighbor information." << endl;

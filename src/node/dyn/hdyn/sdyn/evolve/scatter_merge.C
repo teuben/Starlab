@@ -25,10 +25,10 @@ local void set_merger_dyn(sdyn * bn, sdyn * bi, sdyn * bj)
     bn->set_acc((mi*bi->get_acc() + mj*bj->get_acc())*m_inv);
     bn->set_jerk((mi*bi->get_jerk() + mj*bj->get_jerk())*m_inv);
 
-    vector d_pos = bi->get_pos() - bj->get_pos();
+    vec d_pos = bi->get_pos() - bj->get_pos();
     real rij = sqrt(d_pos*d_pos);
 
-    vector d_vel = bi->get_vel() - bj->get_vel();
+    vec d_vel = bi->get_vel() - bj->get_vel();
     real vij2 = d_vel*d_vel;
 
     real eij_pot = -mi * mj / rij;

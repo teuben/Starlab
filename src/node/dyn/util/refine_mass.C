@@ -78,7 +78,7 @@ void refine_cluster_mass(dyn *b,
     //
     //		phi_J  =  1.5 alpha1 r_J^2.
 
-    vector center, vcenter;
+    vec center, vcenter;
     int which = get_std_center(b, center, vcenter);
 
     center -= b->get_pos();			// std_center quantities
@@ -136,7 +136,7 @@ void refine_cluster_mass(dyn *b,
 
 	for_all_daughters(dyn, b, bb) {
 
-	    vector dx = bb->get_pos() - center;
+	    vec dx = bb->get_pos() - center;
 
 	    real x = dx[0];
 	    real y = dx[1];
@@ -242,7 +242,7 @@ void refine_cluster_mass(dyn *b,
 
     for_all_daughters(dyn, b, bb) {
 
-	vector dx = bb->get_pos() - center;
+	vec dx = bb->get_pos() - center;
 
 	real x = dx[0];
 	real z = dx[2];

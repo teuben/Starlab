@@ -163,7 +163,7 @@ local real  tuple_pot_energy(int tuple[NBODY_MAX], dyn * b,
 			   real dist_table[NNODE_MAX][NNODE_MAX], int k);
 local real  tuple_radius(int tuple[NBODY_MAX], dyn * b,
 			 real struct_table[NNODE_MAX][N_STRUCT],
-			 vector & com_pos, int k);   
+			 vec & com_pos, int k);   
 local void  unwrap_string(char substring[BUFF_LENGTH],
 			  char * head_ptr, char * tail_ptr);
 local void  update_admin_table(int tuple[NBODY_MAX], dyn * b, int nnode,
@@ -429,7 +429,7 @@ local bool  is_isolated_tuple(int tuple[NBODY_MAX], dyn * b, int nnode,
     int  i, j, jt;
     real  radius;
     real  radius_i;
-    vector  com_pos;
+    vec  com_pos;
     real  distance_to_com;
     int  visible_non_tuple[NBODY_MAX];
     int  n_visible_non_tuple;
@@ -545,9 +545,9 @@ local real  tuple_kin_energy(int tuple[NBODY_MAX], dyn * b, int k)
     real  velocity_squared;
     real  kin_energy;
     real  total_mass;
-    vector  mass_times_vel;
-    vector  rel_vel;                  /* velocity with respect to c.o.m. */
-    vector  com_vel;
+    vec  mass_times_vel;
+    vec  rel_vel;                  /* velocity with respect to c.o.m. */
+    vec  com_vel;
     int  pi_offset;
     dyn * bi;
 
@@ -818,14 +818,14 @@ local int  next_element(int element, int tuple[NBODY_MAX], int n)
  */
 local real  tuple_radius(int tuple[NBODY_MAX], dyn * b,
 			 real struct_table[NNODE_MAX][N_STRUCT],
-			 vector & com_pos, int k)
+			 vec & com_pos, int k)
     {
     int  i;
     real  member_radius;
     real  max_member_radius;
     real  total_mass;
     real  lever_arm_factor;          /* in case of a binary, i.e. k = 2      */
-    vector  mass_times_pos;
+    vec  mass_times_pos;
     real  a, e;                      /* binary parameters for the case k = 2 */
     int  member_offset;
     int  g0_offset;
@@ -1066,7 +1066,7 @@ local void get_binary_parameters(dyn *g1, dyn *g2, real * aptr, real * eptr)
 //realptr  eptr;             /* pointer to e, the eccentricity of a binary   */
     {
     real  delta_r, delta_v, m_sum;
-    vector  r_rel, v_rel, r_out_v;
+    vec  r_rel, v_rel, r_out_v;
     real  r_out_v_squared;
 
     delta_r = abs(g1->get_pos() - g2->get_pos());
@@ -1387,10 +1387,10 @@ local void  install_com_dynamics(dyn * b, int nnode,
     {
     int  i;
     real  total_mass;
-    vector  com_pos;
-    vector  com_vel;
-    vector  mass_times_pos;
-    vector  mass_times_vel;
+    vec  com_pos;
+    vec  com_vel;
+    vec  mass_times_pos;
+    vec  mass_times_vel;
     int  member_offset;
     dyn * member;
     dyn * new_node;

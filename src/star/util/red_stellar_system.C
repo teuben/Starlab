@@ -71,7 +71,7 @@ typedef  struct  {
 
   real  radius;  // sorted on this parameter.
   real  dmass;
-  vector  vel;
+  vec  vel;
 } star_table, *star_table_ptr;
 
 local bool check_input_option(bin_option binning, cut_option
@@ -193,7 +193,7 @@ local void accumulate_potential_energy(dyn* bj, dyn*bi,
 	}
     else
 	if (bi != bj) {
-	    vector d_pos = bi->get_pos() - bj->get_pos();
+	    vec d_pos = bi->get_pos() - bj->get_pos();
 	    real mi = bi->get_mass();
 	    real mj = bj->get_mass();
 	    real r = sqrt(d_pos * d_pos);
@@ -216,8 +216,8 @@ local bool bound_object(dyn* bj, dyn* bi)
 
     real   mi = bi->get_mass();
     real   mj = bmin->get_mass();
-    vector d_vel = bi->get_vel() - bmin->get_vel();
-    vector d_pos = bi->get_pos() - bmin->get_pos();
+    vec d_vel = bi->get_vel() - bmin->get_vel();
+    vec d_pos = bi->get_pos() - bmin->get_pos();
     real   r = sqrt(d_pos * d_pos);
     real   e0 = (0.5 * d_vel * d_vel - (mi + mj)/r);
 
@@ -229,7 +229,7 @@ local bool bound_object(dyn* bj, dyn* bi)
 
 	if (bi == bmin1) {
 	    real e  = - mi*mj / r;
-	    vector R_vel = (mi*bi->get_vel()+mj*bmin->get_vel())/(mi+mj);
+	    vec R_vel = (mi*bi->get_vel()+mj*bmin->get_vel())/(mi+mj);
 	    real ekin = 0.5*(mi+mj)*R_vel*R_vel;
 
 	    if (epot + epot1 - 2*e + ekin < 0) bound = true;
@@ -238,7 +238,7 @@ local bool bound_object(dyn* bj, dyn* bi)
 	} else bound = true;
 
     } else {
-	vector vel = bi->get_vel();
+	vec vel = bi->get_vel();
 	real ekin = 0.5*bi->get_mass()*vel*vel;
 	
 	if (ekin + epot > 0.0) bound = false;
@@ -247,14 +247,14 @@ local bool bound_object(dyn* bj, dyn* bi)
     return bound;
 }
 
-local void compute_cod_velocity(dyn *b, vector& vel)
+local void compute_cod_velocity(dyn *b, vec& vel)
 {
   real total_weight = 0;
   int prev_n_bound, n_bound = 0;
 
   cerr << " Initial cod velocity = " << vel << endl;
 
-  vector old_vel;
+  vec old_vel;
   real dvel = 0;
   do {
       
@@ -290,7 +290,7 @@ local void compute_cod_velocity(dyn *b, vector& vel)
 }
 
 local 
-void compute_core_parameters(dyn* b, int k, vector& center, vector &vcore,
+void compute_core_parameters(dyn* b, int k, vec& center, vec &vcore,
 			     real& rcore, int& ncore, real& mcore)
 {
     compute_density(b, k);
@@ -331,8 +331,8 @@ void compute_core_parameters(dyn* b, int k, vector& center, vector &vcore,
 	}
 }
 
-local void print_core_parameters(dyn* b, vector& density_center,
-				         vector &vcore,
+local void print_core_parameters(dyn* b, vec& density_center,
+				         vec &vcore,
 				 real& rcore) {
 				 
     real mcore;
@@ -558,7 +558,7 @@ local void extr_velocity_anisotopy(star_table_ptr table,
   real vel_anisotropy;
   real theta, v2_rad, v2_tan;
   real vc2_rad, vc2_tan;
-  vector velocity=0;
+  vec velocity=0;
   char scratch_pad[SCRATCH_PAD_LINE_LENGTH];
   real quarter_pi = 0.25*PI;
 
@@ -953,8 +953,8 @@ local star_table_ptr sort_stellar_parameter(dyn * b, int nzones, int &n,
   }
 
   // Use the geometric center if the density center is unknown.
-  vector dc_pos = 0;
-  vector dc_vel = 0;
+  vec dc_pos = 0;
+  vec dc_vel = 0;
   real rcore = 0;
   if (find_qmatch(b->get_dyn_story(), "density_center_pos"))
      dc_pos = getvq(b->get_dyn_story(), "density_center_pos");
@@ -1189,8 +1189,8 @@ main(int argc, char ** argv)
     nzones = MAX_PREDEF_RADII;
 
   cerr.precision(LOW_PRECISION);
-  vector density_center=0;
-  vector density_velocity=0;
+  vec density_center=0;
+  vec density_velocity=0;
   real rcore;
   while (b = get_dyn()) {
     

@@ -1,6 +1,6 @@
 #include  "starlab_vector.h"
 
-//// test_vector:  test Starlab vector class operators
+//// test_vector:  test Starlab vec class operators
 ////
 //// No options
 
@@ -10,13 +10,13 @@ main(int argc, char** argv)
 {
     check_help();
 
-    vector x(1.0);
+    vec x(1.0);
 #ifdef POST_GCC_30
-    vector y(1.0+x);
+    vec y(1.0+x);
 #else
-    vector y(x+1.0);
+    vec y(x+1.0);
 #endif // POST_GCC_30
-    vector z(x+y);
+    vec z(x+y);
 
     cout << "x = "; x.print();
     cout << "y = "; y.print();
@@ -58,14 +58,14 @@ main(int argc, char** argv)
 
     cout << "|2x-4(y+z)| = " << abs(2*x-4*(y+z)) << "\n";
 
-    cout << "test of  x = vector(1001, 1002, 1003);  : ";
-    x = vector(1001, 1002, 1003);
+    cout << "test of  x = vec(1001, 1002, 1003);  : ";
+    x = vec(1001, 1002, 1003);
     x.print();
     cout << "test of  x = 8;  : ";
     x = 8;
     x.print();
 
-    vector a(1,2,3);
+    vec a(1,2,3);
 
     cout << "test of a = (1,2,3) :    a = " << a << endl;
     cout << "test of a[2]        : a[2] = " << a[2] << endl;

@@ -345,7 +345,7 @@ void put_story(ostream& str, story& s)
 #define  SAFE_INT_LENGTH     (5 + (BYTE_LENGTH*sizeof(int))/3)
 #define  SAFE_REAL_LENGTH    (10 + (BYTE_LENGTH*sizeof(real))/3)
 #define  SAFE_STRING_LENGTH   1    /* this should hold the string terminator */
-#define  SAFE_VECTOR_LENGTH  (3 * (SAFE_REAL_LENGTH + 2))
+#define  SAFE_vector_LENGTH  (3 * (SAFE_REAL_LENGTH + 2))
 #define  EXTRA_LENGTH  5           /* for initial "  " and " = " */
 
 /*-----------------------------------------------------------------------------
@@ -439,14 +439,14 @@ local void  write_sq(story * a_story_line, char * name, char * value)
  *  write_vq  --  write a vector quantity to a line.
  *-----------------------------------------------------------------------------
  */
-local void  write_vq(story * a_story_line, char * name, vector & value)
+local void  write_vq(story * a_story_line, char * name, vec & value)
 {
     if (!a_story_line || !name) return;
 
     char * new_string;
     int  new_string_length;
     
-    new_string_length = EXTRA_LENGTH + strlen(name) + SAFE_VECTOR_LENGTH;
+    new_string_length = EXTRA_LENGTH + strlen(name) + SAFE_vector_LENGTH;
     new_string  = new char[new_string_length];
 
     sprintf(new_string, "  %s = %.6g %.6g %.6g", name,	// %g here may cause
@@ -741,9 +741,9 @@ char *getsq(story * a_story, char * name, bool verbose)
  *  getvq  --  reads a vector quantity from a line in a story
  *-----------------------------------------------------------------------------
  */
-vector getvq(story *  a_story, char * name, bool verbose)
+vec getvq(story *  a_story, char * name, bool verbose)
 {
-    if (!a_story || !name) return vector(-VERY_LARGE_NUMBER,
+    if (!a_story || !name) return vec(-VERY_LARGE_NUMBER,
 					      -VERY_LARGE_NUMBER,
 					      -VERY_LARGE_NUMBER);
 
@@ -752,13 +752,13 @@ vector getvq(story *  a_story, char * name, bool verbose)
     if ((story_line = find_qmatch(a_story, name)) == NULL) {
 	if (verbose) cerr << "getiq: no quantity found with name \""
 	                  << name << "\"" << endl;
-	return vector(-VERY_LARGE_NUMBER,
+	return vec(-VERY_LARGE_NUMBER,
 		      -VERY_LARGE_NUMBER,
 		      -VERY_LARGE_NUMBER);
 	// exit(1);
     }
 
-    vector v;
+    vec v;
     sscanf(get_qstring(story_line), "%lf %lf %lf", &v[0], &v[1], &v[2]);
 
     return v;
@@ -1145,7 +1145,7 @@ void putsq(story * a_story, char * name, char * value)
  *             overwrite the line containing that quantity.
  *-----------------------------------------------------------------------------
  */
-void putvq(story * a_story, char * name, vector & value)
+void putvq(story * a_story, char * name, vec & value)
 {
     if (!a_story || !name) return;
 
@@ -1216,7 +1216,7 @@ main(int argc, char** argv)
 	putrq(s, "pi", 3.14, 2);
 	putrq(s, "pi", 3.14, 10);
 	putsq(s, "star cluster", "47 Tuc");
-	vector * tmp = new vector(1,2,3);
+	vec * tmp = new vec(1,2,3);
 	putvq(s, "1-2-3-test vector", *tmp);
 	cout << "test message = " << getiq(s, "test message") << endl;
 	cout << "yet another test message = "

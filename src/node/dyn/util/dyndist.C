@@ -57,7 +57,7 @@ local int  realcompare(const void * a, const void * b)
 void  dist_stats(dyn * b1, dyn * b2, int n_intervals)
     {
     real  rootrdist, rootvdist;
-    vector  dr, dv;
+    vec  dr, dv;
     real * posdists;
     real * veldists;
     real * posdists_i;

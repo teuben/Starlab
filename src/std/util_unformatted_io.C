@@ -60,14 +60,14 @@ void write_unformatted32_real( ostream & s, real v )
 #endif
 }
 
-void write_unformatted_vector( ostream & s, vector & v )
+void write_unformatted_vector( ostream & s, vec & v )
 {
     write_unformatted_real( s, v[0] );
     write_unformatted_real( s, v[1] );
     write_unformatted_real( s, v[2] );
 }
 
-void write_unformatted32_vector( ostream & s, vector & v )
+void write_unformatted32_vector( ostream & s, vec & v )
 {
     write_unformatted32_real( s, v[0] );
     write_unformatted32_real( s, v[1] );
@@ -108,14 +108,14 @@ real read_unformatted32_real( istream & s )
 #endif
 }
 
-void read_unformatted_vector( istream & s, vector & v )
+void read_unformatted_vector( istream & s, vec & v )
 {
     v[0] = read_unformatted_real( s );
     v[1] = read_unformatted_real( s );
     v[2] = read_unformatted_real( s );
 }
 
-void read_unformatted32_vector( istream & s, vector & v )
+void read_unformatted32_vector( istream & s, vec & v )
 {
     v[0] = read_unformatted32_real( s );
     v[1] = read_unformatted32_real( s );

@@ -18,13 +18,13 @@ local void jiggle(dyn * b, real f)
 
     for_all_daughters(dyn, b, bi) {
 
-	vector vel = bi->get_vel(), norm;
+	vec vel = bi->get_vel(), norm;
 
 	while(1) {
 	    real costh = randinter(-1, 1);
 	    real sinth = sqrt(Starlab::max(0.0, 1-costh*costh));
 	    real phi = randinter(0, 2*M_PI);
-	    vector rvec = vector(sinth*cos(phi), sinth*cos(phi), costh);
+	    vec rvec = vec(sinth*cos(phi), sinth*cos(phi), costh);
 	    norm = rvec ^ vel;
 	    if (abs(norm) > 0.01*abs(vel)) break;    // norm not too close to
 						     // being parallel to vel

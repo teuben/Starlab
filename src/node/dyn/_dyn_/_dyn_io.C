@@ -152,7 +152,7 @@ ostream & _dyn_::print_dyn_story(ostream & s,
 
     // Awkward (dyn output prints pos), but...
 
-    vector tmp_pos, tmp_vel;
+    vec tmp_pos, tmp_vel;
     if (short_output > 1) {
 	tmp_pos = pos;
 	tmp_vel = vel;

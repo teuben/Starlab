@@ -140,9 +140,9 @@ local real m_sum(sdyn* list[], int k_tuple)
 
 // pos_sum: Calculate the weighted m * pos sum for the nodes on the list.
 
-local vector pos_sum(sdyn* list[], int k_tuple)
+local vec pos_sum(sdyn* list[], int k_tuple)
 {
-    vector sum = vector(0,0,0);
+    vec sum = vec(0,0,0);
 
     for (int i = 0; i < k_tuple; i++)
 	sum += list[i]->get_mass() * list[i]->get_pos();
@@ -153,9 +153,9 @@ local vector pos_sum(sdyn* list[], int k_tuple)
 
 // vel_sum: Calculate the weighted m * vel sum for the nodes on the list.
 
-local vector vel_sum(sdyn* list[], int k_tuple)
+local vec vel_sum(sdyn* list[], int k_tuple)
 {
-    vector sum = vector(0,0,0);
+    vec sum = vec(0,0,0);
 
     for (int i = 0; i < k_tuple; i++)
 	sum += list[i]->get_mass() * list[i]->get_vel();
@@ -170,7 +170,7 @@ local vector vel_sum(sdyn* list[], int k_tuple)
 local real tuple_size(sdyn* list[], int k_tuple)
 {
     real max_dist = 0;
-    vector cmpos = pos_sum(list, k_tuple) / m_sum(list, k_tuple);
+    vec cmpos = pos_sum(list, k_tuple) / m_sum(list, k_tuple);
 
     for (int i = 0; i < k_tuple; i++)
 	max_dist = Starlab::max(max_dist, abs(list[i]->get_pos() - cmpos));
@@ -215,7 +215,7 @@ local real distance_sq(sdyn* list[], int k_tuple, sdyn* rest[], int n_rest)
 
 local bool is_bound(sdyn* list[], int k_tuple)
 {
-    vector cmvel = vel_sum(list, k_tuple) / m_sum(list, k_tuple);
+    vec cmvel = vel_sum(list, k_tuple) / m_sum(list, k_tuple);
 
     real kinetic = 0;
     for (int i = 0; i < k_tuple; i++)
@@ -268,8 +268,8 @@ local sdyn* make_tuple_cm(sdyn* list[], int k_tuple, real radius,
     // Determine CM mass, position, and velocity.
 
     real m_total = m_sum(list, k_tuple);
-    vector cmpos = pos_sum(list, k_tuple) / m_total;
-    vector cmvel = vel_sum(list, k_tuple)/ m_total;
+    vec cmpos = pos_sum(list, k_tuple) / m_total;
+    vec cmvel = vel_sum(list, k_tuple)/ m_total;
 
     cm->set_mass(m_total);
     cm->set_pos(cmpos);
@@ -518,8 +518,8 @@ local int find_and_make_binaries(sdyn* b, bool dynamics, bool stability,
 
 			// Determine periastron and check stability.
 
-			vector rel_pos = bb->get_pos() - nn->get_pos();
-			vector rel_vel = bb->get_vel() - nn->get_vel();
+			vec rel_pos = bb->get_pos() - nn->get_pos();
+			vec rel_vel = bb->get_vel() - nn->get_vel();
 
 			real rdotv = rel_pos * rel_vel;
 			real temp = 1 - radius / sma;

@@ -29,8 +29,8 @@ inline void
 hdyn::flat_accumulate_acc_and_jerk(hdyn * leaf,    // attracting leaf node
 				   real eps2)	   // softening length squared
 {
-    vector d_pos = leaf->get_pred_pos() - get_pred_pos();
-    vector d_vel = leaf->get_pred_vel() - get_pred_vel();
+    vec d_pos = leaf->get_pred_pos() - get_pred_pos();
+    vec d_vel = leaf->get_pred_vel() - get_pred_vel();
     real r2inv = 1.0 / (d_pos * d_pos + eps2);
     real a3 = -3.0 * (d_pos * d_vel) * r2inv;
     real mrinv = leaf->get_mass() * sqrt(r2inv);

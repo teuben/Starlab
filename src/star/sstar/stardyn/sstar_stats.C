@@ -45,10 +45,10 @@ struct nm_bin {
     }
 };
 
-local int which_zone(dyn* bi, vector& center, int n_lagr, real* r_lagr)
+local int which_zone(dyn* bi, vec& center, int n_lagr, real* r_lagr)
 {
-    vector pos = something_relative_to_root(bi, &dyn::get_pos);
-    vector dr = pos - center;
+    vec pos = something_relative_to_root(bi, &dyn::get_pos);
+    vec dr = pos - center;
     real dr2 = dr*dr;
 
     for (int j = 0; j < n_lagr; j++)
@@ -61,7 +61,7 @@ local void print_stellar_content(dyn* b) {
 
     int n_lagr = 0;
     real *r_lagr = NULL;
-    vector lagr_pos = 0;
+    vec lagr_pos = 0;
 
     // As in lagrad, use the geometric center if 
     // density center is unknown.
@@ -345,8 +345,8 @@ local void sort_stellar_ubvri(dyn * b, int nzones, int n,
 			      star_ubvri_ptr table, real *Ltot) {
 
   // Use the geometric center if the density center is unknown.
-  vector dc_pos = 0;
-  vector dc_vel = 0;
+  vec dc_pos = 0;
+  vec dc_vel = 0;
   real rcore = 0;
   if (find_qmatch(b->get_dyn_story(), "density_center_pos"))
     dc_pos = getvq(b->get_dyn_story(), "density_center_pos");
@@ -362,7 +362,7 @@ local void sort_stellar_ubvri(dyn * b, int nzones, int n,
 
   Ltot[0] = Ltot[1] = Ltot[2] = Ltot[3] = Ltot[4] = 0;
 	
-  vector rstar;
+  vec rstar;
   for_all_leaves(dyn, b, bi) {
 
       rstar = (bi->get_top_level_node()->get_pos() - dc_pos);
@@ -601,7 +601,7 @@ local void print_mass_over_light(dyn* b) {
 	real *r_lagr = new real[n_lagr];
 	getra(b->get_dyn_story(), "r_lagr", r_lagr, n_lagr);
 
-	vector lagr_pos = 0;
+	vec lagr_pos = 0;
 
 	if (find_qmatch(b->get_dyn_story(), "lagr_pos"))
 	    lagr_pos = getvq(b->get_dyn_story(), "lagr_pos");
@@ -885,8 +885,8 @@ local void print_luminosity_function(dyn* b, int nzones, bool verbose) {
     delete [] lstar_bins;
 }
 
-local void print_massive_star(dyn *bi, vector center_pos,
-			      vector center_vel, bool verbose) {
+local void print_massive_star(dyn *bi, vec center_pos,
+			      vec center_vel, bool verbose) {
 
     real mass  = bi->get_starbase()->get_total_mass();
     real r_com = abs(bi->get_pos() - center_pos);
@@ -899,7 +899,7 @@ local void print_massive_star(dyn *bi, vector center_pos,
     
 #if 0
 local int print_massive_binary(dyn *bi,
-			       vector center_pos, vector center_vel,
+			       vec center_pos, vec center_vel,
 			       real mass_limit, real number_limit,
 			       bool verbose) {
 
@@ -948,7 +948,7 @@ local bool contains_massive_star(dyn *b,
 }
 
 local int print_massive_binary_recursive(dyn *b,
-					 vector center_pos, vector center_vel,
+					 vec center_pos, vec center_vel,
 					 real mass_limit, real number_limit,
 					 bool verbose) {
 
@@ -1013,11 +1013,11 @@ local int compare_mass(const void * pi, const void * pj)  // decreasing mass
 local void print_most_massive_stars(dyn *b,
 				    real mass_limit,
 				    real number_limit,
-				    vector center_pos,
+				    vec center_pos,
 				    bool verbose) {
 
     bool cod = false;
-    vector center_vel = 0;
+    vec center_vel = 0;
 
     if (abs(center_pos) == 0)
 	cod = (get_std_center(b, center_pos, center_vel) == 1);
@@ -1090,7 +1090,7 @@ void print_sstar_time_scales(dyn *b) {
     b->get_starbase()->print_stellar_evolution_scaling(cerr);
 }
 
-void sstar_stats(dyn* b, bool mass_spectrum, vector center,
+void sstar_stats(dyn* b, bool mass_spectrum, vec center,
 		 bool verbose) { 
 
   if (b->get_use_sstar()) {
@@ -1180,7 +1180,7 @@ main(int argc, char **argv)
 
     dyn *b;
     int i = 0;
-    vector zero = 0;
+    vec zero = 0;
     bool mass_spectrum = true;
     while (b = get_dyn()) {
 

@@ -67,9 +67,9 @@ main(int argc, char ** argv)
     b2.set_mass(4);
     b3.set_mass(5);
 
-    b1.set_pos(vector(1,3,0));
-    b2.set_pos(vector(-2,-1,0));
-    b3.set_pos(vector(1,-1,0));
+    b1.set_pos(vec(1,3,0));
+    b2.set_pos(vec(-2,-1,0));
+    b3.set_pos(vec(1,-1,0));
 
     if (C_flag) b.set_col_output(true);
 

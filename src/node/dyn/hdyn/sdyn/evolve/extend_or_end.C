@@ -135,7 +135,7 @@ bool tree_is_unbound(sdyn* root, real ttf, int debug) {
 	    if (abs(kij/pij - 1) < scaled_safety_factor) return FALSE;
 
 	    real aij = 0.5 * mij / eij;
-	    vector cmij = (bi->get_mass() * bi->get_pos()
+	    vec cmij = (bi->get_mass() * bi->get_pos()
 			     + bj->get_mass() * bj->get_pos()) / mij;
 
 	    // Check the perturbations of all other particles on (i,j).
@@ -234,7 +234,7 @@ bool tree_is_unbound(sdyn* root, int debug) {
 	    if (abs(kij/pij - 1) < scaled_safety_factor) return FALSE;
 
 	    real aij = 0.5 * mij / eij;
-	    vector cmij = (bi->get_mass() * bi->get_pos()
+	    vec cmij = (bi->get_mass() * bi->get_pos()
 			     + bj->get_mass() * bj->get_pos()) / mij;
 
 	    // Check the perturbations of all other particles on (i,j).
@@ -382,8 +382,8 @@ local void extend_orbits(sdyn * b1, sdyn * b2, sdyn * b3, real& apo)
     
     // Center of mass position and velocity of the inner binary:
     
-    vector cmr = (m1 * b1->get_pos() + m2 * b2->get_pos()) / m12;
-    vector cmv = (m1 * b1->get_vel() + m2 * b2->get_vel()) / m12;
+    vec cmr = (m1 * b1->get_pos() + m2 * b2->get_pos()) / m12;
+    vec cmv = (m1 * b1->get_vel() + m2 * b2->get_vel()) / m12;
     
     outer.set_rel_pos(b3->get_pos() - cmr);
     outer.set_rel_vel(b3->get_vel() - cmv);
@@ -483,8 +483,8 @@ local int escape(sdyn * bi, sdyn * bj, sdyn * bk, real ejk,
 
     // Center of mass position and velocity of j-k "binary":
 
-    vector cmr = (mj * bj->get_pos() + mk * bk->get_pos()) / mjk;
-    vector cmv = (mj * bj->get_vel() + mk * bk->get_vel()) / mjk;
+    vec cmr = (mj * bj->get_pos() + mk * bk->get_pos()) / mjk;
+    vec cmv = (mj * bj->get_vel() + mk * bk->get_vel()) / mjk;
 
     // Return immediately if the third particle is approaching the binary,
     // unless r_stop < 0 (meaning that the integration is to be terminated
@@ -492,8 +492,8 @@ local int escape(sdyn * bi, sdyn * bj, sdyn * bk, real ejk,
     // on the initial incoming orbit -- it is assumed that the initial
     // conditions take care of this.
 
-    vector dv = bi->get_vel() - cmv;
-    vector dr = bi->get_pos() - cmr;
+    vec dv = bi->get_vel() - cmv;
+    vec dr = bi->get_pos() - cmr;
 
     // PRL(abs(dr));
     // PRL(abs(dv));
@@ -673,8 +673,8 @@ local void determine_triple_parameters(sdyn * b, real& apo) {
     
     // Center of mass position and velocity of the inner binary:
     
-    vector cmr = (m1 * b1->get_pos() + m2 * b2->get_pos()) / m12;
-    vector cmv = (m1 * b1->get_vel() + m2 * b2->get_vel()) / m12;
+    vec cmr = (m1 * b1->get_pos() + m2 * b2->get_pos()) / m12;
+    vec cmv = (m1 * b1->get_vel() + m2 * b2->get_vel()) / m12;
     
     outer.set_rel_pos(b3->get_pos() - cmr);
     outer.set_rel_vel(b3->get_vel() - cmv);
@@ -753,7 +753,7 @@ local int extend_or_end_scatter4(sdyn * b) {
 
     int i=0;
     real phit=0;
-    vector dv;
+    vec dv;
     for_all_leaves(sdyn, b, bi) {
       for (bj = (sdyn*)bi->next_node(b); bj != NULL;
 	   bj = (sdyn*)bj->next_node(b)) {
@@ -883,7 +883,7 @@ local int extend_or_end_scatter3(sdyn * b) {
     real mu23 = m2 * m3 / (m2 + m3);
     real mu31 = m3 * m1 / (m3 + m1);
 
-    vector dv = b2->get_vel() - b1->get_vel();
+    vec dv = b2->get_vel() - b1->get_vel();
     real k12 = 0.5 * mu12 * dv * dv;
     real vr12 = dv * (b2->get_pos() - b1->get_pos());
 

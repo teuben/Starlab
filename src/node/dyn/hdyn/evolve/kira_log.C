@@ -514,7 +514,7 @@ void print_dstar_params(dyn* b)			// b is binary center of mass
 }
 
 bool print_dstar_stats(dyn* b, bool mass_function,    // b is binary
-		       vector center, bool verbose)   // center of mass
+		       vec center, bool verbose)   // center of mass
 {
     if (((hdyn*)b)->get_use_dstar()) {
 	dstar_stats(b, mass_function, center, verbose);
@@ -558,7 +558,7 @@ void print_statistics(hdyn* b,
 #endif
 }
 
-local int n_bound(hdyn* b, vector& cod_vel)
+local int n_bound(hdyn* b, vec& cod_vel)
 {
     int nb = 0;
     for_all_daughters(hdyn, b, bb)
@@ -567,7 +567,7 @@ local int n_bound(hdyn* b, vector& cod_vel)
     return nb;
 }
 
-local real m_bound(hdyn* b, vector& cod_vel)
+local real m_bound(hdyn* b, vec& cod_vel)
 {
     real mb = 0;
     for_all_daughters(hdyn, b, bb)
@@ -576,7 +576,7 @@ local real m_bound(hdyn* b, vector& cod_vel)
     return mb;
 }
 
-local void get_n_and_m_bound(hdyn* b, vector& cod_vel, int& nb, real& mb)
+local void get_n_and_m_bound(hdyn* b, vec& cod_vel, int& nb, real& mb)
 {
     nb = 0;
     mb = 0;
@@ -605,7 +605,7 @@ void log_output(hdyn * b,
 {
     // Standard log output (to stderr, note).
 
-    vector cod_pos, com_vel, cod_vel;
+    vec cod_pos, com_vel, cod_vel;
     compute_com(b, cod_pos, com_vel);
 
     cod_pos -= b->get_pos();		// CM quantities include the

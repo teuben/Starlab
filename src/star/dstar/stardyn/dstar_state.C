@@ -41,8 +41,8 @@ double_state make_state(dyn* b) {
 	dyn *bi = b->get_oldest_daughter();
 	dyn *bj = b->get_oldest_daughter()->get_binary_sister();
 	real M = bi->get_mass() + bj->get_mass();
-	vector dx = bj->get_pos() - bi->get_pos();
-	vector dv = bj->get_vel() - bi->get_vel();
+	vec dx = bj->get_pos() - bi->get_pos();
+	vec dv = bj->get_vel() - bi->get_vel();
 	real mu = (bi->get_mass() * bj->get_mass()) / M;
 	real E = mu*(0.5*dv*dv - M / abs(dx));
 

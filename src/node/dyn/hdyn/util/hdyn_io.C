@@ -355,8 +355,8 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
 	// *** Must coordinate with tdyn_io.C. ***
 
-	vector putpos = pos;
-	vector putvel = vel;
+	vec putpos = pos;
+	vec putvel = vel;
 
 	if (short_output > 1) {
 	    putpos = pred_pos;
@@ -488,7 +488,7 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
 	if (is_root()) {
 
-	    vector pos, vel;
+	    vec pos, vel;
 	    int which = get_std_center(this, pos, vel);
 	    put_real_vector(s, "  center_pos  =  ", pos);
 	    put_real_vector(s, "  center_vel  =  ", vel);
@@ -499,9 +499,9 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	    if (get_external_field() > 0) {
 		refine_cluster_mass2(this);
 		if (find_qmatch(get_dyn_story(), "bound_center_pos")) {
-		    vector bound_pos = getvq(get_dyn_story(),
+		    vec bound_pos = getvq(get_dyn_story(),
 					     "bound_center_pos");
-		    vector bound_vel = getvq(get_dyn_story(),
+		    vec bound_vel = getvq(get_dyn_story(),
 					     "bound_center_vel");
 		    put_real_vector(s, "  bound_center_pos  =  ", bound_pos);
 		    put_real_vector(s, "  bound_center_vel  =  ", bound_vel);

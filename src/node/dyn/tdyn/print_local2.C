@@ -49,14 +49,14 @@ local void print_binary_diagnostics(real t, tdyn *b, tdyn *bb, pdyn *curr)
 
     // Equivalent new code uses set_interpolated_pos():
 
-    vector interp_pos_time;
+    vec interp_pos_time;
     set_interpolated_pos(b, b->get_time(), interp_pos_time, bb);
     PRL(interp_pos_time);
-    vector interp_pos_t;
+    vec interp_pos_t;
     set_interpolated_pos(b, t, interp_pos_t, bb);
     PRL(interp_pos_t);
     if (n) {
-	vector interp_pos_ntime;
+	vec interp_pos_ntime;
 	set_interpolated_pos(b, n->get_time(), interp_pos_ntime, bb);
 	PRL(interp_pos_ntime);
     }

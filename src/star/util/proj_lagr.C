@@ -96,7 +96,7 @@ real compute_projected_luminosity_radii(dyn * b, int axis, bool Llagr,
     // Otherwise, use center of mass if known and up to date.
     // Otherwise, use the geometric center.
 
-    vector dc_pos = 0;
+    vec dc_pos = 0;
     bool try_com = false;
 
     if (find_qmatch(b->get_dyn_story(), "density_center_pos")) {
@@ -129,7 +129,7 @@ real compute_projected_luminosity_radii(dyn * b, int axis, bool Llagr,
 
     int i = 0;
     real lstar = 0;
-    vector pos = 0;
+    vec pos = 0;
     for_all_leaves(dyn, b, bi) {
 	if (bf == NULL || (*bf)(bi)) {
 	  if(Llagr) {

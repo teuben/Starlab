@@ -20,8 +20,8 @@
 
 local void mk_mrv(dyn* b, int i_flag, int id, 
 		          int m_flag, real mass, 
-                          int r_flag, vector pos, 
-                          int v_flag, vector vel) { 
+                          int r_flag, vec pos, 
+                          int v_flag, vec vel) { 
 
     b->set_index(id);
     b->set_mass(mass);
@@ -38,7 +38,7 @@ local dyn * initialize_dyn(istream &in, int n, int i_flag,
   if(n<=0)
     in >> n;
 
-  vector r, v;
+  vec r, v;
   real m, time;
   real m_tot = 0;
   int id=0;

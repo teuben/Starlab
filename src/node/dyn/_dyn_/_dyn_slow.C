@@ -64,9 +64,9 @@ void _dyn_::create_slow(int k)		// default = 1
     } else {
 
 	real m2 = get_binary_sister()->mass;
-	vector sep = pos * (1 + mass/m2);
+	vec sep = pos * (1 + mass/m2);
 	real r2 = sep*sep;
-	vector a2 = -m2*sep / (r2*sqrt(r2));
+	vec a2 = -m2*sep / (r2*sqrt(r2));
 
 	acc = a2 + (acc - a2) * k;
 	old_acc = acc;			// OK because we do this between steps
@@ -110,9 +110,9 @@ void _dyn_::delete_slow()
 	} else {
 
 	    real m2 = s->mass;
-	    vector sep = pos * (1 + mass/m2);
+	    vec sep = pos * (1 + mass/m2);
 	    real r2 = sep*sep;
-	    vector a2 = -m2*sep / (r2*sqrt(r2));
+	    vec a2 = -m2*sep / (r2*sqrt(r2));
 
 	    acc = a2 + (acc - a2) / k;
 	    old_acc = acc;		// OK because we do this between steps
@@ -167,9 +167,9 @@ void _dyn_::extend_slow(int k)		// no default
 	} else {
 
 	    real m2 = get_binary_sister()->mass;
-	    vector sep = pos * (1 + mass/m2);
+	    vec sep = pos * (1 + mass/m2);
 	    real r2 = sep*sep;
-	    vector a2 = -m2*sep / (r2*sqrt(r2));
+	    vec a2 = -m2*sep / (r2*sqrt(r2));
 
 	    acc = a2 + (acc - a2) * k_fac;
 	    old_acc = acc;		// OK because we do this between steps

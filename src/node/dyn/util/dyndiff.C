@@ -47,12 +47,12 @@ real  dyndiff(dyn * b1, dyn * b2, bool r_flag)
 	 bi1 != NULL;
          bi1 = bi1->get_younger_sister(), bi2 = bi2->get_younger_sister())
         {
-	vector  dr = bi1->get_pos() - bi2->get_pos();
+	vec  dr = bi1->get_pos() - bi2->get_pos();
 	sum_sq_diff += dr*dr;
 	
 	if (!r_flag)
 	    {
-	    vector  dv = bi1->get_vel() - bi2->get_vel();
+	    vec  dv = bi1->get_vel() - bi2->get_vel();
 	    sum_sq_diff += dv*dv;
 	    }
 	}

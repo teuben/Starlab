@@ -40,11 +40,11 @@ void  makesphere(dyn * root, int n,
 	sintheta = 1 - costheta*costheta;
 	if (sintheta > 0) sintheta = sqrt(sintheta);
 	phi = randinter(0.0, TWO_PI);
-        bi->set_pos(vector(radius * sintheta * cos(phi),
+        bi->set_pos(vec(radius * sintheta * cos(phi),
 			   radius * sintheta * sin(phi),
 			   radius * costheta));
 
-        bi->set_vel(vector(randinter(-1,1),
+        bi->set_vel(vec(randinter(-1,1),
 			   randinter(-1,1),
 			   randinter(-1,1)));
     }

@@ -48,12 +48,12 @@
 //	worldbundle *read_bundle(istream &s, int verbose)
 //	tdyn *find_event(worldline *w, tdyn *bn, real t)
 //	void print_event(worldline *w, tdyn *bn, real t)
-//	vector interpolate_pos(tdyn *p, real t, tdyn *bn)
-//	vector interpolate_pos(tdyn *p, real t, vector& pos, bool inc, tdyn *bn)
-//	void set_interpolated_pos(tdyn *p, real t, vector& pos, tdyn *bn)
+//	vec interpolate_pos(tdyn *p, real t, tdyn *bn)
+//	vec interpolate_pos(tdyn *p, real t, vec& pos, bool inc, tdyn *bn)
+//	void set_interpolated_pos(tdyn *p, real t, vec& pos, tdyn *bn)
 //      void set_interpolated_pos(tdyn *p, real t, pdyn *curr, tdyn *bn);
-//	void inc_interpolated_pos(tdyn *p, real t, vector& pos, tdyn *bn)
-//	vector get_pos(worldline *w, tdyn *b, tdyn *bn, real t)
+//	void inc_interpolated_pos(tdyn *p, real t, vec& pos, tdyn *bn)
+//	vec get_pos(worldline *w, tdyn *b, tdyn *bn, real t)
 //	pdyn *create_interpolated_tree(worldbundle *wb, real t)
 //
 //	real physical_mass_scale()
@@ -1045,7 +1045,7 @@ void print_event(worldline *w, tdyn *bn, real t)
 local inline bool check_and_initialize(tdyn *p,
 				       real tp,
 				       real t,
-				       vector& pos,
+				       vec& pos,
 				       bool inc,
 				       tdyn *bn)
 {
@@ -1114,7 +1114,7 @@ local inline bool check_and_initialize(tdyn *p,
 
 		p->set_vel(dti*(n->get_pos() - p->get_pos()));
 		p->set_acc(0);
-		p->set_jerk(vector(VERY_SMALL_NUMBER, 0, 0));
+		p->set_jerk(vec(VERY_SMALL_NUMBER, 0, 0));
 
 	    } else {
 
@@ -1157,7 +1157,7 @@ local inline bool check_and_initialize(tdyn *p,
 
 // Old version:
 
-vector interpolate_pos(tdyn *p, real t,
+vec interpolate_pos(tdyn *p, real t,
 		       tdyn *bn)		// default = NULL; specifies
 						// actual base node
 {
@@ -1235,7 +1235,7 @@ vector interpolate_pos(tdyn *p, real t,
 
 		p->set_vel(dti*(n->get_pos() - p->get_pos()));
 		p->set_acc(0);
-		p->set_jerk(vector(VERY_SMALL_NUMBER, 0, 0));
+		p->set_jerk(vec(VERY_SMALL_NUMBER, 0, 0));
 
 	    } else {
 
@@ -1262,7 +1262,7 @@ vector interpolate_pos(tdyn *p, real t,
 
 void interpolate_pos(tdyn *p,
 		     real t,
-		     vector& pos,
+		     vec& pos,
 		     bool inc,			// default = false
 		     tdyn *bn)			// default = NULL; specifies
 						// the actual base node
@@ -1291,7 +1291,7 @@ void interpolate_pos(tdyn *p,
 
 void set_interpolated_pos(tdyn *p,
 			  real t,
-			  vector& pos,
+			  vec& pos,
 			  tdyn *bn)		// default = NULL; specifies
 						// the actual base node
 {
@@ -1321,7 +1321,7 @@ void set_interpolated_pos(tdyn *p,
     // Interpolate and set the value of pos.
 
     real tp = p->get_time();
-    vector pos;
+    vec pos;
 
     if (check_and_initialize(p, tp, t, pos, false, bn)) {
 
@@ -1336,7 +1336,7 @@ void set_interpolated_pos(tdyn *p,
 
 void inc_interpolated_pos(tdyn *p,
 			  real t,
-			  vector& pos,
+			  vec& pos,
 			  tdyn *bn)		// default = NULL; specifies
 						// the actual base node
 {
@@ -1354,7 +1354,7 @@ void inc_interpolated_pos(tdyn *p,
     }
 }
 
-vector interpolate_vel(tdyn *p, real t,
+vec interpolate_vel(tdyn *p, real t,
 		       tdyn *bn)		// default = NULL; specifies
 						// actual base node
 {
@@ -1384,7 +1384,7 @@ vector interpolate_vel(tdyn *p, real t,
 // Older versions of interpolate_pos() and interpolate_vel() are
 // (for now) saved in old_interpolate.C
 
-local vector get_pos(worldline *w,
+local vec get_pos(worldline *w,
 		     tdyn *b, tdyn *bn,
 		     real t = VERY_LARGE_NUMBER)
 {
@@ -1396,7 +1396,7 @@ local vector get_pos(worldline *w,
 
     if (t == -VERY_LARGE_NUMBER) t = b->get_time();
 
-    vector pos;
+    vec pos;
     set_interpolated_pos(b, t, pos, bn);
 
     // The tree structure associated with the base node should extend

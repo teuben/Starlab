@@ -215,9 +215,9 @@ local int get_slowdown_factor(hdyn* bi, real P = 0)
     // Absolute pos, vel, and acc of the binary's top-level node:
 
     hdyn *top = bi->get_top_level_node();
-    vector tpos = top->get_pred_pos();
-    vector tvel = top->get_pred_vel();
-    vector tacc = top->get_acc();
+    vec tpos = top->get_pred_pos();
+    vec tvel = top->get_pred_vel();
+    vec tacc = top->get_acc();
 
     // Loop over perturbers.
 
@@ -246,7 +246,7 @@ local int get_slowdown_factor(hdyn* bi, real P = 0)
 	// calculation.  If bi and bj are in the same clump, use par
 	// and its binary sister in the calculation.
 
-	vector dpos = 0, dvel = 0, dacc = 0;
+	vec dpos = 0, dvel = 0, dacc = 0;
 
 	hdyn *jtop = bj->get_top_level_node();
 

@@ -75,9 +75,9 @@ main(int argc, char ** argv)
 	    if (!isspace(c)) {
  
 		n++;
-		bo->set_pos(vector(j*LENGTH_SCALE_FACTOR,
+		bo->set_pos(vec(j*LENGTH_SCALE_FACTOR,
 				   i*LENGTH_SCALE_FACTOR, 0));
-		bo->set_vel(v_rand*vector(randinter(-1,1),
+		bo->set_vel(v_rand*vec(randinter(-1,1),
 					  randinter(-1,1),
 					  randinter(-1,1)));
 

@@ -23,7 +23,7 @@ bool has_sstar(dyn * bi) {
   }
 }
 
-vector conv_v_star_to_dyn(vector& v, real rf, real tf) {
+vec conv_v_star_to_dyn(vec& v, real rf, real tf) {
 
 //              Internal velocity is km/s
 //              Internal size is solar raii
@@ -37,15 +37,15 @@ vector conv_v_star_to_dyn(vector& v, real rf, real tf) {
       return to_Rsun_Myr * to_dyn * v;
    }
 
-vector anomalous_velocity(dyn* b) {
+vec anomalous_velocity(dyn* b) {
     //cerr << "in anomalous_velocity..." << endl;
     //PRL(b->get_starbase()->get_anomal_velocity());
 
-     vector anomal_velocity = b->get_starbase()->get_anomal_velocity();
-     vector zero_vector=0;
+     vec anomal_velocity = b->get_starbase()->get_anomal_velocity();
+     vec zero_vector=0;
      b->get_starbase()->set_anomal_velocity(zero_vector);
 
-     vector new_velocity = conv_v_star_to_dyn(anomal_velocity,
+     vec new_velocity = conv_v_star_to_dyn(anomal_velocity,
                        b->get_starbase()->conv_r_star_to_dyn(1),
                        b->get_starbase()->conv_t_star_to_dyn(1));
 

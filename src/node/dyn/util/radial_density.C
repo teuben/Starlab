@@ -47,7 +47,7 @@ local int compare_radii(const void * pi, const void * pj)  // increasing radius
         return 0;
 }
 
-int get_radial_densities(dyn *b, vector cpos,
+int get_radial_densities(dyn *b, vec cpos,
 			 int n_zones, real r[], real rho[])
 {
     if (n_zones < 2) return 1;
@@ -154,7 +154,7 @@ main(int argc, char ** argv)
 	// Use the density center if known and up to date (preferred).
 	// Otherwise, use modified center of mass, if known and up to date.
 
-	vector cpos, cvel;
+	vec cpos, cvel;
 	get_std_center(b, cpos, cvel);
 
 	cpos -= b->get_pos();			// std_center quantities

@@ -186,10 +186,10 @@ static hdyn** previous_nodes = NULL;
 static int* nb_check_counter = NULL;
 static int* grape_chip = NULL;
 
-static vector * pxj = NULL;
-static vector * pvj = NULL;
-static vector * paj = NULL;
-static vector * pjj = NULL;
+static vec * pxj = NULL;
+static vec * pvj = NULL;
+static vec * paj = NULL;
+static vec * pjj = NULL;
 static real   * ptj = NULL;
 static real   * pmj = NULL;
 static int    * ppj = NULL;
@@ -214,10 +214,10 @@ local void initialize_node_lists()
         for (int i = 0; i < grape_n_max; i++)
             grape_chip[i] = -1;
 
-	pxj = new vector[grape_n_max];
-	pvj = new vector[grape_n_max];
-	paj = new vector[grape_n_max];
-	pjj = new vector[grape_n_max];
+	pxj = new vec[grape_n_max];
+	pvj = new vec[grape_n_max];
+	paj = new vec[grape_n_max];
+	pjj = new vec[grape_n_max];
 	ptj = new real[grape_n_max];
 	pmj = new real[grape_n_max];
 	ppj = new int[grape_n_max];
@@ -297,10 +297,10 @@ local void jpdma_nodes(int nnodes, hdyn * nodelist[], bool predicted,
 
 // More static data:
 
-static vector * px = NULL;
-static vector * pv = NULL;
-static vector * pa = NULL;
-static vector * pj = NULL;
+static vec * px = NULL;
+static vec * pv = NULL;
+static vec * pa = NULL;
+static vec * pj = NULL;
 static real   * ppot = NULL;
 static real   * peps2 = NULL;
 static real   * ph2 = NULL;
@@ -319,10 +319,10 @@ local void force_by_grape4(real time, int ni, hdyn * nodes[], int nj)
     npipe = h3npipe_();
 
     if (px == NULL) {
-	px = new vector[npipe];
-	pv = new vector[npipe];
-	pa = new vector[npipe];
-	pj = new vector[npipe];
+	px = new vec[npipe];
+	pv = new vec[npipe];
+	pa = new vec[npipe];
+	pj = new vec[npipe];
 	peps2 = new real[npipe];
 	ph2 = new real[npipe];
 	ppot = new real[npipe];
@@ -646,10 +646,10 @@ local int jpdma_all_leaves(hdyn *root,
 
 // Yet more static data:
 
-static vector * pxl = NULL;
-static vector * pvl = NULL;
-static vector * pal = NULL;
-static vector * pjl = NULL;
+static vec * pxl = NULL;
+static vec * pvl = NULL;
+static vec * pal = NULL;
+static vec * pjl = NULL;
 static real   * ppl = NULL;
 static real   * peps2l = NULL;
 static real   * ph2l = NULL;
@@ -667,10 +667,10 @@ local void force_by_grape4_on_leaves(real time, int ni, hdyn * nodes[], int nj)
     npipe = h3npipe_();
 
     if (pxl == NULL) {
-	pxl = new vector[npipe];
-	pvl = new vector[npipe];
-	pal = new vector[npipe];
-	pjl = new vector[npipe];
+	pxl = new vec[npipe];
+	pvl = new vec[npipe];
+	pal = new vec[npipe];
+	pjl = new vec[npipe];
 	peps2l = new real[npipe];
 	ph2l = new real[npipe];
 	ppl = new real[npipe];
@@ -819,14 +819,14 @@ void grape_calculate_energies(hdyn * b,
 	for_all_leaves(hdyn,b,bb) {
 	    real mi = bb->get_mass();
 	    epot += 0.5*mi*bb->get_pot();
-	    vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
+	    vec vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
 	    ekin += 0.5*mi*vel*vel;
 	}
     } else {
 	for_all_daughters(hdyn,b,bb) {
 	    real mi = bb->get_mass();		// replicated code again...
 	    epot += 0.5*mi*bb->get_pot();
-	    vector vel = bb->get_vel();
+	    vec vel = bb->get_vel();
 	    ekin += 0.5*mi*vel*vel;
 	}
     }
@@ -911,7 +911,7 @@ local bool get_neighbors_and_adjust_h2(int chip, hdyn * b)
 		// Now, get_pred_pos performs Just-In-Time prediction
 		// so the above case cannot occur (as of Dec 12, 1996)
 
-		vector diff = b->get_pred_pos() - bb->get_pred_pos();
+		vec diff = b->get_pred_pos() - bb->get_pred_pos();
 		real d2 = diff * diff;
 
 		real sum_of_radii = get_sum_of_radii(b, bb);
@@ -1608,7 +1608,7 @@ local bool count_neighbors_and_adjust_h2(int chip, hdyn *b)
 
 	if (DEBUG) {
 	    if (bb != b) {
-		vector diff = b->get_pred_pos() - bb->get_pred_pos();
+		vec diff = b->get_pred_pos() - bb->get_pred_pos();
 		real d2 = diff * diff;
 		if (d2 < d_min) {
 		    d_min = d2;

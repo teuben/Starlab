@@ -842,7 +842,7 @@ void get_sigma(sigma_input &init, MPI_Datatype inputtype,
   make_tree(b, !DYNAMICS, STABILITY, K_MAX, init.debug);
   cerr << "Initial configuration: " << endl;
   b->set_name("root");
-  vector center = b->get_pos();
+  vec center = b->get_pos();
   print_structure_recursive(b, 0., center, true, true, 4);
   out.hi = initialize_scatter_hist(b);
   delete b;

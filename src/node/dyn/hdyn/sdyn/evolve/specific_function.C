@@ -32,7 +32,7 @@ void print_scatter_specific_information(sdyn *b,
     cerr << "Found prefered final state: "
 	 << experiment.get_final_form() << endl;
     ppn(b, cerr);
-    vector center = b->get_pos();
+    vec center = b->get_pos();
     print_structure_recursive(b, 0., center, true, true, 4);
 
     MPI::COMM_WORLD.Send(&request_for_data, length, MPI::INT,
@@ -58,7 +58,7 @@ void print_scatter_specific_information(sdyn *b,
     cerr << "Found prefered final state: "
 	 << experiment.get_final_form() << endl;
     ppn(b, cerr);
-    vector center = b->get_pos();
+    vec center = b->get_pos();
     print_structure_recursive(b, 0., center, true, true, 4);
     
   }

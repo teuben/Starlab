@@ -65,7 +65,7 @@ bool get_physical_scales(dyn *b, real& mass, real& length, real& time)
 
 void add_power_law(dyn *b,
 		   real coeff, real exponent, real scale,
-		   vector center,		// default = (0, 0, 0)
+		   vec center,		// default = (0, 0, 0)
 		   bool n_flag,			// default = false
 		   bool verbose,		// default = false
 		   bool G_flag)			// default = false
@@ -168,7 +168,7 @@ main(int argc, char *argv[])
     char *comment;		// comment string
 
     real coeff = 1, scale = 1, exponent = 0;
-    vector center = 0;
+    vec center = 0;
 
     bool G_flag = false;
     bool n_flag = false;
@@ -197,7 +197,7 @@ main(int argc, char *argv[])
 			comment = poptarg;
 			break;
 
-	    case 'C':	center = vector(atof(poparr[0]),
+	    case 'C':	center = vec(atof(poparr[0]),
 					atof(poparr[1]),
 					atof(poparr[2]));
 			break;
@@ -235,7 +235,7 @@ main(int argc, char *argv[])
 	exponent = 1.2;
 
 	scale = 0.1;
-	center = vector(0,0,0);
+	center = vec(0,0,0);
     }
 
     add_power_law(b, coeff, exponent, scale, center, n_flag, true, G_flag);

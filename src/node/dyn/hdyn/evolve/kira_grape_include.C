@@ -160,7 +160,7 @@ int kira_calculate_top_level_acc_and_jerk(hdyn ** next_nodes,
     return n_top;
 }
 
-void kira_compute_densities(hdyn* b, vector& cod_pos, vector& cod_vel)
+void kira_compute_densities(hdyn* b, vec& cod_pos, vec& cod_vel)
 {
     // Density computation (currently limited to GRAPE systems).
     // Called only by log_output() in kira_log.C.
@@ -285,7 +285,7 @@ void kira_synchronize_tree(hdyn *b,
         for (int i = 0; i < n_next; i++) {
 	    hdyn *bi = next_nodes[i];
 	    real pot;
-	    vector acc, jerk;
+	    vec acc, jerk;
 	    get_external_acc(bi, bi->get_pred_pos(), bi->get_pred_vel(),
 			     pot, acc, jerk);
 	    bi->inc_pot(pot);

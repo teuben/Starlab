@@ -15,7 +15,7 @@ void dyn::null_pointers()
 }
 
 bool dyn::nn_stats(real energy_cutoff, real kT,
-		   vector center, bool verbose,
+		   vec center, bool verbose,
 		   bool long_binary_output,	// default = true
 		   int which)			// default = 0
 {
@@ -48,20 +48,20 @@ real dyn::get_radius()
     for (dyn* b = this; b != NULL; b = (dyn*) b->next_node(this))
 	if (b->get_oldest_daughter() == NULL) {
 	    
-	    vector dx = b->get_pos();
+	    vec dx = b->get_pos();
 	    real r2 = dx*dx;
 	    if (r2 > rmax2) rmax2 = r2;
 	}
     return sqrt(rmax2);
 }
 
-vector something_relative_to_root(dyn* bi,
+vec something_relative_to_root(dyn* bi,
 				  dyn_VMF_ptr get_something)
 {
 #ifdef DEBUG
     cerr << "something_relative_to_ancestor\n";
 #endif    
-    vector  d_something = 0.0;
+    vec  d_something = 0.0;
     for(dyn * b = bi;b->get_parent() != NULL; b = b->get_parent()){
 	if(b == NULL){
 	    cerr << "something_relative_to_root: Error, bj is not the "

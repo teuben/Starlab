@@ -22,7 +22,7 @@ void accumulate_potential_energy(dyn* bj, dyn*bi,
 	}
     else
 	if (bi != bj) {
-	    vector d_pos = bi->get_pos() - bj->get_pos();
+	    vec d_pos = bi->get_pos() - bj->get_pos();
 	    real mi = bi->get_mass();
 	    real mj = bj->get_mass();
 	    real r = sqrt(d_pos * d_pos);
@@ -45,8 +45,8 @@ void compute_energies(dyn* bj, dyn* bi, char& c)
 
     real   mi = bi->get_mass();
     real   mj = bmin->get_mass();
-    vector d_vel = bi->get_vel() - bmin->get_vel();
-    vector d_pos = bi->get_pos() - bmin->get_pos();
+    vec d_vel = bi->get_vel() - bmin->get_vel();
+    vec d_pos = bi->get_pos() - bmin->get_pos();
     real   r = sqrt(d_pos * d_pos);
     real   e0 = (0.5 * d_vel * d_vel - (mi + mj)/r);
 
@@ -58,7 +58,7 @@ void compute_energies(dyn* bj, dyn* bi, char& c)
 
 	if (bi == bmin1) {
 	    real e  = - mi*mj / r;
-	    vector R_vel = (mi*bi->get_vel()+mj*bmin->get_vel())/(mi+mj);
+	    vec R_vel = (mi*bi->get_vel()+mj*bmin->get_vel())/(mi+mj);
 	    real ekin = 0.5*(mi+mj)*R_vel*R_vel;
 
 	    if (epot + epot1 - 2*e + ekin < 0) c = bound_binary;
@@ -67,7 +67,7 @@ void compute_energies(dyn* bj, dyn* bi, char& c)
 	} else c = bound_single;
 
     } else {
-	vector vel = bi->get_vel();
+	vec vel = bi->get_vel();
 	real ekin = 0.5*bi->get_mass()*vel*vel;
 	
 	if (ekin + epot > 0.0) c = unbound_single;

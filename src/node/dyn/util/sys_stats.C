@@ -150,7 +150,7 @@ local void print_numbers_and_masses(dyn* b, bool& mass_spectrum)
 
 local void print_parameters_for_massive_black_holes(dyn *b,
 						    real kT,
-						    vector center,
+						    vec center,
 						    bool verbose)
 {
     int n_bh = 0;
@@ -176,9 +176,9 @@ local void print_parameters_for_massive_black_holes(dyn *b,
 
 
 
-local int which_zone(dyn* bi, vector& center_pos, int n_lagr, real* r_lagr)
+local int which_zone(dyn* bi, vec& center_pos, int n_lagr, real* r_lagr)
 {
-    vector dr = bi->get_pos() - center_pos;
+    vec dr = bi->get_pos() - center_pos;
     real dr2 = dr*dr;
 
     for (int j = 0; j < n_lagr; j++)
@@ -224,7 +224,7 @@ local void print_numbers_and_masses_by_radial_zone(dyn* b, int which)
 	// in case of error (shouldn't happen, as lagr_pos is written
 	// whenever r_lagr is).
 
-	vector center_pos = 0;
+	vec center_pos = 0;
 
 	if (find_qmatch(b->get_dyn_story(), "lagr_pos"))
 	    center_pos = getvq(b->get_dyn_story(), "lagr_pos");
@@ -343,7 +343,7 @@ local void print_anisotropy_by_radial_zone(dyn* b, int which)
 	// in case of error (shouldn't happen, as lagr_pos is written
 	// whenever r_lagr is).
 
-	vector center_pos = 0, center_vel = 0;
+	vec center_pos = 0, center_vel = 0;
 	if (find_qmatch(b->get_dyn_story(), "lagr_pos"))
 	    center_pos = getvq(b->get_dyn_story(), "lagr_pos");
 	else
@@ -378,8 +378,8 @@ local void print_anisotropy_by_radial_zone(dyn* b, int which)
 		real weight = bi->get_mass();
 		weight = 1;			// Heggie/Binney & Tremaine
 
-		vector dr = bi->get_pos() - center_pos;
-		vector dv = bi->get_vel() - center_vel;
+		vec dr = bi->get_pos() - center_pos;
+		vec dv = bi->get_vel() - center_vel;
 
 		real r2 = square(dr);
 		real v2 = square(dv);
@@ -451,7 +451,7 @@ local void print_anisotropy_by_radial_zone(dyn* b, int which)
 // 	real dpot = 0.0;
 // 	for_all_leaves(dyn, b, bj) {
 // 	    if (bj == bi) break;
-// 	    vector dx = something_relative_to_root(bi, &dyn::get_pos)
+// 	    vec dx = something_relative_to_root(bi, &dyn::get_pos)
 // 			  - something_relative_to_root(bj, &dyn::get_pos);
 // 	    dpot += bj->get_mass() / abs(dx);
 // 	}
@@ -466,7 +466,7 @@ local real top_level_kinetic_energy(dyn* b)
     // (Probably should compute energy relative to density center,
     //  or at least relative to the system center of mass...)
 
-    vector cmv = vector(0);
+    vec cmv = vec(0);
     real mass = 0;
 
     for_all_daughters(dyn, b, bb) {
@@ -503,7 +503,7 @@ local void print_energies(dyn* b,
     real external_pot = get_external_pot(b);
     e_total = total_int_energy + external_pot;
 
-    vector com_pos, com_vel;
+    vec com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
 
     com_vel -= b->get_vel();		// CM quantities include root node
@@ -557,7 +557,7 @@ local void print_energies(dyn* b,
 }
 
 local void search_for_binaries(dyn* b, real energy_cutoff, real kT,
-			       vector center, bool verbose,
+			       vec center, bool verbose,
 			       bool long_binary_output)
 {
     // Search for bound binary pairs among top-level nodes.
@@ -616,7 +616,7 @@ local void initialize_histograms()
 }
 
 local void bin_recursive(dyn* bi,
-			 vector center, real rcore, real rhalf,
+			 vec center, real rcore, real rhalf,
 			 real kT)
 {
     // Note: inner and outer multiple components are counted
@@ -780,7 +780,7 @@ local void print_binary_histograms()
 
 
 local void print_binaries(dyn* b, real kT,
-			  vector center, real rcore, real rhalf,
+			  vec center, real rcore, real rhalf,
 			  bool verbose,
 			  bool long_binary_output = true,
 			  void (*dstar_params)(dyn*) = NULL)
@@ -930,7 +930,7 @@ local void print_binaries(dyn* b, real kT,
 }
 
 local void print_core_parameters(dyn* b, bool allow_n_sq_ops,
-				 vector& density_center, real& rcore)
+				 vec& density_center, real& rcore)
 {
     real mcore;
     int ncore;
@@ -1101,7 +1101,7 @@ local real print_lagrangian_radii(dyn* b, int which_lagr,
 	// Assume that lagr_pos has been properly set if n_lagr is set
 	// and lagr_time is current.
 
-	vector lagr_pos = getvq(b->get_dyn_story(), "lagr_pos");
+	vec lagr_pos = getvq(b->get_dyn_story(), "lagr_pos");
 
 	if (verbose) {
 	    cerr << endl << "  Lagrangian radii relative to ("
@@ -1213,7 +1213,7 @@ local void print_dominated_lagrangian_radii(dyn* b, dyn* b_dom)
 
     for_all_daughters(dyn, b, bi)
 	if (bi != b_dom) {
-	    vector dr = bi->get_pos() - b_dom->get_pos();
+	    vec dr = bi->get_pos() - b_dom->get_pos();
 
 	    // "Radius" is 2-D (x-y) only.
 
@@ -1264,8 +1264,8 @@ local void print_dominated_velocity_dispersions(dyn* b, dyn* b_dom)
 
     for_all_daughters(dyn, b, bi)
 	if (bi != b_dom) {
-	    vector dr = bi->get_pos() - b_dom->get_pos();
-	    vector dv = bi->get_vel() - b_dom->get_vel();
+	    vec dr = bi->get_pos() - b_dom->get_pos();
+	    vec dv = bi->get_vel() - b_dom->get_vel();
 
 	    total_mass += bi->get_mass();
 	    v2z += bi->get_mass() * dv[2]*dv[2];
@@ -1381,7 +1381,7 @@ void sys_stats(dyn* b,
 					real&, bool),
 	       void (*dstar_params)(dyn*),		// default = NULL
 	       bool (*print_dstar_stats)(dyn*, bool,	// default = NULL
-					 vector, bool))
+					 vec, bool))
 
 // The last three arguments are a C-ish way of allowing this dyn function
 // to output additional dyn/dstar information when called from kira and
@@ -1409,7 +1409,7 @@ void sys_stats(dyn* b,
     bool mass_spectrum = false;
     print_numbers_and_masses(b, mass_spectrum);
 
-    vector com_pos, com_vel;
+    vec com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
 
     cerr << "    center of mass position = " << com_pos << endl
@@ -1484,7 +1484,7 @@ void sys_stats(dyn* b,
     v_max = sqrt(v_max);
     PRI(4); PRC(vrms); PRC(kT); PRC(r_max); PRL(v_max);
 
-    vector center = com_pos;
+    vec center = com_pos;
     real rcore = 0, rhalf = 0;
 
     // "Dominant" mass means > 50% of the total mass of the system.

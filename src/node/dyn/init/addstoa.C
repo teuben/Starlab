@@ -34,12 +34,12 @@ local void  addstoa(dyn * b, int m_flag)
 	if(m_flag)bi->set_mass(mass);
     }
     for_all_daughters(dyn, b, bi) {
-	vector p;
+	vec p;
 	cin >> p;
 	bi->set_pos(p);
     }
     for_all_daughters(dyn, b, bi) {
-	vector v;
+	vec v;
 	cin >> v;
 	bi->set_vel(v);
     }

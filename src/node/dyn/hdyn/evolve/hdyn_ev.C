@@ -208,8 +208,8 @@ void update_binary_sister(hdyn * bi)
 	cerr << "update_binary_sister():  setting jerk = 0 for "
 	     << bi->format_label() << " at time " << bi->get_system_time()
 	     << endl;
-	bi->set_jerk(vector(0,0,0));
-	sister->set_jerk(vector(0,0,0));
+	bi->set_jerk(vec(0,0,0));
+	sister->set_jerk(vec(0,0,0));
     }
 
     sister->set_pot(-factor * bi->get_pot());
@@ -429,10 +429,10 @@ real kepler_step(hdyn *b,
 static int mycount = 0;
 
 local inline real new_timestep(hdyn *b,			// this node
-			       vector& at3,		// 3rd order term
-			       vector& bt2,		// 2nd order term
-			       vector& jerk,		// 1st order term
-			       vector& acc,		// 0th order term
+			       vec& at3,		// 3rd order term
+			       vec& bt2,		// 2nd order term
+			       vec& jerk,		// 1st order term
+			       vec& acc,		// 0th order term
 			       real dt,			// current step
 			       real time,		// present time
 			       real correction_factor,
@@ -695,7 +695,7 @@ local inline real new_timestep(hdyn *b,			// this node
 // update:  Update the time and the timestep.
 //-----------------------------------------------------------------------------
 
-void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
+void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
 					       // avoid recomputation
 {
     // Note from Steve (4/03):  We now draw a distinction betwen dt, the
@@ -714,8 +714,8 @@ void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
 	slow->inc_tau(dt);
     }
 
-    // vector at3 = 2 * (old_acc - acc) + dt * (old_jerk + jerk);
-    // vector bt2 = -3 * (old_acc - acc) - dt * (2 * old_jerk + jerk);
+    // vec at3 = 2 * (old_acc - acc) + dt * (old_jerk + jerk);
+    // vec bt2 = -3 * (old_acc - acc) - dt * (2 * old_jerk + jerk);
 
     // Reminder:	at3  =  a''' dt^3 / 6		(a' = j)
     //			bt2  =  a''  dt^2 / 2
@@ -967,25 +967,25 @@ void initialize_system_phase1(hdyn * b,  xreal t)
 //
 //-----------------------------------------------------------------------------
 
-local inline void get_derivs(vector& acc, vector& jerk,
-			     vector& old_acc, vector& old_jerk,
-			     real dt, vector& bt2, vector& at3)
+local inline void get_derivs(vec& acc, vec& jerk,
+			     vec& old_acc, vec& old_jerk,
+			     real dt, vec& bt2, vec& at3)
 {
     bt2 = -3 * (old_acc - acc) - dt * (2 * old_jerk + jerk);
     at3 =  2 * (old_acc - acc) + dt * (old_jerk + jerk);
 }
 
-local inline void update_derivs_from_perturbed(vector& acc_p,
-					       vector& jerk_p,
-					       vector& old_acc_p,
-					       vector& old_jerk_p,
+local inline void update_derivs_from_perturbed(vec& acc_p,
+					       vec& jerk_p,
+					       vec& old_acc_p,
+					       vec& old_jerk_p,
 					       real kdt,
 					       real ki2,	// not used
 					       real ki3,	// not used
-					       vector& acc,
-					       vector& jerk,
-					       vector& bt2,
-					       vector& at3,
+					       vec& acc,
+					       vec& jerk,
+					       vec& bt2,
+					       vec& at3,
 					       bool print = false)
 {
     // Return here to neglect all perturbed terms and compute slow binary
@@ -993,7 +993,7 @@ local inline void update_derivs_from_perturbed(vector& acc_p,
 
     // if (CM_ONLY) return;
 
-    vector bt2_p, at3_p;
+    vec bt2_p, at3_p;
     get_derivs(acc_p, jerk_p, old_acc_p, old_jerk_p,
 	       kdt, bt2_p, at3_p);
 
@@ -1017,8 +1017,8 @@ local inline void update_derivs_from_perturbed(vector& acc_p,
 }
 
 local inline void correct_slow(slow_binary *s, real dt,
-			       vector &acc, vector &jerk,
-			       vector &bt2, vector &at3,
+			       vec &acc, vec &jerk,
+			       vec &bt2, vec &at3,
 			       int id)
 {
 
@@ -1039,8 +1039,8 @@ local inline void correct_slow(slow_binary *s, real dt,
     // For now, simply work with copies and copy back changes as
     // necessary.
 
-    vector acc_p = s->get_acc_p();
-    vector jerk_p = s->get_jerk_p();
+    vec acc_p = s->get_acc_p();
+    vec jerk_p = s->get_jerk_p();
 
     // Scale acc_p and jerk_p first because the old_ versions are
     // already scaled.
@@ -1064,8 +1064,8 @@ local inline void correct_slow(slow_binary *s, real dt,
 
 #endif
 
-    vector old_acc_p = s->get_old_acc_p();
-    vector old_jerk_p = s->get_old_jerk_p();
+    vec old_acc_p = s->get_old_acc_p();
+    vec old_jerk_p = s->get_old_jerk_p();
 
     update_derivs_from_perturbed(acc_p, jerk_p, old_acc_p, old_jerk_p,
 				 dt, ki2, ki3,
@@ -1207,7 +1207,7 @@ bool hdyn::correct_and_update()
 	    // perturber interaction twice...
 
 
-	    vector a_2b, j_2b;
+	    vec a_2b, j_2b;
 	    real p_2b;
 	    hdyn *p_nn_sister;
 	    real d_min_sister = VERY_LARGE_NUMBER;
@@ -1228,9 +1228,9 @@ bool hdyn::correct_and_update()
 	    PRL(acc);
 	    PRL(a_2b);
 
-	    vector dx = pred_pos - get_younger_sister()->pred_pos;
+	    vec dx = pred_pos - get_younger_sister()->pred_pos;
 	    real r2 = dx*dx;
-	    vector a = -get_younger_sister()->mass * dx / pow(r2, 1.5);
+	    vec a = -get_younger_sister()->mass * dx / pow(r2, 1.5);
 
 	    PRL(a);
 
@@ -1244,7 +1244,7 @@ bool hdyn::correct_and_update()
 	}
     }
 
-    vector bt2, at3;
+    vec bt2, at3;
     get_derivs(acc, jerk, old_acc, old_jerk, dt, bt2, at3);
 
     // Reminder:	bt2  =  a''  dt^2 / 2		(a' = j)
@@ -1328,8 +1328,8 @@ bool hdyn::correct_and_update()
 		    real ki2 = ki*ki;
 		    real ki3 = ki2*ki;
 
-		    vector acc_p = s->get_acc_p();     // as above, better to
-		    vector jerk_p = s->get_jerk_p();   // have _dyn_ as friend?
+		    vec acc_p = s->get_acc_p();     // as above, better to
+		    vec jerk_p = s->get_jerk_p();   // have _dyn_ as friend?
 
 		    // Scale acc_p and jerk_p (see comment above).
 
@@ -1345,11 +1345,11 @@ bool hdyn::correct_and_update()
 
 			// Apply the correction if the old_ quantities are set.
 
-			vector old_acc_p = s->get_old_acc_p();
+			vec old_acc_p = s->get_old_acc_p();
 
 			if (square(old_acc_p) > 0) {
 
-			    vector old_jerk_p = s->get_old_jerk_p();
+			    vec old_jerk_p = s->get_old_jerk_p();
 			    real kdt = dt; // kap*dt;
 
 			    update_derivs_from_perturbed(acc_p, jerk_p,
@@ -1409,8 +1409,8 @@ bool hdyn::correct_and_update()
 	correct_slow(sb->slow, dt, acc, jerk, bt2, at3, 2);
 
 
-    vector new_pos = pred_pos + (0.05 * at3 + ONE12 * bt2) * dt * dt;
-    vector new_vel = pred_vel + (0.25 * at3 + ONE3 * bt2) * dt;
+    vec new_pos = pred_pos + (0.05 * at3 + ONE12 * bt2) * dt * dt;
+    vec new_vel = pred_vel + (0.25 * at3 + ONE3 * bt2) * dt;
 
 
 //    if (name_is("11") && system_time > 1.48 && system_time < 1.484377) {
@@ -1683,11 +1683,11 @@ bool hdyn::correct_and_update()
 //-----------------------------------------------------------------------------
 
 inline void accumulate_acc_and_jerk(hdyn* b,
-				    vector& d_pos,
-				    vector& d_vel,
+				    vec& d_pos,
+				    vec& d_vel,
 				    real eps2,
-				    vector& a,
-				    vector& j,
+				    vec& a,
+				    vec& j,
 				    real& p,
 				    real& distance_squared)
 {
@@ -1746,8 +1746,8 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 
 	if (bi != this) {
 
-	    vector d_pos = bi->get_pred_pos() - pred_pos;
-	    vector d_vel = bi->get_pred_vel() - pred_vel;
+	    vec d_pos = bi->get_pred_pos() - pred_pos;
+	    vec d_vel = bi->get_pred_vel() - pred_vel;
 	    accumulate_acc_and_jerk(bi,				// (inlined)
 				    d_pos, d_vel,
 				    eps2, acc, jerk, pot, distance_squared);
@@ -1788,8 +1788,8 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
     return n_top;
 }
 
-void hdyn::perturber_acc_and_jerk_on_leaf(vector &a,
-					  vector &j,
+void hdyn::perturber_acc_and_jerk_on_leaf(vec &a,
+					  vec &j,
 					  real &p,
 					  real &p_d_nn_sq,
 					  hdyn *&p_nn,
@@ -1838,8 +1838,8 @@ void hdyn::perturber_acc_and_jerk_on_leaf(vector &a,
 
     // Determine absolute position and velocity of 'this', using explicit code.
 
-    vector d_pos = -pred_pos;
-    vector d_vel = -pred_vel;
+    vec d_pos = -pred_pos;
+    vec d_vel = -pred_vel;
 
     hdyn* par = get_parent();
     if (par) {
@@ -1852,15 +1852,15 @@ void hdyn::perturber_acc_and_jerk_on_leaf(vector &a,
  	}
     }
 
-    // vector d_pos = -hdyn_something_relative_to_root(this,
+    // vec d_pos = -hdyn_something_relative_to_root(this,
     // 						    &hdyn::get_pred_pos);
-    // vector d_vel = -hdyn_something_relative_to_root(this,
+    // vec d_vel = -hdyn_something_relative_to_root(this,
     // 						    &hdyn::get_pred_vel);
 
     // Loop over the perturber list.
 
-    vector d_pos_p;
-    vector d_vel_p;
+    vec d_pos_p;
+    vec d_vel_p;
 
     bool reset = false;
 
@@ -1978,10 +1978,10 @@ void hdyn::perturber_acc_and_jerk_on_leaf(vector &a,
 
 void hdyn::tree_walk_for_partial_acc_and_jerk_on_leaf(hdyn *b,
 						      hdyn *mask,
-						      vector& offset_pos,
-						      vector& offset_vel,
-						      vector& a,
-						      vector& j,
+						      vec& offset_pos,
+						      vec& offset_vel,
+						      vec& a,
+						      vec& j,
 						      real& p,
 						      real& p_d_nn_sq,
 						      hdyn * &p_nn,
@@ -2045,8 +2045,8 @@ void hdyn::tree_walk_for_partial_acc_and_jerk_on_leaf(hdyn *b,
 
 	for_all_daughters(hdyn, b, d) {		       // recursive loop
 
-	    vector ppos = offset_pos + d->get_pred_pos();
-	    vector pvel = offset_vel + d->get_pred_vel();
+	    vec ppos = offset_pos + d->get_pred_pos();
+	    vec pvel = offset_vel + d->get_pred_vel();
 
 	    tree_walk_for_partial_acc_and_jerk_on_leaf(d, mask,
 						       ppos, pvel,
@@ -2072,8 +2072,8 @@ void hdyn::tree_walk_for_partial_acc_and_jerk_on_leaf(hdyn *b,
 void hdyn::calculate_partial_acc_and_jerk_on_leaf(hdyn * top,
 						  hdyn * common,
 						  hdyn * mask,
-						  vector& a,
-						  vector& j,
+						  vec& a,
+						  vec& j,
 						  real & p,
 						  real & p_d_nn_sq,
 						  hdyn * &p_nn,
@@ -2112,8 +2112,8 @@ void hdyn::calculate_partial_acc_and_jerk_on_leaf(hdyn * top,
 
     // Determine absolute position and velocity of "this":
 
-    vector d_pos = 0;
-    vector d_vel = 0;
+    vec d_pos = 0;
+    vec d_vel = 0;
 
     hdyn *b;
     for (b = this; b != common; b = b->get_parent()) {
@@ -2146,8 +2146,8 @@ void hdyn::calculate_partial_acc_and_jerk_on_leaf(hdyn * top,
 void hdyn::calculate_partial_acc_and_jerk(hdyn * top,
 					  hdyn * common,
 					  hdyn * mask,
-					  vector& a,
-					  vector& j,
+					  vec& a,
+					  vec& j,
 					  real & p,
 					  real & p_d_nn_sq,
 					  hdyn * &p_nn,
@@ -2199,8 +2199,8 @@ void hdyn::calculate_partial_acc_and_jerk(hdyn * top,
 					       pnode, step_node);
     } else {
 
-	vector a_daughter, a_save;
-	vector j_daughter;
+	vec a_daughter, a_save;
+	vec j_daughter;
 	real p_daughter;
 	real m_daughter;
 
@@ -2299,9 +2299,9 @@ void hdyn::calculate_partial_acc_and_jerk(hdyn * top,
 // check_add_perturber:  check if p is a perturber of 'this' and add it
 //			 to the perturber list if necessary.
 
-void hdyn::check_add_perturber(hdyn* p, vector& this_pos)
+void hdyn::check_add_perturber(hdyn* p, vec& this_pos)
 {
-    vector ppos = hdyn_something_relative_to_root(p, &hdyn::get_pred_pos);
+    vec ppos = hdyn_something_relative_to_root(p, &hdyn::get_pred_pos);
 
 //     bool print = get_top_level_node()->n_leaves() >= 4;
 //     if (print) {
@@ -2373,7 +2373,7 @@ void hdyn::create_low_level_perturber_list(hdyn* pnode)
     perturbation_radius_factor
 	= define_perturbation_radius_factor(this, gamma23);
 
-    vector this_pos = hdyn_something_relative_to_root(this,
+    vec this_pos = hdyn_something_relative_to_root(this,
 						      &hdyn::get_pred_pos);
     // First add sisters, aunts, etc. up to pnode...
 
@@ -2528,8 +2528,8 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     sister->set_nn(NULL);
     sister->set_d_nn_sq(VERY_LARGE_NUMBER);
 
-    vector apert1, jpert1;
-    vector apert2, jpert2;
+    vec apert1, jpert1;
+    vec apert2, jpert2;
     real p_dummy;
 
     if (np != 0) {
@@ -2565,12 +2565,12 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
     // Relative acceleration and jerk due to other (sister) component:
 
-    vector a_2b, j_2b;
+    vec a_2b, j_2b;
     real p_2b;
     hdyn *p_nn_sister;
     real d_min_sister = VERY_LARGE_NUMBER;
 
-    vector d_pos, d_vel;
+    vec d_pos, d_vel;
 
     if (!oldest_daughter && !sister->oldest_daughter) {
 
@@ -2653,9 +2653,9 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	PRL(a_2b);
 
 	real m2 = get_binary_sister()->mass;
-	vector sep = pred_pos * (1 + mass/m2);
+	vec sep = pred_pos * (1 + mass/m2);
 	real r2 = sep*sep;
-	vector a2 = -m2*sep / (r2*sqrt(r2));
+	vec a2 = -m2*sep / (r2*sqrt(r2));
 	PRL(a2);
 
 	PRL(pscale * (apert1 - apert2) * get_kappa());
@@ -3122,7 +3122,7 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	// First, subtract out the center-of-mass contribution due to perturbers
 	// (note that, at this point, the perturber list contains only CMs):
 	
-	vector a_cm, a_p, j_cm, j_p;
+	vec a_cm, a_p, j_cm, j_p;
 	real p_p;
 	calculate_partial_acc_and_jerk(this, this, this,
 				       a_cm, j_cm, p_p, d_nn_sq, nn,
@@ -3369,9 +3369,9 @@ void hdyn::calculate_acc_and_jerk(bool exact)
 
 local inline void apply_correction(hdyn * bj, hdyn * bi)
 {
-    vector a_c = 0, j_c = 0;
+    vec a_c = 0, j_c = 0;
     real p_c = 0;
-    vector a_p = 0, j_p = 0;
+    vec a_p = 0, j_p = 0;
     real p_p = 0;
     real dum_d_sq = VERY_LARGE_NUMBER;
     hdyn *dum_nn = NULL;
@@ -3938,7 +3938,7 @@ void hdyn::integrate_node(bool integrate_unperturbed,	// default = true
 
 	if (tidal_type && is_top_level_node()) {
 	    real dpot;
-	    vector dacc, djerk;
+	    vec dacc, djerk;
 	    get_external_acc(this, pred_pos, pred_vel,
 			     dpot, dacc, djerk);
 	    inc_pot(dpot);

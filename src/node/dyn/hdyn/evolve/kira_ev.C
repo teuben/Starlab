@@ -319,7 +319,7 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 		hdyn *bb = next_nodes[i];
 
 		real pot;
-		vector acc, jerk;
+		vec acc, jerk;
 		get_external_acc(bb, bb->get_pred_pos(), bb->get_pred_vel(),
 				 pot, acc, jerk);
 		bb->inc_pot(pot);

@@ -232,8 +232,8 @@ local real period_ratio(sdyn3* a, sdyn3* b, sdyn3* c, bool debug = false)
     real mc = c->get_mass();
 
     real mab = ma + mb;
-    vector rab = b->get_pos() - a->get_pos();
-    vector vab = b->get_vel() - a->get_vel();
+    vec rab = b->get_pos() - a->get_pos();
+    vec vab = b->get_vel() - a->get_vel();
 
     real dab = abs(rab);
     real eab = 0.5*square(vab) - mab/dab;
@@ -250,12 +250,12 @@ local real period_ratio(sdyn3* a, sdyn3* b, sdyn3* c, bool debug = false)
 
     // Determine the position and velocity of the CM of a and b.
 
-    vector cmpos = (ma*a->get_pos() + mb*b->get_pos()) / mab;
-    vector cmvel = (ma*a->get_vel() + mb*b->get_vel()) / mab;
+    vec cmpos = (ma*a->get_pos() + mb*b->get_pos()) / mab;
+    vec cmvel = (ma*a->get_vel() + mb*b->get_vel()) / mab;
 
     real mabc = mab + mc;
-    vector rc = c->get_pos() - cmpos;
-    vector vc = c->get_vel() - cmvel;
+    vec rc = c->get_pos() - cmpos;
+    vec vc = c->get_vel() - cmvel;
 
     // EXTRA CONDITION: require that c not be a dominant perturber of (a,b).
 

@@ -61,7 +61,7 @@ void scale_mass(dyn* b, real mscale)
 }
 
 void scale_pos(dyn* b, real rscale,
-	       vector com_pos)			// default = 0
+	       vec com_pos)			// default = 0
 {
     b->set_pos(com_pos + rscale*(b->get_pos()-com_pos));
 
@@ -71,7 +71,7 @@ void scale_pos(dyn* b, real rscale,
 }
 
 void scale_vel(dyn* b, real vscale,
-	       vector com_vel)			// default = 0
+	       vec com_vel)			// default = 0
 {
     b->set_vel(com_vel + vscale*(b->get_vel()-com_vel));
 
@@ -119,7 +119,7 @@ void get_top_level_energies(dyn *b, real eps2,
 void scale_virial(dyn *b, real q,
 		  real potential_energy,		// internal
 		  real& kinetic_energy,			// internal
-		  vector com_vel)			// default = 0
+		  vec com_vel)			// default = 0
 {
     // Set the virial ratio by scaling the velocities.
     // Also rescale the kinetic energy.
@@ -133,8 +133,8 @@ void scale_virial(dyn *b, real q,
 
 real scale_energy(dyn * b,
 		  real e, real& energy,			// internal
-		  vector com_pos,			// default = 0
-		  vector com_vel)			// default = 0
+		  vec com_pos,			// default = 0
+		  vec com_vel)			// default = 0
 {
     // Set the energy by scaling positions and velocities, keeping
     // the virial ratio fixed.  Note that eps = 0 is implicit.
@@ -286,7 +286,7 @@ void scale(dyn *b, real eps,
     // The relevant kinetic energy for scaling should be in the center
     // of mass frame.  Compute the CM velocity here and correct.
 
-    vector com_pos, com_vel;
+    vec com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
 
     com_vel -= b->get_vel();		// com includes root node; energies

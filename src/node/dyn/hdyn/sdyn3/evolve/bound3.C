@@ -363,8 +363,8 @@ main(int argc, char **argv)
     // Default from Simo:
 
     bo->set_mass(1);
-    bo->set_pos(vector(-0.97000436, 0.24308753, 0));
-    bo->set_vel(-0.5*vector(0.93240737, 0.86473146, 0));
+    bo->set_pos(vec(-0.97000436, 0.24308753, 0));
+    bo->set_vel(-0.5*vec(0.93240737, 0.86473146, 0));
 
     for (int i = 1; i < 3; i++) {
         by = new sdyn3();

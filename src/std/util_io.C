@@ -109,14 +109,14 @@ const char *getequals(const char *input_line, char *keyword)
     return cp;
 }
 
-void set_vector_from_input_line(vector & v, char * input_line)
+void set_vector_from_input_line(vec & v, char * input_line)
 {
     char *eq = strchr(input_line, '=');
     if(eq)
 	set_vector_from_string( v, eq+1 );
 }
 
-void set_vector_from_string(vector & v, char *val)
+void set_vector_from_string(vec & v, char *val)
 {
     real component[3];
     char *cp, *ep;
@@ -127,7 +127,7 @@ void set_vector_from_string(vector & v, char *val)
 	cerr << "Expected three reals, got: " << val << endl;
 	exit(1);
     }
-    v = vector(component[0],component[1],component[2]);
+    v = vec(component[0],component[1],component[2]);
 }
     
 
@@ -287,7 +287,7 @@ void put_real_number(ostream & s, char * label, real x)
 	s.precision(old_precision);
 }
 
-void put_real_vector(ostream & s, char * label, vector v)
+void put_real_vector(ostream & s, char * label, vec v)
 {
     int old_precision = set_starlab_precision(s);
 

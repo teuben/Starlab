@@ -45,7 +45,7 @@ local void  addplummer(dyn * b, real mfrac, real rfrac)
 	theta = acos(randinter(-1.0, 1.0));
 	phi = randinter(0.0, TWO_PI);
 
-        bi->set_pos(vector(radius * sin( theta ) * cos( phi ),
+        bi->set_pos(vec(radius * sin( theta ) * cos( phi ),
 			   radius * sin( theta ) * sin( phi ),
 			   radius * cos( theta )));
 
@@ -61,7 +61,7 @@ local void  addplummer(dyn * b, real mfrac, real rfrac)
 	theta = acos(randinter(-1.0, 1.0));
 	phi = randinter(0.0, TWO_PI);
 
-        bi->set_vel(vector(velocity * sin( theta ) * cos( phi ),
+        bi->set_vel(vec(velocity * sin( theta ) * cos( phi ),
 			   velocity * sin( theta ) * sin( phi ),
 			   velocity * cos( theta )));
     }

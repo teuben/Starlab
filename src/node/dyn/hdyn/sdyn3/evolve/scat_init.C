@@ -21,24 +21,24 @@ void set_orientation(kepler &k, phase3 &p)
 
     // Construct the normal vector:
 
-    vector n = vector(sin_theta*cos(p.phi), sin_theta*sin(p.phi), mu);
+    vec n = vec(sin_theta*cos(p.phi), sin_theta*sin(p.phi), mu);
 
     // Construct unit vectors a and b perpendicular to n:
 
-    vector temp = vector(1, 0, 0);
-    if (abs(n[0]) > .5) temp = vector(0, 1, 0);	// temp is not parallel to n
+    vec temp = vec(1, 0, 0);
+    if (abs(n[0]) > .5) temp = vec(0, 1, 0);	// temp is not parallel to n
     if (n[2] < 0) temp = -temp;
 
-    vector b = n ^ temp;
+    vec b = n ^ temp;
     b /= abs(b);
-    vector a = b ^ n;
+    vec a = b ^ n;
     if (n[2] < 0) a = -a;	// Force (a, b) to be (x, y) for n = +/-z
     
     // Construct *random* unit vectors l and t perpendicular to each
     // other and to n (psi = 0 ==> periastron along a):
 
-    vector l = cos(p.psi)*a + sin(p.psi)*b;
-    vector t = n ^ l;
+    vec l = cos(p.psi)*a + sin(p.psi)*b;
+    vec t = n ^ l;
 
     k.set_orientation(l, t, n);
     k.initialize_from_shape_and_phase();

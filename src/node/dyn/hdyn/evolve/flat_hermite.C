@@ -30,10 +30,10 @@ void hdyn::flat_set_first_timestep(real eta_for_firststep, real max_step_size)
     timestep = newstep;
 }
 
-real flat_new_timestep(vector & at3,	// third order term
-		       vector & bt2,	// 2nd order term
-		       vector & jerk,	// 1st order term
-		       vector & acc,	// 0th order term
+real flat_new_timestep(vec & at3,	// third order term
+		       vec & bt2,	// 2nd order term
+		       vec & jerk,	// 1st order term
+		       vec & acc,	// 0th order term
 		       real timestep,	// old timestep
 		       real time,	// present time
 		       real eta,	// accuracy parameter
@@ -60,8 +60,8 @@ real flat_new_timestep(vector & at3,	// third order term
 
 void hdyn::flat_update(const real eta, const real dtmax)
 {
-    vector at3 = 2 * (old_acc - acc) + timestep * (old_jerk + jerk);
-    vector bt2 = -3 * (old_acc - acc) - timestep * (2 * old_jerk + jerk);
+    vec at3 = 2 * (old_acc - acc) + timestep * (old_jerk + jerk);
+    vec bt2 = -3 * (old_acc - acc) - timestep * (2 * old_jerk + jerk);
     time = time + timestep;
     timestep = flat_new_timestep(at3, bt2, jerk, acc,
 				 timestep, time, eta, dtmax);
@@ -77,7 +77,7 @@ void accumulate_energies(hdyn * b, real & epot, real & ekin, real & etot)
     } else {
 	real mi = b->get_mass();
 	epot += 0.5 * mi * b->get_pot();
-	vector vel = b->get_vel();
+	vec vel = b->get_vel();
 	ekin += 0.5 * mi * vel * vel;
     }
     etot = ekin + epot;
@@ -150,10 +150,10 @@ void flat_initialize_system_phase2(hdyn * b, hdyn * root, real eps,
 local void shift_cm(hdyn * b, real snap_cube_size)
 {
     real mass = 0;
-    vector cmpos = vector(0, 0, 0);
+    vec cmpos = vec(0, 0, 0);
 
     for_all_daughters(hdyn, b, bb) {
-	vector x = bb->get_pos();
+	vec x = bb->get_pos();
 	if (abs(x[0]) < snap_cube_size
 	    && abs(x[1]) < snap_cube_size
 	    && abs(x[2]) < snap_cube_size) {

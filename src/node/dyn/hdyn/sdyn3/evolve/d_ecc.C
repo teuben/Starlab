@@ -37,7 +37,7 @@ local void print(sdyn3* b)
     for_all_daughters(sdyn3, b, bi)
 	for (sdyn3* bj = bi->get_younger_sister(); bj != NULL;
 	     bj = bj->get_younger_sister()) {
-	    vector rij = bi->get_pos() - bj->get_pos();
+	    vec rij = bi->get_pos() - bj->get_pos();
 	    real rij2 = rij * rij;
 	    if (rij2 < rmin2) {
 		b1 = bi;
@@ -52,7 +52,7 @@ local void print(sdyn3* b)
     sdyn3* b3 = NULL;
     for_all_daughters(sdyn3, b, bk)
 	if (b3 == NULL && bk != b1 && bk != b2) b3 = bk;
-    vector cm = (b1->get_mass()*b1->get_pos() + b2->get_mass()*b2->get_pos())
+    vec cm = (b1->get_mass()*b1->get_pos() + b2->get_mass()*b2->get_pos())
 	          / (b1->get_mass() + b2->get_mass());
 
     if (e_init == VERY_LARGE_NUMBER) e_init = energy(b);

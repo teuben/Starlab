@@ -441,7 +441,7 @@ local void create_overexposure_marks(real **ccd, real maximum_electrons) {
     }
 }
 
-local void mk_ccd(dyn* b, vector dc_pos, int project, wavelength band,
+local void mk_ccd(dyn* b, vec dc_pos, int project, wavelength band,
 		  real distance, real reddening,
 		  real upper_Llimit,
 		  real xoffset, real yoffset,
@@ -492,10 +492,10 @@ local void mk_ccd(dyn* b, vector dc_pos, int project, wavelength band,
   real local_Mmm=0, magn;
   real luminosity, L_max = 0;
   real xmax=0, ymax=0;
-  vector r;
+  vec r;
   if (b->get_oldest_daughter()) {
 
-    vector r_com  = b->get_pos() - dc_pos;
+    vec r_com  = b->get_pos() - dc_pos;
 
     for_all_leaves(dyn, b, bb) {
 
@@ -836,7 +836,7 @@ main(int argc, char ** argv) {
     dyn *b = NULL;
     int count = 0;
     bool cod, try_com = false;
-    vector dc_pos = 0;
+    vec dc_pos = 0;
     while (b = get_dyn()) {
 
 	b->flatten_node();

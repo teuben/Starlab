@@ -73,7 +73,7 @@ void ppn(sdyn* b, ostream & s, int level) {
 
 local real calculate_angular_mometum_from_scratch(sdyn* b) {
 
-  vector L = 0;
+  vec L = 0;
   for_all_leaves(sdyn, b, bi) {
     L += bi->get_mass()*(bi->get_pos()^bi->get_vel());
   }
@@ -265,7 +265,7 @@ void slave_part_of_experiment(scatter_input input,
        << get_initial_seed() << "):\n";
   print_normal_form(b, cerr);
     
-  vector center = b->get_pos();
+  vec center = b->get_pos();
   print_structure_recursive(b, 0., center, true, true, 4);
   ppn(b, cerr);
   //#endif
@@ -285,7 +285,7 @@ void slave_part_of_experiment(scatter_input input,
   print_normal_form(b, cerr);
 
   ppn(b, cerr);
-  //  vector center = b->get_pos();
+  //  vec center = b->get_pos();
   print_structure_recursive(b, 0., center, true, true, 4);
 
   cerr << "Energy error = " << experiment.get_energy_error() << endl;

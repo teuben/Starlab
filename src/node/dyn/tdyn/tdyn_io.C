@@ -65,7 +65,7 @@ istream & pdyn::scan_dyn_story(istream & s)
     char input_line[MAX_INPUT_LINE_LENGTH];
     bool last_real = false;
     bool reading_root = false;
-    vector tmp;
+    vec tmp;
 
     while (get_line(s, input_line), !matchbracket(END_DYNAMICS, input_line)) {
 
@@ -272,7 +272,7 @@ istream & tdyn::scan_dyn_story(istream & s)
     char input_line[MAX_INPUT_LINE_LENGTH];
     bool last_real = false;
     bool reading_root = false;
-    vector tmp;
+    vec tmp;
 
     while (get_line(s, input_line), !matchbracket(END_DYNAMICS, input_line)) {
 
@@ -301,7 +301,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 
 		if (reading_root) {
 
-		    vector tmp;
+		    vec tmp;
 
 		    if (!strcmp("bound_center_pos", keyword)) {
 			set_vector_from_input_line(tmp, input_line);

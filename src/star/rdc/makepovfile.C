@@ -21,7 +21,7 @@
 typedef struct nebulae {
   int id;
   real time;
-  vector pos;
+  vec pos;
 };
 nebulae nebula[NNEBULAE];
 
@@ -30,7 +30,7 @@ typedef struct sn_remnants {
   int id;
   bool bh;
   real time;
-  vector pos;
+  vec pos;
 };
 sn_remnants sn_remnant[NSN_REMNANT];
 
@@ -59,9 +59,9 @@ local filter_type get_filter_type(char fltr) {
 
 }
 
-void new_camera_position(vector &v_new,
-			 vector first_pos,
-			 vector last_pos,
+void new_camera_position(vec &v_new,
+			 vec first_pos,
+			 vec last_pos,
 			 int nsteps,
 			 int nsnap) {
 
@@ -73,8 +73,8 @@ void new_camera_position(vector &v_new,
 }
 
 #if 0
-void new_camera_position(vector &v_new,
-			 vector v_old,
+void new_camera_position(vec &v_new,
+			 vec v_old,
 			 real theta_rotation,
 			 real phi_rotation,
 			 int nsteps,
@@ -95,13 +95,13 @@ void new_camera_position(vector &v_new,
 }
 #endif
 
-local void print_camera_on_star(dyn* b, vector com_pos,
+local void print_camera_on_star(dyn* b, vec com_pos,
 				int camera_on_star_id,
                                 real r_star,
 				real aperture, int blur_samples) {
 
-    vector cam_view = b->get_pos() + b->get_vel();
-    vector cam_pos = b->get_pos() + r_star*b->get_vel();
+    vec cam_view = b->get_pos() + b->get_vel();
+    vec cam_pos = b->get_pos() + r_star*b->get_vel();
 
     // Look at the clusters CoM for now.
 //    cam_view[0] = cam_pos;
@@ -109,7 +109,7 @@ local void print_camera_on_star(dyn* b, vector com_pos,
     cam_view[1] = 0;
     cam_view[2] = 0;
     
-    vector normal;
+    vec normal;
     normal[0] = sqrt(pow(abs(cam_pos), 2)
               -      pow(cam_pos[1], 2)
               -      pow(cam_pos[2], 2));
@@ -140,14 +140,14 @@ local void print_camera_on_star(dyn* b, vector com_pos,
 }
 
 
-local bool print_camera_position_recursive(dyn* b, vector cam_pos,
+local bool print_camera_position_recursive(dyn* b, vec cam_pos,
 					   int camera_on_star_id,
                                            real r_star,
 					   real aperture, int blur_samples) {
 
   if (b->get_oldest_daughter()) {
     
-    vector com_pos  = b->get_pos() - cam_pos;
+    vec com_pos  = b->get_pos() - cam_pos;
 
 
     for_all_daughters(dyn, b, bb)
@@ -184,7 +184,7 @@ local void print_filename_counter(int counter, ostream& s) {
       s << counter;
 }
 
-local void print_pl_nebula(vector pos, real scale) {
+local void print_pl_nebula(vec pos, real scale) {
 
     cout << "object { Pl_Nebula scale " << scale
 	 << " translate < " << pos[0] << ", "
@@ -193,7 +193,7 @@ local void print_pl_nebula(vector pos, real scale) {
 	 << endl;
 }
 
-local void print_sn_nebula(vector pos, real scale) {
+local void print_sn_nebula(vec pos, real scale) {
 
   cout << "object { SN_Remnant scale " << scale
        << " translate < " << pos[0] << ", "
@@ -219,7 +219,7 @@ local void print_some_data(dyn *b) {
   }
 }
 
-local void print_hertzsprung_Russell_diagram(dyn* b, vector cam_pos) {
+local void print_hertzsprung_Russell_diagram(dyn* b, vec cam_pos) {
 
   if (b->get_oldest_daughter()) {
 
@@ -296,7 +296,7 @@ local void print_hertzsprung_Russell_diagram(dyn* b, vector cam_pos) {
   }
 }
 
-local void add_collision_effect(dyn *bi, vector pos, real time, 
+local void add_collision_effect(dyn *bi, vec pos, real time, 
 				real scale) { 
 
   for (int i=0; i<NCOLLISIONS; i++) {
@@ -324,11 +324,11 @@ local void add_collision_effect(dyn *bi, vector pos, real time,
   }
 }
 
-local void print_star(dyn *bi, vector pos,
+local void print_star(dyn *bi, vec pos,
 		      real scale_L, filter_type filter) {
 
   // To solar radii
-  //  vector pos = bi->get_pos() - dc_pos;
+  //  vec pos = bi->get_pos() - dc_pos;
 //  pos[0] = bi->get_starbase()->conv_r_dyn_to_star(pos[0]);
 //  pos[1] = bi->get_starbase()->conv_r_dyn_to_star(pos[1]);
 //  pos[2] = bi->get_starbase()->conv_r_dyn_to_star(pos[2]);
@@ -597,7 +597,7 @@ cerr << "Add collisions"<<endl;
 
 }
 
-local void print_node(dyn *bi, vector pos, real mass_scale,
+local void print_node(dyn *bi, vec pos, real mass_scale,
 		      real mmax)  {
 
   real time = getrq(bi->get_root()->get_dyn_story(), "real_system_time");
@@ -627,7 +627,7 @@ local void print_node(dyn *bi, vector pos, real mass_scale,
 //    B = 0.00;
   }
 #if 0
-  vector cam_pos;
+  vec cam_pos;
     cam_pos[0] = 1;
     cam_pos[1] = 0;
     cam_pos[2] = 0;
@@ -703,7 +703,7 @@ local void print_node(dyn *bi, vector pos, real mass_scale,
 }
 
 local int print_povray_binary_recursive(dyn *b,
-					vector dc_pos, 
+					vec dc_pos, 
 					real mass_limit, real number_limit,
 					bool povray, real scale_L,
 					filter_type filter) {
@@ -711,7 +711,7 @@ local int print_povray_binary_recursive(dyn *b,
   int nb = 0;
   if (b->get_oldest_daughter()) {
     
-    vector r_com  = b->get_pos() - dc_pos;
+    vec r_com  = b->get_pos() - dc_pos;
 
     real m_tot = b->get_starbase()->conv_m_dyn_to_star(b->get_mass());
 
@@ -729,7 +729,7 @@ local int print_povray_binary_recursive(dyn *b,
 }
 
 local void print_povtime(real time,
-			 vector pos,
+			 vec pos,
 			 real scale=1,
 			 real depth=0.25) {
 
@@ -752,7 +752,7 @@ local void print_povtime(real time,
     cout.precision(p);
 }
 
-local void print_start_text(vector cam_pos) {
+local void print_start_text(vec cam_pos) {
 }
 
 local void print_povray_stars(dyn *b, real mass_limit,
@@ -767,7 +767,7 @@ cerr << "Print STARS"<<endl;
     
   bool cod = false;
 
-  vector dc_pos = 0;
+  vec dc_pos = 0;
   bool try_com = false;
   if(abs(dc_pos) == 0) {
     if (find_qmatch(b->get_dyn_story(), "density_center_pos")) {
@@ -843,7 +843,7 @@ local void print_povray_bodies(dyn *b, real mass_limit,
 
 }
 
-void print_povray_header(dyn* b, vector cam_pos,
+void print_povray_header(dyn* b, vec cam_pos,
                          int camera_on_star_id, 
 			 real aperture, real gamma, 
 			 int blur_samples,
@@ -877,7 +877,7 @@ void print_povray_header(dyn* b, vector cam_pos,
 
   if (camera_on_star_id<=0) {
 
-    vector normal;
+    vec normal;
     normal[1] = 1;
 
 //    cout << "// Normal to camera " << endl;
@@ -911,7 +911,7 @@ void print_povray_header(dyn* b, vector cam_pos,
 //    real time = b->get_real_system_time();
     real time = -1*getrq(b->get_dyn_story(), "real_system_time");
 //    real time = -(20 + 0.015625*(counter-160));
-    vector time_pos;
+    vec time_pos;
     if(vertical<=400) {         //320x240
       time_pos[0] = -10;
       time_pos[1] = 6;
@@ -1174,7 +1174,7 @@ main(int argc, char ** argv)
 
     char filter = 'V';
     real aperture    = -1;
-    vector first_campos, last_campos, cam_pos;
+    vec first_campos, last_campos, cam_pos;
     first_campos[2] = last_campos[2] = -10;
     real theta_rotate = 0;
     real phi_rotate   = 0;
@@ -1280,7 +1280,7 @@ main(int argc, char ** argv)
 
   int id;
   real time, mmax = -1;
-  vector pos;
+  vec pos;
     
     int nread = nstart;
     int j=0;

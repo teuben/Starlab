@@ -59,7 +59,7 @@ local int compare_radii(const void * pi, const void * pj)
 static real nonlin_masses[9] = {0.005, 0.01, 0.02, 0.05, 0.1,
 				0.25, 0.5, 0.75, 0.9};
 
-local void compute_general_mass_radii(dyn * b, vector dc_pos, int nzones,
+local void compute_general_mass_radii(dyn * b, vec dc_pos, int nzones,
 				      real r_lagr[],
 				      real m_cutoff, real M_cutoff,
 				      bool nonlin = false, 
@@ -102,7 +102,7 @@ local void compute_general_mass_radii(dyn * b, vector dc_pos, int nzones,
 
     // Use the geometric center if the density center is unknown.
 
-    //vector dc_pos = 0;
+    //vec dc_pos = 0;
     //if (find_qmatch(b->get_dyn_story(), "density_center_pos")) 
     //dc_pos = getvq(b->get_dyn_story(), "density_center_pos");
 
@@ -181,7 +181,7 @@ local void compute_general_mass_radii(dyn * b, vector dc_pos, int nzones,
 
 // Convenient synonyms:
 
-local void  compute_mass_radii_quartiles(dyn * b, vector dc_pos,
+local void  compute_mass_radii_quartiles(dyn * b, vec dc_pos,
 					 real m_cutoff, real M_cutoff)
 {
   int nl = 4;
@@ -192,7 +192,7 @@ local void  compute_mass_radii_quartiles(dyn * b, vector dc_pos,
     compute_general_mass_radii(b, dc_pos, nl, r_lagr, m_cutoff, M_cutoff);
 }
 
-local void  compute_mass_radii_percentiles(dyn * b, vector dc_pos,
+local void  compute_mass_radii_percentiles(dyn * b, vec dc_pos,
 					   real m_cutoff, real M_cutoff)
 {
   int nl = 10;
@@ -222,7 +222,7 @@ local bool double_fn(dyn * b)
     return false;
 }  
 
-local void print_lagrangian_radii(dyn* b, vector dc_pos, int which_lagr,
+local void print_lagrangian_radii(dyn* b, vec dc_pos, int which_lagr,
 				  real m_cutoff, real M_cutoff,
 				  int which = 0)
 {
@@ -382,7 +382,7 @@ local void  compute_density(dyn * b,   	/* pointer to an Nbody system */
  */
 local void compute_mean_cod(dyn *b,
  			    real local_density[],
-			    vector& pos, vector& vel, real m_cutoff,
+			    vec& pos, vec& vel, real m_cutoff,
 			    real M_cutoff)
 {
     real total_weight = 0;
@@ -408,13 +408,13 @@ local void compute_mean_cod(dyn *b,
 
 /*===========================================================================*/
 
-local void compute_core_parameters(dyn* b, int k, vector& center,
+local void compute_core_parameters(dyn* b, int k, vec& center,
 				   real& rcore, int& ncore, real& mcore,
 				   real & vcore, int n,
 				   real local_density[], 
 				   real m_cutoff, real M_cutoff)
 {
-    vector vel;
+    vec vel;
     int is=0;
 
     real rcore2 = 0;
@@ -458,7 +458,7 @@ local void compute_core_parameters(dyn* b, int k, vector& center,
     vcore = sqrt(vcore)/(1.0*ncore);
 }
 
-local void print_core_parameters(dyn* b, vector& density_center, real& rcore,
+local void print_core_parameters(dyn* b, vec& density_center, real& rcore,
 				 int & ncore, real & vcore,
 				 int n, real local_density[],
 				 real m_cutoff, real M_cutoff,
@@ -529,7 +529,7 @@ local real system_energy(dyn* b, real m_cutoff, real M_cutoff)
 	for_all_leaves(dyn, b, bj) 
 	  if (bj->get_mass()>=m_cutoff && bj->get_mass()<=M_cutoff) {
 	    if (bj == bi) break;
-	    vector dx = something_relative_to_root(bi, &dyn::get_pos)
+	    vec dx = something_relative_to_root(bi, &dyn::get_pos)
 			  - something_relative_to_root(bj, &dyn::get_pos);
 	    dpot += bj->get_mass() / abs(dx);
 	}
@@ -549,7 +549,7 @@ local void get_energies(dyn * n, real eps2,
     for (ALL_i) 
       if (ni->get_mass()>=m_cutoff && ni->get_mass()<=M_cutoff) {
       
-	vector v = ni->get_vel();
+	vec v = ni->get_vel();
         kinetic_energy += ni->get_mass() * v * v;
     }
     kinetic_energy *= 0.5;
@@ -558,10 +558,10 @@ local void get_energies(dyn * n, real eps2,
     for (ALL_i) 
       if (ni->get_mass()>=m_cutoff && ni->get_mass()<=M_cutoff) {
         real dphi = 0;
-	vector xi = ni->get_pos();
+	vec xi = ni->get_pos();
 	for (j_ABOVE_i) 
 	  if (nj->get_mass()>=m_cutoff && nj->get_mass()<=M_cutoff) {
-	    vector xij = nj->get_pos() - xi;
+	    vec xij = nj->get_pos() - xi;
 	    dphi += nj->get_mass()/sqrt(xij*xij + eps2);
 	}
 	potential_energy -= ni->get_mass() * dphi;
@@ -713,7 +713,7 @@ main(int argc, char **argv)
     real r_tot, m_tot, v_rel;      
     int n, ncore;
     real mass_int;
-    vector density_center;
+    vec density_center;
     real rcore=0, vcore=0;
     real kT;
     real M_cutoff, m_cutoff;

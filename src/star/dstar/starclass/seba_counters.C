@@ -25,7 +25,7 @@
 local void putq(story* s, char* l, int i)		{putiq (s, l, i);}
 local void putq(story* s, char* l, unsigned long i)	{putulq(s, l, i);}
 local void putq(story* s, char* l, real r)		{putrq (s, l, r);}
-local void putq(story* s, char* l, vector v)		{putvq (s, l, v);}
+local void putq(story* s, char* l, vec v)		{putvq (s, l, v);}
 
 #define PUTLOG(x) putq(sb->get_star_story(), #x, sb->get_seba_counters()->x);
 

@@ -87,8 +87,8 @@ real print_binary_params(kepler* k, real m1, real kT,
 real get_total_energy(dyn* bi, dyn* bj)
 {
     real M = bi->get_mass() + bj->get_mass();
-    vector dx = bj->get_pos() - bi->get_pos();
-    vector dv = bj->get_vel() - bi->get_vel();
+    vec dx = bj->get_pos() - bi->get_pos();
+    vec dv = bj->get_vel() - bi->get_vel();
     real mu = (bi->get_mass() * bj->get_mass()) / M;
     return mu*(0.5*dv*dv - M / abs(dx));
 }
@@ -138,7 +138,7 @@ void initialize_kepler_from_dyn_pair(kepler& k, dyn* bi, dyn* bj,
 
 void print_binary_from_dyn_pair(dyn* bi, dyn* bj,
 				real kT,		// default = 0
-				vector center,		// default = (0,0,0)
+				vec center,		// default = (0,0,0)
 				bool verbose,		// default = true
 				bool long_binary_output) // default = true
 {
@@ -175,7 +175,7 @@ void print_binary_from_dyn_pair(dyn* bi, dyn* bj,
 
 real print_structure_recursive(dyn* bi,
 			       real kT,
-			       vector center,
+			       vec center,
 			       bool verbose,
 			       bool long_binary_output,
 			       int indent)
@@ -193,7 +193,7 @@ real print_structure_recursive(dyn* bi,
 			       void (*dstar_params)(dyn*),
 			       int& n_unp, real& e_unp,
 			       real kT,
-			       vector center,
+			       vec center,
 			       bool verbose,
 			       bool long_binary_output,
 			       int indent)
@@ -261,10 +261,10 @@ real print_structure_recursive(dyn* bi,
 
 void compute_core_parameters(dyn* b, int k,
 			     bool allow_n_sq_ops,
-			     vector& center,
+			     vec& center,
 			     real& rcore, int& ncore, real& mcore)
 {
-    vector vel;
+    vec vel;
 
     // Write densities to particle dyn stories, if necessary.
 

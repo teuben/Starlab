@@ -437,7 +437,7 @@ bool evolve_stars(hdyn* b,
 
 	    if (bi->is_valid()) {		     // (just in case...)
 
-		vector dv = anomalous_velocity(bi);  // |dv| > 0 <==> supernova
+		vec dv = anomalous_velocity(bi);  // |dv| > 0 <==> supernova
 		real dv_sq = square(dv);
 
 		dm = get_total_mass(bi) - bi->get_mass();
@@ -505,7 +505,7 @@ bool evolve_stars(hdyn* b,
 		    correct_leaf_for_change_of_vector(bi, dv, &hdyn::get_vel,
 							      &hdyn::inc_vel);
 
-		    vector vnew = hdyn_something_relative_to_root(bi,
+		    vec vnew = hdyn_something_relative_to_root(bi,
 							      &hdyn::get_vel);
 		    real dde_kick = 0.5 * bi->get_mass()
 					* (square(vnew) - square(vnew-dv));

@@ -16,7 +16,7 @@
 
 #ifndef TOOLBOX
 
-void compute_com(dyn *b, vector& pos, vector& vel)
+void compute_com(dyn *b, vec& pos, vec& vel)
 {
     real total_mass = 0;
     pos = 0;
@@ -43,7 +43,7 @@ void compute_com(dyn *b, vector& pos, vector& vel)
 
 void compute_com(dyn *b)
 {
-    vector pos, vel;
+    vec pos, vel;
     compute_com(b, pos, vel);
 }
 

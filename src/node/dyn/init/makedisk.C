@@ -38,7 +38,7 @@ local void makedisk(dyn* b, int n,
     real pmass = m_disk / n;
     v_disp *= sqrt(3.0);	// so a uniform distribution has proper v_disp;
 
-    vector cmpos = 0, cmvel = 0;
+    vec cmpos = 0, cmvel = 0;
 
     for_all_daughters(dyn, b, bi) {
 
@@ -74,10 +74,10 @@ local void makedisk(dyn* b, int n,
 			     + randinter(0,1)
 			  	  * (r_outer*r_outer - r_inner*r_inner));
 	    real theta = randinter(0, 2*M_PI);
-	    bi->set_pos(vector(r*cos(theta), r*sin(theta), 0));
+	    bi->set_pos(vec(r*cos(theta), r*sin(theta), 0));
 
 	    real v_orb = sqrt(m_central/r);
-	    bi->set_vel(vector(-v_orb*sin(theta) + v_disp*randinter(-1,1),
+	    bi->set_vel(vec(-v_orb*sin(theta) + v_disp*randinter(-1,1),
 			        v_orb*cos(theta) + v_disp*randinter(-1,1),
 						   v_disp*randinter(-1,1)));
 

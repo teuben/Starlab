@@ -233,7 +233,7 @@ local void collision_to_peri_to_system(sdyn3 * b,
 	for (sdyn3 * bj = bi->get_younger_sister(); bj != NULL; 
 	     bj = bj->get_younger_sister()) {
 
-	    vector sep = bi->get_pos() - bj->get_pos();
+	    vec sep = bi->get_pos() - bj->get_pos();
 	    real r = abs(sep);
 	    real rad_sum = bi->get_radius() + bj->get_radius();
 	    if (r < rad_sum) {
@@ -262,8 +262,8 @@ local void collision_to_peri_to_system(sdyn3 * b,
 
 	// Save the center of mass pos and vel of the binary.
 
-	vector cmpos = (mi * bi_coll->get_pos() + mj * bj_coll->get_pos()) / m;
-	vector cmvel = (mi * bi_coll->get_vel() + mj * bj_coll->get_vel()) / m;
+	vec cmpos = (mi * bi_coll->get_pos() + mj * bj_coll->get_pos()) / m;
+	vec cmvel = (mi * bi_coll->get_vel() + mj * bj_coll->get_vel()) / m;
 
 	// Make a kepler and transform it to periastron.
 

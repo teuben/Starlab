@@ -56,32 +56,32 @@ local void add_secondary(dyn* original, real mass_ratio)
 #if 0
 // To be worked out
 local void set_kepler_orientation_from_aml(kepler *k, 
-					   vector angular_momentum) {
+					   vec angular_momentum) {
 
     // normal unit vector is normlaized angular momentum vector
-    vector n = angular_momentum/abs(angular_momentum);
+    vec n = angular_momentum/abs(angular_momentum);
 
-    vector temp = vector(1, 0, 0);
-    if (abs(n[0]) > .5) temp = vector(0, 1, 0);	// temp is not parallel to n
+    vec temp = vec(1, 0, 0);
+    if (abs(n[0]) > .5) temp = vec(0, 1, 0);	// temp is not parallel to n
     if (n[2] < 0) temp = -temp;
 
-    vector b = n ^ temp;
+    vec b = n ^ temp;
     b /= abs(b);
-    vector a = b ^ n;
+    vec a = b ^ n;
     if (n[2] < 0) a = -a;	// Force (a, b) to be (x, y) for n = +/-z
     
     // Construct *random* unit vectors l and t perpendicular to each
     // other and to n (psi = 0 ==> periastron along a):
 
-    vector l = cos(psi)*a + sin(psi)*b;
-    vector t = n ^ l;
+    vec l = cos(psi)*a + sin(psi)*b;
+    vec t = n ^ l;
 
     k.set_orientation(l, t, n);
 }
 #endif
 
 local void add_dynamics(dyn* cm, real ecc, real energy) 
-		//	vector angular_momentum)
+		//	vec angular_momentum)
 {
     dyn* primary = cm->get_oldest_daughter();
     dyn* secondary = primary->get_younger_sister();

@@ -41,7 +41,7 @@ main(int argc, char ** argv)
         real msum = 0;
 	int i = 0, n = 0;
 
-	vector pos, vel;
+	vec pos, vel;
         get_std_center(b, pos, vel);
 
 	pos -= b->get_pos();		// center includes pos of b...

@@ -51,8 +51,8 @@ local void initialize_root(sdyn* root, real v_inf,
 
     real m_total = target_mass + projectile_mass;
     root->set_mass(m_total);
-    root->set_pos(vector(0,0,0));
-    root->set_vel(vector(0,0,0));
+    root->set_pos(vec(0,0,0));
+    root->set_vel(vec(0,0,0));
 
     sdyn* target = root->get_oldest_daughter();
     target->set_mass(target_mass);

@@ -81,7 +81,7 @@ void compute_general_mass_radii(dyn * b, int nzones,
     // Use the density center if known and up to date (preferred).
     // Otherwise, use modified center of mass, if known and up to date.
 
-    vector lagr_pos, lagr_vel;
+    vec lagr_pos, lagr_vel;
     int which = get_std_center(b, lagr_pos, lagr_vel);
     if (which == 1)
 	strcpy(lagr_string, "density center");
@@ -102,7 +102,7 @@ void compute_general_mass_radii(dyn * b, int nzones,
     real total_mass = 0;
     int i = 0;
 
-    vector dlagr_pos = lagr_pos - b->get_pos();
+    vec dlagr_pos = lagr_pos - b->get_pos();
 
     for_all_daughters(dyn, b, bi) {
 	if (bf == NULL || (*bf)(bi)) {

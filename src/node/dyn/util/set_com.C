@@ -29,10 +29,10 @@
 
 #ifndef TOOLBOX
 
-void dyn::set_com(vector set_pos, vector set_vel)	// defaults = 0
+void dyn::set_com(vec set_pos, vec set_vel)	// defaults = 0
 {
-    vector com_pos;
-    vector com_vel;
+    vec com_pos;
+    vec com_vel;
 
     compute_com(this, com_pos, com_vel); 	// includes 'this' pos and vel
 
@@ -64,8 +64,8 @@ main(int argc, char ** argv)
 {
     bool  c_flag = FALSE;
     char  *comment;
-    vector r = 0;
-    vector v = 0;
+    vec r = 0;
+    vec v = 0;
 
     bool n_flag = false;
 
@@ -84,11 +84,11 @@ main(int argc, char ** argv)
 	    case 'n':	n_flag = true;
 			break;
 
-	    case 'r':	r = vector(atof(poparr[0]),
+	    case 'r':	r = vec(atof(poparr[0]),
 				   atof(poparr[1]),
 				   atof(poparr[2]));
 	    		break;
-	    case 'v':	v = vector(atof(poparr[0]),
+	    case 'v':	v = vec(atof(poparr[0]),
 				   atof(poparr[1]),
 				   atof(poparr[2]));
 	    		break;

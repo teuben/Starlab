@@ -115,7 +115,7 @@ local void slave_part_of_experiment(sigma_input input,
          << get_initial_seed() << "):\n";
 
     print_normal_form(b, cerr);
-    vector center = b->get_pos();
+    vec center = b->get_pos();
     print_structure_recursive(b, 0., center, true, true, 4);
   }
     
@@ -137,7 +137,7 @@ local void slave_part_of_experiment(sigma_input input,
     print_normal_form(b, cerr);
     
     ppn(b, cerr);
-    vector center = b->get_pos();
+    vec center = b->get_pos();
     print_structure_recursive(b, 0., center, true, true, 4);
     
     cerr << "Energy error = " << experiment.get_energy_error() << endl;

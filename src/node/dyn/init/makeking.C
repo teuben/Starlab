@@ -535,7 +535,7 @@ void setpos(dyn * b, real& p)
   real cph = cos(ph);
   real sph = sin(ph);
 
-  b->set_pos(vector(r * sth * cph, r * sth * sph, r * cth));
+  b->set_pos(vec(r * sth * cph, r * sth * sph, r * cth));
 }
 
 void setvel(dyn * b, real p)
@@ -612,7 +612,7 @@ void setvel(dyn * b, real p)
     real cph = cos(ph);
     real sph = sin(ph);
 
-    b->set_vel(vector(v * sth * cph, v * sth * sph, v * cth));
+    b->set_vel(vec(v * sth * cph, v * sth * sph, v * cth));
 }
 
 

@@ -31,7 +31,7 @@ local void accumulate_energies(_dyn_ * b,
 
 	real mi = b->get_mass();
 	epot += 0.5 * mi * b->get_pot();
-	vector vel = b->get_vel();
+	vec vel = b->get_vel();
 	ekin += 0.5 * mi * vel * vel;
 
     }

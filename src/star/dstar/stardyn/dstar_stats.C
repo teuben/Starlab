@@ -94,7 +94,7 @@ local void print_binary_content(dyn* b, binary_type which) {
     delete []content;
 }
 
-void dstar_stats(dyn* b, bool mass_spectrum, vector center,
+void dstar_stats(dyn* b, bool mass_spectrum, vec center,
 		 bool verbose) { 
 
   sstar_stats(b, mass_spectrum, center, verbose); 
@@ -155,7 +155,7 @@ main(int argc, char **argv)
 
     hdyn *b;
     int i = 0;
-    vector zero = 0;
+    vec zero = 0;
     bool mass_spectrum = true;
     while (b = get_hdyn()) {
 

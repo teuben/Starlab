@@ -659,7 +659,7 @@ void get_ubvri_star(dyn *bi, stellar_type& stype,
 //     }
 }
 
-local void print_star(stellar_type stype, int nstar, real mass, vector pos, 
+local void print_star(stellar_type stype, int nstar, real mass, vec pos, 
 		 real U, real B, real V, real R, real I) {
 
      cerr << stype <<" "<< nstar<<" "<<mass << " " << pos << " " 
@@ -667,7 +667,7 @@ local void print_star(stellar_type stype, int nstar, real mass, vector pos,
 
 }
 
-local void print_ubvri_star(dyn *bi, vector pos) {
+local void print_ubvri_star(dyn *bi, vec pos) {
 
 //     real mass = bi->get_starbase()->conv_m_dyn_to_star(bi->get_mass());
      real time = bi->get_starbase()->conv_t_dyn_to_star(bi->get_system_time());
@@ -728,10 +728,10 @@ local void print_ubvri_star(dyn *bi, vector pos) {
 
 }
 
-local void print_ubvri_binary(dyn *bi, vector dc_pos) {
+local void print_ubvri_binary(dyn *bi, vec dc_pos) {
 
 
-  vector com = bi->get_pos() - dc_pos;
+  vec com = bi->get_pos() - dc_pos;
   real rcom = abs(com);
   rcom = bi->get_starbase()->conv_r_dyn_to_star(rcom);
   // And now to parsec
@@ -769,7 +769,7 @@ local void print_ubvri_binary(dyn *bi, vector dc_pos) {
 
 }
 
-local int print_ubvri_binary_recursive(dyn *b, vector dc_pos,
+local int print_ubvri_binary_recursive(dyn *b, vec dc_pos,
 				       real mtot, int ncomp,
 				       real &U, real &B, real &V, 
 				       real &R, real &I) {
@@ -812,7 +812,7 @@ local int print_ubvri_binary_recursive(dyn *b, vector dc_pos,
     }
 
 
-  vector pos = something_relative_to_root(b, &dyn::get_pos);
+  vec pos = something_relative_to_root(b, &dyn::get_pos);
 
   // And now to parsec
   real Rsun_per_parsec = cnsts.parameters(solar_radius)
@@ -834,7 +834,7 @@ local int print_ubvri_binary_recursive(dyn *b, vector dc_pos,
 #if 0
 
 
-local int print_ubvri_binary_recursive(dyn *b, vector dc_pos,
+local int print_ubvri_binary_recursive(dyn *b, vec dc_pos,
 				       real mtot, int ncomp,
 				       real &U, real &B, real &V, 
 				       real &R, real &I) {
@@ -864,7 +864,7 @@ void put_ubvri(dyn *b) {
 
   bool cod = false;
 
-  vector dc_pos = 0;
+  vec dc_pos = 0;
   bool try_com = false;
   if(abs(dc_pos) == 0) {
       if (find_qmatch(b->get_dyn_story(), "density_center_pos")) {

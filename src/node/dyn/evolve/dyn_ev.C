@@ -18,7 +18,7 @@ local void  accumulate_acceleration(dyn * bj,    // n-body system pointer
 	}
     }else{
 	if(bi != bj){
-	    vector d_pos = bi->get_pos() - bj->get_pos();
+	    vec d_pos = bi->get_pos() - bj->get_pos();
 	    real soft_d_pos_squared = d_pos * d_pos + eps_squared;
 	    real inverse_d_pos_cubed =
 	    1 / ( soft_d_pos_squared * sqrt( soft_d_pos_squared ));      

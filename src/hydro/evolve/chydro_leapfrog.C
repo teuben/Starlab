@@ -25,7 +25,7 @@ local void accumulate_acceleration(dyn *bj,           // target body
 	}                              // and recalculate all accelerations
     } else {
 	if (bi != bj) {
-	    vector d_pos = bi->get_pos() - bj->get_pos();
+	    vec d_pos = bi->get_pos() - bj->get_pos();
 	    real d_pos_squared = d_pos * d_pos;
 	    real sum_of_stellar_r_eff =
 		    get_effective_radius(bi) + get_effective_radius(bj);

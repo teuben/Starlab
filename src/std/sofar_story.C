@@ -258,7 +258,7 @@ main()
 	putiq(s, "yet another test message", 137);
 	putrq(s, "pi", 3.14);
 	putsq(s, "star cluster", "47 Tuc");
-	vector * tmp = new vector(1,2,3);
+	vec * tmp = new vec(1,2,3);
 	putvq(s, "1-2-3-test vector", *tmp);
 #endif
 //	cout << "test message = " << getiq(s, "test message") << endl;

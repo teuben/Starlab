@@ -43,7 +43,7 @@ static void write_line(float* a, int m, FILE* file,
     }
 
     for (i = 0; i < m; i++)
-	c[i] = (unsigned char) as[i]; // Won't vectorize
+	c[i] = (unsigned char) as[i];		// won't vectorize
 
     fwrite(&c, 1, m, file);			// may vectorize?
     if (modd) fwrite(&c, 1, 1, file);		// pad to 16-bit boundary.

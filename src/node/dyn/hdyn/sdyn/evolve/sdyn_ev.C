@@ -80,8 +80,8 @@ void sdyn::accumulate_new_acc_and_jerk_from_new(
     else
 	if(this != bj)
 	    {
-	    vector d_pos = new_pos - bj->get_new_pos();
-	    vector d_vel = new_vel - bj->get_new_vel();
+	    vec d_pos = new_pos - bj->get_new_pos();
+	    vec d_vel = new_vel - bj->get_new_vel();
 	    real r2 = d_pos*d_pos;
 
 	    //	    if(!strcmp(get_name(), "t1")) {
@@ -200,8 +200,8 @@ void  sdyn::correct_new_acc_and_jerk(const real new_dt, const real prev_new_dt)
     real inv_theta = 1 / theta;
     real tau2 = tau * tau;
     real tau3 = tau2 * tau;
-    vector prev_new_acc = new_acc;
-    vector prev_new_jerk = new_jerk;
+    vec prev_new_acc = new_acc;
+    vec prev_new_jerk = new_jerk;
 
     new_acc = 0.25 * (
 		      acc * (2 - 3 * tau + tau3)

@@ -45,7 +45,7 @@
 
 #define MAX_COUNT 5
 
-void compute_mean_cod(dyn *b, vector& pos, vector& vel)
+void compute_mean_cod(dyn *b, vec& pos, vec& vel)
 {
     real total_weight = 0;
     bool print_message = true;
@@ -102,7 +102,7 @@ void compute_mean_cod(dyn *b, vector& pos, vector& vel)
 
 void compute_mean_cod(dyn *b)
 {
-    vector pos, vel;
+    vec pos, vel;
     compute_mean_cod(b, pos, vel);
 }
 

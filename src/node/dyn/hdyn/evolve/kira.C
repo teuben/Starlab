@@ -297,16 +297,16 @@ local void print_triple_stats(hdyn* root, hdyn* b)
     // Triple is (ss, bs), with ss single, bs double.
 
     real mss = ss->get_mass();
-    vector pos_ss = b->get_pos() + ss->get_pos();
-    vector vel_ss = b->get_vel() + ss->get_vel();
+    vec pos_ss = b->get_pos() + ss->get_pos();
+    vec vel_ss = b->get_vel() + ss->get_vel();
     hdyn* bs1 = bs->get_oldest_daughter();
     hdyn* bs2 = bs1->get_younger_sister();
     real mb1 = bs1->get_mass();
     real mb2 = bs2->get_mass();
-    vector pos_bs1 = b->get_pos() + bs->get_pos() + bs1->get_pos();
-    vector vel_bs1 = b->get_vel() + bs->get_vel() + bs1->get_vel();
-    vector pos_bs2 = b->get_pos() + bs->get_pos() + bs2->get_pos();
-    vector vel_bs2 = b->get_vel() + bs->get_vel() + bs2->get_vel();
+    vec pos_bs1 = b->get_pos() + bs->get_pos() + bs1->get_pos();
+    vec vel_bs1 = b->get_vel() + bs->get_vel() + bs1->get_vel();
+    vec pos_bs2 = b->get_pos() + bs->get_pos() + bs2->get_pos();
+    vec vel_bs2 = b->get_vel() + bs->get_vel() + bs2->get_vel();
 
     real pot_1 = -mss * (mb1+mb2) / abs(ss->get_pos() - bs->get_pos());
     real pot_2 = -mss * mb1 / abs(pos_ss - pos_bs1)
@@ -821,7 +821,7 @@ local int integrate_list(hdyn * b,
 
 		    if (bi->is_top_level_node()
 			&& b->get_external_field() > 0) {
-			vector acc, jerk;
+			vec acc, jerk;
 			real pot;
 			get_external_acc(bi,
 					 bi->get_pred_pos(),
@@ -1668,7 +1668,7 @@ local void print_energy_from_pot(hdyn* b)
     real kin = 0;
 
     for_all_leaves(hdyn, b, bb) {
-	vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
+	vec vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
 	kin += bb->get_mass()*square(vel);
     }
 
@@ -1687,7 +1687,7 @@ local void kira_alt_output(hdyn *b)
 {
     ofstream alt("alt_output", ios::app|ios::out);
 
-    vector cmpos, cmvel;
+    vec cmpos, cmvel;
     get_std_center(b, cmpos, cmvel);	        // use CM for now (note: doesn't
     					        // use pred quantities -- should
 						// create a "pred" version...)
@@ -1699,8 +1699,8 @@ local void kira_alt_output(hdyn *b)
 
 	real sys_t = bb->get_system_time();
 	real m = bb->get_mass();
-	vector dr = bb->get_pred_pos() - cmpos;
-	vector dv = bb->get_pred_vel() - cmvel;
+	vec dr = bb->get_pred_pos() - cmpos;
+	vec dv = bb->get_pred_vel() - cmvel;
 	real r2 = square(dr);
 	real v2 = square(dv);
 	real vr2 = square(dr*dv)/r2;

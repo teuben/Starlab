@@ -765,7 +765,7 @@ void check_set_plummer(dyn *b,
 	 b->set_p_scale_sq(pow(getrq(b->get_log_story(),
 				     "kira_plummer_scale"), 2));
 
-	 vector center = 0;
+	 vec center = 0;
 	 if (find_qmatch(b->get_log_story(), "kira_plummer_center"))
 	     center = getvq(b->get_log_story(), "kira_plummer_center");
 	 b->set_p_center(center);
@@ -773,7 +773,7 @@ void check_set_plummer(dyn *b,
 	 if (verbose) {
 	     real M = b->get_p_mass();
 	     real a = sqrt(b->get_p_scale_sq());
-	     vector center = b->get_p_center();
+	     vec center = b->get_p_center();
 	     cerr << "check_set_plummer:  "; PRC(M); PRC(a); PRL(center);
 	 }
      }
@@ -811,7 +811,7 @@ void check_set_power_law(dyn *b,
 	     exponent = getrq(b->get_log_story(), "kira_pl_exponent");
 	 b->set_pl_exponent(exponent);
 
-	 vector center = 0;
+	 vec center = 0;
 	 if (find_qmatch(b->get_log_story(), "kira_pl_center"))
 	     center = getvq(b->get_log_story(), "kira_pl_center");
 	 b->set_pl_center(center);
@@ -835,7 +835,7 @@ void check_set_power_law(dyn *b,
 	     real A = b->get_pl_coeff();
 	     real a = sqrt(b->get_pl_scale_sq());
 	     real x = b->get_pl_exponent();
-	     vector center = b->get_pl_center();
+	     vec center = b->get_pl_center();
 	     real C = b->get_pl_cutoff();
 	     real M = b->get_pl_mass();
 	     real eps2 = b->get_pl_softening_sq();

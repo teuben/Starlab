@@ -30,8 +30,8 @@ local void  makecube(dyn * root, int n, int u_flag)
     for (bi = root->get_oldest_daughter(); bi != NULL;
          bi = bi->get_younger_sister()) {
 	bi->set_mass(pmass);	
-        bi->set_pos(vector(randinter(-1,1),randinter(-1,1),randinter(-1,1)));
-        bi->set_vel(vector(randinter(-1,1),randinter(-1,1),randinter(-1,1)));
+        bi->set_pos(vec(randinter(-1,1),randinter(-1,1),randinter(-1,1)));
+        bi->set_vel(vec(randinter(-1,1),randinter(-1,1),randinter(-1,1)));
     }
 
 //  Transform to center-of-mass coordinates, and optionally

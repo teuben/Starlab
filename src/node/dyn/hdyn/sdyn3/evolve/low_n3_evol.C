@@ -33,7 +33,7 @@
 local void restore_pos_and_vel(kepler& inner, kepler& outer, real time,
 			       int n_transform,
 			       sdyn3* b1, sdyn3* b2, sdyn3* b3,
-			       vector& cmpos, vector& cmvel)
+			       vec& cmpos, vec& cmvel)
 {
     inner.transform_to_time(time);
     if (n_transform == 2) outer.transform_to_time(time);
@@ -111,10 +111,10 @@ local void print_unperturbed_diag(sdyn3* b, sdyn3* b1, sdyn3* b2, sdyn3* b3,
 	     << "    l = " << outer.get_longitudinal_unit_vector() << endl
 	     << "    n = " << outer.get_normal_unit_vector() << endl;
 
-	vector bcm_pos = (b1->get_mass() * b1->get_pos()
+	vec bcm_pos = (b1->get_mass() * b1->get_pos()
 			   + b2->get_mass() * b2->get_pos())
 	    		     / (b1->get_mass() + b2->get_mass());
-	vector bcm_vel = (b1->get_mass() * b1->get_vel()
+	vec bcm_vel = (b1->get_mass() * b1->get_vel()
 			   + b2->get_mass() * b2->get_vel())
 	    		     / (b1->get_mass() + b2->get_mass());
 
@@ -239,7 +239,7 @@ local void print_perturbed_error(kepler& inner, kepler& outer,
     real I = (term1 + term2) / (e*sqrt(2*abs(E)));
     real coeffdv = -2*M/pow(R,5) * I;
 
-    vector dv = coeffdv * (-(R*R - 3*X*X) * inner.get_longitudinal_unit_vector()
+    vec dv = coeffdv * (-(R*R - 3*X*X) * inner.get_longitudinal_unit_vector()
 			         - 3*X*Y  * inner.get_transverse_unit_vector()
 			         - 3*X*Z  * inner.get_normal_unit_vector());
 
@@ -336,7 +336,7 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
 
     // Binary components must be approaching.
 
-    vector r = b2->get_pos() - b1->get_pos();
+    vec r = b2->get_pos() - b1->get_pos();
 
     if (r * (b2->get_vel() - b1->get_vel()) >= 0) return FALSE;
 
@@ -348,10 +348,10 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
 
     // Center of mass position of the inner binary:
     
-    vector binary_cmpos = (b1->get_mass() * b1->get_pos()
+    vec binary_cmpos = (b1->get_mass() * b1->get_pos()
 			    + b2->get_mass() * b2->get_pos()) / m12;
 
-    vector R = b3->get_pos() - binary_cmpos;
+    vec R = b3->get_pos() - binary_cmpos;
 
     real true_tol_23 = 	pow((m12/m123) * tidal_tolerance, 0.6666667);
     if (square(r) > square(R) * true_tol_23) return FALSE;
@@ -362,15 +362,15 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
     // binary).  Keep track of the system center of mass (which will
     // otherwise be lost by the kepler structures below).
 
-    vector system_cmpos = (m12 * binary_cmpos
+    vec system_cmpos = (m12 * binary_cmpos
 			   + b3->get_mass() * b3->get_pos()) / m123;
 
     // Center of mass velocity of the inner binary:
 
-    vector binary_cmvel = (b1->get_mass() * b1->get_vel()
+    vec binary_cmvel = (b1->get_mass() * b1->get_vel()
 			    + b2->get_mass() * b2->get_vel()) / m12;
 
-    vector system_cmvel = (m12 * binary_cmvel
+    vec system_cmvel = (m12 * binary_cmvel
 			    + b3->get_mass() * b3->get_vel()) / m123;
 
     // Make kepler structures out of the inner and outer orbits.

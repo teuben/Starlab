@@ -40,7 +40,7 @@ local int compare_radii(const void * pi, const void * pj)  // increasing radius
 }
 
 void compute_mcom(dyn *b,
-		  vector& pos, vector& vel,
+		  vec& pos, vec& vel,
 		  real f,			// default = 0.9
 		  int n_iter)			// default = 2
 {
@@ -109,7 +109,7 @@ void compute_mcom(dyn *b,
 
 	real r_max2i = 1/rp[(int)(f*n)].r2;
 	real weighted_mass = 0;
-	vector new_pos = 0, new_vel = 0;
+	vec new_pos = 0, new_vel = 0;
 
 	for (i = 0; i < f*n; i++) {
 	    dyn *bi = rp[i].p;
@@ -146,7 +146,7 @@ void compute_mcom(dyn *b,
 		  real f,			// default = 0.9
 		  int n_iter)			// default = 2
 {
-    vector pos, vel;
+    vec pos, vel;
     compute_mcom(b, pos, vel, f, n_iter);
 }
 

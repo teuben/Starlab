@@ -28,8 +28,8 @@
 void _dyn_::flat_accumulate_acc_and_jerk(_dyn_ * leaf,	// attracting leaf node
 					real eps2)	// softening length^2
 {
-    vector d_pos = leaf->get_pred_pos() - get_pred_pos();
-    vector d_vel = leaf->get_pred_vel() - get_pred_vel();
+    vec d_pos = leaf->get_pred_pos() - get_pred_pos();
+    vec d_vel = leaf->get_pred_vel() - get_pred_vel();
     real r2inv = 1.0 / (d_pos * d_pos + eps2);
     real a3 = -3.0 * (d_pos * d_vel) * r2inv;
     real mrinv = leaf->get_mass() * sqrt(r2inv);
@@ -112,10 +112,10 @@ void _dyn_::flat_set_first_timestep(real eta_for_firststep,
     timestep = newstep;
 }
 
-local real flat_new_timestep(vector & at3,	// third order term
-			     vector & bt2,	// 2nd order term
-			     vector & jerk,	// 1st order term
-			     vector & acc,	// 0th order term
+local real flat_new_timestep(vec & at3,	// third order term
+			     vec & bt2,	// 2nd order term
+			     vec & jerk,	// 1st order term
+			     vec & acc,	// 0th order term
 			     real timestep,	// old timestep
 			     real time,		// present time
 			     real eta,		// accuracy parameter
@@ -148,8 +148,8 @@ local real flat_new_timestep(vector & at3,	// third order term
 
 void _dyn_::flat_update(const real eta, const real dtmax)
 {
-    vector at3 = 2 * (old_acc - acc) + timestep * (old_jerk + jerk);
-    vector bt2 = -3 * (old_acc - acc) - timestep * (2 * old_jerk + jerk);
+    vec at3 = 2 * (old_acc - acc) + timestep * (old_jerk + jerk);
+    vec bt2 = -3 * (old_acc - acc) - timestep * (2 * old_jerk + jerk);
     time = time + timestep;
     timestep = flat_new_timestep(at3, bt2, jerk, acc,
 				 timestep, time, eta, dtmax);
@@ -165,15 +165,15 @@ void _dyn_::flat_update(const real eta, const real dtmax)
 
 bool _dyn_::flat_correct()
 {
-    vector at3 = 2 * (old_acc - acc) + timestep * (old_jerk + jerk);
-    vector bt2 = -3 * (old_acc - acc) - timestep * (2 * old_jerk + jerk);
+    vec at3 = 2 * (old_acc - acc) + timestep * (old_jerk + jerk);
+    vec bt2 = -3 * (old_acc - acc) - timestep * (2 * old_jerk + jerk);
     real dt2 = timestep * timestep;
 
     // Reminder:	at3  =  a''' dt^3 / 6		(a' = j)
     //			bt2  =  a''  dt^2 / 2
 
-    vector new_pos = pred_pos + (0.05 * at3 + ONE12 * bt2) * dt2;
-    vector new_vel = pred_vel + (0.25 * at3 + ONE3 * bt2) * timestep;
+    vec new_pos = pred_pos + (0.05 * at3 + ONE12 * bt2) * dt2;
+    vec new_vel = pred_vel + (0.25 * at3 + ONE3 * bt2) * timestep;
 
     pos = new_pos;
     vel = new_vel;
@@ -202,7 +202,7 @@ void predict_loworder_all(_dyn_ * b,
 
 #ifdef FIFTH_ORDER_PRED
 	real dt = b->get_timestep();
-	vector kdt = 18*dt*b->get_k_over_18();
+	vec kdt = 18*dt*b->get_k_over_18();
 	PRL(b->get_jerk());
 	PRC(dt); PRL(kdt);
 	b->predict_loworder5(t);	// new -- for GRAPE-6 kira...

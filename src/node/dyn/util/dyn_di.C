@@ -27,8 +27,8 @@ void dbg_message(char* s, dyn* bj, dyn *bi) {
 }
 
 local inline void accumulate_pot_on_work(real mass,
-					 vector d_pos,
-//					 vector d_vel,	// not used
+					 vec d_pos,
+//					 vec d_vel,	// not used
 					 real eps2,
 					 real & p) {
     real r2inv = 1.0 / (d_pos*d_pos + eps2);
@@ -36,7 +36,7 @@ local inline void accumulate_pot_on_work(real mass,
     p -= mrinv;
 
 //  silly trick to make the compiler shut up about "warning:  d_vel not used":
-//    vector dummy = d_vel;
+//    vec dummy = d_vel;
 
 //    cout << "work p = " << p << " \n";    
 }
@@ -44,8 +44,8 @@ local inline void accumulate_pot_on_work(real mass,
 local void tree_calculate_pot(dyn * bj,
 			      dyn *mask,
 			      dyn *bi,
-			      vector offset_pos,
-//			      vector offset_vel,
+			      vec offset_pos,
+//			      vec offset_vel,
 			      real eps2,
 			      real & p)
 {
@@ -74,8 +74,8 @@ local void calculate_pot_on_leaf(dyn * bj,
 {
     // dbg_message("calculate_pot_on_leaf", bi);
 
-    vector d_pos;
-//    vector d_vel;
+    vec d_pos;
+//    vec d_vel;
     for(dyn * b = bi; b != bj; b = b->get_parent()){
 	d_pos -= b->get_pos();
 //	d_vel -= b->get_vel();

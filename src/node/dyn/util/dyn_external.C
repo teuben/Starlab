@@ -17,7 +17,7 @@
 // Member functions:
 //
 //	real dyn::get_external_scale_sq()
-//	vector dyn::get_external_center();
+//	vec dyn::get_external_center();
 //
 // Global functions:
 //
@@ -48,11 +48,11 @@
 //-------------------------------------------------------------------------
 
 local inline void add_tidal(dyn * b,
-			    vector pos,
-			    vector vel,
+			    vec pos,
+			    vec vel,
 			    real& pot,
-			    vector& acc,
-			    vector& jerk,
+			    vec& acc,
+			    vec& jerk,
 			    bool pot_only)
 {
     // Compute the tidal components of the acceleration, jerk,
@@ -63,21 +63,21 @@ local inline void add_tidal(dyn * b,
 
     real a3 = b->get_alpha3();
 
-    vector dx = pos - b->get_tidal_center();
+    vec dx = pos - b->get_tidal_center();
 
     if (!pot_only) {
 
-	vector da_tidal_centrifugal = -vector(a1*dx[0], 0.0, a3*dx[2]);
-	vector da_coriolis = 2 * b->get_omega()
-	    		       * vector(vel[1], -vel[0], 0.0);
+	vec da_tidal_centrifugal = -vec(a1*dx[0], 0.0, a3*dx[2]);
+	vec da_coriolis = 2 * b->get_omega()
+	    		       * vec(vel[1], -vel[0], 0.0);
 
 	// Must update acc BEFORE computing dj for velocity-dependent forces!
 
 	acc += da_tidal_centrifugal + da_coriolis;
 
-	vector dj_tidal_centrifugal = -vector(a1*vel[0], 0.0, a3*vel[2]);
-	vector dj_coriolis = 2 * b->get_omega()
-      			       * vector(acc[1], -acc[0], 0.0);
+	vec dj_tidal_centrifugal = -vec(a1*vel[0], 0.0, a3*vel[2]);
+	vec dj_coriolis = 2 * b->get_omega()
+      			       * vec(acc[1], -acc[0], 0.0);
 
 	jerk += dj_tidal_centrifugal + dj_coriolis;
     }
@@ -117,11 +117,11 @@ local inline real tidal_pot(dyn * b)
 //-------------------------------------------------------------------------
 
 local inline void add_plummer(dyn * b,
-			      vector pos,
-			      vector vel,
+			      vec pos,
+			      vec vel,
 			      real& pot,
-			      vector& acc,
-			      vector& jerk,
+			      vec& acc,
+			      vec& jerk,
 			      bool pot_only)
 {
     // Compute the Plummer-field components of the acceleration, jerk,
@@ -132,7 +132,7 @@ local inline void add_plummer(dyn * b,
 
     real a2 = b->get_p_scale_sq();
 
-    vector dx = pos - b->get_p_center();
+    vec dx = pos - b->get_p_center();
     real r2 = square(dx) + a2;
     real r1 = sqrt(r2);
 
@@ -157,7 +157,7 @@ local inline real plummer_pot(dyn * b)
 
     real dpot = 0;
     for_all_daughters(dyn, b, bb) {
-	vector dx = bb->get_pos() - bb->get_p_center();
+	vec dx = bb->get_pos() - bb->get_p_center();
 	real r2 = square(dx) + a2;
 	dpot += bb->get_mass() / sqrt(r2);
     }
@@ -178,25 +178,25 @@ local inline real plummer_virial(dyn * b)
     // Don't make any assumptions about the locations of the
     // center of mass of the center of the Plummer field...
 
-    vector com_pos, com_vel;
+    vec com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
     // PRL(com_pos);
 
-    vector dR = com_pos - b->get_p_center();
-    vector acc_com = dR * pow(square(dR)+a2, -1.5);
+    vec dR = com_pos - b->get_p_center();
+    vec acc_com = dR * pow(square(dR)+a2, -1.5);
     // PRL(acc_com);
 
     // Don't actually need the acc_com term, as it should sum to zero
     // in the loop below...
 
-    vector dcom_pos = com_pos - b->get_pos();		// com quantities
-    vector dcen_pos = b->get_p_center() - com_pos;	// include root node
+    vec dcom_pos = com_pos - b->get_pos();		// com quantities
+    vec dcen_pos = b->get_p_center() - com_pos;	// include root node
 
     real vir = 0;
     for_all_daughters(dyn, b, bb) {
-	vector dr = bb->get_pos() - dcom_pos;
+	vec dr = bb->get_pos() - dcom_pos;
 	dR = bb->get_pos() - dcen_pos;
-	vector acc_ext = dR * pow(square(dR)+a2, -1.5);
+	vec acc_ext = dR * pow(square(dR)+a2, -1.5);
 	real dvir = bb->get_mass()*dr*(acc_ext - acc_com);
 	// PRL(dvir);
 	vir += dvir;
@@ -239,8 +239,8 @@ void set_friction_beta(real b) {beta = b;}	// BT say beta = 1
 static real Mfric = 0;				// cluster effective mass
 void set_friction_mass(real m) {Mfric = m;}
 
-static vector Vcm = 0;				// cluster CM velocity
-void set_friction_vel(vector v) {Vcm = v;}
+static vec Vcm = 0;				// cluster CM velocity
+void set_friction_vel(vec v) {Vcm = v;}
 
 local real density(dyn *b, real r)		// background density
 {
@@ -306,7 +306,7 @@ local real potential(dyn *b, real r)		// background potential;
     //#endif
 }
 
-static vector Afric = 0;			// frictional acceleration
+static vec Afric = 0;			// frictional acceleration
 void set_friction_acc(dyn *b, real r)
 {
     if (beta > 0) {
@@ -363,11 +363,11 @@ local inline void set_acx(real A, real c2, real x)
 }
 
 local inline void add_power_law(dyn * b,
-				vector pos,
-				vector vel,
+				vec pos,
+				vec vel,
 				real& pot,
-				vector& acc,
-				vector& jerk,
+				vec& acc,
+				vec& jerk,
 				bool pot_only)
 {
     // Compute the power-law-field components of the acceleration, jerk,
@@ -390,7 +390,7 @@ local inline void add_power_law(dyn * b,
 
     if (!acx_set) set_acx(A, c2, x);
 
-    vector dx = pos - b->get_pl_center();
+    vec dx = pos - b->get_pl_center();
     real dx2 = square(dx);
     real r2 = dx2 + a2;
 
@@ -418,7 +418,7 @@ local inline void add_power_law(dyn * b,
 	    real dx3i;
 	    if (M > 0 || c2 > 0) dx3i = dx1i/(dx2+eps2);
 
-	    vector vr = dx*(dx*vel);
+	    vec vr = dx*(dx*vel);
 
 	    if (dx2 > c2) {
 
@@ -479,7 +479,7 @@ local inline real power_law_pot(dyn * b)
     real dpot = 0;
     for_all_daughters(dyn, b, bb) {
 
-	vector dx = bb->get_pos() - bb->get_pl_center();
+	vec dx = bb->get_pos() - bb->get_pl_center();
 	real dx2 = square(dx);
 	real r2 = dx2 + a2;
 
@@ -526,25 +526,25 @@ local inline real power_law_virial(dyn * b)
     // Don't make any assumptions about the locations of the
     // center of mass of the center of the power-law field...
 
-    vector com_pos, com_vel;
+    vec com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
     // PRL(com_pos);
 
-    vector dR = com_pos - b->get_pl_center();
-    vector acc_com = dR * pow(square(dR)+a2, 0.5*(x-3));
+    vec dR = com_pos - b->get_pl_center();
+    vec acc_com = dR * pow(square(dR)+a2, 0.5*(x-3));
     // PRL(acc_com);
 
     // We don't actually need the acc_com term, as it should sum
     // to zero in the loop below...
 
-    vector dcom_pos = com_pos - b->get_pos();		// com quantities
-    vector dcen_pos = b->get_pl_center() - com_pos;	// include root node
+    vec dcom_pos = com_pos - b->get_pos();		// com quantities
+    vec dcen_pos = b->get_pl_center() - com_pos;	// include root node
 
     real vir = 0;
     for_all_daughters(dyn, b, bb) {
-	vector dr = bb->get_pos() - dcom_pos;
+	vec dr = bb->get_pos() - dcom_pos;
 	dR = bb->get_pos() - dcen_pos;
-	vector acc_ext = dR * pow(square(dR)+a2, 0.5*(x-3));
+	vec acc_ext = dR * pow(square(dR)+a2, 0.5*(x-3));
 	real dvir = bb->get_mass()*dr*(acc_ext - acc_com);
 	// PRL(dvir);
 	vir += dvir;
@@ -576,7 +576,7 @@ real dyn::get_external_scale_sq()
 	return 0;
 }
 
-vector dyn::get_external_center()
+vec dyn::get_external_center()
 {
     // Just enumerate the possiblilties...
 
@@ -595,11 +595,11 @@ vector dyn::get_external_center()
 // Other functions:
 
 void get_external_acc(dyn * b,
-		      vector pos,
-		      vector vel,
+		      vec pos,
+		      vec vel,
 		      real& pot,
-		      vector& acc,
-		      vector& jerk,
+		      vec& acc,
+		      vec& jerk,
 		      bool pot_only)	// default = false
 {
     // Compute the external components of the acceleration, jerk,
@@ -639,15 +639,15 @@ void get_external_acc(dyn * b,
     }
 }
 
-real vcirc(dyn *b, vector r)
+real vcirc(dyn *b, vec r)
 {
     // Return the circular velocity at position r.  Node b is used only
     // as a convenient means of passing static dyn class data.
 
-    vector acc, jerk;
+    vec acc, jerk;
     real pot;
 
-    get_external_acc(b, r, vector(0), pot, acc, jerk);
+    get_external_acc(b, r, vec(0), pot, acc, jerk);
 
     real vc2 = -r*acc;
 

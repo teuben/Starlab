@@ -87,9 +87,9 @@ real starbase::get_evolve_timestep() {return 0;}
 real starbase::temperature() {return 0;}
 real starbase::get_luminosity() {return 0;}
 
-vector starbase::get_anomal_velocity() {
-                 vector v; return v;}
-void starbase::set_anomal_velocity(const vector v) {}
+vec starbase::get_anomal_velocity() {
+                 vec v; return v;}
+void starbase::set_anomal_velocity(const vec v) {}
 void starbase::evolve_element(const real) {}
 star* starbase::merge_elements(star*) { return NULL; }    // HELP HELP
 

@@ -29,7 +29,7 @@
 
 void add_plummer(dyn *b,
 		 real coeff, real scale,
-		 vector center,			// default = (0, 0, 0)
+		 vec center,			// default = (0, 0, 0)
 		 bool n_flag,			// default = false
 		 bool verbose)			// default = false
 {
@@ -44,7 +44,7 @@ main(int argc, char *argv[])
     char *comment;		// comment string
 
     real mass = 1, scale = 1;
-    vector center = 0;
+    vec center = 0;
 
     bool n_flag = false;
 
@@ -67,7 +67,7 @@ main(int argc, char *argv[])
 	    case 'c':	c_flag = TRUE;
 			comment = poptarg;
 			break;
-	    case 'C':	center = vector(atof(poparr[0]),
+	    case 'C':	center = vec(atof(poparr[0]),
 					atof(poparr[1]),
 					atof(poparr[2]));
 			break;

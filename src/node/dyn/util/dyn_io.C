@@ -35,16 +35,16 @@ real dyn::omega	= 0;
 real dyn::omega_sq	= 0;
 real dyn::alpha1	= 0;
 real dyn::alpha3	= 0;
-vector dyn::tidal_center = vector(0,0,0);
+vec dyn::tidal_center = vec(0,0,0);
 
 real dyn::p_mass = 0;
 real dyn::p_scale_sq = 0;
-vector dyn::p_center = vector(0,0,0);
+vec dyn::p_center = vec(0,0,0);
 
 real dyn::pl_coeff = 0;
 real dyn::pl_scale_sq = 0;
 real dyn::pl_exponent = 0;
-vector dyn::pl_center = vector(0,0,0);
+vec dyn::pl_center = vec(0,0,0);
 real dyn::pl_cutoff = 0;
 real dyn::pl_cutoff_sq = 0;
 real dyn::pl_mass = 0;
@@ -274,13 +274,13 @@ dyn* get_col(istream& s,
 	}
 
 	if (find_qmatch(st, "r")) {
-	    vector pos = getvq(st, "r");
+	    vec pos = getvq(st, "r");
 	    root->set_pos(pos);
 	    rmq(st, "r");
 	}
 
 	if (find_qmatch(st, "v")) {
-	    vector vel = getvq(st, "v");
+	    vec vel = getvq(st, "v");
 	    root->set_vel(vel);
 	    rmq(st, "v");
 	}
@@ -296,8 +296,8 @@ dyn* get_col(istream& s,
     dyn* const b = (dyn*)the_npfp(the_hbpfp, the_sbpfp, use_stories);
     b->set_index(id);
     b->set_mass(m);
-    b->set_pos(vector(x[0], x[1], x[2]));
-    b->set_vel(vector(v[0], v[1], v[2]));
+    b->set_pos(vec(x[0], x[1], x[2]));
+    b->set_vel(vec(v[0], v[1], v[2]));
     b->set_parent(root);
     if (first_dyn) root->set_oldest_daughter(b), first_dyn = false;
     else  b->set_elder_sister(bo), bo->set_younger_sister(b);

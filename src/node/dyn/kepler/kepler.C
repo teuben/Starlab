@@ -696,7 +696,7 @@ void kepler::set_real_from_pred()
 void kepler::to_pred_rel_pos_vel(real cos_true_an, real sin_true_an)
 {
 
-    vector r_unit = cos_true_an * longitudinal_unit_vector +
+    vec r_unit = cos_true_an * longitudinal_unit_vector +
                     sin_true_an * transverse_unit_vector;
     pred_rel_pos = pred_separation * r_unit;
 
@@ -788,7 +788,7 @@ void kepler::fast_to_pred_rel_pos_vel(real r_cos_true_an,	// r cos f
     // Now compute the relative velocity vector.
 
     real ri = 1 / pred_separation;
-    vector r_unit = ri * pred_rel_pos;
+    vec r_unit = ri * pred_rel_pos;
 
     real rel_vel_squared = 2 * (energy + total_mass * ri);
     real v_t = angular_momentum * ri;
@@ -970,18 +970,18 @@ void  kepler::align_with_axes(int axis)
 {
     if (axis == 1) {
 
-	longitudinal_unit_vector = vector(1, 0, 0);
-	transverse_unit_vector = vector(0, 1, 0);
+	longitudinal_unit_vector = vec(1, 0, 0);
+	transverse_unit_vector = vec(0, 1, 0);
 
     } else if (axis == 2) {
 
-	longitudinal_unit_vector = vector(0, 1, 0);
-	transverse_unit_vector = vector(0, 0, 1);
+	longitudinal_unit_vector = vec(0, 1, 0);
+	transverse_unit_vector = vec(0, 0, 1);
 
     } else {
 
-	longitudinal_unit_vector = vector(0, 0, 1);
-	transverse_unit_vector = vector(1, 0, 0);
+	longitudinal_unit_vector = vec(0, 0, 1);
+	transverse_unit_vector = vec(1, 0, 0);
     }
     
     normal_unit_vector = longitudinal_unit_vector ^ transverse_unit_vector;
@@ -1102,16 +1102,16 @@ void  kepler::initialize_from_pos_and_vel(bool minimal, bool verbose)
     // Phase:
     // -----
 
-    vector r_unit = rel_pos / separation;
+    vec r_unit = rel_pos / separation;
 
     if (angular_momentum == 0) {
-        vector temp = vector(1,0,0);  // Construct an arbitrary normal vector.
-        if (abs(r_unit[0]) > .5) temp = vector(0,1,0);
+        vec temp = vec(1,0,0);  // Construct an arbitrary normal vector.
+        if (abs(r_unit[0]) > .5) temp = vec(0,1,0);
         normal_unit_vector = r_unit ^ temp;
         normal_unit_vector /= abs(normal_unit_vector);
     }
 
-    vector t_unit = normal_unit_vector ^ r_unit;
+    vec t_unit = normal_unit_vector ^ r_unit;
 
     real cos_true_an = 1, sin_true_an = 0;
 
@@ -1616,24 +1616,24 @@ void set_random_orientation(kepler &k, int planar)
 
     // Construct the normal vector:
 
-    vector n = vector(sin_theta*cos(phi), sin_theta*sin(phi), cos_theta);
+    vec n = vec(sin_theta*cos(phi), sin_theta*sin(phi), cos_theta);
 
     // Construct unit vectors a and b perpendicular to n:
 
-    vector temp = vector(1, 0, 0);
-    if (abs(n[0]) > .5) temp = vector(0, 1, 0);	// temp is not parallel to n
+    vec temp = vec(1, 0, 0);
+    if (abs(n[0]) > .5) temp = vec(0, 1, 0);	// temp is not parallel to n
     if (n[2] < 0) temp = -temp;
 
-    vector b = n ^ temp;
+    vec b = n ^ temp;
     b /= abs(b);
-    vector a = b ^ n;
+    vec a = b ^ n;
     if (n[2] < 0) a = -a;	// Force (a, b) to be (x, y) for n = +/-z
     
     // Construct *random* unit vectors l and t perpendicular to each
     // other and to n (psi = 0 ==> periastron along a):
 
-    vector l = cos(psi)*a + sin(psi)*b;
-    vector t = n ^ l;
+    vec l = cos(psi)*a + sin(psi)*b;
+    vec t = n ^ l;
 
     k.set_orientation(l, t, n);
     k.initialize_from_shape_and_phase();
@@ -1675,8 +1675,8 @@ main(int argc, char **argv)
     real mass = 1;
     real m2 = 1;
     real mean_anomaly = 0;
-    vector r = vector(1,0,0);
-    vector v = vector(0,1,0);
+    vec r = vec(1,0,0);
+    vec v = vec(0,1,0);
 
     bool anim = false;
     bool to_apo = false;
@@ -1820,8 +1820,8 @@ main(int argc, char **argv)
 	    k.transform_to_time(time);
 	    if (k.get_separation() < rad_sum) break;
 
-	    vector pos = k.get_rel_pos();
-	    vector vel = k.get_rel_vel();
+	    vec pos = k.get_rel_pos();
+	    vec vel = k.get_rel_vel();
 
 	    bo->set_pos(-(m2/mass)*pos);
 	    bo->set_vel(-(m2/mass)*vel);

@@ -504,7 +504,7 @@ bool black_hole::super_nova() {
       real x_kick = v_kick*sin(theta_kick)*cos(phi_kick);
       real y_kick = v_kick*sin(theta_kick)*sin(phi_kick);
       real z_kick = v_kick*cos(theta_kick);
-      vector kick_velocity(x_kick, y_kick, z_kick);
+      vec kick_velocity(x_kick, y_kick, z_kick);
 //      PRL(kick_velocity);
       anomal_velocity = kick_velocity;
 // cerr << "Kick   : "<< v_kick <<" " << theta_kick <<" " << phi_kick<< endl;

@@ -195,7 +195,7 @@ local INLINE void update_node(worldbundle *wb,
 
 		    // Hard to see how to avoid this cost...
 
-		    vector ang_mom = square(1+b->get_mass()/sis->get_mass())
+		    vec ang_mom = square(1+b->get_mass()/sis->get_mass())
 					* (b->get_pos() ^ b->get_vel());
 
 #define TWFAC 1.e-6

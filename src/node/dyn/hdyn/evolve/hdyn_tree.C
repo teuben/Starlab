@@ -58,7 +58,7 @@
 
 real hdyn::distance_to_sister_squared()
 {
-    vector d_sep = pos - get_binary_sister()->get_pos();
+    vec d_sep = pos - get_binary_sister()->get_pos();
     return d_sep * d_sep;
 }
 
@@ -402,11 +402,11 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 
 	    real d_sq_min = VERY_LARGE_NUMBER;
 	    hdyn * local_nn = NULL;
-	    vector s_pos = hdyn_something_relative_to_root(new_sister,
+	    vec s_pos = hdyn_something_relative_to_root(new_sister,
 							   &hdyn::get_pos);
 
 	    for_all_leaves(hdyn, snn, bb) {
-		vector b_pos = hdyn_something_relative_to_root(bb,
+		vec b_pos = hdyn_something_relative_to_root(bb,
 							       &hdyn::get_pos);
 		real d_sq = square(b_pos - s_pos);
 		if (d_sq < d_sq_min) {

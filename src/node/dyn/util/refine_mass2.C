@@ -18,17 +18,17 @@
 
 #include "dyn.h"
 
-local inline vector ext_acc(dyn *b, vector pos)
+local inline vec ext_acc(dyn *b, vec pos)
 {
-    vector v = 0, acc, j;
+    vec v = 0, acc, j;
     real p;
     get_external_acc(b, pos, v, p, acc, j);		// (discard p and j)
     return acc;
 }
 
-local inline real ext_pot(dyn *b, vector pos)
+local inline real ext_pot(dyn *b, vec pos)
 {
-    vector v = 0, a, j;
+    vec v = 0, a, j;
     real pot;
     get_external_acc(b, pos, v, pot, a, j, true);	// (discard a and j)
     return pot;
@@ -36,18 +36,18 @@ local inline real ext_pot(dyn *b, vector pos)
 
 // Handy, for now...
 
-static vector ext_center, Rhat, acc_CM;
+static vec ext_center, Rhat, acc_CM;
 static real R;
 
 local real g1(dyn *b, real r)
 {
-    vector pos = ext_center + r*Rhat;
+    vec pos = ext_center + r*Rhat;
     return (ext_acc(b, pos) - acc_CM) * Rhat + pow(r-R, -2);
 }
 
 local real g2(dyn *b, real r)
 {
-    vector pos = ext_center + r*Rhat;
+    vec pos = ext_center + r*Rhat;
     return (ext_acc(b, pos) - acc_CM) * Rhat - pow(r-R, -2);
 }
 
@@ -104,7 +104,7 @@ local inline real solve(real (*g)(dyn*, real), dyn *b, real r1, real r2)
 
 local void get_rL(dyn *b,		// root node
 		  real M,		// current mass estimate
-		  vector center,	// current center estimate
+		  vec center,	// current center estimate
 		  real& r_L1,
 		  real& r_L2)
 {
@@ -169,7 +169,7 @@ void refine_cluster_mass2(dyn *b,
     // Use the standard center as our starting point.  The center will be
     // redetermined self-consistently, along with the mass.
 
-    vector center, vcenter;
+    vec center, vcenter;
     get_std_center(b, center, vcenter);
 
     // Choose the initial mass to include only the volume between the
@@ -187,7 +187,7 @@ void refine_cluster_mass2(dyn *b,
 
     real M = -1;					// (to start the loop)
     int N_inside;
-    vector cen = center, vcen = vcenter;
+    vec cen = center, vcen = vcenter;
 
     if (verbose) {
 	cerr << endl << "  refine_cluster_mass2: getting mass by iteration"
@@ -205,7 +205,7 @@ void refine_cluster_mass2(dyn *b,
     // a convenient measure of the cluster center in this case.
 
     real M0 = M_inside;
-    vector cen50 = center, vcen50 = vcenter;
+    vec cen50 = center, vcen50 = vcenter;
     bool set50 = false;
 
     while (iter++ < M_ITER_MAX
@@ -325,8 +325,8 @@ void refine_cluster_mass2(dyn *b,
 
     // Write our best estimate of the center to the dyn story.
 
-    vector bc_pos = b->get_pos()+center;
-    vector bc_vel = b->get_vel()+vcenter;
+    vec bc_pos = b->get_pos()+center;
+    vec bc_vel = b->get_vel()+vcenter;
 
     putrq(b->get_dyn_story(), "bound_center_time", (real)b->get_system_time());
     putvq(b->get_dyn_story(), "bound_center_pos", bc_pos);

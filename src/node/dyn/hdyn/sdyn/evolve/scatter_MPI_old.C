@@ -212,7 +212,7 @@ void slave_part_of_experiment(scatter_input input,
   b->set_name("root");
   //ppn(b, cerr);
     
-  vector center = b->get_pos();
+  vec center = b->get_pos();
   print_structure_recursive(b, 0., center, true, true, 4);
     
   // Integrate the system to completion:
@@ -228,7 +228,7 @@ void slave_part_of_experiment(scatter_input input,
   print_normal_form(b, cerr);
   b->set_name("root");
   ppn(b, cerr);
-  //	vector center = b->get_pos();
+  //	vec center = b->get_pos();
   print_structure_recursive(b, 0., center, true, true, 4);
 
   cerr << "Energy error = " << experiment.get_energy_error() << endl;

@@ -105,14 +105,14 @@ main(int argc, char ** argv)
     real sintheta = sqrt(1-costheta*costheta);
     if (randinter(-1,1) > 0) sintheta = -sintheta;
     real phi = randinter(0, 2*M_PI);
-    vector pos = r*vector(sintheta*cos(phi), sintheta*sin(phi), costheta);
+    vec pos = r*vec(sintheta*cos(phi), sintheta*sin(phi), costheta);
     PRL(pos);
     
     costheta = randinter(-1, 1);
     sintheta = sqrt(1-costheta*costheta);
     if (randinter(-1,1) > 0) sintheta = -sintheta;
     phi = randinter(0, 2*M_PI);
-    vector vel = v*vector(sintheta*cos(phi), sintheta*sin(phi), costheta);
+    vec vel = v*vec(sintheta*cos(phi), sintheta*sin(phi), costheta);
 
     n = new dyn();
     n->set_mass(m);

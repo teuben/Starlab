@@ -726,7 +726,7 @@ main(int argc, char** argv)
 
 		real x, y, z;
 		if(!HRD) {
-		    vector pos = bb->get_pos();
+		    vec pos = bb->get_pos();
 
 		    hdyn *p = bb->get_parent();
 		    while (p && p != root) {

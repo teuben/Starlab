@@ -150,7 +150,7 @@ local void adjust_vel(hdyn * b)
 
     // Recompute acc and jerk (acc unchanged)...
 
-    vector a_2b, j_2b;
+    vec a_2b, j_2b;
     real p_2b;
     real d_min_sister = VERY_LARGE_NUMBER;
     hdyn * p_nn_sister = NULL;

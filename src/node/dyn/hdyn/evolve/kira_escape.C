@@ -19,8 +19,8 @@
 
 local bool remove_escapers(hdyn* b,
 			   real rmax,
-			   vector center_pos,
-			   vector center_vel)
+			   vec center_pos,
+			   vec center_vel)
 {
     bool correct_dynamics = false;
     real rmax2 = rmax*rmax;
@@ -155,7 +155,7 @@ void check_and_remove_escapers(hdyn* b,
 
     real mass0 = total_mass(b);
 
-    vector center_pos, center_vel;
+    vec center_pos, center_vel;
     get_std_center(b, center_pos, center_vel);
 
     center_pos -= b->get_pos();			// std_center quantities

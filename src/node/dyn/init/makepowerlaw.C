@@ -108,7 +108,7 @@ local void  makepowerlaw(dyn * root, int n,
 	if (sintheta > 0) sintheta = sqrt(sintheta);
 	real phi = randinter(0.0, TWO_PI);
 
-        bi->set_pos(radius*vector(sintheta * cos(phi),
+        bi->set_pos(radius*vec(sintheta * cos(phi),
 				  sintheta * sin(phi),
 				  costheta));
 
@@ -142,17 +142,17 @@ local void  makepowerlaw(dyn * root, int n,
 
 	    // Isotropic.
 
-	    bi->set_vel(vrms*vector(randinter(-1,1),
+	    bi->set_vel(vrms*vec(randinter(-1,1),
 				    randinter(-1,1),
 				    randinter(-1,1)));
 	} else {
 
 	    // Some handy unit vectors.
 
-	    vector rhat = bi->get_pos()/radius;
-	    vector zhat = vector(0,0,1);
+	    vec rhat = bi->get_pos()/radius;
+	    vec zhat = vec(0,0,1);
 
-	    vector xyhat = rhat^zhat;		// transverse unit vector
+	    vec xyhat = rhat^zhat;		// transverse unit vector
 	    xyhat /= abs(xyhat);		// in the x-y plane
 
 	    real lim = sqrt(radius/cutoff);
@@ -189,7 +189,7 @@ int main(int argc, char ** argv) {
     char  seedlog[SEED_STRING_LENGTH];
 
     real coeff = 1, scale = 1, exponent = 1;
-    vector center = 0;
+    vec center = 0;
 
     real cutoff = 0, mass = 0, softening = 0;
 

@@ -650,8 +650,8 @@ local void initialize_dialog(int xorigin, int yorigin)
 
 local void make_relative_to_root(hdyn* b)
 {
-    vector root_pos = b->get_pos();
-    vector root_vel = b->get_vel();
+    vec root_pos = b->get_pos();
+    vec root_vel = b->get_vel();
     for_all_nodes(hdyn, b, bi) {
 	bi->inc_pos(-root_pos);
 	bi->inc_vel(-root_vel);

@@ -25,7 +25,7 @@
 local void getq(story* s, char* l, int &i)		{i = getiq (s, l);}
 local void getq(story* s, char* l, unsigned long &i)	{i = getulq(s, l);}
 local void getq(story* s, char* l, real &r)		{r = getrq (s, l);}
-local void getq(story* s, char* l, vector &v)		{v = getvq (s, l);}
+local void getq(story* s, char* l, vec &v)		{v = getvq (s, l);}
 
 #  define GETLOG(x) if (find_qmatch(b->get_log_story(), #x)) \
 		        getq(b->get_log_story(), #x, \
@@ -38,7 +38,7 @@ local void getq(story* s, char* l, vector &v)		{v = getvq (s, l);}
 local void putq(story* s, char* l, int i)		{putiq (s, l, i);}
 local void putq(story* s, char* l, unsigned long i)	{putulq(s, l, i);}
 local void putq(story* s, char* l, real r)		{putrq (s, l, r);}
-local void putq(story* s, char* l, vector v)		{putvq (s, l, v);}
+local void putq(story* s, char* l, vec v)		{putvq (s, l, v);}
 
 #define PUTLOG(x) putq(b->get_log_story(), #x, b->get_kira_counters()->x);
 

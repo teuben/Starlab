@@ -362,7 +362,7 @@ bool neutron_star::super_nova() {
     real x_kick = v_kick*sin(theta_kick)*cos(phi_kick);
     real y_kick = v_kick*sin(theta_kick)*sin(phi_kick);
     real z_kick = v_kick*cos(theta_kick);
-    vector kick_velocity(x_kick, y_kick, z_kick);
+    vec kick_velocity(x_kick, y_kick, z_kick);
     anomal_velocity = kick_velocity;
 
     // This is correct if velocity is along the z-axis.

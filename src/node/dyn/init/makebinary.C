@@ -171,7 +171,7 @@ local void makebinary(dyn* b, real lower, real upper,
 
 	    dyn* primary = bi->get_oldest_daughter();
 	    dyn* secondary = primary->get_younger_sister();
-	    vector nul = 0;
+	    vec nul = 0;
 	    if(!dyn_present(primary) || !dyn_present(secondary)) {
 
 	    real m_total = bi->get_mass();
@@ -462,7 +462,7 @@ int main(int argc, char ** argv)
 
 	    // Recompute the top-level kinetic energy in the CM frame.
 
-	    vector com_pos, com_vel;
+	    vec com_pos, com_vel;
 	    compute_com(b, com_pos, com_vel);
 	    com_vel -= b->get_pos();		// energies are relative
 						// to the parent node
