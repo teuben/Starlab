@@ -393,7 +393,8 @@ hdyn* hdyn::check_merge_node()
 	    if (get_parent() == coll->get_parent()) {
 		coll->synchronize_node();
 		initialize_kepler_from_dyn_pair(k, this, coll, false);
-		sep_sq = Starlab::min(sep_sq, k.get_periastron() * k.get_periastron()
+		sep_sq = Starlab::min(sep_sq,
+				      k.get_periastron() * k.get_periastron()
 						- sum_of_radii_sq);
 	    }
 
@@ -496,17 +497,14 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     real sum_of_radii_sq = pow(get_sum_of_radii(this, bcoll), 2);
     // real sum_of_radii_sq = pow(radius+bcoll->radius, 2);
 
-    // Potentially very expensive if merger doesn't occur during binary
-    // evolution, as this may entail synchronizing the entire system and
-    // synchronize_tree currently doesn't use GRAPE.  Fix is to define
+    // Potentially very expensive if the merger doesn't occur during
+    // binary evolution, as this may entail synchronizing the entire
+    // system and synchronize_tree doesn't use GRAPE.  Fix is to define
     // kira_synchronize_tree() in kira_grape_include.C to switch between
     // GRAPE (if available) and non-GRAPE code.
 
 //    cerr << "merge_nodes: calling synchronize_tree..." << flush;
 //    PRL(cpu_time());
-//    pp3("(1,10001)");
-//    pp3("(21,100021)");
-//    pp3("(23,100023)");
 
     kira_synchronize_tree(get_root(), true);	// true ==> sync_low_level
 
@@ -514,15 +512,18 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     // binary (specifically, 'this'), so sync the components now to avoid
     // problems later.
 
-    hdyn *sister = get_binary_sister();
     time = system_time;
-    sister->time = system_time;
+    hdyn *sister = NULL;
+    if (is_low_level_node()) {
+	sister = get_binary_sister();
+	sister->time = system_time;
+    }
 
 //    cerr << "back" << endl << flush;
 //    PRL(cpu_time());
-//    pp3("(1,10001)");
-//    pp3("(21,100021)");
-//    pp3("(23,100023)");
+
+//    pp3(this, cerr);
+//    pp3(bcoll, cerr);
 
     // It is possible that 'this' or bcoll is unperturbed (probably
     // at periastron passage)!  Better delete any kepler structures
@@ -571,14 +572,18 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
 	    cerr << "merge_nodes: call combine_top_level_nodes" << endl;
 
-	    // PRL(this);
-	    // PRL(get_top_level_node());
-	    // PRL(bcoll);
-	    // PRL(bcoll->get_top_level_node());
+#if 0
+	    PRL(this);
+	    PRL(get_top_level_node());
+	    PRL(bcoll);
+	    PRL(bcoll->get_top_level_node());
+	    PRL(decombine);
+#endif
 
 	    combine_top_level_nodes(get_top_level_node(),
 				    bcoll->get_top_level_node(),
 				    full_dump);
+//				    true);
 
 	    // pp2(get_top_level_node(), cerr);
 
@@ -597,7 +602,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	
 	    if (decombine) {
 
-		// cerr << "merge_nodes: call split_top_level_node 3" << endl;
+		cerr << "merge_nodes: call split_top_level_node 3" << endl;
 
 		split_top_level_node(get_top_level_node(), full_dump);
 
