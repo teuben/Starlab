@@ -24,6 +24,7 @@
 
 #define		DEFAULT_DT		10
 #define		DEFAULT_DT_REINIT	1
+#define		DEFAULT_DT_FULLDUMP	1
 #define		DEFAULT_DT_LOG		1
 #define		DEFAULT_DT_SSTAR	0.015625
 
@@ -699,6 +700,7 @@ bool kira_initialize(int argc, char** argv,
 		     real& dt_sstar,	// stellar evolution timestep
 		     real& dt_esc,	// escaper removal
 		     real& dt_reinit,	// reinitialization interval
+		     real& dt_fulldump,	// full dump interval
 		     bool& exact,	// no perturber list if true
 		     real& cpu_time_limit,
 		     bool& verbose,
@@ -726,13 +728,14 @@ bool kira_initialize(int argc, char** argv,
     dt_sstar = DEFAULT_DT_SSTAR;
     dt_esc = VERY_LARGE_NUMBER;
     dt_reinit = DEFAULT_DT_REINIT;
+    dt_fulldump = DEFAULT_DT_FULLDUMP;
 
     // Frequency of full binary output, in units of the log output interval.
     
     long_binary_out = LONG_BINARY_OUT;
 
     bool log_flag = false, snap_flag = false, sstar_flag = false,
-         esc_flag = false, reinit_flag = false;
+         esc_flag = false, reinit_flag = false, fulldump_flag = false;
 
     cpu_time_limit = VERY_LARGE_NUMBER;
 
@@ -784,7 +787,7 @@ bool kira_initialize(int argc, char** argv,
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"*:a:b.Bc:C:d:D:e:E:f:F:g:G:h:I:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvxX:y:z:Z:";
+"*:a:b.Bc:C:d:D:e:E:f:F:g:G:h:I:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvW:xX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
@@ -942,6 +945,11 @@ bool kira_initialize(int argc, char** argv,
 			break;
 	    case 'v':	verbose = !verbose;
 			break;
+	    case 'W':	dt_fulldump = atof(poptarg);
+	    		if (dt_fulldump < 0)
+			    dt_fulldump = pow(2.0, dt_fulldump);
+			fulldump_flag = true;
+			break;
 	    case 'x':	b->get_kira_options()->print_xreal
 				= !b->get_kira_options()->print_xreal;
 			break;
@@ -1066,9 +1074,9 @@ bool kira_initialize(int argc, char** argv,
     if (!snap_flag) dt_snap = delta_t;			// snap output at end
     if (dt_snap == 0) dt_snap = VERY_LARGE_NUMBER;	// suppress snap output
 
-    if (!reinit_flag) dt_reinit = dt_log;	// reinitialize on log output
     if (!esc_flag) dt_esc = dt_reinit;		// check for escapers at each
 						//     reinitialization
+    if (!fulldump_flag) dt_fulldump = dt_esc;	// full dump on escaper check
 
     //----------------------------------------------------------------------
 

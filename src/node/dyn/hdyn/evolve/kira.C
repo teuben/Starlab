@@ -1435,6 +1435,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
                                                //     stellar evolution
 			 real dt_esc,	       // escaper removal
 			 real dt_reinit,       // reinitialization interval
+			 real dt_fulldump,     // full dump interval
 			 bool exact,	       // exact force calculation
 			 real cpu_time_limit,
 			 bool verbose,
@@ -1476,6 +1477,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
     real dt_max = min(dt_log, dt_sstar);	// system will be synchronized
 						// for stellar evolution occur
     dt_max = min(dt_max, dt_reinit);
+    dt_max = min(dt_max, dt_fulldump);
     b->set_unpert_step_limit(dt_max);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1491,7 +1493,8 @@ local void evolve_system(hdyn * b,	       // hdyn array
     if (dt_snap < 0) {
 
 	// Turn on full_dump mode, at frequency -dt_snap.
-	// Turn off regular snapshot output.
+	// Turn off regular snapshot output.  Complete output
+	// occurs at intervals determined by dt_fulldump.
 
 	n_dump = -dt_snap;
 	dt_snap = VERY_LARGE_NUMBER;
@@ -1528,11 +1531,13 @@ local void evolve_system(hdyn * b,	       // hdyn array
     // Check and flag some basic relationships between time scales.
 
     if (dt_reinit < dt_sync)
-	err_exit("dt_reinit < dt_sync.");	// Require dt_reinit >= dt_sync
+	err_exit("dt_reinit < dt_sync.");	// require dt_reinit >= dt_sync
     if (dt_esc < dt_sync)
-	err_exit("dt_esc < dt_sync.");		// Require dt_esc >= dt_sync
+	err_exit("dt_esc < dt_sync.");		// require dt_esc >= dt_sync
     if (dt_sstar < dt_sync)
-	err_exit("dt_sstar < dt_sync.");	// Require dt_sstar >= dt_sync
+	err_exit("dt_sstar < dt_sync.");	// require dt_sstar >= dt_sync
+    if (dt_fulldump < dt_sync)			// require dt_fulldump
+	err_exit("dt_fulldump < dt_sync.");	//		>= dt_sync
 
     if (verbose) {
 	if (dt_log < dt_sync)
@@ -1571,6 +1576,10 @@ local void evolve_system(hdyn * b,	       // hdyn array
     real dt_esc_check = min(dt_sync, 1.0/16);
     real t_esc_check = tt + dt_esc_check;
 
+    // Time of next complete system dump (Steve, 9/01).
+
+    real t_fulldump = tt;
+
     if (verbose) {
 	cerr << endl;
 	PRC(t), PRL(t_end);
@@ -1582,8 +1591,9 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	PRL(dt_reinit);
 	PRL(dt_sstar);
 	PRL(dt_sync);
+	PRL(dt_fulldump);
 
-	PRC(t_snap); PRC(t_log); PRC(t_sync); PRL(t_esc);
+	PRC(t_snap); PRC(t_log); PRC(t_sync); PRC(t_esc); PRL(t_fulldump);
 
 	ko->print();
 	kd->print();
@@ -1727,13 +1737,21 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	// No full output at every t_sync.
 	// Stellar evolution forces t_sync to be 1/64 or less!
 
-	bool full_dump_now = (full_dump
-			      && (t >= t_reinit || t >= t_esc || t >= t_end));
-
+	// bool full_dump_now = (full_dump
+	//		      && (t >= t_reinit || t >= t_esc || t >= t_end));
+	//
 	// Note that t = t_reinit = t_esc now at restart, so the second
-	// clause of the if() test is true initially.
+	// clause of the if () test is true initially.
+
+	// Now have a separate timescale for full dump.
+
+	bool full_dump_now = (full_dump
+			      && (t >= t_fulldump || t >= t_end));
+	if (full_dump)
+	    update_step(ttmp, t_fulldump, dt_fulldump);
 
 	// This dump ends the current worldbundle, so don't do it initially.
+	// First full dump will be written below.
 
 	if (full_dump_now && !first_full_dump) {
 
@@ -1748,7 +1766,6 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    put_node(cout, *b,
 		     false,		// don't print xreal
 		     short_output);	// short output (uses STARLAB_PRECISION)
-
 	    set_complete_system_dump(false);
 
 	    cerr << "Full dump (";
@@ -2206,6 +2223,7 @@ main(int argc, char **argv)
     real dt_sstar;		// standard single-star evolution timestep
     real dt_esc;		// timestep to remove escapers
     real dt_reinit;		// timestep to reinitialize entire system
+    real dt_fulldump;		// timestep for full system dumps
 
     int long_binary_out;
 
@@ -2221,7 +2239,7 @@ main(int argc, char **argv)
     if (!kira_initialize(argc, argv,
 			 b, delta_t, dt_log, long_binary_out,
 			 dt_snap, dt_sstar,
-			 dt_esc, dt_reinit,
+			 dt_esc, dt_reinit, dt_fulldump,
 			 exact, cpu_time_limit, verbose,
 			 save_snap_at_log, snap_save_file, n_stop))
 	get_help();
@@ -2235,7 +2253,7 @@ main(int argc, char **argv)
 				   ->report_kepler_trig_error);
 
     evolve_system(b, delta_t, dt_log, long_binary_out,
-		  dt_snap, dt_sstar, dt_esc, dt_reinit,
+		  dt_snap, dt_sstar, dt_esc, dt_reinit, dt_fulldump,
 		  exact, cpu_time_limit,
 		  verbose, save_snap_at_log, snap_save_file, n_stop);
 
