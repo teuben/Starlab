@@ -36,7 +36,7 @@
 
 // T_DEBUG is not defined by kira_debug.h, so it can be used here as a flag.
 
-#define T_DEBUG		0.278765
+//#define T_DEBUG		0.278765
 
 // However, T_DEBUG_END is infinite by default, and T_DEBUG_LEVEL = 0.
 // To change these defaults, we must undefine them first...
@@ -1925,11 +1925,27 @@ local INLINE int get_force_and_neighbors(xreal xtime,
 
 	int status = 0;
 #ifndef NO_G6_NEIGHBOUR_LIST
+
+#ifdef T_DEBUG
+	if (in_debug_range) {
+	    cerr << "DEBUG: " << func << ": reading neighbor list...";
+	    PRL(cluster_id);
+	}
+#endif
+
 #ifdef G6_OLD_READ_NEIGHBOUR_LIST
 	status = g6_read_neighbour_list_old_(&cluster_id);
 #else
 	status = g6_read_neighbour_list_(&cluster_id);
 #endif
+
+#ifdef T_DEBUG
+	if (in_debug_range) {
+	    cerr << "DEBUG: " << func << ": read neighbor list"
+		 << endl << flush;
+	}
+#endif
+
 #endif
 
 #ifdef T_DEBUG
@@ -2955,12 +2971,6 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 
 	int ni = Starlab::min(n_pipes, n_top - i);
 
-
-	if (xtime > 0.278768) {
-	    cerr << func << ": top of loop: "; PRL(ni);
-	}
-
-
 	need_neighbors = false;
 	for (int ip = 0; ip < ni; ip++)
 	    if (current_nodes[i+ip]->get_grape_rnb_sq() > 0) {
@@ -2968,13 +2978,13 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 		break;
 	    }
 
-
-	if (xtime > 0.278768) PRL(need_neighbors);
-
-
 #ifdef T_DEBUG
 	if (in_debug_range && T_DEBUG_LEVEL > 0) {
-	    PRI(2); PRC(i); PRC(ni); PRL(need_neighbors);
+	    if (in_debug_range) {
+		cerr << "DEBUG: " << func << " " << 2.1 << endl << flush;
+		cerr << "  " << func << ": top of loop: ";
+		PRC(i); PRC(ni); PRL(need_neighbors);
+	    }
 	}
 #endif
 
@@ -2984,9 +2994,9 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 	// nn pointers.
 
 #ifdef T_DEBUG
-    if (in_debug_range) {
-	cerr << "DEBUG: " << func << " " << 3 << endl << flush;
-    }
+	if (in_debug_range) {
+	    cerr << "DEBUG: " << func << " " << 3 << endl << flush;
+	}
 #endif
 
 	int stat;
@@ -2995,8 +3005,12 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 					   need_neighbors)) {
 
 	    cerr << "after get_force_and_neighbors 2: ";
-	    PRL(stat);
 
+#ifdef T_DEBUG
+	    if (in_debug_range) {
+		PRL(stat);
+	    }
+#endif
 
 	    if (stat == 2) {
 
