@@ -24,8 +24,9 @@ story::~story()
 	delete si;
 	si = sn;
     }
+    // cout << "~story for " << this << endl;
     if (text) {
-//	cerr << "text = " << text << endl;
+	// cerr << "~story: deleting text " << text << endl;
 	delete [] text;
     }
 }

@@ -90,9 +90,7 @@ main(int argc, char ** argv)
 	    if (--n <= 0) exit(0);
 	}
 
-	if (bp != NULL)		// Hmmm... if (!bp) fails here on merlot!
-	    rmtree(bp);
-
+	if (bp) rmtree(bp);
 	bp = b;
     }
 
