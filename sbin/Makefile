@@ -12,10 +12,17 @@ mytime:	routines.c mytime.c
 	$(CC) -O0 mytime.c routines.o -lm -o mytime -g
 
 exelist:
-	@echo $(EXECUTABLES) routines.o
+	@echo $(EXECUTABLES)
 
-exelist1:
-	@echo $(EXECUTABLES) routines.o | tr ' ' '|'
+# Print a list of binary files explicitly not to be linked by mkshadow,
+# in a format suitable for use by egrep.
+
+skip:
+	@for file in $(EXECUTABLES) routines.o ; do \
+	    echo -n $$file'$$' ; \
+	    if [ "$$file" != "routines.o" ]; then \
+	        echo -n '|' ; else echo "" ; fi \
+	done
 
 distclean:
 clean:
