@@ -16,6 +16,9 @@ $nx = 256;		# should be able to determine this from the first file...
 $ny = 256;
 $n_repeat = 100;
 
+# Ticks per second
+$tps = 30;
+
 # Parse the command line.
 
 while ( @ARGV ) {
@@ -24,6 +27,11 @@ while ( @ARGV ) {
 
     if ( $arg =~ /^[0-9]/ ) {
 	$ny = $arg;
+    } elsif ( $arg eq "-f" ) {
+	$tps = shift( @ARGV );
+	if ($tps < 1) {
+	    $tps = 1;
+	}
     } elsif ( $arg eq "-i" ) {
 	$imgid = shift( @ARGV );
     } elsif ( $arg eq "-n" ) {
@@ -32,8 +40,8 @@ while ( @ARGV ) {
 	$nx = shift( @ARGV );
 	$ny = $nx;
     } else {
-	print "Usage: png2mng -i image-id [snap] -r n_repeat [100] ",
-	      "-s nx ny [256 256]\n";
+	print "Usage: png2mng -f speed [30] -i image-id [snap] ",
+	      "-n n_repeat [100] -s nx ny [256 256]\n";
 	exit(1);
     }
 }
@@ -49,9 +57,6 @@ while ( @ARGV ) {
 
 # mime for MNG in your server
 $mime = 'video/x-mng';
-
-# Ticks per second
-$tps = 30;
 
 ## Main
 
