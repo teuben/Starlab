@@ -705,7 +705,8 @@ bool kira_initialize(int argc, char** argv,
 		     bool& verbose,
 		     bool& save_snap_at_log,
 		     char* snap_save_file,
-		     int& n_stop)	// n to terminate simulation
+		     int& n_stop,	// n to terminate simulation
+		     bool& ignore_internal)
 {
 
     // Establish defaults for parameters (static class members or
@@ -779,6 +780,8 @@ bool kira_initialize(int argc, char** argv,
 
     bool allow_kira_override = true;
 
+    ignore_internal = false;
+
     bool r_virial_set = false;
     real input_r_virial;
 
@@ -788,7 +791,7 @@ bool kira_initialize(int argc, char** argv,
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"*:a:b.Bc:C:d:D:e:E:f:F.g:G:h:I:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvW:xX:y:z:Z:";
+"*:a:b.Bc:C:d:D:e:E:f:F.g:G:h:iI:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvW:xX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
@@ -935,6 +938,8 @@ bool kira_initialize(int argc, char** argv,
 	    		if (dt_sstar < 0) dt_sstar = pow(2.0, dt_sstar);
 			sstar_flag = true;
 			break;
+	    case 'i':	ignore_internal = !ignore_internal;
+			break;
 	    case 'I':	dt_reinit = atof(poptarg);
 	    		if (dt_reinit < 0) dt_reinit = pow(2.0, dt_reinit);
 			reinit_flag = true;
@@ -1027,6 +1032,23 @@ bool kira_initialize(int argc, char** argv,
 
     set_friction_beta(friction_beta);
     cerr << "Dynamical friction beta = " << friction_beta << endl;
+
+    bool snap_ignore_internal = false;
+    if (find_qmatch(b->get_log_story(), "ignore_internal")
+	&& getiq(b->get_log_story(), "ignore_internal") == 1)
+	snap_ignore_internal = true;
+
+    if (ignore_internal || snap_ignore_internal) {
+	if (!snap_ignore_internal) {
+	    cerr << "Command-line \"-i\" flag forces ignore_internal mode"
+		 << endl;
+	    putiq(b->get_log_story(), "ignore_internal", 1);
+
+	} else
+
+	    cerr << "*** Ignoring all internal forces "
+		 << "-- external field only ***" << endl;
+    }
 
     //----------------------------------------------------------------------
 

@@ -32,7 +32,10 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
 				     bool tree_changed,
 				     bool &reset_force_correction, // no longer
 								   // used...
-				     bool &restart_grape)
+				     bool &restart_grape,
+				     bool ignore_internal)	// turn off
+								// ALL N-body
+							        // interactions
 {
     // Note that this function uses the same function calls as
     // calculate_acc_and_jerk_on_top_level_node, but in a different
@@ -117,8 +120,9 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
 
     if (!exact) {
 
-	kira_calculate_top_level_acc_and_jerk(next_nodes, n_next,
-					      time, restart_grape);
+	if (!ignore_internal)
+	    kira_calculate_top_level_acc_and_jerk(next_nodes, n_next,
+						  time, restart_grape);
 
 	// (Uses grape_calculate_acc_and_jerk or
 	//  top_level_node_real_force_calculation, as appropriate.)
@@ -127,6 +131,12 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
 
 	for (int i = 0; i < n_next; i++) {
 	    hdyn *bi = next_nodes[i];
+
+	    if (ignore_internal) {
+		bi->set_nn(bi);
+		bi->set_coll(bi);
+		bi->set_d_nn_sq(VERY_LARGE_NUMBER);
+	    }
 
 	    if (bi->is_top_level_node()) {
 
@@ -305,8 +315,9 @@ static int nnodes = -1;
 void clean_up_kira_ev() {if (nodes) delete [] nodes;}
 
 void initialize_system_phase2(hdyn * b,
-			      int call_id,	// dfault = 0
-			      bool set_dt)	// default = true
+			      int call_id,	// default = 0
+			      bool set_dt,	// default = true
+			      bool ignore_internal)	// default = false
 {
     dbg_message("initialize_system_phase2", b);
 
@@ -367,7 +378,8 @@ void initialize_system_phase2(hdyn * b,
 				    exact,
 				    tree_changed,
 				    reset_force_correction,  // no longer used
-				    restart_grape);
+				    restart_grape,
+				    ignore_internal);
 
     // (All perturber lists have been redetermined...)
 
