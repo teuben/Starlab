@@ -6,7 +6,8 @@
 ## (Japanese computer hardware site with unclear purpose...)
 ## Writes to stdout.
 
-## Modified by Steve 8/02 to expand features.
+## Modified by Steve McMillan (steve@kepler.physics.drexel.edu)
+## 8/02 to expand features.
 
 # Defaults:
 
