@@ -1325,6 +1325,12 @@ pdyn *create_interpolated_tree(worldbundle *wb, real t,
 			    if (b->get_kepler())
 				curr->set_kepler((kepler*)1);
 
+			    // **** NEW for pdyn data. ****
+
+			    curr->set_stellar_type(b->get_stellar_type());
+			    curr->set_temperature(b->get_temperature());
+			    curr->set_luminosity(b->get_luminosity());
+
 			    // cerr << "added " << curr->format_label()
 			    //      << endl;
 

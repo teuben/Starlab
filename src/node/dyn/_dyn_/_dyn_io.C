@@ -97,23 +97,29 @@ istream & _dyn_::scan_dyn_story(istream & s)
 }
 
 local void print_local_time(xreal time,
+			    xreal system_time,
 			    ostream & s,
 			    bool print_xreal,
 			    int short_output)
 {
-    // Always print high-precision real system time for t in the
+    // Always print high-precision real system_time for t in the
     // short_output case.  (In general, the output precision is
     // controlled with the STARLAB_PRECISION environment variable.)
 
-    if (short_output) adjust_starlab_precision(HIGH_PRECISION);
+    if (short_output) {
 
-    if (print_xreal)
-	put_real_number(s, "  t  =  ", time);		// OK for real or xreal
-    else
-	put_real_number(s, "  t  =  ", (real)time);
+	adjust_starlab_precision(HIGH_PRECISION);
+	put_real_number(s, "  t  =  ", (real)system_time);
+	if (short_output) adjust_starlab_precision(-1);
 
-    if (short_output) adjust_starlab_precision(-1);
+    } else {
 
+	if (print_xreal)
+	    put_real_number(s, "  t  =  ", time);	// OK for real or xreal
+	else
+	    put_real_number(s, "  t  =  ", (real)time);
+
+    }
 }
 
 ostream & _dyn_::print_dyn_story(ostream & s,
@@ -125,7 +131,8 @@ ostream & _dyn_::print_dyn_story(ostream & s,
     // Ordinarily we want to print time before dyn stuff, but it is
     // necessary to print system time first for the root node...
 
-    if (parent) print_local_time(time, s, print_xreal, short_output);
+    if (parent) print_local_time(time, system_time,
+				 s, print_xreal, short_output);
 
     // Awkward (dyn output prints pos), but...
 
@@ -146,7 +153,8 @@ ostream & _dyn_::print_dyn_story(ostream & s,
 	vel = tmp_vel;
     }
 
-    if (!parent) print_local_time(time, s, print_xreal, short_output);
+    if (!parent) print_local_time(time, system_time,
+				  s, print_xreal, short_output);
 
     if (!short_output) {
 	put_real_vector(s, "  a  =  ", acc);

@@ -21,6 +21,7 @@
 ////             -u    highlight unperturbed systems [no]
 ////             -v    verbose mode (worldbundle details) [0]
 ////
+////
 //// Note:  There appears to be a problem with the X interface on some
 ////        systems that causes xstarplot to crash if too many run-time
 ////        user commands are received in a short space of time (e.g.
@@ -62,6 +63,12 @@
 #include "xstarplot.h"
 #include "dyn_util.h"
 
+// Use dyn if we only want to deal with dynamical quantities.
+// Use pdyn if we want to see quantities too.
+
+#define DYN pdyn
+#define DYNPTR pdynptr
+
 //-------------------------------------------------------------------------
 
 
@@ -99,7 +106,7 @@ char   temp_buffer[255];	// convenient to share this temporary space
 // base_point_size defines the size of the default "dot" size on the display.
 // It is used (with scaling) for stars and (without scaling) for nodes.
 
-local void set_base_point_size(dyn* b, float rel_point_size)
+local void set_base_point_size(DYN* b, float rel_point_size)
 {
     base_point_size = 2 * SMALL_DOT_SIZE;	// default point size
 
@@ -109,7 +116,7 @@ local void set_base_point_size(dyn* b, float rel_point_size)
 
 	real m_tot = 0;
 	real n_tot = 0;
-	for_all_leaves(dyn, b, bi) {
+	for_all_leaves(DYN, b, bi) {
 	    n_tot++;
 	    m_tot += bi->get_mass();
 	}
@@ -131,7 +138,7 @@ local void set_base_point_size(dyn* b, float rel_point_size)
 
 	    real r_tot = 0;
 	    real n_tot = 0;
-	    for_all_leaves(dyn, b, bi) {
+	    for_all_leaves(DYN, b, bi) {
 		n_tot++;
 		r_tot += bi->get_radius();
 	    }
@@ -150,17 +157,23 @@ local void set_base_point_size(dyn* b, float rel_point_size)
     if (rel_point_size > 0.0)  base_point_size *= rel_point_size;
 }
 
-local float get_point_size(dyn* bi)
+local float get_point_size(DYN* bi)
 {
     // Scaling by mass is too extreme.  Use sqrt(mass).
     // Also, impose a lower limit on the point size.
 
+    // For pdyns, radius is in solar units.  Better place a limit so
+    // supergiants don't just vanish!
+
     if (point_scale_mode == 1)
-	return max(SMALL_DOT_SIZE, base_point_size * sqrt(bi->get_mass()));
+	return max(SMALL_DOT_SIZE,
+		   base_point_size * sqrt(bi->get_mass()));
     else if (point_scale_mode == 2)
-	return max(SMALL_DOT_SIZE, base_point_size * bi->get_radius());
+	return max(SMALL_DOT_SIZE,
+		   base_point_size * min(20., bi->get_radius()));
     else if (point_scale_mode == 3)
-	return max(SMALL_DOT_SIZE, base_point_size * sqrt(bi->get_radius()));
+	return max(SMALL_DOT_SIZE,
+		   base_point_size * min(20., sqrt(bi->get_radius())));
     else
 	return base_point_size;
 }
@@ -185,9 +198,9 @@ local void draw_star_point(unsigned long win, float r, float s,
 		  actual_point_size, actual_point_size, 0.0, 360.0);
 }
 
-local void draw_links_2d(dyn* b, float r, float s)
+local void draw_links_2d(DYN* b, float r, float s)
 {
-    for_all_daughters(dyn, b, bb) {
+    for_all_daughters(DYN, b, bb) {
 
 	float rr = bb->get_pos()[kx]-local_offset[kx];
 	float ss = bb->get_pos()[ky]-local_offset[ky];
@@ -239,9 +252,9 @@ local void draw_links_2d(dyn* b, float r, float s)
     }
 }					   
 
-local void draw_links_3d(dyn* b, float r, float s)
+local void draw_links_3d(DYN* b, float r, float s)
 {
-    for_all_daughters(dyn, b, bb) {
+    for_all_daughters(DYN, b, bb) {
 
 	float X = (float)bb->get_pos()[0] - local_offset[0] - origin[0];
 	float Y = (float)bb->get_pos()[1] - local_offset[1] - origin[1];
@@ -256,7 +269,7 @@ local void draw_links_3d(dyn* b, float r, float s)
     }
 }					   
 
-local int clean_index(dyn* b)
+local int clean_index(DYN* b)
 {
     int clean_name = 0;
 
@@ -272,7 +285,7 @@ local int clean_index(dyn* b)
 
 static real max_cm = 2;
 
-local void plot_star(dyn *bi, float r, float s,
+local void plot_star(DYN *bi, float r, float s,
 		     float actual_point_size, int f_flag)
 {
     // Plot a point at (r, s) representing star bi.
@@ -327,7 +340,7 @@ local void plot_star(dyn *bi, float r, float s,
 	//	orange		quadruple system
 	//	red		quintuple or higher-order system
 
-	dyn *od = bi->get_oldest_daughter();
+	DYN *od = bi->get_oldest_daughter();
 
 	if (multiples && od && bi->is_top_level_node()) {
 
@@ -414,7 +427,7 @@ local void plot_star(dyn *bi, float r, float s,
     }
 }
 
-local int plot_all_stars(dyn* b, int f_flag)
+local int plot_all_stars(DYN* b, int f_flag)
 {
     int  n_stars = b->n_leaves();
     if (b->get_oldest_daughter() == NULL) n_stars = 0;
@@ -424,7 +437,7 @@ local int plot_all_stars(dyn* b, int f_flag)
 
     if (graph3d) {
 
-	for_all_nodes(dyn, b, bi) if (root || bi->get_parent()) {
+	for_all_nodes(DYN, b, bi) if (root || bi->get_parent()) {
 	    if (nodes
 		|| (multiples && bi->is_top_level_node())
 		|| (unperturbed && bi->get_oldest_daughter())
@@ -462,10 +475,10 @@ local int plot_all_stars(dyn* b, int f_flag)
 	// Make a list of all nodes, *including* the root node if root = 1.
 	// Root will be at the start of the list if it is being displayed.
 
-	dynptr* p = new dynptr[n_nodes+root];
+	DYNPTR* p = new DYNPTR[n_nodes+root];
 
 	int ip = 0;
-	for_all_nodes(dyn, b, bi) if (root || bi != b) p[ip++] = bi;
+	for_all_nodes(DYN, b, bi) if (root || bi != b) p[ip++] = bi;
 	if (ip != n_nodes+root) {
 	    cerr << "plot_all_stars: n_nodes = " << n_nodes+root
 		<< " counted " << ip << endl;
@@ -477,7 +490,7 @@ local int plot_all_stars(dyn* b, int f_flag)
 	for (ip = 0; ip < n_nodes+root; ip++)
 	    for (int jp = ip+1; jp < n_nodes+root; jp++)
 		if (p[jp]->get_pos()[kproj-1] < p[ip]->get_pos()[kproj-1]) {
-		    dynptr bb = p[jp];
+		    DYNPTR bb = p[jp];
 		    p[jp] = p[ip];
 		    p[ip] = bb;
 		}
@@ -485,7 +498,7 @@ local int plot_all_stars(dyn* b, int f_flag)
 	// Plot ordered by depth.
 
 	for (ip = 0; ip < n_nodes+root; ip++) {
-	    dyn * bi = p[ip];
+	    DYN * bi = p[ip];
 	    if ( (root || bi != b)
 		&& (nodes
 		    || (multiples && bi->is_top_level_node())
@@ -717,11 +730,11 @@ local void initialize_dialog(int xorigin, int yorigin)
     r_factor = save;
 }
 
-local void make_relative_to_root(dyn* b)
+local void make_relative_to_root(DYN* b)
 {
     vector root_pos = b->get_pos();
     vector root_vel = b->get_vel();
-    for_all_nodes(dyn, b, bi) {
+    for_all_nodes(DYN, b, bi) {
 	bi->inc_pos(-root_pos);
 	bi->inc_vel(-root_vel);
     }
@@ -842,7 +855,7 @@ local void update_from_dialog(bool r_flag)
     read_diag_item(pointscalemode, point_scale_mode);
 }
 
-local void show_static_rotation(dyn* b, bool f_flag)
+local void show_static_rotation(DYN* b, bool f_flag)
 {
     // Handle static rotation using lux_check_keypress:
 
@@ -872,7 +885,7 @@ local void show_static_rotation(dyn* b, bool f_flag)
 		draw3d_axis(win, lmax3d, costheta, sintheta,
 			    cosphi, sinphi);
 
-		for_all_leaves(dyn, b, bi) {
+		for_all_leaves(DYN, b, bi) {
 
 		    float X = (float)bi->get_pos()[0] - origin[0];
 		    float Y = (float)bi->get_pos()[1] - origin[1];
@@ -942,7 +955,7 @@ local void show_static_rotation(dyn* b, bool f_flag)
     lux_set_color(win,c_energy[default_color]);
 }
 
-local char check_for_input(unsigned long win, dyn* b,
+local char check_for_input(unsigned long win, DYN* b,
 			   real &t, real &dt,
 			   bool r_flag, bool f_flag, bool eod)
 {
@@ -1008,7 +1021,7 @@ local char check_for_input(unsigned long win, dyn* b,
 
 		    // Use all dimensions in redetermining the scale!
 
-		    for_all_leaves(dyn, b, bi)
+		    for_all_leaves(DYN, b, bi)
 			for (int kk = 0; kk < 3; kk++)
 			    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]
 						     - local_offset[kk]));
@@ -1552,7 +1565,7 @@ local char check_for_input(unsigned long win, dyn* b,
 static int instr_freq = INSTR_FREQ_MAX;
 static int count_instr = 0;
 
-void xstarplot2(dyn* b, float scale, int k, int d, float lmax,
+void xstarplot2(DYN* b, float scale, int k, int d, float lmax,
 		int point_mode, float rel_point_size,
 		real &t, real &dt, float D, int ce,
 		bool r_flag, bool f_flag, bool t_flag,
@@ -1622,7 +1635,7 @@ void xstarplot2(dyn* b, float scale, int k, int d, float lmax,
 
 	    // Use all dimensions in determining the initial scale!
 
-	    for_all_leaves(dyn, b, bi)
+	    for_all_leaves(DYN, b, bi)
 		for (int kk = 0; kk < 3; kk++)
 		    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]));
 
@@ -1706,7 +1719,7 @@ void xstarplot2(dyn* b, float scale, int k, int d, float lmax,
     // Determine local offset, if any.
 
     if (origin_star > 0) {
-	for_all_leaves(dyn, b, bi)
+	for_all_leaves(DYN, b, bi)
 	    if (clean_index(bi) == origin_star) {
 		for (int kk = 0; kk < 3; kk++)
 		    local_offset[kk] = bi->get_pos()[kk];
@@ -1942,7 +1955,7 @@ main(int argc, char** argv)
 
     while (1) {
 
-	dyn *root = create_interpolated_tree(wb, t);
+	DYN *root = create_interpolated_tree(wb, t);
 
 	if (!max_cm_set) {
 	    max_cm /= root->n_daughters();

@@ -14,7 +14,7 @@
 ##    Sep 2000					Steve McMillan
 #..............................................................................
 
-OBJECT_FILES = tdyn_io.o worldline.o
+OBJECT_FILES = tdyn_io.o tdyn_tt.o worldline.o
 
 LIBRARY = libtdyn.a
 
