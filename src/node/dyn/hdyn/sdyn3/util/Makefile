@@ -4,7 +4,7 @@
 #     #  /      |      ^     |   \  |         ^     |   \     #           _\|/_
 #    #   \__    |     / \    |___/  |        / \    |___/    #             /|\
 #   #       \   |    /___\   |  \   |       /___\   |   \   #  _\|/_
-#  #     ___/   |   /     \  |   \  |____  /     \  |___/  #    /|\     
+#  #     ___/   |   /     \  |   \  |____  /     \  |___/  #    /|\
 # #                                                       #             _\|/_
 ##=======================================================#               /|\
 #
@@ -15,8 +15,8 @@
 ##.............................................................................
 
 CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) -O
-LIBFLAGS	= -L$(LIB) -lsdyn3 -lhdyn -l_dyn_ -ldyn -lnode -lstd -lm
-DEPEND_LIBS	= $(LIB)/libsdyn3.a  $(LIB)/libhdyn.a $(LIB)/lib_dyn_.a \
+LIBFLAGS	= -L$(LIB) -lsdyn3 -l_dyn_ -ldyn -lnode -lstd -lm
+DEPEND_LIBS	= $(LIB)/libsdyn3.a $(LIB)/lib_dyn_.a \
 		  $(LIB)/libdyn.a $(LIB)/libnode.a $(LIB)/libstd.a
 
 EXECUTABLES = sdyn3_io
