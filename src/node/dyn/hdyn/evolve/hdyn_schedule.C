@@ -530,6 +530,114 @@ void clean_up_hdyn_schedule() {if (nodes) delete [] nodes;}
 // ***** on the list have been integrated (e.g. by synchronize_tree()).
 // ***** If this is done, then a reset *must* be forced.
 
+
+
+
+//=========================================================================
+//
+// **** Used by the "experimental" code below -- sorting the node list
+// **** to make the traversal more cache-friendly.
+
+// Makino's quicksort -- recursive, with some add-ons from NR.
+
+#define N_INSERT 60	// crossover between quicksort and insertion_sort
+
+// Insertion sort from Numerical Recipes (except arrays start at 0!).
+
+local inline void insertion_sort(hdynptr a[], int n)	// sort from 0 to n-1
+{
+    for (int j = 1; j < n; j++) {
+	hdynptr v = a[j];
+	int i = j - 1;
+	while (i >= 0 && a[i] > v) a[i+1] = a[i--];
+	a[i+1] = v;
+    }
+}
+
+// Note that swap is slightly faster* than swap1...
+
+local inline void swap(hdynptr a[], int i, int j)
+{
+    hdynptr tmp = a[i];
+    a[i] = a[j];
+    a[j] = tmp;
+}
+
+local inline void swap1(hdynptr *x, hdynptr *y)
+{
+    hdynptr tmp = *x;
+    *x = *y;
+    *y = tmp;
+}
+
+local void quicksort_rec(hdynptr a[], int left, int right,
+			 int bucket = 0)
+{
+    // Sort pointer array a.
+
+    int i,j;
+    hdynptr v;
+
+    if (right > left) {
+
+	if (right-left <= N_INSERT) {
+	    insertion_sort(a+left, right-left+1);
+	    return;
+	}
+
+	// Extra test for "good enough" sort.
+
+	bool is_sorted = true;
+
+	for (i=left; i< right; i++) {
+	    if (a[i] - a[i+1] > bucket) {
+		is_sorted = false;
+		break;
+	    }
+	}
+	if (is_sorted) return;
+
+	// Not sorted -- something still to do.
+
+	// The NR way.
+
+	i = (left+right) >> 1;
+	swap(a, i, left+1);
+
+	if (a[left]   > a[right])  swap(a, left, right);
+	if (a[left+1] > a[right])  swap(a, left+1, right);
+	if (a[left]   > a[left+1]) swap(a, left, left+1);
+
+	i = left+1;
+	j = right;
+	v = a[left+1];
+
+	for (;;) {
+
+//	    while (a[++i] < v);
+//	    while (a[--j] > v);
+
+	    do i++; while (a[i] < v);	// marginally faster...
+	    do j--; while (a[j] > v);
+
+	    if (j < i) break;
+	    swap(a, i, j);
+	}
+	a[left+1] = a[j];
+	a[j] = v;
+
+	// Recursively sort the two halves.
+
+	quicksort_rec(a, left, j - 1, bucket);
+	quicksort_rec(a, j + 1, right, bucket);
+
+    }
+}
+
+//=========================================================================
+
+
+
 void fast_get_nodes_to_move(hdyn * b,
 			    hdyn * list[],
 			    int &nlist,
@@ -615,6 +723,25 @@ void fast_get_nodes_to_move(hdyn * b,
 
       cerr << list[0]->format_label() << endl;
     }
+
+
+//=========================================================================
+
+#if 0
+
+    // Experimental code: sort the node list to help cache flow...
+    // NB, for later -- bucket size should be the number of hdyns
+    // in a cache page.  Presently, a hdyn is about 0.5 kbytes.
+
+    // Hmmm...  The effect seems to be at best a small (~1%) speedup.
+    //							(Steve, 3/03)
+
+    quicksort_rec(list, 0, nlist-1, 128);
+
+#endif
+
+//=========================================================================
+
 }
 
 
