@@ -250,6 +250,7 @@ static vector Afric = 0;
 void set_friction_acc(dyn *b, real r)
 {
     Afric = -beta*Mfric*Vfric*density(b, r)/pow(-potential(b, r), 1.5);
+    cerr << "set_friction_acc: "; PRL(Afric);
 }
 
 //-------------------------------------------------------------------------
