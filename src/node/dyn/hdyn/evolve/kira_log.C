@@ -74,6 +74,12 @@ int get_effective_block(real dt)
     return k;
 }
 
+static bool allow_block_check = true;
+void set_block_check(bool b)		// default = true
+{
+    allow_block_check = b;
+}
+
 #define NTOP 10
 #define NBOT 10
 
@@ -233,7 +239,7 @@ local void print_timestep_stats(hdyn* b)
 		list_dtb[n].dt_a = dt_a;
 		list_dtb[n].b = bb;
 
-		if (bb->get_kepler() || dt_a != dtb) {
+		if (allow_block_check && (bb->get_kepler() || dt_a != dtb)) {
 
 		    if (!print_dtb) {
 			cerr << endl << "  Actual and block timesteps:"

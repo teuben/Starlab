@@ -1159,10 +1159,14 @@ bool check_kira_runtime(hdyn* b,
 	// print_recalculated_energies(b);	// omit because this can
 						// change the evolution...
 						// -- doesn't affect evolution
-						// now, but omit anyway
+						// any more, but omit anyway
 
 	print_counters(b->get_kira_counters());
-	print_statistics(b);
+
+	set_block_check(false);			// avoid annoying
+	print_statistics(b);			// "mismatch" messages
+	set_block_check(true);
+
 	cerr << endl;
     }
 
