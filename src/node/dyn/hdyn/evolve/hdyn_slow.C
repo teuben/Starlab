@@ -416,11 +416,10 @@ void hdyn::extend_or_end_slow_motion(real P)	// convenient to pass P (!)
 
 			    s->set_kappa(k);
 
-#if 0
-			    cerr << "    updated slow_perturbed list of"
-				 << " top-level node "
-				 << pert_top->format_label() << endl;
-#endif
+			    if (diag->slow)
+				cerr << "    updated slow_perturbed list of"
+				     << " top-level node "
+				     << pert_top->format_label() << endl;
 			}
 		    }
 		}
