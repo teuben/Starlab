@@ -316,7 +316,6 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		src/star/xutil/xhrdplot.h \
 		src/star/xutil/xstarplot.h \
 		src/std/mycat.C \
-		src/std/set_up.C \
 		src/std/setup_starlab.C \
 		src/std/sofar_story.C \
 		src/std/stats.C \
