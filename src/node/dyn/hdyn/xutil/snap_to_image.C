@@ -21,6 +21,10 @@
 ////           -n nmax      specify maximum number of images to produce   [Inf]
 ////           -N nbody     color using a (small-N) colormap               [no]
 ////           -o filename  same as -f (more standard name)
+////           -O option    specify how to choose the plot origin           [0]
+////                            0:  as is (don't adjust)
+////                            1:  initial center of mass
+////                            2:  modified center of mass of each frame
 ////           -p psize     specify star radius, in pixels
 ////                                          [0 (single image), 1 (animation)]
 ////           -P axis      specify projection axis                         [z]
@@ -41,7 +45,7 @@
 ////
 //// Note: 1. If animations are specified, an MNG or animated GIF file will
 ////          be created, but the individual frames will be retained unless
-////          the "-d" option is specified.
+////          the "-d" option is set.
 ////       2. If PNG output is requested and the PNG libraries are unavailable,
 ////          GIF output is produced instead.
 //.............................................................................
@@ -383,7 +387,7 @@ main(int argc, char** argv)
     bool compress = false;
     int format = 0;
 
-    real l = L;
+    real boxl = L;
     real xleft = -L;
     real xright = L;
     real ybot = -L;
@@ -401,6 +405,7 @@ main(int argc, char** argv)
     int nx = NX, ny = NY;
     int n = 0, nskip = 0;
 
+    int origin = 0;
     int axis = 3;		// 1 = x, 2 = y, 3 = z
 
     char colormap[FILE_NAME_LEN];
@@ -423,7 +428,7 @@ main(int argc, char** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "1acC:df:F:gGi:Hl:X:x:Y:y:mn:N:o:p:P:qrs:S:t";
+    char* param_string = "1acC:df:F:gGi:Hl:X:x:Y:y:mn:N:o:O:p:P:qrs:S:t";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
@@ -451,7 +456,7 @@ main(int argc, char** argv)
 			break;
 	    case 'H':	HRD = !HRD;
 			break;
-	    case 'l':	l = atof(poptarg);
+	    case 'l':	boxl = atof(poptarg);
 			break;
 	    case 'i':	index_all = atof(poptarg);
 	    		if (index_all < 0)
@@ -477,6 +482,8 @@ main(int argc, char** argv)
 	    		break;
 	    case 'N':	ncolor = atoi(poptarg);
 			index_all = -1;
+	    		break;
+	    case 'O':	origin = atoi(poptarg);
 	    		break;
 	    case 'p':   psize = atoi(poptarg);
 	    		// if (psize < 1) psize = 1;
@@ -542,20 +549,9 @@ main(int argc, char** argv)
 	    ytop = 3;
 	}
     } else {
-	xleft = ybot = -l;
-	xright = ytop = l; 
+	xleft = ybot = -boxl;
+	xright = ytop = boxl;
     }
-
-    real lx = xright - xleft;
-    real ly = ytop - ybot;
-
-    real xmin = Starlab::min(xleft, xright);
-    real xmax = Starlab::max(xleft, xright);
-    real ymin = Starlab::min(ybot, ytop);
-    real ymax = Starlab::max(ybot, ytop);
-
-    // PRC(xleft); PRC(xright); PRL(lx);
-    // PRC(ybot); PRC(ytop); PRL(ly);
 
     // Note on color maps and conventions (Steve, 8/02):
     //
@@ -645,13 +641,40 @@ main(int argc, char** argv)
 
     real mmin = VERY_LARGE_NUMBER, mmax = -VERY_LARGE_NUMBER;
     real rmin = VERY_LARGE_NUMBER, rmax = -VERY_LARGE_NUMBER;
-    real logfac = 1, rfac = nx/(2*l);
+
+    // Box settings (some may change with the forst dataset):
+
+    real logfac = 1, rfac = nx/(2*boxl);
+
+    real lx = xright - xleft;
+    real ly = ytop - ybot;
+
+    real xmin = Starlab::min(xleft, xright);
+    real xmax = Starlab::max(xleft, xright);
+    real ymin = Starlab::min(ybot, ytop);
+    real ymax = Starlab::max(ybot, ytop);
+
+    // PRC(xleft); PRC(xright); PRL(lx);
+    // PRC(ybot); PRC(ytop); PRL(ly);
+
+    vec xoffset, voffset;				// origin = 1 only
 
     // Loop over input snapshots.
 
     hdyn* b;
     while (b = get_hdyn()) {
 
+	if (origin == 2) {
+
+	    // Move the standard center to (0,0,0).
+
+	    vec cmx, cmv;
+	    get_std_center(b, cmx, cmv);
+
+	    b->inc_pos(-cmx);
+	    b->inc_vel(-cmx);
+	}
+	
 	float color_all = 1;
 	if (index_all >= 0) color_all = 0.6667 + 0.3333*index_all; // !!
 
@@ -664,6 +687,45 @@ main(int argc, char** argv)
 		// This is the first frame to be converted into an image.
 		// Determine overall scalings (and the mass range, if
 		// relevant) from *this* snapshot.
+
+		// Start by checking that some opints will actually be visible!
+
+		if (!HRD) {
+		    int total, count;
+		    real boxl_save = boxl;
+		    boxl /= 2;
+		    do {
+			boxl *= 2;
+			total = count = 0;
+			for_all_daughters(hdyn, b, bb) {
+			    total++;
+			    vec pos = b->get_pos() + bb->get_pos();
+			    if (abs1(pos) <= boxl) count++;
+			}
+		    }  while (total > 10 && count < (3*total)/4);
+
+		    if (boxl > 1.1*boxl_save) {
+
+			cerr << "snap_to_image: box size increased to "
+			     << boxl << endl;
+
+			// Reprats lines above..
+
+			xleft = ybot = -boxl;
+			xright = ytop = boxl;
+			rfac = nx/(2*boxl);
+
+			lx = xright - xleft;
+			ly = ytop - ybot;
+
+			xmin = Starlab::min(xleft, xright);
+			xmax = Starlab::max(xleft, xright);
+			ymin = Starlab::min(ybot, ytop);
+			ymax = Starlab::max(ybot, ytop);
+		    }
+
+		    if (origin == 1) compute_com(b, xoffset, voffset);
+		}
 
 		if (HRD || mass || radius || index_all < 0) {
 
@@ -734,21 +796,24 @@ main(int argc, char** argv)
 		initialize_arrays(a, zarray, nx*ny);
 
 	    hdyn *root = b->get_root();
-	    for_all_leaves(hdyn, b, bb) {
+	    for_all_daughters(hdyn, b, bb) {
 
 		real x, y, z;
 		if(!HRD) {
 		    vec pos = bb->get_pos();
 
 		    hdyn *p = bb->get_parent();
-		    while (p && p != root) {
+		    while (p) {
 			pos += p->get_pos();
 			p = p->get_parent();
 		    }
 
+		    if (origin == 1) pos -= xoffset;
+
 		    x = pos[iax];
 		    y = pos[jax];
 		    z = pos[kax];
+
 		}
 		else {
 
@@ -767,8 +832,8 @@ main(int argc, char** argv)
 
 		    if (!st) {
 			st = bb->get_dyn_story();
-			T_eff = getrq(st, "T"); 
-			L_sun = getrq(st, "L");
+			T_eff = getrq(st, "T");		// these are really
+			L_sun = getrq(st, "L");		// pdyn data...
 			stp = getrq(st, "S");
 		    }
 
