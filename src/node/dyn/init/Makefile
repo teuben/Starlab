@@ -24,7 +24,7 @@ DEPEND_LIBS	= $(LIB)/libstd.a $(LIB)/libnode.a $(LIB)/libdyn.a
 #  in DEPEND_LIBS.)
 
 EXECUTABLES	= makecube makedisk makeplummer makepyth makesphere makewrite \
-		  addplummer makebinary split_particles makeking \
+		  apply_plummer makebinary split_particles makeking \
 	 	  makeheavystar readp readstoa \
 	          makeplanetary makeblack_hole grow_black_hole \
 		  make_aniso_king makepowerlaw \
