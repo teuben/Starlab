@@ -37,7 +37,8 @@
 #..............................................................................
 
 OBJECT_FILES = hdyn_unpert.o hdyn_ev.o hdyn_tree.o hdyn_merge.o \
-	       hdyn_debug.o hdyn_grape.o hdyn_schedule.o hdyn_slow.o \
+	       hdyn_debug.o hdyn_external.o hdyn_grape.o \
+	       hdyn_schedule.o hdyn_slow.o \
 	       kira_init.o kira_runtime.o \
 	       perturbed_list.o correct_perturbers.o kira_check.o \
 	       kira_counters.o kira_energy.o kira_escape.o \
@@ -59,7 +60,8 @@ CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC)
 CPPFLAGS = 
 
 LIBFLAGS  =	-L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
-                -ldstar -lsstar -lstd -lm 
+                -ldstar -lsstar -lstd -lm \
+		$(GRAPELIB)
 #		~/ccmalloc-0.2.3/src/ccmalloc.o -ldl
 
 #EXEFLAGS = -pg
