@@ -146,8 +146,6 @@ local void mkbinary(dyn* b, real lower, real upper,
     // between the specified limits.
     // For now, use thermal eccentricities.
 
-    real frac = upper/lower;
-
     for_all_daughters(dyn, b, bi)
 	if (bi->get_oldest_daughter()) {
 
@@ -206,6 +204,7 @@ local void mkbinary(dyn* b, real lower, real upper,
 		      err_exit("mkbinary: Illegal limits on angular momentum");
 		    }
 		    a_min = max(lower, a_min);
+		    real frac = upper/lower;
 
 		    do {
 			ecc = sqrt(randinter(0,emax));
@@ -220,6 +219,7 @@ local void mkbinary(dyn* b, real lower, real upper,
 		    while(!detached);
 		}
 		else {
+		    real frac = upper/lower;
 		    ecc = sqrt(randinter(0,emax));
 		    l_const = log(upper) - log(lower);
 		    angular_momentum = lower*pow(frac, randinter(0,1));
@@ -284,6 +284,7 @@ local void mkbinary(dyn* b, real lower, real upper,
 
 	    else {				// default is select = 3
 
+	        real frac = upper/lower;
 		ecc = sqrt(randinter(0,emax));
 		energy = lower * pow(frac, randinter(0,1));
 		if (option == 1)
