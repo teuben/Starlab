@@ -75,7 +75,7 @@ real get_initial_mass(dyn* b,
 
 		if (b->get_system_time() > 0)
 		    cerr << endl
-			 << "warning: setting initial mass with time > 0"
+			 << "Warning: setting initial mass with time > 0"
 			 << endl;
 	    }
 
@@ -167,7 +167,7 @@ real get_initial_virial_radius(dyn* b,
 
 		if (b->get_system_time() > 0)
 		    cerr << endl
-			 << "warning: setting initial r_virial with time > 0"
+			 << "Warning: setting initial r_virial with time > 0"
 			 << endl;
 	    }
 
@@ -269,7 +269,7 @@ real get_initial_jacobi_radius(dyn* b,
 	} else {
 
 	    if (verbose)
-		cerr << "warning: error reading "
+		cerr << "Warning: error reading "
 		     << "kira_initial_jacobi_radius "
 		     << "from input snapshot"
 		     << endl;
@@ -314,7 +314,7 @@ real get_initial_jacobi_radius(dyn* b,
 	    } else {
 
 		if (verbose)
-		    cerr << "warning: error reading "
+		    cerr << "Warning: error reading "
 			 << "initial_rtidal_over_rvirial from input snapshot"
 			 << endl;
 		else
@@ -496,7 +496,7 @@ void set_tidal_params(dyn* b,
 	} else {
 
 	    if (verbose)
-		cerr << "warning: error reading "
+		cerr << "Warning: error reading "
 		     << "kira_tidal_field_type "
 		     << "from input snapshot"
 		     << endl;
@@ -539,7 +539,7 @@ void set_tidal_params(dyn* b,
 			tidal_msg(tidal_field_type, alpha3_over_alpha1);
 		}
 	    } else {
-		cerr << "warning: snapshot alpha3_over_alpha1 = "
+		cerr << "Warning: snapshot alpha3_over_alpha1 = "
 		     << alpha3_over_alpha1
 		     << " does not match any standard value"
 		     << endl;
@@ -548,7 +548,7 @@ void set_tidal_params(dyn* b,
 	} else {
 
 	    if (verbose)
-		cerr << "warning: error reading "
+		cerr << "Warning: error reading "
 		     << "alpha3_over_alpha1 "
 		     << "from input snapshot"
 		     << endl;
@@ -563,7 +563,7 @@ void set_tidal_params(dyn* b,
 
 	if (tidal_field_type <= 0)
 
-	    cerr << "Unable to determine tidal field type." << endl;
+	    cerr << "unable to determine tidal field type" << endl;
 
 	else {
 

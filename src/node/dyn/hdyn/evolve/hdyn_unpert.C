@@ -526,7 +526,7 @@ void toggle_unperturbed(hdyn *b, int level)
 
 void print_unperturbed_options(hdyn *b)
 {
-    cerr << "Unperturbed options:  allow_unperturbed = "
+    cerr << "unperturbed options:  allow_unperturbed = "
 	 << b->get_kira_options()->allow_unperturbed
 	 << ",  allow_multiples = "
 	 << b->get_kira_options()->allow_multiples

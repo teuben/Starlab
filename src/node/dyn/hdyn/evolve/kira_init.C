@@ -46,7 +46,7 @@ local void initialize_index(node * b, bool verbose)
     for_all_nodes(node, b, bb)
 	if (bb != b && bb->get_index() < 0 && bb->get_name() == NULL) {
 	    if (verbose) {
-		cerr << "Attached index " << index << " to unnamed ";
+		cerr << "attached index " << index << " to unnamed ";
 		if (bb->is_parent())
 		    cerr << "node\n";
 		else
@@ -131,7 +131,7 @@ local void choose_param(hdyn* b, bool verbose,
 		x = x_snap;
 		if (verbose) {
 		    if (skip_line) cerr << endl;
-		    cerr << "Taking " << x_id << " = " << x
+		    cerr << "taking " << x_id << " = " << x
 			 << " from input snapshot"
 			 << endl;
 		    skip_line = false;
@@ -153,7 +153,7 @@ local void choose_param(hdyn* b, bool verbose,
 
 	    if (verbose) {
 		if (skip_line) cerr << endl;
-		cerr << "Using default " << x_id << " = " << x
+		cerr << "using default " << x_id << " = " << x
 		     << endl;
 		skip_line = false;
 	    }
@@ -225,7 +225,7 @@ local void set_runtime_params(hdyn *b, bool verbose,
     real ratio = d_min_sq / square(d_min/nbody);
     if (ratio < 0.0002 || ratio > 5.e3)
 	cerr << endl
-	     << "*** warning: d_min_sq ratio = " << ratio << " ***"
+	     << "*** Warning: d_min_sq ratio = " << ratio << " ***"
 	     << endl;
 
     choose_param(b, verbose, lag_factor, lag_flag, "lag_factor");
@@ -237,10 +237,10 @@ local void set_runtime_params(hdyn *b, bool verbose,
     choose_param(b, verbose, max_slow, max_slow_flag, "log_max_slow", true);
     if (max_slow >= 0) {
 	int kappa_max = (int) pow(2, max_slow);
-	cerr << "Setting maximum slowdown factor = " << kappa_max << endl;
+	cerr << "setting maximum slowdown factor = " << kappa_max << endl;
 	b->set_max_slow_factor(kappa_max);
 	if (kappa_max > 1)
-	    cerr << "Maximum slow perturbation = "
+	    cerr << "maximum slow perturbation = "
 		 << b->get_max_slow_perturbation() << endl;
 	putiq(b->get_log_story(), "log_max_slow", max_slow);
     }
@@ -284,12 +284,12 @@ local real get_scaled_stripping_radius(hdyn* b,
 	    scaled_stripping_radius = kira_scaled_stripping_radius;
 
 	    if (verbose) {
-		cerr << "Using scaled stripping radius ";
+		cerr << "using scaled stripping radius ";
 		PRL(kira_scaled_stripping_radius);
 		cerr << "    from input snapshot" << endl;
 
 		if (input_stripping_radius > 0)
-		    cerr << "Ignoring \"-G " << input_stripping_radius
+		    cerr << "ignoring \"-G " << input_stripping_radius
 			 << "\" found on command line"
 			 << endl;
 	    }
@@ -438,12 +438,12 @@ local void get_physical_scales(hdyn* b,
 		    cerr << " overrides value " << old_m_tot;
 		cerr << " in input snapshot" << endl;
 	    } else
-		cerr << "Taking total mass = " << m_tot
+		cerr << "taking total mass = " << m_tot
 		     << " Msun from command line" << endl;
     } else
 	if (old_m_tot > 0) {
 	    m_tot = old_m_tot;
-	    cerr << "Taking total mass = " << m_tot
+	    cerr << "taking total mass = " << m_tot
 		 << " Msun from input snapshot" << endl;
 	    M_set = true;
 	}
@@ -467,13 +467,13 @@ local void get_physical_scales(hdyn* b,
 		    cerr << " overrides value " << old_r_vir;
 		cerr << " in input snapshot" << endl;
 	    } else
-		cerr << "Taking virial radius = " << r_vir
+		cerr << "taking virial radius = " << r_vir
 		     << " pc from command line" << endl;
 	}
     } else
 	if (old_r_vir > 0) {
 	    r_vir = old_r_vir;
-	    cerr << "Taking virial radius = " << r_vir
+	    cerr << "taking virial radius = " << r_vir
 		 << " pc from input snapshot" << endl;
 	    R_set = true;
 	}
@@ -497,7 +497,7 @@ local void get_physical_scales(hdyn* b,
 	    && !M_flag && !R_flag) {
 
 	    t_vir = old_t_vir;
-	    if (verbose) cerr << "Taking virial time scale = " << t_vir
+	    if (verbose) cerr << "taking virial time scale = " << t_vir
 			      << " from input snapshot" << endl;
 
 	} else {
@@ -511,14 +511,14 @@ local void get_physical_scales(hdyn* b,
 
 	    if (verbose) {
 		if (old_t_vir > 0) {
-		    cerr << "Recomputed virial time scale " << t_vir;
+		    cerr << "recomputed virial time scale " << t_vir;
 		    if (twiddles(t_vir, old_t_vir))
 			cerr << " is identical to value";
 		    else
 			cerr << " overrides value " << old_t_vir;
 		    cerr << " in input snapshot" << endl;
 		} else
-		    cerr << "Computed virial time scale = " << t_vir
+		    cerr << "computed virial time scale = " << t_vir
 			 << endl;
 	    }
 	}
@@ -533,7 +533,7 @@ local void get_physical_scales(hdyn* b,
 		cerr << " overrides value " << old_t_vir;
 	    cerr << " in input snapshot" << endl;
 	} else
-	    cerr << "Taking virial time scale = " << t_vir
+	    cerr << "taking virial time scale = " << t_vir
 		 << " from command line" << endl;
 
     }
@@ -551,9 +551,9 @@ local void get_physical_scales(hdyn* b,
 
 	if (verbose) {
 	    if (!R_set)
-		cerr << "Computed";
+		cerr << "computed";
 	    else
-		cerr << "Recomputed";
+		cerr << "recomputed";
 	    cerr << " virial radius = " << r_vir << endl;
 	}
     }
@@ -706,7 +706,8 @@ local void check_total_mass(hdyn *b, bool reset = true)
 	    cerr << endl
 		 << "*** Root mass disagrees with total mass"
 		 << endl;
-	    PRI(4); PRC(b->get_mass()); PRL(total_mass);
+	    real dm = b->get_mass() - total_mass;
+	    PRI(4); PRC(b->get_mass()); PRC(total_mass); PRL(dm);
 	    if (reset) {
 		cerr << "    resetting..." << endl;
 		b->set_mass(total_mass);
@@ -887,7 +888,7 @@ bool kira_initialize(int argc, char** argv,
 			break;
 	    case 'A':	alt_flag = true;
 	    		cerr << endl
-			     << "Additional log output enabled"
+			     << "additional log output enabled"
 			     << endl;
 			break;
 	    case 'b':	if (poptarg)
@@ -944,7 +945,7 @@ bool kira_initialize(int argc, char** argv,
 				set_write_unformatted(true);
 
 			    cerr << endl
-				 << "Binary tracking on"
+				 << "binary tracking on"
 				 << endl;
 
 			} else{
@@ -1073,21 +1074,21 @@ bool kira_initialize(int argc, char** argv,
     initialize_index(b, verbose);
 
     set_friction_beta(friction_beta);
-    cerr << "Dynamical friction beta = " << friction_beta << endl;
+    cerr << "dynamical friction beta = " << friction_beta << endl;
 
     check_set_ignore_internal(b, verbose);
     bool snap_ignore_internal = b->get_ignore_internal();
 
     if (ignore_internal || snap_ignore_internal) {
 	if (!snap_ignore_internal) {
-	    cerr << "Command-line \"-i\" flag forces ignore_internal mode"
+	    cerr << "command-line \"-i\" flag forces ignore_internal mode"
 		 << endl;
 	    putiq(b->get_log_story(), "ignore_internal", 1);
 
 	} else
 
 	    cerr << endl
-		 << "Ignoring internal forces "
+		 << "ignoring internal forces "
 		 << "-- external field only"
 		 << endl;
 
@@ -1171,7 +1172,7 @@ bool kira_initialize(int argc, char** argv,
         sprintf(seedlog,
 		"       random number generator seed = %d",actual_seed);
         b->log_comment(seedlog);
-	cerr << "Initial random seed = " << actual_seed << endl;
+	cerr << "initial random seed = " << actual_seed << endl;
     }
 
     // Establish defaults for time scales:
@@ -1270,7 +1271,7 @@ bool kira_initialize(int argc, char** argv,
     check_set_external(b, verbose);
 
     if (friction_beta > 0 && !b->get_pl())
-	cerr << "warning: dynamical friction, but no external field." << endl;
+	cerr << "Warning: dynamical friction, but no external field." << endl;
 
     //----------------------------------------------------------------------
 
@@ -1311,7 +1312,7 @@ bool kira_initialize(int argc, char** argv,
 
     } else
 
-	if (verbose) cerr << endl << "No escaper removal" << endl;
+	if (verbose) cerr << endl << "no escaper removal" << endl;
 
     // Save information on whether or not escapers are removed.
 
@@ -1354,7 +1355,7 @@ bool kira_initialize(int argc, char** argv,
 	    if (R_flag || M_flag || T_flag) {
 
 		if (verbose)
-		    cerr << "Overwriting (some) scale factors from"
+		    cerr << "overwriting (some) scale factors from"
 			 << " input snapshot"
 			 << endl;
 
@@ -1363,7 +1364,7 @@ bool kira_initialize(int argc, char** argv,
 	    } else {
 
 		if (verbose) {
-		    cerr << "Scale factors taken from input snapshot"
+		    cerr << "scale factors taken from input snapshot"
 			 << endl;
 		    b->get_starbase()->print_stellar_evolution_scaling(cerr);
 		}
@@ -1387,7 +1388,7 @@ bool kira_initialize(int argc, char** argv,
 	    // New:
 
 	    if (verbose) {
-		cerr << "Scale factors taken from input snapshot"
+		cerr << "scale factors taken from input snapshot"
 		     << endl;
 		b->get_starbase()->print_stellar_evolution_scaling(cerr);
 	    }
@@ -1395,7 +1396,7 @@ bool kira_initialize(int argc, char** argv,
 	} else {
 
 	    if (verbose)
-		cerr << "Stellar scaling unavailable -- "
+		cerr << "stellar scaling unavailable -- "
 		     << "suppressing stellar evolution." << endl;
 
 	    B_flag = S_flag = false;
