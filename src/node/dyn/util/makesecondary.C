@@ -19,7 +19,7 @@
 //// Usage: makesecondary [OPTIONS] < input > output
 ////
 //// Options:      
-////		  -C    force output data to be in 'col' format [no]
+////              -C    force output data to be in 'col' format [no]
 ////                    (note: loses binary data)
 ////              -f    specify binary fraction [0.1]
 ////                    for stars with mass >= spacified with -m
