@@ -3,6 +3,7 @@
 ////           the root node.
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
+////              -C    force col output [take from input format]
 
 //   version 1:  March 1994   Piet Hut
 
@@ -25,7 +26,7 @@
 //-----------------------------------------------------------------------------
 
 local void  unbundle_node(dyn * ud)
-    {
+{
     dyn * parent;
     parent = ud->get_parent();
 
@@ -41,11 +42,10 @@ local void  unbundle_node(dyn * ud)
     vector pos = ud->get_pos();
     vector vel = ud->get_vel();
 
-    for_all_daughters(dyn, ud, dd)
-	{
+    for_all_daughters(dyn, ud, dd) {
 	dd->inc_pos(pos);
 	dd->inc_vel(vel);
-	}
+    }
 
     // pointer adjustments:
 
@@ -54,48 +54,44 @@ local void  unbundle_node(dyn * ud)
 
     if (elder_sister == NULL)
 	parent->set_oldest_daughter(od);
-    else
-	{
+    else {
 	elder_sister->set_younger_sister(od);
 	od->set_elder_sister(elder_sister);
-	}
+    }
 
     dyn * d = od;
     dyn * pd;
 
-    while (d)
-	{
+    while (d) {
 	d->set_parent(parent);
 	pd = d;
 	d = d->get_younger_sister();
-	}
+    }
     
     dyn * younger_sister;
     younger_sister = ud->get_younger_sister();
 
-    if (younger_sister)
-        {
+    if (younger_sister) {
 	younger_sister->set_elder_sister(pd);
 	pd->set_younger_sister(younger_sister);
-	}
+    }
 
     delete ud;
-    }
+}
 
 /*-----------------------------------------------------------------------------
  *  flatten_node  --  
  *-----------------------------------------------------------------------------
  */
 void  dyn::flatten_node()
-    {
-    for_all_daughters(dyn, this, d)
-	{
+{
+    for_all_daughters(dyn, this, d) {
 	if (d->is_grandparent())
 	    d->flatten_node();
 
 	unbundle_node(d);
-	}
     }
+}
 
 /*===========================================================================*/
 
@@ -107,20 +103,23 @@ void  dyn::flatten_node()
 
 main(int argc, char ** argv)
 {
-    bool  c_flag = FALSE;
+    bool  c_flag = false;
+    bool  C_flag = false;
     char  *comment;
 
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:";
+    char* param_string = "c:C";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
 
 	    case 'c': c_flag = TRUE;
 		      comment = poptarg;
+		      break;
+	    case 'C': C_flag = TRUE;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
@@ -131,9 +130,11 @@ main(int argc, char ** argv)
 
     while (b = get_dyn()) {
 
-        if (c_flag == TRUE)
+        if (c_flag)
             b->log_comment(comment);
         b->log_history(argc, argv);
+
+	if (C_flag) b->set_col_output(true);
 
         b->flatten_node();
 	put_dyn(b);
