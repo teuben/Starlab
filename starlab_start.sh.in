@@ -62,6 +62,8 @@ fi
 # Add Starlab to search path after . and .. (or at end of path if absent).
 #
 # *** CHECK: what if we are user starlab and have a ~/bin directory??? ***
+# *** Really want to have the Starlab entries precede the system path  ***
+# *** TO DO -- NOT TESTED (Steve, 9/04) ***
 
 PATH=`echo "$PATH" | tr : '\12' | \
  awk '! /starlab.*bin$/ || /^(\/(|usr|local))+\/sbin$/ { p[++n] = $0; }

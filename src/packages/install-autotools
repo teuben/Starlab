@@ -39,22 +39,69 @@ set libtool  = (`find . -name libtool\*.tar.gz  | sed "s/.tar.gz//"`)
 
 foreach dir ($autoconf $automake $libtool)
 
-    echo unpacking $dir
-    gunzip -c $dir.tar.gz | tar xf -
+#   Start by checking whether we should actually build the package.  Compare
+#   its version with the version number of any installed version of the tool.
 
-    if (-d $dir) then
+    set build = 1
 
-	echo installing $dir
-	set log = $dir.install.log
-	echo installation log is $log
+#   Determine the tool name and version from dir.  We assume that the format
+#   here will continue to be standard terminology -- NEED TO MONITOR THIS.
 
-	chdir $dir
-	./configure $pre			>&! ../$log
-	make					>>& ../$log
-	make install				>>& ../$log
-	chdir ..
+    set tmp = (`echo $dir:t | tr '-' ' '`)
+    if ($#tmp == 2) then
 
-	rehash
+	set tool = $tmp[1]
+	set version = $tmp[2]
+
+#	See if a more up-to-date version of the tool already exists.
+
+	set tmp = `which $tool | grep not\ found`
+	if ($#tmp == 0) then
+
+#	    Tool exists on the current search path.  Check its version.
+
+	    alias t $tool
+	    set tmp = (`t --version | grep $tool`)
+
+#	    The following is very specific to the current format of the
+#	     --version output.  NEED TO MONITOR THIS...
+
+	    set v = $tmp[4]
+
+#	    Local package version is version, existing version is v.
+#	    Test whether we should supercede the installed version.
+#	    Assume that a simple lexical comparison will suffice.
+
+	    set build = `echo $version \
+			| awk -v v=$v '{print ($1 > v ? 1 : 0);}'`
+
+	endif
+    endif
+
+    if ($build == 0) then
+
+	echo suppressing build for $dir -- already exists
+
+    else
+
+	echo unpacking $dir
+	gunzip -c $dir.tar.gz | tar xf -
+
+	if (-d $dir) then
+
+	    echo installing $dir
+	    set log = $dir.install.log
+	    echo installation log is $log
+
+	    chdir $dir
+	    ./configure $pre			>&! ../$log
+	     make				>>& ../$log
+	    make install			>>& ../$log
+	    chdir ..
+
+	    rehash
+	endif
+
     endif
 
 end

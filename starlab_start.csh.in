@@ -98,16 +98,14 @@ end
 if ($add1 > 0 || $add2 > 0) then
 
     if ($idot < $iddot) set idot = $iddot
-    if ($idot == 0) set idot = $#path
 
 #   Directories will be added after idot.
+#   If idot = 0, add the directories at the start.
 
     set save = ($path)
     set path = ()
     @ i = 0
     while ($i < $#save)
-        @ i++
-        set path = ($path $save[$i])
         if ($i == $idot) then
             if ($add1 == 1) then
                 set path = ($path $dir1)
@@ -116,6 +114,8 @@ if ($add1 > 0 || $add2 > 0) then
                 set path = ($path $dir2)
             endif
         endif
+        @ i++
+        set path = ($path $save[$i])
     end
 endif
 
