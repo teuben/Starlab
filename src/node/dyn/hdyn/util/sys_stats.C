@@ -52,7 +52,7 @@
 ////                                      (0.5, 1, 2, 5, 10, 25, 50, 75, 90%)
 ////             -n    perform/don't perform actions requiring O(N^2)
 ////                   operations (e.g. computation of energy, core radius,
-////                   density, bound pairs) [yes]
+////                   density, bound pairs) [no]
 ////             -o    pipe system to cout [no]
 
 #include "hdyn.h"
