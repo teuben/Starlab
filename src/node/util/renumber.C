@@ -44,7 +44,8 @@ local int compare_mass(const void * pi, const void * pj)
         return(0);
 }
 
-void renumber(node* b, int istart, bool mass_order) {
+void renumber(node* b, int istart, bool mass_order,
+	      bool name_nodes) {
 
     int i;
     if(!mass_order) {
@@ -52,35 +53,45 @@ void renumber(node* b, int istart, bool mass_order) {
       i = istart;
       for_all_leaves(node, b, bj)
 	bj->set_label(i++);
+    }
+    else {
 
-      return;
+      // Renumber the stars in order of mass.
+      // Highest mass gets smallest number (strange choise, but).
+
+      int n = b->n_leaves();
+      nm_pair_ptr nm_table = new nm_pair[n];
+      if (nm_table == NULL) {
+	cerr << "renumber: "
+	     << "not enough memory left for nm_table\n";
+	return;
+      }
+
+      i=0;
+      for_all_daughters(node, b, bi) {
+	nm_table[i].str = bi;
+	nm_table[i].mass = bi->get_mass();
+	i++;
+      }
+
+      qsort((void *)nm_table, (size_t)n, sizeof(nm_pair), compare_mass);
+
+      for (i=0; i<n; i++) {
+	nm_table[i].str->set_index(istart+i);
+      }
+      delete []nm_table;
+
     }
 
-    // Renumber the stars in order of mass.
-    // Highest mass gets smallest number (strange choise, but).
-
-    int n = b->n_leaves();
-    nm_pair_ptr nm_table = new nm_pair[n];
-    if (nm_table == NULL) {
-      cerr << "renumber: "
-	   << "not enough memory left for nm_table\n";
-      return;
+    char tmp[128];
+    if(name_nodes)
+      for_all_leaves(node, b, bj) {
+      PRL(bj->get_index());
+      if (bj->get_index() >= 0) {
+	sprintf(tmp, "%d", bj->get_index());
+	bj->set_name(tmp);
+      }
     }
-
-    i=0;
-    for_all_daughters(node, b, bi) {
-      nm_table[i].str = bi;
-      nm_table[i].mass = bi->get_mass();
-      i++;
-    }
-
-    qsort((void *)nm_table, (size_t)n, sizeof(nm_pair), compare_mass);
-
-    for (i=0; i<n; i++) {
-      nm_table[i].str->set_index(istart+i);
-    }
-    delete []nm_table;
-
 }
 
 #else
@@ -91,13 +102,14 @@ void main(int argc, char ** argv)
     char  *comment;
 
     bool M_flag = false;
+    bool N_flag = false;
     int istart = 1;
 
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "MmI:i:c:";
+    char* param_string = "MmNI:i:c:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -111,6 +123,8 @@ void main(int argc, char ** argv)
 	    case 'm':
 	    case 'M': M_flag = true;
 		      break;
+	    case 'N': N_flag = true;
+		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	    	      get_help();
 	    	      exit(1);
@@ -121,7 +135,7 @@ void main(int argc, char ** argv)
     b = get_node(cin);
     b->log_history(argc, argv);
 
-    renumber(b, istart, M_flag);
+    renumber(b, istart, M_flag, N_flag);
 
     put_node(cout, *b);
     rmtree(b);
