@@ -504,9 +504,15 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
     cerr << "merge_nodes: calling synchronize_tree..." << flush;
     PRL(cpu_time());
+//    pp3("(21,100021)");
+//    pp3("(23,100023)");
+
     kira_synchronize_tree(get_root());
+
     cerr << "back" << endl << flush;
     PRL(cpu_time());
+//    pp3("(21,100021)");
+//    pp3("(23,100023)");
 
     // Yes, it really is possible that 'this' or bcoll is unperturbed
     // (probably in periastron passage)!  Better delete any kepler
