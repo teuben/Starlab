@@ -745,10 +745,9 @@ local int integrate_list(hdyn * b,
 		    bi->calculate_acc_and_jerk(true);
 		    bi->set_valid_perturbers(false);
 
-		    vector acc = 0, jerk = 0;
-		    bool recomp = false;
 		    if (bi->is_top_level_node()
 			&& b->get_external_field() > 0) {
+			vector acc, jerk;
 			real pot;
 			get_external_acc(bi,
 					 bi->get_pred_pos(),
@@ -764,9 +763,9 @@ local int integrate_list(hdyn * b,
 			     << bi->format_label() << " at time "
 			     << bi->get_system_time() << endl;
 			err_exit("Run terminated in integrate_list");
-		    } else if (recomp) {
-			cerr << endl << "recomputed  "; PRL(acc);
-			PRI(12); PRL(jerk);
+		    } else {
+			cerr << endl << "recomputed  "; PRL(bi->get_acc());
+			PRI(11); PRL(bi->get_jerk());
 		    }
 		}
 
