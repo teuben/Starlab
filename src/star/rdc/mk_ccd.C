@@ -47,7 +47,7 @@
 #include "sstar_to_dyn.h"
 #include "dyn.h"
 
-#include "/home3/spz/fits/inc/fitsio.h"
+#include <fitsio.h>
 
 enum wavelength {U=0, B, F, R, J};
 
