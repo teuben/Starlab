@@ -253,7 +253,7 @@ void kira_synchronize_tree(hdyn *b)
     if (ko->use_old_correct_acc_and_jerk || !ko->use_perturbed_list) {
 	bool reset = false;
 	correct_acc_and_jerk(b, reset);			// old version
-    else
+    } else
 	correct_acc_and_jerk(next_nodes, n_next);	// new version
 
     for (int i = 0; i < n_next; i++)
