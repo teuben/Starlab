@@ -36,9 +36,17 @@ First time install of starlab 4.x
 	cvs checkout starlab
 	cd starlab
 	
-	(goto step 3a)
+	(goto step 3a or 3b)
 
 3a) New method (configure based starlab 4.x based)
+
+    The simplest way to install would be the following command (from the starlab
+    root directory):
+
+	source AAA_SOURCE_ME
+
+
+3b) A more manual way would be the following set of commands:
 
 			(optionally override compilers if you need to fool the system)
 			(not well tested yet)
@@ -55,7 +63,7 @@ First time install of starlab 4.x
 	make all
 	
 
-3b) Old method (pre-configure, or starlab 3.x and below) - some comments on
+3c) Old method (pre-configure, or starlab 3.x and below) - some comments on
     installations of broken starlab 4.x may still apply here
 
 	mkdir local		(it may already exist though)
