@@ -425,6 +425,7 @@ void remove_node_with_one_daughter(node *n);
 void detach_node_from_binary_tree(node *n);
 void extend_tree(node *, node *);
 void add_node(node *n, node *parent);
+void add_node_before(node *n, node *m);
 void insert_node_into_binary_tree(node *, node *, node *);
 
 int is_descendent_of(node *, node *, int);

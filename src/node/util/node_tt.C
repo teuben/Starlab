@@ -417,21 +417,22 @@ node * node_with_name(char* s, node * top)	// recursive; default top = NULL
 }
 
 // detach_node_from_general_tree
-// delete node n. Do not check if the parent has more than 2 remaining
-// daughters or not.  Do not correct parent mass for removal of node.
+// Detach node n from the tree.  Do not check whether the parent has
+// more than two remaining daughters.  Do not correct the parent mass.
 
 void detach_node_from_general_tree(node *n)
 {
     if (n == NULL) {
-	cerr << "Warning: detach_node_from_general_tree, n is NULL\n";
+	cerr << "detach_node_from_general_tree: n is NULL" << endl;
 	return;
     }
 
     node *parent = n->get_parent();
     
-    // check if n is head without parent or sisters
+    // Check if n is head without parent or sisters.
+
     if (parent == NULL) {
-	cerr << "Warning: detach_node_from_general_tree, n has no parent\n";
+	cerr << "detach_node_from_general_tree: n has no parent" << endl;
 	return;
     }
 
@@ -440,18 +441,12 @@ void detach_node_from_general_tree(node *n)
     node *elder_sister = n->get_elder_sister();
     node *younger_sister = n->get_younger_sister();
 
-    if (parent->get_oldest_daughter() == n) {
+    if (parent->get_oldest_daughter() == n)
 	parent->set_oldest_daughter(younger_sister);
-    }
 
-    if (elder_sister != NULL) {
-	elder_sister->set_younger_sister(younger_sister);
-    }
-    if (younger_sister != NULL) {
-	younger_sister->set_elder_sister(elder_sister);
-    }
+    if (elder_sister) elder_sister->set_younger_sister(younger_sister);
+    if (younger_sister)	younger_sister->set_elder_sister(elder_sister);
 }
-
 
 // remove_node_with_one_daughter
 // remove the node from the tree
@@ -522,11 +517,10 @@ void detach_node_from_binary_tree(node *n)
     remove_node_with_one_daughter(parent);
 }
     
-
 // extend_tree
-// extend a tree by inserting a new node to a location presently
+// Extend a tree by inserting a new node to a location presently
 // occupied by old_n. old_n becomes the only child of the newly
-// inserted node. This function returns the address of the
+// inserted node.  This function returns the address of the
 // newly created node
 //
 
@@ -571,8 +565,6 @@ void extend_tree(node *old_n, node *new_n)
     old_n->set_younger_sister(NULL);
     old_n->set_parent(new_n);
 }
-
-
 
 // add_node
 // insert n into the tree as the oldest_daughter of the
@@ -624,9 +616,25 @@ void add_node(node *n, node *parent)
     n->set_parent(parent);
 }
 
-// insert_node_into_binary_tree : put n into the tree by creating
-// a new node at the location of old_n and making both old_n and n
-// its daughters
+// add_node_before: insert the given node n into the tree before a
+// specified node m.
+
+void add_node_before(node *n, node *m)
+{
+    if (!n || !m) return;
+    
+    node *p = m->get_parent();
+    if (!p) return;
+    n->set_parent(p);
+    if (p->get_oldest_daughter() == m) p->set_oldest_daughter(n);
+
+    node *elder_sister = m->get_elder_sister();
+    n->set_elder_sister(elder_sister);
+    m->set_elder_sister(n);
+
+    if (elder_sister) elder_sister->set_younger_sister(n);
+    n->set_younger_sister(m);
+}
 
 void insert_node_into_binary_tree(node *n, node *old_n, node *new_n)
 {

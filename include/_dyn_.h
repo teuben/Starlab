@@ -136,7 +136,8 @@ class  _dyn_ : public dyn
 
 	void  clear_t_pred()		  {t_pred = -VERY_LARGE_NUMBER;
 					   if (slow) slow->clear_tau_pred();}
-	inline xreal  get_t_pred()        {return t_pred;}
+	inline xreal get_t_pred()         {return t_pred;}
+	inline void  set_t_pred(xreal t)  {t_pred = t;}
 	
 	real  get_pot()                   {return pot;}
 	void  set_pot(const real p)	  {pot = p;}
