@@ -322,7 +322,7 @@ void hdyn::set_first_timestep(real additional_step_limit) // default = 0
 	while (fmod(time, timestep) != 0)
 	    timestep *= 0.5;
 
-    real tnext = time + timestep;
+    xreal tnext = time + timestep;
 
     if (timestep == 0 || time == tnext) {
 
