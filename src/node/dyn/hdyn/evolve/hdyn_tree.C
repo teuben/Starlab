@@ -204,11 +204,9 @@ local bool too_close(hdyn * bi, hdyn * bj, real limit_sq,
 local bool too_big(hdyn * bi, real limit_sq)
 {
     hdyn *od = bi->get_oldest_daughter();
-    if (od == NULL)
-	return false;
+    if (!od) return false;
 
-    // The next if statement prevents an unperturbed binary from being
-    // split even if it is large.
+    // Don't split an unperturbed binary even if it is large.
 
     if (od->get_kepler()) return false;
 
@@ -223,6 +221,10 @@ local bool too_big(hdyn * bi, real limit_sq)
     }
 
     bool big = !too_close(od, od->get_younger_sister(), limit_sq, false);
+
+    // EXPERIMENTAL:  Probably shouldn't keep strongly perturbed binaries:
+
+    if (od->get_perturbation_squared() > 10) big = true;
 
     // Don't allow a slow binary to be split, but schedule the slow
     // motion to be stopped at next apocenter.
@@ -995,7 +997,7 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
     }
 
     if (bi->get_kira_diag()->tree && bi->get_kira_diag()->tree_level > 0) {
-        cerr << "\ncombine_low_level_nodes:  combining ";
+        cerr << endl << "combine_low_level_nodes:  combining ";
 	bi->pretty_print_node(cerr);
 	cerr << " and ";
 	bj->pretty_print_node(cerr);
@@ -1006,6 +1008,7 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
     ancestor = common_ancestor(bi, bj);
 
     bool pp3_at_end = false;
+//    pp3_at_end = (bi->get_time() > 82 && bi->get_time() < 82.5);
 
 #if 0
     if (bi->get_time() > 2.6 && bi->get_time() < 2.7) {
