@@ -57,7 +57,9 @@
 //
 // where restart_grape may be ignored or used for other purposes in future
 // applications.  It indicates a change in top-level tree structure that
-// requires an internal reset in the GRAPE arrays.  The functions's return
+// requires an internal reset in the GRAPE arrays.  However, the GRAPE-6
+// code now sets an internal flag to convey the information, so only the
+// GRAPE-4 code actually uses this variable.  The functions's return
 // value is simply the number of top-level nodes in the system.
 //
 // Currently, the list of possible functions that can be used is
@@ -87,7 +89,7 @@ local inline int _kira_calculate_top_level_acc_and_jerk(hdyn **next_nodes,
     switch (config) {
 
 	case 0:	n_top = top_level_acc_and_jerk_for_list(next_nodes, n_next,
-							time, restart_grape);
+							time);
 		break;
 
 	case 1:	n_top = grape4_calculate_acc_and_jerk(next_nodes, n_next,
@@ -115,8 +117,7 @@ int kira_calculate_top_level_acc_and_jerk(hdyn **next_nodes,
 
 int top_level_acc_and_jerk_for_list(hdyn **next_nodes,
 				    int n_next,
-				    xreal time,
-				    bool restart_grape)
+				    xreal time)
 {
     int n_top = 0;
 
@@ -241,13 +242,29 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
     }
 #endif
 
+    // Retain restart_grape for compatibility with other functions, but
+    // in the GRAPE-6 version we actually transmit the information via
+    // the static restart_grape flag.  The reason is that (as of 3/05)
+    // there now are two functions which may need to reset the internal
+    // data structures, and it is too complicated to carry the flag
+    // through the many levels before we get to the new call.  The flag
+    // will be unset as soon as it is tested and action taken.
+    //
+    // In general, the use of static flags is probably a better way to
+    // handle this sort of communication (Steve, 3/05).
+
+    // Synchronize the old and new flags.  Retain the old version until we
+    // are sure the new one works, then we can remove all restart_grape
+    // references from the GRAPE version of calculate_acc_and_jerk()...
+    // 							(Steve 3/05)
+
+    if (tree_changed) restart_grape = true;
+    if (restart_grape) b->set_restart_grape_flag();
+
     // Complete the top-level force calculation (now top-level nodes
     // run from 0 to n_top-1):
 
     if (n_top > 0) {
-
-	if (tree_changed)
-	    restart_grape = true;
 
 #ifdef T_DEBUG
 	if (IN_DEBUG_RANGE(sys_t)) {
@@ -290,6 +307,8 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 	    // Note that we now clear restart_grape explicitly here.
 
 	    restart_grape = false;
+	    b->clear_restart_grape_flag();	// should be unnecessary
+	    
 	}
 
 //	if (sys_t >= 44.15329 && sys_t <= 44.1533) {

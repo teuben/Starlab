@@ -2055,12 +2055,14 @@ void hdyn::perturber_acc_and_jerk_on_leaf(vec &a,
 
     if (np <= 0) return;
     
-    // Added &hdyn:: to four "hdyn_something_relative_to_root" (Steve, 6/27/97).
-
-    // Removed all four "hdyn_something_relative_to_root" references, which are
+    // Determine absolute position and velocity of 'this', using explicit code.
+    // Removed four "hdyn_something_relative_to_root" references, which are
     // quite inefficient (Steve, 8/20/98).
 
-    // Determine absolute position and velocity of 'this', using explicit code.
+    // vec d_pos = -hdyn_something_relative_to_root(this,
+    // 						    &hdyn::get_pred_pos);
+    // vec d_vel = -hdyn_something_relative_to_root(this,
+    // 						    &hdyn::get_pred_vel);
 
     vec d_pos = -pred_pos;
     vec d_vel = -pred_vel;
@@ -2075,11 +2077,6 @@ void hdyn::perturber_acc_and_jerk_on_leaf(vec &a,
  	    gpar = gpar->get_parent();
  	}
     }
-
-    // vec d_pos = -hdyn_something_relative_to_root(this,
-    // 						    &hdyn::get_pred_pos);
-    // vec d_vel = -hdyn_something_relative_to_root(this,
-    // 						    &hdyn::get_pred_vel);
 
     // Loop over the perturber list.
 
@@ -2679,7 +2676,7 @@ void hdyn::create_low_level_perturber_lists(bool only_if_null) // default = true
 	}
     }
 }
-
+
 //-----------------------------------------------------------------------------
 // calculate_acc_and_jerk_on_low_level_node:  Calculate the acc (etc) on
 //         one component of a binary node in the following steps:
@@ -2789,9 +2786,16 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     // use the top-level list here.  Perturber_acc_and_jerk() will do the
     // right thing if sent a pnode with only low-only data available.
 
-    // *** Flag this when it occurs? ***
+    // A "valid" pnode is one containing either a full perturber list or
+    // a valid low-level list.  The two are distinguished by the value of
+    // n_perturbers, which is MAX_PERTURBERS + 1 in the latter case.
+
+    bool partial_only = false;
 
     if (!pnode) {
+
+	// No pnode is available.  Use the top-level node if it at least
+	// contains a valid low-level perturber list.
 
 	if (top_level->valid_perturbers_low) {
 
@@ -2799,23 +2803,73 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
 	    top = pnode = top_level;
 	    np = pnode->n_perturbers_low;
+	    partial_only = true;
 
-	} else
+	} else {
 
-	    top = root;		// better to use GRAPE if possible, but at
-				// present this will force an O(N) calculation
-				// on the front end...
-    } else
+	    // No list of any sort is available.  At present, this will
+	    // force an O(N) calculation on the front end.  Better to
+	    // use GRAPE if possible...
+
+	    top = root;
+	}
+
+    } else {
+
+	// Use pnode, but remember that it may only contain usable
+        // low-level data.
 
 	np = pnode->n_perturbers;
+    }
 
-    // np may be -1, 0, or >0, note.
+    // The value of np is only used as a boolean flag below, but it
+    // actually has the following meaning.  If np < 0 (-1), no perturber
+    // list is available and we will have to use the entire system in
+    // computing the perturbation.  If np = 0, the list is valid but
+    // empty.  If np > 0, the list is valid, although it may only be
+    // partial (partial_only = true).  If np > MAX_PERTURBERS, the list
+    // is partial.
+
+    if (np > MAX_PERTURBERS) partial_only = true;
+
+    bool grape_pert = false;
+    bool full_pert = false;
+
+    // Handle (and flag) problematical cases when they occur.
+
+    if (top == root		// O(N) calculation
+	|| partial_only		// incomplete list
+	|| np > 200) {		// long list
+
+#if 0
+	cerr << endl << "***** perturbers: ";
+	if (top == root) cerr << "top = root, ";
+        PRC(partial_only); PRL(np);
+	if (pnode) PRL(pnode->format_label());
+#endif
+
+	// In these cases, we should compute the perturbation due
+	// to the entire system, and use the GRAPE if possible.
+	// Using top = root will do what is needed on the front-end
+	// if no GRAPE is available.  However, if we have a GRAPE,
+	// then we should compute the perturbation due to the other
+	// components of the clump (top = top_level), then use GRAPE
+	// for the rest of the system (new function, 3/05).
+
+	if (top == root) full_pert = true;
+	if (has_grape6()) {
+	    top = top_level;
+	    pnode = NULL;
+	    full_pert = true;
+	    grape_pert = true;
+	}
+    }
 
     if (!kep) {
 
 	// Bookkeeping (if this isn't part of an unperturbed step):
 
-	if (pnode)
+	if (pnode && !full_pert)
 	    kc->pert_with_list += pnode->n_perturbers;
 	else {
 	    kc->pert_without_list++;
@@ -2826,7 +2880,6 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
 	}
     }
-
     nn = NULL;
     d_nn_sq = VERY_LARGE_NUMBER;
     sister->set_nn(NULL);
@@ -2865,6 +2918,20 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	// variables, so it has no direct effect on d_nn_sq and nn.  (Test
 	// afterwards if d_nn_sq and nn must be updated.)  The coll data
 	// are always updated by these calls.
+    }
+
+    if (grape_pert) {
+
+	// Calculate perturbations to this and sister simultaneously on GRAPE.
+	// Don't update nn, etc and use point-mass approximation for all forces.
+
+	// cerr << "Computing perturbation using GRAPE" << endl << flush;
+       
+	grape6_calculate_perturbation(get_parent(),
+				      apert1, apert2, jpert1, jpert2);
+
+	// PRL(apert1);
+	// PRL(apert2);
     }
 
     // Relative acceleration and jerk due to other (sister) component:
@@ -3323,12 +3390,12 @@ void hdyn::top_level_node_epilogue_force_calculation()
 
     // If the perturber list has overflowed and no perturber list is available,
     // we will have to use the entire tree (below).  We'd prefer to avoid this
-    // if possible, so the GRAPE version of the code provides the "low-only" list
+    // if possible, so the GRAPE version of the code provides a "low-only" list
     // -- a subset of the complete list, for the MAX_PERTURBERS closest nodes.
     // It is intended for use in computing low-level perturbers, but it is as
     // large as possible, so it can be used here as an approximate means of
     // avoiding a potentially expensive calculation on the front end.  It is
-    // constructed so that it should now overflow when CM nodes are expanded
+    // constructed so that it should not overflow when CM nodes are expanded
     // into components, so the "low" list should always be usable.  Note that
     // calculate_partial_acc_and_jerk() knows what to do if sent a node with
     // only "low" data available.

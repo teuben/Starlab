@@ -194,7 +194,7 @@ local INLINE void send_j_node_to_grape(hdyn *b,
     // If we are computing the energy, we may be doing it at an odd time,
     // which may cause the GRAPE to complain.  Since we never do prediction
     // in this case, just send a time of zero to avoid prediction and warning
-    // messages. Note that this convention *must* be consistent with the
+    // messages.  Note that this convention *must* be consistent with the
     // actions taken by force_by_grape.
 
     real t = 0;
@@ -402,15 +402,30 @@ local void reset_grape(hdyn *b)					// root node
 // These arrays are actually local to force_by_grape, but it is convenient
 // to make them globally accessible in order to permit cleanup.
 
-static int    *iindex = NULL;
-static vec *ipos   = NULL;
-static vec *ivel   = NULL;
-static vec *iacc   = NULL;
-static vec *ijerk  = NULL;
-static real   *ipot   = NULL;
-static real   *ih2    = NULL;
-static int    *inn    = NULL;
-static real   eps2    = 0;
+static int  *iindex = NULL;
+static vec  *ipos   = NULL;
+static vec  *ivel   = NULL;
+static vec  *iacc   = NULL;
+static vec  *ijerk  = NULL;
+static real *ipot   = NULL;
+static real *ih2    = NULL;
+static int  *inn    = NULL;
+static real eps2    = 0;
+
+local inline void create_i_arrays(int n_pipes, real eps_sq)
+{
+    // Create the i-particle arrays.
+
+    iindex = new int[n_pipes];
+    ipos   = new vec[n_pipes];
+    ivel   = new vec[n_pipes];
+    iacc   = new vec[n_pipes];
+    ijerk  = new vec[n_pipes];
+    ipot   = new real[n_pipes];
+    ih2    = new real[n_pipes];
+    inn    = new int[n_pipes];
+    eps2   = eps_sq;
+}
 
 //-------------------------------------------------------------------------
 
@@ -449,20 +464,7 @@ local INLINE int force_by_grape(xreal xtime,
     }
 #endif
 
-    if (!iindex) {
-
-	// Create the i-particle arrays.
-
-	iindex = new int[n_pipes];
-	ipos   = new vec[n_pipes];
-	ivel   = new vec[n_pipes];
-	iacc   = new vec[n_pipes];
-	ijerk  = new vec[n_pipes];
-	ipot   = new real[n_pipes];
-	ih2    = new real[n_pipes];
-	inn    = new int[n_pipes];
-	eps2   = nodes[0]->get_eps2();
-    }
+    if (!iindex) create_i_arrays(n_pipes, nodes[0]->get_eps2());
 
     real mass = 0;			// for use below if we need to
     real mass32 = 0;			// estimate quantities for scaling
@@ -1697,7 +1699,7 @@ void grape6_calculate_energies(hdyn *b,			// root node
 
     if (!grape_is_open)
 	reattach_grape(b->get_real_system_time(),
-		       "grape6_calculate_energies", b->get_kira_options());
+		       func, b->get_kira_options());
 
     real cpu0 = cpu_time();
 
@@ -2098,9 +2100,9 @@ local INLINE int get_force_and_neighbors(xreal xtime,
     }
 #endif
 
-    if (error) {
-	cerr << "returning "; PRL(error);
-    }
+    //    if (error) {
+    //	      cerr << "returning "; PRL(error);
+    //    }
     return error;
 }
 
@@ -2900,6 +2902,60 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 
 
 
+local inline int check_reattach_grape6(real time, char *func,
+				       hdyn *root, bool restart = false)
+{
+    // (Re)open the GRAPE and reset data structures if necessary.
+    // If restart is true, we must reinitialize the GRAPE interface
+    // after a change in the tree or other kira configuration.
+    // 
+    // (The GRAPE release check is now performed externally.  The main
+    // advantage to doing the check here was that we only had to do it
+    // once.  However a major disadvantage was that the hardware could
+    // get tied up unnecessarily by a process that was stuck elsewhere
+    // in the code (e.g. in a multiple encounter.)
+    //
+    // It is necessary to know when a restart has been triggered ONLY by
+    // the release/reattachment of the GRAPE hardware.  Indicator is:
+    //
+    //		grape_reattached = true
+
+    bool grape_reattached = false;
+    bool restart_flag = root->get_restart_grape_flag();
+
+    // PRC(restart_flag); PRL(restart);
+    // if (restart_flag != restart) cerr << "***** mismatch *****" << endl;
+
+    restart = restart_flag;		// argument is redundant
+
+    if (!grape_is_open) {
+
+	reattach_grape(time, func, root->get_kira_options());
+
+	if (!restart) grape_reattached = true;
+
+	// Restart irrespective of the actual argument.
+
+	restart = true;
+    }
+
+    if (grape_was_used_to_calculate_potential) {
+	restart = true;
+	grape_was_used_to_calculate_potential = false;
+    }
+
+    if (restart) {
+	// cerr << "restarting GRAPE at time " << xtime << endl << flush;
+	initialize_grape_arrays(root, !grape_reattached);
+	n_previous_nodes = 0;
+    }
+
+    root->clear_restart_grape_flag();
+    return n_node_list;
+}
+
+
+
 //						*****************************
 //						*****************************
 //						***                       ***
@@ -2910,9 +2966,9 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 
 
 int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
-				 int n_next,
-				 xreal xtime,
-				 bool restart)
+				  int n_next,
+				  xreal xtime,
+				  bool restart_grape)
 
 //  This function is called from kira_calculate_top_level_acc_and_jerk,
 //  which is called only from calculate_acc_and_jerk_for_list.
@@ -2923,7 +2979,7 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
     static int n_pipes = 0;		// number of pipelines to use
 
     static int nj_on_grape = 0;		// current number of j-particles
-					// in GRAPE memory
+					// in GRAPE memory -- redundant
 
     if (n_next <= 0) return 0;
 
@@ -2945,44 +3001,9 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 
     //------------------------------------------------------------------
 
-    // Test the state of the GRAPE and open it if necessary.
-    // If restart is true, we must reinitialize the GRAPE interface
-    // after a change in the tree or other kira configuration.
-    // 
-    // (The GRAPE release check is now performed externally.  The main
-    //  advantage to doing the check here was that we only had to do it
-    //  once.  However a major disadvantage was that the hardware could
-    //  get tied up unnecessarily by a process that was stuck elsewhere
-    //  in the code (e.g. in a multiple encounter.)
-    //
-    // It is necessary to know when a restart has been triggered ONLY by
-    // the release/reattachment of the GRAPE hardware.  Indicator is:
-    //
-    //		grape_reattached = true
+    // Test the state of the GRAPE and (re)open it if necessary.
 
-    bool grape_reattached = false;
-
-    if (!grape_is_open) {
-
-	reattach_grape((real)xtime, func, ko);
-
-	if (!restart) grape_reattached = true;
-
-	// Restart irrespective of the actual argument.
-
-	restart = true;
-    }
-
-    if (grape_was_used_to_calculate_potential) {
-	restart = true;
-	grape_was_used_to_calculate_potential = false;
-    }
-
-    if (restart) {
-//	cerr << "restarting GRAPE at time " << xtime << endl << flush;
-	nj_on_grape = initialize_grape_arrays(root, !grape_reattached);
-	n_previous_nodes = 0;
-    }
+    nj_on_grape = check_reattach_grape6((real)xtime, func, root, restart_grape);
 
     //------------------------------------------------------------------
 
@@ -3265,6 +3286,138 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 #endif
 
     return nj_on_grape;
+}
+
+
+
+int grape6_calculate_perturbation(hdyn *parent,
+				  vec& apert1, vec& apert2,
+				  vec& jpert1, vec& jpert2)
+{
+    // Calculate the perturbation on the components of the parent node.
+    // Return 0 iff no problems occur.
+
+    static char *func = "grape6_calculate_perturbation";
+
+    // PRL(func);
+
+    if (!parent) return 0;
+    // PRL(parent->format_label());
+    hdyn *od = parent->get_oldest_daughter();
+    if (!od) return 0;
+    xreal xtime = od->get_time();
+    // PRL(xtime);
+
+    //------------------------------------------------------------------
+
+    // Test the state of the GRAPE and (re)open it if necessary.
+
+    int nj = check_reattach_grape6((real)xtime, func, parent->get_root());
+
+    //------------------------------------------------------------------
+
+    int n_pipes = g6_npipes_();
+
+    // PRC(nj); PRL(n_pipes);
+
+    // Structure closely follows force_by_grape, but specific to a binary.
+
+    if (!iindex) create_i_arrays(n_pipes, parent->get_eps2());
+
+    // Send the current time to the GRAPE.
+
+    real time = xtime - grape_time_offset;
+    g6_set_ti_(&cluster_id, &time);
+
+    // Pack the i-particle data and start the GRAPE calculation.
+    // Top-level index will prevent self-interaction.
+
+    int itop = parent->get_top_level_node()->get_grape_index();
+
+    int ni = 0;
+    for_all_daughters(hdyn, parent, bi) {
+
+	iindex[ni] = itop;
+	// PRL(bi->format_label());
+
+	// Assume that acc and jerk are usable in this case (perturbed
+	// binary component).
+
+	ipos[ni] = bi->get_nopred_pos();
+	ivel[ni] = bi->get_nopred_vel();
+	iacc[ni] = bi->get_old_acc();
+	ijerk[ni] = bi->get_old_jerk();
+
+	// This is basically something_relative_to_root() for all quantities.
+
+	hdyn *p = parent;
+	while (p != bi->get_root()) {
+	    ipos[ni] += p->get_nopred_pos();
+	    ivel[ni] += p->get_nopred_vel();
+	    iacc[ni] += p->get_old_acc();
+	    ijerk[ni] += p->get_old_jerk();
+	    p = p->get_parent();
+	}
+
+	ipot[ni] = bi->get_pot();
+	ih2[ni] = 0;
+
+#if 0
+	// Alternative, maybe simpler, approach.
+	// Choose quantities appropriate to the nearest neighbor.
+
+	hdyn *sis = bi->get_younger_sister();
+	if (!sis) sis = bi->get_elder_sister();
+	real m = sis->get_mass();
+	real r, r2;
+
+	r2 = square(bi->get_pos() - sis->get_pos());
+	r = sqrt(r2);
+
+	real j = m/(r*r2);
+	ipot[ni] = j*r2;
+	iacc[ni] = j*r;
+	ijerk[ni] = j;
+#endif
+
+	ni++;
+    }
+
+    // PRL(ni);
+
+    // Fill the pipeline with copies of the last element.
+
+    for (int i = ni; i < n_pipes; i++) {
+	ipos[i] = ipos[ni-1];
+	ivel[i] = ivel[ni-1];
+	iacc[i] = iacc[ni-1];
+	ijerk[i] = ijerk[ni-1];
+	ipot[i] = ipot[ni-1];
+        ih2[i] = ih2[ni-1];
+    }
+    
+    // Optionally enable DMA on the Athlon.
+
+    if (init_jp_dma) g6_flush_jp_buffer_(&cluster_id);
+
+    g6calc_firsthalf_(&cluster_id, &nj, &ni, iindex,
+		      ipos, ivel, iacc, ijerk, ipot,
+		      &eps2, ih2);
+
+    int error = g6calc_lasthalf2_(&cluster_id, &nj, &ni, iindex,
+				  ipos, ivel, &eps2, ih2,
+				  iacc, ijerk, ipot, inn);
+
+    if (error) {
+	cerr << func << ": "; PRC(xtime); PRL(error);
+    }
+
+    apert1 = iacc[0];
+    apert2 = iacc[1];
+    jpert1 = ijerk[0];
+    jpert2 = ijerk[1];
+
+    return error;	// don't iterate for now...
 }
 
 
@@ -3965,7 +4118,8 @@ bool grape6_calculate_densities(hdyn* b,		// root node
     static int neighbor_list[MAX_PERTURBERS];
 
     if (!grape_is_open)
-	reattach_grape(b->get_real_system_time(), func, b->get_kira_options());
+	reattach_grape(b->get_real_system_time(), func,
+		       b->get_kira_options());
 
     // Copy all top-level nodes to the GRAPE hardware.
     // We will compute the forces, etc. using the same functions

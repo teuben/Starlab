@@ -54,6 +54,7 @@ real hdyn::max_slow_perturbation		= DEFAULT_MAX_SLOW_PERTURBATION;
 real hdyn::max_slow_perturbation_sq	     = DEFAULT_MAX_SLOW_PERTURBATION_SQ;
 
 unsigned int hdyn::config			= 0;
+bool hdyn::restart_grape_flag			= false;
 //acc_function_ptr hdyn::kira_calculate_top_level_acc_and_jerk = NULL;
 
 
