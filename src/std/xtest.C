@@ -3,6 +3,7 @@
 
 main()
 {
+#if 0
     long long i = 1;
     int n = 0;
     while (1) {
@@ -16,4 +17,10 @@ main()
     i = i<<63;
     PRL(i);
     PRL(sizeof(i));
+#else
+    xreal x;
+    cin >> x;
+    cerr.precision(20);
+    PRL((real)x);
+#endif
 }
