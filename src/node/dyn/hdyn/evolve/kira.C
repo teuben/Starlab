@@ -1674,6 +1674,10 @@ local void kira_alt_output(hdyn *b)
     alt.close();
 }
 
+
+#define TMP_SUPPRESS
+#undef  TMP_SUPPRESS
+
 // evolve_system:  Main integration loop.
 
 static hdyn **next_nodes = NULL;
@@ -1853,8 +1857,11 @@ local void evolve_system(hdyn * b,	       // hdyn array
 					//    general use
 
     real t_end = tt + delta_t;		// final time, at end of integration
+
     real t_log = tt;			// time of next log output
-    // if (t > 0) t_log += dt_log;
+    // if (t > 0) 
+    	t_log += dt_log;
+
     real t_snap = tt + dt_snap;		// time of next snapshot output
     real t_sync = tt + dt_sync;		// time of next system synchronization
 
@@ -1955,6 +1962,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	}
 #endif
 
+#ifndef TMP_SUPPRESS
     bool quit_now = false;
     hdyn *bad = NULL;
     for (int ii = 0; ii < n_next; ii++) {
@@ -1971,7 +1979,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 				<< endl;
 	err_exit("invalid node(s) on timestep list.");
     }
-
+#endif
 
 	// New order of actions (Steve, 7/01):
 	//
