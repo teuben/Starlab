@@ -19,6 +19,7 @@
 //	void hdyn::startup_unperturbed_motion
 //	bool hdyn::integrate_unperturbed_motion
 //	real hdyn::set_unperturbed_timestep
+//	real hdyn::get_unperturbed_steps
 //	bool hdyn::is_weakly_perturbed
 //	bool hdyn::is_stable
 
@@ -1788,8 +1789,21 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 // system is outside its semi-major axis (using KEP_OUTSIDE_SEMI)
 // before applying full merging.
 //
-// This function is called only from startup_unperturbed_motion() and
-// integrate_unperturbed_motion().
+// This function is presently called only from
+//
+//	startup_unperturbed_motion()		(this file)
+//	integrate_unperturbed_motion()		(this file)
+//
+// In the first two cases, the variable fully_unperturbed is false
+// on entry, and may be set true here.  A call from anywhere else
+// will generally be made to update an existing unperturbed binary
+// (e.g. after binary evolution), and fully_unperturbed will be true.
+// (It is important to distinguish these possibilities, as the binary
+// will not necessarily be approaching in the latter cases.)
+//
+// Note that this function has accidentally been given the same
+// name as the (real-argument) member function that actually sets
+// the variable unperturbed_timestep for the hdyn class (oops!)...
 //
 // Argument check_phase is set true when this function is called from
 // startup_unperturbed_motion().  It is set to !force_time when the
@@ -1824,6 +1838,9 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
     // Since the binary has already been deemed "unperturbed", an
     // unperturbed step should be taken if possible, even if it
     // extends beyond the parent step.
+
+//    cerr << "in set_unperturbed_step for " << format_label()
+//	 << " at " << time << "/" << system_time << endl;
 
     if (diag->unpert_function_id) {
 	cerr << ">> set_unperturbed_timestep for "
@@ -2082,7 +2099,7 @@ local xreal latest_time(xreal t_min, xreal t_max, real dtblock,
 {
     // Determine the latest time (integer * dtblock) that lies between
     // t_min and t_max and has mean anomaly in the range (ma_min, ma_max).
-    // Input mean_anomaly refers to time t_min.
+    // Note: input mean_anomaly refers to time t_min.
     //
     // For use with optimized binary scheduling (Steve, 6/00).
 
@@ -2171,6 +2188,16 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 // int hdyn::get_unperturbed_steps(bool predict, bool to_apo)
 // real hdyn::get_unperturbed_steps(bool predict, bool to_apo)
 // unsigned long hdyn::get_unperturbed_steps(bool predict, bool to_apo)
+//
+// This function is called only from
+//
+//	set_unperturbed_timestep()		(this file)
+//	reinitialize_kepler_from_hdyn()		(hdyn_kepler.C)
+//	evolve_stars()				(kira_stellar.C)
+//
+// It is sometimes more convenient to bypass the normal checks applied
+// by set_unperturbed_timestep() when we already know the binary
+// configuration.
 
 {
     // Return the number of current time steps to advance
@@ -2188,11 +2215,21 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
     // cygnus-2.7-96q4 on Dec UNIX V4.0B, at optimization
     // levels higher than 0...
 
+    // *** NOTE: Do not assume approaching components, or ***
+    // ***	 time = system_time or parent time...	  ***
+
+//    cerr << "in get_unperturbed_steps for " << format_label()
+//	 << " at " << time << "/" << system_time << endl;
+
     hdyn * p = get_parent();
     if (p->is_low_level_node() && p->get_elder_sister() != NULL)
 	p = p->get_elder_sister();
 
-    real pdt = p->get_next_time() - time;	// parent time step
+    // Set a limit on the next unperturbed step.
+
+    real pdt = p->get_next_time() - time;	// time to end of parent time
+						// step; note that time may
+						// differ from system_time
 
     if (pdt > unpert_step_limit) {
 	if (diag->report_continue_unperturbed)
@@ -2303,7 +2340,19 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	// of how many periods would actually fit into pdt2.
     }
 
-    real mean_anomaly = sym_angle(kep->get_mean_anomaly());  // in (-PI, PI]
+    // Get the normalized mean anomaly.  If this function is invoked as part
+    // of a normal step, we should have kepler time = time = system_time, so
+    // this is unambiguous.  However, if this function is called from
+    // elsewhere, care must be taken to define the time.  The first use of
+    // mean_anomaly below is in determining the time to apastron, so the
+    // time in question should be the time for this particle.  Adopt this
+    // convention, and check later when some other time is implied.
+
+    real mean_anomaly = kep->get_mean_anomaly();
+    real mean_motion =  kep->get_mean_motion();
+    if (kep->get_time() != time)
+	mean_anomaly += ((real)(time - kep->get_time())) * mean_motion;
+    mean_anomaly = sym_angle(mean_anomaly);		// in (-PI, PI]
 
     // Determine number of perturbed steps in the next unperturbed step.
 
@@ -2316,7 +2365,10 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	// Old code used pred_advance_to_periastron(), but this may be quite
 	// inaccurate.  Better to use mean motion.  (Steve, 4/99)
 
-	real apo_time = (M_PI - mean_anomaly) / kep->get_mean_motion();
+	// Note that mean_anomaly here must correspond to the base time
+	// of the unperturbed step.
+
+	real apo_time = (M_PI - mean_anomaly) / mean_motion;
 
 	// Note added by Steve, 7/99.  If the unperturbed motion has for
 	// some reason (e.g. rounding error) managed to end just before
@@ -2365,7 +2417,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
     // Check that we really will pass apocenter at end of step.
 
-    real d_mean_anomaly = timestep * kep->get_mean_motion();
+    real d_mean_anomaly = timestep * mean_motion;
     real end_mean_anomaly = sym_angle(mean_anomaly
 				       + pert_steps * d_mean_anomaly);
     int  mcount = 0;
@@ -2479,41 +2531,36 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	    // Choice of t_min means that we require an "optimized" step
 	    // of at least one orbit before we accept it.
 
-	    xreal t_min = time + kep->get_period();
+	    // *** Careful with t_min choice in case of approaching binary ***
+	    // *** TO DO...
+
+	    xreal t_min = system_time + kep->get_period();	// note use of
+								// system_time
+	    real mean_anomaly_min = mean_anomaly
+					+ ((real)(t_min-time))*mean_motion;
+
 	    xreal t_max = p->get_next_time() + 0.5*p->get_timestep();
 
 	    // Define range of acceptable final mean anomalies.
 
 	    real ma_min = -0.999*M_PI;
-	    real ma_max = -0.900*M_PI;
+	    real ma_max = -0.750*M_PI;		// was -0.900 (Steve, 5/02)
 
 	    // Step will end at time t_next in the block defined by dtblock
 	    // if t_next > t_min.
 
 	    xreal t_next = t_min;
-	    real dtblock;
-	    int kb;
+	    real dtblock = unpert_step_limit;
+	    int kb = get_effective_block(dtblock);
 
-	    for (kb = 0, dtblock = 1; dtblock >= timestep; kb++, dtblock /= 2)
+	    for (; dtblock >= timestep; kb++, dtblock /= 2)
 		if ((t_next = latest_time(t_min, t_max, dtblock,
 					  ma_min, ma_max,
-					  mean_anomaly, kep->get_mean_motion()))
+					  mean_anomaly_min,
+					  mean_motion))
 			> t_min)
 		    break;
 
-	    // (These debugging lines can be quite expensive...)
-
-#if 0
-	    cerr << endl << "get_unperturbed_steps for "
-		 << format_label() << " at time " << system_time<< ":"
-		 << endl;
-	    PRI(4); PRL(pert_steps);
-	    PRI(4); PRL(get_effective_block(time));
-	    PRI(4); PRL(get_effective_block(timestep));
-	    PRI(4); PRL(get_effective_block(pert_steps*timestep));
-	    PRI(4); PRL(get_effective_block(time+pert_steps*timestep));
-
-#endif
 	    if (t_next <= t_min
 		|| kb >= get_effective_block(time+pert_steps*timestep)) {
 
@@ -2530,20 +2577,90 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 		pert_steps = floor(((real)(t_next - time)) / timestep + 0.1);
 
 #if 0
-		PRI(4); PRC(kb); PRC(dtblock); PRL(dtblock/timestep);
-		PRI(4); PRC(pert_steps); PRL(pert_steps/old_steps);
-		PRI(4); PRL(get_effective_block(pert_steps*timestep));
-		PRI(4); PRL(get_effective_block(time+pert_steps*timestep));
+		// (These debugging lines can be quite expensive...)
 
-		if (get_effective_block(time+pert_steps*timestep) != kb)
-		    cerr << "    ????" << endl;
+		if (name_is("15943")) {
+
+		    cerr << endl << "get_unperturbed_steps for "
+			 << format_label() << " at time " << system_time << ":"
+			 << endl;
+		    int pp = cerr.precision(20);
+
+		    PRI(4); PRL(system_time);
+		    PRI(4); PRL(time);
+		    PRI(4); PRL(timestep);
+		    PRI(4); PRL(get_effective_block(time));
+		    PRI(4); PRL(get_effective_block(timestep));
+
+		    PRI(4); PRL(old_steps);
+		    PRI(4); PRC(time+old_steps*timestep);
+		    PRI(4); PRL(get_effective_block(old_steps*timestep));
+		    PRI(4); PRL(get_effective_block(time+old_steps*timestep));
+		    PRI(4); PRL(sym_angle(mean_anomaly
+				+ mean_motion*old_steps*timestep));
+
+		    PRI(4); PRC(kb); PRC(dtblock); PRL(dtblock/timestep);
+		    PRI(4); PRC(pert_steps); PRL(pert_steps/old_steps);
+		    PRI(4); PRL(get_effective_block(pert_steps*timestep));
+		    PRI(4); PRL(get_effective_block(time+pert_steps*timestep));
+		    PRI(4); PRL(sym_angle(mean_anomaly
+				+ mean_motion*pert_steps*timestep));
+
+		    if (get_effective_block(time+pert_steps*timestep) != kb)
+			cerr << "    ????" << endl;
+
+		    cerr.precision(pp);
+		}
 #endif
 
 	    }
+
+#if 0
+	    cerr << endl; PRC(t_next); PRC(t_min); PRL(system_time);
+	    PRC(pert_steps); PRL(pert_steps*timestep);
+#endif
 	}
     }
 
-    return pert_steps;
+    return pert_steps;		// unit = current unperturbed timestep
+}
+
+void hdyn::recompute_unperturbed_step()
+{
+    //	    cerr << "Recomputing unperturbed step for "
+    //		 << "(" << b->format_label() << ",";
+    //	    cerr << b->get_binary_sister()->format_label() << ")\n";
+    //	    PRL(b->get_fully_unperturbed());
+
+    // Ordinarily, if the motion is flagged as unperturbed on restart,
+    // the unperturbed timestep should be trustworthy.  However, it
+    // is possible that the node time has been synchronized by some
+    // program, and that time + unperturbed_timestep may not take us
+    // to apastron, as is desirable (and assumed?) elsewhere in kira.
+    // Recompute the step, using the standard criteria.  (SLWM, 4/02)
+
+    // int usteps = get_unperturbed_steps(true);
+    // unsigned long usteps = get_unperturbed_steps(true);
+    real usteps = get_unperturbed_steps(true);
+
+    if (usteps > 0) {
+	unperturbed_timestep = timestep*usteps;
+	get_binary_sister()->unperturbed_timestep
+	    = unperturbed_timestep;
+    } else {
+	// Just live with this, and assume that it will be handled
+	// properly once the step is over...
+    }
+}
+
+void hdyn::recompute_unperturbed_steps()
+{
+    for_all_nodes(hdyn, this, b)
+        if (b->is_low_level_node()
+	    && !b->get_elder_sister()
+	    && b->get_unperturbed_timestep() > 0)
+
+	    b->recompute_unperturbed_step();
 }
 
 
@@ -2687,6 +2804,10 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
     bool is_u = is_unperturbed_and_approaching();
 
 #if 0
+    PRC(format_label()); PRC(kep->get_rel_pos()*kep->get_rel_vel()); PRL(is_u);
+#endif
+
+#if 0
     if (streq(format_label(), "xxx")) {
 	PRL(posvel);
 	PRL(is_u);
@@ -2768,10 +2889,13 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	if (verbose) {
 
 	    // Pericenter reflection will be separating on termination.
+	    // A transition from fully unperturbed to not approaching
+	    // probably indicates internal binary evolution and should
+	    // be flagged.
 
 	    if (binary_type != NOT_APPROACHING	// (= end of peri reflection)
 		|| diag->report_pericenter_reflection
-		|| fully_unperturbed) {
+		|| fully_unperturbed || save_unpert) {
 
 		int p = cerr.precision(HIGH_PRECISION);
 		cerr << "\nending unperturbed motion for "
@@ -2788,6 +2912,15 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		    cerr << "  (" << pnn->format_label() << ")";
 
 		cerr << endl;
+
+#if 1
+		PRL(get_effective_block(time));
+		PRI(4); PRL(sym_angle(kep->get_mean_anomaly()));
+//		int pp = cerr.precision(20);
+//		PRI(4); PRL(time);
+//		PRI(4); PRL(system_time);
+//		cerr.precision(pp);
+#endif
 
 		if (diag->unpert_report_level > 0
 		    || diag->end_unpert_report_level > 0) {
@@ -2960,14 +3093,17 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 		// Time step is probably too long.  Reduce it appropriately.
 
-		real target_timestep = timestep
-		    			* pow(sep_sq/initial_sep_sq, 0.75);
+		real rfac = sep_sq/initial_sep_sq;
+		real target_timestep = timestep * pow(rfac, 0.75);
 		while (timestep > target_timestep) timestep /= 2;
 
 		if (diag->report_continue_unperturbed)
 		    cerr << "\nintegrate_unperturbed_motion: timestep for "
 		         << format_label() << " reduced to " << timestep
-			 << " on restart at time " << time << endl;
+			 << endl << "                              "
+			 << "on restart at time " << time
+			 << ", rfac = " << rfac
+			 << endl;
 
 		get_binary_sister()->timestep = timestep;
 	    }
