@@ -953,9 +953,9 @@ local void accumulate_energies(hdyn * root, hdyn * b, real eps2,
 	// potential per unit mass of a top-level node, or the potential
 	// per unit mass of a low-level node due to its binary sister
 
-	real pot = m * pot_on_general_node(root, b, eps2, cm);
+	real pot = pot_on_general_node(root, b, eps2, cm);
 
-	epot += 0.5 * m * pot_on_general_node(root, b, eps2, cm);
+	epot += 0.5 * m * pot;
 	ekin += 0.5 * m * square(b->get_vel());
 
 	b->set_pot(pot);	// will only be used for top-level nodes
