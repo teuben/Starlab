@@ -69,6 +69,10 @@ if (-e configure) then
     echo Running make install \(`date`\)		>>& $log
     make install					>>& $log
 
+    # Another temporary workaround...
+
+    chmod +x sbin/sremake
+
     # Then test whatever...
 
     rehash
@@ -110,6 +114,13 @@ To use the Starlab tools, make sure that the directory
         $install_dir/bin
 
 is in your search path and *precedes* any system files.
+If you prefer, source the script
+
+        $STARLAB_PATH/starlab_start.csh
+
+(or its .sh equivalent) to set up the environment and your
+search path automatically.
+
 For programmers, the Starlab header files are installed in
 
         $install_dir/include/starlab

@@ -18,6 +18,18 @@ AM_INIT_AUTOMAKE([1.8 gnu no-exeext nostdinc std-options])
 # but I don't quite understand how ac_top_srcdir/top_srcdir work
 CPPFLAGS="$CPPFLAGS -I$PWD/include -I$PWD/include/star"
 
+# Source and install paths will be used in starlab_setup.* scripts.
+AC_SUBST(STARLAB_SOURCE_PATH, $PWD)
+AC_SUBST(STARLAB_VERSION_NUMBER, VERSION_NUMBER)
+
+# From Steve, 09/03/04:  Configure will have set prefix=NONE by the time
+# we get here if we use the default.
+if test "x$prefix" = "xNONE" ; then
+    AC_SUBST(STARLAB_INSTALL_PATH, $ac_default_prefix)
+else
+    AC_SUBST(STARLAB_INSTALL_PATH, $prefix)
+fi
+
 AC_ARG_ENABLE(xreal,
     AS_HELP_STRING([--enable-xreal], use the xreal type [[[default=no]]]),
     [AC_DEFINE(USE_XREAL, 1,
@@ -167,7 +179,10 @@ AC_LANG_POP
 # Checks for library functions.
 AC_REPLACE_FUNCS(stpcpy)
 
-AC_CONFIG_FILES([Makefile src/Makefile src/std/Makefile src/gfx/Makefile \
+AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
+    starlab.pl VERSION \
+    sbin/sremake \
+    src/Makefile src/std/Makefile src/gfx/Makefile \
     src/gfx/lux/Makefile src/gfx/lux++/Makefile src/gfx/util/Makefile \
     src/node/Makefile src/node/util/Makefile src/node/dyn/Makefile \
     src/node/dyn/util/Makefile src/node/dyn/kepler/Makefile \
@@ -190,4 +205,37 @@ AC_CONFIG_FILES([Makefile src/Makefile src/std/Makefile src/gfx/Makefile \
     src/star/util/Makefile src/star/xutil/Makefile src/hydro/Makefile \
     src/hydro/util/Makefile src/hydro/init/Makefile src/hydro/evolve/Makefile \
     src/harpsims/Makefile])
+
+# From Steve, 09/03/04:  We would like to make a handy link to the appropriate
+# starlab_start file, but it is unclear how to distinguish between various
+# shells.  The $SHELL variable will apparently always be /bin/sh here.  We need
+# something that identifies the shell used by the user running configure.  If
+# such a variable could be identified, then the following code would work.
+
+# Assume that if $SHELL is defined and contains csh we are a C-shell or
+# something similar.  Anything else is treated as a Bourne shell.
+#
+#shell=sh
+#if test "x$SHELL" != "x" ; then
+#    csh=`echo $SHELL | fgrep csh`
+#    if test "x$csh" != "x" ; then
+#	shell=csh
+#    fi
+#fi
+
+# But it doesn't, so just link to the csh version (which is consistent with
+# previous usage in any case.)
+
+shell=csh
+
+cd $STARLAB_SOURCE_PATH
+ln -f -s starlab_start.$shell starlab_start
+echo linked starlab_start to starlab_start.$shell
+
+# Also from Steve, 09/03/04:  The newly created version of sremake doesn't
+# have execute permission.  To be fixed.  Following workaround doesn't
+# seem to work...
+
+chmod +x ./sbin/sremake
+
 AC_OUTPUT

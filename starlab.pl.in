@@ -1,0 +1,15 @@
+#! /usr/bin/perl
+#
+#  This is a section of perl code to set up perl (e.g. cgi-bin) scripts
+#  to know the absolute location of the Starlab bin directories.
+# 
+#  CAVEAT:  if you relocate the Starlab directory tree, you will need to 
+#	    edit this file (or re-install in the new location)
+
+$slp1 ="@STARLAB_SOURCE_PATH@";
+$slp2 ="@STARLAB_INSTALL_PATH@";
+
+$ENV{'STARLAB'}="$slp1";
+$sl_path = "${slp1}/sbin/;${slp2}/bin/";
+
+$ENV{'PATH'} = "/usr/bin:/bin:${sl_path}";   # Needed?
