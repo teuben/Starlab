@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //  dyn_external.C: functions related to external influences on the system.
 //.............................................................................
@@ -265,7 +265,7 @@ void set_friction_acc(dyn *b, real r)
 	real V = abs(Vcm);
 	real X = V/sigma2;			   // scaled velocity; BT p. 425
 
-	if (X > 0.1) 
+	if (X > 0.1)
 
 	    Afric = -beta * Mfric * Vcm * density(b, r) * pow(V, -3)
 			  * (erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
@@ -479,7 +479,7 @@ void get_external_acc(dyn * b,
     }
 }
 
-// Accessors: 
+// Accessors:
 
 real get_tidal_pot(dyn *b) {return tidal_pot(b);}
 real get_plummer_pot(dyn *b) {return plummer_pot(b);}

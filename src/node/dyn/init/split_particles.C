@@ -2,8 +2,8 @@
 //// split_particles:  split specified particles in input snapshot into
 ////                   binaries having specified orbital properties.
 ////
-//// Usage:  split_particles  [-s #] -l l1 -a a1 -e e1 -E E1 -q q1 \
-////                                 -l l2 -a a2 -e e2 -E E2 -q q2 \
+//// Usage:  split_particles  [-s #] -l l1 -a a1 -e e1 -E E1 -q q1 \			~
+////                                 -l l2 -a a2 -e e2 -E E2 -q q2 \			~
 ////                                 (etc.)
 ////
 //// Options:    -s    specify random seed [random from system clock]

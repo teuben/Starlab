@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //  hdyn_grape4.C: functions to use GRAPE-4 (HARP-3)
 //
@@ -87,7 +87,7 @@
 //   b) if it does not have a non-null valid perturber list, ....
 //   c) if it has an overflowed perturber list, I guess you
 // 	should still set the perturbation radius as the neighbour
-// 	sphere radius... 
+// 	sphere radius...
 
 //.............................................................................
 //
@@ -299,7 +299,7 @@ local void force_by_grape4(real time, int ni, hdyn * nodes[], int nj)
     int i, ip,k;
     hdyn * b;
     npipe = h3npipe_();
-    
+
     if (px == NULL) {
 	px = new vector[npipe];
 	pv = new vector[npipe];
@@ -313,13 +313,13 @@ local void force_by_grape4(real time, int ni, hdyn * nodes[], int nj)
 	}
     }
 
-#ifdef USE_HALF_CHIP    
+#ifdef USE_HALF_CHIP
     if (ni*2 > npipe)
 	err_exit("force by grape4: ni too large");
-#else    
+#else
     if (ni > npipe)
 	err_exit("force by grape4: ni too large\n");
-#endif    
+#endif
 
     static real ti;
     ti = time;
@@ -388,7 +388,7 @@ local void force_by_grape4(real time, int ni, hdyn * nodes[], int nj)
 #endif
 
     for (k = 0; k < ni; k++) {
- 
+
 #ifndef USE_HALF_CHIP
 	int j = k;
 #else
@@ -441,7 +441,7 @@ local int put_grape_index_to_top_level_nodes(hdyn* b)
 
     if (nodes == NULL)
 	initialize_node_lists();
-    
+
     for_all_daughters(hdyn, b, bbb) {
 	nodes[index] = bbb;
 	index++;
@@ -488,7 +488,7 @@ local int initialize_array(hdyn * root)
 void check_release_grape(kira_options *ko, xreal time)
 {
 #ifdef SHARE_GRAPE
-  
+
     // cerr << "GRAPE CPU check: "; PRL(cpu_time());
 
     if (cpu_time() - ko->grape_last_cpu > ko->grape_max_cpu) {
@@ -595,7 +595,7 @@ local inline void jpdma_node(hdyn *b,
 	    bufid = 0;
 	h3wait_();
 	h3wait_();
-	    
+	
 	jp = 0;
     }
 }
@@ -643,7 +643,7 @@ local void force_by_grape4_on_leaves(real time, int ni, hdyn * nodes[], int nj)
     int i, ip,k;
     hdyn * b;
     npipe = h3npipe_();
-    
+
     if (pxl == NULL) {
 	pxl = new vector[npipe];
 	pvl = new vector[npipe];
@@ -670,7 +670,7 @@ local void force_by_grape4_on_leaves(real time, int ni, hdyn * nodes[], int nj)
     int j;
     for (i = 0; i < ni; i++) {
 	b = nodes[i];
-	    
+	
 	j = i;
 	pxl[j] = hdyn_something_relative_to_root(b, &hdyn::get_pred_pos);
 	pvl[j] = hdyn_something_relative_to_root(b, &hdyn::get_pred_vel);
@@ -930,7 +930,7 @@ local bool get_neighbors_and_adjust_h2(int chip, hdyn * b)
 	if (cmin != NULL) {
 	    b->set_coll(cmin);
 	    b->set_d_coll_sq(dcmin_sq);
-	}	  
+	}	
 
     }
 
@@ -956,7 +956,7 @@ local void set_grape4_neighbour_radius(hdyn * b)
 
 {
     int hindex = b->get_grape_index()-1;
-    
+
     if (b->is_leaf()) {
 
 	// For a single particle, adjust the nnb radius so that it will
@@ -967,7 +967,7 @@ local void set_grape4_neighbour_radius(hdyn * b)
 
 	    // Node seems to have a valid nearest neighbor pointer.
 	    // We can perhaps use the distance as well.
-	    
+	
 	    // Set zero neighbor sphere radius if nb_check_counter is non-zero.
 
 	    if (nb_check_counter[hindex] == 0) {
@@ -1005,7 +1005,7 @@ local void set_grape4_neighbour_radius(hdyn * b)
 
 	    // Note: d_min_sq^(1/3) ~ square of the average interparticle
 	    // spacing for standard N-body units -- OK for leaves and nn.
-	    
+	
 	}
 
     } else {
@@ -1080,7 +1080,7 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 {
     static int nj_on_grape4;
 
-    hdyn * root = next_nodes[0]->get_root(); 
+    hdyn * root = next_nodes[0]->get_root();
     kira_options *ko = root->get_kira_options();
 
     // if (restart) {
@@ -1088,7 +1088,7 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
     // }
 
     // Test the state of the GRAPE and open it if necessary.
-    // 
+    //
     // (The GRAPE release check is now performed externally.  The main
     //  advantage to doing the check here was that we only had to do it
     //  once.  However a major disadvantage was that the hardware could
@@ -1147,7 +1147,7 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 	    for_all_daughters(hdyn, root, bi) {
 
 		if (find_qmatch(bi->get_dyn_story(), "nb_check_counter")) {
-		    nb_check_counter[bi->get_grape_index()-1] = 
+		    nb_check_counter[bi->get_grape_index()-1] =
 			getiq(bi->get_dyn_story(), "nb_check_counter");
 		    rmq(bi->get_dyn_story(), "nb_check_counter");
 		}
@@ -1212,7 +1212,7 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 
     // Now we actually calculate the force...
 
-#ifndef USE_HALF_CHIP    
+#ifndef USE_HALF_CHIP
     int nimax = h3npipe_();
 #else
     int nimax = h3npipe_()/2;
@@ -1352,7 +1352,7 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 local void set_grape4_density_radius(hdyn * b, real h2_max)
 {
     int hindex = b->get_grape_index() - 1;
-    
+
     // For a single particle, adjust the radius so that it will
     // contain just ~10 neighbours (set r = 4*d_nn, if known).
 

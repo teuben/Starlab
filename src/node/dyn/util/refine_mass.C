@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // refine_mass.C:  More careful determination of cluster mass.
 //		   Also flag escapers.
@@ -145,7 +145,7 @@ void refine_cluster_mass(dyn *b,
 		N_J++;
 		M_J += bb->get_mass();
 
-		if (r == 0 
+		if (r == 0
 		    || -M/r + 0.5 * (b->get_alpha1()*x*x + b->get_alpha3()*z*z)
 			    < phi_J) {
 		    N_inside++;
@@ -211,7 +211,7 @@ void refine_cluster_mass(dyn *b,
 	     << b->get_system_time() << endl;
     }
 
-    if (verbose) 
+    if (verbose)
 	cerr << "  within last zero-velocity surface:"
 	     << "  M = " << M_inside << "  N = " << N_inside
 	     << endl

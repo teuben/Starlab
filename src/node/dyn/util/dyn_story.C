@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // dyn_story.C:  initialization of system parameters from input snapshots.
 //
@@ -638,17 +638,17 @@ void set_tidal_params(dyn* b,
 	real Oort_B = 0;
 	real rho_G = 0;
 
-	if (find_qmatch(b->get_log_story(), "Oort_A_constant")) 
+	if (find_qmatch(b->get_log_story(), "Oort_A_constant"))
 	    Oort_A = getrq(b->get_log_story(), "Oort_A_constant");
 	else
 	    err_exit("Oort A constant not specified");
 
-	if (find_qmatch(b->get_log_story(), "Oort_B_constant")) 
+	if (find_qmatch(b->get_log_story(), "Oort_B_constant"))
 	    Oort_B = getrq(b->get_log_story(), "Oort_B_constant");	
 	else
 	    err_exit("Oort B constant not specified");
 
-	if (find_qmatch(b->get_log_story(), "local_mass_density")) 
+	if (find_qmatch(b->get_log_story(), "local_mass_density"))
 	    rho_G = getrq(b->get_log_story(), "local_mass_density");
 	else
 	    err_exit("rho_G not specified");
@@ -660,7 +660,7 @@ void set_tidal_params(dyn* b,
 
             // alpha1 = -4*Oort_A*(Oort_A-Oort_B);	// no!
 
-	    real alpha3_over_alpha1 = 
+	    real alpha3_over_alpha1 =
 		(4*M_PI*rho_G + 2*(pow(Oort_A, 2) - pow(Oort_B, 2)))
 		    / (-4*Oort_A*(Oort_A - Oort_B));
 

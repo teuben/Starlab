@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // Functions associated with escapers.
 //
@@ -38,17 +38,17 @@ local bool remove_escapers(hdyn* b,
     cerr << endl << n_esc << " escaper(s):\n";
 
     hdyn** esc_list = new hdynptr[n_esc];
-    
+
     real epot0, ekin0, etot0;
     calculate_energies_with_external(b, epot0, ekin0, etot0);
-    
+
     n_esc = 0;
     for_all_daughters(hdyn, b, bj) {
 
 	// Escape criterion (note that we do NOT check E > 0):
 	
 	if (square(bj->get_pos()- center_pos) > rmax2) {
-	    
+	
 	    cerr << "    " << bj->format_label() << " " << bj->get_mass()
 		 << endl;
 	    cerr << "    pos: " << bj->get_pos()- center_pos << "   |pos| = "
@@ -58,11 +58,11 @@ local bool remove_escapers(hdyn* b,
 
 	    if (b->get_use_sstar())
 		if (has_sstar(bj)) {
-		    cerr << "    ";  
+		    cerr << "    ";
 		    put_state(make_star_state(bj));
 		    cerr << endl;
 		}
-	    
+	
 //	    if (bj->get_starbase() != NULL) {
 //		bj->get_starbase()->print_star_story(cerr);
 //	    }
@@ -115,15 +115,15 @@ local bool remove_escapers(hdyn* b,
 	cerr << endl;
 	PRI(2); PRC(epot0); PRC(ekin0); PRL(etot0);
 	PRI(2); PRC(epot); PRC(ekin); PRL(etot);
-    
+
 	// pp3(cm, cerr);
-    
+
 	real de_total = etot - etot0;
-    
-	PRI(2); PRL(de_total); 
-    
+
+	PRI(2); PRL(de_total);
+
 	// Update statistics on energy change components:
-    
+
 	b->get_kira_counters()->de_total += de_total;
 
 	predict_loworder_all(b, b->get_system_time());	// Unnecessary?

@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //  hdyn_ev.C: functions related to orbit integration within the hdyn class.
 //.............................................................................
@@ -68,7 +68,7 @@
 //  to some large number.
 //
 //  The pointer coll and  d_coll_sq are initialized in the following three
-//  functions. 
+//  functions.
 //   --- flat_calculate_acc_and_jerk
 //   --- perturber_acc_and_jerk
 //   --- calculate_acc_and_jerk (The top-level routine for force calculation)
@@ -80,7 +80,7 @@
 //   higher levels.
 //   This means that the pointer coll of a leaf can be overwritten during
 //   the force calculation of a CM node. This cannot cause any problem, I
-//   believe. 
+//   believe.
 
 // MEMO 8 Aug 1996
 //
@@ -277,9 +277,9 @@ void hdyn::synchronize_node()
 //                       and pot (acceleration, jerk, potential).
 //                       The expression used here is:
 //                                                 ________
-//               1              /   | acc |       V | pot |   \
-//   timestep = ---  eta * min (   ---------  ,  -----------   )
-//               32             \   | jerk |       | acc |    /
+//               1              /   | acc |       V | pot |   \         ~
+//   timestep = ---  eta * min (   ---------  ,  -----------   )        ~
+//               32             \   | jerk |       | acc |    /         ~
 //
 //  The first expression gives the time scale on which the acceleration is
 //  changing significantly.
@@ -520,7 +520,7 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 	    PRC(tmp1); PRC(tmp2); PRC(tmp3); PRL(tmp4);
 
 	    PRC(timestep); PRL(newstep);
-#endif    
+#endif
 
 	}
     }
@@ -597,7 +597,7 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 }
 
 //-----------------------------------------------------------------------------
-// update:  Update the time and the timestep. 
+// update:  Update the time and the timestep.
 //-----------------------------------------------------------------------------
 
 void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
@@ -610,7 +610,7 @@ void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
 	dt = slow->get_dtau();
 	slow->inc_tau(dt);
     }
-    
+
     // vector at3 = 2 * (old_acc - acc) + dt * (old_jerk + jerk);
     // vector bt2 = -3 * (old_acc - acc) - dt * (2 * old_jerk + jerk);
 
@@ -1365,41 +1365,41 @@ bool hdyn::correct_and_update()
 // ----------------------------------------------------------
 //
 // Functions (note: "force" <--> "acc, jerk, and potential"):
-// 
+//
 // accumulate_acc_and_jerk
-// 	compute force due to a specified particle 
-// 
+// 	compute force due to a specified particle
+//
 // hdyn::flat_calculate_acc_and_jerk
 // 	compute force on top-level node 'this' due to all other
 // 	top-level nodes in the system (masking allowed)
-// 
+//
 // hdyn::perturber_acc_and_jerk_on_leaf
 // 	compute force on 'this' leaf due to its top-level
 // 	perturber list
-// 
+//
 // hdyn::tree_walk_for_partial_acc_and_jerk_on_leaf
 // 	accumulate force on 'this' leaf while traversing the portion
 // 	of the tree under a specified node, excluding everything
 // 	under a mask node.  Currently, the descent STOPS at an
 // 	unperturbed center of mass.
-// 
+//
 // hdyn::calculate_partial_acc_and_jerk_on_leaf
 // 	compute the force on `this' leaf from all particles under
 // 	a specified node, excluding everything under a mask node
-// 
+//
 // hdyn::calculate_partial_acc_and_jerk
 // 	compute the force on `this' node or leaf from all particles
 // 	under a specified node, excluding everything under a mask node
-// 
+//
 // hdyn::calculate_acc_and_jerk_on_low_level_node
 // 	compute the force on `this' low-level node or leaf
-// 
+//
 // hdyn::calculate_acc_and_jerk_on_top_level_node
 // 	compute the force on `this' top-level node or leaf
-// 
+//
 // hdyn::calculate_acc_and_jerk
 // 	compute the force on `this' node or leaf
-// 
+//
 // correct_acc_and_jerk
 // 	correct computed force in situations where GRAPE-style functions
 // 	lead to incorrect results
@@ -1420,22 +1420,22 @@ bool hdyn::correct_and_update()
 // 	    calls calculate_partial_acc_and_jerk
 //
 
-// 
+//
 // Calling sequences (schematic, "exact" = false)
-// 
+//
 //                               calculate_acc_and_jerk
-// 
+//
 //                                          |
 //                                          |
 //                     ------------------------------------------
 //                    |                                          |
 //                    v                                          v
-// 
+//
 // calculate_acc_and_jerk_on_top_level_node   calculate_acc_and_jerk_on_low_level_node
 //
 //                    |                                          |
 //                    v                                          v
-// 
+//
 //     flat_calculate_acc_and_jerk               calculate_partial_acc_and_jerk
 //      (GRAPE-style, or GRAPE itself)           (relative motion, perturbation)
 //                  +
@@ -1447,15 +1447,15 @@ bool hdyn::correct_and_update()
 //                                          |
 //                                          |
 //                                          v
-// 
+//
 //                           (calculate_partial_acc_and_jerk)
-// 
+//
 //                                          |
 //                                          |
 //                    -------------------------------------------
 //                   |                                           |
 //                   v                                           v
-// 
+//
 // calculate_partial_acc_and_jerk_on_leaf        calculate_partial_acc_and_jerk
 //                                                 (RECURSIVE, for acc and jerk
 //                   |                                         on a node)
@@ -1463,14 +1463,14 @@ bool hdyn::correct_and_update()
 //                   |-------------------------------------------
 //                   |                                           |
 //                   v                                           v
-// 
+//
 //     perturber_acc_and_jerk_on_leaf       tree_walk_for_partial_acc_and_jerk_on_leaf
 //       (if perturber list used)
 //                                                               |
 //                   |-------------------------------------------
 //                   |                                           |
 //                   v                                           v
-// 
+//
 // 	accumulate_acc_and_jerk             tree_walk_for_partial_acc_and_jerk_on_leaf
 //                                            (RECURSIVE, if source node is not
 //                                                        a leaf)
@@ -1883,7 +1883,7 @@ void hdyn::calculate_partial_acc_and_jerk_on_leaf(hdyn * top,
 
     a = j = 0.0;
     p = 0;
-    
+
     // Determine absolute position and velocity of "this":
 
     vector d_pos = 0;
@@ -2261,7 +2261,7 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 					   !USE_POINT_MASS,	// explicit loop
 					   pnode,		// with list
 					   this);		// node to charge
- 
+
     // Note:  The first two calls to calculate_partial_acc_and_jerk pass
     // the d_nn_sq and nn from the hdyn, so the hdyn data are actually
     // updated by update_nn_coll.  The third call (below) passes local
@@ -2623,7 +2623,7 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	    // cerr << endl;
 	}
     }
-    
+
 #if 0
     if (time > 13.62265) {
 	cerr << "top_level_node_epilogue_force_calculation(2): " << endl;
@@ -2645,12 +2645,12 @@ void hdyn::top_level_node_epilogue_force_calculation()
     // }
 
     if (n_perturbers > MAX_PERTURBERS) {
-	    
+	
 	// Perturber list has overflowed.  Use the entire tree (below).
 
 	valid_perturbers = false;
 	kc->perturber_overflow++;
-	    
+	
     } else if (n_perturbers > 0) {
 	
 	// Use the perturber list to correct the center-of-mass force.
@@ -2684,17 +2684,17 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	bool debug = false;
 
 	if (!expand_nodes(n_perturbers, perturber_list, debug)) {
-	    
+	
 	    // Perturber list has overflowed.  Use the entire tree (below).
 	    // Note: may cause problems if this is a slow binary...
-	    
+	
 	    valid_perturbers = false;
 	    kc->perturber_overflow++;
-	    
+	
 	} else {
 
 	    // (Explicit loop)
-	    
+	
 	    calculate_partial_acc_and_jerk(this, this, this,
 					   a_p, j_p, p_p, d_nn_sq, nn,
 					   !USE_POINT_MASS,
@@ -2770,7 +2770,7 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	    }
 
 	    pot += p_p;
-	    
+	
 	}
 
 	// if (nn == NULL) {
@@ -2785,7 +2785,7 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	}
 #endif
     }
-    
+
     // Recompute the force exactly if the perturber list has overflowed.
 
     if (!valid_perturbers) {
@@ -3007,7 +3007,7 @@ local inline void apply_correction(hdyn * bj, hdyn * bi)
 	}
 #endif
     }
-    
+
     bi->get_kira_counters()->force_correction++;
 
     // cerr << "after correction" << endl;
@@ -3027,7 +3027,7 @@ local inline void apply_correction(hdyn * bj, hdyn * bi)
 // The requirement is as follows:
 //
 //     a) the actual pointer returned is the top_level_node of bi (btop)
-//     b) bi must be the left-most leaf of the tree under btop, to 
+//     b) bi must be the left-most leaf of the tree under btop, to
 //        guarantee uniqueness (i.e. that the correction is applied only once
 //     c) btop must be in the present integration block
 //     d) bj must not be on the perturber list of btop
@@ -3138,7 +3138,7 @@ void correct_acc_and_jerk(hdyn * root,		// OLD!
 	int n = 0;
 	for_all_daughters(hdyn, root, bb)
 	    if (bb->is_parent()) n++;
-	if  (work_size < n) { 
+	if  (work_size < n) {
 	    nodes = new hdynptr[n*2+10];	// DEC C++ doesn't like (hdyn*)
 	    work_size = n*2+10;
 	}
@@ -3479,7 +3479,7 @@ void hdyn::integrate_node(hdyn * root,
 }
 
 //=======================================================================//
-//  +---------------+        _\|/_        +------------------------------\\
+//  +---------------+        _\|/_        +------------------------------\\ ~
 //  |  the end of:  |         /|\         |  src/dyn/evolve/hdyn_ev.C
 //  +---------------+                     +------------------------------//
-//========================= STARLAB =====================================\\ 
+//========================= STARLAB =====================================\\ ~

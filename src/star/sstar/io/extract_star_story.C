@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 /*
  *  addstar.C: creates a star part for each body
@@ -31,14 +31,14 @@ void dump_line_text(ostream& str, story& s)
 #endif
     }
 
-void extract_line_text(char* type, real& t_cur,  real& t_rel, 
-		       real& m_rel, real& m_env, 
+void extract_line_text(char* type, real& t_cur,  real& t_rel,
+		       real& m_rel, real& m_env,
 		       real& m_core, real& co_core,
 		       real& t_eff, real& l_eff,
 		       real& p_rot, real& b_fld,
 		       story& s)
     {
-      
+
         char keyword[MAX_INPUT_LINE_LENGTH];
         char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
         char line [MAX_INPUT_LINE_LENGTH];
@@ -53,7 +53,7 @@ void extract_line_text(char* type, real& t_cur,  real& t_rel,
         if(0){   // trick to keep the if() statement, for the else below
         }else if(!strcmp("Type",keyword)){
             char str_tpe[MAX_INPUT_LINE_LENGTH];
-            sscanf(line,"%*s%*s%s",type); 
+            sscanf(line,"%*s%*s%s",type);
         }else if(!strcmp("T_cur",keyword)){
             sscanf(line,"%*s%*s%lf",&t_cur);
         }else if(!strcmp("T_rel",keyword)){
@@ -70,48 +70,48 @@ void extract_line_text(char* type, real& t_cur,  real& t_rel,
             sscanf(line,"%*s%*s%lf",&t_eff);
         }else if(!strcmp("L_eff",keyword)){
             sscanf(line,"%*s%*s%lf",&l_eff);
-        }else if(!strcmp("P_rot",keyword)){       // Experimental extra 
-	    sscanf(line,"%*s%*s%lf",&p_rot);     // information for 
+        }else if(!strcmp("P_rot",keyword)){       // Experimental extra
+	    sscanf(line,"%*s%*s%lf",&p_rot);     // information for
         }else if(!strcmp("B_fld",keyword)){       // Only for neutron stars
   	    sscanf(line,"%*s%*s%lf",&b_fld);
         }
 
     }
 
-void extract_story_chapter(char* type, real& t_cur, real& t_rel, 
-                           real& m_rel, real& m_env, real& m_core, 
+void extract_story_chapter(char* type, real& t_cur, real& t_rel,
+                           real& m_rel, real& m_env, real& m_core,
 			   real& co_core,
 			   real& t_eff, real& l_eff,
 			   real& p_rot, real& b_fld,
 			   story& s) {
 
-  
+
     if (!s.get_chapter_flag())
         {
         cerr << "extract_story_chapter: not a story\n";
         exit(1);
         }
 
-    
+
     t_rel=-1;
-    
+
     for (story * d = s.get_first_daughter_node(); d != NULL;
                                                   d = d->get_next_story_node())
       {
 	
 	
-	if (d->get_chapter_flag()) 
-	  extract_story_chapter(type, t_cur, t_rel, 
+	if (d->get_chapter_flag())
+	  extract_story_chapter(type, t_cur, t_rel,
 				m_rel, m_env, m_core, co_core,
 				t_eff, l_eff,
 				p_rot, b_fld, *d);
-	else 
-	  extract_line_text(type, t_cur, t_rel, 
+	else
+	  extract_line_text(type, t_cur, t_rel,
 			    m_rel, m_env, m_core, co_core,
 			    t_eff, l_eff,
 			    p_rot, b_fld, *d);
       }
-    
+
     if (t_rel<=0)
       t_rel = t_cur;
 }
@@ -120,7 +120,7 @@ void extract_story_chapter(char* type, real& t_cur, real& t_rel,
  *  addstar  -- for all particles, add a star part using "new star()".
  *-----------------------------------------------------------------------------
  */
-void  addstar(node * b, real t_rel, stellar_type type, 
+void  addstar(node * b, real t_rel, stellar_type type,
                         real mf=1, real rf=1, real tf=1) {
       node * bi;
 
@@ -138,7 +138,7 @@ void  addstar(node * b, real t_rel, stellar_type type,
 	 starbase * old_starbase = b->get_starbase();
          story * s = old_starbase->get_star_story();
 
-         extract_story_chapter(type_string, t_cur, t_rel, 
+         extract_story_chapter(type_string, t_cur, t_rel,
                                m_rel, m_env, m_core, co_core,
 			       t_eff, l_eff,
 			       p_rot, b_fld, *s);
@@ -146,8 +146,8 @@ void  addstar(node * b, real t_rel, stellar_type type,
          stellar_type local_type = extract_stellar_type_string(type_string);
 
          if (local_type!=NAS) {		// is the star properly defined.
-            type = local_type; 
-            single_star* new_star = new_single_star(type, id, t_cur, t_rel, 
+            type = local_type;
+            single_star* new_star = new_single_star(type, id, t_cur, t_rel,
 			 m_rel, m_tot, m_core, co_core, p_rot, b_fld,  b);
 
          }
@@ -159,22 +159,22 @@ void  addstar(node * b, real t_rel, stellar_type type,
             id = b->get_index();
             m_rel = m_tot = b->get_mass()/mf;
 
-	    // Treat by dynamics pre-requested black holes 
+	    // Treat by dynamics pre-requested black holes
 	    if(getiq(b->get_log_story(), "black_hole")==1) {
-	      single_star* new_star = new_single_star(Black_Hole, id, 
-						      t_cur, t_rel, 
+	      single_star* new_star = new_single_star(Black_Hole, id,
+						      t_cur, t_rel,
 						      m_rel, m_tot, m_tot,
 						      m_tot,
 						      p_rot, b_fld, b);
 	    }
 	    else {
-	      single_star* new_star = new_single_star(type, id, 
-						    t_cur, t_rel, 
+	      single_star* new_star = new_single_star(type, id,
+						    t_cur, t_rel,
 						    m_rel, m_tot, m_core,
 						    co_core,
 						    p_rot, b_fld, b);
 
-//            single_star* new_star = new_single_star(type, id, t_cur, t_rel, 
+//            single_star* new_star = new_single_star(type, id, t_cur, t_rel,
 //                         m_rel, m_tot, m_core, co_core, p_rot, b_fld, b);
 
 	  }
@@ -234,8 +234,8 @@ main(int argc, char ** argv)
             case '?': cerr <<
 		      "usage: addstar [-t #] [-T #] [-c \"..\"]\n";
 		      exit(1);
-	    }            
-    
+	    }
+
     node *b;
 
     while (b = get_node(cin))

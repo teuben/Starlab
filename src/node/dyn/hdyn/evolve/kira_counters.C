@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // Functions associated with kira counters.  Special treatment is needed
 // here because we are largely circumventing the standard I/O mechanisms.
@@ -49,7 +49,7 @@ local void putq(story* s, char* l, vector v)		{putvq (s, l, v);}
 		  cerr << endl
 
 void initialize_counters_from_log(hdyn* b)
-{  
+{
     // Counters may be saved in the root log story.
 
     b->get_kira_counters()->cpu_time = 0;

@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // Functions associated with log output, snapshots, etc.
 //
@@ -379,7 +379,7 @@ local void print_timestep_stats(hdyn* b)
     for (i = 10; i < 20; i++) fprintf(stderr, " %5d", count_next[i]);
     cerr << endl << "        ";
     for (i = 20; i < 30; i++) fprintf(stderr, " %5d", count_next[i]);
-    cerr << endl;    
+    cerr << endl;
 
     // ...then the list of shortest steps and force counters.
 
@@ -512,7 +512,7 @@ void print_dstar_params(dyn* b)			// b is binary center of mass
 	print_binary_dstars(b);
 }
 
-bool print_dstar_stats(dyn* b, bool mass_function,    // b is binary 
+bool print_dstar_stats(dyn* b, bool mass_function,    // b is binary
 		       vector center, bool verbose)   // center of mass
 {
     if (((hdyn*)b)->get_use_dstar()) {
@@ -610,7 +610,7 @@ void log_output(hdyn * b, real count, real steps,
     int n_bound;
     real m_bound;
     get_n_and_m_bound(b, cod_vel, n_bound, m_bound);
-    
+
     cerr << endl;
     for (int k = 0 ; k < 40; k++) cerr << '-';
     cerr << endl << endl

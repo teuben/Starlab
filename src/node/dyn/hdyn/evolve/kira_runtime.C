@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // Implement run-time corrections/adjustments to kira.
 //
@@ -39,7 +39,7 @@ local void clean_up_file(char* name)
 	cerr << "***** deleted file " << name << endl;
     else
 	cerr << "***** error deleting file " << name << endl;
-    
+
     ifstream file(name);
     if (file) {
 	cerr << ">>>>> clean_up_file: warning: file " << name
@@ -254,7 +254,7 @@ local bool kill_multiples(hdyn * b)
     return killed;
 }
 
-local void modify_params(hdyn * b, char * name, 
+local void modify_params(hdyn * b, char * name,
 			 real& t_end, real& new_dt_log, real& new_dt_snap,
 			 int& long_binary_output, char* new_snap_save_file)
 {
@@ -496,21 +496,21 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 	    if (s = strstr(line, "precision"))
 
 		adjust_starlab_precision(get_value(s, -1));  // default = reset
-	    
+	
 	    else if (s = strstr(line, "print"))
 
 		b->get_kira_options()->print();
-	    
+	
 	    else if (s = strstr(line, "reset")) {
 
 		// Restore factory settings...
 
 		delete b->get_kira_options();
 		b->set_kira_options(new kira_options);
-	    
+	
 
 		// *** print_xreal is taken care of in modify_params() ***
-    
+
 
 	    } else if ((s = strstr(line, "perturber_criterion"))
 		       || (s = strstr(line, "perturber_c")))
@@ -533,7 +533,7 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 
 	    //  ***  allow_unperturbed and allow_multiples are  ***
 	    //  ***  taken care of in modify_params()...        ***
-    
+
 
 	    else if ((s = strstr(line, "min_unpert_steps"))
 		     || (s = strstr(line, "min_u")))
@@ -676,7 +676,7 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 	    if (s = strstr(line, "print"))
 
 		b->get_kira_diag()->print();
-	    
+	
 	    else if (s = strstr(line, "name")) {
 
 		if (s = get_string(line))
@@ -704,7 +704,7 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 
 		delete b->get_kira_diag();
 		b->set_kira_diag(new kira_diag);
-	    
+	
 	    } else if (s = strstr(line, "kira_main"))
 
 		b->get_kira_diag()->kira_main = get_value(s, 1);
@@ -718,7 +718,7 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 	    else if ((s = strstr(line, "check_heartbeat"))
 		     || (s = strstr(line, "check_h")))
 
-		b->get_kira_diag()->check_heartbeat 
+		b->get_kira_diag()->check_heartbeat
 		    = get_value(s, 1);
 
 	    else if ((s = strstr(line, "n_check_runtime"))

@@ -1,12 +1,12 @@
- 
+
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //// sys_stats:  Print out various diagnostic statistics on the input
 ////             system.  These include:
@@ -87,7 +87,7 @@ local real print_relaxation_time(dyn* b,
     real r_virial, t_relax;
     real total_mass = 0;
     int N = b->n_leaves();
-    
+
     for_all_leaves(dyn, b, bj)
 	total_mass += bj->get_mass();
 
@@ -111,7 +111,7 @@ local real print_relaxation_time(dyn* b,
 
 local bool print_numbers_and_masses(dyn* b)
 {
-    // Numbers of stars and nodes:      
+    // Numbers of stars and nodes:
 
     real total_cpu_time = getrq(b->get_log_story(), "total_cpu_time");
     if (total_cpu_time > -VERY_LARGE_NUMBER) {
@@ -149,15 +149,15 @@ local bool print_numbers_and_masses(dyn* b)
     return (m_min < m_max);
 }
 
-local void print_parameters_for_massive_black_holes(dyn *b, 
-						    real kT, 
-						    vector center, 
+local void print_parameters_for_massive_black_holes(dyn *b,
+						    real kT,
+						    vector center,
 						    bool verbose) {
 
   int n_bh = 0;
   for_all_daughters(dyn, b, bi) {
     if(find_qmatch(bi->get_log_story(), "black_hole")) {
-      
+
       n_bh ++;
       bool long_binary_output = true;	
       print_binary_from_dyn_pair(b, bi,
@@ -244,7 +244,7 @@ local void print_numbers_and_masses_by_radial_zone(dyn* b, int which)
 	    if ( (which == 0 && bi->get_oldest_daughter() == NULL)
 		|| (which == 1 && bi->get_oldest_daughter() != NULL)
                 || (which == 2 && getiq(bi->get_log_story(),
-					"mass_doubled") == 0 ) 
+					"mass_doubled") == 0 )
 		|| (which == 3 && getiq(bi->get_log_story(),
 					"mass_doubled") == 1) ) {
 		 //		 || (which == 2)
@@ -294,7 +294,7 @@ local void print_numbers_and_masses_by_radial_zone(dyn* b, int which)
 		m_minc = min(m_minc, m_min[i]);
 		m_maxc = max(m_maxc, m_max[i]);
 		cerr << "    zone " << i << "  N = " << Nc;
-		if (Nc > 0) 
+		if (Nc > 0)
 		    cerr << "  m_av = " << m_totc / max(Nc, 1)
 		         << "  m_min = " << m_minc
 		         << "  m_max = " << m_maxc;
@@ -360,9 +360,9 @@ local void print_anisotropy_by_radial_zone(dyn* b, int which)
 	    // Count single stars and binaries separately.
 
 	    if ( (which == 0 && bi->get_oldest_daughter() == NULL)
-		|| (which == 1 && bi->get_oldest_daughter() != NULL) 
+		|| (which == 1 && bi->get_oldest_daughter() != NULL)
 		|| (which == 2 && getiq(bi->get_log_story(),
-					"mass_doubled") == 0) 
+					"mass_doubled") == 0)
 		|| (which == 3 && getiq(bi->get_log_story(),
 					"mass_doubled") == 1) ) {
 
@@ -444,7 +444,7 @@ local void print_anisotropy_by_radial_zone(dyn* b, int which)
 // 	kin += bj->get_mass()
 // 	        * square(something_relative_to_root(bj, &dyn::get_vel));
 //     kin *= 0.5;
-// 
+//
 //     real pot = 0.0;
 //     for_all_leaves(dyn, b, bi) {
 // 	real dpot = 0.0;
@@ -456,7 +456,7 @@ local void print_anisotropy_by_radial_zone(dyn* b, int which)
 // 	}
 // 	pot -= bi->get_mass() * dpot;
 //     }
-// 
+//
 //     return kin + pot;
 // }
 
@@ -577,7 +577,7 @@ local void search_for_binaries(dyn* b, real energy_cutoff, real kT,
 
 		found = true;
 	    }
-	}    
+	}
 
     if (!found) cerr << "    (none)\n";
 }
@@ -702,7 +702,7 @@ local void bin_recursive(dyn* bi,
 local void print_histogram(int histogram[][NR], int n, char *label)
 {
     cerr << endl
-	 << "  Binary distribution by " << label << " and radius:" 
+	 << "  Binary distribution by " << label << " and radius:"
 	 << endl;
 
     PRI(13+5*n);
@@ -763,7 +763,7 @@ local void print_binary_histograms()
 
     cerr << endl;
     PRI(11); cerr << "< "; fprintf(stderr, "%3.1f", E_MIN);
-    PRI((NE/2-1)*5-4); 
+    PRI((NE/2-1)*5-4);
     if (have_kT)
 	cerr << "E/kT (x 2)";
     else
@@ -916,7 +916,7 @@ local void print_binaries(dyn* b, real kT,
 					// only when binary output is turned
 					// on (as at present)?
 					//
-					// -- histograms are presently only 
+					// -- histograms are presently only
 					//    computed if binary output is
 					//    enabled
     }
@@ -957,9 +957,9 @@ local real linear_interpolation(const real x,
 }
 
 #if 0
-// Currently in /star/util/kingfit.C   
+// Currently in /star/util/kingfit.C
 
-// Fitting function for N-body Rc/Rvir to King's concentration parameter c. 
+// Fitting function for N-body Rc/Rvir to King's concentration parameter c.
 // Argument is core radius / virial radius.
 
 local real kingCfit(const real rc_rvir) {
@@ -972,13 +972,13 @@ local real kingCfit(const real rc_rvir) {
   real Rc_Rvir[] = {1., 0.497, 0.492, 0.428, 0.376, 0.314,
 		    0.241, 0.179, 0.110, 0.0568, 0.0369,
 		    0.0185, 0.0129};
-  
+
   if (rc_rvir>=Rc_Rvir[1])
     return 0;
   else if(rc_rvir<=Rc_Rvir[nfit])
     return 3;
   else
-    for (int i=1; i<=nfit; i++) 
+    for (int i=1; i<=nfit; i++)
       if (rc_rvir>=Rc_Rvir[i])
 	return linear_interpolation(rc_rvir,
 				    Rc_Rvir[i-1], Rc_Rvir[i],
@@ -1002,7 +1002,7 @@ local real kingWfit(const real rc_rvir) {
   else if (rc_rvir <= Rc_Rvir[nfit])
     return 12;
   else
-    for (int i=1; i<=nfit; i++) 
+    for (int i=1; i<=nfit; i++)
       if (rc_rvir >= Rc_Rvir[i])
 	return  linear_interpolation(rc_rvir,
 				     Rc_Rvir[i-1], Rc_Rvir[i],
@@ -1014,11 +1014,11 @@ local void print_king_parameters(const real rc_rvir) {
 
   real Wo = kingWfit(rc_rvir);
   real C  = kingCfit(rc_rvir);
-  
-    PRI(4); cerr << "Wo = " << Wo 
+
+    PRI(4); cerr << "Wo = " << Wo
 		 << "  c = " << C
 		 << endl;
-  
+
 }
 
 #endif
@@ -1053,7 +1053,7 @@ local bool double_fn(dyn * b)
 	return true;
     else
 	return false;
-}  
+}
 
 local real print_lagrangian_radii(dyn* b, int which_lagr,
 				  bool verbose = true, int which_star = 0)
@@ -1307,7 +1307,7 @@ bool parse_sys_stats_main(int argc, char *argv[],
     // Parse the sys_stats command-line (used by both dyn and hdyn versions).
 
     // Set standard defaults for standalone tools:
-    
+
     which_lagr = 2;			// print nonlinear Lagrangian zones
 
     binaries = true;			// print binary output

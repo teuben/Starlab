@@ -60,7 +60,7 @@ local void alter_star_from_random_time(dyn* b) {
     ss->set_current_time(0);
 }
 
-local real evolve_star_until_next_time(dyn* bi, const real out_time) {
+local void evolve_star_until_next_time(dyn* bi, const real out_time) {
 
           real current_time = ((star*)bi->get_starbase())->get_current_time();
           real time_step    =  bi->get_starbase()->get_evolve_timestep();

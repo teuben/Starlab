@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // refine_mass2.C:  More careful determination of cluster mass and center,
 //		    for use with an external non-tidal field.
@@ -228,7 +228,7 @@ void refine_cluster_mass2(dyn *b,
 	    PRC(R); PRC(r_L1); PRC(r_L2);
 	}
 
-	// Limiting potential: 
+	// Limiting potential:
 
 	real phi_L1 = ext_pot(b, ext_center + r_L1*Rhat) - M/(R-r_L1);
 	real phi_L2 = ext_pot(b, ext_center + r_L2*Rhat) - M/(r_L2-R);
@@ -242,7 +242,7 @@ void refine_cluster_mass2(dyn *b,
 	for_all_daughters(dyn, b, bb) {
 	    real r = abs(bb->get_pos() - center);
 	    if (r < r_L) {
-		if (r == 0 
+		if (r == 0
 		    || -M/r + ext_pot(b, bb->get_pos()) < phi_lim) {
 		    N_inside++;
 		    M_inside += bb->get_mass();

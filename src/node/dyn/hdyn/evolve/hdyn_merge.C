@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\ 
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ 
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ 
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\ 
+//=======================================================//              /|\ ~
 
 //
 //  hdyn_merge.C: functions related to physical mergers in kira
@@ -189,13 +189,13 @@ local void print_perioapo_clustron(hdyn* bi) {
     cerr << "\nIn print_close_encounter with bi =  " << bi->format_label()
 	 << "  at time " << bi->get_system_time() << endl;
     cerr << "     "; print_coll(bi,2);
-    cerr << "     "; print_nn(bi,2); 
+    cerr << "     "; print_nn(bi,2);
     cerr << "     (bj = " << bj->format_label();
     cerr << ":  coll = "; print_coll(bj);
     cerr << ",  nn = "; print_nn(bj); cerr << ")" << endl;
 
 #endif
-  
+
     // Retrieve coll information from the log story.
 
     d2cd_2 = getrq(bi->get_log_story(), "d2cd_1");
@@ -219,12 +219,12 @@ local void print_perioapo_clustron(hdyn* bi) {
 
 	}
 	else {
-	  if (find_qmatch(bi->get_log_story(), "pcp_cntr")) 
+	  if (find_qmatch(bi->get_log_story(), "pcp_cntr"))
 	    pcp_cntr = getiq(bi->get_log_story(), "pcp_cntr");
 
 	  pcp_cntr++;
-	  
-	  if (pcp_cntr == 1) 
+	
+	  if (pcp_cntr == 1)
 	    print_encounter_elements(bi, bj, "First periclustron", false);
 	  else
 	    print_encounter_elements(bi, bj, "Periclustron", false);
@@ -234,7 +234,7 @@ local void print_perioapo_clustron(hdyn* bi) {
 	// Note that an unbound pericenter resets pcc_cntr to zero.
 
 	putiq(bi->get_log_story(), "pcp_cntr", pcp_cntr);
-	putrq(bi->get_log_story(), "pcp_time", bi->get_time());  
+	putrq(bi->get_log_story(), "pcp_time", bi->get_time());
 	
       }
       else if (d2cd_2 < d2cd_1 && d2cd <= d2cd_1) { //just passed apocluctron
@@ -245,17 +245,17 @@ local void print_perioapo_clustron(hdyn* bi) {
 	if (E > 0) {
 
 	  // Always print unbound encounter elements.
-	  
+	
 	  print_encounter_elements(bi, bj, "Apoclustron", false);
 
 	}
 	else {
-	  if (find_qmatch(bi->get_log_story(), "pca_cntr")) 
+	  if (find_qmatch(bi->get_log_story(), "pca_cntr"))
 	    pca_cntr = getiq(bi->get_log_story(), "pca_cntr");
 
 	  pca_cntr++;
 
-	  if (pca_cntr == 1) 
+	  if (pca_cntr == 1)
 	    print_encounter_elements(bi, bj, "First apoclustron", false);
 	  else
 	    print_encounter_elements(bi, bj, "Apoclustron", false);
@@ -265,10 +265,10 @@ local void print_perioapo_clustron(hdyn* bi) {
 	// Note that an unbound pericenter resets pca_cntr to zero.
 
 	putiq(bi->get_log_story(), "pca_cntr", pca_cntr);
-	putrq(bi->get_log_story(), "pca_time", bi->get_time());  
+	putrq(bi->get_log_story(), "pca_time", bi->get_time());
       }
       else {
-	  
+	
 	// Unlikely multiple encounter(?).  Has been known to occur
 	// when one incoming star overtakes another.
 
@@ -283,9 +283,9 @@ local void print_perioapo_clustron(hdyn* bi) {
 
     }
 
-    putrq(bi->get_log_story(), "d2cd_1", d2cd_1);  
-    putrq(bi->get_log_story(), "d2cd", d2cd);  
-    //    putrq(bi->get_log_story(), "pcd_time", bi->get_time());  
+    putrq(bi->get_log_story(), "d2cd_1", d2cd_1);
+    putrq(bi->get_log_story(), "d2cd", d2cd);
+    //    putrq(bi->get_log_story(), "pcd_time", bi->get_time());
 
 #if 0
     cerr << "\nAt end of print_close_encounter at time "
@@ -317,7 +317,7 @@ hdyn* hdyn::check_merge_node()
     // tidal destruction by a massive black hole so long as the
     // "radius" of the hole (based on constant density) is much
     // greater than the radius of a particle.
-  
+
     if (use_dstar) {
 	if (is_low_level_node()) {
 	    if (binary_is_merged(this)) {
@@ -351,7 +351,7 @@ hdyn* hdyn::check_merge_node()
 
 
 	// (NB: d_coll_sq = distance_squared - sum_of_radii_sq)
-      
+
 	if (get_d_coll_sq() <= (stellar_capture_criterion_sq-1)
 						* sum_of_radii_sq) {
 
@@ -445,7 +445,7 @@ void hdyn::merge_logs_after_collision(hdyn *bi, hdyn* bj) {
 
   // log only the moment of the last merger
   putrq(get_log_story(), "last_merger_time", bi->get_time());
-  
+
   if(find_qmatch(bi->get_log_story(), "black_hole"))
     putiq(get_log_story(), "black_hole",
 	  getiq(bi->get_log_story(), "black_hole"));
@@ -516,9 +516,9 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 
 	    // Nodes are not in the same subtree.  Combine their
 	    // subtrees into a single clump to allow use of function
-	    // move_node below.  Undo the combination before 
+	    // move_node below.  Undo the combination before
 	    // continuing, if necessary.
-	    
+	
 	    bool decombine = !is_top_level_node()
 				&& !bcoll->is_top_level_node();
 
@@ -545,7 +545,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 		if (full_dump)
 		    put_node(cout, *(get_top_level_node()), false, 2);
 	    }
-	    
+	
 	    if (decombine) {
 
 		// cerr << "call split_top_level_node 3" << endl;
@@ -553,7 +553,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 		split_top_level_node(get_top_level_node(), full_dump);
 
 	    }
-	    
+	
 	} else {
 
 	    // Already in the same subtree.
@@ -569,19 +569,19 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 		put_node(cout, *(get_top_level_node()), false, 2);
 	}		
     }
-    
+
     // Nodes 'this' and bcoll are binary sisters (in all cases).
     // Merge them into their center-of-mass node and remove them.
-    
+
     // pp2(get_top_level_node(), cerr);
-    
+
     if (full_dump)
 	put_node(cout, *(get_top_level_node()), false, 3);
 
     // Compute energies prior to merger, for bookkeeping purposes:
 
     cerr << "calculating energies..." << endl << flush;
-    
+
     real epot0, ekin0, etot0;
 
     //calculate_energies(get_root(), eps2, epot0, ekin0, etot0);//dyn function
@@ -590,12 +590,12 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     PRC(epot0); PRC(ekin0); PRL(etot0);
 
     hdyn* cm = get_parent();
-    
+
     real epot_int = -mass * bcoll->mass / abs(pos - bcoll->pos);
     real ekin_int = 0.5 * (mass * square(vel)
 			   + bcoll->mass * square(bcoll->vel));
     real etot_int = epot_int + ekin_int;
-    
+
     PRC(epot_int); PRC(ekin_int); PRL(etot_int);
     PRL(cpu_time());
     //pp3(cm, cerr);
@@ -609,7 +609,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     PRL(cm->format_label());
 
     // pp3(cm->get_root(), cerr);
-    
+
     real dm;
     vector dv;
 
@@ -722,52 +722,52 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     }
 
     cm->set_coll(NULL);			// Set its coll to NULL.
-    
+
     // Add kick velocity, if any...
-    
+
     if (square(dv) > 0)
 	correct_leaf_for_change_of_vector(cm, dv, &hdyn::get_vel,
 					  &hdyn::inc_vel);
-    
+
     cm->set_oldest_daughter(NULL);
 
-    // Do not try to free memory by simply 
+    // Do not try to free memory by simply
     //		delete bcoll;
     //		delete this;
     // causes a not so very strange error.
-    
+
     real epot, ekin, etot;
 #ifdef CALCULATE_POST_COLLISION_ON_GRAPE
     cerr << "calculate post collision on GRAPE"<<endl;
     // replaced by GRAPE friendly function (SPZ, March 2001)
-    calculate_internal_energies(get_root(), epot, ekin, etot); 
+    calculate_internal_energies(get_root(), epot, ekin, etot);
 #else
     calculate_energies(get_root(), eps2, epot, ekin, etot);	//dyn function
 #endif
     PRC(epot); PRC(ekin); PRL(etot);
-    
+
     real de_total = etot - etot0;
     vector vcm = hdyn_something_relative_to_root(cm, &hdyn::get_vel);
     real de_kick = 0.5 * cm->mass * (vcm*vcm - square(vcm-dv));
     real de_int = -etot_int;
-    
+
     PRC(de_total); PRC(de_int); PRL(de_kick);
     PRL(cpu_time());
-    
+
     // Update statistics on mass and energy change components:
-    
+
     kc->dm_massloss -= dm;	// dm < 0, note
 
     kc->de_total += de_total;
     kc->de_merge += de_int;
     kc->de_massloss += de_total - de_int - de_kick;
     kc->de_kick += de_kick;
-    
+
     hdyn* root = cm->get_root();
     xreal time = cm->time;
-    
+
     // Special treatment of case cm->mass = 0.
-    
+
     if (cm->mass <= 0) {
 	
 	// NOTE: Must copy cm's log entry before deleting the node.	<---

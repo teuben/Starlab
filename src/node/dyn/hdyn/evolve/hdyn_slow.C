@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // Initiate, extend, or terminate slow binary motion.
 //
@@ -21,7 +21,7 @@
 // Note from Steve, 8/99:
 //
 // Slow binary motion is handled by two data classes:
-// 
+//
 // 1. Slow motion itself is signified simply by attaching a slow_binary
 //    pointer to the binary components (the data structure is shared
 //    by the two components).  If the slow pointer is set, the binary
@@ -34,7 +34,7 @@
 //    indicating that the motion must terminate at the proper phase;
 //    subsequently, unperturbed motion can begin normally.  This portion
 //    of the motion is straightforward to program and maintain.
-// 
+//
 // 2. However, once a binary is undergoing slow motion, its center of
 //    mass motion and its effect on its perturbers require special
 //    attention.  The reason is that the internal motion causes a
@@ -49,12 +49,12 @@
 //    involving slow binaries separately, reducing the relevant a, j, k,
 //    and l by factors of kappa, kappa^2, etc., and does in fact allow
 //    longer timesteps for the CM and perturber motion.
-// 
+//
 //    This portion of kira is significantly messier to code and maintain
 //    than the slow motion itself.  The CM motion and perturber motion
 //    are handled differently (and both are presently implemented only
 //    for top-level nodes):
-// 
+//
 // 	* For the CM, instead of correcting the center of mass force
 // 	  for the perturbation due to perturbers, we instead store the
 // 	  perturbative part as acc_p and jerk_p in the slow_binary
@@ -64,7 +64,7 @@
 // 	  derivatives separately for the pertubative term, taking the
 // 	  slowdown factors into account, and then combines it with the
 // 	  usual correction terms.
-// 
+//
 // 	* For perturbers of a slow binary, things are more complex, as
 // 	  the correction in principle is different for each slow
 // 	  binary a particle happens to perturb.  Presently, I (Steve)
@@ -83,7 +83,7 @@
 //	  node of the slow binary in question.  Relevant list elements
 // 	  are deleted each time the slow binary's perturber list is
 //	  recomputed, and when slow motion ends.
-// 
+//
 // The procedures just described are currently implemented only for
 // top-level nodes, principally because the perturbative component of
 // the interparticle force is easy to determine in that case (since all
@@ -111,7 +111,7 @@
 //
 //	  *** probably will use the slow binary structure attached ***
 //	  *** to the (elder) binary component to implement this... ***
-// 
+//
 // The slow and slow_perturbed classes are defined in _dyn_.h and managed
 // in _dyn_slow.C.  The only use is in kira, accessed via this file.
 

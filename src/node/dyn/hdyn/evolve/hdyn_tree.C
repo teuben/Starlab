@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\ 
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ 
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ 
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\ 
+//=======================================================//              /|\ ~
 
 //
 //  hdyn_tree.C: functions related to tree evolution in kira.
@@ -277,7 +277,7 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
     //       O		A = (a,b), B = c, 'this' = A
     //      / \		nn of A is c, nn of c is A
     //     A   c	nn of a is b, nn of b is c
-    //    / \	
+    //    / \							~
     //   a   b		exchange will not be detected until
     // 			component a is advanced (return at *)
     //
@@ -285,7 +285,7 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
     //       O		A = (a,b), B = c, 'this' = c
     //      / \		nn of A is c, nn of c is A
     //     A   c	nn of a is b, nn of b is c
-    //    / \	
+    //    / \							~
     //   a   b		exchange will not be detected until
     // 			component a is advanced (return at *)
     //
@@ -293,7 +293,7 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
     //       O		A = c, B = (a,b), 'this' = c
     //      / \		nn of c is b, nn of B is c
     //     c   B	nn of a is b, nn of b is c
-    //        / \	
+    //        / \						~
     //       a   b	exchange will be detected when c
     // 			is advanced
     //
@@ -301,7 +301,7 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
     //       O		A = c, B = (a,b), 'this' = B
     //      / \		nn of c is b, nn of B is c
     //     c   B	nn of a is b, nn of b is c
-    //        / \	
+    //        / \						~
     //       a   b	exchange will be detected when c
     // 			is advanced
     //
@@ -525,7 +525,7 @@ local void check_merge_esc_flags(hdyn *bi, hdyn *bj)
 	    putrq(bj->get_dyn_story(), "esc", 0);
 	    rmq(bj->get_dyn_story(), "t_esc");
 	}
-    }    
+    }
 }
 
 void combine_top_level_nodes(hdyn * bj, hdyn * bi,
@@ -633,7 +633,7 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 		    hdyn *p = pnode->get_perturber_list()[k]
 				   ->get_top_level_node();
 		    if (p->get_sp())
-			p->remove_slow_perturbed(bb);		    
+			p->remove_slow_perturbed(bb);		
 		}
 	}
 
@@ -938,7 +938,7 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
     if (full_dump) {
 
 	// Dump out the "before" system (top-level), for use in 4tree
-	// applications.  
+	// applications.
 
 	// cerr << "combine_low_level_nodes: time " << bi->get_system_time();
 	// cerr << "  put_node for " << old_top_level_node->format_label()
@@ -961,7 +961,7 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
     // which should be unchanged, so we at least don't have to
     // compute perturbations using the entire system.
     // Messy, messy...
-    // 
+    //
     // Messier still, if bi's parent node happens to be the top-level
     // node, then the top-level node will be deleted and its perturber
     // information lost.  Save the perturber info and restore it to
@@ -1288,7 +1288,7 @@ int hdyn::adjust_tree_structure(bool full_dump)		// default = false
 
     hdyn *br = get_root();
     if (is_top_level_node()) {		// this is a top-level node
-      
+
 	bool cm = false;
 	if (oldest_daughter) cm = true;
 

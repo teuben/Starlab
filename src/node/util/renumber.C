@@ -1,20 +1,20 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //// renumber:            Renumber stars in a specific order
 ////
 //// Options:   -c c      add a comment to the output snapshot [false]
 ////            -I/i      start numbering number               [1]
-////            -M        Renumber the stars in order of mass 
+////            -M        Renumber the stars in order of mass
 ////                      (highest mass=I/lowest mass=i)       [false]
-////            
+////
 
 //// Options:
 
@@ -77,13 +77,13 @@ void renumber(node* b, int istart, bool mass_order) {
     qsort((void *)nm_table, (size_t)n, sizeof(nm_pair), compare_mass);
 
     for (i=0; i<n; i++) {
-      nm_table[i].str->set_index(istart+i);  
+      nm_table[i].str->set_index(istart+i);
     }
     delete []nm_table;
 
 }
 
-#else 
+#else
 
 void main(int argc, char ** argv)
 {
@@ -92,7 +92,7 @@ void main(int argc, char ** argv)
 
     bool M_flag = false;
     int istart = 1;
-    
+
     check_help();
 
     extern char *poptarg;
@@ -105,10 +105,10 @@ void main(int argc, char ** argv)
 	    case 'c': c_flag = TRUE;
 		      comment = poptarg;
 		      break;
-	    case 'i': 
+	    case 'i':
 	    case 'I': istart = atoi(poptarg);
 		      break;
-	    case 'm': 
+	    case 'm':
 	    case 'M': M_flag = true;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);

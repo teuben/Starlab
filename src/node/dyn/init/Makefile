@@ -25,8 +25,11 @@ DEPEND_LIBS	= $(LIB)/libstd.a $(LIB)/libnode.a $(LIB)/libdyn.a
 
 EXECUTABLES	= makecube makedisk makeplummer makepyth makesphere makewrite \
 		  addplummer makebinary split_particles makeking \
-	 	  makeheavystar make_aniso_king readp readstoa \
-	          makeplanetary makeblack_hole grow_black_hole
+	 	  makeheavystar readp readstoa \
+	          makeplanetary makeblack_hole grow_black_hole \
+		  make_aniso_king
+
+# (Steve 9/01: place mk_aniso_king last, as the build may break on new systems.)
 
 OBJECT_FILES	= makesphere.o
 LIBRARY		= libdyn.a

@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //// mkmass:  Add a mass spectrum to an input snapshot.  Existing
 ////          node masses are overwritten.
@@ -51,11 +51,11 @@ local real mf_Miller_Scalo(real m_lower, real m_upper) {
 	m = 0.19*rnd
 	    / (pow(1-rnd, 0.75) + 0.032*pow(1-rnd, 0.25));
     }
-    while(m_lower>m || m>m_upper); 
+    while(m_lower>m || m>m_upper);
     return m;
 }
 
-// see: de la Fuente Marcos, Aarseth, Kiseleva, Eggleton 
+// see: de la Fuente Marcos, Aarseth, Kiseleva, Eggleton
 // 1997, in Docobo, Elipe, McAlister (eds.), Visual Double
 // Stars: Formation, dynamics and Evolutionary Tracks, KAP: ASSL
 // Series vol. 223,  165
@@ -66,7 +66,7 @@ local real mf_Scalo(real m_lower, real m_upper) {
 	m = 0.3*rnd
 	    / pow(1-rnd, 0.55);
     }
-    while(m_lower>m || m>m_upper); 
+    while(m_lower>m || m>m_upper);
     return m;
 }
 
@@ -78,12 +78,12 @@ local real Kroupa_Tout_Gilmore(real m_lower, real m_upper) {
 	m = 0.08 + (0.19*pow(rnd, 1.55) + 0.05*pow(rnd, 0.6))
 	    /        pow(1-rnd, 0.58);
     }
-    while(m_lower>m || m>m_upper); 
+    while(m_lower>m || m>m_upper);
     return m;
 }
 
-real get_random_stellar_mass(real m_lower, real m_upper, 
-			     mass_function mf, real exponent) { 
+real get_random_stellar_mass(real m_lower, real m_upper,
+			     mass_function mf, real exponent) {
 
     real m;
     switch(mf) {
@@ -99,10 +99,10 @@ real get_random_stellar_mass(real m_lower, real m_upper,
        case mf_Power_Law:
 	  m =  general_power_law(m_lower, m_upper, exponent);
 	       break;
-       case Miller_Scalo: 
+       case Miller_Scalo:
 	   m = mf_Miller_Scalo(m_lower, m_upper);
 	       break;
-       case Scalo:     
+       case Scalo:
 	  m = mf_Scalo(m_lower, m_upper);
 	      break;
        case Kroupa: // Kroupa, Tout & Gilmore 1993, MNRAS 262, 545
@@ -119,27 +119,27 @@ real get_random_stellar_mass(real m_lower, real m_upper,
 }
 
 char* type_string(mass_function mf) {
-    
+
     local char  mf_name[SEED_STRING_LENGTH];	// permanent
     switch(mf) {
 
        case Equal_Mass:
-            sprintf(mf_name, "Equal_Mass"); 
-	    break;	    
+            sprintf(mf_name, "Equal_Mass");
+	    break;	
        case mf_Power_Law:
-            sprintf(mf_name, "Power_Law"); 
-	    break;	    
+            sprintf(mf_name, "Power_Law");
+	    break;	
        case Miller_Scalo:
-            sprintf(mf_name, "Miller_Scalo"); 
-	    break;	    
+            sprintf(mf_name, "Miller_Scalo");
+	    break;	
        case Scalo:
-            sprintf(mf_name, "Scalo"); 
-	    break;	    
+            sprintf(mf_name, "Scalo");
+	    break;	
        case Kroupa:
-            sprintf(mf_name, "Kroupa"); 
+            sprintf(mf_name, "Kroupa");
 	    break;
        default:
-            sprintf(mf_name, "Unknown"); 
+            sprintf(mf_name, "Unknown");
 	    break;
     }
     return mf_name;
@@ -151,15 +151,15 @@ mass_function extract_mass_function_type_string(char* type_string) {
 
      if (!strcmp(type_string, "Equal_Mass"))
         type = Equal_Mass;
-     else if (!strcmp(type_string, "Power_Law")) 
+     else if (!strcmp(type_string, "Power_Law"))
         type = mf_Power_Law;
-     else if (!strcmp(type_string, "Miller_Scalo")) 
+     else if (!strcmp(type_string, "Miller_Scalo"))
         type = Miller_Scalo;
      else if (!strcmp(type_string, "Scalo"))
         type = Scalo;
-     else if (!strcmp(type_string, "Kroupa")) 
+     else if (!strcmp(type_string, "Kroupa"))
         type = Kroupa;
-     else if (!strcmp(type_string, "Unknown")) 
+     else if (!strcmp(type_string, "Unknown"))
         type = Unknown_MF;
      else {
 	 cerr << "No proper mass function indicated in mkmass."<<endl;
@@ -210,9 +210,9 @@ local int compare_mass(const void * pi, const void * pj)
 }
 
 local void mkmass(node* b, mass_function mf,
-		  real m_lower, real m_upper, 
+		  real m_lower, real m_upper,
 		  real exponent, real total_mass, bool renumber_stars) {
-  
+
     real m, m_sum = 0;
     int n=0;
     for_all_daughters(node, b, bi) {
@@ -267,11 +267,11 @@ local void mkmass(node* b, mass_function mf,
     if(m_lower>=m_upper)
 	sprintf(tmp_string,
 		"         %s mass function, total mass = %8.2f",
-		type_string(Equal_Mass), m_sum); 
+		type_string(Equal_Mass), m_sum);
     else
 	sprintf(tmp_string,
 		"       %s mass function, total mass = %8.2f Solar",
-		type_string(mf), m_sum); 
+		type_string(mf), m_sum);
     b->log_comment(tmp_string);
     cerr << "Mass function is " << type_string(mf) <<endl;
 

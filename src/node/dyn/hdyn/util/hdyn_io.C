@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // hdyn_io:  Starlab hdyn-specific I/O functions.
 
@@ -17,9 +17,9 @@
 
 // Initialize all static hdyn data here (?)
 
-kira_counters *hdyn::kc		= NULL;    
-kira_options *hdyn::options	= NULL;    
-kira_diag *hdyn::diag		= NULL;    
+kira_counters *hdyn::kc		= NULL;
+kira_options *hdyn::options	= NULL;
+kira_diag *hdyn::diag		= NULL;
 
 bool hdyn::use_dstar	= false;
 
@@ -39,8 +39,8 @@ real hdyn::d_min_sq	= 0;
 real hdyn::lag_factor	= 0;
 real hdyn::mbar		= 0;
 
-real hdyn::gamma2	= 0;    
-real hdyn::gamma23	= VERY_LARGE_NUMBER;   
+real hdyn::gamma2	= 0;
+real hdyn::gamma23	= VERY_LARGE_NUMBER;
 
 real hdyn::initial_step_limit	= 0;
 real hdyn::step_limit		= 0;
@@ -71,7 +71,7 @@ void check_sanity_of_timestep(xreal & time, real & timestep)
 	    PRL(1.0/timestep);
 	    PRL(fmod(time,  timestep));
 	    cerr << " Perform correction... \n";
-      
+
 	    real corrected_timestep = 1.0;
 	    while (corrected_timestep > timestep*1.1)
 		corrected_timestep *= 0.5;
@@ -88,7 +88,7 @@ void check_sanity_of_timestep(xreal & time, real & timestep)
 	}
     }
 }
-    
+
 static bool read_xreal = false;
 
 istream & hdyn::scan_dyn_story(istream & s)
@@ -118,7 +118,7 @@ istream & hdyn::scan_dyn_story(istream & s)
 
 		//cerr << "hdyn::scan_dyn_story: input "
 		//     << "time data type is xreal"
-		//     << endl; 
+		//     << endl;
 
 		set_system_time(get_xreal_from_input_line(input_line));
 
@@ -127,7 +127,7 @@ istream & hdyn::scan_dyn_story(istream & s)
 		if (sizeof(xreal) != sizeof(real))	// crude test...
 		    cerr << "hdyn::scan_dyn_story: input "
 			 << "time data type is real"
-			 << endl; 
+			 << endl;
 
 		real_system_time = system_time = strtod(val, NULL);
 
@@ -371,7 +371,7 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
 		if (!elder_sister) {
 		    put_integer(s, "  slow_kappa  =  ", get_kappa());
-		    put_real_number(s, "  slow_t_init  =  ", 
+		    put_real_number(s, "  slow_t_init  =  ",
 				    slow->get_t_init());
 		    put_real_number(s, "  slow_t_apo  =  ",
 				    slow->get_t_apo());
@@ -428,7 +428,7 @@ ostream & hdyn::print_dyn_story(ostream & s,
 #endif
 
 	// Defunct node:
-	 
+	
 	if (short_output == 3)
 	    put_integer(s, "  defunct  =  ", 1);
 

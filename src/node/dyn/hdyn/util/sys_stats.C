@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // The help information below is copied directly from the dyn version.
 // The only difference between this program and the dyn version is that
@@ -38,7 +38,7 @@
 ////             relative to the density center, as are binary radial
 ////             coordinates.  Otherwise, the modified center of mass
 ////             (center of mass with outliers excluded)  is used.
-////                 
+////
 //// Options:    -b    specify level of binary statistics [2]
 ////                       0:		  none
 ////                       1 (or no arg): short binary output

@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // Functions associated with stellar evolution.
 //
@@ -100,7 +100,7 @@ local void dissociate_binary(hdyn* bi)
 							// merger won't occur.
 	
     }
-		    
+		
     // NOTE: In case of sudden mass loss, probably have
     // to recompute accs and jerks, at least of neighbors.
 }
@@ -129,12 +129,12 @@ bool evolve_stars(hdyn* b,
 		  bool full_dump)	// default = false
 {
     bool correct_dynamics = false;
-    
+
     // The following if statement was moved to evolve_system() 4/99.
     // All stars (sstar and dstar) are now updated once we enter
     // this function.
 
-    // if (fmod(b->get_system_time(), dt_sstar) == 0.0 && 
+    // if (fmod(b->get_system_time(), dt_sstar) == 0.0 &&
 
     if (b->get_use_sstar()) {
 	
@@ -192,12 +192,12 @@ bool evolve_stars(hdyn* b,
 
 	synchronize_tree(b);
 
-	if (b->get_kira_diag()->report_stellar_evolution) 
+	if (b->get_kira_diag()->report_stellar_evolution)
 	    cerr << "After synchronize_tree" << endl;
 
 	predict_loworder_all(b, b->get_system_time());	    // unnecessary??
 
-	if (b->get_kira_diag()->report_stellar_evolution) 
+	if (b->get_kira_diag()->report_stellar_evolution)
 	    cerr << "After predict_loworder_all" << endl;
 
 	real mass0 = total_mass(b);
@@ -212,7 +212,7 @@ bool evolve_stars(hdyn* b,
 
 	// Change stellar masses after evolution.
 
-	if (b->get_kira_diag()->report_stellar_evolution) 
+	if (b->get_kira_diag()->report_stellar_evolution)
 	    cerr << "\n----------\nCorrecting dynamical masses..." << endl;
 
 	real de_kick = 0;
@@ -255,9 +255,9 @@ bool evolve_stars(hdyn* b,
 			     abs(dm_slow) >= MINIMUM_REPORT_MASS_LOSS)) {
 
 			    cerr << "Binary evolution mass loss from "
-				 << bi->format_label(); 
+				 << bi->format_label();
 			    cerr << ", parent = "
-				 << bi->get_parent()->format_label() 
+				 << bi->get_parent()->format_label()
 				 << ", at time " << bi->get_time() << endl;
 			    PRC(dm); PRC(dm_slow); PRC(dm_fast);
 			    cerr << " (" << dm1_fast <<" "<< dm2_fast<<")"
@@ -303,12 +303,12 @@ bool evolve_stars(hdyn* b,
 			b->get_kira_diag()->report_binary_mass_loss)
 			cerr << "After kepler update..." << flush;
 
-		    update_dyn_from_binary_evolution(parent, bi, dm1_fast, 
+		    update_dyn_from_binary_evolution(parent, bi, dm1_fast,
 						                 dm2_fast);
 
 		    if (b->get_kira_diag()->report_stellar_evolution &&
 			abs(dm_slow) >= MINIMUM_REPORT_MASS_LOSS &&
-			b->get_kira_diag()->report_binary_mass_loss) 
+			b->get_kira_diag()->report_binary_mass_loss)
 			cerr << "dyn updated..." << flush;
 
 		    // Neither update_kepler_from_binary_evolution nor
@@ -433,9 +433,9 @@ bool evolve_stars(hdyn* b,
 			((star*)btop->get_starbase())->dump(cerr);
 		    }
 		}
-	    
+	
 		// Add kick velocity, if any...
-	    
+	
 		if (dv_sq > 0) {
 
 		    b->get_kira_counters()->total_kick++;
@@ -493,7 +493,7 @@ bool evolve_stars(hdyn* b,
 
 	predict_loworder_all(b, b->get_system_time());
 
-	if (b->get_kira_diag()->report_stellar_evolution) 
+	if (b->get_kira_diag()->report_stellar_evolution)
 	    cerr << "initialize_system_phase2 called from evolve_stars\n";
        	initialize_system_phase2(b, 5);
 

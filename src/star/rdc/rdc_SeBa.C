@@ -70,8 +70,10 @@ class SeBa_hist {
 	   number = 0;
 	   time   = 0;
 	   bin_tpe = Detached;
-	   label_prim = "1a";
-	   label_sec = "1b";
+	   // label_prim = "1a";
+	   strcpy(label_prim, "1a");			// Steve, 20010907
+	   // label_sec = "1b";
+	   strcpy(label_sec, "1b");
 	   tpe_prim = tpe_sec = Main_Sequence;
 	   m_prim=m_sec=r_prim=r_sec=0;
        }

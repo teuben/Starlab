@@ -13,7 +13,7 @@
 ////
 //// Example usage: after
 ////
-////   mkplummer -n 128 -i -s 123 | ( kira -t 1000 -d 10 -D 0.2 -n 0 |        \
+////   mkplummer -n 128 -i -s 123 | ( kira -t 1000 -d 10 -D 0.2 -n 0 |        \		~
 ////   compute_density | to_cod | lagradplot -q > run128q.out ) >& run128q.log
 ////
 //// try:

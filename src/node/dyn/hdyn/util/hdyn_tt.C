@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // hdyn_tt:  Starlab hdyn-specific node-handling functions.
 
@@ -76,7 +76,7 @@ hdyn* hdyn::next_node(hdyn* base,
 	    return tmp->get_younger_sister();
     }
 
-    return NULL;	// To keep some compilers happy... 
+    return NULL;	// To keep some compilers happy...
 }
 
 // find_perturber_node:  return a pointer to the first ancestor node
@@ -724,7 +724,7 @@ local void insert_node_and_correct_upto_ancestor(hdyn * ancestor,
     }
 }
 
-void correct_leaf_for_change_of_mass(hdyn * node, real dm)  
+void correct_leaf_for_change_of_mass(hdyn * node, real dm)
 {
     hdyn *parent = node->get_parent();
     hdyn *ancestor = node->get_root();

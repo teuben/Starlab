@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // Functions for maintaining the list of (top-level) perturbed binaries.
 // "Maintenance" calls come from kira.C, kira_stellar.C, and kira_escape.C.
@@ -328,7 +328,7 @@ void hdyn::remove_from_perturbed_list(int id) // default = 0
 
     // Same O(N) method, regardless of FAST_ACCESS.
 
-    for_all_nodes(node, get_root(), bb) 
+    for_all_nodes(node, get_root(), bb)
 	if(bb!=bb->get_starbase()->get_node()) {
 	    PRC(bb->format_label());
 	    PRC(bb);PRL(bb->get_starbase()->get_node());
@@ -369,7 +369,7 @@ void hdyn::remove_from_perturbed_list(int id) // default = 0
 	}
     }
 
-    for_all_nodes(node, get_root(), bb) 
+    for_all_nodes(node, get_root(), bb)
 	if(bb!=bb->get_starbase()->get_node()) {
 	    PRC(bb->format_label());
 	    PRC(bb);PRL(bb->get_starbase()->get_node());

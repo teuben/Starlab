@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //// adddouble: Adds double star class to excisting node structure.
 ////
@@ -35,7 +35,7 @@
 //++  mass of the input N-body system (e.g. when modeling a large
 //++  cluster by a smaller N-body system).
 //++
-//++ Example of usage:      
+//++ Example of usage:
 //++  adddouble
 //++
 //++ See also: addstar
@@ -73,7 +73,7 @@ local void randomize_created_binary(dyn *the_binary_node)
        cerr << "randomize_created_binary: ";
        PRC(m1);PRC(m2);PRC(sma);PRL(ecc);
      }
-           
+
      if (sma<0 || ecc<0 || ecc>1) {
         cerr << "randomize_created_binary(): This is not a binary!"<<endl;
         return;
@@ -98,32 +98,32 @@ void update_dyn_from_binary_evolution(dyn* the_binary_node,
 				      dyn* d1, real dm1_fast,
 				               real dm2_fast)
 {
-    
+
     dyn *d2 = NULL;
     if (d1==NULL) {
 	d1 = the_binary_node->get_oldest_daughter();
 	d2 = d1->get_younger_sister();
     }
-    else 
+    else
 	d2 = d1->get_binary_sister();
 
     real dyn_m1 = get_total_mass(d1) - dm1_fast;
     real dyn_m2 = get_total_mass(d2) - dm2_fast;
     real dyn_mtot = dyn_m1 + dyn_m2;
-    
+
     // kepler and binary exists.
     // As there is a kepler it should have been initialized.
-    
+
     //		Needed to think about more carefully.
     kepler *johannes = the_binary_node->get_oldest_daughter()->get_kepler();
     d1->set_pos(-dyn_m2 * johannes->get_rel_pos() / dyn_mtot);
     d1->set_vel(-dyn_m2 * johannes->get_rel_vel() / dyn_mtot);
-    
+
     d2->set_pos(dyn_m1 * johannes->get_rel_pos() / dyn_mtot);
     d2->set_vel(dyn_m1 * johannes->get_rel_vel() / dyn_mtot);
     d1->set_mass(dyn_m1);
     d2->set_mass(dyn_m2);
-    
+
 
 }
 
@@ -138,7 +138,7 @@ void update_dyn_from_binary_evolution(dyn* the_binary_node,
  *  The function checks (too extensively) wheter or not a double_star
  *  is really needed. The function is fully self-supporting:
  *  call adddouble from any root-node and it finds itself what it needs,
- *  (unlike delete_double see dstar_to_kira.C). 
+ *  (unlike delete_double see dstar_to_kira.C).
  *-----------------------------------------------------------------------------
  */
 
@@ -155,7 +155,7 @@ local void do_the_adding(hdyn *bi, real stellar_time,	// bi is binary CM
 	    		 ->conv_t_dyn_to_star(od->get_time());
 				      // 3/99 was get_system_time()
     }
-  
+
     if (REPORT_ADD_DOUBLE) {
 	int p = cerr.precision(HIGH_PRECISION);
 	cerr << "Before adddouble: at " << stellar_time << " to: ";
@@ -164,13 +164,13 @@ local void do_the_adding(hdyn *bi, real stellar_time,	// bi is binary CM
 	od->get_kepler()->print_all(cerr);
 	cerr.precision(p);
     }
-    
+
     // addstar(bi, stellar_time); // Should not be needed.
 
     int id;
     if((od->is_low_level_node() &&
 	od->get_younger_sister()->is_low_level_node()) &&
-       (od->get_elder_sister() == NULL) && 
+       (od->get_elder_sister() == NULL) &&
        bi->n_leaves()==2 ) {
 
 	if (!has_dstar(od)) {
@@ -214,16 +214,16 @@ local void do_the_adding(hdyn *bi, real stellar_time,	// bi is binary CM
 	    }
 	}
 	else {
-	    if (REPORT_ADD_DOUBLE) 
+	    if (REPORT_ADD_DOUBLE)
 		cerr << "No double_star to node needed in adddouble"<<endl;
 	}
     }
     else {
-	if (REPORT_ADD_DOUBLE) 
+	if (REPORT_ADD_DOUBLE)
 	    cerr << "Sorry, no binary node in adddouble"<<endl;
     }
 }
- 
+
 void adddouble(hdyn *b,					// b is binary CM
 	       real dyn_time, binary_type type,
 	       bool random_initialization,
@@ -235,18 +235,18 @@ void adddouble(hdyn *b,					// b is binary CM
 	cerr<<"adddouble: "<<b<<" at T="<<dyn_time<<endl;
 	cerr.precision(p);
     }
-  
+
     real stellar_time = b->get_starbase()->conv_t_dyn_to_star(dyn_time);
     addstar(b, stellar_time);
-    
+
     real ecc, sma;
     real binary_age=0;
 //      binary_type local_type = Unknown_Binary_Type;
     real a_const = log(a_max) - log(a_min);
     int id;
-//      kepler johannes; 
-      
-    for_all_nodes(hdyn, b, bi) { 
+//      kepler johannes;
+
+    for_all_nodes(hdyn, b, bi) {
 	if (bi->is_parent() && !bi->is_root()) {
 
 	    // Note that b's star_story is DELETED here.
@@ -272,7 +272,7 @@ void adddouble(hdyn *b,					// b is binary CM
                }
                while (ecc<e_min && ecc>=e_max);
 
-            } else { //if (local_type==Unknown_Binary_Type) 
+            } else { //if (local_type==Unknown_Binary_Type)
 
 	      // cerr << "Non-random creation"<<endl;
 //               type = local_type;
@@ -334,7 +334,7 @@ main(int argc, char ** argv)
     real  m_tot = 1;
     real  r_vir = 1;
     real  t_hc = 1;
-    real  Q_vir = 0.5; 
+    real  Q_vir = 0.5;
     real  a_min = 1;
     real  a_max = 1.e+6;
     real  e_min = 0;
@@ -350,7 +350,7 @@ main(int argc, char ** argv)
 
     char * param_string = "A:a:E:e:M:R:Q:T:t:Ss:c:";
     check_help();
-    
+
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c)
 	    {
@@ -374,7 +374,7 @@ main(int argc, char ** argv)
                       break;
             case 'Q': Q_flag = true;
 	              Q_vir = atof(poptarg);
-	              break; 
+	              break;
             case 'T': T_flag = true;
 		      t_hc = atof(poptarg);
                       break;
@@ -390,8 +390,8 @@ main(int argc, char ** argv)
             case '?': params_to_usage(cerr, argv[0], param_string);
 	    	      get_help();
 	    	      exit(1);
-	    }            
-    
+	    }
+
     int actual_seed = srandinter(random_seed);
     sprintf(seedlog, "       random number generator seed = %d",actual_seed);
 
@@ -412,9 +412,9 @@ main(int argc, char ** argv)
 		    << "the mass, \nthe size and the time" << endl; exit(1);
 	   }
 
-          if (A_flag || a_flag || E_flag || e_flag) 
+          if (A_flag || a_flag || E_flag || e_flag)
            random_initialization=true;
-       adddouble(b, t_start, type, random_initialization, 
+       adddouble(b, t_start, type, random_initialization,
 	         a_min, a_max, e_min, e_max);
        put_dyn(cout, *b);	
        delete b;

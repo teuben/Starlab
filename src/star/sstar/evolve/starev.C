@@ -31,7 +31,7 @@
 
 #ifdef TOOLBOX
 
-local real evolve_star_until_next_time(node* bi, const real out_time) {
+local void evolve_star_until_next_time(node* bi, const real out_time) {
 
           real current_time = ((star*)bi->get_starbase())->get_current_time();
           real time_step    =  bi->get_starbase()->get_evolve_timestep();

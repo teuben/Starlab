@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // Initiate and maintain unperturbed motion.
 //
@@ -473,7 +473,7 @@ local void check_perturbers(hdyn *b)
 
     real t_min = dt_perturbers(b);
 
-    if (t_min >= 0) 
+    if (t_min >= 0)
 
 	cerr << "    " << b->get_top_level_node()->get_n_perturbers()
 	     << " perturbers, perturber crossing time = "
@@ -763,7 +763,7 @@ bool hdyn::is_weakly_perturbed(int& status)
     }
 
     // Avoid merging if the outer orbit is too extended.
-    // Should perhaps make this condition consistent with the 
+    // Should perhaps make this condition consistent with the
     // relax_factor used elsewhere?
 
     real semi_major_axis = -0.5 * parent->get_mass() / energy;
@@ -2070,7 +2070,7 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 	PRC(timestep); PRC(steps); PRL(unperturbed_timestep);
 	kep->print_all();
     }
-    
+
     return steps;
 }
 
@@ -2258,7 +2258,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
     //       motion from starting or continuing).  The unperturbed
     //       step will *never* exceed the parent step by more than 1
     //       orbital period.
-    // 
+    //
     //       Since the unperturbed time step is constrained by the
     //       value of the perturbed step, it is not in general
     //       possible to advance a binary by an exact number of orbit

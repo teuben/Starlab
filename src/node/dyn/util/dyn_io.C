@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //// dyn_io:  test Starlab dyn class I/O functions.
 ////
@@ -82,7 +82,7 @@ istream & dyn::scan_dyn_story(istream& s)
 
 		//cerr << "dyn::scan_dyn_story: input "
 		//     << "time data type is xreal"
-		//     << endl; 
+		//     << endl;
 
 		// The following should set real_system_time too...
 
@@ -92,7 +92,7 @@ istream & dyn::scan_dyn_story(istream& s)
 
 		//cerr << "dyn::scan_dyn_story: input "
 		//     << "time data type is real"
-		//     << endl; 
+		//     << endl;
 
 		real_system_time = system_time = strtod(val, NULL);
 	    }

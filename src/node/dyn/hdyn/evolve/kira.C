@@ -2,13 +2,13 @@
 //#define DUMP_DATA 1	// uncomment to allow detailed TMP_DUMP output
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //// kira:  Hermite N-body integrator with evolving hierarchical tree
 ////        structure, stellar and binary evolution, and an external
@@ -63,7 +63,7 @@
 ////              -U    toggle all unperturbed motion [enabled][*]
 ////              -v    toggle "verbose" mode [on]
 ////              -W    specify full-dump (worldline) timescale [1]
-////              -x    toggle output of extended precision time [on]
+////              -x    toggle output of extended-precision time [on]
 ////              -X    specify escaper removal timescale [reinit][*]
 ////              -y    specify stellar encounter criterion
 ////                                  [0 N-body units or solar radii][*]

@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 //// addstar:  Add star class to existing node structure.
 ////
@@ -31,8 +31,8 @@
 //++
 //++  Should run makemass first to establish stellar masses.
 //++
-//++ Example of usage:      
-//++  makenode -n 10 | makemass -u 100 -l 10 | add_star -T 1 
+//++ Example of usage:
+//++  makenode -n 10 | makemass -u 100 -l 10 | add_star -T 1
 //++
 //++ See also:  mkmass
 //++            mknode
@@ -86,15 +86,15 @@ void  addstar(node * b, real t_current, stellar_type type, bool verbose)
 //	cerr << "addstar: ";
 //	PRL(b->get_starbase()->get_element_type());
 
-	// NAS is the default return value of get_element_type, in 
+	// NAS is the default return value of get_element_type, in
 	// cases where only a starbase (but no star) exists.
 
 	if (b->get_starbase()->get_element_type() != NAS) return;
-	  
+	
 	int id = b->get_index();
 	real t_cur=0, t_rel=0, m_rel=1, m_env=0, m_core=0.01;
 	real T_eff, L_eff;
-	real p_rot=0, b_fld=0; 
+	real p_rot=0, b_fld=0;
 	real m_tot;
 
 	// Create a (single) star part, using the unformation obtained from
@@ -105,7 +105,7 @@ void  addstar(node * b, real t_current, stellar_type type, bool verbose)
 	story * s = old_starbase->get_star_story();
 
 	real mco_core = 0;
-	extract_story_chapter(local_type, t_cur, t_rel,  
+	extract_story_chapter(local_type, t_cur, t_rel,
 			      m_rel, m_env, m_core, mco_core, T_eff, L_eff,
 			      p_rot, b_fld, *s);
 
@@ -118,26 +118,26 @@ void  addstar(node * b, real t_current, stellar_type type, bool verbose)
 	    // Use the data extracted from the star story.  Note that the
 	    // input values of the type and t_rel arguments are IGNORED.
 
-	  //cerr << "addstar: " << type_string(local_type) 
+	  //cerr << "addstar: " << type_string(local_type)
 	  //   << " t_rel = " << t_rel << " t_cur = " << t_cur << endl;
-	  
-	    type = local_type; 
+	
+	    type = local_type;
 	    single_star* new_star = new_single_star(type, id, t_cur,
-						    t_rel, 
+						    t_rel,
 						    m_rel, m_tot, m_core,
 						    mco_core,
 						    p_rot, b_fld, b);
 
 	    //new_star->set_current_time(t_current); // added (SPZ:2/1998)
 	    //new_star->dump(cerr);
-	    
+	
 	} else {		// No star story present, or at least no
 	     			// proper definition for a single star.
 
 	    // Create a default star of the specified type.
 
 	    real t_cur=0, t_rel = 0, m_rel = 1, m_core = 0.01;
-	    real p_rot=0, b_fld=0; 
+	    real p_rot=0, b_fld=0;
 	    real m_tot;
 	    t_cur = t_current;
 	    //cerr << "addstar2: " << type_string(type) << " t_rel = " << t_rel
@@ -150,7 +150,7 @@ void  addstar(node * b, real t_current, stellar_type type, bool verbose)
 
 	    stellar_type local_type = type;
 
-	    // Treat by dynamics pre-requested black holes 
+	    // Treat by dynamics pre-requested black holes
 	    if(getiq(b->get_log_story(), "black_hole")==1) {
 	      local_type = Black_Hole;
 	      m_core = m_tot;
@@ -161,9 +161,9 @@ void  addstar(node * b, real t_current, stellar_type type, bool verbose)
 	      m_core = 0.01*m_tot;
 	      mco_core = 0;
 	    }
-	    
-	    single_star* new_star = new_single_star(local_type, id, 
-						    t_cur, t_rel, 
+	
+	    single_star* new_star = new_single_star(local_type, id,
+						    t_cur, t_rel,
 						    m_rel, m_tot, m_core,
 						    mco_core,
 						    p_rot, b_fld, b);
@@ -201,9 +201,9 @@ main(int argc, char ** argv)
     extern char *poptarg;
     int  pgetopt(int, char **, char *);
     char * param_string = "M:R:Q:T:t:s:c:";
-    
+
     check_help();
-    
+
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c)
 	    {
@@ -234,7 +234,7 @@ main(int argc, char ** argv)
             case '?': params_to_usage(cerr, argv[0], param_string);
 	    	      get_help();
 	    	      exit(1);
-	    }            
+	    }
 
     node *b;
     b = get_node(cin);
@@ -289,7 +289,7 @@ main(int argc, char ** argv)
 	    // the other units.
 
 	    // Standard (N-body / Heggie & Mathieu) time unit, in Myr:
-      
+
 	    new_t_vir = 21.0 * sqrt(q_vir/new_m_tot) * pow(new_r_vir, 1.5);
 	    check_consistent = false;
 	}
@@ -359,7 +359,7 @@ main(int argc, char ** argv)
       m_sum += bi->get_mass();
     }
     b->set_mass(m_sum);
-    
+
     real old_mtot = b->get_starbase()->conv_m_dyn_to_star(1);
     if(old_mtot!=m_sum) {
       real old_r_vir= b->get_starbase()->conv_r_star_to_dyn(1);

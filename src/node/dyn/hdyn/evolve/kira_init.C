@@ -1,12 +1,12 @@
 
        //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\
+      //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
-  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
-//=======================================================//              /|\
+//=======================================================//              /|\ ~
 
 // kira_init.C:  Read in command-line parameters and initialize
 //		 the system.
@@ -104,7 +104,7 @@ local bool twiddles(real a, real b, real eps = 1.e-12)
 	return false;
 }
 
-local bool choose_param(hdyn* b, bool verbose,
+local void choose_param(hdyn* b, bool verbose,
 			real& x, bool x_flag, char* x_id,
 			bool zero_OK = false)
 {
@@ -190,7 +190,7 @@ local bool choose_param(hdyn* b, bool verbose,
     putrq(b->get_log_story(), kira_x, x);
 }
 
-local bool choose_param(hdyn* b, bool verbose,
+local void choose_param(hdyn* b, bool verbose,
 			int& ix, bool x_flag, char* x_id,
 			bool zero_OK = false)
 {
@@ -658,7 +658,7 @@ local void kira_system_id(int argc, char** argv)
 
 	    file.close();
 	    sprintf(tmp, "rm KIRA_TEMP");
-	    system(tmp);	    
+	    system(tmp);	
 	}
 
     }
@@ -731,7 +731,7 @@ bool kira_initialize(int argc, char** argv,
     dt_fulldump = DEFAULT_DT_FULLDUMP;
 
     // Frequency of full binary output, in units of the log output interval.
-    
+
     long_binary_out = LONG_BINARY_OUT;
 
     bool log_flag = false, snap_flag = false, sstar_flag = false,
@@ -988,7 +988,7 @@ bool kira_initialize(int argc, char** argv,
 
 
 
-    
+
     //----------------------------------------------------------------------
 
     // Some consistency checks (review from time to time to check if
@@ -1189,7 +1189,7 @@ bool kira_initialize(int argc, char** argv,
 					  initial_r_virial,
 					  initial_mass);
 
-	if (scaled_stripping_radius <= 0) 
+	if (scaled_stripping_radius <= 0)
 	    err_exit("Unable to determine stripping radius");
 
 	PRL(scaled_stripping_radius);
