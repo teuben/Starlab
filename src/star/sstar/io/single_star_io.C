@@ -264,3 +264,28 @@ void single_star::first_roche_lobe_contact_story(stellar_type accretor)
     add_story_line(get_node()->get_log_story(), info_line);
 
 }
+
+void single_star::merge_two_stars_story(stellar_type that_type)
+{
+    char info_line[MAX_STORY_LINE_LENGTH];
+    stellar_type this_type = get_element_type();
+    real time = get_current_time();
+
+    sprintf(info_line,
+	    "merge_%s_and_%s_at_time = %6.2f",
+	    type_string(this_type), type_string(that_type), time);
+
+    add_story_line(get_node()->get_log_story(), info_line);
+
+    // cerr output for debugging!
+
+    //    cerr << endl << get_node()->format_label() << " " << info_line
+    //	 << " Myr (old mass = " << get_total_mass() << ")" << endl;
+
+    //    if(is_binary_component()) {
+    //      cerr << "binary companion: " 
+    //	   << type_string(get_companion()->get_element_type()) << endl;
+    //      cerr << "parent: " << get_node()->get_parent()->format_label() 
+    //	   << endl;
+    //    }
+}

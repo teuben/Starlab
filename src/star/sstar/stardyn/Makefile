@@ -17,7 +17,7 @@
 
 CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC_STAR) -I$(INC) -g3
 LIBFLAGS	= -L$(LIB) -lsstar -ldyn -lnode -lstd -lm
-DEPEND_LIBS	= $(LIB)/libsstar.a $(LIB)/libdyn.a \
+hDEPEND_LIBS	= $(LIB)/libsstar.a $(LIB)/libdyn.a \
 		  $(LIB)/libnode.a $(LIB)/libstd.a
 
 # N.B. the -ldstar here is to satisfy references to make_state(double_star*)

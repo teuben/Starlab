@@ -23,9 +23,9 @@ single_star * new_single_star(stellar_type type,	// All defaults are
 			      real b_fld,
 			      node* n)
 {
-   //cerr << "Initialize from: "<< type_string(type)<<endl;
-   //PRC(id);PRC(t_cur);PRC(t_rel);PRC(m_rel);PRC(m_tot);
-   //PRL(m_core); 
+  //cerr << "Initialize from: "<< type_string(type)<<endl;
+  //PRC(id);PRC(t_cur);PRC(t_rel);PRC(m_rel);PRC(m_tot);
+  //PRL(m_core); 
 
   single_star* element = 0;
   switch(type) {
@@ -68,9 +68,9 @@ single_star * new_single_star(stellar_type type,	// All defaults are
     break;
   case Disintegrated: element = new disintegrated(n);
     break;
-//  default: element = new main_sequence(n);
+    //  default: element = new main_sequence(n);
   default: cerr << "No default stellar type in new_single_star()"<<endl;
-           exit(1);
+    exit(1);
 		    
   }
       
@@ -83,20 +83,20 @@ single_star * new_single_star(stellar_type type,	// All defaults are
 
 single_star::single_star(node* n) : star(n) {
 
-    star_type = NAS;
-    for (int i=NAC; i<no_of_spec_type; i++)
-      spec_type[i] = NAC;
-    current_time=relative_age=0;
-    last_update_age = next_update_age=0;
-    relative_mass = accreted_mass=0;
-    envelope_mass=core_mass=0;
-    core_radius=effective_radius=radius=0;
-    COcore_mass = 0;
-    luminosity=0;
-    velocity=0;
-    wind_constant=0;
-    magnetic_field = rotation_period = 0;
-    birth_mass=0;
+  star_type = NAS;
+  for (int i=NAC; i<no_of_spec_type; i++)
+    spec_type[i] = NAC;
+  current_time=relative_age=0;
+  last_update_age = next_update_age=0;
+  relative_mass = accreted_mass=0;
+  envelope_mass=core_mass=0;
+  core_radius=effective_radius=radius=0;
+  COcore_mass = 0;
+  luminosity=0;
+  velocity=0;
+  wind_constant=0;
+  magnetic_field = rotation_period = 0;
+  birth_mass=0;
 }
 
 
@@ -148,47 +148,38 @@ single_star::single_star(single_star & rv) : star(rv) {
 
 void single_star::post_constructor() {
 
-//(GN+SPZ Apr 28 1999) stars with M < 8 Msun have wind per phase:
+  //(GN+SPZ Apr 28 1999) stars with M < 8 Msun have wind per phase:
   update_wind_constant();
 
-    // MEmory refrsh to prevent helium star to become white dwarf with
-    // zero-mass core.
-    // Not clear yet if companion and binary must also be updated?
-    // (SPZ+GN, 10 Nov 1998)
-      if (is_binary_component())
-         get_binary()->refresh_memory();
-      else
-	 refresh_memory();
-//    refresh_memory();
+  // MEmory refrsh to prevent helium star to become white dwarf with
+  // zero-mass core.
+  // Not clear yet if companion and binary must also be updated?
+  // (SPZ+GN, 10 Nov 1998)
+  if (is_binary_component())
+    get_binary()->refresh_memory();
+  else
+    refresh_memory();
+  //    refresh_memory();
     
-//    if (is_binary_component() && get_binary()->get_bin_type()==Detached)
-      if (is_binary_component() && 
-	  get_binary()->get_bin_type() != Merged &&
-	  get_binary()->get_bin_type() != Disrupted) {
-	 get_binary()->set_bin_type(Detached);
-	 get_binary()->set_first_contact(false);
-      }
+  //    if (is_binary_component() && get_binary()->get_bin_type()==Detached)
+  if (is_binary_component() && 
+      get_binary()->get_bin_type() != Merged &&
+      get_binary()->get_bin_type() != Disrupted) {
+    get_binary()->set_bin_type(Detached);
+    get_binary()->set_first_contact(false);
+  }
 
-      // only dump if star is binary and NOT filling Roche lobe
-      //if (is_binary_component() && !get_spec_type(Rl_filling))
-      if (is_binary_component() && 
-	  get_binary()->roche_radius(this) > radius) {
-      	get_binary()->dump("SeBa.data", true);
-	}
-      //else 
-// (GN May 12 1999) skrews up output
-//    {
-//      dump("SeBa.data", true);
-//      cerr << endl;
-//    }
-  
+  if (is_binary_component() && 
+      get_binary()->roche_radius(this) > radius) {
+    get_binary()->dump("SeBa.data", true);
+  }
 
-    if (remnant()) {
-      if (is_binary_component())
-	get_binary()->dump("binev.data", false);
-      else
-	dump("binev.data", false);
-    }
+  if (remnant()) {
+    if (is_binary_component())
+      get_binary()->dump("binev.data", false);
+    else
+      dump("binev.data", false);
+  }
 
 }
 
@@ -196,8 +187,8 @@ void single_star::initialize(int id, real t_cur,
 			     real t_rel, real m_rel, real m_tot,
 			     real m_core, real co_core) {
 
-   //cerr << "Initialize from: ";
-   //PRC(id);PRC(t_cur);PRC(t_rel);PRC(m_rel);PRC(m_tot);PRL(m_core);
+  //cerr << "Initialize from: ";
+  //PRC(id);PRC(t_cur);PRC(t_rel);PRC(m_rel);PRC(m_tot);PRL(m_core);
   
   real m_env = m_tot - m_core;
   if (m_rel<=0 || m_rel>cnsts.parameters(maximum_main_sequence)) {
@@ -246,7 +237,7 @@ real single_star::helium_core_radius() {
 
   real r_he_core;
   real tmp = log10(core_mass)
-            * (0.4509 - 0.1085*log10(core_mass)) + 4.7143;
+    * (0.4509 - 0.1085*log10(core_mass)) + 4.7143;
   real lum  = 8.33*tmp - 36.8;
   tmp = 1.e-3*pow(10., tmp);
   lum  = pow(10., lum);
@@ -264,7 +255,7 @@ real single_star::helium_core_radius() {
 real single_star::main_sequence_time(const real mass) {
 
   real t_ms = (2550. + 667.*pow(mass,2.5) + pow(mass,4.5) )
-            / (0.0327*pow(mass,1.5) + 0.346*pow(mass,4.5));
+    / (0.0327*pow(mass,1.5) + 0.346*pow(mass,4.5));
 
   return t_ms;
 }
@@ -272,9 +263,9 @@ real single_star::main_sequence_time(const real mass) {
 real single_star::main_sequence_time() {
 
   real t_ms = (2550. + 667.*pow(relative_mass,2.5) 
-	    + pow(relative_mass,4.5) )
-            / (0.0327*pow(relative_mass,1.5) 
-            + 0.346*pow(relative_mass,4.5));
+	       + pow(relative_mass,4.5) )
+    / (0.0327*pow(relative_mass,1.5) 
+       + 0.346*pow(relative_mass,4.5));
 
   return t_ms;
 }
@@ -386,13 +377,13 @@ real single_star::base_main_sequence_luminosity() {
   if (relative_mass<=1.093) {
     l_bms =  (1.107*pow(relative_mass, 3.)
 	      +   240.7*pow(relative_mass, 9.))
-          /  (1. + 281.9*pow(relative_mass, 4.));
+      /  (1. + 281.9*pow(relative_mass, 4.));
   }
   else {
     l_bms =  (13990.*pow(relative_mass, 5.))
-          /             (pow(relative_mass, 4.)   
-			 +  2151.*pow(relative_mass, 2)
-			 +  3908.*relative_mass +9536.);
+      /             (pow(relative_mass, 4.)   
+		     +  2151.*pow(relative_mass, 2)
+		     +  3908.*relative_mass +9536.);
   }
   
   return l_bms;
@@ -403,11 +394,11 @@ real single_star::base_main_sequence_luminosity(const real mass) {
   real l_bms;
   if (mass<=1.093) {
     l_bms =  (1.107*pow(mass, 3.)+ 240.7*pow(mass, 9.))
-          /  (1. + 281.9*pow(mass, 4.));
+      /  (1. + 281.9*pow(mass, 4.));
   }
   else {
     l_bms =  (13990.*pow(mass, 5.))
-          / (pow(mass, 4.) + 2151.*pow(mass, 2)+3908.*mass +9536.);
+      / (pow(mass, 4.) + 2151.*pow(mass, 2)+3908.*mass +9536.);
   }
    
   return l_bms;
@@ -416,7 +407,7 @@ real single_star::base_main_sequence_luminosity(const real mass) {
 real single_star::giant_luminosity(const real mass) {
 
   real l_g = (2.15 + 0.22*pow(mass, 3.))*pow(mass, 2)
-           / (5.0e-6*pow(mass, 4.)+1.4e-2*mass*mass + 1.);
+    / (5.0e-6*pow(mass, 4.)+1.4e-2*mass*mass + 1.);
 
   return l_g;
 }
@@ -424,9 +415,9 @@ real single_star::giant_luminosity(const real mass) {
 real single_star::giant_luminosity() {
   
   real l_g = (2.15 + 0.22*pow(relative_mass, 3.))
-           *  pow(relative_mass, 2)
-           / (5.0e-6*pow(relative_mass, 4.)
-           +  1.4e-2*relative_mass*relative_mass + 1.);
+    *  pow(relative_mass, 2)
+    / (5.0e-6*pow(relative_mass, 4.)
+       +  1.4e-2*relative_mass*relative_mass + 1.);
 
   return l_g;
 }
@@ -457,7 +448,7 @@ real single_star::helium_giant_luminosity() {
   real l_g = base_giant_branch_luminosity(relative_mass);
   real l_HeI = base_agb_luminosity(l_g, relative_mass);
   real l_He = 49*pow(relative_mass, 0.364)
-            +  0.86*pow(relative_mass, 4.);
+    +  0.86*pow(relative_mass, 4.);
 
   return Starlab::min(l_He, l_HeI);
 
@@ -575,8 +566,8 @@ real single_star::helium_time() {
 }
 
 real single_star::temperature() {
-//  cerr<<"single_star::temperature()"<<endl;
-//  PRC(luminosity);PRL(effective_radius);
+  //  cerr<<"single_star::temperature()"<<endl;
+  //  PRC(luminosity);PRL(effective_radius);
 
   // Effective radius is the radius of the star as it really is.
   // radius is the equilibrium radius of the star.
@@ -584,7 +575,7 @@ real single_star::temperature() {
 
 
   real T_eff = cnsts.parameters(Tsun)
-             * pow(luminosity/pow(effective_radius, 2), 0.25); // in [K]
+    * pow(luminosity/pow(effective_radius, 2), 0.25); // in [K]
   
   return T_eff;
 }
@@ -625,8 +616,8 @@ real single_star::bolometric_correction() {
 real single_star::wind_velocity() {
 
   real v_esc2 = cnsts.physics(G)
-              * cnsts.parameters(solar_mass)*get_total_mass()
-              / (effective_radius*cnsts.parameters(solar_radius));
+    * cnsts.parameters(solar_mass)*get_total_mass()
+    / (effective_radius*cnsts.parameters(solar_radius));
   real v_wind = 2.5*sqrt(v_esc2)/cnsts.physics(km_per_s);
 
   return v_wind;
@@ -650,17 +641,17 @@ real single_star::nucleair_evolution_timescale() {
   // Pols, 1994, A&A 290, 119
   // (SPZ+GN:30 Sep 1998)
   
-//  real fused_mass = 0.1*relative_mass;
-//
-//  real t_nuc = cnsts.parameters(energy_to_mass_in_internal_units)
-//             * fused_mass/luminosity;
-//
-//  real t_kh = kelvin_helmholds_timescale();
-//
-//  return sqrt(t_nuc * t_kh);
+  //  real fused_mass = 0.1*relative_mass;
+  //
+  //  real t_nuc = cnsts.parameters(energy_to_mass_in_internal_units)
+  //             * fused_mass/luminosity;
+  //
+  //  real t_kh = kelvin_helmholds_timescale();
+  //
+  //  return sqrt(t_nuc * t_kh);
   
 
-// (GN+SPZ Apr 28 1999) giant lifetime is ~ 10% of ms life time
+  // (GN+SPZ Apr 28 1999) giant lifetime is ~ 10% of ms life time
 
   return 0.1*main_sequence_time();
 
@@ -697,10 +688,10 @@ bool single_star::high_mass_star() {
   
   if(remnant())
     return (get_total_mass()>cnsts.parameters(medium_mass_star_mass_limit))
-           ?true :false;
+      ?true :false;
   else
     return (get_relative_mass()>cnsts.parameters(medium_mass_star_mass_limit))
-           ?true :false;
+      ?true :false;
 }
 
 void single_star::read_element() {
@@ -918,25 +909,25 @@ void single_star::recall_memory() {
 real single_star::mass_ratio_mdot_limit(real mdot) {
 
     
-    // No limit for the moment.
-    return mdot;
+  // No limit for the moment.
+  return mdot;
     
-    real accretor_mass = 0;
+  real accretor_mass = 0;
 
-    if (is_binary_component()) 
-      get_companion()->get_total_mass();
+  if (is_binary_component()) 
+    get_companion()->get_total_mass();
 
-    if (accretor_mass<get_total_mass()) {
-	real mdot_max = get_total_mass() - accretor_mass;
-	if (mdot>mdot_max) 
-	mdot = mdot_max;
-    }
+  if (accretor_mass<get_total_mass()) {
+    real mdot_max = get_total_mass() - accretor_mass;
+    if (mdot>mdot_max) 
+      mdot = mdot_max;
+  }
 
-    int p = cerr.precision(HIGH_PRECISION);
-    PRC(accretor_mass);PRL(get_total_mass());
-    cerr.precision(p);
+  int p = cerr.precision(HIGH_PRECISION);
+  PRC(accretor_mass);PRL(get_total_mass());
+  cerr.precision(p);
   
-    return mdot;
+  return mdot;
 }
 
 // Computes expansion of acceptor due to mass accretion.
@@ -951,7 +942,7 @@ real single_star::accretion_limit(const real mdot, const real dt) {
   real r_rl = get_binary()->roche_radius(this);
   real mdot_kh = dt*relative_mass/kelvin_helmholds_timescale();
   real accretion = log10(r_rl/effective_radius)
-                 / pow(10, expansionB(relative_mass));
+    / pow(10, expansionB(relative_mass));
 
   accretion = Starlab::max(accretion, 0.);
   real mdot_max = mdot_kh*pow(accretion, 1./expansionA(relative_mass));
@@ -994,8 +985,8 @@ void single_star::adjust_accretor_radius(const real mdot, const real dt) {
   // Allowing accretor to grow in size results in contact systems.
   // do not allow bloating
   // (SPZ+GN:28 Sep 1998)
-//(GN+SPZ Apr 28 1999) star do bloat however... bloating on again
-//  return;
+  //(GN+SPZ Apr 28 1999) star do bloat however... bloating on again
+  //  return;
   
   //cerr<<"void star::adjust_accretor_radius()"<<endl;
   //cerr<<"pre radius: "<<radius<<" "<<effective_radius<<endl;
@@ -1007,12 +998,12 @@ void single_star::adjust_accretor_radius(const real mdot, const real dt) {
       + expansionB(relative_mass);
     if (r_fr>0.5) // (GN+SPZ Apr 28 1999) was 1 
       r_fr = 0.5;
-// (GN+SPZ Apr 28 1999) radius is equilibrium radius
-//    effective_radaius = radius = radius*pow(10, pow(10, r_fr));
+    // (GN+SPZ Apr 28 1999) radius is equilibrium radius
+    //    effective_radaius = radius = radius*pow(10, pow(10, r_fr));
 
     real r_l = get_binary()->roche_radius(this);
     effective_radius = Starlab::max(Starlab::min(r_l, effective_radius), 
-			   radius*pow(10, pow(10, r_fr)));
+				    radius*pow(10, pow(10, r_fr)));
              
   }
 }
@@ -1043,7 +1034,7 @@ real single_star::expansionA(const real m) {
 
 real single_star::expansionB(const real m) {
 
-//              Lineair interpolation.
+  //              Lineair interpolation.
   real rc, inc;
   if (m<=3) {
     rc = -0.273;     //base on:      m1 = 2; B1 = -1.374;
@@ -1071,18 +1062,20 @@ real single_star::expansionB(const real m) {
 // Star is updated.
 star* single_star::merge_elements(star* str) {
 
+  merge_two_stars_story(str->get_element_type());
+
   star* merged_star = this;
 
   real m_conserved = get_total_mass() + str->get_total_mass();
 
   if (str->get_element_type()!=Main_Sequence) {
 
-      // adding two cores of giants together should not result in
-      // rejuvenation.
-      // previous method appeared to make mergers too old.
-      // (SPZ+GN:11 Oct 1998)
+    // adding two cores of giants together should not result in
+    // rejuvenation.
+    // previous method appeared to make mergers too old.
+    // (SPZ+GN:11 Oct 1998)
       
-      add_mass_to_core(str->get_core_mass());
+    add_mass_to_core(str->get_core_mass());
 
     if ((str->get_element_type()==Neutron_Star ||
 	 str->get_element_type()==Black_Hole)   &&
@@ -1130,17 +1123,21 @@ star* single_star::merge_elements(star* str) {
 
 
   if (get_relative_mass() >= cnsts.parameters(massive_star_mass_limit) &&
-	hydrogen_envelope_star()) 
-      merged_star =  reduce_mass(envelope_mass);
+      hydrogen_envelope_star()) 
+    merged_star =  reduce_mass(envelope_mass);
   else {
 
     instantaneous_element();
     // calling evolve element may cause segmentation fault if star changes.
-      //evolve_element(current_time);
+    //evolve_element(current_time);
   }
 
   cerr << "Merged star: "<<endl;
   merged_star->dump(cerr, false);
+
+  //++++++Identify primary after merger
+  //  if (is_binary_component())
+  //    get_companion()->set_element_type(NAS);
 
   return merged_star;
 }
@@ -1190,8 +1187,8 @@ real single_star::mass_transfer_timescale(mass_transfer_type &type) {
   if (low_mass_star()) {
 
     real mdot = get_binary()
-              ->mdot_according_to_roche_radius_change(this,
-						      get_companion());
+      ->mdot_according_to_roche_radius_change(this,
+					      get_companion());
     if (mdot>0) {
       real mtt_rl = get_relative_mass()/mdot;
       if(mtt>mtt_rl) {
@@ -1218,11 +1215,11 @@ real single_star::mass_transfer_timescale(mass_transfer_type &type) {
 //		Stellar stability functions.
 real single_star::zeta_adiabatic() {
 
-// (GN+SPZ Apr 28 1999) this is used by sub_giant: all stars with HW87
-// all stars should have their own actually...(when we have time)
+  // (GN+SPZ Apr 28 1999) this is used by sub_giant: all stars with HW87
+  // all stars should have their own actually...(when we have time)
 
-// (GN+SPZ Apr 28 1999) fit from Lev Yungelson private communication
-// for giants with not too convective envelope = radiative envelope
+  // (GN+SPZ Apr 28 1999) fit from Lev Yungelson private communication
+  // for giants with not too convective envelope = radiative envelope
 
   real r_dconv = 2.4*pow(relative_mass,1.56);
   if (relative_mass > 10 )
@@ -1232,10 +1229,10 @@ real single_star::zeta_adiabatic() {
     
   if (radius < r_dconv) {
     return 12.25;
-//    cerr << "radius < r_dconv" << endl;
+    //    cerr << "radius < r_dconv" << endl;
   }
   else {
-//   		Hjellming and Webbink 1987 ApJ, 318, 804
+    //   		Hjellming and Webbink 1987 ApJ, 318, 804
     real x = core_mass/get_total_mass();
     real A = -0.220823;
     real B = -2.84699;
@@ -1243,10 +1240,10 @@ real single_star::zeta_adiabatic() {
     real D = -75.6863;
     real E = 57.8109;
 
-// (GN+SPZ Apr 28 1999) not for (sub) giants    
-//  if (low_mass_star())
-//    z = -cnsts.mathematics(one_third);
-//  else 
+    // (GN+SPZ Apr 28 1999) not for (sub) giants    
+    //  if (low_mass_star())
+    //    z = -cnsts.mathematics(one_third);
+    //  else 
     return A + x*(B + x*(C + x*(D + x*E)));
 
   }
@@ -1292,9 +1289,9 @@ void single_star::add_mass_to_core(const real mdot) {
 // Check mass-transfer timescales before use.
 real single_star::add_mass_to_accretor(const real mdot) {
 
-//  cerr << "add_mass_to_accretor"<<endl;
-//  PRL(mdot);
-//  dump(cerr, false);
+  //  cerr << "add_mass_to_accretor"<<endl;
+  //  PRL(mdot);
+  //  dump(cerr, false);
   
   if (mdot<=0) {
     cerr << "single_star::add_mass_to_accretor(mdot=" << mdot << ")"<<endl;
@@ -1322,9 +1319,9 @@ real single_star::add_mass_to_accretor(const real mdot) {
 
 real single_star::add_mass_to_accretor(real mdot, const real dt) {
 
-//  cerr << "add_mass_to_accretor"<<endl;
-//  PRL(mdot);
-//  dump(cerr, false);
+  //  cerr << "add_mass_to_accretor"<<endl;
+  //  PRL(mdot);
+  //  dump(cerr, false);
 
   if (mdot<0) {
     cerr << "single_star::add_mass_to_accretor(mdot=" << mdot 
@@ -1361,14 +1358,14 @@ void single_star::update() {
 
   core_radius = helium_core_radius();
 
-// (GN+SPZ Apr 28 1999)
-// effective_radius can be larger than  radius
+  // (GN+SPZ Apr 28 1999)
+  // effective_radius can be larger than  radius
   effective_radius = Starlab::max(radius,effective_radius);
 
 
   // last update age is set after stellar expansion timescale is set.
-// (GN+SPZ May  4 1999) last_update_age now used as time of last type change
-//  last_update_age = relative_age;
+  // (GN+SPZ May  4 1999) last_update_age now used as time of last type change
+  //  last_update_age = relative_age;
 
   detect_spectral_features();
 
@@ -1387,7 +1384,7 @@ void single_star::detect_spectral_features() {
     if (!remnant() && 
 	!get_companion()->hydrogen_envelope_star() &&
 	accreted_mass >= cnsts.parameters(Barium_star_mass_limit)
-	               * relative_mass)
+	* relative_mass)
       set_spec_type(Barium);
 }
 
@@ -1397,7 +1394,7 @@ void single_star::detect_spectral_features() {
 // Livio, M., Warner, B., 1984, The Observatory 104, 152.
 real single_star::accrete_from_stellar_wind(const real mdot, const real dt) {
 
-//  PRC(mdot);PRL(dt);
+  //  PRC(mdot);PRL(dt);
 
   real alpha_wind = 0.5;
   real v_wind = get_companion()->wind_velocity();
@@ -1405,17 +1402,17 @@ real single_star::accrete_from_stellar_wind(const real mdot, const real dt) {
   real acc_radius = pow(cnsts.physics(G)*cnsts.parameters(solar_mass)
 			* get_total_mass()
 			/ pow(v_wind*cnsts.physics(km_per_s), 2),2)
-                  / cnsts.parameters(solar_radius);
+    / cnsts.parameters(solar_radius);
   real wind_acc = alpha_wind/(sqrt(1-pow(get_binary()->get_eccentricity(), 2))
 			      * pow(cnsts.parameters(solar_radius)
 				    * get_binary()->get_semi(),2));
   real v_factor = 1/pow(1+pow(velocity/v_wind, 2), 3./2.);
 
   real mass_fraction = acc_radius*wind_acc*v_factor;
-// (GN+SPZ May  4 1999) Do not multiply with dt*cnsts.physics(Myear)!
+  // (GN+SPZ May  4 1999) Do not multiply with dt*cnsts.physics(Myear)!
 
-//  PRC(v_wind);PRC(acc_radius);PRC(wind_acc);PRL(v_factor);
-//  PRL(mass_fraction);PRL(mdot);
+  //  PRC(v_wind);PRC(acc_radius);PRC(wind_acc);PRL(v_factor);
+  //  PRL(mass_fraction);PRL(mdot);
   
   mass_fraction = Starlab::min(0.9, mass_fraction);
 
@@ -1489,10 +1486,10 @@ real single_star::angular_momentum() {
   real m = get_total_mass()*cnsts.parameters(solar_mass);
   real r = effective_radius*cnsts.parameters(solar_radius);
 
-// (GN+SPZ May  5 1999) effective_radius may increase when rl shrinks
+  // (GN+SPZ May  5 1999) effective_radius may increase when rl shrinks
   if (is_binary_component()) {
     r = Starlab::min(r, 
-	    get_binary()->roche_radius(this)*cnsts.parameters(solar_radius));
+		     get_binary()->roche_radius(this)*cnsts.parameters(solar_radius));
   }
 
   real o = 0;                            // default rotation.
@@ -1507,72 +1504,72 @@ real single_star::angular_momentum() {
 
 real single_star::rejuvenation_fraction(const real mdot_fr) {
 
-      real rejuvenation = (1-pow(mdot_fr,
-				 cnsts.parameters(rejuvenation_exponent)));
+  real rejuvenation = (1-pow(mdot_fr,
+			     cnsts.parameters(rejuvenation_exponent)));
 
-      // no rejuvenation if companion has no hydrogen envelope.
-      if(is_binary_component() &&
-	 !get_companion()->hydrogen_envelope_star()) 
-	rejuvenation = 1;
+  // no rejuvenation if companion has no hydrogen envelope.
+  if(is_binary_component() &&
+     !get_companion()->hydrogen_envelope_star()) 
+    rejuvenation = 1;
 
-      return rejuvenation;
+  return rejuvenation;
 }
 
 void single_star::stellar_wind(const real dt) {
-//cerr << "void single_star::stellar_wind(const real dt=" << dt << ")" << endl;
+  //  cerr << "void single_star::stellar_wind(const real dt=" << dt << ")" << endl;
 
-//  PRL(last_update_age);
-//  PRL(next_update_age);
-//  PRL(relative_age);
-// (GN+SPZ Apr 28 1999) wind for low mass stars per phase
-    real end_time = next_update_age - last_update_age;
-//    real prev_rel_time = max(0.,previous.relative_age - last_update_age);
-//    real relative_time = min(relative_age - last_update_age, end_time);
-    real relative_time = relative_age - last_update_age;
+  //    PRL(last_update_age);
+  //    PRL(next_update_age);
+  //    PRL(relative_age);
+  // (GN+SPZ Apr 28 1999) wind for low mass stars per phase
+  real end_time = next_update_age - last_update_age;
+  //    real prev_rel_time = max(0.,previous.relative_age - last_update_age);
+  //    real relative_time = min(relative_age - last_update_age, end_time);
+  real relative_time = relative_age - last_update_age;
 
-//    PRL(end_time);
-//    PRL(prev_rel_time);
-//    PRL(relative_time);
-//    PRL(wind_constant);
+  //    PRL(end_time);
+  //    PRL(prev_rel_time);
+  //    PRL(relative_time);
+  //    PRL(wind_constant);
 
-// for high mass stars over whole evolution
-// (GN May 12 1999)
-// except for stars more massive than 85 that become WR after ms immediately
-    if (relative_mass >= cnsts.parameters(super_giant2neutron_star) &&
-	relative_mass < 85.) {
-      end_time = nucleair_evolution_time();
-//      prev_rel_time = previous.relative_age;
-      relative_time = relative_age;
-    }
+  // for high mass stars over whole evolution
+  // (GN May 12 1999)
+  // except for stars more massive than 85 that become WR after ms immediately
+  if (relative_mass >= cnsts.parameters(super_giant2neutron_star) &&
+      relative_mass < 85.) {
+    end_time = nucleair_evolution_time();
+    //      prev_rel_time = previous.relative_age;
+    relative_time = relative_age;
+  }
 
-//    PRC(end_time);
-//    PRC(dt);
-//    PRC(prev_rel_time);
-//    PRC(relative_time);
-//    PRL(wind_constant);
+  //    PRC(end_time);
+  //    PRC(dt);
+  //    PRC(prev_rel_time);
+  //    PRC(relative_time);
+  //    PRL(wind_constant);
 
-    real wind_mass = wind_constant 
-                   * (pow(relative_time/end_time,
-			cnsts.parameters(massive_star_mass_loss_law))
-	           -  pow((relative_time-dt)/end_time,
-			cnsts.parameters(massive_star_mass_loss_law)));
+  real wind_mass = wind_constant 
+    * (pow(relative_time/end_time,
+	   cnsts.parameters(massive_star_mass_loss_law))
+       -  pow((relative_time-dt)/end_time,
+	      cnsts.parameters(massive_star_mass_loss_law)));
 
-    // Previous second term according to GN.
-//	           -  pow((prev_rel_time)/end_time,
-//			cnsts.parameters(massive_star_mass_loss_law)));
-// (GN+SPZ Apr 28 1999) wind induced helium star formation can happen
-// because stellar_wind is last function in evolve_element
+  // Previous second term according to GN.
+  //	           -  pow((prev_rel_time)/end_time,
+  //			cnsts.parameters(massive_star_mass_loss_law)));
+  // (GN+SPZ Apr 28 1999) wind induced helium star formation can happen
+  // because stellar_wind is last function in evolve_element
   if (wind_mass>=envelope_mass) {
     wind_mass = envelope_mass;
     radius = core_radius;
   }
   
-//  PRL(wind_mass);
-//  dump(cerr, false);
+  //  PRL(wind_mass);
+  //  dump(cerr, false);
   if (is_binary_component())
     get_binary()->adjust_binary_after_wind_loss(this, wind_mass, dt);
   else {
-// (GN Oct 11 1999) for single stars: previous used for stellar wind! (?)
+    // (GN Oct 11 1999) for single stars: previous used for stellar wind! (?)
     // refresh_memory();
 
     reduce_mass(wind_mass);
@@ -1596,7 +1593,7 @@ void single_star::lose_envelope_decent() {
   if (envelope_mass>0) {
     if (is_binary_component()) {
       get_binary()->adjust_binary_after_wind_loss(
-		    this, envelope_mass, POST_AGB_TIME);
+						  this, envelope_mass, POST_AGB_TIME);
     } 
     else 
       reduce_mass(envelope_mass);
@@ -1616,15 +1613,15 @@ void single_star::update_wind_constant() {
 #if 0
   if (relative_mass >= cnsts.parameters(massive_star_mass_limit))
     wind_constant = (get_relative_mass()-core_mass)
-                  * cnsts.parameters(massive_star_envelope_fraction_lost);
+      * cnsts.parameters(massive_star_envelope_fraction_lost);
   else 
     wind_constant = get_relative_mass()
-                  * cnsts.parameters(non_massive_star_envelope_fraction_lost);
+      * cnsts.parameters(non_massive_star_envelope_fraction_lost);
     
 #endif
-// (GN+SPZ Apr 28 1999) new fits to Maeder, de Koter and common sense
+  // (GN+SPZ Apr 28 1999) new fits to Maeder, de Koter and common sense
 
-//  cerr << "update_wind_constant"<<endl;
+  //  cerr << "update_wind_constant"<<endl;
 
   if (relative_mass >= cnsts.parameters(super_giant2neutron_star)) {
 
@@ -1650,37 +1647,37 @@ void single_star::update_wind_constant() {
 
 real single_star::potential_energy() {
   
-     real GM2_R = cnsts.physics(G)*pow(cnsts.parameters(solar_mass), 2)
-                / cnsts.parameters(solar_radius);
-     real p = GM2_R*get_total_mass()*get_total_mass()
-            / get_effective_radius();
+  real GM2_R = cnsts.physics(G)*pow(cnsts.parameters(solar_mass), 2)
+    / cnsts.parameters(solar_radius);
+  real p = GM2_R*get_total_mass()*get_total_mass()
+    / get_effective_radius();
      
-     return -p;
+  return -p;
 }
 
 real single_star::kinetic_energy() {
   
-     real Mkm_s2 = cnsts.parameters(solar_mass)
-                 * pow(cnsts.physics(km_per_s), 2);
-     real k = 0.5*Mkm_s2*get_total_mass()*pow(velocity, 2);
+  real Mkm_s2 = cnsts.parameters(solar_mass)
+    * pow(cnsts.physics(km_per_s), 2);
+  real k = 0.5*Mkm_s2*get_total_mass()*pow(velocity, 2);
      
-     return k;
+  return k;
 }
 
 real single_star::total_energy() {
-     return kinetic_energy() + potential_energy();
+  return kinetic_energy() + potential_energy();
 }
 
 real single_star::get_evolve_timestep() {
 
-// (GN+SPZ Apr 28 1999) was a bit too small
-//  return max(next_update_age - relative_age
-//	     -0.5*cnsts.safety(minimum_timestep),
-//	     cnsts.safety(minimum_timestep));
+  // (GN+SPZ Apr 28 1999) was a bit too small
+  //  return max(next_update_age - relative_age
+  //	     -0.5*cnsts.safety(minimum_timestep),
+  //	     cnsts.safety(minimum_timestep));
 
-// (GN+SPZ May  5 1999) type change time must be small because of rapid
-// growth of giants at end phase 0.0001 seems to be OK (?)
-//  return max(next_update_age - relative_age - (0.5*0.001), 0.001);
+  // (GN+SPZ May  5 1999) type change time must be small because of rapid
+  // growth of giants at end phase 0.0001 seems to be OK (?)
+  //  return max(next_update_age - relative_age - (0.5*0.001), 0.001);
 
   return Starlab::max(next_update_age - relative_age, 0.0001);
 
@@ -1699,4 +1696,19 @@ real single_star::final_core_mass() {
     return  0.46 + maximum_luminosity()/(46818*pow(relative_mass,0.25));
   }
 
+}
+
+// WARNING: this function spoils the memory of a single star
+real single_star::get_dlogR_dT() {
+  
+  real dt = 1.e-4*get_next_update_age();
+  real r = get_effective_radius();
+  refresh_memory();
+  evolve_element(dt);
+  real rdr = get_effective_radius();
+  recall_memory();
+
+  real dlogr_dt = (r-rdr)/dt;
+
+  return dlogr_dt; // in Rsun per Mur
 }

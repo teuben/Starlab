@@ -114,8 +114,9 @@ local bool read_binary_params(ifstream& in, real &m_prim,
   int id, tpp, tps; 
   real time, Rlp, Rls;
 
-  in >>id >> time >> sma >> ecc 
-     >> tpp >> m_prim >> Rlp >> tps >> m_sec >> Rls;
+  in >> sma >> ecc >> m_prim >> m_sec;
+  //  in >>id >> time >> sma >> ecc 
+  //     >> tpp >> m_prim >> Rlp >> tps >> m_sec >> Rls;
 
       PRC(m_prim);PRC(m_sec);PRC(sma);PRL(ecc);
 

@@ -1885,7 +1885,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
     real t_end = tt + delta_t;		// final time, at end of integration
 
     real t_log = tt;			// time of next log output
-    if (t > 0) 
+    if (t > (xreal)0) 
     	t_log += dt_log;
 
     real t_snap = tt + dt_snap;		// time of next snapshot output
@@ -2104,7 +2104,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	    if (check_file("STOP")) {
 
-		t_end = ttmp - 1;	// Forces optional snap output 
+		t_end = ttmp - (xreal)1;	// Forces optional snap output 
 					// and end of run in snap_output.
 
 		cerr << endl << "***** Calculation STOPped by user at time "

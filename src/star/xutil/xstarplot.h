@@ -1,5 +1,5 @@
 
-#include <strstream.h>
+#include <strstream>
 #include "stdinc.h"
 
 #define HALF_ROOT2   0.707106781186547524400844362105	// Root2/2

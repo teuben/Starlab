@@ -92,9 +92,9 @@ local void set_base_point_size(float rel_point_size)
 
 // 	(0.01 + 0.05*pow(R_eff, 2))*lmax3d/30.0
         if (point_scale_mode<=1) {
-        float r= max(0.6*SMALL_DOT_SIZE, 
+        float r= Starlab::max(0.6*SMALL_DOT_SIZE, 
 	           base_point_size*(0.3 
-               + 0.2*pow(1+log10(max(0.1, radius)), 2)));
+               + 0.2*pow(1+log10(Starlab::max(0.1, radius)), 2)));
         return r;
         }
         else {
@@ -108,9 +108,9 @@ local float get_point_size(hdyn* bi)
     // Also, impose a lower limit on the point size.
 
     if (point_scale_mode == 1)
-	return max(SMALL_DOT_SIZE, base_point_size * sqrt(bi->get_mass()));
+	return Starlab::max(SMALL_DOT_SIZE, base_point_size * sqrt(bi->get_mass()));
     else if (point_scale_mode == 2)
-	return max(SMALL_DOT_SIZE, base_point_size * bi->get_radius());
+	return Starlab::max(SMALL_DOT_SIZE, base_point_size * bi->get_radius());
     else
 	return base_point_size;
 }
@@ -253,13 +253,15 @@ local int plot_stellar_hrd(hdyn* b, int f_flag) {
 
 //		Methos for plotting HRD.
                 t_rel=m_rel=m_env=m_core=T_eff=L_eff=p_rot=b_fld=0;
+		real co_core=0;
                 st = bi->get_starbase()->get_star_story();
                 extract_story_chapter(type, t_cur, t_rel,
 				      m_rel, m_env, m_core, 
+				      co_core,
 				      T_eff, L_eff, p_rot, b_fld, *st);
-                R_eff = sqrt(max(0.1, (1130.*L_eff)/pow(T_eff, 4)));
-                L_eff = log10(max(L_eff, 0.000000001));
-                T_eff = log10(max(1000*T_eff, 0.000000001));
+                R_eff = sqrt(Starlab::max(0.1, (1130.*L_eff)/pow(T_eff, 4)));
+                L_eff = log10(Starlab::max(L_eff, 0.000000001));
+                T_eff = log10(Starlab::max(1000*T_eff, 0.000000001));
 //cerr<<"star: "<<type<<" " <<t_rel<<" " <<m_rel<<" " <<m_env<<" "
 //<<m_core<<" "<<T_eff<< " "<< L_eff<<endl;
 //cerr<<"rs, tl"<< r<<" " <<s<<" : "<<T_eff << " "<<L_eff<<" "<<R_eff<<" ";
@@ -984,7 +986,7 @@ local void check_for_input(unsigned long win, hdyn* b,
 
 		    for_all_leaves(hdyn, b, bi)
 			for (int kk = 0; kk < 3; kk++)
-			    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]
+			    lmax3d = Starlab::max(lmax3d, abs(bi->get_pos()[kk]
 						     - local_offset[kk]));
 		
 		    // Round lmax3d up to something reasonable:
@@ -1517,7 +1519,7 @@ void xhrdplot(hdyn* b, float scale, int k, int d, float lmax,
 
 	    for_all_leaves(hdyn, b, bi)
 		for (int kk = 0; kk < 3; kk++)
-		    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]));
+		    lmax3d = Starlab::max(lmax3d, abs(bi->get_pos()[kk]));
 
 	    // Round lmax3d up to something reasonable:
 
@@ -1729,7 +1731,7 @@ void xstarplot(hdyn* b, float scale, int k, int d, float lmax,
 
             for_all_leaves(hdyn, b, bi)
                 for (int kk = 0; kk < 3; kk++)
-                    lmax3d = max(lmax3d, abs(bi->get_pos()[kk]));
+                    lmax3d = Starlab::max(lmax3d, abs(bi->get_pos()[kk]));
 
             // Round lmax3d up to something reasonable:
 

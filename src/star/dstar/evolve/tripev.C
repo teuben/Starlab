@@ -48,7 +48,7 @@ local void  binev(double_star * b, real start_time, real end_time,
     for(int j = 0; j<n_steps; j++) {
            b->evolve_element(start_time+ageint*(j+1));
            cout << b->get_binary_age() <<":";
-           b->put_appeal();
+           b->put_state();
 #ifdef FULL_OUTPUT
     b->print_status();
 #endif
@@ -70,7 +70,7 @@ cout <<"e = "<<b->get_eccentricity()<<endl;
 
 /* endof: addstar.C */
 
-void main(int argc, char ** argv)
+int main(int argc, char ** argv)
     {
 /*
     main_sequence * m = new main_sequence();
@@ -80,7 +80,7 @@ void main(int argc, char ** argv)
     double_star * b = new double_star(p, s);
 */
 
-    star_appeal primary, secondary;
+    star_state primary, secondary;
 //    double_star * b = new double_star();
     double_init inner;
     double_init outer;

@@ -51,9 +51,19 @@ local void print_binary_content(dyn* b, binary_type which) {
     int N_row = 0; 
     if(N_total>0) {
 
+      //      cerr << "    ";
+      //      for (int j=0; j<no_of_stellar_type-1; j++)
+      //	cerr << " " << type_short_string((stellar_type)j);
+      //      cerr << endl;
+
       cerr << "    ";
-      for (int j=0; j<no_of_stellar_type-1; j++)
-	cerr << " " << type_short_string((stellar_type)j);
+      for (int j = 0; j <= dynamic_cast(int, Super_Giant); j++) 
+	cerr << " " << type_short_string(dynamic_cast(stellar_type, j));
+
+      cerr << "     ";
+      for (int j = dynamic_cast(int, Carbon_Star); 
+	   j < dynamic_cast(int, no_of_stellar_type-1); j++) 
+	cerr << " " << type_short_string(dynamic_cast(stellar_type, j));
       cerr << endl;
       
       for (int k = 0; k < no_of_stellar_type-1; k++) {
@@ -64,12 +74,20 @@ local void print_binary_content(dyn* b, binary_type which) {
 	if(N_row>0) {
 	  cerr << "   " << type_short_string((stellar_type)k);
 
-	  for (int i = 0; i < no_of_stellar_type-1; i++) 
+	  //	  for (int i = 0; i < no_of_stellar_type-1; i++) 
+	  //	    cerr << " " << content[i].stypes[k];
+	  //	  cerr << endl;
+	  for (int i=0; i<=dynamic_cast(int, Super_Giant); i++)
+	    cerr << " " << content[i].stypes[k];
+	  cerr << "     ";
+	  for (int i=Carbon_Star; i<no_of_stellar_type-1; i++)
 	    cerr << " " << content[i].stypes[k];
 	  cerr << endl;
 	}
       }
+
     }
+
     else
       cerr << "     ---No "<< type_string(which) << " binaries---" <<endl;
     

@@ -1,5 +1,4 @@
 
-//#include <strstream.h>
 #include "sdyn3.h"
 #include "xhrdplot.h"
 #include "single_star.h"
@@ -162,10 +161,11 @@ void derive_stellar_type(dyn* bj, dyn* bi, char& c)
 
     stellar_type type = NAS;
     real t_cur, t_rel, m_rel, m_env, m_core, T_eff, L_eff, p_rot, b_fld;
+    real co_core=0;
     t_cur=t_rel=m_rel=m_env=m_core=T_eff=L_eff=p_rot=b_fld=0;
     story *s = bi->get_starbase()->get_star_story();
     extract_story_chapter(type, t_cur, t_rel,
-                          m_rel, m_env, m_core,
+                          m_rel, m_env, m_core, co_core,
 			  T_eff, L_eff, p_rot, b_fld, *s);
 //cerr<<"star: "<<type<<" " <<t_rel<<" " <<m_rel<<" " <<m_env<<" "
 //<<m_core<<" "<<T_eff<< " "<< L_eff<<endl;
@@ -278,6 +278,7 @@ void show_hrd_information(unsigned long instr,float r,int d, int u, dyn* b) {
 //              Methos for plotting HRD.
       real total_mass=0;
       real t_cur, t_rel, m_rel, m_env, m_core, T_eff, L_eff, p_rot, b_fld;
+      real co_core=0;
       t_cur=t_rel=m_rel=m_env=m_core=T_eff=L_eff=p_rot=b_fld=0;
       stellar_type type=NAS;
       story *st = NULL;
@@ -286,6 +287,7 @@ void show_hrd_information(unsigned long instr,float r,int d, int u, dyn* b) {
       for_all_leaves(dyn, b, bi) {
          st = bi->get_starbase()->get_star_story();
          extract_story_chapter(type, t_cur, t_rel, m_rel, m_env, m_core, 
+			       co_core,
 			       T_eff, L_eff, p_rot, b_fld, *st);
          total_mass += m_env+m_core;
          if (type<= Main_Sequence) {
@@ -303,7 +305,8 @@ void show_hrd_information(unsigned long instr,float r,int d, int u, dyn* b) {
            mu[2] += (m_env + m_core);
          }
          else 
-         if (type== Helium_Star || type== White_Dwarf) {
+         if (type== Carbon_Star || type== Helium_Star || type== Helium_Giant ||
+	     type== Carbon_Dwarf || type== Helium_Dwarf || type== Oxygen_Dwarf) {
            su[3]++; 
            mu[3] += (m_env + m_core);
          }

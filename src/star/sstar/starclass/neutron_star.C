@@ -15,193 +15,194 @@
 
 neutron_star::neutron_star(super_giant & g) : single_star(g) {
 
-      delete &g;
+  delete &g;
 
-      magnetic_field  = cnsts.parameters(pulsar_magnetic_field);
-      // log Gauss
-      rotation_period = cnsts.parameters(pulsar_pulse_period);
-      // seconde
+  magnetic_field  = cnsts.parameters(pulsar_magnetic_field);
+  // log Gauss
+  rotation_period = cnsts.parameters(pulsar_pulse_period);
+  // seconde
 
 
-      suddenly_lost_mass     = 0;
-      real m_tot             = get_total_mass();
-      core_mass = birth_mass = neutron_star_mass(Super_Giant);
-      envelope_mass          = m_tot - core_mass;
-      relative_age           = 0;
+  suddenly_lost_mass     = 0;
+  real m_tot             = get_total_mass();
+  core_mass = birth_mass = neutron_star_mass(Super_Giant);
+  envelope_mass          = m_tot - core_mass;
+  relative_age           = 0;
 
-// (GN+SPZ May  4 1999) last update age is time of previous type change
-      last_update_age = next_update_age;
+  // (GN+SPZ May  4 1999) last update age is time of previous type change
+  last_update_age = next_update_age;
 
-      bool hit_companion = super_nova();
-      post_supernova_story();
+  bool hit_companion = super_nova();
+  post_supernova_story();
 
-      refresh_memory();
-      instantaneous_element();
-      update();
+  refresh_memory();
+  instantaneous_element();
+  update();
 
-      post_constructor();
+  post_constructor();
 
-      if (hit_companion)            // Kick may cause coalescence.
-         direct_hit();
+  if (hit_companion)            // Kick may cause coalescence.
+    direct_hit();
 
-      if (is_binary_component()) {
-	get_binary()->set_first_contact(false);
-	get_companion()->set_spec_type(Accreting, false);
-	get_binary()->dump("binev.data", false);
-      }
-      else {
-	dump("binev.data", false);
-      }
+  if (is_binary_component()) {
+    get_binary()->set_first_contact(false);
+    get_companion()->set_spec_type(Accreting, false);
+    get_binary()->dump("binev.data", false);
+  }
+  else {
+    dump("binev.data", false);
+  }
 }
 
 neutron_star::neutron_star(hyper_giant & w) : single_star(w) {
 
-      delete &w;
+  delete &w;
 
-      magnetic_field  = cnsts.parameters(pulsar_magnetic_field);
-      // log Gauss
-      rotation_period = cnsts.parameters(pulsar_pulse_period);
-      // seconde
+  magnetic_field  = cnsts.parameters(pulsar_magnetic_field);
+  // log Gauss
+  rotation_period = cnsts.parameters(pulsar_pulse_period);
+  // seconde
 
-      suddenly_lost_mass     = 0;
-      real m_tot             = get_total_mass();
-      core_mass = birth_mass = neutron_star_mass(Super_Giant);
-      envelope_mass          = m_tot - core_mass;
-      relative_age           = 0;
+  suddenly_lost_mass     = 0;
+  real m_tot             = get_total_mass();
+  core_mass = birth_mass = neutron_star_mass(Super_Giant);
+  envelope_mass          = m_tot - core_mass;
+  relative_age           = 0;
 
-// (GN+SPZ May  4 1999) last update age is time of previous type change
-      last_update_age = next_update_age;
+  // (GN+SPZ May  4 1999) last update age is time of previous type change
+  last_update_age = next_update_age;
 
-      bool hit_companion = super_nova();
-      post_supernova_story();
+  bool hit_companion = super_nova();
+  post_supernova_story();
 
-      refresh_memory();
-      instantaneous_element();
-      update();
+  refresh_memory();
+  instantaneous_element();
+  update();
 
-      post_constructor();
+  //      post_constructor();
 
-      if (hit_companion) 
-         direct_hit();
+  if (hit_companion) 
+    direct_hit();
 
-      post_constructor();
+  post_constructor();
 
-      if (is_binary_component()) {
-	get_binary()->set_first_contact(false);
-	dump("binev.data", false);
-	get_companion()->set_spec_type(Accreting, false);
-      }
-      else {
-	dump("binev.data", false);
-      }
+  if (is_binary_component()) {
+    get_binary()->set_first_contact(false);
+    dump("binev.data", false);
+    get_companion()->set_spec_type(Accreting, false);
+  }
+  else {
+    dump("binev.data", false);
+  }
 }
 
 neutron_star::neutron_star(thorne_zytkow & t) : single_star(t) {
 
-      delete &t;
+  delete &t;
 
-      suddenly_lost_mass = 0;
+  suddenly_lost_mass = 0;
 
-// (GN+SPZ May  4 1999) last update age is time of previous type change
-      last_update_age = next_update_age;
+  // (GN+SPZ May  4 1999) last update age is time of previous type change
+  last_update_age = next_update_age;
 
-      relative_age = 0;
-      lose_envelope_decent();
+  relative_age = 0;
+  lose_envelope_decent();
 
-      refresh_memory();
-      instantaneous_element();
+  refresh_memory();
+  instantaneous_element();
 
-      post_constructor();
+  post_constructor();
 
-      if (is_binary_component()) 
-	get_binary()->dump("binev.data", false);
-      else 
-	dump("binev.data", false);
+  if (is_binary_component()) 
+    get_binary()->dump("binev.data", false);
+  else 
+    dump("binev.data", false);
 }
 
 neutron_star::neutron_star(helium_giant & h) : single_star(h) {
 
-      delete &h;
+  delete &h;
+
+  magnetic_field  = cnsts.parameters(pulsar_magnetic_field);
+  // log Gauss
+  rotation_period = cnsts.parameters(pulsar_pulse_period);
+  // seconde
 
 
+  suddenly_lost_mass     = 0;
+  real m_tot             = get_total_mass();
+  core_mass = birth_mass = neutron_star_mass(Helium_Star);
+  envelope_mass          = m_tot - core_mass;
+  relative_age           = 0;
 
-      magnetic_field  = cnsts.parameters(pulsar_magnetic_field);
-      // log Gauss
-      rotation_period = cnsts.parameters(pulsar_pulse_period);
-      // seconde
+  // (GN+SPZ May  4 1999) last update age is time of previous type change
+  last_update_age = next_update_age;
 
+  bool hit_companion = super_nova();
+  post_supernova_story();
 
-      suddenly_lost_mass     = 0;
-      real m_tot             = get_total_mass();
-      core_mass = birth_mass = neutron_star_mass(Helium_Star);
-      envelope_mass          = m_tot - core_mass;
-      relative_age           = 0;
+  //  cerr << "Super nova in Helium giant"<<endl;
+  //  PRL(get_use_hdyn());
 
-// (GN+SPZ May  4 1999) last update age is time of previous type change
-      last_update_age = next_update_age;
+  refresh_memory();
+  instantaneous_element();
+  update();
 
-      bool hit_companion = super_nova();
-      post_supernova_story();
+  post_constructor();
 
-      refresh_memory();
-      instantaneous_element();
-      update();
+  if (hit_companion)            // Kick may cause coalescence.
+    direct_hit();
 
-      post_constructor();
-
-      if (hit_companion)            // Kick may cause coalescence.
-         direct_hit();
-
-      if (is_binary_component()) {
-	get_binary()->set_first_contact(false);
-	get_companion()->set_spec_type(Accreting, false);
-	get_binary()->dump("binev.data", false);
-      }
-      else {
-	dump("binev.data", false);
-      }
+  if (is_binary_component()) {
+    get_binary()->set_first_contact(false);
+    get_companion()->set_spec_type(Accreting, false);
+    get_binary()->dump("binev.data", false);
+  }
+  else {
+    dump("binev.data", false);
+  }
 }
 
 
 neutron_star::neutron_star(white_dwarf & w) : single_star(w) {
 
-      delete &w;
+  delete &w;
       
-      magnetic_field  = cnsts.parameters(pulsar_magnetic_field);
-      // log Gauss
-      rotation_period = cnsts.parameters(pulsar_pulse_period);
-      // seconde
+  magnetic_field  = cnsts.parameters(pulsar_magnetic_field);
+  // log Gauss
+  rotation_period = cnsts.parameters(pulsar_pulse_period);
+  // seconde
       
-      suddenly_lost_mass = 0;
+  suddenly_lost_mass = 0;
 
-      real m_tot = get_total_mass();
-      core_mass = birth_mass = Starlab::max(0.0, m_tot - aic_binding_energy());
-      envelope_mass = m_tot - core_mass;
-      relative_age = 0;
+  real m_tot = get_total_mass();
+  core_mass = birth_mass = Starlab::max(0.0, m_tot - aic_binding_energy());
+  envelope_mass = m_tot - core_mass;
+  relative_age = 0;
 
-// (GN+SPZ May  4 1999) last update age is time of previous type change
-      last_update_age = next_update_age;
+  // (GN+SPZ May  4 1999) last update age is time of previous type change
+  last_update_age = next_update_age;
 
-      bool hit_companion = super_nova();
-      post_supernova_story();
+  bool hit_companion = super_nova();
+  post_supernova_story();
 
-      refresh_memory();
-      instantaneous_element();
-      update();
+  refresh_memory();
+  instantaneous_element();
+  update();
       
-      if (hit_companion) 
-         direct_hit();
+  if (hit_companion) 
+    direct_hit();
 
-      post_constructor();
+  post_constructor();
 
-      if (is_binary_component()) {
-	get_binary()->set_first_contact(false);
-	get_companion()->set_spec_type(Accreting, false);
-	get_binary()->dump("binev.data", false);
-      }
-      else {
-	dump("binev.data", false);
-      }
+  if (is_binary_component()) {
+    get_binary()->set_first_contact(false);
+    get_companion()->set_spec_type(Accreting, false);
+    get_binary()->dump("binev.data", false);
+  }
+  else {
+    dump("binev.data", false);
+  }
 }
 
 void neutron_star::instantaneous_element() {
@@ -216,48 +217,48 @@ void neutron_star::instantaneous_element() {
 
 void neutron_star::evolve_element(const real end_time) {
 
-      real dt = end_time - current_time;
-      current_time = end_time;
-      relative_age += dt;
+  real dt = end_time - current_time;
+  current_time = end_time;
+  relative_age += dt;
 
-      core_radius = radius = neutron_star_radius();
-      luminosity = spindown_luminosity();
+  core_radius = radius = neutron_star_radius();
+  luminosity = spindown_luminosity();
 
-      accrete_from_envelope(dt);
-      rotation_period = pulsar_spin_down(dt);
+  accrete_from_envelope(dt);
+  rotation_period = pulsar_spin_down(dt);
 
-      if (core_mass>cnsts.parameters(maximum_neutron_star_mass)) {
+  if (core_mass>cnsts.parameters(maximum_neutron_star_mass)) {
 
-	if (is_binary_component()) 
-	  get_binary()->dump("binev.data", false);
-	else
-	  dump("binev.data", false);
+    if (is_binary_component()) 
+      get_binary()->dump("binev.data", false);
+    else
+      dump("binev.data", false);
 	
-         star_transformation_story(Black_Hole);
-         new black_hole(*this);
-         return;
-      }
+    star_transformation_story(Black_Hole);
+    new black_hole(*this);
+    return;
+  }
 
-      next_update_age = relative_age + cnsts.safety(maximum_timestep);
+  next_update_age = relative_age + cnsts.safety(maximum_timestep);
 
-      update();
-   }
+  update();
+}
 
 void neutron_star::update() {
 
-      detect_spectral_features();
-// (GN+SPZ May  4 1999) last_update_age now used as time of last type change
-//  last_update_age = relative_age;
-      effective_radius = radius;
+  detect_spectral_features();
+  // (GN+SPZ May  4 1999) last_update_age now used as time of last type change
+  //  last_update_age = relative_age;
+  effective_radius = radius;
 
-//      if(get_element_type() != previous.star_type) {
-//
-//	if (is_binary_component()) 
-//	  get_binary()->dump("SeBa.data", true);
-//	else
-//	  dump("SeBa.data", true);
-//      }
-    }
+  //      if(get_element_type() != previous.star_type) {
+  //
+  //	if (is_binary_component()) 
+  //	  get_binary()->dump("SeBa.data", true);
+  //	else
+  //	  dump("SeBa.data", true);
+  //      }
+}
 
 void neutron_star::accrete_from_envelope(const real dt) {
 
@@ -307,15 +308,15 @@ void neutron_star::accrete_from_envelope(const real dt) {
 // Typically one of those things that makes programming interesting.
 real neutron_star::aic_binding_energy() {
 
-      real GM2_RC2 = 3*cnsts.physics(G)
-	           * pow(cnsts.parameters(solar_mass)/cnsts.physics(C), 2)
-	           / (5*cnsts.parameters(solar_radius));
-      real binding_energy = (GM2_RC2*pow(core_mass,2)
-			  / cnsts.parameters(kanonical_neutron_star_radius))
-	                  / cnsts.parameters(solar_mass);
+  real GM2_RC2 = 3*cnsts.physics(G)
+    * pow(cnsts.parameters(solar_mass)/cnsts.physics(C), 2)
+    / (5*cnsts.parameters(solar_radius));
+  real binding_energy = (GM2_RC2*pow(core_mass,2)
+			 / cnsts.parameters(kanonical_neutron_star_radius))
+    / cnsts.parameters(solar_mass);
 
-      return binding_energy;
-   }
+  return binding_energy;
+}
 
 // One of the few routines that requires the random number generator.
 // random numbers:
@@ -329,158 +330,160 @@ real neutron_star::aic_binding_energy() {
 // with its companion.
 bool neutron_star::super_nova() {
 
-     suddenly_lost_mass = envelope_mass;
+  suddenly_lost_mass = envelope_mass;
 
-     bool hit_companion = FALSE;
+  bool hit_companion = FALSE;
       
-      real v_disp = 300;
-      if (get_use_hdyn()) {
-       // decide on kick velocity scaling
-       // standard Pac. disperson is 600 km/s
+  real v_disp = 300;
+  if (get_use_hdyn()) {
+    // decide on kick velocity scaling
+    // standard Pac. disperson is 600 km/s
+    
+    if(cnsts.parameters(scale_kick_to_escape_velocity)>0) {
+      real r = get_r_conv_star_to_dyn();
+      r = cnsts.parameters(Rsun)/(r*cnsts.parameters(parsec));
+      real t = 1/get_t_conv_star_to_dyn();
+      real vd = r/t;
+      v_disp *= vd/cnsts.parameters(scale_kick_to_escape_velocity); 
+      cerr << "Kick_velocity_dispersion = " << v_disp << endl;
+    }
+  }
 
-	  if(cnsts.parameters(scale_kick_to_escape_velocity)>0) {
-	      real r = get_r_conv_star_to_dyn();
-	      r = cnsts.parameters(Rsun)/(r*cnsts.parameters(parsec));
-	      real t = 1/get_t_conv_star_to_dyn();
-	      real vd = r/t;
-	      v_disp *= vd/cnsts.parameters(scale_kick_to_escape_velocity); 
-	      cerr << "Kick_velocity_dispersion = " << v_disp << endl;
-	  }
-      }
+  real v_kick = cnsts.super_nova_kick(Paczynski_velocity_kick, v_disp);
+  //     real v_kick = cnsts.super_nova_kick(no_velocity_kick, v_disp);
 
-     real v_kick = cnsts.super_nova_kick(Paczynski_velocity_kick, v_disp);
-//     real v_kick = cnsts.super_nova_kick(no_velocity_kick, v_disp);
+  real theta_kick = acos(1-2*random_angle(0, 1));
+  real phi_kick   = random_angle(0, 2*PI);
 
-     real theta_kick = acos(1-2*random_angle(0, 1));
-     real phi_kick   = random_angle(0, 2*PI);
-
-     cerr << "Supernova kick v = " << v_kick << " [km/s]" << endl;
+  cerr << "Supernova kick v = " << v_kick << " [km/s]" << endl;
       
-     if (get_use_hdyn()) {
+  if (get_use_hdyn()) {
 
-	real x_kick = v_kick*sin(theta_kick)*cos(phi_kick);
-	real y_kick = v_kick*sin(theta_kick)*sin(phi_kick);
-	real z_kick = v_kick*cos(theta_kick);
-	vector kick_velocity(x_kick, y_kick, z_kick);
-	anomal_velocity = kick_velocity;
+    real x_kick = v_kick*sin(theta_kick)*cos(phi_kick);
+    real y_kick = v_kick*sin(theta_kick)*sin(phi_kick);
+    real z_kick = v_kick*cos(theta_kick);
+    vector kick_velocity(x_kick, y_kick, z_kick);
+    anomal_velocity = kick_velocity;
 
-	// This is correct if velocity is along the z-axis.
-	velocity = sqrt(pow(v_kick, 2) + pow(velocity, 2)
-		 + 2*v_kick*velocity*sin(theta_kick)*cos(phi_kick));
+    // This is correct if velocity is along the z-axis.
+    velocity = sqrt(pow(v_kick, 2) + pow(velocity, 2)
+		    + 2*v_kick*velocity*sin(theta_kick)*cos(phi_kick));
 
-	envelope_mass = 0;
-	return hit_companion;
-      }
-      else if(is_binary_component()) {  //+++
+    envelope_mass = 0;
+    return hit_companion;
+  }
+  else if(is_binary_component()) {  //+++
 
-	// Supernova is performed by the binary evolution
+    // Supernova is performed by the binary evolution
 
-	if(get_binary()->get_bin_type() == Disrupted ||
-	   get_binary()->get_bin_type() == Merged) {
+    if(get_binary()->get_bin_type() == Disrupted ||
+       get_binary()->get_bin_type() == Merged) {
 
-	  get_companion()->set_spec_type(Accreting, false);
+      get_companion()->set_spec_type(Accreting, false);
 
-	  velocity = sqrt(pow(v_kick, 2) + pow(velocity, 2)
-		   + 2*v_kick*velocity*sin(theta_kick)*cos(phi_kick));
+      velocity = sqrt(pow(v_kick, 2) + pow(velocity, 2)
+		      + 2*v_kick*velocity*sin(theta_kick)*cos(phi_kick));
 
-	  envelope_mass = 0;
-	  return hit_companion;
-	}
-	else if (get_binary()->get_bin_type() != Merged &&
-		 get_binary()->get_bin_type() != Disrupted) {
+      envelope_mass = 0;
+      return hit_companion;
+    }
+    else if (get_binary()->get_bin_type() != Merged &&
+	     get_binary()->get_bin_type() != Disrupted) {
 
-	  real a_init = get_binary()->get_semi();
-	  real e_init = get_binary()->get_eccentricity();
-	  real mtot_0 = get_binary()->get_total_mass();
-	  real msn_0 = get_total_mass();
-	  real m_psn = core_mass;
-	  real m_comp_0 = mtot_0 - msn_0;
-	  real m_comp = m_comp_0;
+      real a_init = get_binary()->get_semi();
+      real e_init = get_binary()->get_eccentricity();
+      real mtot_0 = get_binary()->get_total_mass();
+      real msn_0 = get_total_mass();
+      real m_psn = core_mass;
+      real m_comp_0 = mtot_0 - msn_0;
+      real m_comp = m_comp_0;
 
-	  real separation = random_separation(a_init, e_init);
-	  real a_new = post_sn_semi_major_axis(a_init, e_init, separation,
-					       msn_0, m_comp_0, m_psn, m_comp,
-					       v_kick, theta_kick, phi_kick);
-	  real e_new = post_sn_eccentricity(a_init, e_init, separation,
-					    msn_0, m_comp_0, m_psn, m_comp,
-					    v_kick, theta_kick, phi_kick); 
-	  real v_cm  = post_sn_cm_velocity(a_init, e_init, separation,
+      real separation = random_separation(a_init, e_init);
+      real a_new = post_sn_semi_major_axis(a_init, e_init, separation,
 					   msn_0, m_comp_0, m_psn, m_comp,
 					   v_kick, theta_kick, phi_kick);
+      real e_new = post_sn_eccentricity(a_init, e_init, separation,
+					msn_0, m_comp_0, m_psn, m_comp,
+					v_kick, theta_kick, phi_kick); 
+      real v_cm  = post_sn_cm_velocity(a_init, e_init, separation,
+				       msn_0, m_comp_0, m_psn, m_comp,
+				       v_kick, theta_kick, phi_kick);
 
-	  //              System bound after kick?
-	  if (e_new>=0 && e_new<1.) {
-            get_binary()->set_eccentricity(e_new);
-            get_binary()->set_semi(a_new);
+      //      PRC(a_new);PRC(e_new);PRL(v_cm);
 
-            get_binary()->set_velocity(v_cm);
-            get_binary()->calculate_velocities();
+      //              System bound after kick?
+      if (e_new>=0 && e_new<1.) {
+	get_binary()->set_eccentricity(e_new);
+	get_binary()->set_semi(a_new);
 
-	    //              Does it hit the companion?
-            real pericenter = a_new*(1-e_new);
+	get_binary()->set_velocity(v_cm);
+	get_binary()->calculate_velocities();
 
-            if (pericenter <= get_companion()->get_radius())
-	      hit_companion = TRUE;
+	//              Does it hit the companion?
+	real pericenter = a_new*(1-e_new);
+
+	if (pericenter <= get_companion()->get_radius())
+	  hit_companion = TRUE;
 	    
-	  }
-	  else {
-            set_spec_type(Runaway);
-
-            get_binary()->set_eccentricity(1);
-            get_companion()->set_spec_type(Runaway);
-            get_binary()->set_bin_type(Disrupted);
-            get_binary()->set_semi(0);
-
-            real e2_init = e_init*e_init;
-            real vr_mean_0 = sqrt(((cnsts.physics(G)
-			   *        cnsts.parameters(solar_mass)
-	                   /        cnsts.parameters(solar_radius))
-			   *        (msn_0+m_comp_0)/a_init)
-                           *        (1-e2_init)/pow(1+0.5*e2_init, 2));
-	    vr_mean_0      /= cnsts.physics(km_per_s);
-	    
-            real mu_0 = get_total_mass()/mtot_0;
-            real v_comp = mu_0*vr_mean_0;
-
-	    //              velocity at infinity.
-            real v_sn_0 = (1-mu_0)*vr_mean_0;
-            real v_sn   = sqrt(v_sn_0*v_sn_0 + v_kick*v_kick
-                        + 2*v_sn_0*v_kick*sin(theta_kick)*cos(phi_kick));
-
-	    //              binary CoM velocity:
-            real v_cm = get_binary()->get_velocity();
-            v_comp = sqrt(pow(v_comp, 2) + pow(v_cm, 2)
-                   + 2*v_comp*v_cm*cos(theta_kick));
-            get_companion()->set_velocity(v_comp);
-	    
-            v_sn = sqrt(pow(v_sn, 2) + pow(v_cm, 2)
-                 + 2*v_sn*v_cm*cos(theta_kick));
-            velocity = v_sn;
-	  }
-	}
       }
-      envelope_mass = 0;
+      else {
+	set_spec_type(Runaway);
 
-     return hit_companion;
+	get_binary()->set_eccentricity(1);
+	get_companion()->set_spec_type(Runaway);
+	get_binary()->set_bin_type(Disrupted);
+	get_binary()->set_semi(0);
+
+	real e2_init = e_init*e_init;
+	real vr_mean_0 = sqrt(((cnsts.physics(G)
+				*        cnsts.parameters(solar_mass)
+				/        cnsts.parameters(solar_radius))
+			       *        (msn_0+m_comp_0)/a_init)
+			      *        (1-e2_init)/pow(1+0.5*e2_init, 2));
+	vr_mean_0      /= cnsts.physics(km_per_s);
+	    
+	real mu_0 = get_total_mass()/mtot_0;
+	real v_comp = mu_0*vr_mean_0;
+
+	//              velocity at infinity.
+	real v_sn_0 = (1-mu_0)*vr_mean_0;
+	real v_sn   = sqrt(v_sn_0*v_sn_0 + v_kick*v_kick
+			   + 2*v_sn_0*v_kick*sin(theta_kick)*cos(phi_kick));
+
+	//              binary CoM velocity:
+	real v_cm = get_binary()->get_velocity();
+	v_comp = sqrt(pow(v_comp, 2) + pow(v_cm, 2)
+		      + 2*v_comp*v_cm*cos(theta_kick));
+	get_companion()->set_velocity(v_comp);
+	    
+	v_sn = sqrt(pow(v_sn, 2) + pow(v_cm, 2)
+		    + 2*v_sn*v_cm*cos(theta_kick));
+	velocity = v_sn;
+      }
+    }
+  }
+  envelope_mass = 0;
+
+  return hit_companion;
 }
 
 
 star* neutron_star::subtrac_mass_from_donor(const real dt, real& mdot) {
 
-      mdot = mass_ratio_mdot_limit(accretion_limit(envelope_mass, dt));
+  mdot = mass_ratio_mdot_limit(accretion_limit(envelope_mass, dt));
 
-      //		The disc may lose mass.
-      envelope_mass -= mdot;
+  //		The disc may lose mass.
+  envelope_mass -= mdot;
 
-      return this;
+  return this;
 }
 
 real neutron_star::add_mass_to_accretor(const real mdot) {
 
-      envelope_mass += mdot;
-      relative_mass = Starlab::max(relative_mass, get_total_mass());
+  envelope_mass += mdot;
+  relative_mass = Starlab::max(relative_mass, get_total_mass());
       
-      return mdot;
+  return mdot;
 }
 
 // Accrete on neutron star.
@@ -490,35 +493,35 @@ real neutron_star::add_mass_to_accretor(const real mdot) {
 // So no magnetic field decay here.
 real neutron_star::add_mass_to_accretor(real mdot, const real dt) {
 
-     if (DEBUG) cerr<<"neutron_star::add_mass_to_accretor "<<dt<<endl;
+  if (DEBUG) cerr<<"neutron_star::add_mass_to_accretor "<<dt<<endl;
 
-     mdot = accretion_limit(mdot, dt);
-     envelope_mass += mdot;
-     relative_mass = Starlab::max(relative_mass, get_total_mass());
+  mdot = accretion_limit(mdot, dt);
+  envelope_mass += mdot;
+  relative_mass = Starlab::max(relative_mass, get_total_mass());
 
-     return mdot;
+  return mdot;
 }
 
 // Limit the accretion onto the nuetron star by the Eddingtopn limit.
 real neutron_star::accretion_limit(const real mdot, const real dt) {
 
-     real eddington = eddington_limit(radius, dt); 
+  real eddington = eddington_limit(radius, dt); 
 
-   if (cnsts.parameters(hyper_critical))
-      return Starlab::min(mdot, (1.e+8)*eddington); 
+  if (cnsts.parameters(hyper_critical))
+    return Starlab::min(mdot, (1.e+8)*eddington); 
 
-   return Starlab::min(mdot, eddington);
+  return Starlab::min(mdot, eddington);
 
 }
 
 #if 0 // Old stuff
 real neutron_star::add_mass_to_accretor(const real mdot) {
 
-      relative_mass = Starlab::max(relative_mass, get_total_mass() + mdot);
-      envelope_mass += mdot;
+  relative_mass = Starlab::max(relative_mass, get_total_mass() + mdot);
+  envelope_mass += mdot;
 
-      return mdot;
-   }
+  return mdot;
+}
 
 // Accrete ont neutron star.
 // Neutron star accretes with Eddington limit. The accreted mass first
@@ -526,84 +529,84 @@ real neutron_star::add_mass_to_accretor(const real mdot) {
 // the compact object.
 real neutron_star::add_mass_to_accretor(real mdot, const real dt) {
 
-      mdot = accretion_limit(mdot, dt);
-      relative_mass = Starlab::max(relative_mass, get_total_mass() + mdot);
-      envelope_mass += mdot;
+  mdot = accretion_limit(mdot, dt);
+  relative_mass = Starlab::max(relative_mass, get_total_mass() + mdot);
+  envelope_mass += mdot;
 
-      return mdot;
-   }
+  return mdot;
+}
 
 // Limit the accretion onto the nuetron star by the Eddingtopn limit.
 real neutron_star::accretion_limit(const real mdot, const real dt) {
 
-     real eddington = eddington_limit(radius, dt); 
-//      real eddington = 1.5e-08*cnsts.parameters(solar_radius)*radius*dt;
+  real eddington = eddington_limit(radius, dt); 
+  //      real eddington = 1.5e-08*cnsts.parameters(solar_radius)*radius*dt;
 
-      return Starlab::min(mdot, eddington);
-   }
+  return Starlab::min(mdot, eddington);
+}
 #endif // End old stuff
 
 star* neutron_star::merge_elements(star* str) {
 
-      envelope_mass = 0;
-      real merger_core = str->get_core_mass();
+  envelope_mass = 0;
+  real merger_core = str->get_core_mass();
 
-      add_mass_to_accretor(str->get_envelope_mass());
-      relative_mass = Starlab::max(relative_mass, get_total_mass() + merger_core);
-      core_mass += merger_core;
+  add_mass_to_accretor(str->get_envelope_mass());
+  relative_mass = Starlab::max(relative_mass, get_total_mass() + merger_core);
+  core_mass += merger_core;
 
-      set_spec_type(Merger);
-      instantaneous_element();
+  set_spec_type(Merger);
+  instantaneous_element();
 
-      return this;
+  return this;
 
-   }
+}
 
 star* neutron_star::reduce_mass(const real mdot) {
 
-      if (mdot>envelope_mass) {
-	real dm = mdot -envelope_mass;
-	envelope_mass = 0;
-	core_mass -= dm;
-      }
-      else envelope_mass -= mdot;
+  if (mdot>envelope_mass) {
+    real dm = mdot -envelope_mass;
+    envelope_mass = 0;
+    core_mass -= dm;
+  }
+  else envelope_mass -= mdot;
       
-      return this;
+  return this;
 }
 
 void neutron_star::direct_hit() {
 
-      real theta = random_angle(0, 2*PI);
-      real v_bin = get_binary()->get_velocity();
-      real ek_ns = get_total_mass()*velocity*velocity;
-      real ek_comp = get_companion()->get_total_mass()
-                   * pow(get_companion()->get_velocity(), 2);
-      real v_merger = sqrt((ek_ns+ek_comp)/get_binary()->get_total_mass());
-      real v_new = sqrt(pow(v_merger, 2) + pow(v_bin, 2)
-                 + 2*v_merger*v_bin*cos(theta));
+  real theta = random_angle(0, 2*PI);
+  real v_bin = get_binary()->get_velocity();
+  real ek_ns = get_total_mass()*velocity*velocity;
+  real ek_comp = get_companion()->get_total_mass()
+    * pow(get_companion()->get_velocity(), 2);
+  real v_merger = sqrt((ek_ns+ek_comp)/get_binary()->get_total_mass());
+  real v_new = sqrt(pow(v_merger, 2) + pow(v_bin, 2)
+		    + 2*v_merger*v_bin*cos(theta));
 
-      get_binary()->set_semi(0);
-      if (get_total_mass() >= get_companion()->get_total_mass())  
-         get_binary()->merge_elements(this, get_companion()); 
-      else 
-         get_binary()->merge_elements(get_companion(), this); 
+  get_binary()->set_semi(0);
+  if (get_total_mass() >= get_companion()->get_total_mass())  
+    get_binary()->merge_elements(this, get_companion()); 
+  else 
+    get_binary()->merge_elements(get_companion(), this); 
 
-      get_binary()->set_bin_type(Merged);
-      get_binary()->set_semi(0);
-      get_binary()->set_velocity(v_new);
-      get_binary()->get_primary()->set_velocity(v_new);
+  get_binary()->set_bin_type(Merged);
+  get_binary()->set_semi(0);
+  get_binary()->set_velocity(v_new);
+  get_binary()->get_primary()->set_velocity(v_new);
 
-      get_binary()->dump("hit.data", false);
-   }
+  get_binary()->dump("hit.data", false);
+}
 
 real neutron_star::sudden_mass_loss() {
 
-    real mass_lost = suddenly_lost_mass;
-    suddenly_lost_mass = 0;
+  real mass_lost = suddenly_lost_mass;
+  suddenly_lost_mass = 0;
 
-    return mass_lost;
+  return mass_lost;
 
-   }
+}
 
 
 /*----------------------------------------------------------------------
@@ -622,17 +625,17 @@ real neutron_star::neutron_star_mass(stellar_type stp) {
 
   real m = get_total_mass();
   if (stp==Helium_Star || stp==Hyper_Giant)
-        m = 10 + get_total_mass();
+    m = 10 + get_total_mass();
   else
-      m = relative_mass;
+    m = relative_mass;
 
-    real a, b, c, d, e;
-    a =  2.25928E+00;
-    b = -2.68264E-01;
-    c =  2.28206E-02;
-    d = -7.06583E-04;
-    e =  7.48965E-06;
-    real mass = a + m*(b + m*(c + m*(d + m*e)));
+  real a, b, c, d, e;
+  a =  2.25928E+00;
+  b = -2.68264E-01;
+  c =  2.28206E-02;
+  d = -7.06583E-04;
+  e =  7.48965E-06;
+  real mass = a + m*(b + m*(c + m*(d + m*e)));
 
   mass = Starlab::min(mass, cnsts.parameters(maximum_neutron_star_mass));
 
@@ -642,186 +645,186 @@ real neutron_star::neutron_star_mass(stellar_type stp) {
 //Assuming a Newtonian Polytrope with n= 3/2
 real neutron_star::neutron_star_radius() {
 
-     return 15.12 * (cnsts.physics(kilometer)/cnsts.parameters(solar_radius))
-                  / pow(core_mass, cnsts.mathematics(one_third));   // [rsun]
+  return 15.12 * (cnsts.physics(kilometer)/cnsts.parameters(solar_radius))
+    / pow(core_mass, cnsts.mathematics(one_third));   // [rsun]
 }
 
 //Is this neutron star spinning so fast that it cannot accrete any matter?
 bool neutron_star::propeller(const real mdot, const real dt) {
-     if (DEBUG)
-       cerr<<"neutron_star::propeller"<<endl;
+  if (DEBUG)
+    cerr<<"neutron_star::propeller"<<endl;
 
-     real propellor = TRUE;
-     real eddington = eddington_limit(radius, dt); 
+  real propellor = TRUE;
+  real eddington = eddington_limit(radius, dt); 
 
-     //Take the propeller effect into account, by allowing accretion
-     //only to occur if mdot>propeller_limit
-     if (is_binary_component() && eddington>0 && mdot>0 && dt>0) {
-         real f = 1;
+  //Take the propeller effect into account, by allowing accretion
+  //only to occur if mdot>propeller_limit
+  if (is_binary_component() && eddington>0 && mdot>0 && dt>0) {
+    real f = 1;
 
-         real v_wind = get_companion()->wind_velocity();
-         real v_orb  = velocity + get_companion()->get_velocity();
-//       real v2_rel  = sqrt(0.5 * (pow(v_wind, 2) + pow(v_orb, 2)));
-         real v2_rel  = sqrt(pow(v_wind, 2) + pow(v_orb, 2));
-         real propeller_limit = 2.06e-8*f
-                              * pow(pow(10., magnetic_moment()-30), 2)
-            / (v2_rel*pow(rotation_period, 4));               // [Msun/Myr]
+    real v_wind = get_companion()->wind_velocity();
+    real v_orb  = velocity + get_companion()->get_velocity();
+    //       real v2_rel  = sqrt(0.5 * (pow(v_wind, 2) + pow(v_orb, 2)));
+    real v2_rel  = sqrt(pow(v_wind, 2) + pow(v_orb, 2));
+    real propeller_limit = 2.06e-8*f
+      * pow(pow(10., magnetic_moment()-30), 2)
+      / (v2_rel*pow(rotation_period, 4));               // [Msun/Myr]
 
-         // no accterion, neutron star spins too rapidly.
-         if (mdot>propeller_limit*dt)
-	              propellor=FALSE;
-     }
+    // no accterion, neutron star spins too rapidly.
+    if (mdot>propeller_limit*dt)
+      propellor=FALSE;
+  }
 
-     if (DEBUG)
-       cerr<<propellor<<endl;
+  if (DEBUG)
+    cerr<<propellor<<endl;
 
-    return propellor;
+  return propellor;
 }
 
 real neutron_star::moment_of_inertia() {
-     if (DEBUG)
-       cerr<<"neutron_star::moment_of_inertia = "<<endl;
+  if (DEBUG)
+    cerr<<"neutron_star::moment_of_inertia = "<<endl;
 
-     real MR2 = cnsts.parameters(solar_mass)
-              * pow(cnsts.parameters(solar_radius), 2);
-     real inertia = MR2*gyration_radius_sq()*core_mass*pow(radius, 2);
+  real MR2 = cnsts.parameters(solar_mass)
+    * pow(cnsts.parameters(solar_radius), 2);
+  real inertia = MR2*gyration_radius_sq()*core_mass*pow(radius, 2);
 
-     if (DEBUG)
-       cerr << inertia << endl;
+  if (DEBUG)
+    cerr << inertia << endl;
 
   return inertia;
 }
 
 real neutron_star::period_derivative() {
-    if (DEBUG)
-      cerr<<"neutron_star::period_derivative"<<endl;
+  if (DEBUG)
+    cerr<<"neutron_star::period_derivative"<<endl;
 
   real pi2R6_3c3 = cnsts.mathematics(one_third)*pow(cnsts.mathematics(pi), 2)
-                 * pow( pow(cnsts.parameters(solar_radius), 2)
-	         /          cnsts.physics(C), 3);
+    * pow( pow(cnsts.parameters(solar_radius), 2)
+	   /          cnsts.physics(C), 3);
 
   real Bfield = pow(10., magnetic_field);
   real inertia = moment_of_inertia();
 
   real Pdot = 8*pi2R6_3c3*pow(radius, 6)*pow(Bfield, 2)
-                / (inertia*rotation_period);
+    / (inertia*rotation_period);
 
 
-    if (DEBUG)
-      cerr << Pdot << endl;
+  if (DEBUG)
+    cerr << Pdot << endl;
 
   return Pdot;
 }
 
 real neutron_star::spindown_luminosity() {
-     if (DEBUG)
-       cerr<<"neutron_star::spindown_luminosity"<<endl;
+  if (DEBUG)
+    cerr<<"neutron_star::spindown_luminosity"<<endl;
 
-     real L400 = 1;         // Luminosity at 400 Mhz.
-     if (rotation_period>0) {
-       real Pdot = period_derivative();
+  real L400 = 1;         // Luminosity at 400 Mhz.
+  if (rotation_period>0) {
+    real Pdot = period_derivative();
 
-       real argument = Pdot/pow(rotation_period, 3);
+    real argument = Pdot/pow(rotation_period, 3);
 
-       if(argument>0)
-	 L400 = pow(10., 6.63 + ONE_THIRD*log10(argument));
+    if(argument>0)
+      L400 = pow(10., 6.63 + ONE_THIRD*log10(argument));
 
-     }
+  }
      
-     if (DEBUG)
-       cerr<<L400<<endl;
+  if (DEBUG)
+    cerr<<L400<<endl;
 
-     return L400;
+  return L400;
 }
 
 real neutron_star::accretion_luminosity(const real dm,
 					const real dt) {
-    if (DEBUG)
-      cerr<<"neutron_star::accretion_luminosity"<<endl;
+  if (DEBUG)
+    cerr<<"neutron_star::accretion_luminosity"<<endl;
 
-    real L = spindown_luminosity();
+  real L = spindown_luminosity();
 
-    if (dm>0 &&  dt>0) {
-      real dmdt = dm/dt;
-      real GM2_RMyr = cnsts.physics(G)*pow(cnsts.parameters(solar_mass), 2)
-                    / (cnsts.parameters(solar_radius)*cnsts.physics(Myear));
-      L = GM2_RMyr*core_mass*dmdt/radius;
-      L /= cnsts.parameters(solar_luminosity);
-    }
+  if (dm>0 &&  dt>0) {
+    real dmdt = dm/dt;
+    real GM2_RMyr = cnsts.physics(G)*pow(cnsts.parameters(solar_mass), 2)
+      / (cnsts.parameters(solar_radius)*cnsts.physics(Myear));
+    L = GM2_RMyr*core_mass*dmdt/radius;
+    L /= cnsts.parameters(solar_luminosity);
+  }
     
-    if (DEBUG)
-      cerr<<L<<endl;
+  if (DEBUG)
+    cerr<<L<<endl;
 
-    return L;
+  return L;
 }
 
 real neutron_star::fastness_parameter(const real dmdt) {
-    if (DEBUG)
-      cerr<<"neutron_star::fastness_parameter"<<endl;
+  if (DEBUG)
+    cerr<<"neutron_star::fastness_parameter"<<endl;
 
-    real mu30 = pow(10., magnetic_moment()-30);
-    real omega_s = 1.19*pow(mu30, 6./7.)
-                 / (rotation_period*pow(dmdt, 3./7.)*pow(core_mass, 5./7.));
+  real mu30 = pow(10., magnetic_moment()-30);
+  real omega_s = 1.19*pow(mu30, 6./7.)
+    / (rotation_period*pow(dmdt, 3./7.)*pow(core_mass, 5./7.));
 
-    if (DEBUG)
-      cerr<< Starlab::min(1-0.01, Starlab::max(0.1, omega_s))<<endl;
+  if (DEBUG)
+    cerr<< Starlab::min(1-0.01, Starlab::max(0.1, omega_s))<<endl;
 
-    return Starlab::min(1-0.01, Starlab::max(0.1, omega_s));
+  return Starlab::min(1-0.01, Starlab::max(0.1, omega_s));
 }
 
 real neutron_star::dimension_less_accretion_torque(const real dmdt) {
-    if (DEBUG)
-      cerr<<"neutron_star::dimension_less_accretion_torque"<<endl;
+  if (DEBUG)
+    cerr<<"neutron_star::dimension_less_accretion_torque"<<endl;
     
-    real omega_s = fastness_parameter(dmdt);
-    real n_omega = ((7./6.) - (4./3.)*omega_s + (1./9)*pow(omega_s, 2))
-                 / (1-omega_s);
+  real omega_s = fastness_parameter(dmdt);
+  real n_omega = ((7./6.) - (4./3.)*omega_s + (1./9)*pow(omega_s, 2))
+    / (1-omega_s);
     
-    if (DEBUG)
-      cerr<<n_omega<<endl;
+  if (DEBUG)
+    cerr<<n_omega<<endl;
     
-    return n_omega;
+  return n_omega;
 }
 
 
 real neutron_star::pulsar_propeller_torque(const real dm,
                                            const real dt) {
-     if (DEBUG)
-       cerr<<"neutron_star::pulsar_propeller_torque"<<endl;
+  if (DEBUG)
+    cerr<<"neutron_star::pulsar_propeller_torque"<<endl;
 
-//Pulsar torque due to drag should be taken into account.
-// the prescription below is for accreting pulsars, not propellering ones.
+  //Pulsar torque due to drag should be taken into account.
+  // the prescription below is for accreting pulsars, not propellering ones.
     
-    real dmEdd = 1;
-    real dmdt=1;
-    if (dm>0 &&  dt>0) {
-      dmdt = dm/dt;
-      real Eddington = eddington_limit(radius, 1.0); 
-      //real Eddington = 1.5e-08*cnsts.parameters(solar_radius)*radius; // [Msun/Myr]
-      dmEdd = dmdt/Eddington;
-    }
+  real dmEdd = 1;
+  real dmdt=1;
+  if (dm>0 &&  dt>0) {
+    dmdt = dm/dt;
+    real Eddington = eddington_limit(radius, 1.0); 
+    //real Eddington = 1.5e-08*cnsts.parameters(solar_radius)*radius; // [Msun/Myr]
+    dmEdd = dmdt/Eddington;
+  }
     
-    real n_omega = dimension_less_accretion_torque(dmdt);
-    real mu30 = pow(10., magnetic_moment()-30);
+  real n_omega = dimension_less_accretion_torque(dmdt);
+  real mu30 = pow(10., magnetic_moment()-30);
 
-    real Pdot = -7.2 * n_omega * pow(mu30, 2./7.)
-              * pow(dmEdd, 6./7.) * pow(rotation_period, 2); // [s/Myr]
-    Pdot = Starlab::max(0., Pdot);
+  real Pdot = -7.2 * n_omega * pow(mu30, 2./7.)
+    * pow(dmEdd, 6./7.) * pow(rotation_period, 2); // [s/Myr]
+  Pdot = Starlab::max(0., Pdot);
 
-    real delta_P = rotation_period + Pdot*dt;
+  real delta_P = rotation_period + Pdot*dt;
     
-    if (DEBUG)
-      cerr<<delta_P<<endl;
+  if (DEBUG)
+    cerr<<delta_P<<endl;
 
-    return delta_P;
+  return delta_P;
 }
 
 real neutron_star::magnetic_moment() {
   
-     real r3 = pow(radius*cnsts.parameters(solar_radius), 3);
-               // log r^3 in [cm]
+  real r3 = pow(radius*cnsts.parameters(solar_radius), 3);
+  // log r^3 in [cm]
 
-     return magnetic_field + log10(r3);
+  return magnetic_field + log10(r3);
 }
 
 // Spontanious magnetic field decay.
@@ -831,10 +834,10 @@ real neutron_star::magnetic_moment() {
 real neutron_star::magnetic_field_decay(const real log_B,
 					const real dt_tau=0) {
   
-     real B0 = pow(10., log_B);
-     real B1 = Starlab::max(1.,  B0 / exp(dt_tau));
+  real B0 = pow(10., log_B);
+  real B1 = Starlab::max(1.,  B0 / exp(dt_tau));
 
-     return log10(B1);
+  return log10(B1);
 }
 
 
@@ -845,19 +848,19 @@ real neutron_star::magnetic_field_decay(const real log_B,
 real neutron_star::magnetic_field_decay(const real delta_m,
                                         const real log_B,
 					const real dt=0) {
-     real dmEdd = 1.0;
-     if (delta_m>0 &&  dt>0) {
-       real dmdt = delta_m/dt;
-       real Eddington = eddington_limit(radius, 1.0); 
+  real dmEdd = 1.0;
+  if (delta_m>0 &&  dt>0) {
+    real dmdt = delta_m/dt;
+    real Eddington = eddington_limit(radius, 1.0); 
 
-       dmEdd = dmdt/Eddington;
-     }
+    dmEdd = dmdt/Eddington;
+  }
      
-     real B1 = magnetic_field_strength(core_mass, dmEdd);
-     real B2 = magnetic_field_strength(core_mass+delta_m, dmEdd);
-     real delta_B = Starlab::min(0.0, B2-B1);
+  real B1 = magnetic_field_strength(core_mass, dmEdd);
+  real B2 = magnetic_field_strength(core_mass+delta_m, dmEdd);
+  real delta_B = Starlab::min(0.0, B2-B1);
 
-     return log_B + delta_B;
+  return log_B + delta_B;
 }
 
 //The lineair interpolation is from :
@@ -870,118 +873,118 @@ real neutron_star::magnetic_field_decay(const real delta_m,
 real neutron_star::magnetic_field_strength(const real ns_mass,
 					   const real dmEdd = 1) {
 
-      real delta_BBo = -0.2 * log10(dmEdd);
-      real log_dm    = log10(ns_mass - birth_mass + 1.0e-10);
-      log_dm        -= Starlab::max(0.0, -0.5*(1+log10(dmEdd)));
+  real delta_BBo = -0.2 * log10(dmEdd);
+  real log_dm    = log10(ns_mass - birth_mass + 1.0e-10);
+  log_dm        -= Starlab::max(0.0, -0.5*(1+log10(dmEdd)));
 
-      real log_dm_min  = -8.0;
-      real log_dm_max  = -2;
-      real log_BBo_min = -5.0;
-      real log_BBo_max =  0.0;
+  real log_dm_min  = -8.0;
+  real log_dm_max  = -2;
+  real log_BBo_min = -5.0;
+  real log_BBo_max =  0.0;
 
-      if (log_dm>-3)
-	        return Starlab::max(0.0, log_BBo_min + delta_BBo);
-      if (log_dm<-7.5)
-	        return log_BBo_max;
+  if (log_dm>-3)
+    return Starlab::max(0.0, log_BBo_min + delta_BBo);
+  if (log_dm<-7.5)
+    return log_BBo_max;
 
-      if(log_dm>=-3.5) {
-          log_dm_min  = -3.5;
-          log_dm_max  = -3.0;
-          log_BBo_min = -4.5;
-          log_BBo_max = -4.9;
-      }else if(log_dm>=-4.0) {
-          log_dm_min  = -4.0;
-          log_dm_max  = -3.5;
-          log_BBo_min = -3.1;
-          log_BBo_max = -4.5;
-      }else if(log_dm>=-4.5) {
-          log_dm_min  = -4.5;
-          log_dm_max  = -4.0;
-          log_BBo_min = -2.4;
-          log_BBo_max = -3.1;
-      }else if(log_dm>=-5.0) {
-          log_dm_min  = -5.0;
-          log_dm_max  = -4.5;
-          log_BBo_min = -2.0;
-          log_BBo_max = -2.4;
-      }else if(log_dm>=-5.5) {
-          log_dm_min  = -5.5;
-          log_dm_max  = -5.0;
-          log_BBo_min = -1.5;
-          log_BBo_max = -2.0;
-      }else if(log_dm>=-6.0) {
-          log_dm_min  = -6.0;
-          log_dm_max  = -5.5;
-          log_BBo_min = -1.1;
-          log_BBo_max = -1.5;
-      }else if(log_dm>=-6.5) {
-          log_dm_min  = -6.5;
-          log_dm_max  = -6.0;
-          log_BBo_min = -0.7;
-          log_BBo_max = -1.1;
-      }else if(log_dm>=-7.0) {
-          log_dm_min  = -7.0;
-          log_dm_max  = -6.5;
-          log_BBo_min = -0.4;
-          log_BBo_max = -0.7;
-      }else if(log_dm>=-7.5) {
-          log_dm_min  = -7.5;
-          log_dm_max  = -7.0;
-          log_BBo_min =  0.0;
-          log_BBo_max = -0.4;
-}
+  if(log_dm>=-3.5) {
+    log_dm_min  = -3.5;
+    log_dm_max  = -3.0;
+    log_BBo_min = -4.5;
+    log_BBo_max = -4.9;
+  }else if(log_dm>=-4.0) {
+    log_dm_min  = -4.0;
+    log_dm_max  = -3.5;
+    log_BBo_min = -3.1;
+    log_BBo_max = -4.5;
+  }else if(log_dm>=-4.5) {
+    log_dm_min  = -4.5;
+    log_dm_max  = -4.0;
+    log_BBo_min = -2.4;
+    log_BBo_max = -3.1;
+  }else if(log_dm>=-5.0) {
+    log_dm_min  = -5.0;
+    log_dm_max  = -4.5;
+    log_BBo_min = -2.0;
+    log_BBo_max = -2.4;
+  }else if(log_dm>=-5.5) {
+    log_dm_min  = -5.5;
+    log_dm_max  = -5.0;
+    log_BBo_min = -1.5;
+    log_BBo_max = -2.0;
+  }else if(log_dm>=-6.0) {
+    log_dm_min  = -6.0;
+    log_dm_max  = -5.5;
+    log_BBo_min = -1.1;
+    log_BBo_max = -1.5;
+  }else if(log_dm>=-6.5) {
+    log_dm_min  = -6.5;
+    log_dm_max  = -6.0;
+    log_BBo_min = -0.7;
+    log_BBo_max = -1.1;
+  }else if(log_dm>=-7.0) {
+    log_dm_min  = -7.0;
+    log_dm_max  = -6.5;
+    log_BBo_min = -0.4;
+    log_BBo_max = -0.7;
+  }else if(log_dm>=-7.5) {
+    log_dm_min  = -7.5;
+    log_dm_max  = -7.0;
+    log_BBo_min =  0.0;
+    log_BBo_max = -0.4;
+  }
 
 
-      real log_B = lineair_interpolation(log_dm, log_dm_min, log_dm_max,
-                                               log_BBo_min, log_BBo_max);
-      log_B += delta_BBo;
+  real log_B = lineair_interpolation(log_dm, log_dm_min, log_dm_max,
+				     log_BBo_min, log_BBo_max);
+  log_B += delta_BBo;
 
-      return Starlab::min(0.0, log_B);
+  return Starlab::min(0.0, log_B);
 }
 
 real neutron_star::pulsar_spin_up(const real dm, const real dt) {
 
-     if (!is_binary_component())
-       return rotation_period;
+  if (!is_binary_component())
+    return rotation_period;
 
-     real dmEdd = 1.0;
-     if (dm>0 &&  dt>0) {
-       real dmdt = dm/dt;
-       real Eddington = eddington_limit(radius, 1.0); 
-       dmEdd = dmdt/Eddington;
-     }
+  real dmEdd = 1.0;
+  if (dm>0 &&  dt>0) {
+    real dmdt = dm/dt;
+    real Eddington = eddington_limit(radius, 1.0); 
+    dmEdd = dmdt/Eddington;
+  }
      
-     real B = pow(10., magnetic_field);
-     real P_eq = 0.0019*pow(B/1.e+9, 6./7.)
-               / (pow(core_mass/1.4, 5./7.)*pow(dmEdd, 3./7.));  // seconds
+  real B = pow(10., magnetic_field);
+  real P_eq = 0.0019*pow(B/1.e+9, 6./7.)
+    / (pow(core_mass/1.4, 5./7.)*pow(dmEdd, 3./7.));  // seconds
 
-     return Starlab::min(rotation_period, P_eq);
+  return Starlab::min(rotation_period, P_eq);
 }
 
 real neutron_star::pulsar_spin_down(const real dt) {
-   if (DEBUG)
-     cerr << "enter pulsar_spin_down( dt="<<dt<<")"<<endl;
+  if (DEBUG)
+    cerr << "enter pulsar_spin_down( dt="<<dt<<")"<<endl;
 
-   real B = pow(10., magnetic_field);
-   real P0 = rotation_period;
+  real B = pow(10., magnetic_field);
+  real P0 = rotation_period;
 
-   real Pdot = pow(B/3.2e+19, 2)/P0;
-   real delta_P = Pdot * dt * cnsts.physics(Myear);
+  real Pdot = pow(B/3.2e+19, 2)/P0;
+  real delta_P = Pdot * dt * cnsts.physics(Myear);
 
-   return rotation_period + delta_P;
+  return rotation_period + delta_P;
 }
 
 bool neutron_star::dead_pulsar() {
 
-   bool dead = FALSE;
+  bool dead = FALSE;
 
-   real B = pow(10., magnetic_field);
-   real Pdeath = sqrt(B/0.17e+12);
+  real B = pow(10., magnetic_field);
+  real Pdeath = sqrt(B/0.17e+12);
 
-   if (rotation_period >=Pdeath)
-          dead = TRUE;
+  if (rotation_period >=Pdeath)
+    dead = TRUE;
 
-   return dead;
+  return dead;
 }
 
 real neutron_star::gyration_radius_sq() {

@@ -9,9 +9,9 @@
 ##=======================================================#               /|\
 #
 ##
-##  src/evolve/single/support/Makefile
+##  src/evolve/triple/util/Makefile
 ##.............................................................................
-##    version 2.1:	March 1994	Simon F. Portegies Zwart
+##    version 1.0:	Okt 1994	Simon F. Portegies Zwart
 ##.............................................................................
 ##
 
@@ -29,13 +29,15 @@ DEPEND_LIBS	= $(LIB)/libsstar.a  $(LIB)/libdstar.a  $(LIB)/libhdyn.a \
 		  $(STARLAB_PGPLOTINC)/libpgplot.a 
 
 EXECUTABLES  = semi_to_period	# roche # *don't* include roche routinely...
+
 OBJECT_FILES = dstar_to_node.o semi_to_period.o
+
 
 LIBRARY = 
 LIB_DEP = 
 
 LIBRARY = libdstar.a
-LIB_DEP = .$(LIBRARY)
+#LIB_DEP = .$(LIBRARY)
 
 roche:	roche.o
 	$(STARLAB_FORTRAN_COMPILE) $(CFLAGS) \
@@ -56,7 +58,7 @@ include $(STARLAB_PATH)/inc/Makefile.worker.inc
 
 ##=======================================================================//
 ##  +---------------+        _\|/_        +------------------------------\\
-##  |  the end of:  |         /|\        src/dyn/evolve/single/support/Makefile
+##  |  the end of:  |         /|\         | src/dyn/evolve/triple/util/Makefile
 ##  +---------------+                     +------------------------------//
 ##========================= STAREV =====================================\\
 

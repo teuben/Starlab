@@ -23,7 +23,7 @@ CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC_STAR) -I$(INC) \
 #DEPEND_LIBS	= $(LIB)/libstar.a $(LIB)/libsdyn3.a $(LIB)/libhdyn.a \
 #		  $(LIB)/libdyn.a $(LIB)/libnode.a $(LIB)/libnode.a
 LIBFLAGS        = -L$(LIB) -L$(STARLAB_LIB) -lsstar \
-	          -lhdyn -l_dyn_ -ldyn -lnode \
+	          -lhdyn -l_dyn_ -ldyn -lnode -lsstar \
 	          -lstd -llux $(STARLAB_POSIX_LIB) \
 	          $(STARLAB_X11LIB) $(STARLAB_XLIB) -lm
 DEPEND_LIBS     = $(LIB)/libstd.a $(LIB)/libnode.a $(LIB)/libdyn.a

@@ -7,7 +7,7 @@
 #include "main_sequence.h"
 
 hyper_giant::hyper_giant(main_sequence & m) : single_star(m) {
-   
+
         delete &m;
 
         real m_tot = get_total_mass();
@@ -46,11 +46,15 @@ void hyper_giant::instantaneous_element() {
 
 void hyper_giant::evolve_element(const real end_time) {
 
+  //   cerr << "void hyper_giant::evolve_element(T="<<end_time<<")"<<endl;
+  //   cerr << identity<<" "<<luminosity<<" "<<radius<<endl;
+
         real dt = end_time - current_time;
         current_time = end_time;
         relative_age += dt;
 
         if (relative_age>next_update_age) {
+	  cerr << "to neutron star" << endl;
            create_remnant();
            return;
         }
@@ -96,7 +100,6 @@ real hyper_giant::hyper_giant_core_mass() {
   real m_core = Starlab::min(m_core_TY, m_core_max);
   if (relative_mass >= cnsts.parameters(maximum_main_sequence))
       m_core = get_total_mass();
-
 
 //	// Extra enhanced mass loss for stars with M>80 Msun.
 //	// to make low-mass compact objects. (SPZ+GN:24 Sep 1998)
