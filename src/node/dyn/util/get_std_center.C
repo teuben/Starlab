@@ -19,7 +19,8 @@
 
 #ifndef TOOLBOX
 
-int get_std_center(dyn *b, vector& pos, vector& vel)
+int get_std_center(dyn *b, vector& pos, vector& vel,
+		   bool verbose)			// default = false
 {
     int which = 0;
 
@@ -28,11 +29,12 @@ int get_std_center(dyn *b, vector& pos, vector& vel)
     if (find_qmatch(b->get_dyn_story(), "density_center_pos")) {
 
 	if (getrq(b->get_dyn_story(), "density_center_time")
-		!= b->get_system_time())
+		!= b->get_system_time()) {
 
-	    warning("get_std_center: neglecting out-of-date density center");
+	    if (verbose)
+	      warning("get_std_center: neglecting out-of-date density center");
 
-	else {
+	} else {
 
 	    // Assume that density_center_vel exists if density_center_pos
 	    // is OK.
@@ -51,11 +53,12 @@ int get_std_center(dyn *b, vector& pos, vector& vel)
 	    // Try modified center of mass instead.
 
 	    if (getrq(b->get_dyn_story(), "mcom_time")
-		    != b->get_system_time())
+		    != b->get_system_time()) {
 
-		warning("get_std_center: neglecting out-of-date mcom");
+		if (verbose)
+		    warning("get_std_center: neglecting out-of-date mcom");
 
-	    else {
+	    } else {
 
 		pos = getvq(b->get_dyn_story(), "mcom_pos");
 		vel = getvq(b->get_dyn_story(), "mcom_vel");
@@ -77,10 +80,11 @@ int get_std_center(dyn *b, vector& pos, vector& vel)
     return which;
 }
 
-int get_std_center(dyn *b)
+int get_std_center(dyn *b,
+		   bool verbose)		// default = false
 {
     vector pos, vel;
-    return get_std_center(b, pos, vel);
+    return get_std_center(b, pos, vel, verbose);
 }
 
 #else
