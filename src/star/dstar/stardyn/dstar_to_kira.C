@@ -277,7 +277,8 @@ local void delete_double(hdyn *b) {			// b is binary CM
 
 local void delete_double(hdyn *b,		    // b is binary CM
 			 bool * update_dynamics,
-			 bool allow_evolution_before_termination)
+			 bool allow_evolution_before_termination,
+			 bool full_dump = false)
 {
     if (b->get_oldest_daughter()->get_kepler() == NULL) {
 	cerr << "Deleting double without a kepler pointer"<<endl;
@@ -368,7 +369,7 @@ local void delete_double(hdyn *b,		    // b is binary CM
 
 	cerr << "merging nodes..." << endl << flush;
       
-	od->merge_nodes(bcoll);
+	od->merge_nodes(bcoll, full_dump);
 	update_dynamics[0] = true;
       
 	// Components are not deleted in merge_nodes.  Do this now.
@@ -474,8 +475,9 @@ local void delete_double(hdyn *b,		    // b is binary CM
 //
 //------------------------------------------------------------------------
 
-bool create_or_delete_binary(hdyn *bi,		    // pointer to parent node
-			     bool * update_dynamics)
+bool create_or_delete_binary(hdyn *bi,		      // pointer to parent node
+			     bool * update_dynamics,
+			     bool full_dump = false)  // default = false
 {
 // Two "update_dynamics" flags may be modified (by delete_double):
 //
@@ -501,7 +503,8 @@ bool create_or_delete_binary(hdyn *bi,		    // pointer to parent node
 	bool allow_evolution_before_termination = false;
 
 	delete_double(bi, update_dynamics,
-		      allow_evolution_before_termination);
+		      allow_evolution_before_termination,
+		      full_dump);
 
 	//bi->get_starbase()->get_seba_counters()->del_dstar++;
 
@@ -534,7 +537,8 @@ bool binary_is_merged(dyn* bi)
     return false;
 }
 
-bool binary_evolution(hdyn *b)		// root node
+bool binary_evolution(hdyn *b,		// root node
+		      bool full_dump)	// default = false
 
 // Return value is true iff a system reinitialization will be needed
 // after returning to kira.
@@ -553,7 +557,8 @@ bool binary_evolution(hdyn *b)		// root node
 
 	    hdyn *  parent = bi->get_parent();
 
-	    create_or_delete_binary(bi->get_parent(), update_dynamics);
+	    create_or_delete_binary(bi->get_parent(),
+				    update_dynamics, full_dump);
 
 	    if (REPORT_ADD_DOUBLE) {
 	        cerr << "new double star created at time "
@@ -604,7 +609,7 @@ bool binary_evolution(hdyn *b)		// root node
 
 			cerr << "merging nodes..." << endl;
 
-			bi->merge_nodes(bcoll);
+			bi->merge_nodes(bcoll, full_dump);
 
 			// Components are not deleted by merge_nodes.  Do this
 			// here, and adjust perturber lists if necessary.
@@ -656,7 +661,8 @@ bool binary_evolution(hdyn *b)		// root node
 		// (SPZ:8/02/1998)
 		// delete_double(bi->get_parent());
 
-		create_or_delete_binary(bi->get_parent(), update_dynamics);
+		create_or_delete_binary(bi->get_parent(),
+					update_dynamics, full_dump);
 	    }
 	}
     }

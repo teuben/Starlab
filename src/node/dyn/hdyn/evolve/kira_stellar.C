@@ -154,7 +154,7 @@ bool evolve_stars(hdyn* b,
 	if (b->get_kira_diag()->report_stellar_evolution)
 	    print_start_evolution("Binary", b->get_system_time());
 
-	correct_dynamics |= binary_evolution(b);
+	correct_dynamics |= binary_evolution(b, full_dump);
 
 	if (b->get_kira_diag()->report_stellar_evolution)
 	    print_end_evolution("Binary", correct_dynamics);
