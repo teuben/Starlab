@@ -1,0 +1,140 @@
+ecc = 0
+
+Input from SeBa
+time = 0,  semi = 100,  ecc = 0,  btpe = 2,  mttpe = 0
+    pid = 0,  ptype = 3,  pmass = 13.1,  pradius = 4.37974,  ptemp = 4.45797,  pmcore = 0.01
+    sid = 1,  stype = 3,  smass = 9.8,  sradius = 3.71166,  stemp = 4.39663,  smcore = 0.01
+ecc = 0
+Draw roche lobes or otherwise
+Binary, draw Roche lobes
+L1 = 0.529832,  q = 0.748092,  Rlp = 0.404279,  Rls = 0.354088
+Summary: 
+0 100 0	 3 13.1 0.0437974 0.01	 3 9.8 0.0371166 0.01
+
+Input from SeBa
+time = 14.192,  semi = 101.762,  ecc = 0,  btpe = 2,  mttpe = 0
+    pid = 0,  ptype = 5,  pmass = 12.7088,  pradius = 12.2548,  ptemp = 4.31605,  pmcore = 3.08499
+    sid = 1,  stype = 3,  smass = 9.79461,  sradius = 5.35858,  stemp = 4.35338,  smcore = 0.01
+ecc = 0
+Draw roche lobes or otherwise
+Binary, draw Roche lobes
+L1 = 0.52678,  q = 0.770695,  Rlp = 0.401659,  Rls = 0.356606
+Summary: 
+14.192 101.762 0	 5 12.7088 0.120426 3.08499	 3 9.79461 0.052658 0.01
+
+Input from SeBa
+time = 14.2085,  semi = 101.777,  ecc = 0,  btpe = 3,  mttpe = 3
+    pid = 0,  ptype = 5,  pmass = 12.7057,  pradius = 40.9264,  ptemp = 4.0528,  pmcore = 3.09063
+    sid = 1,  stype = 3,  smass = 9.79457,  sradius = 5.36202,  stemp = 4.3533,  smcore = 0.01
+ecc = 0
+Draw roche lobes or otherwise
+Binary, draw Roche lobes
+L1 = 0.526755,  q = 0.77088,  Rlp = 0.401638,  Rls = 0.356626
+Summary: 
+14.2085 101.777 0	 5 12.7057 0.402118 3.09063	 3 9.79457 0.052684 0.01
+
+Input from SeBa
+time = 14.2207,  semi = 421.106,  ecc = 0,  btpe = 2,  mttpe = 3
+    pid = 0,  ptype = 10,  pmass = 3.09478,  pradius = 0.566582,  ptemp = 4.90839,  pmcore = 0
+    sid = 1,  stype = 3,  smass = 19.3351,  sradius = 6.58804,  stemp = 4.50951,  smcore = 0.01
+ecc = 0
+Draw roche lobes or otherwise
+Binary, draw Roche lobes
+L1 = 0.678304,  q = 0.16006,  Rlp = 0.236581,  Rls = 0.53971
+Summary: 
+14.2207 421.106 0	 10 3.09478 0.00134546 0	 3 19.3351 0.0156446 0.01
+
+Input from SeBa
+time = 15.9157,  semi = 454.278,  ecc = 0,  btpe = 3,  mttpe = 3
+    pid = 0,  ptype = 11,  pmass = 2.24032,  pradius = 110.139,  ptemp = 3.65895,  pmcore = 2.01161
+    sid = 1,  stype = 3,  smass = 19.3889,  sradius = 7.50293,  stemp = 4.4973,  smcore = 0.01
+ecc = 0
+Draw roche lobes or otherwise
+Binary, draw Roche lobes
+L1 = 0.70584,  q = 0.115547,  Rlp = 0.215608,  Rls = 0.566612
+Summary: 
+15.9157 454.278 0	 11 2.24032 0.242448 2.01161	 3 19.3889 0.0165162 0.01
+
+Input from SeBa
+time = 16.1041,  semi = 523.199,  ecc = 0.0379517,  btpe = 2,  mttpe = 3
+    pid = 0,  ptype = 16,  pmass = 1.26192,  pradius = 2.01032e-05,  ptemp = 6.91502,  pmcore = 1.26192
+    sid = 1,  stype = 3,  smass = 19.5053,  sradius = 7.67153,  stemp = 4.49604,  smcore = 0.01
+ecc = 0.0379517
+Draw roche lobes or otherwise
+Binary, draw Roche lobes
+L1 = 0.750624,  q = 0.0646963,  Rlp = 0.18187,  Rls = 0.61137
+Summary: 
+16.1041 523.199 0.0379517	 16 1.26192 3.84236e-08 1.26192	 3 19.5053 0.0146627 0.01
+
+Input from SeBa
+time = 19.7194,  semi = 555.662,  ecc = 0.0379517,  btpe = 2,  mttpe = 3
+    pid = 0,  ptype = 17,  pmass = 1.26192,  pradius = 2.01032e-05,  ptemp = 6.57231,  pmcore = 1.26192
+    sid = 1,  stype = 5,  smass = 18.292,  sradius = 16.6072,  stemp = 4.38785,  smcore = 5.64544
+ecc = 0.0379517
+Draw roche lobes or otherwise
+Binary, draw Roche lobes
+L1 = 0.745938,  q = 0.0689875,  Rlp = 0.185381,  Rls = 0.606638
+Summary: 
+19.7194 555.662 0.0379517	 17 1.26192 3.61788e-08 1.26192	 5 18.292 0.0298872 5.64544
+
+Input from SeBa
+time = 19.7287,  semi = 555.143,  ecc = 0,  btpe = 3,  mttpe = 4
+    pid = 0,  ptype = 16,  pmass = 1.26192,  pradius = 2.01032e-05,  ptemp = 3.80172,  pmcore = 1.26192
+    sid = 1,  stype = 5,  smass = 18.2821,  sradius = 336.75,  stemp = 3.73407,  smcore = 5.65693
+ecc = 0
+Draw roche lobes or otherwise
+Binary, draw Roche lobes
+L1 = 0.745898,  q = 0.0690249,  Rlp = 0.185411,  Rls = 0.606598
+Summary: 
+19.7287 555.143 0	 16 1.26192 3.62127e-08 1.26192	 5 18.2821 0.6066 5.65693
+
+Input from SeBa
+time = 19.7287,  semi = 1.97529,  ecc = 0,  btpe = 2,  mttpe = 4
+    pid = 0,  ptype = 18,  pmass = 1.26193,  pradius = 2.01032e-05,  ptemp = 3.80172,  pmcore = 1.26192
+    sid = 1,  stype = 10,  smass = 5.65693,  sradius = 0.856013,  stemp = 4.99116,  smcore = 0
+ecc = 0
+Draw roche lobes or otherwise
+Binary, draw Roche lobes
+L1 = 0.648617,  q = 0.223077,  Rlp = 0.259424,  Rls = 0.51132
+Summary: 
+19.7287 1.97529 0	 18 1.26193 1.01773e-05 1.26192	 10 5.65693 0.433361 0
+
+Input from SeBa
+time = 20.4828,  semi = 2.64845,  ecc = 0,  btpe = 3,  mttpe = 3
+    pid = 0,  ptype = 16,  pmass = 1.26192,  pradius = 2.01032e-05,  ptemp = 6.61671,  pmcore = 1.26192
+    sid = 1,  stype = 11,  smass = 3.87922,  sradius = 3.09341,  stemp = 4.608,  smcore = 3.67701
+ecc = 0
+Draw roche lobes or otherwise
+Binary, draw Roche lobes
+L1 = 0.613098,  q = 0.325303,  Rlp = 0.287129,  Rls = 0.478225
+Summary: 
+20.4828 2.64845 0	 16 1.26192 7.59055e-06 1.26192	 11 3.87922 1.16801 3.67701
+
+Input from SeBa
+time = 20.5666,  semi = 27.0805,  ecc = 0.917772,  btpe = 2,  mttpe = 3
+    pid = 0,  ptype = 17,  pmass = 1.26198,  pradius = 2.01029e-05,  ptemp = 6.91509,  pmcore = 1.26198
+    sid = 1,  stype = 17,  smass = 1.3134,  sradius = 1.98371e-05,  stemp = 6.91454,  smcore = 1.3134
+ecc = 0.917772
+Draw roche lobes or otherwise
+Binary, draw Roche lobes
+L1 = 0.504111,  q = 0.96085,  Rlp = 0.375468,  Rls = 0.382383
+Summary: 
+20.5666 27.0805 0.917772	 17 1.26198 7.42339e-07 1.26198	 17 1.3134 7.32523e-07 1.3134
+
+Input from SeBa
+time = 100,  semi = 27.0805,  ecc = 0.917772,  btpe = 2,  mttpe = 3
+    pid = 0,  ptype = 17,  pmass = 1.26198,  pradius = 2.01029e-05,  ptemp = 6.91509,  pmcore = 1.26198
+    sid = 1,  stype = 18,  smass = 1.3134,  sradius = 1.98371e-05,  stemp = 6.91454,  smcore = 1.3134
+ecc = 0.917772
+Draw roche lobes or otherwise
+Binary, draw Roche lobes
+L1 = 0.504111,  q = 0.96085,  Rlp = 0.375468,  Rls = 0.382383
+Summary: 
+100 27.0805 0.917772	 17 1.26198 7.42339e-07 1.26198	 18 1.3134 7.32523e-07 1.3134
+
+Input from SeBa
+time = 7.43586,  semi = 8.64438,  ecc = 1.24812e+10,  btpe = 1108505728,  mttpe = 1075923436
+    pid = 1075923436,  ptype = 134669984,  pmass = 3.39519e-313,  pradius = 5.47188e-270,  ptemp = 2.00102e+10,  pmcore = 2.00718e+10
+    sid = -1073745464,  stype = 1107773996,  smass = 5.47144e-270,  sradius = 8.64438,  stemp = -2.30162e-39,  smcore = 9.01956e-314
+ecc = 1.24812e+10
+Did not pass if statement
