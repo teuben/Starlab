@@ -228,7 +228,7 @@ main(int argc, char ** argv)
 	}            
 
     if (n_zones <= 1) n_zones = N_DEFAULT;
-    PRC(option); PRC(r_max); PRL(n_zones);
+    cerr << "radial_profile: "; PRC(option); PRC(r_max); PRL(n_zones);
 
     dyn *b;
     while (b = get_dyn()) {
