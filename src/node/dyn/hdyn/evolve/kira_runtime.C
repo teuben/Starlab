@@ -636,6 +636,17 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 		b->get_kira_options()->use_perturbed_list
 		    = get_value(s, DEFAULT_USE_PERTURBED_LIST);
 
+	    else if ((s = strstr(line, "max_slow_factor"))
+		     || (s = strstr(line, "max_slow_f")))
+
+		b->set_max_slow_factor(get_value(s, DEFAULT_MAX_SLOW_FACTOR));
+
+	    else if ((s = strstr(line, "max_slow_perturbation"))
+		     || (s = strstr(line, "max_slow_p")))
+
+		b->set_max_slow_perturbation(get_value(s,
+					     DEFAULT_MAX_SLOW_PERTURBATION));
+
 	}
 
 	file.close();

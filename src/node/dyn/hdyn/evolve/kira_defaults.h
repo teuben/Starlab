@@ -14,7 +14,7 @@
 #define	DEFAULT_DT_LOG				1.0
 #define	DEFAULT_DT_SSTAR			0.015625
 
-// Used in evolve/kira_runtime.C and util/kira_options.C:
+// Used in util/kira_options.C and evolve/kira_runtime.C:
 
 #define DEFAULT_PERTURBER_CRITERION		2	// hybrid
 
@@ -46,3 +46,9 @@
 #define DEFAULT_GRAPE_LAST_CPU			0.0
 
 #define DEFAULT_USE_PERTURBED_LIST		true
+
+// Used in util/hdyn_io.C and evolve/kira_runtime.C:
+
+#define DEFAULT_MAX_SLOW_FACTOR			1	// suppress
+#define DEFAULT_MAX_SLOW_PERTURBATION		1.e-3
+#define DEFAULT_MAX_SLOW_PERTURBATION_SQ	1.e-6	// keep consistent!

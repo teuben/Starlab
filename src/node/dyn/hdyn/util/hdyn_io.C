@@ -12,6 +12,7 @@
 
 #include "hdyn.h"
 #include "util_io.h"
+#include "../evolve/kira_defaults.h"
 
 #ifndef TOOLBOX
 
@@ -48,11 +49,9 @@ real hdyn::unpert_step_limit	= 1;
 
 real hdyn::scaled_stripping_radius = -1;
 
-int hdyn::max_slow_factor = 1;			// default is to suppress slow
-						// motion, for now
-real hdyn::max_slow_perturbation = 1.e-4;	// should be tied to parameters
-						// for unperturbed motion
-real hdyn::max_slow_perturbation_sq = 1.e-8;
+int hdyn::max_slow_factor = DEFAULT_MAX_SLOW_FACTOR;
+real hdyn::max_slow_perturbation = DEFAULT_MAX_SLOW_PERTURBATION;
+real hdyn::max_slow_perturbation_sq = DEFAULT_MAX_SLOW_PERTURBATION_SQ;
 
 
 void check_sanity_of_timestep(xreal & time, real & timestep)

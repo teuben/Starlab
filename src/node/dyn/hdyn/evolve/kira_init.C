@@ -238,6 +238,9 @@ local void set_runtime_params(hdyn *b, bool verbose,
 	int kappa_max = (int) pow(2, max_slow);
 	cerr << "Setting maximum slowdown factor = " << kappa_max << endl;
 	b->set_max_slow_factor(kappa_max);
+	if (kappa_max > 1)
+	    cerr << "Maximum slow perturbation = "
+		 << b->get_max_slow_perturbation() << endl;
     }
 }
 
