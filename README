@@ -126,8 +126,13 @@ GRAPE SYSTEMS
   by default build a system without GRAPE acceleration.
 
 - If you change any of the scripts in $STARLAB_PATH/local (e.g. to
-  use a different GRAPE library), you will have to rerun configure in
-  order for the changes to find their way into the relevant Makefiles.
+  change the name or location of the GRAPE library ), you will have to
+  rerun configure in order for the changes to find their way into the
+  relevant Makefiles.  Simply updating a library does not require
+  reconfiguration, but note that (for now) make will not automatically
+  detect the change, so you will have to explicitly rebuild all GRAPE-
+  dependent programs (kira, sys_stats, scale, etc.).  It is probably
+  simplest to use sremake to accomplish this (see below).
   
 
 PROGRAMMERS
