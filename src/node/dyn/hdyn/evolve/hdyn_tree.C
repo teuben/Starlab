@@ -72,7 +72,8 @@ local void init_predictor_tree(hdyn * b)
 }
 
 // synchronize_branch:  Synchronize parent and sister nodes up to, but
-//                      not including, the specified ancestor.
+//                      not including, the specified ancestor (so the
+//			ancestor node is synchronized....).
 
 local void synchronize_branch(hdyn * bi, hdyn * ancestor)
 {
@@ -577,7 +578,9 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 		}
 
 		cerr << endl;
-		plot_stars(bj);
+		// plot_stars(bj);	// *** may cause problems in code
+					// *** as of 8/03 (maybe bug in
+					// *** perturber lists...)
 	    }
 
 	} else {
@@ -590,8 +593,13 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     // Make sure bi and bj are up to date.
 
+//     cerr << 1 << endl;
+//     print_recalculated_energies(bi->get_root());
 
     predict_loworder_all(bi->get_root(), bi->get_system_time());
+
+//     cerr << 2 << endl;
+//     print_recalculated_energies(bi->get_root());
 
     // print_recalculated_energies(bi->get_root());
     // pp3((bi->get_root()), cerr);
@@ -601,6 +609,9 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     bi->synchronize_node();
     bj->synchronize_node();
+
+//     cerr << 3 << endl;
+//     print_recalculated_energies(bi->get_root());
 
     if (full_dump) {
 
@@ -640,28 +651,35 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     create_binary_from_toplevel_nodes(bi, bj);		// --> (bj, bi)
 
+//     cerr << 4 << endl;
+//     print_recalculated_energies(bi->get_root());
+
     // Copy any slow_perturbed lists to the new top-level node, and
     // delete the low-level lists.
 
-    bi->copy_slow_perturbed(bi->get_parent());
+    hdyn *par = bj->get_parent();
+
+    bi->copy_slow_perturbed(par);
     bi->clear_slow_perturbed();
-    bj->copy_slow_perturbed(bj->get_parent());
+    bj->copy_slow_perturbed(par);
     bj->clear_slow_perturbed();
 
     // Delete any slow_perturbed element in the new CM node that refers
     // to either component.
 
-    if (bi->get_parent()->get_sp()) {
-	bi->get_parent()->remove_slow_perturbed(bi);
-	bi->get_parent()->remove_slow_perturbed(bj);
+    if (par->get_sp()) {
+	par->remove_slow_perturbed(bi);
+	par->remove_slow_perturbed(bj);
     }
 
     // Reset all perturber lists below the newly-formed top-level
-    // node -- probably not necessary for bi and bj if low-level
-    // perturber lists are allowed, but cleaner to clear and
-    // recompute the lists.
+    // node -- probably not strictly necessary for bi and bj if
+    // low-level perturber lists are allowed, but cleaner and much
+    // more convenient to clear and recompute the lists.  Note that 
+    // this will result in perturbations being computed using the
+    // entire system until the top-level list is computed.
 
-    for_all_nodes(hdyn, bj->get_parent(), bb) {
+    for_all_nodes(hdyn, par, bb) {
 	bb->set_valid_perturbers(false);
 	bb->set_perturbation_squared(-1);
     }
@@ -681,7 +699,39 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
     // but we can't do this here, as the GRAPE doesn't yet know about
     // the CM.  Could do it from the top-level in kira.  (Steve, 3/03)
 
-    halve_timestep(bj->get_parent());
+    halve_timestep(par);
+    real dt_par = par->get_timestep();
+    // PRL(dt_par);
+
+    // Note from Steve (8/03): for multiples, really want to have the
+    // CM step precede any low-level step, not just the daughters.
+    // May not be convenient if a daughter step is very short, or just
+    // happens to place the daughter in a bad timestep block.
+
+    real min_time = VERY_LARGE_NUMBER;
+    for_all_nodes(hdyn, bj, bb)
+        if (bb != bj && !bb->get_elder_sister()) {
+	    real bb_time = bb->get_next_time();
+	    if (bb_time < min_time) min_time = bb_time;
+	}
+    for_all_nodes(hdyn, bi, bb)
+        if (bb != bi && !bb->get_elder_sister()) {
+	    real bb_time = bb->get_next_time();
+	    if (bb_time < min_time) min_time = bb_time;
+	}
+
+    real dt_min = min_time - bj->get_system_time();
+    // PRL(min_time);
+    if (dt_min < dt_par) {
+      if (dt_min > dt_par/16) {			// 16 is arbitrary
+	  dt_par = dt_min;
+	  par->set_timestep(dt_par);
+      }
+      // else cerr << "combine_top_level_nodes: "
+      //           << "Can't reduce parent timestep sufficiently..." << endl;
+    }
+
+    // PRC(dt_par); PRL(dt_min);
 
     bi->init_pred();
     bj->init_pred();
@@ -707,8 +757,8 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     bi->get_kira_counters()->top_level_combine++;
 
-    if (bi->get_kira_diag()->tree && bi->get_kira_diag()->tree_level > 1)
-	pp3(bi->get_parent(), cerr);
+//     cerr << 5 << endl;
+//     print_recalculated_energies(bi->get_root());
 }
 
 void split_top_level_node(hdyn * bi,
@@ -1035,8 +1085,7 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
     }
 
     move_node(bi, bj);
-
-    hdyn* top_level_node = bi->get_top_level_node();
+    hdyn *top_level_node = bi->get_top_level_node();
 
     if (top_level_node != old_top_level_node) {
 
@@ -1081,19 +1130,15 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 
     predict_loworder_all(bi->get_root(), bi->get_system_time());
 
-    // Force all perturber lists in the present subtree to be rebuilt.
+    // Could force all low-level perturber lists in the present subtree 
+    // to be rebuilt by setting valid_perturbers false, but better to
+    // rebuild now...
 
-    for_all_nodes(hdyn, top_level_node, bb) {
-	if (bb != top_level_node) {
+    // "False" here means rebuild all low-level lists, even if non-null.
 
-	    bb->set_valid_perturbers(false);
-	    bb->set_perturbation_squared(-1);
-
-	    // cerr << "cleared perturber lists for "
-	    //	    << bb->format_label() << endl;
-	}
-    }
-
+    if (ALLOW_LOW_LEVEL_PERTURBERS)
+	top_level_node->create_low_level_perturber_lists(false);
+    
     bi->get_kira_counters()->low_level_combine++;
 
     // Make sure that all CM node names are up to date.
@@ -1209,11 +1254,11 @@ local int adjust_low_level_node(hdyn * bi, int full_dump = 0)
 	    }
 	}
 
-    } else if (sister != NULL)
+    } else if (sister != NULL) {
 
 	combine_low_level_nodes(bi, sister, full_dump);
 
-    else
+    } else
 
 	status = 0;
 
