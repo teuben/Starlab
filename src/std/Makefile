@@ -15,7 +15,7 @@
 ##.............................................................................
 ##
 
-CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC)
+CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) -O1
 LIBFLAGS	= -L$(LIB) -lstd -lm
 DEPEND_LIBS	= $(LIB)/libstd.a
 
@@ -23,7 +23,7 @@ EXECUTABLES =  gethist pgetopt randinter runtime_help precision \
 	       story test_vector
 OBJECT_FILES = randinter.o pgetopt.o gethist.o precision.o story.o \
 		util_math.o util_io.o error.o time.o par_to_use.o \
-		printbits.o runtime_help.o xreal.o
+		printbits.o runtime_help.o xreal.o util_unformatted_io.o
 LIBRARY = libstd.a
 
 EXTRA_CLEAN = $(LIB)/$(LIBRARY)
@@ -35,6 +35,11 @@ include $(STARLAB_PATH)/inc/Makefile.worker.inc
 #randinter:	randinter.C
 #	@make_cond_build $@ $(BIN)/$@ \
 #		"$(LIBFLAGS) " $(STARLAB_CCC) $(CFLAGS) $(TOOLFLAGS)
+
+# Special case (don't allow -O2, but -O1 seems OK):
+
+util_unformatted_io.o:
+	@make_cond_compile util_unformatted_io.C $(STARLAB_CCC) $(CFLAGS) -O1
 
 #..............................................................................
 #..............................................................................
