@@ -395,33 +395,77 @@ local INLINE int force_by_grape(xreal xtime,
 	ijerk[i]  = ONE6*nodes[i]->get_old_jerk();
 	ipot[i]   = nodes[i]->get_pot();
 	ih2[i]    = nodes[i]->get_grape_rnb_sq();
-#else
-	// New version.  Suggested by Jun (May 8 2001) to prevent
-	// "call Jun" message.  Implemented by SPZ.
 
-	if (pot_only){
+#else
+
+	// New version.  Suggested by Jun (May 8 2001) to prevent the
+	// "call Jun" message.  Implemented by SPZ.  Corrected by Steve.
+	// Mainly, we want to avoid sending zeroes to g6calc_firsthalf()
+	// in acc, jerk, or pot, as these are used for scaling purposes.
+
+	if (pot_only) {
 
             // Nodes in this case are leaves, not necessarily top-level.
 
             ipos[i] = hdyn_something_relative_to_root(nodes[i],
                                                       &hdyn::get_pred_pos);
 
-            // Set some LARGE NUMBERS to acc and jerk to avoid
+#if 0
+            // Set some NOT-SO-LARGE NUMBERS to acc and jerk to avoid
             // overflow flag.
 
-            iacc[i]   = vector(1e100);
-            ijerk[i]   = vector(1e100);
+            iacc[i]   = vector(1);
+            ijerk[i]  = vector(1);
+#endif
 
-        } else{
+        } else {
 
             ipos[i]   = nodes[i]->get_pred_pos();
+#if 0
             iacc[i]   = nodes[i]->get_old_acc();
             ijerk[i]  = ONE6*nodes[i]->get_old_jerk();
+
+
+
+	    // Added for pentium linux G6 (SPZ: 12 Sept 2001)
+	    // Modified by Steve (2 Oct 2001).
+
+	    if (abs(iacc[i]) <= VERY_SMALL_NUMBER || 
+		abs(ijerk[i]) <= VERY_SMALL_NUMBER) {
+		cerr << "WARNING: Initializing acc and jerk from zero."
+		     << endl;
+	      iacc[i]   = vector(1);
+	      ijerk[i]  = vector(1);
+	    }
+#endif
+
         }
 
         ivel[i]   = nodes[i]->get_pred_vel();
-        ipot[i]   = nodes[i]->get_pot();
         ih2[i]    = nodes[i]->get_grape_rnb_sq();
+	iacc[i]   = nodes[i]->get_old_acc();
+	ijerk[i]  = ONE6*nodes[i]->get_old_jerk();
+        ipot[i]   = nodes[i]->get_pot();
+
+	// Must take care with pot, acc, and jerk.  Quite expensive to
+	// check the abs of a vector, so try more indirect tests first.
+	// Normally,  these values will be zero only at initialization,
+	// but we may also encounter this immediately after a new CM
+	// node is created.
+
+	if (abs(ipot[i]) <= VERY_SMALL_NUMBER
+	    || abs(abs(iacc[i][0])) <= VERY_SMALL_NUMBER) {
+
+	    ipot[i] = 1;
+	    if (abs(iacc[i]) <= VERY_SMALL_NUMBER ||
+                abs(ijerk[i]) <= VERY_SMALL_NUMBER) {
+                // cerr << "WARNING: Initializing acc and jerk from zero."
+		//	<< endl;
+		iacc[i]   = vector(1);
+		ijerk[i]  = vector(1);
+            }
+	}
+
 #endif
 
 	if (DEBUG > 1) {
@@ -436,7 +480,7 @@ local INLINE int force_by_grape(xreal xtime,
 
     // Clear neighbor radii for unused pipes (added by SPZ, May 8 2001).
 
-    for(int i = ni; i < n_pipes; i++)
+    for (int i = ni; i < n_pipes; i++)
         ih2[i] = 0;
 
     g6calc_firsthalf_(&cluster_id, &nj, &ni, iindex,
