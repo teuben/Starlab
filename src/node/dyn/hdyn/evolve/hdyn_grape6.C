@@ -855,11 +855,16 @@ local inline bool use_cm_approx(hdyn *bb, real d_crit)
 {
     // Check if a binary can be treated as unperturbed for purposes of
     // computing its energy if the estimated tidal effect of its neighbors
-    // is negligible.  Looks as though accepting any unperturbed binary
-    // may lead to unacceptably large tidal errors.  Use d_crit to define
-    // a "close" binary to be treated as unperturbed -- to be reviewed.
+    // is negligible.  Note that accepting any unperturbed binary may lead
+    // to unacceptably large tidal errors if the criterion for unperturbed
+    // motion is relaxed.  Use d_crit to define a "close" binary to be
+    // treated as unperturbed -- to be reviewed.	      (Steve, 5/02)
     //
-    // 							(Steve, 5/02)
+    // See also the treatment of tidal errors in unperturbed motion in
+    // integrate_unperturbed_motion() (hdyn_unpert.C), which assumes that
+    // relatively wide unperturbed binaries are resolved into components
+    // for purposes of computing and correcting ther energy (i.e. that
+    // there is no discontinuity in energy when unperturbed motion starts).
 
     bool use_cm = false;
 
