@@ -860,7 +860,7 @@ bool low_n3_evolve(sdyn3* b,	   // sdyn3 array
 	    if (t >= t_snap) {
 
 		if (system_in_cube(b, snap_cube_size)) {
-		    put_node(cout, *b);
+		    put_node(cout, *b, false, 2);
 		    cout << flush;
 		    total_snaps++;
 

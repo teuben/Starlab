@@ -102,12 +102,15 @@ ostream& sdyn3::print_dyn_story(ostream& s,
 
     put_real_number(s, "  m  =  ", mass);
     put_real_vector(s, "  r  =  ", pos);
-    put_real_vector(s, "  v  =  ", vel);
-    put_real_vector(s, "  a  =  ", acc);
-    put_real_vector(s, "  j  =  ", jerk);
+    put_real_number(s, "  R_eff  =  ", get_radius());
+
+    if (short_output < 2)
+	put_real_vector(s, "  v  =  ", vel);
 
     if (!short_output) {
 
+	put_real_vector(s, "  a  =  ", acc);
+	put_real_vector(s, "  j  =  ", jerk);
 	put_real_number(s, "  pot  =  ", pot);
 
 	put_real_number(s, "  min_nn_dr2  =  ", min_nn_dr2);
