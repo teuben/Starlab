@@ -159,7 +159,7 @@ local sdyn3 * init_to_sdyn3(initial_state3 & init, final_state3 & final)
 	return NULL;
     }
 
-    init.r_init = max(init.r_init_min, min(init.r_init_max, r_unp));
+    init.r_init = Starlab::max(init.r_init_min, Starlab::min(init.r_init_max, r_unp));
 
     // NOTE: Can't assume that k3.separation is less than r_init.
 
@@ -430,7 +430,7 @@ void scatter3(initial_state3 & init,
     for_all_daughters(sdyn3, b, bb) {
         inter.index[inter.n_stars] = bb->get_index();
         inter.r_min[inter.n_stars] = sqrt(bb->get_min_nn_dr2());
-	inter.r_min_min = min(inter.r_min_min, inter.r_min[inter.n_stars]);
+	inter.r_min_min = Starlab::min(inter.r_min_min, inter.r_min[inter.n_stars]);
         inter.n_stars++;
     }
 

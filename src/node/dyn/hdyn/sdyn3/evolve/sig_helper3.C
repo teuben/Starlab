@@ -238,7 +238,7 @@ void print_sigma3_counts(int n_hits[N_INTER][N_FINAL][N_RHO_ZONE_MAX],
 
 	    // Use exactly 6 chars (+ 1 space) unless integer is very large.
 
-	    for (int i = 0; i < max(0, 6 - (int)strlen(dummy_string)); i++)
+	    for (int i = 0; i < Starlab::max(0, 6 - (int)strlen(dummy_string)); i++)
 		cerr << " ";
 	    
 	    cerr << dummy_string;
@@ -258,7 +258,7 @@ local void print_formatted(real x)
 
 	// Use exactly 7 characters unless integer is very large.
 
-	for (int i = 0; i < max(1, 6 - (int)strlen(dummy_string)); i++)
+	for (int i = 0; i < Starlab::max(1, 6 - (int)strlen(dummy_string)); i++)
 	    cerr << " ";
 
 	// Truncate the string, if x large (max = 999999).
@@ -725,21 +725,21 @@ void single_scatter_stats(scatter_profile & prof,
 {
     // Accumulate statistics:
 
-    max_t = max(max_t, final.time);
-    max_err = max(max_err, abs(final.error));
+    max_t = Starlab::max(max_t, final.time);
+    max_err = Starlab::max(max_err, abs(final.error));
 
     // Accumulate results on data not available to higher levels:
 
     out.n_hits[inter.descriptor][final.descriptor][rho_bin_index]++;
 
     out.total_steps += final.n_steps;
-    out.max_steps = max(out.max_steps, final.n_steps);
-    real logn = log10((real)max(1, final.n_steps));
-    int index = min(N_STEP_BIN-1, (int)logn);
+    out.max_steps = Starlab::max(out.max_steps, final.n_steps);
+    real logn = log10((real)Starlab::max(1, final.n_steps));
+    int index = Starlab::min(N_STEP_BIN-1, (int)logn);
     out.step_counter[index]++;
 
-    logn = log10((real)max(1, inter.n_osc)) / log10(2.0);
-    index = min(N_OSC_BIN-1, (int)logn);
+    logn = log10((real)Starlab::max(1, inter.n_osc)) / log10(2.0);
+    index = Starlab::min(N_OSC_BIN-1, (int)logn);
     out.osc_counter[index][final.descriptor]++;
 
     // Convenient to update these global counters here also:

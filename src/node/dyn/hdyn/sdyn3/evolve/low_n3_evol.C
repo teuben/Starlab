@@ -279,9 +279,9 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
     sdyn3* bj = bi->get_younger_sister();
     sdyn3* bk = bj->get_younger_sister();
 
-    real min_sep_sq = min(min(bi->get_nn_dr2(), bj->get_nn_dr2()),
+    real min_sep_sq = Starlab::min(Starlab::min(bi->get_nn_dr2(), bj->get_nn_dr2()),
 			  bk->get_nn_dr2());
-    real max_sep_sq = max(max(bi->get_nn_dr2(), bj->get_nn_dr2()),
+    real max_sep_sq = Starlab::max(Starlab::max(bi->get_nn_dr2(), bj->get_nn_dr2()),
 			  bk->get_nn_dr2());
 
     // The following mass factor represents a "worst-case" scenario
@@ -294,7 +294,7 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
 
     if (tol_23 < 0) {
 	real total_mass = bi->get_mass() + bj->get_mass() + bk->get_mass();
-	real max_mass = max(max(bi->get_mass(), bj->get_mass()),
+	real max_mass = Starlab::max(Starlab::max(bi->get_mass(), bj->get_mass()),
 			    bk->get_mass());
 	tol_23 = pow((1 - max_mass/total_mass) * tidal_tolerance, 0.6666667);
     }
@@ -398,10 +398,10 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
     // and labels don't need to be changed.
 
     real peri_sq = inner.get_periastron() * inner.get_periastron();
-    b1->set_nn_dr2(min(b1->get_nn_dr2(), peri_sq));
-    b2->set_nn_dr2(min(b2->get_nn_dr2(), peri_sq));
-    b1->set_min_nn_dr2(min(b1->get_min_nn_dr2(), peri_sq));
-    b2->set_min_nn_dr2(min(b2->get_min_nn_dr2(), peri_sq));
+    b1->set_nn_dr2(Starlab::min(b1->get_nn_dr2(), peri_sq));
+    b2->set_nn_dr2(Starlab::min(b2->get_nn_dr2(), peri_sq));
+    b1->set_min_nn_dr2(Starlab::min(b1->get_min_nn_dr2(), peri_sq));
+    b2->set_min_nn_dr2(Starlab::min(b2->get_min_nn_dr2(), peri_sq));
 
     print_unperturbed_diag(b, b1, b2, b3,
 			   inner, outer,
@@ -635,13 +635,13 @@ real dynamic_timestep(sdyn3* b, real eta)
 
     for_all_daughters(sdyn3, b, bb) {
 	global_min_encounter_time_sq =
-	    min(global_min_encounter_time_sq, bb->get_min_encounter_time_sq());
+	    Starlab::min(global_min_encounter_time_sq, bb->get_min_encounter_time_sq());
 	global_min_free_fall_time_sq =
-	    min(global_min_free_fall_time_sq, bb->get_min_free_fall_time_sq());
+	    Starlab::min(global_min_free_fall_time_sq, bb->get_min_free_fall_time_sq());
     }
 
     return eta *
-	sqrt(min(global_min_encounter_time_sq, global_min_free_fall_time_sq));
+	sqrt(Starlab::min(global_min_encounter_time_sq, global_min_free_fall_time_sq));
 }
 
 local tfp get_timestep_function_ptr(char* timestep_name)
@@ -812,15 +812,15 @@ bool low_n3_evolve(sdyn3* b,	   // sdyn3 array
         real max_dt = end_dt;
 
 	if (dt_out < VERY_LARGE_NUMBER)
-	    max_dt = min(max_dt, t_out - t);
+	    max_dt = Starlab::min(max_dt, t_out - t);
 
 	if (dt_snap < VERY_LARGE_NUMBER) {
 	    if (t + max_dt >= t_snap
 		&& system_in_cube(b, 1.2*snap_cube_size))
-	    max_dt = min(max_dt, t_snap - t);
+	    max_dt = Starlab::min(max_dt, t_snap - t);
 	}
 	if (print)
-	    max_dt = min(max_dt, t_print - t);
+	    max_dt = Starlab::min(max_dt, t_print - t);
 
         real dt = the_tfp(b, eta);
 

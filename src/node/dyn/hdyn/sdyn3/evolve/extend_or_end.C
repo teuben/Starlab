@@ -247,7 +247,7 @@ local int escape(sdyn3 * bi, sdyn3 * bj, sdyn3 * bk,
 
     real rlimit = (ajk + bi->get_radius())
 		      * pow(init.tidal_tol_factor * mjk / (mi + mjk), -1/3.0);
-    if (init.r_stop < 0) rlimit = max(rlimit, abs(init.r_stop));
+    if (init.r_stop < 0) rlimit = Starlab::max(rlimit, abs(init.r_stop));
 
     // PRL(rlimit);
 
@@ -335,7 +335,7 @@ local int escape(sdyn3 * bi, sdyn3 * bj, sdyn3 * bk,
 
 	if (apo >= init.r_stop) {
 	    stop_integration(bi, bj, bk, ejk, mjk,
-			     min(apo, abs(init.r_stop)), virial_ratio, final);
+			     Starlab::min(apo, abs(init.r_stop)), virial_ratio, final);
 	    return 1;
 	}
     }
@@ -548,16 +548,16 @@ local int extend_or_end_scatter3(sdyn3 * b,
 	&& r31 > LARGE_SEPARATION
 	&& k12 > phi12 && k23 > phi23 && k31 > phi31
 	&& vr12 > 0 && vr23 > 0 && vr31 > 0
-	&& triple_escape(k12 - phi12, min(r23, r31), m1 + m2, m3,
+	&& triple_escape(k12 - phi12, Starlab::min(r23, r31), m1 + m2, m3,
 			 init.tidal_tol_factor)
-	&& triple_escape(k23 - phi23, min(r31, r12), m2 + m3, m1,
+	&& triple_escape(k23 - phi23, Starlab::min(r31, r12), m2 + m3, m1,
 			 init.tidal_tol_factor)
-	&& triple_escape(k31 - phi31, min(r12, r23), m3 + m1, m2,
+	&& triple_escape(k31 - phi31, Starlab::min(r12, r23), m3 + m1, m2,
 			 init.tidal_tol_factor)) {
 
 	if (final) {
 	    final->descriptor = ionization;
-	    final->virial_ratio = min(min(k12/phi12, k23/phi23), k31/phi31);
+	    final->virial_ratio = Starlab::min(Starlab::min(k12/phi12, k23/phi23), k31/phi31);
 	    final->outer_separation = -1;
 	    final->escaper = -1;                // -1 means all escaping
 	}
