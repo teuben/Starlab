@@ -56,6 +56,9 @@ void kira_calculate_internal_energies(hdyn *b,
     // This function is called by hdyn::merge_nodes() and kira routine
     // calculate_energies_with_external().
 
+PRL(b->has_grape());
+PRL(use_grape);
+
     if (b->has_grape() && use_grape) {
 
 	if (b->has_grape6())
