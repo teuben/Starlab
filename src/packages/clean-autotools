@@ -1,0 +1,16 @@
+#!/bin/tcsh -f
+
+# Clean the autotools (not quite standard...):
+
+foreach tool (autoconf automake libtool)
+
+    echo Cleaning $tool
+    set dir = $tool*[0-9]
+    cd $dir
+    if ($tool == "libtool") then
+	make distclean-libtool
+    else
+	make distclean
+    endif
+    cd ..
+end

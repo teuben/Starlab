@@ -15,10 +15,18 @@ endif
 # Build the autotools (isn't standardization wonderful?):
 
 foreach tool (autoconf automake libtool)
+
+    echo Unpacking $tool
     tar xzf $tool*.tar.gz
-    cd $tool*[0-9]
-    ./configure $pre
-    make
-    make install
+
+    echo Installing $tool
+    set dir = $tool*[0-9]
+    set log = $dir.install.log
+    echo Installation log is $log
+
+    cd $dir
+    ./configure $pre			>&! ../$log
+    make				>>& ../$log
+    make install			>>& ../$log
     cd ..
 end
