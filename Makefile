@@ -132,7 +132,8 @@ cleanbin:
 #..............................................................................
 # configure and related stuff for new starlab4 installation
 
-CONFIG_CLEAN = config.h config.cache config.log config.status 
+CONFIG_CLEAN = config.h config.cache config.log config.status \
+		cshrc.starlab starlab_start starlab_start.sh
 CONFIG_EXTRA = cshrc.starlab config.h 
 
 config: configure
