@@ -19,8 +19,8 @@ CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC)
 LIBFLAGS	= -L$(LIB) -ldyn -lnode -lstd -lm
 DEPEND_LIBS	= $(LIB)/libstd.a $(LIB)/libnode.a $(LIB)/libdyn.a
 
-EXECUTABLES	= mkcube mkdisk mkplummer mkpyth mksphere mkwrite \
-		  addplummer mkbinary split_particles mkking \
+EXECUTABLES	= makecube makedisk makeplummer makepyth makesphere mkwrite \
+		  addplummer mkbinary split_particles makeking \
 	 	  mkheavystar mk_aniso_king readp readstoa \
 	          mkplanetary mkblack_hole grow_black_hole
 
