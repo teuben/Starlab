@@ -345,13 +345,18 @@ local void mksecondary(node* b, real binary_fraction,
 
     if(split) {
 	sprintf(tmp_string,
-		"         total mass in primaries = %8.2f Solar", m_primaries); 
+		"       total mass in primaries = %8.2f Solar", m_primaries); 
+	b->log_comment(tmp_string);
     }
-    b->log_comment(tmp_string);
 
     sprintf(tmp_string,
-	    "         total mass in secondaries = %8.2f Solar", m_secondaries); 
+	    "       total mass in secondaries = %8.2f Solar", m_secondaries); 
     b->log_comment(tmp_string);
+
+    // Update mass info, if any.
+
+    if (find_qmatch(b->get_log_story(), "initial_mass"))
+	putrq(b->get_log_story(), "initial_mass", m_tot);
 }
 
 void main(int argc, char ** argv)
@@ -437,7 +442,7 @@ void main(int argc, char ** argv)
 
     int actual_seed = srandinter(random_seed);
 
-    sprintf(seedlog, "       random number generator seed = %d",actual_seed);
+    sprintf(seedlog, "       random number generator seed = %d", actual_seed);
     b->log_comment(seedlog);
 
     mksecondary(b, binary_fraction, min_mprim, max_mprim, 
