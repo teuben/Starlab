@@ -174,6 +174,7 @@ void check_and_remove_escapers(hdyn* b,
 
     if (remove_escapers(b, stripping_radius, center_pos, center_vel)) {
 
+	PRI(2); PRL(center_pos);
 	PRI(2); PRC(b->get_scaled_stripping_radius());
 	PRL(stripping_radius);
 
