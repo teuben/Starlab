@@ -596,21 +596,20 @@ void hdyn::update_dyn_from_kepler(bool need_acc_and_jerk)	// default = true
     else
 	kep->transform_to_time(time - unperturbed_timestep
 			       		* (1 - 1.0/get_kappa()));
-
     // Note that the latter expression implies the former, as get_kappa() = 1
     // for binaries with slow = NULL, but it seems cleaner this way.
 
     // Compute dyn components from updated kepler values.
 
-    real factor = sister->mass / (mass + sister->mass);
-    real sfactor = factor - 1.0;
+    real factor = -sister->mass / (mass + sister->mass);
+    real sfactor = 1 - factor;
     pos = kep->get_rel_pos() * factor;
     vel = kep->get_rel_vel() * factor;
     pred_pos = pos;
     pred_vel = vel;
 
     prev_posvel = posvel;
-    posvel = pos*vel;		    // used in is_unperturbed_and_appproaching
+    posvel = pos*vel;		    // used in is_unperturbed_and_approaching
 
     sister->time = time;
     sister->pred_pos = kep->get_rel_pos() * sfactor;
@@ -1703,6 +1702,11 @@ void hdyn::startup_unperturbed_motion()
 
         cerr << "    binary_type changed to " << binary_type
 	     << ":  " << bt[binary_type] << endl;
+
+//  	if (name_is("11")) {
+//  	    kep->print_all(cerr);
+//  	    pp3(get_parent());
+//  	}
 
     }
 
