@@ -339,7 +339,8 @@ local void scale_limits(real& e1, real& e2, int option,
 {
     real scale = 1.0;
 
-PRL(E);
+    // PRL(E);
+
     if (option == 3) {
 
 	// Limits refer to kinetic energy per unit mass.  Scale to -E/M.
@@ -351,7 +352,7 @@ PRL(E);
 	// Limits refer to energy.  Scale to kT = -(2/3) E/N.
 
 	scale = -E / (1.5*N);
-PRL(scale);
+	// PRL(scale);
     }
 
     e1 *= scale;
