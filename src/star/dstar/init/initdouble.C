@@ -504,6 +504,7 @@ void mkrandom_binary( real m_min,  real m_max,
     // good enough.  mkbinary does not know much about
     // stars.
     real r_prim = zero_age_main_sequnece_radius(m_prim);
+    real r_sec = zero_age_main_sequnece_radius(m_sec);
 
     if(e_max>=1 && ef!=Equal_ecc) 
 	e_max = Starlab::max(e_min, Starlab::min(1., 1 - (r_prim+r_sec)/a_max));
