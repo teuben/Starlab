@@ -1945,6 +1945,19 @@ local INLINE int get_force_and_neighbors(xreal xtime,
 	    cerr << func << ":  error getting GRAPE neighbor data: ";
 	    PRL(status);
 
+
+	    PRC(ni); PRC(nj_on_grape); PRL(n_pipes);
+	    PRC(need_neighbors); PRL(nodes[0]);
+	    for (int i = 0; i < ni; i++) {
+		cerr << i << " " << nodes[i] << " "; PRL(nodes[i]->is_valid());
+		if (nodes[i]->is_valid())
+		    cerr << "    " << nodes[i]->format_label() << " "
+			<< nodes[i]->get_pos() << endl
+			<< "    " << nodes[i]->get_valid_perturbers() << " "
+			<< nodes[i]->get_grape_rnb_sq() << endl << flush;
+	    }
+	    
+
 	    if (status > 0) {
 
 		// Hardware perturber lists on the GRAPE have overflowed.
