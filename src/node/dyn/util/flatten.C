@@ -39,8 +39,8 @@ local void  unbundle_node(dyn * ud)
     if (od == NULL)
 	return;                         // nothing left to unbundle
 
-    vector pos = ud->get_pos();
-    vector vel = ud->get_vel();
+    vec pos = ud->get_pos();
+    vec vel = ud->get_vel();
 
     for_all_daughters(dyn, ud, dd) {
 	dd->inc_pos(pos);
