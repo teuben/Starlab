@@ -966,10 +966,11 @@ tdyn *find_event(worldline *w, tdyn *bn, real t)
 	if (curr) {
 
 	    real t_curr = curr->get_time();
+	    real t_bn = bn->get_time();
 
 	    if (t_curr > t) {
 
-		if (t > 0.5*(bn->get_time() + t_curr)) {
+		if (t > 0.5*(t_bn + t_curr)) {
 
 		    // Do a backward search from curr.
 
