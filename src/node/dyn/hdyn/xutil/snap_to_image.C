@@ -17,6 +17,7 @@
 ////           -i index     specify (real) color index for all stars
 ////                                                       [use internal index]
 ////           -l scale     specify width of field of view (+/- scale)      [3]
+////           -L loop      specify number of loops in animation           [10]
 ////           -m           use mass to determine star color and/or size   [no]
 ////           -n nmax      specify maximum number of images to produce   [Inf]
 ////           -N nbody     color using a (small-N) colormap               [no]
@@ -428,11 +429,13 @@ main(int argc, char** argv)
 
     bool reverse = false;
 
+    int loop = 10;
+
     check_help();
 
     extern char *poptarg, *poparr[];
     int c;
-    char* param_string = "1acC:df:F:gGi:Hl:X:x:Y:y:mn:N:o:O:p:P:qrRs:.S:t";
+    char* param_string = "1acC:df:F:gGi:Hl:L:X:x:Y:y:mn:N:o:O:p:P:qrRs:.S:t";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
@@ -460,26 +463,16 @@ main(int argc, char** argv)
 			break;
 	    case 'H':	HRD = !HRD;
 			break;
-	    case 'l':	boxw = atof(poptarg);
-			break;
 	    case 'i':	index_all = atof(poptarg);
 	    		if (index_all < 0)
 			    index_all = 0;
 	    		else if (index_all > 1)
 			    index_all = 1;
 			break;
-	    case 'X':	xright = atof(poptarg);
-			xlim_set = true;
+	    case 'l':	boxw = atof(poptarg);
 			break;
-	    case 'x':	xleft = atof(poptarg);
-			xlim_set = true;
-			break;
-	    case 'Y':	ytop = atof(poptarg);
-			ylim_set = true;
-			break;
-	    case 'y':	ybot = atof(poptarg);
-			ylim_set = true;
-			break;
+	    case 'L':	loop = atoi(poptarg);
+	    		break;
 	    case 'm':	mass = true;
 			break;
 	    case 'n':	n = atoi(poptarg);
@@ -513,6 +506,18 @@ main(int argc, char** argv)
 	    case 'S':   nskip = atoi(poptarg);
 		        break;
 	    case 't':	testmap = true;
+			break;
+	    case 'X':	xright = atof(poptarg);
+			xlim_set = true;
+			break;
+	    case 'x':	xleft = atof(poptarg);
+			xlim_set = true;
+			break;
+	    case 'Y':	ytop = atof(poptarg);
+			ylim_set = true;
+			break;
+	    case 'y':	ybot = atof(poptarg);
+			ylim_set = true;
 			break;
 	    default:
 	    case '?':	params_to_usage(cerr, argv[0], param_string);
@@ -705,11 +710,14 @@ main(int argc, char** argv)
 		    boxw /= 2;
 		    do {
 			boxw *= 2;
+			real boxh = (boxw*ny)/nx;
 			total = count = 0;
 			for_all_daughters(hdyn, b, bb) {
 			    total++;
 			    vec pos = b->get_pos() + bb->get_pos();
-			    if (abs1(pos) <= boxw) count++;
+			    real x = pos[iax];
+			    real y = pos[jax];
+			    if (abs(x) <= boxw && abs(y) < boxh) count++;
 			}
 		    }  while (total > 10 && count < (3*total)/4);
 
@@ -718,7 +726,8 @@ main(int argc, char** argv)
 			cerr << "snap_to_image: box size increased to "
 			     << boxw << endl;
 
-			// Repeats lines above..
+			// Repeats lines above.  Note that we are assuming
+			// xleft < xright (and similarly y) in this case.
 
 			xleft = -boxw;
 			xright = boxw;
@@ -736,6 +745,52 @@ main(int argc, char** argv)
 		    }
 
 		    if (origin == 1) compute_com(b, xoffset, voffset);
+
+		    if (total == count) {
+
+			// Try to center the first frame.
+
+			real x1, x2, y1, y2;
+			x1 = y2 = VERY_LARGE_NUMBER;
+			x2 = y2 = -VERY_LARGE_NUMBER;
+
+			for_all_daughters(hdyn, b, bb) {
+
+			    vec pos = b->get_pos() + bb->get_pos();
+			    if (origin == 1) pos -= xoffset;
+			    real x = pos[iax];
+			    real y = pos[jax];
+
+			    if (x > xmin && x < xmax && y > ymin && y < ymax) {
+			
+				x1 = Starlab::min(x1, x);
+				x2 = Starlab::max(x2, x);
+				y1 = Starlab::min(y1, y);
+				y2 = Starlab::max(y2, y);
+			    }
+			}
+
+			// Expand borders to the equal the largest gap.
+
+			if (x1-xmin < xmax-x2)
+			    xmin = x1 - (xmax-x2);
+			else
+			    xmax = x2 + (x1-xmin);
+
+			if (y1-ymin < ymax-y2)
+			    ymin = y1 - (ymax-y2);
+			else
+			    ymax = y2 + (y1-ymin);
+
+			xleft = xmin;
+			xright = xmax;
+			ybot = ymin;
+			ytop = ymax;
+
+			lx = xright - xleft;
+			ly = ytop - ybot;
+			rfac = nx/(2*boxw);
+		    }
 		}
 
 		if (HRD || mass || radius || index_all < 0) {
@@ -981,8 +1036,9 @@ main(int argc, char** argv)
 	    } else {
 		strcpy(ext1, ".gif");
 		strcpy(ext2, ".gif");
-		sprintf(command, "xargs gifsicle `/bin/ls %s %s.*%s` -o %s%s",
-			rev, output_file_id, ext1, output_file_id, ext2);
+		sprintf(command,
+		    "xargs gifsicle `/bin/ls %s %s.*%s` --loopcount=%d -o %s%s",
+		    rev, output_file_id, ext1, loop, output_file_id, ext2);
 	    }
 
 	    cerr << endl
