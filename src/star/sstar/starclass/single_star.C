@@ -1535,8 +1535,10 @@ void single_star::stellar_wind(const real dt) {
   // for high mass stars over whole evolution
   // (GN May 12 1999)
   // except for stars more massive than 85 that become WR after ms immediately
-  if (relative_mass >= cnsts.parameters(super_giant2neutron_star) &&
-      relative_mass < 85.) {
+  // (GN Apr 19 2004) temporary fix for Hyper_Giants with M > 85 through merger
+  if (get_element_type() == (int)Hyper_Giant ||
+      (relative_mass >= cnsts.parameters(super_giant2neutron_star) &&
+      relative_mass < 85.)) {
     end_time = nucleair_evolution_time();
     //      prev_rel_time = previous.relative_age;
     relative_time = relative_age;
@@ -1599,7 +1601,11 @@ void single_star::lose_envelope_decent() {
       reduce_mass(envelope_mass);
   }
 
-  if (is_binary_component()) {
+  // (GN Apr 19 2004) added check for Merged & Disrupted, otherwise merged black hole radius 
+  // is set to 0, causing inf temperature, nan bol_cor and magnitude
+  if (is_binary_component()  && 
+      get_binary()->get_bin_type() != Merged &&
+      get_binary()->get_bin_type() != Disrupted) {
     get_companion()->set_effective_radius(get_companion()->get_radius());
     get_companion()->set_spec_type(Accreting, false);
   }
