@@ -49,7 +49,7 @@ void refine_cluster_mass(dyn *b)
 {
     if (b->get_external_field() == 0) return;
     if (b->get_tidal_field() == 0) {
-	// refine_cluster_mass2(b);				// experimental
+	refine_cluster_mass2(b, 1);			// experimental
 	return;
     }
 
@@ -82,9 +82,11 @@ void refine_cluster_mass(dyn *b)
     //
     // To do...  (See also check_and_remove_escapers().)
 
-    real M_inside = total_mass(b), M = -1;
+    real M_inside = total_mass(b), M = -1, M0 = M_inside;
     real r_J, r_x2, r_y2, r_z2, r_max_inside;
     int  N_inside, iter = 0;
+
+    real phi_J;
 
     real M_J, M_x, M_y, M_z;
     int  N_J, N_x, N_y, N_z;
@@ -104,7 +106,7 @@ void refine_cluster_mass(dyn *b)
 
 	r_J = pow(-M/b->get_alpha1(), 0.3333333);
 
-	real phi_J = 1.5 * b->get_alpha1() * r_J * r_J;
+	phi_J = 1.5 * b->get_alpha1() * r_J * r_J;
 	real r_max = 0;
 
 	r_x2 = square(r_J);		// zero-velocity surface crosses x-axis
@@ -216,4 +218,25 @@ void refine_cluster_mass(dyn *b)
 	 << "  within r_z (projected):           "
 	 << "  M = " << M_z << "  N = " << N_z << "  r_z = " << sqrt(r_z2)
 	 << endl;
+
+    // Repeat the inner loop above and flag stars as escapers or not.
+
+    bool disrupted = (iter >= M_ITER_MAX || M_inside < 0.01*M0);
+
+    for_all_daughters(dyn, b, bb) {
+
+	vector dx = bb->get_pos() - center;
+
+	real x = dx[0];
+	real z = dx[2];
+	real r = abs(dx);
+
+	bool escaper = true;
+	if (r < r_J
+	    && (r == 0 || -M/r + 0.5 * (b->get_alpha1()*x*x
+					+ b->get_alpha3()*z*z) < phi_J))
+	    escaper = false;
+
+	putiq(bb->get_dyn_story(), "esc", escaper);
+    }
 }
