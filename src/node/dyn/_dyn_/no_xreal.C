@@ -18,8 +18,10 @@
 
 main(int argc, char** argv)
 {
-    _dyn_  * b;
     check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
+
+    _dyn_  * b;
 
     while (b = get__dyn_()) {
         put_node(b, cout, false);

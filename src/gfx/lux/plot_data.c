@@ -208,6 +208,40 @@ void set_or_flag(char* arg, int* flag, float* limit)
     }
 }
 
+char *get_version(char *cvs_id)
+{
+    // Extract a version string from the CVS id.
+    // CVS id format is "$Revision$".
+
+    if (!cvs_id) return NULL;
+
+    char *start = strstr(cvs_id, "Revision:");
+    if (!start) return NULL;
+
+    start += 9;
+    while (*start > 0 && *start <= ' ') start++;
+
+    if (start - cvs_id > strlen(cvs_id)) return NULL;
+
+    char *end = start;
+    while (*end > ' ') end++;
+
+    if (*end == ' ') {
+	int n = end-start+1;
+	char *version = (char*)malloc(n*sizeof(char));
+	strncpy(version, start, n-1);
+	version[n-1] = 0;
+	return version;
+    } else {
+
+	// Didn't find another space.  Assume no version was found.
+
+	char *version = (char*)malloc(4*sizeof(char));
+	strcpy(version, "0.0");
+	return version;
+    }
+}
+
 void parse_command_line(int argc, char** argv, plot_params* params)
 {
     int i, j;
@@ -224,6 +258,20 @@ void parse_command_line(int argc, char** argv, plot_params* params)
 	        case '-':	if (!strcmp(argv[i], "--help")) {
 		    		    print_help(NULL);
 				    exit(0);
+
+				} else if (!strcmp(argv[i], "--version")) {
+				    printf("plot_data (CVS ID %s)\n\n",
+					   get_version("$Revision$"));
+
+				    // GNU boilerplate:
+
+				    printf(
+"Copyright (C) 1994-2004, the Starlab development group.\n\
+This is free software; see the source for copying conditions\n\
+There is NO warranty; not even for MERCHANTABILITY or FITNESS\n\
+A PARTICULAR PURPOSE.\n"
+					);
+					exit(0);
 				}
 
 		case 'c':	if (argv[i][2] == 'x')		       /*  cx */

@@ -1,6 +1,5 @@
 
-////  red_stellar system.C: reduce some useful information from the
-////  			    stellar system
+////  rearrange_mf.C: sort stars by stellar mass.
 //.............................................................................
 //    version 1:  Jan 1997   Simon Portegies Zwart   email: spz@astro.uva.nl
 //.............................................................................
@@ -8,14 +7,14 @@
 //  all functions are local
 ////
 ////  Input options:
-////     -B:	Binning option of the Lagrangian radii.
+////     -B:    Binning option of the Lagrangian radii.
 ////     -C:	Cut off criterion, mass, luminosity, number of stars.
-////     -l:      Lower luminosity limit (see below).
+////     -l:    Lower luminosity limit (see below).
 ////     -n:	Number of Lagrangian radii bins.
 ////		Might for some choises be forced.
-////     -O:      Output option, what information should be studied.
+////     -O:    Output option, what information should be studied.
 ////     -o:	Output the story with data written in root.
-////     -S:      Sort option, on what parameter must information be sorted.
+////     -S:    Sort option, on what parameter must information be sorted.
 ////
 ////  Concerning the Lower luminosity limit option (-l, see above).
 ////  Currently this option is only applied to the sorting functions.
@@ -82,6 +81,7 @@ main(int argc, char ** argv)
   extern char *poptarg;
   int c;
   char* param_string = "c:";
+  pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
   dyn *b;
 

@@ -4,6 +4,7 @@
 main(int argc, char *argv[])
 {
     check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
 #if 0
     long long i = 1;

@@ -731,6 +731,7 @@ main(int argc, char** argv)
 {
     tdyn *b;
     check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
 #if 1
 

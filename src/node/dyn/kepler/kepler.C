@@ -1668,6 +1668,7 @@ local void rr(real r)
 main(int argc, char **argv)
 {
     check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
     bool orbit_params = true;
     real time = 0;

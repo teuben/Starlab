@@ -8,7 +8,7 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
  
-//// (re)scale an N-body system to specified M, Q (=T/U), and E.  Note
+//// (Re)scale an N-body system to specified M, Q (=T/U), and E.  Note
 //// that if the required Q implies E > 0, no additional energy scaling
 //// is applied.
 ////

@@ -191,9 +191,10 @@ ostream & _dyn_::print_dyn_story(ostream & s,
 
 main(int argc, char** argv)
 {
-    _dyn_  * b;
     check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
+    _dyn_  * b;
     while (b = get__dyn_()) {
 	cout << "TESTING put__dyn_:" << endl;
         put_node(b);

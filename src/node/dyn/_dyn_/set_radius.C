@@ -65,6 +65,7 @@ int main(int argc, char ** argv)
     label[0] = '\0';
 
     check_help();
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
     _dyn_* b;
     b = get__dyn_();
