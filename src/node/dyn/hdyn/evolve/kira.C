@@ -1721,6 +1721,80 @@ void kira_finalize(hdyn *b)
 #include <unistd.h>				// for termination below...
 #include <signal.h>
 
+#include <time.h>
+
+// This function has to live in the same file as kira:main(), since it must
+// reflect the environment at the time kira was built.  It is referenced by
+// kira_initialize.
+
+void kira_system_id(int argc, char** argv)
+{
+    // Identify the Starlab version.
+
+    cerr << "Starlab version " << VERSION;
+    cerr << "; kira created on " << __DATE__ << " at " << __TIME__ << endl;
+
+    // Attempt to identify the user and host.
+
+    cerr << "kira run by user ";
+    if (getenv("LOGNAME"))
+	cerr << getenv("LOGNAME");
+    else
+	cerr << "(unknown)";
+    cerr << " on host ";
+    if (getenv("HOST"))
+	cerr << getenv("HOST");
+    else if (getenv("HOSTNAME"))
+	cerr << getenv("HOSTNAME");
+    else
+	cerr << "(unknown)";
+    if (getenv("HOSTTYPE"))
+	cerr << " (host type " << getenv("HOSTTYPE") <<")";
+    cerr << endl;
+
+    // Also log the time and date.
+
+    const time_t tt = time(NULL);
+    cerr << "    on  " << ctime(&tt);
+
+    cerr << "command line reference:  " << argv[0] << endl;
+    cerr << "arguments: ";
+    for (int i = 1; i < argc; i++) {
+	cerr << " " << argv[i];
+	if (i%20 == 0) cerr << endl << "           ";
+    }
+    cerr << endl;
+
+    if (   (argv[0][0] == '.' && argv[0][1] == '/')	// easier to list
+	|| (argv[0][0] == '~' && argv[0][1] == '/')	// excluded strings...
+	||  argv[0][0] == '/') {
+    } else {
+
+	char tmp[256];
+	sprintf(tmp, "which %s > ./KIRA_TEMP", argv[0]);
+	// cerr << tmp << endl;
+
+	system(tmp);		// Note: "system" adds newline and insists
+				// on writing to stdout, so we must capture
+				// the output in a file and read it back...
+
+	ifstream file("./KIRA_TEMP");
+	if (file) {
+
+	    file >> tmp;
+	    cerr << "system `which " << argv[0] << "` = " << tmp << endl;
+
+	    file.close();
+	    sprintf(tmp, "rm ./KIRA_TEMP");
+	    system(tmp);	
+	}
+
+    }
+
+    cerr << "current directory = " << getenv("PWD") << endl;
+    cerr << endl;
+}
+
 main(int argc, char **argv) {
 
     check_help();
