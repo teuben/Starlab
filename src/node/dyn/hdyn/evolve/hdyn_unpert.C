@@ -407,7 +407,7 @@ local inline real dt_overshoot(hdyn *b)
 local inline real dt_perturbers(hdyn *b)
 {
     // Return the time for any perturber of multiple CM b to exceed
-    // the threshhold for unperturbed multiple motion,  or -1 if no
+    // the threshhold for unperturbed multiple motion, or -1 if no
     // perturber list exists.
 
     // Effectively replace gamma2 by multiple_merge_tolerance in
@@ -596,6 +596,7 @@ void hdyn::update_dyn_from_kepler(bool need_acc_and_jerk)	// default = true
     else
 	kep->transform_to_time(time - unperturbed_timestep
 			       		* (1 - 1.0/get_kappa()));
+
     // Note that the latter expression implies the former, as get_kappa() = 1
     // for binaries with slow = NULL, but it seems cleaner this way.
 
