@@ -13,7 +13,8 @@
 ////    options:
 ////          -B starting  worldbundle [0]
 ////          -b ending worldbundle [all]
-////          -d output timestep [1/64]
+////          -d output timestep [-6]
+////             (Use negative integer for power of 1/2^[-d])
 ////          -t output worldline at time t [not specified]
 ////
 ////     input: worldbundle output file from kira
@@ -77,7 +78,8 @@ main(int argc, char *argv[]) {
 	case 'b': b_end = atoi(poptarg);
 		break;
 	case 'd': dt = atof(poptarg);
-		break;
+	          if (dt < 0) dt = pow(2.0, dt);
+		  break;
 	case 't': t_flag = true;
 		  t_world = atof(poptarg);
 		break;
