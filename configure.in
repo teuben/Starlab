@@ -193,5 +193,8 @@ AC_CHECK_FUNCS(gethostname gettimeofday select strdup strstr strtod strtol strto
 
 AC_C_BIGENDIAN
 
+dnl		find if 'long long' is known to the compiler
+AC_C_LONG_LONG
+
 dnl skip Makefile for now
 AC_OUTPUT(cshrc.starlab starlab_start starlab_start.sh)
