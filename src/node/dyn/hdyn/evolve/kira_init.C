@@ -781,7 +781,7 @@ bool kira_initialize(int argc, char** argv,
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"*:0a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvVW:xX:y:z:Z:";
+"*:012a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvVW:xX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
@@ -872,6 +872,10 @@ bool kira_initialize(int argc, char** argv,
 			"$Revision$", _SRC_)) != -1) {
 	switch (c) {
 	    case '0':	force_nogrape = true;
+			break;
+	    case '1':	force_nodensity();
+			break;
+	    case '2':	grape6_force_nodma();
 			break;
 	    case 'a':	eta = atof(poptarg);
 			eta_flag = true;

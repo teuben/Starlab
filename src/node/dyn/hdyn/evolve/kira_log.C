@@ -624,6 +624,11 @@ void update_cpu_counters(hdyn * b)
     write_counters_to_log(b);
 }
 
+// Local flag, possibly reset at initialization.
+
+static bool with_density = true;
+void force_nodensity() {with_density = false;}
+
 void log_output(hdyn * b,
 		real count, real steps,
 		real count_top_level, real steps_top_level,
@@ -646,6 +651,7 @@ void log_output(hdyn * b,
 
     // Suppressed while debugging other parts of
     // the GRAPE-6 interface (Steve, 7/00).
+    // Superceded with the with_density flag (Steve, 2/05).
 
     real cpu = cpu_time();
     cerr << endl << "Computing densities..." << flush;
@@ -653,7 +659,8 @@ void log_output(hdyn * b,
     // Possible that the density calculation will fail, in which case
     // we delete the "density_time" entry from the root dyn story.
 
-    if (!kira_calculate_densities(b, cod_pos, cod_vel)) { // does nothing unless
+    if (!with_density ||
+	!kira_calculate_densities(b, cod_pos, cod_vel)) { // does nothing unless
 	cerr << "(densities unavailable)" << endl;	  // GRAPE is present
 	rmq(b->get_dyn_story(), "density_time");
     }

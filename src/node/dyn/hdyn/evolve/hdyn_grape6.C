@@ -154,6 +154,13 @@ local void reattach_grape(real time, char *id, kira_options *ko)
 
 
 
+// Local flags, possibly reset at initialization.
+
+static bool use_jp_dma = true;
+static bool init_jp_dma = false;
+
+void grape6_force_nodma() {use_jp_dma = false;}
+
 local INLINE void send_j_node_to_grape(hdyn *b,
 				       bool computing_energy = false)
 
@@ -219,13 +226,15 @@ local INLINE void send_j_node_to_grape(hdyn *b,
     }
 #endif
 
-    // enabling DMA on the Athlon according to Jun's documentation (sect. 4.3)
-    // Ernie, 01/31/'05
-    static bool init_jp_called;
-    if (!init_jp_called) {
-      cerr << "calling g6_initialize_jp_buffer_" << endl;
-      int size = 10000;
-      g6_initialize_jp_buffer_(&cluster_id, &size), init_jp_called = true;
+    // Enabling DMA on the Athlon according to Jun's documentation (sect. 4.3)
+    // Ernie, 01/31/'05.
+    // Added flag to enable/disable DMA use (Steve, 2/05).
+
+    if (use_jp_dma && !init_jp_dma) {
+	cerr << "calling g6_initialize_jp_buffer_" << endl;
+	int bufsize = 10000;
+	g6_initialize_jp_buffer_(&cluster_id, &bufsize);
+	init_jp_dma = true;
     }
 
     g6_set_j_particle_(&cluster_id,
@@ -611,9 +620,11 @@ local INLINE int force_by_grape(xreal xtime,
 	// ipot[i] = ipot[ni-1];
     }
     
-    // enabling DMA on the Athlon according to Jun's documentation (sect. 4.3)
-    // Ernie, 01/31/'05
-    g6_flush_jp_buffer_(&cluster_id);
+    // Enabling DMA on the Athlon according to Jun's documentation (sect. 4.3)
+    // Ernie, 01/31/'05.  Test added by Steve, 2/05.
+
+    if (init_jp_dma)
+	g6_flush_jp_buffer_(&cluster_id);
 
     g6calc_firsthalf_(&cluster_id, &nj, &ni, iindex,
 		      ipos, ivel, iacc, ijerk, ipot,

@@ -854,9 +854,10 @@ void correct_acc_and_jerk(hdyn * root,		// OLD!
 void correct_acc_and_jerk(hdyn** next_nodes,	// NEW
 			  int n_next);
 
-// ----- In hdyn_grape4.C: -----
+// ----- In hdyn_grape4/6.C: -----
 
 int get_grape4_chip(hdyn *b);
+void grape6_force_nodma();
 
 void check_release_grape(unsigned int config,
 			 kira_options *ko, xreal time, bool verbose = true);
@@ -1093,6 +1094,7 @@ void log_output(hdyn * b,
 		real count_top_level, real steps_top_level,
 		kira_counters* kc_prev,
 		int long_binary_output = 2);
+void force_nodensity();
 
 void snap_output(hdyn * b, real steps, int& snaps,
 		 bool reg_snap, bool last_snap,
