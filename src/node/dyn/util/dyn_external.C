@@ -308,16 +308,13 @@ void set_friction_acc(dyn *b, real r)
 	real sigma2 = sqrt(-2*potential(b, r)/3);  // this is sqrt(2) * sigma;
 						   // assume virial equilibrium
 	real V = abs(Vcm);
-	real X = V/sigma2;			   // scaled velocity; BT p. 425
+	real X = V/sigma2;			// scaled velocity; BT p. 425
 
 #ifndef NEW_4OCT2001
-	real coeff = beta;			   // discard after current runs
+	real coeff = beta;			// discard after current runs
 #else
 	real coeff = 4*M_PI*beta*logLambda(b, r);
 #endif
-
-	PRC(r); PRC(sigma2); PRC(V); PRL(X);
-	PRL(erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
 
 	if (X > 0.1)
 
@@ -330,12 +327,12 @@ void set_friction_acc(dyn *b, real r)
 	    Afric = -coeff * Mfric * Vcm * density(b, r)
 			   * 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
 
-	PRL(Afric);
-
 #if 1
 	cerr << endl << "set_friction_acc: "; PRL(Afric);
 	PRC(beta); PRC(coeff); PRC(Mfric); PRL(density(b, r));
 	PRL(Vcm);
+	PRC(r); PRC(sigma2); PRC(V); PRL(X);
+	PRL(erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
 #endif
     }
 }
