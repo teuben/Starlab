@@ -897,11 +897,15 @@ main(int argc, char** argv)
 
 		    if (!combine) r = Starlab::max(r, 1.0);
 
+		    // Note that the image array runs from top to bottom,
+		    // while the y coordinates run from bottom to yop...
+
 		    // Coordinates in the frame:
 
 		    x = ((x - xleft) * 1.0 * nx / lx);
 		    int i = (int) x;
-		    y = ((y - ybot) * 1.0 * ny / ly);
+		    // y = ((y - ybot) * 1.0 * ny / ly);
+		    y = ((ytop - y) * 1.0 * ny / ly);
 		    int j = (int) y;
 
 		    add_point(a, nx, ny, x, y, i, j,
