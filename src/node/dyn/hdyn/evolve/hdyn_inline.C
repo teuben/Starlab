@@ -24,6 +24,7 @@
 //	real define_perturbation_radius_factor
 //	bool is_perturber
 //	real binary_scale
+//	real compute_sum_of_radii
 //
 //----------------------------------------------------------------------
 
@@ -411,4 +412,27 @@ local inline real estimated_perturbation(hdyn *cm, hdyn *p)
 	gamma *= 2 * m_pert / m_bin;
 
     return gamma;
+}
+
+local inline real compute_sum_of_radii(hdyn *bi, real radi, bool bi_is_bh,
+				       hdyn *bj, real radj, bool bj_is_bh)
+{
+    real sum_of_radii = radi + radj;
+
+    // For black hole, use tidal radius instead of event horizon radius.
+
+    if (bi_is_bh) {
+
+	// bi is a black hole.
+
+        if (!bj_is_bh) 
+            sum_of_radii = 2 * radj
+                * (pow(bi->get_mass()/bj->get_mass(), ONE_THIRD));
+
+    } else if (bj_is_bh)
+
+        sum_of_radii = 2 * radi
+            * (pow(bj->get_mass()/bi->get_mass(), ONE_THIRD));
+
+    return sum_of_radii;
 }
