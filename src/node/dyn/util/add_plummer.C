@@ -14,7 +14,7 @@
 ////
 //// Options:      -c    add comment [none]
 ////               -C    specify center [(0,0,0)]
-////               -M    specify mass [1]
+////               -m/M  specify mass [1]
 ////               -a/R  specify scale [1]
 ////               -n    force interpretation of parameters in N-body units [no]
 
@@ -53,7 +53,7 @@ main(int argc, char *argv[])
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "a:c:C:::M:nR:";
+    char* param_string = "a:c:C:::m:M:nR:";
 
     dyn *b = get_dyn();
     if (b == NULL) err_exit("Can't read input snapshot");
@@ -71,6 +71,7 @@ main(int argc, char *argv[])
 					atof(poparr[1]),
 					atof(poparr[2]));
 			break;
+	    case 'm':
 	    case 'M':	mass = atof(poptarg);
 			break;
 	    case 'a':

@@ -1,4 +1,13 @@
 
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
 // dyn_stats.C:  Helper functions used mainly by sys_stats.
 
 #include "dyn.h"
@@ -283,7 +292,7 @@ void compute_core_parameters(dyn* b, int k,
 	compute_density(b, k);		// (N^2 ops on the front end...)
     }
 
-    // Compute mean (not max) density center, if necessary.
+    // Compute max (not mean) density center, if necessary.
 
     if (getrq(b->get_dyn_story(), "density_center_time")
 		!= b->get_system_time()

@@ -178,7 +178,7 @@ main(int argc, char *argv[])
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "A:a:c:C:::e:E:GnR:x:X:";
+    char* param_string = "A:a:c:C:::e:E:GM:nR:x:X:";
 
     dyn *b = get_dyn();
     if (b == NULL) err_exit("Can't read input snapshot");

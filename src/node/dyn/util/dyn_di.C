@@ -1,4 +1,13 @@
-//
+
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
 // dyn_di.C: dyn-specific diagnostic functions.
 //
 
@@ -175,6 +184,11 @@ real pot_on_general_node(dyn * bj, dyn * bi, real eps2, bool cm = false)
 
 	return pot_on_low_level_node(bi, eps2);
 }
+
+// Note that the kinetic energy is defined in the "root" frame
+// -- i.e. it does not include any bulk motion associated with the
+// root node itself.  (Usually what we want in practice, but don't
+// forget the CM kinetic energy for diagnostics!)
 
 local void accumulate_energies(dyn * root, dyn * b, real eps2,
 			       real & epot, real & ekin, real & etot,
