@@ -20,7 +20,10 @@ echo Initializing Starlab environment
 source starlab_start >>& install.log
 echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
 
-echo Building Starlab
+echo Building Starlab \(this may take a few minutes\)
 make all >>& install.log
+rehash
 echo '++++++++++++++++++++++++++++++++++++++++' >>& install.log
+
+echo Done...\ \ Run scripts/kira_test to check sample kira output.
 
