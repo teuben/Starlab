@@ -47,9 +47,9 @@ else
     if ("$STARLAB_PATH" != "$conf_ssp") then
 
 	if ($?TERM == 1) then
-	    echo Warning: STARLAB_PATH = $STARLAB_PATH differs
-	    echo from the configure version $conf_ssp
-	endif
+            echo Note: STARLAB_PATH = $STARLAB_PATH \
+                 differs from configured version
+ 	endif
 
 #	Retain the current STARLAB_PATH, and check to see if the
 #	install path needs to be modified.  (If it is a subdirectory
@@ -63,10 +63,10 @@ else
 #	    Correct STARLAB_INSTALL_PATH to reflect the new STARLAB_PATH.
 
 	    setenv STARLAB_INSTALL_PATH \
-		`echo $conf_sip | sed \%$conf_ssp%$STARLAB_PATH%`
+		`echo $conf_sip | sed s\%$conf_ssp%$STARLAB_PATH%`
 	    if ($?TERM == 1) then
-		echo Corrected STARLAB_INSTALL_PATH from $conf_sip
-		echo to $STARLAB_INSTALL_PATH
+		echo Corrected STARLAB_INSTALL_PATH to $STARLAB_INSTALL_PATH
+		echo ""
 	    endif
 
 	endif

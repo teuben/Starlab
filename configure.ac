@@ -291,11 +291,10 @@ AC_MSG_NOTICE([linking starlab_start to starlab_start.$shell])
 cd $STARLAB_SOURCE_PATH
 ln -f -s starlab_start.$shell starlab_start
 
-# Also from Steve, 09/03/04:  The newly created version of sremake doesn't
-# have execute permission.  To be fixed.  Following workaround doesn't
-# seem to work...
+# Convenient to save a record of where configure was run.
 
-chmod a+x ./sbin/sremake
+AC_MSG_NOTICE([savinf hostname in CONFIGURE_HOST])
+hostname > CONFIGURE_HOST
 
 #==========================================================================
 
