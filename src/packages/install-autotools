@@ -7,7 +7,7 @@ if ($#argv > 0) then
     if (x$1 == xx) then
 	set p = $STARLAB_PATH/usr
     else
-	st p = $1
+	set p = $1
     endif
     set pre = "--prefix=$p"
 endif
