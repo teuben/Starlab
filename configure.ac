@@ -1,6 +1,9 @@
 # -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
+# Undocumented configure variables used here that might change in the future.
+# no_x
+
 AC_PREREQ(2.59)
 m4_include([version.m4])
 AC_INIT(Starlab, VERSION_NUMBER, [steve@physics.drexel.edu])
@@ -196,6 +199,10 @@ AC_ARG_WITH(qt, AS_HELP_STRING([--with-qt], use Qt [[[default=yes]]]),
 AC_ARG_WITH(qt-dir,
     AS_HELP_STRING([--with-qt-dir=QTDIR], directory where Qt is installed),
     [qt_dir="$withval"])
+if test "x$no_x" = "xyes"; then
+    qt=no
+fi
+AM_CONDITIONAL(NO_X, [test "x$no_x" = "xyes"])
 
 if test -z "$qt" -o "x$qt" = "xyes"; then
 
@@ -220,22 +227,22 @@ Please set environment QTDIR or use --with-qt-dir=QTDIR.])
     if test "x$good_qt" = "xyes"; then
 
 #	We want Qt and have a Qt directory name.  Check that the
-#	library is usable.  Look in both lib and lib64 if necessary.
+#	library is usable.  Look in both lib64 and lib if necessary.
 
 	AC_SUBST(MOC, [$qt_dir/bin/moc])
 	CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
 
 	found_qt=no
 	save_LDFLAGS="$LDFLAGS"
-	if test -d "$qt_dir/lib"; then
-	    LDFLAGS="$LDFLAGS -L$qt_dir/lib"
+	if test -d "$qt_dir/lib64"; then
+	    LDFLAGS="$LDFLAGS -L$qt_dir/lib64"
 	    AC_CHECK_LIB(qt, main, [found_qt="yes"], [found_qt="no"])
 	fi
 
 	if test "x$found_qt" = "xno"; then
-	    if test -d "$qt_dir/lib64"; then
-		LDFLAGS="$save_LDFLAGS -L$qt_dir/lib64"
-		AC_MSG_NOTICE(trying lib64...)
+	    if test -d "$qt_dir/lib"; then
+		LDFLAGS="$save_LDFLAGS -L$qt_dir/lib"
+		AC_MSG_NOTICE(trying lib...)
 		unset ac_cv_lib_qt_main		# (avoid possible caching)
 		AC_CHECK_LIB(qt, main, [found_qt="yes"], [found_qt="no"])
 	    fi
