@@ -1,4 +1,4 @@
-Some issues for starlab4
+Some issues for starlab4   (*'s have been done, -'s are to be done)
 ------------------------
 
 * various "configure" related things have been added, notably
@@ -15,10 +15,12 @@ Some issues for starlab4
   space, e.g. 4.1, or 4.0.2 etc.. 
 
 * inc/version.h (a new file) should be created automatically whenever VERSION
-  has been updated
+  has been updated:
+	make version	
 
 * 'make dist'   will make a snapshot of the current CVS release in a tarball
-  with directory name starlab_VERSION
+  with directory name starlab_VERSION, this is the preferred way to make
+  export tar balls for non-CVS users.
 
 - if an old $STARLAB_PATH is present, the current scheme "starlab_start" is
   not clean. Perhaps it should assume no STARLAB_PATH ?? Alternatively, there
@@ -40,7 +42,7 @@ Some issues for starlab4
 - use of the CPP preprocessor is only guarenteed for .c files... we use .F
   but i've seen  for gnu
 	cpp file.F > file.f
-  and for others i also saw
+  and for others i also saw in the original Makefile's
 	cpp file.F file.f
   (which does not work for gnu)
   Or is the -E or -P flag the trick here. At any rate,need to figure out a consistent
