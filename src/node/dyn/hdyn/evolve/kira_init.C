@@ -1048,6 +1048,8 @@ bool kira_initialize(int argc, char** argv,
 
 	    cerr << "*** Ignoring all internal forces "
 		 << "-- external field only ***" << endl;
+
+	ignore_internal = true;
     }
 
     //----------------------------------------------------------------------
