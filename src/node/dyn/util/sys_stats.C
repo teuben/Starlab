@@ -1098,8 +1098,11 @@ local bool massive_fn(dyn * b)
     return (b->get_mass() >= cutoff_mass);
 }
 
-local real print_lagrangian_radii(dyn* b, int which_lagr,
-				  bool verbose = true, int which_star = 0)
+real print_lagrangian_radii(dyn* b,
+			    int which_lagr,	// default = 2 (nonlinear)
+			    bool verbose,	// default = true
+			    int which_star,	// default = 0 (all stars)
+			    bool noprint)	// default = false (print!)
 {
     bool nonlin = false;
 
@@ -1141,7 +1144,7 @@ local real print_lagrangian_radii(dyn* b, int which_lagr,
 
 	vec lagr_pos = getvq(b->get_dyn_story(), "lagr_pos");
 
-	if (verbose) {
+	if (verbose && !noprint) {
 	    cerr << endl << "  Lagrangian radii relative to ("
 		 << lagr_pos << "):" << endl;
 	    if (find_qmatch(b->get_dyn_story(), "pos_type"))
@@ -1162,14 +1165,16 @@ local real print_lagrangian_radii(dyn* b, int which_lagr,
 	getra(b->get_dyn_story(), "r_lagr", r_lagr, n_lagr);
 
 	for (int k = 0; k < n_lagr; k += 5) {
-	    if (k > 0) {
-		cerr << endl;
-		for (int kk = 0; kk < indent; kk++) cerr << " ";
+	    if (!noprint) {
+		if (k > 0) {
+		    cerr << endl;
+		    for (int kk = 0; kk < indent; kk++) cerr << " ";
+		}
+		for (int i = k; i < k+5 && i < n_lagr; i++)
+		    cerr << " " << r_lagr[i];
 	    }
-	    for (int i = k; i < k+5 && i < n_lagr; i++)
-		cerr << " " << r_lagr[i];
+	    cerr << endl << flush;
 	}
-	cerr << endl << flush;
 
 	rhalf = r_lagr[ihalf];
 	delete [] r_lagr;
@@ -1412,7 +1417,7 @@ void sys_stats(dyn* b,
 	       bool verbose,				// default = true
 	       bool binaries,				// default = true
 	       bool long_binary_output,			// default = false
-	       int  which_lagr,				// default = 0
+	       int  which_lagr,				// default = 2
 	       bool print_time,				// default = false
 	       bool compute_energy,			// default = false
 	       bool allow_n_sq_ops,			// default = false
@@ -1587,7 +1592,8 @@ void sys_stats(dyn* b,
 
 	if (rhalf > 0) {
 	    real density = 1.5*nd / (4*M_PI*pow(rhalf, 3));
-	    putrq(b->get_root()->get_dyn_story(), "half_density", density);
+	    putrq(b->get_root()->get_dyn_story(), "kira_rhalf", rhalf);
+	    putrq(b->get_root()->get_dyn_story(), "kira_half_density", density);
 	}
 
 	// PRL(heavy_stars);
@@ -1787,4 +1793,3 @@ main(int argc, char **argv)
 }
 
 #endif
-

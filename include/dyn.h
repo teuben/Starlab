@@ -458,6 +458,12 @@ void compute_general_mass_radii(dyn*, int,
 
 // From sys_stats.C:
 
+real print_lagrangian_radii(dyn* b,
+			    int which_lagr = 2,
+			    bool verbose = true,
+			    int which_star = 0,
+			    bool noprint = false);
+
 bool parse_sys_stats_main(int argc, char *argv[],
 			  int  &which_lagr,
 			  bool &binaries,
@@ -473,7 +479,7 @@ void sys_stats(dyn* root,
 	       bool verbose = true,
 	       bool binaries = true,
 	       bool long_binary_output = false,
-	       int which_lagr = 0,
+	       int which_lagr = 2,
 	       bool print_time = false,
 	       bool compute_energy = false,
 	       bool allow_n_sq_ops = false,
