@@ -1,7 +1,8 @@
 
 //// snap_to_image:  Construct images of a series of snapshots.
 ////
-//// Options:  -1           combine all frames in a simgle image          [yes]
+//// Options:
+////           -1           combine all frames in a simgle image          [yes]
 ////           -a           produce a series of frames for animation       [no]
 ////           -c           compress the image file(s) using gzip          [no]
 ////           -C colormap  specify a colormap file name                   [no]
@@ -26,7 +27,9 @@
 ////                            0:  as is (don't adjust)
 ////                            1:  initial center of mass
 ////                            2:  modified center of mass of each frame
-////           -p psize     specify star radius, in pixels
+////           -p psize     specify star radius/scale, in pixels
+////                        (psize < 0 ==> lower limit on pixel size = 0,
+////                        otherwise, limit = 1)
 ////                                          [0 (single image), 1 (animation)]
 ////           -P axis      specify projection axis                         [z]
 ////           -q           toggle suppression of diagnostic output
@@ -421,6 +424,7 @@ main(int argc, char** argv)
     bool radius = false;
     int psize = 1;
     bool psize_set = false;
+    real minpixel = 1;
     int ncolor = 0;
     real index_all = -1;
 
@@ -485,7 +489,10 @@ main(int argc, char** argv)
 	    		break;
 	    case 'p':   psize = atoi(poptarg);
 	    		// if (psize < 1) psize = 1;
-	    		if (psize < 0) psize = 0;
+	    		if (psize < 0) {
+			    psize = -psize;
+			    minpixel = 0;
+			}
 	    		psize_set = true;
 		        break;
 	    case 'P':	if (poptarg[0] == 'x' || atoi(poptarg) == 1)
@@ -527,10 +534,13 @@ main(int argc, char** argv)
     }
 
     if (!psize_set) {
-	if (combine && !radius)
+	if (combine && !radius) {
 	    psize = 0;
-	else
+	    minpixel = 0;
+	} else {
 	    psize = 1;
+	    minpixel = 1;
+	}
     }
 
 #ifndef HAVE_LIBPNG
@@ -949,9 +959,10 @@ main(int argc, char** argv)
 		    if (radius || (HRD && bb->get_radius() > 0))
 			r = psize * bb->get_radius() * rfac;
 
-		    // Single pixels are too small for an animation.
+		    // Single pixels may be too small for an animation.
+		    // Allow specification of a lower limit.
 
-		    if (!combine) r = Starlab::max(r, 1.0);
+		    r = Starlab::max(r, minpixel);
 
 		    // Note that the image array runs from top to bottom,
 		    // while the y coordinates run from bottom to yop...
