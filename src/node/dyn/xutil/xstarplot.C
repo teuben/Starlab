@@ -39,7 +39,7 @@
 //	 This isn't fatal, but it should be fixed someday...
 
 #include "dyn.h"
-#include <strstream>
+#include <sstream>
 
 #define HALF_ROOT2   0.707106781186547524400844362105	// Root2/2
 #define ROOT2        1.414213562373095048801688724210	// sqrt(2)
@@ -398,7 +398,7 @@ void show_instructions(unsigned long  win, float r, char* buffer, int update)
 
     lux_clear_window(win);
     lux_reconvert_rcoord(win,0,0,&statusx, &statusy);
-    istrstream ins(buffer,strlen(buffer));
+    istringstream ins(buffer);
     while(ins.get(s,255,'\n')) {
 	lux_draw_image_string(win, statusx, statusy,
 			      -(line+1)*linespacing, s, -1);
@@ -416,7 +416,7 @@ void show_instructions(unsigned long win, float r, char* buffer,
     int ptr = 0, len;
 
     lux_reconvert_rcoord(win,0,0,&statusx, &statusy);
-    istrstream ins(buffer,strlen(buffer));
+    istringstream ins(buffer);
     while(ins.get(s,255,'\n')) {
 	lux_draw_string(win, statusx, statusy, -(line+1)*linespacing, s, -1);
 	ins.get(s[0]);  /* Clean "\n" */

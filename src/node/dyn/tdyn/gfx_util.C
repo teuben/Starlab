@@ -1,6 +1,7 @@
 #ifndef WIN32
 
 #include "xstarplot.h"
+#include <sstream>
 
 static float linespacing;
 			 
@@ -78,8 +79,7 @@ void initialize_graphics(float r_factor,	     // (input) scale factor
 
     xorigin = 0;
     yorigin = 0;
-    int xsize = _R_(400);
-    int ysize = _R_(400);
+    int xsize = _R_(400);    int ysize = _R_(400);
     win = lux_openwin(xorigin, yorigin, xsize, ysize);
     lux_set_window_name(win, "Starlab");
 
@@ -291,14 +291,16 @@ void show_instructions(unsigned long win, float r, char* buffer,
 
     lux_clear_window(win);
     lux_reconvert_rcoord(win,0,0,&statusx, &statusy);
-    istrstream ins(buffer,strlen(buffer));
-    while(ins.get(s,255,'\n')) {
+
+    istringstream ins(buffer);
+    while (ins.get(s, 255, '\n')) {
 	lux_set_nobuffer();
 	lux_draw_image_string(win, statusx, statusy,
 			      -(line+1)*linespacing, s, -1);
 	ins.get(s[0]);  /* Clean "\n" */
-	line = line+1;
+	line++;
     }
+
     if (update) lux_update_fg(win);
 }
 
@@ -311,7 +313,8 @@ void show_instructions(unsigned long win, float r, char* buffer,
     int ptr = 0, len;
 
     lux_reconvert_rcoord(win,0,0,&statusx, &statusy);
-    istrstream ins(buffer,strlen(buffer));
+
+    istringstream ins(buffer);
     while(ins.get(s,255,'\n')) {
 	lux_set_nobuffer();
 	lux_draw_string(win, statusx, statusy,
@@ -319,6 +322,7 @@ void show_instructions(unsigned long win, float r, char* buffer,
 	ins.get(s[0]);  /* Clean "\n" */
 	line = line+1;
     }
+
     if (update) lux_update_fg(win);
 }
 
