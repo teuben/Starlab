@@ -32,7 +32,7 @@ esac
 
 cd $STARLAB_PATH
 
-(find inc -name '*\.h' -print; \
+(find include -name '*\.h' -print; \
  find $srcdir -name Makefile -print; \
  find $srcdir -name '*\.[cCfFh]' -print; \
  find src/gfx/Local* -print ) \
