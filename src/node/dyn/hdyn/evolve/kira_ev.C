@@ -17,6 +17,11 @@
 //	void initialize_system_phase2
 //	void clean_up_kira_ev
 
+// Substantially rewrote code and removed timing and some other
+// debugging #ifdefs -- too confusing, and no longer relevant
+// after the rewrite.
+//						Steve, 4/03
+
 #include "hdyn.h"
 #include "kira_timing.h"
 
@@ -25,8 +30,7 @@
 #   undef T_DEBUG
 #endif
 
-int calculate_acc_and_jerk_for_list(hdyn *b,
-				    hdyn **next_nodes,
+int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 				    int  n_next,
 				    xreal time,
 				    bool exact,
@@ -41,69 +45,17 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
     // top-level (i.e. GRAPE) force calculations, then all epilogue
     // calls.
 
+    if (!next_nodes[0] || !next_nodes[0]->is_valid()) return 0;	  // unnecessary
+
+    hdyn *b = next_nodes[0]->get_root();
+
     kira_counters *kc = b->get_kira_counters();
-    kira_diag *kd = next_nodes[0]->get_kira_diag();
-    kira_options *ko = next_nodes[0]->get_kira_options();
+    kira_diag *kd = b->get_kira_diag();
+    kira_options *ko = b->get_kira_options();
 
-#ifdef CPU_COUNTERS
-    real cpu = cpu_time(), cpu_prev;
-#endif
+    bool ignore_internal = b->get_ignore_internal();
 
-    // Return the number of top-level nodes on the list.
-
-    int n_list_top_level = 0;
-
-    bool ignore_internal = next_nodes[0]->get_ignore_internal();
-
-#ifdef TIME_INTERNAL
-
-    // Code to time specific force-calculation operations:
-
-    real cpu0, cpu1, cpu2, cpu3, cpu4;
-    int kmax = 1;
-
-#if 0
-	for (int k = 0; k < n_next; k++) {
-	    hdyn* bi = next_nodes[k];
-
-	    if (bi->name_is("13a")
-		&& bi->get_kepler() == NULL
-		&& bi->get_time() > 6.6
-		&& bi->find_perturber_node()
-		&& bi->find_perturber_node()->get_n_perturbers() > 0
-		) {
-
-		// Found the particle.  Clean up the rest of the list.
-
-		for (int kk = 0; kk < n_next; kk++)
-		    if (kk != k)
-			next_nodes[kk]->set_timestep(VERY_LARGE_NUMBER);
-		n_next = 1;
-		next_nodes[0] = bi;
-
-		int p = cerr.precision(HIGH_PRECISION);
-		cerr << endl << "timing " << bi->format_label()
-		     << " at time " << bi->get_system_time() << endl;
-		if (bi->is_low_level_node()) {
-		    PRL(bi->get_top_level_node()->format_label());
-		    if (bi->find_perturber_node()) {
-			PRL(bi->find_perturber_node()->format_label());
-			PRL(bi->find_perturber_node()->get_n_perturbers());
-		    }
-		}
-		cerr.precision(p);
-
-		kmax = 25000;
-		cpu0 = cpu_time();
-	    }
-	}
-#endif
-
-    for (int k = 0; k < kmax; k++) {
-
-#endif
-
-    xreal sys_t = next_nodes[0]->get_system_time();
+    xreal sys_t = b->get_system_time();
 
     // Note that time and system_time should be the same...
 
@@ -111,42 +63,73 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
     if (IN_DEBUG_RANGE(sys_t)) {
 	cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 1 << endl;
 	int p = cerr.precision(HIGH_PRECISION);
-	PRI(7); PRC(n_next); PRC(exact); PRC(time); PRL(time - sys_t);
+	PRI(7); PRC(n_next); PRC(exact); PRC(time); PRL(time-sys_t);
 	cerr.precision(p);
     }
 #endif
 
+    // Explicitly split the calculation into low-level and top-level
+    // nodes (Steve, 4/03).  Low-level nodes run from 0 to n_low-1;
+    // top-level nodes from n_low to n_next-1.
+    //
+    // The first loop here does the splitting, at the same time
+    // performing the first part of the force calculation.
+
+    bool print = kd->kira_ev;
+    int n_low = 0;
+
     for (int i = 0; i < n_next; i++) {
 
 	hdyn *bi = next_nodes[i];
+	bool low = false;
 
-	// Predict the entire clump containing node bi (Steve, 8/98):
+	if (bi->get_parent() == b) {
 
-	predict_loworder_all(bi->get_top_level_node(), sys_t);
+	    // This is a top-level node.
 
-	if (bi->is_top_level_node()) {
+	    predict_loworder_all(bi, sys_t);
+
+	    // Prologue operations:
+
 	    bi->clear_interaction();
-	    bi->top_level_node_prologue_for_force_calculation(exact);
-	    n_list_top_level++;
+
+	    // Note that top_level_node_prologue_for_force_calculation()
+	    // does the *entire* calculation in the case exact = true.
+
+	    if (!ignore_internal)
+		bi->top_level_node_prologue_for_force_calculation(exact);
+
+	} else {
+
+	    // This is a low-level node.
+
+	    low = true;
+
+	    // Predict the entire clump containing node bi (Steve, 8/98):
+
+	    if (!ignore_internal)
+		predict_loworder_all(bi->get_top_level_node(), sys_t);
+	}
+
+	if (ignore_internal) {
+
+	    // Set flags in case of no internal forces...
+
+	    bi->set_nn(bi);
+	    bi->set_coll(bi);
+	    bi->set_d_nn_sq(VERY_LARGE_NUMBER);
+	}
+
+	bi->inc_steps();
+
+	// All initial operations on bi are complete.
+	// Reorder the list if necessary.
+
+	if (low) {
+	    next_nodes[i] = next_nodes[n_low];
+	    next_nodes[n_low++] = bi;
 	}
     }
-
-#ifdef CPU_COUNTERS
-    cpu_prev = cpu;
-    kc->cpu_time_predict += (cpu = cpu_time()) - cpu_prev;
-#endif
-
-#ifdef TIME_INTERNAL
-    }
-    if (kmax > 1) cpu1 = cpu_time();
-#endif
-
-    if (tree_changed)
-	restart_grape = true;
-
-#ifdef TIME_INTERNAL
-    for (int k = 0; k < kmax; k++) {
-#endif
 
 #ifdef T_DEBUG
     if (IN_DEBUG_RANGE(sys_t)) {
@@ -155,201 +138,170 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
     }
 #endif
 
-    if (!exact) {
+    // Complete the low-level force calculations.
 
-	// Top-level forces.
+    if (!ignore_internal) {
 
-	if (!ignore_internal)
-	    kira_calculate_top_level_acc_and_jerk(next_nodes, n_next,
-						  time, restart_grape);
+	for (int i = 0; i < n_low; i++) {
 
-	// (Uses grape_calculate_acc_and_jerk or
-	//  top_level_node_real_force_calculation, as appropriate.)
+	    hdyn *bi = next_nodes[i];
+	    if (!bi->get_kepler()) {
+
+		// Compute the forces (perturbed motion).
+
+		if (print) {
+		    cerr << "\nComputing force on low-level node "
+			 << bi->format_label() << endl;
+		    pp3(bi);
+		    PRC(bi->get_system_time());
+		    PRC(bi->get_time()); PRL(bi->get_t_pred());
+		    PRL(bi->get_pred_pos());
+		    PRL(bi->get_pred_vel());
+		}
+
+		hdyn *sister = bi->get_younger_sister();
+		if (!sister) {
+		    sister = bi->get_elder_sister();
+		    if (!sister) continue;		  // really an error...
+		}
+
+		bi->clear_interaction();
+
+		// Doing these steps here allows us to bypass
+		// calculate_acc_and_jerk and go directly to
+		// calculate_acc_and_jerk_on_low_level_node.
+
+		bi->set_d_coll_sq(VERY_LARGE_NUMBER);
+		bi->set_coll(NULL);
+		if (sister) sister->set_d_coll_sq(VERY_LARGE_NUMBER);
+
+		bi->calculate_acc_and_jerk_on_low_level_node();
+		kc->pert_step++;
+
+		if (print) {
+		    cerr << "after..."<<endl;
+		    pp3(bi);
+		    PRL(bi->get_acc());
+		    PRL(bi->get_binary_sister()->get_acc());
+		    PRL(bi->get_pos());
+		    PRL(bi->get_binary_sister()->get_pos());
+		}
+	    }
+	}
+    }
 
 #ifdef T_DEBUG
-	if (IN_DEBUG_RANGE(sys_t)) {
-	    cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 3
-		 << endl << flush;
-	}
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 3
+	     << endl << flush;
+    }
 #endif
 
-	int n = get_n_top_level();
+    // Everything is done for low-level nodes.  Complete the top-level
+    // force calculation (now top-level nodes run from n_low to n_next-1):
 
-	for (int i = 0; i < n_next; i++) {
+    if (n_low < n_next) {
+
+	// Prologue operations.
+
+	for (int i = n_low; i < n_next; i++) {
+
 	    hdyn *bi = next_nodes[i];
+	    predict_loworder_all(bi, sys_t);
 
-	    if (ignore_internal) {
+	    bi->clear_interaction();
+
+	    // Note that top_level_node_prologue_for_force_calculation()
+	    // does the *entire* calculation in the case exact = true.
+
+	    bi->top_level_node_prologue_for_force_calculation(exact);
+
+	    if (!exact && ignore_internal) {
 		bi->set_nn(bi);
 		bi->set_coll(bi);
 		bi->set_d_nn_sq(VERY_LARGE_NUMBER);
 	    }
-
-	    if (bi->is_top_level_node()) {
-
-		bi->inc_direct_force(n-1);	// direct force counter
-
-		bi->top_level_node_epilogue_force_calculation();
-	    }
+	    bi->inc_steps();
 	}
 
-#ifdef CPU_COUNTERS
-	cpu_prev = cpu;
-	kc->cpu_time_top_level_force += (cpu = cpu_time()) - cpu_prev;
-#endif
-    }
-
-#ifdef TIME_INTERNAL
-    }
-    if (kmax > 1) cpu2 = cpu_time();
-#endif
-
-#ifdef TIME_INTERNAL
-    for (int k = 0; k < kmax; k++) {
-#endif
-
-    bool print = kd->kira_ev;
+	if (tree_changed)
+	    restart_grape = true;
 
 #ifdef T_DEBUG
 	if (IN_DEBUG_RANGE(sys_t)) {
 	    cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 4
 		 << endl << flush;
-#if 0
-	    pp3("(21,100021)");
-	    pp3("(23,100023)");
-	    print = true;
-#endif
 	}
-	int ppp = cerr.precision(HIGH_PRECISION);
 #endif
 
-    for (int i = 0; i < n_next; i++) {
-	hdyn *bi = next_nodes[i];
+	int n_top = 1;
 
-	// Compute forces on low-level nodes.
+	// Calculate top-level forces.  Note new return value from
+	// kira_calculate_top_level_acc_and_jerk() (Steve, 4/03).
 
-	if (bi->is_low_level_node() && bi->get_kepler() == NULL) {
+	// Top_level force calculation uses grape_calculate_acc_and_jerk or
+	// top_level_node_real_force_calculation, as appropriate.
 
-	    if (print) {
-	        cerr << "\nComputing force on low-level node "
-		     << bi->format_label() << endl;
-		pp3(bi);
-		PRC(bi->get_system_time());
-		PRC(bi->get_time()); PRL(bi->get_t_pred());
-		PRL(bi->get_pred_pos());
-		PRL(bi->get_pred_vel());
-	    }
-
-#ifdef KIRA_DEBUG
-	    hdyn *sister = bi->get_binary_sister();
-#else
-	    hdyn *sister = bi->get_younger_sister();	// assume binary tree
-	    if (!sister) {
-		sister = bi->get_elder_sister();
-		if (!sister)
-		    continue;				// really an error...
-	    }
-#endif
-
-	    bi->clear_interaction();
-
-	    // Doing these steps here allows us to bypass calculate_acc_and_jerk
-	    // and go directly to calculate_acc_and_jerk_on_low_level_node.
-
-	    bi->set_d_coll_sq(VERY_LARGE_NUMBER);
-	    bi->set_coll(NULL);
-	    sister->set_d_coll_sq(VERY_LARGE_NUMBER);
-	    bi->calculate_acc_and_jerk_on_low_level_node();
-
-	    kc->pert_step++;
-
-	    if (print) {
-		cerr << "after..."<<endl;
-		pp3(bi);
-		PRL(bi->get_acc());
-		PRL(bi->get_binary_sister()->get_acc());
-		PRL(bi->get_pos());
-		PRL(bi->get_binary_sister()->get_pos());
-	    }
-	}
-
-	// Update all step counters (direct force counters are
-	// incremented above; indirect force counters are handled
-	// in hdyn_ev.C)
-
-#ifdef TIME_INTERNAL
-	if (k == 0)
-#endif
-
-	bi->inc_steps();
-    }
-
-#ifdef CPU_COUNTERS
-    cpu_prev = cpu;
-    kc->cpu_time_low_level_force += (cpu = cpu_time()) - cpu_prev;
-#endif
-
-#ifdef TIME_INTERNAL
-    }
-    if (kmax > 1) cpu3 = cpu_time();
-#endif
+	if (!exact && !ignore_internal)
+	    n_top = kira_calculate_top_level_acc_and_jerk(next_nodes+n_low,
+							  n_next-n_low,
+							  time, restart_grape);
 
 #ifdef T_DEBUG
-    if (IN_DEBUG_RANGE(sys_t)) {
-	cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 5
-	     << endl << flush;
-#if 0
-	pp3("(21,100021)");
-	pp3("(23,100023)");
-#endif
-    }
-    cerr.precision(ppp);
-#endif
-
-    // Complete calculation of accs and jerks by correcting for C.M.
-    // interactions.
-
-#ifdef TIME_INTERNAL
-    for (int k = 0; k < kmax; k++) {
-#endif
-
-    if (!exact) {
-
-	// Note: correct_acc_and_jerk() now checks list membership to
-	// determine if correction is needed.
-
-	// The new version of correct_acc_and_jerk appears to work, but
-	// retain the possibility of reverting to the old version until we
-	// are sure there are no problems.  Results of the two versions
-	// are similar, but *not* identical.
-
-	// On_integration_list flags are for use by correct_acc_and_jerk(),
-	// to ensure that we only correct interactions between objects on
-	// the list.
-
-	for (int i = 0; i < n_next; i++)
-	    next_nodes[i]->set_on_integration_list();
-
-	if (ko->use_old_correct_acc_and_jerk || !ko->use_perturbed_list)
-
-	    correct_acc_and_jerk(b,			// old version
-				 reset_force_correction);
-	else
-
-	    correct_acc_and_jerk(next_nodes, n_next);	// new version
-
-	// Cautiously unset the "on_integration_list" flags...
-
-	for (int i = 0; i < n_next; i++) {
-	    hdyn *n = next_nodes[i];
-	    if (n && n->is_valid())
-		n->clear_on_integration_list();
+	if (IN_DEBUG_RANGE(sys_t)) {
+	    cerr << "DEBUG: calculate_acc_and_jerk_for_list " << 5
+		 << endl << flush;
 	}
-
-#ifdef CPU_COUNTERS
-	cpu_prev = cpu;
-	kc->cpu_time_top_level_force += (cpu = cpu_time()) - cpu_prev;
 #endif
-    }
+
+	// Complete calculation of top-level accs and jerks by correcting
+	// for C.M. interactions.
+
+	if (!exact) {
+
+	    // Note: correct_acc_and_jerk() now checks list membership to
+	    // determine if correction is needed.
+
+	    // The new version of correct_acc_and_jerk appears to work, but
+	    // retain the possibility of reverting to the old version until we
+	    // are sure there are no problems.  Results of the two versions
+	    // are similar, but *not* identical.
+
+	    // On_integration_list flags are for use by correct_acc_and_jerk(),
+	    // to ensure that we only correct interactions between objects on
+	    // the list.  Should be unset immediately on return, but see the
+	    // note below.
+
+	    n_top--;
+
+	    // Epilogue operations.
+
+	    for (int i = n_low; i < n_next; i++) {
+
+		hdyn *bi = next_nodes[i];
+
+		bi->inc_direct_force(n_top);		// direct force counter
+		bi->top_level_node_epilogue_force_calculation();
+		bi->set_on_integration_list();
+	    }
+
+	    if (ko->use_old_correct_acc_and_jerk || !ko->use_perturbed_list)
+
+		correct_acc_and_jerk(b,			// old version
+				     reset_force_correction);
+	    else
+
+		correct_acc_and_jerk(next_nodes+n_low,	// new version
+				     n_next-n_low);
+
+	    // Don't unset the "on_integration_list" flags here, because
+	    // the loop through memory may cost more than it is worth.
+	    // *** Must unset these flags in the calling function. ***
+
+	    // for (int i = n_low; i < n_next; i++)
+	    //     next_nodes[i]->clear_on_integration_list();
+
+	}
 
 #ifdef T_DEBUG
 	if (IN_DEBUG_RANGE(sys_t)) {
@@ -358,50 +310,29 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
 	}
 #endif
 
-#ifdef TIME_INTERNAL
-    }
-    if (kmax > 1) cpu4 = cpu_time();
+	// Add external forces, if any, to top-level nodes.
 
-    for (int k = 0; k < kmax; k++) {
-#endif
+	if (b->get_external_field() > 0) {
 
-    if (b->get_external_field() > 0) {
+	    for (int i = n_low; i < n_next; i++) {
 
-        // Add external forces.
-
-        for (int i = 0; i < n_next; i++)
-	    if (next_nodes[i]->is_top_level_node()) {
 		hdyn *bb = next_nodes[i];
+
 		real pot;
 		vector acc, jerk;
-	        get_external_acc(bb, bb->get_pred_pos(), bb->get_pred_vel(),
+		get_external_acc(bb, bb->get_pred_pos(), bb->get_pred_vel(),
 				 pot, acc, jerk);
 		bb->inc_pot(pot);
 		bb->inc_acc(acc);
 		bb->inc_jerk(jerk);
 	    }
-
-#ifdef CPU_COUNTERS
-	cpu_prev = cpu;
-	kc->cpu_time_external_force += (cpu = cpu_time()) - cpu_prev;
-#endif
+	}
     }
 
-#ifdef TIME_INTERNAL
-    }
-    if (kmax > 1) {
-	cerr << "CPU times:  "
-	     << (cpu1-cpu0)/kmax << "  "
-	     << (cpu2-cpu1)/kmax << "  "
-	     << (cpu3-cpu2)/kmax << "  "
-	     << (cpu4-cpu3)/kmax << "  "
-	     << (cpu_time()-cpu4)/kmax << endl;
-	exit(0);
-    }
-#endif
-
-    return n_list_top_level;
+    return n_low;
 }
+
+
 
 void calculate_acc_and_jerk_on_all_top_level_nodes(hdyn * b)
 {
@@ -415,13 +346,12 @@ void calculate_acc_and_jerk_on_all_top_level_nodes(hdyn * b)
     bool reset_force_correction = true; 	// (no longer used)
     bool restart_grape = true;
 
-    calculate_acc_and_jerk_for_list(b, list, n_top,
+    calculate_acc_and_jerk_for_list(list, i_top,
 				    b->get_system_time(),
 				    false,	// usually what we want...
 				    false,	// called before tree changes
-				    reset_force_correction, // no longer used
+				    reset_force_correction, // obsolete
 				    restart_grape);
-
     delete [] list;
 }
 
@@ -437,13 +367,12 @@ void calculate_acc_and_jerk_on_top_level_binaries(hdyn * b)
     bool reset_force_correction = true; 	// (no longer used)
     bool restart_grape = true;
 
-    calculate_acc_and_jerk_for_list(b, list, i_top,
+    calculate_acc_and_jerk_for_list(list, i_top,
 				    b->get_system_time(),
 				    false,	// usually what we want...
 				    true,
 				    reset_force_correction, // no longer used
 				    restart_grape);
-
     delete [] list;
 }
 
@@ -451,7 +380,7 @@ void calculate_acc_and_jerk_on_top_level_binaries(hdyn * b)
 
 // initialize_system_phase2:  Calculate acc, jerk, timestep, etc for all nodes.
 
-// System should be synchronized prior to calling this function.
+// NOTE: System should be synchronized prior to calling this function.
 
 // Static data:
 
@@ -463,22 +392,22 @@ static int nnodes = -1;
 
 void clean_up_kira_ev() {if (nodes) delete [] nodes;}
 
-void initialize_system_phase2(hdyn * b,
+void initialize_system_phase2(hdyn *b,
 			      int call_id,	// default = 0
 			      int set_dt)	// 0 ==> set only if zero
 						// 1 ==> set with limit (def)
 						// 2 ==> always set
 {
-//    cerr << "initialize_system_phase2: "; PRC(call_id), PRL(set_dt);
-
+    // cerr << "initialize_system_phase2: "; PRC(call_id), PRL(set_dt);
     dbg_message("initialize_system_phase2", b);
 
-    if (!b->is_root()) {
+    if (!b->is_root())
 	err_exit("initialize_system_phase2 called with non-root");
-    }
+
+    xreal time = b->get_system_time();
 
     int n = 0;
-    for_all_nodes(hdyn, b, b1) n++ ;
+    for_all_nodes(hdyn, b, bb) n++;
 
     if  (work_size < n) {
 	if (!nodes) delete [] nodes;
@@ -486,10 +415,8 @@ void initialize_system_phase2(hdyn * b,
 	nodes = new hdynptr[work_size];
     }
 
-    // (New variable names necessary here because of DEC C++...)
-
-    for_all_nodes(hdyn, b, b2) {
-	if (!b2->get_kepler() && (b2->get_unperturbed_timestep() > 0)) {
+    for_all_nodes(hdyn, b, bb) {
+	if (!bb->get_kepler() && (bb->get_unperturbed_timestep() > 0)) {
 
 	    // When is this necessary? (SLWM 3/98)
 
@@ -498,34 +425,32 @@ void initialize_system_phase2(hdyn * b,
 		 << "initialize_system_phase2: "
 		 << "creating kepler for unperturbed binary"
 		 << endl
-		 << "    " << b2->get_parent()->format_label()
-		 << " at system time " << b->get_system_time()
+		 << "    " << bb->get_parent()->format_label()
+		 << " at system time " << time
 		 << "  call_id = " << call_id
 		 << endl;
 	    cerr.precision(p);
 
-	    b2->update_kepler_from_hdyn();
+	    bb->update_kepler_from_hdyn();
 	}
     }
 
     // Make a list of all nodes except unperturbed binary components.
 
     n = 0;
-    for_all_nodes(hdyn, b, b3) {
-	if ((b3 != b) && (!b3->get_kepler())) {
-	    nodes[n] = b3;
+    for_all_nodes(hdyn, b, bb) {
+	if ((bb != b) && (!bb->get_kepler())) {
+	    nodes[n] = bb;
 	    n++ ;
 	}
     }
-
-    xreal time = nodes[0]->get_system_time();
 
     bool tree_changed = true;
     bool reset_force_correction = true;	// no longer used
     bool restart_grape = true;
     bool exact = false;
 
-    calculate_acc_and_jerk_for_list(b, nodes, n, time,
+    calculate_acc_and_jerk_for_list(nodes, n, time,
 				    exact,
 				    tree_changed,
 				    reset_force_correction,  // no longer used
@@ -535,55 +460,58 @@ void initialize_system_phase2(hdyn * b,
 
     real min_dt = VERY_LARGE_NUMBER;
 
-    for_all_nodes(hdyn, b, b4) {
-	if ((b4 != b) && (!b4->get_kepler())) {
+    for_all_nodes(hdyn, b, bb) {
+	if ((bb != b) && (!bb->get_kepler())) {
 
-	    b4->store_old_force();
+	    bb->store_old_force();
 
-	    if (set_dt || (b4->get_time() <= 0 || b4->get_timestep() <= 0) ) {
+	    if (set_dt || (bb->get_time() <= 0 || bb->get_timestep() <= 0) ) {
 
-		real dtlim = b4->get_timestep()/2;
-		b4->set_first_timestep();
-		if (set_dt == 1 && b4->get_timestep() < dtlim)
-		    b4->set_timestep(dtlim);
+		real dtlim = bb->get_timestep()/2;
+		bb->set_first_timestep();
+		if (set_dt == 1 && bb->get_timestep() < dtlim)
+		    bb->set_timestep(dtlim);
 
-		if (b4->get_time() + b4->get_timestep()
-		    < b->get_system_time()) {
+		if (bb->get_time() + bb->get_timestep() < time) {
 
-		    // Note from Steve and Simon, 26Feb, 1999:
+		    // Note from Steve and Simon, Feb 26, 1999:
 
 		    // This bug can only occur if the function is
 		    // improperly called.
 
 		    cerr << endl << "warning: initialize_system_phase2: "
 			 << "time will go backwards!" << endl;
+
+		    int p = cerr.precision(HIGH_PRECISION);
+		    PRL(bb->format_label());
+		    PRC(time); PRL(bb->get_time() + bb->get_timestep());
+		    cerr.precision(p);
+
 		    cerr << "function should not be called with "
 			 << "unsynchronized system." << endl << endl;
-		    pp3(b4);
+		    pp3(bb);
 
 		    // Fix would be to force timestep to go past system
 		    // time, but this is not in general possible while
 		    // maintaining the block step structure.  Could
 		    // simply terminate here, but for now we let the
 		    // code die in kira.C.
-
 		}
-
 	    }
 
-	    min_dt = Starlab::min(min_dt, b4->get_timestep());
+	    min_dt = Starlab::min(min_dt, bb->get_timestep());
 	}
     }
 
     // Check for perturbed binaries in the input data...
 
-    if (set_dt && b->get_system_time() <= 0) {
-	for_all_nodes(hdyn, b, b5) {
-	    if ((b5 != b) && (!b5->get_kepler())) {
-		if (b5->is_parent()
-		    && b5->get_oldest_daughter()
+    if (set_dt && time <= 0) {
+	for_all_nodes(hdyn, b, bb) {
+	    if ((bb != b) && (!bb->get_kepler())) {
+		if (bb->is_parent()
+		    && bb->get_oldest_daughter()
 			 ->get_perturbation_squared() > 1)
-		    b5->set_timestep(min_dt);
+		    bb->set_timestep(min_dt);
 	    }
 	}
     }
