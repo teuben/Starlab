@@ -1,0 +1,444 @@
+
+// tree_io.C
+//
+//	The most important (pipeable) output routines have been
+//	modified to work on HP/HPUX-8.x -- S. McMillan, 3/3/93
+//
+//	Modified to read/write compressed snapshots (cout only),
+//	under control of environment variable STARLAB_ZIP.
+//				-- S. McMillan, X. Zhuge, 6/22/98
+//	Minor leak fix		-- PJT , 11/24/98
+
+#include "starlab_vector.h"
+#include "util_io.h"
+#include "story.h"
+#include "node.h"
+
+void  node::log_comment(char * comment)
+{
+    if (log_story)
+	add_story_line(log_story, comment);
+}
+
+void  node::log_history(int argc, char ** argv)	
+{
+    if (log_story) {
+	char *hist = gethist(argc, argv);
+	add_story_line(log_story, hist);
+	delete hist;
+    }
+}
+
+ostream& node::print_log_story(ostream& s)
+{
+    story * the_log_story = node::get_log_story();
+    if (the_log_story)
+        put_story(s, *the_log_story);
+    return s;
+}
+
+ostream& node::print_hydro_story(ostream& s)
+{
+    if (hbase)
+	hbase->print_hydro_story(s);
+    return s;
+}
+
+ostream& node::print_star_story(ostream& s,
+				int short_output)	// default = 0
+{
+    if (sbase)
+	sbase->print_star_story(s, short_output);
+    return s;
+}
+
+istream & node::scan_log_story(istream& s, char * line)
+{
+    node::set_log_story(get_story(s, line));
+    return s;
+}
+
+istream & node::scan_hydro_story(istream& s)
+{
+    if (hbase)
+	hbase->scan_hydro_story(s);
+    else {
+
+	// No hydrobase is defined, but we have already read the
+	// START_HYDRO string.  Must keep reading the input stream
+	// until the matching END_HYDRO is found.
+
+	char input_line[MAX_INPUT_LINE_LENGTH];
+	while(get_line(s,input_line), strcmp(END_HYDRO, input_line));
+    }
+    return s;
+}
+
+istream & node::scan_star_story(istream& s, int level)
+{
+    if (sbase)
+	sbase->scan_star_story(s, level);
+    else {
+
+	// (See hydrobase note above.)
+
+	char input_line[MAX_INPUT_LINE_LENGTH];
+	while (get_line(s,input_line), strcmp(END_STAR, input_line));
+    }
+    return s;
+}
+
+#include <string.h>
+#define BUF_SIZE 1024
+
+static char format_string[BUF_SIZE];
+
+// Note added by Steve 7/6/98.  Do NOT use format_label() to print out
+// labels of more than one particle in the same print statement if the
+// particles are identified by index rather than by label.  Because we
+// use a single string here, only one format can be stored at any
+// time.  Therefore, since all calls to format_label() will be executed
+// before the string is sent to the output stream, a statement of the
+// form
+//
+//	cerr << bi->format_label() << bj->format_label() << endl;
+//
+// will actually print out the label of bj twice!
+//
+// Better to use print_label() instead in those circumstances.
+
+char* node::format_label()
+{
+    if (is_valid()) {
+
+	// Precedence:	print name string if defined
+	//		otherwise, print index if non-negative
+	//		otherwise, print '?'
+
+	if (name != NULL) {
+	    strncpy(format_string, name, BUF_SIZE-1);
+	    format_string[BUF_SIZE-1] = '\0';
+	} else if(index >= 0) {
+	    sprintf(format_string, "%d", index);	// SLWM removed leading
+							// "#", July 1998
+	} else {
+	    sprintf(format_string, "?");
+	}
+    } else
+	sprintf(format_string, "(invalid)");
+	
+    return format_string;
+}
+
+bool node_contains(node * b, int i)		// overloaded
+{
+    if (b->is_parent()) {
+        for_all_nodes(node, b, bi)
+	    if (bi->get_index() == i)
+		return true;
+    } else
+        if (b->get_index() == i)
+	    return true;
+
+    return false;
+}
+
+bool node_contains(node * b, char* s)		// overloaded
+{
+    if (b->is_parent()) {
+        for_all_nodes(node, b, bi)
+	    if (bi->name_is(s))
+		return true;
+    } else
+        if (b->name_is(s))
+	    return true;
+
+    return false;
+}
+
+bool clump_contains(node * b, int i)		// overloaded
+{
+    return node_contains(b->get_top_level_node(), i);
+}
+
+bool clump_contains(node * b, char *s)		// overloaded
+{
+    return node_contains(b->get_top_level_node(), s);
+}
+
+bool node::name_is(char* s)
+{
+    return streq(format_label(), s);
+}
+
+void node::print_label(ostream & s)
+{
+    s << format_label();
+}
+
+void node::pretty_print_node(ostream & s)
+{
+    print_label(s);
+}
+
+void node::pretty_print_tree(int depth_level, ostream & s)
+{
+    int  k = depth_level;
+    while (k--)
+	s << "  ";
+    pretty_print_node(s);
+    if (mass != 1)
+	s << "        m = " << mass;
+    s << endl;
+    if (is_parent())
+	for_all_daughters(node, this, d)
+	    d->pretty_print_tree(depth_level + 1, s);
+}
+
+void node::pretty_print_tree(ostream & s)
+{
+    pretty_print_tree(0, s);
+}
+
+void pp(node * b, ostream & s)
+{
+    s << "(";
+    b->pretty_print_node(s);
+    for_all_daughters(node, b, daughter)
+	pp(daughter, s);	
+    s << ")";
+}
+
+void pp2(node * b, ostream & s,  int level)
+{
+    for (int i = 0; i<level*2; i++) {s << " ";}
+    b->pretty_print_node(s);
+    s << "\n";
+    for_all_daughters(node, b, daughter)
+	pp2(daughter, s, level + 1);	
+}
+
+local node * get_node_recursive(istream& s,
+				npfp the_npfp,
+				hbpfp the_hbpfp,
+				sbpfp the_sbpfp,
+				bool use_stories,
+				int level)
+{
+    node * b = (*the_npfp)(the_hbpfp, the_sbpfp, use_stories);
+    char line[MAX_INPUT_LINE_LENGTH];
+
+    get_line(s, line);
+
+    node * elder_sister = (node *)42;	// to make some compilers happy
+
+    while (strcmp(END_PARTICLE, line)) {
+	if (strcmp(START_DYNAMICS, line) == 0) {
+	    b->scan_dyn_story(s);			// virtual
+	} else if (strcmp(START_HYDRO, line) == 0) {
+	    b->scan_hydro_story(s);
+	} else if (strcmp(START_STAR, line) == 0) {
+	    b->scan_star_story(s, level);
+	} else if (strcmp(START_LOG, line) == 0) {
+
+                // bug: every node gets a log story, but when you see
+                // one from input, you set this to be the new one
+                // and thus never dealloc the old one ???
+
+	    b->scan_log_story(s, line);
+
+	} else if (strcmp(START_PARTICLE, line) == 0) {
+	    node * daughter =
+		get_node_recursive(s, the_npfp, the_hbpfp, the_sbpfp,
+				   use_stories, level+1);
+	    if (b->get_oldest_daughter() == NULL) {
+		b->set_oldest_daughter(daughter);
+	    } else {
+		daughter->set_elder_sister(elder_sister);
+		elder_sister->set_younger_sister(daughter);
+	    }
+	    daughter->set_parent(b);
+	    elder_sister = daughter;
+	} else {
+	    char keyword[MAX_INPUT_LINE_LENGTH];
+	    char should_be_equal_sign[MAX_INPUT_LINE_LENGTH];
+	    sscanf(line,"%s%s",keyword,should_be_equal_sign);
+	    if (strcmp("=",should_be_equal_sign)) {
+	        cerr << "Expected '=', but got '"
+		     << should_be_equal_sign <<"'\n";
+	    	exit(1);
+	    }
+    	    if (!strcmp("i",keyword)) {
+		int index;
+		sscanf(line,"%*s%*s%d",&index);
+		b->set_label(index);
+	    } else if (!strcmp("name",keyword)) {
+ 	        char cptr[MAX_INPUT_LINE_LENGTH];
+		sscanf(line,"%*s%*s%s",cptr);
+	        b->set_label(cptr);
+	    } else if (!strcmp("N",keyword)) {   // N is not read in here;
+		;                                // instead N will be computed
+	    }                                    // anew at output time.
+	    else{
+		cerr << line <<" unexpected\n";
+	        exit(1);
+	    }
+        }
+        get_line(s, line);
+    }
+    return b;
+}
+
+local node * get_node_init(istream& s,
+			   npfp the_npfp,
+			   hbpfp the_hbpfp,
+			   sbpfp the_sbpfp,
+			   bool use_stories)
+{
+
+    if (!check_and_skip_input_line(s, START_PARTICLE)) {
+	return NULL;
+    }
+    node* root = get_node_recursive(s, the_npfp, the_hbpfp, the_sbpfp,
+				    use_stories, 0);
+    root->set_root(root);
+    return root;
+}
+
+static bool first_log = true;
+
+inline local void put_node_body(ostream & s, node & b,
+				bool print_xreal = true,
+				int short_output = 0)
+{
+    if (short_output)
+	put_string(s, "  name = ", b.format_label());
+    else {
+	if (b.get_index() >= 0) put_integer(s, "  i = ", b.get_index());
+	if (b.get_name() != NULL) put_string(s, "  name = ", b.get_name());
+	put_integer(s, "  N = ", b.n_leaves());
+    }
+
+    if (!short_output || (b.is_root() && first_log)) {
+	b.print_log_story(s);			// HP OK -- story.C
+	first_log = false;
+    }
+
+    // Virtual:
+
+    b.print_dyn_story(s, print_xreal,
+		         short_output);		// HP OK -- node_io.C
+
+   if (!short_output)
+       b.print_hydro_story(s);			// HP OK -- *hydro_io.C
+
+    b.print_star_story(s, short_output);	// HP OK -- *star_io.C
+						// (short output not yet
+						// implemented...)
+}
+
+inline local void put_node_recursive(ostream & s, node & b,
+				     bool print_xreal = true,
+				     int short_output = 0)
+{
+    put_story_header(s, PARTICLE_ID);
+
+    put_node_body(s, b, print_xreal, short_output);
+
+    for(node * daughter = b.get_oldest_daughter();
+	daughter != NULL;
+	daughter = daughter->get_younger_sister()){
+	put_node_recursive(s, *daughter, print_xreal, short_output);
+    }
+
+    put_story_footer(s, PARTICLE_ID);
+}
+
+void put_single_node(ostream & s, node & b,
+		     bool print_xreal,		// default = true
+		     int short_output)		// default = 0
+{
+    // Same as put_node, but without recursion.
+
+    put_story_header(s, PARTICLE_ID);
+    put_node_body(s, b, print_xreal, short_output);
+    put_story_footer(s, PARTICLE_ID);
+}
+
+#ifdef HAS_GZIP
+#include <pfstream.h>	// (May not exist on all systems...)
+#endif
+
+node * get_node(istream& s, npfp the_npfp, hbpfp the_hbpfp, sbpfp the_sbpfp,
+		bool use_stories)
+{
+    // If STARLAB_USE_GZIP is defined, the input will be decompressed
+    // by gzip first.  This is accomplished by redefining the stream s.
+
+    // Note that, for compression to be carried out, we must (1) compile
+    // HAS_GZIP set, then (2) run with STARLAB_USE_GZIP defined.
+
+#ifdef HAS_GZIP
+    if (char * zip = getenv("STARLAB_USE_GZIP")) {
+	ipfstream sz("|gzip -d -f");
+	if (sz) {
+	    return get_node_init(sz, the_npfp, the_hbpfp, the_sbpfp,
+				 use_stories);
+	}
+    }
+#endif
+
+    return get_node_init(s, the_npfp, the_hbpfp, the_sbpfp, use_stories);
+}
+
+// put_node: the function that does all the work of outputting nodes
+//	     of all sorts...
+
+void put_node(ostream & s, node & b,
+	      bool print_xreal,		// default = true
+	      int short_output)		// default = 0
+{
+    // If STARLAB_USE_GZIP is set, everything written to cout will be
+    // compressed by gzip.
+
+#ifdef HAS_GZIP
+    if (&s == (ostream *) &cout) {
+	if (char * zip = getenv("STARLAB_USE_GZIP")) {
+	    opfstream sz("|gzip -c -f");
+	    if (sz) {
+		put_node_recursive(sz, b, print_xreal, short_output);
+		return;
+	    }
+	}
+    }
+#endif
+
+    put_node_recursive(s, b, print_xreal, short_output);
+}
+
+local void forget_node_recursive(istream& s)
+{
+    char line[MAX_INPUT_LINE_LENGTH];
+
+    get_line(s, line);
+
+    while(strcmp(END_PARTICLE, line)) {
+	if(strcmp(START_PARTICLE, line) == 0)
+	    forget_node_recursive(s);
+	get_line(s, line);
+    }
+}
+
+// forget_node: reads in a complete node structure, just as get_node does, but 
+//              without storing anything.  This is useful in the function
+//              snapprune, which prunes a long list of snapshots.
+//              Piet, 941125.
+
+bool forget_node(istream& s)
+{
+    if(!check_and_skip_input_line(s, START_PARTICLE)) {
+	return FALSE;
+    }
+    forget_node_recursive(s);
+    return TRUE;
+}
