@@ -8,7 +8,8 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-// util_io.C:  functions for formatted I/O.
+// util_io.C:  Functions for formatted I/O.
+//	       Note that xreal functions now reside in xreal.C.
 
 #include "starlab_vector.h"
 #include "util_io.h"
@@ -208,7 +209,7 @@ void put_real_number(ostream & s, char * label, real x)
 {
     // Note from Steve (7/04).  The precision of a stream isn't
     // exactly what we need here.  It simply determines the number
-    // of digits printed after the desimal point, *including*
+    // of digits printed after the decimal point, *including*
     // non-significant leading zeroes.  In many cases, we want
     // precision to set the number of significant digits printed
     // (especially in put_node).  The C printf "g" format seems
