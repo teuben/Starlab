@@ -26,6 +26,11 @@ Some issues for starlab4   (*'s have been done, -'s are to be done)
     * exp10 seems to exist now, i renamed it to myexp10, but autoconf should figure this out
     * pow(int,) or pow(,int) seems to be confusing, so a few explicit 2.0 and 3.0 were needed
     - 'typedef bool int' : can't do that in C++, bool is internally defined
+    - if you gcc is not in /usr/bin, the fortran libraries are formally
+      set wrong. Solution is to do
+	setenv  CC `which gcc`
+	setenv F77 `which g77`
+	setenv CXX `which g++`
 
 ================================================================================================
 
