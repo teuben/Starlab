@@ -46,8 +46,8 @@ OBJECT_FILES =	compute_com.o compute_density.o compute_max_cod.o \
 		set_com.o plot_stars.o get_std_center.o \
 		refine_mass.o refine_mass2.o \
 		add_plummer.o add_power_law.o \
-		radial_density.o radial_vdisp.o radial_profile.o
-
+		radial_density.o radial_vdisp.o radial_profile.o \
+		wrappers.o
 
 LIBRARY = libdyn.a
 
