@@ -47,7 +47,13 @@ if ($stat == 0) then
         echo 'failed :-('
     endif
 
-    echo Done...\ \ Run scripts/kira_test to check sample kira output.
+    echo "Done...   Run 'scripts/kira_test' to check a sample kira run output."
+    echo ""
+    echo "Note: Although your current shell now has the Starlab environment loaded,"
+    echo "      new shells will not have Starlab pre-loaded. You would need to add"
+    echo "      the following command/alias to your .cshrc (or equivalent) file:"
+    echo "                   source $STARLAB_PATH/starlab_start"
+
 else
     echo Install failed: stat = $stat
 endif
