@@ -97,7 +97,9 @@ ostream& dyn::print_dyn_story(ostream& s,
 			      bool print_xreal,		// default = true
 			      int short_output)	// default = 0
 {
-    put_story_header(s, DYNAMICS_ID);
+    // Modifications by Steve (5/01) to streamline output.
+
+    // Print system time first (root node only).
 
     if (!parent) {
 
@@ -108,8 +110,6 @@ ostream& dyn::print_dyn_story(ostream& s,
 	    // For convenience, also print out a real version of the time.
 	    // By printing out real_system_time first, we set a flag that
 	    // allows scan_dyn_story to read xreal, rather than real, input.
-	    // Unfortunately, as noted above, this logic must be duplicated
-	    // in all other *dyn::scan_dyn_story functions.
 
 	    put_real_number(s, "  real_system_time  =  ", (real)system_time);
 	    put_real_number(s, "  system_time  =  ", system_time);
@@ -124,18 +124,13 @@ ostream& dyn::print_dyn_story(ostream& s,
 #endif
     }
 
-    put_real_number(s, "  m  =  ", mass);
+    // Mass is now printed by node::print_dyn_story().
+
+    node::print_dyn_story(s, print_xreal, short_output);
+
     put_real_vector(s, "  r  =  ", pos);
     put_real_vector(s, "  v  =  ", vel);
 
-    if (!short_output && dyn_story) {
-	if (kep)
-	    kep->kep_to_dyn_story(dyn_story);          // redundant information
-        put_story_contents(s, *dyn_story);
-    }
-
-    put_story_footer(s, DYNAMICS_ID);
-    
     return s;
 }
 

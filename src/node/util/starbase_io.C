@@ -53,7 +53,13 @@ ostream& starbase::print_star_story(ostream& s,
        put_real_number(s, "  time_scale     =  ", t_conv_star_to_dyn);
     }
 
-    if (star_story)
+    // Note from Steve (5/01): It seems that, if this virtual function
+    // is actually being used, then we have a starbase without a "star"
+    // type, and hence no evolving stellar properties.  In that case,
+    // we probably have no need for short_format output here, since
+    // that is relevant only to the evolution code, so suppress it.
+
+    if (star_story && !short_output)
         put_story_contents(s, *star_story);
 
     put_story_footer(s, STAR_ID);

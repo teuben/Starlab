@@ -96,54 +96,64 @@ istream & _dyn_::scan_dyn_story(istream & s)
     return s;
 }
 
-ostream & _dyn_::print_dyn_story(ostream & s,
-				 bool print_xreal,	// default = true
-				 int short_output)	// default = 0
+local void print_local_time(xreal time,
+			    ostream & s,
+			    bool print_xreal,
+			    int short_output)
 {
-    put_story_header(s, DYNAMICS_ID);
+    // Always print high-precision real system time for t in the
+    // short_output case.  (In general, the output precision is
+    // controlled with the STARLAB_PRECISION environment variable.)
 
-    if (!parent) {
-
-	// See xreal notes in dyn_io.C...
-
-#ifdef USE_XREAL
-	if (print_xreal) {
-
-	    put_real_number(s, "  real_system_time  =  ", (real)system_time);
-	    put_real_number(s, "  system_time  =  ", system_time);
-
-	} else
-
-	    put_real_number(s, "  system_time  =  ", (real)system_time);
-#else
-
-	put_real_number(s, "  system_time  =  ", system_time);
-
-#endif
-    }
+    if (short_output) adjust_starlab_precision(HIGH_PRECISION);
 
     if (print_xreal)
 	put_real_number(s, "  t  =  ", time);		// OK for real or xreal
     else
 	put_real_number(s, "  t  =  ", (real)time);
 
-    if (!short_output)
-	put_real_number(s, "  dt =  ", timestep);
+    if (short_output) adjust_starlab_precision(-1);
 
-    put_real_number(s, "  m  =  ", mass);
-    put_real_vector(s, "  r  =  ", pos);
-    put_real_vector(s, "  v  =  ", vel);
-    put_real_vector(s, "  a  =  ", acc);
+}
 
-    if (!short_output) {
-	put_real_number(s, "  pot  =  ", pot);
-	put_real_number(s, "  R_eff  =  ", radius);
+ostream & _dyn_::print_dyn_story(ostream & s,
+				 bool print_xreal,	// default = true
+				 int short_output)	// default = 0
+{
+    // Modifications by Steve (5/01) to streamline output.
 
-	if (dyn_story)
-	    put_story_contents(s, *dyn_story);
+    // Ordinarily we want to print time before dyn stuff, but it is
+    // necessary to print system time first for the root node...
+
+    if (parent) print_local_time(time, s, print_xreal, short_output);
+
+    // Awkward (dyn output prints pos), but...
+
+    vector tmp_pos, tmp_vel;
+    if (short_output > 1) {
+	tmp_pos = pos;
+	tmp_vel = vel;
+	pos = pred_pos;
+	vel = pred_vel;
     }
 
-    put_story_footer(s, DYNAMICS_ID);
+    // Use dyn::print_dyn_story() to print dyn stuff...
+
+    dyn::print_dyn_story(s, print_xreal, short_output);
+
+    if (short_output > 1) {
+	pos = tmp_pos;
+	vel = tmp_vel;
+    }
+
+    if (!parent) print_local_time(time, s, print_xreal, short_output);
+
+    if (!short_output) {
+	put_real_vector(s, "  a  =  ", acc);
+	put_real_number(s, "  pot  =  ", pot);
+	put_real_number(s, "  dt =  ", timestep);
+	put_real_number(s, "  R_eff  =  ", radius);
+    }
 
     return s;
 }

@@ -54,6 +54,8 @@ istream & tdyn::scan_dyn_story(istream & s)
 	    read_unformatted32_vector( s, pos );
 	    read_unformatted32_vector( s, vel );
 
+	// No unformatted options for stellar input yet...
+
 	} else {
 
 	    // Usual formatted input.
@@ -90,6 +92,8 @@ istream & tdyn::scan_dyn_story(istream & s)
 
 		last_real = false;
 
+		// Dynamical data:
+
 		if (!strcmp("t", keyword)) {
 
 		    if (read_xreal)
@@ -113,6 +117,20 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    i = strtol(val, NULL, 10);
 		    kep = (kepler*)1;		// just use as a flag for now
 		}
+
+		// Stellar data:
+
+		else if (!strcmp("S", keyword)) {
+		    char cptr[MAX_INPUT_LINE_LENGTH];
+		    sscanf(val,"%s",cptr);
+		    set_stellar_type(cptr);
+		} else if (!strcmp("T", keyword))
+		    temperature = strtod(val, NULL);
+		else if (!strcmp("L", keyword))
+		    luminosity = strtod(val, NULL);
+
+		// Bookkeeping:
+
 		else if (!strcmp("defunct", keyword))
 		    defunct = true;
 		else
@@ -123,52 +141,48 @@ istream & tdyn::scan_dyn_story(istream & s)
     return s;
 }
 
-ostream & tdyn::print_dyn_story(ostream & s,
-				bool print_xreal,	// default = true
-				int short_output)	// default = 0
+local void print_local_time(xreal time,
+			    ostream & s,
+			    bool print_xreal,
+			    int short_output)
 {
-    put_story_header(s, DYNAMICS_ID);
-
-    if (!parent) {
-
-	// See xreal notes in dyn_io.C...
-
-#ifdef USE_XREAL
-	if (print_xreal) {
-
-	    put_real_number(s, "  real_system_time  =  ", (real)system_time);
-	    put_real_number(s, "  system_time  =  ", system_time);
-
-	} else
-
-	    put_real_number(s, "  system_time  =  ", (real)system_time);
-#else
-
-	put_real_number(s, "  system_time  =  ", system_time);
-
-#endif
-    }
+    adjust_starlab_precision(HIGH_PRECISION);
 
     if (print_xreal)
 	put_real_number(s, "  t  =  ", time);		// OK for real or xreal
     else
 	put_real_number(s, "  t  =  ", (real)time);
 
-    put_real_number(s, "  m  =  ", mass);
-    put_real_vector(s, "  r  =  ", pos);
-    put_real_vector(s, "  v  =  ", vel);
+    adjust_starlab_precision(-1);
+}
 
-//    put_real_vector(s, "  r  =  ", something_relative_to_root(this, 
-//							      &dyn::get_pos));
-//  put_real_vector(s, "  v  =  ", something_relative_to_root(this, 
-//							      &dyn::get_vel));
+ostream & pdyn::print_dyn_story(ostream & s,
+				bool print_xreal,	// default = true
+				int short_output)	// default = 0, ignored
+{
+    // Use dyn::print_dyn_story() to print dyn stuff...
 
-    // Not needed:
+    dyn::print_dyn_story(s, print_xreal, short_output);
 
-    // put_real_vector(s, "  a  =  ", acc);
-    // put_real_vector(s, "  j  =  ", acc);
+    return s;
+}
 
-    put_story_footer(s, DYNAMICS_ID);
+ostream & tdyn::print_dyn_story(ostream & s,
+				bool print_xreal,	// default = true
+				int short_output)	// default = 0, ignored
+{
+    // Modifications by Steve (5/01) to streamline output.
+
+    // Ordinarily we want to print time before dyn stuff, but it is
+    // necessary to print system time first for the root node...
+
+    if (parent) print_local_time(time, s, print_xreal, short_output);
+
+    // Use pdyn::print_dyn_story() to print dyn stuff...
+
+    pdyn::print_dyn_story(s, print_xreal, short_output);
+
+    if (!parent) print_local_time(time, s, print_xreal, short_output);
 
     return s;
 }

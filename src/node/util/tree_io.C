@@ -314,21 +314,38 @@ inline local void put_node_body(ostream & s, node & b,
     }
 
     if (!short_output || (b.is_root() && first_log)) {
-	b.print_log_story(s);			// HP OK -- story.C
+	b.print_log_story(s);
 	first_log = false;
     }
 
-    // Virtual:
+    // ------------------------------------------------------------
+    // *** Changed the way output is done (Steve, 5/01) ***
+    //
+    // Virtual print_dyn_story() functions now just print out
+    // "known" quantities in the form
+    //
+    //		keyword = value
+    //
+    // and each uses its base class function to avoid repetition.
+    // We add enclosing "parens" and any additional story output HERE.
 
-    b.print_dyn_story(s, print_xreal,
-		         short_output);		// HP OK -- node_io.C
+    put_story_header(s, DYNAMICS_ID);			// new
 
-   if (!short_output)
-       b.print_hydro_story(s);			// HP OK -- *hydro_io.C
+    b.print_dyn_story(s, print_xreal, short_output);
 
-    b.print_star_story(s, short_output);	// HP OK -- *star_io.C
-						// (short output not yet
-						// implemented...)
+    if (!short_output && b.get_dyn_story())
+        put_story_contents(s, *b.get_dyn_story());	// new
+
+    put_story_footer(s, DYNAMICS_ID);			// new
+
+    // ------------------------------------------------------------
+
+    // For now, all short output is handled as part of Dyn.
+
+   if (!short_output) {
+       b.print_hydro_story(s);
+       b.print_star_story(s, short_output);
+   }
 }
 
 inline local void put_node_recursive(ostream & s, node & b,

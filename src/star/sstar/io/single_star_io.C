@@ -74,9 +74,16 @@ ostream& single_star::print_star_story(ostream& s,
 
     if (short_output) {
 
+	// If we were to handle short output in the Star part of
+	// the output stream, this is where it should be done.
+	// However, for now it is simpler to handle all stellar
+	// quantities in the Dyn output (in hdyn_io).
+
+#if 0
 	put_string(s,      "  S  =  ", type_short_string(get_element_type()));
 	put_real_number(s, "  T  =  ", temperature());
 	put_real_number(s, "  L  =  ", get_luminosity());
+#endif
 
     } else {
 

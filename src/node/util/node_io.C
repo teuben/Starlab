@@ -16,6 +16,11 @@ istream& node::scan_dyn_story(istream& s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];
 
+    // On entry, we have just read the "(Dynamics" [or "(D"] line
+    // signifying the start of dyn_story input.  Keep reading and
+    // storing until we encounter the corresponding closing
+    // [END_DYNAMICS] line.
+
     while (get_line(s,input_line), !matchbracket(END_DYNAMICS, input_line)) {
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
@@ -36,15 +41,10 @@ ostream& node::print_dyn_story(ostream& s,
 			       bool print_xreal,	// default = true
 			       int short_output)	// default = 0
 {
-    put_story_header(s, DYNAMICS_ID);
+    // Modifications by Steve (5/01) to streamline output.
 
     put_real_number(s, "  m  =  ", mass);
 
-    if (!short_output && dyn_story)
-        put_story_contents(s, *dyn_story);		// HP OK -- story.C
-
-    put_story_footer(s, DYNAMICS_ID);
-    
     return s;
 }
 

@@ -43,7 +43,7 @@
 //	void print_event(tdyn *bn, real t)
 //	vector interpolate_pos(tdyn *p, real t, tdyn *bn)
 //	vector get_pos(tdyn *b, tdyn *bn, real t)
-//	tdyn *create_interpolated_tree(worldbundle *wb, real t)
+//	pdyn *create_interpolated_tree(worldbundle *wb, real t)
 //
 //----------------------------------------------------------------------
 
@@ -1043,12 +1043,12 @@ void worldbundle::print_worldline(char *name,
 
 #define EPS 1.e-12
 
-dyn *create_interpolated_tree(worldbundle *wb, real t,
+pdyn *create_interpolated_tree(worldbundle *wb, real t,
 			       bool vel)		// default = false
 {
     // All leaves on the bundle list are still current, by construction.
     // Find the base segment corresponding to each and use it to build
-    // a new dyn tree interpolated to the current time.
+    // a new pdyn tree interpolated to the current time.
 
     // Try to take care of rounding error in t.  Management of worldbundles
     // should be the responsibility of the calling program.  (This would not
@@ -1073,7 +1073,7 @@ dyn *create_interpolated_tree(worldbundle *wb, real t,
     for (int i = 0; i < wb->get_nw(); i++)
 	bundle[i]->clear_tree_node();
 
-    dyn *root = new dyn(NULL, NULL, false);
+    pdyn *root = new pdyn(NULL, NULL, false);
     root->set_system_time(t);
     root->set_pos(0);
 
@@ -1173,7 +1173,7 @@ dyn *create_interpolated_tree(worldbundle *wb, real t,
 				     << bb->get_time() << " "
 				     << bb->format_label() << endl;
 
-			    dyn *curr = new dyn(NULL, NULL, false);
+			    pdyn *curr = new pdyn(NULL, NULL, false);
 
 			    // The traversal of the tree is such that
 			    // parents are always seen before children
@@ -1187,7 +1187,7 @@ dyn *create_interpolated_tree(worldbundle *wb, real t,
 
 				// Add bb to the end of the top-level list.
 
-				dyn *n = root->get_oldest_daughter();
+				pdyn *n = root->get_oldest_daughter();
 
 				if (!n)
 				    add_node(*curr, *root);
@@ -1206,7 +1206,7 @@ dyn *create_interpolated_tree(worldbundle *wb, real t,
 				// are derived (awkwardly!) from the
 				// existing tree structures.
 
-				dyn *par = wb->find_worldline(bb->get_parent())
+				pdyn *par = wb->find_worldline(bb->get_parent())
 				    	     ->get_tree_node();
 				curr->set_parent(par);
 
@@ -1215,7 +1215,7 @@ dyn *create_interpolated_tree(worldbundle *wb, real t,
 				if (!bb_sis)
 				    par->set_oldest_daughter(curr);
 				else {
-				    dyn *sis = wb->find_worldline(bb_sis)
+				    pdyn *sis = wb->find_worldline(bb_sis)
 						  ->get_tree_node();
 				    curr->set_elder_sister(sis);
 				    sis->set_younger_sister(curr);
@@ -1363,7 +1363,7 @@ main(int argc, char *argv[])
 
     worldbundle *wb = read_bundle(s);
 
-    dyn *root = create_interpolated_tree(wb, t, true);
+    pdyn *root = create_interpolated_tree(wb, t, true);
     put_node(cout, *root, false);
     rmtree(root);
 
@@ -1423,7 +1423,7 @@ main(int argc, char *argv[])
 #if 0
     real t = 0.8;
     while (t < 0.85) {
-	dyn *root = create_interpolated_tree(wb, t);
+	pdyn *root = create_interpolated_tree(wb, t);
 	put_node(cout, *root, false);
 	rmtree(root);
 	t += 0.01;

@@ -252,11 +252,18 @@ ostream & hdyn::print_dyn_story(ostream & s,
 				bool print_xreal,	// default = true
 				int short_output)	// default = 0
 {
-    put_story_header(s, DYNAMICS_ID);
+    // Modifications by Steve (5/01) to streamline output.
 
     int precision = 0;
     int use_floats = 0;
 
+    // Two basic branches here:
+    //
+    //		1. short_output
+    //		2. write_unformatted
+    //
+    // Note that write_unformatted is only relevant when short_output > 0.
+    //
     // Short_output options (see also write_unformatted):
     //
     //		0:	normal (long) output
@@ -264,175 +271,126 @@ ostream & hdyn::print_dyn_story(ostream & s,
     //		2:	short output using current time, predicted pos, ...
     //		3:	as for 2, but mark as defunct
     //
-    // Note that write_unformatted is only relevant when short_output > 0.
+    // Short output is:  time, mass, pos, vel.
+    //
     // Particle name is printed in node/util/tree_io.C
 
-    // **** Output formats are getting out of hand!  (Steve, 10/00) ****
+    if (write_unformatted) {
 
-    if (!parent) {				// root node
+	// In this case, we have to do everything ourselves, and we
+	// can't rely on the base class output functions to help us.
 
-	// See xreal notes in dyn_io.C...
+	// Note that short_output is implicit.
 
-#ifdef USE_XREAL
+	// Write time, mass, pos, and vel as unformatted data.
+	// Allows significantly faster I/O, and converting doubles
+	// to floats saves additional space.
 
-	if (print_xreal && !short_output) {
+	// *** Must coordinate with tdyn_io.C. ***
 
-	    put_real_number(s, "  real_system_time  =  ", (real)system_time);
-	    put_real_number(s, "  system_time  =  ", system_time);
+	vector putpos = pos;
+	vector putvel = vel;
 
-	} else
-		
-	    put_real_number(s, "  system_time  =  ", (real)system_time);
+	if (short_output > 1) {
+	    putpos = pred_pos;
+	    putvel = pred_vel;
+	}
 
-#else
+	if (use_floats) {
 
-	put_real_number(s, "  system_time  =  ", system_time);
+	    // Write floats.
 
-#endif
-
-    }
-
-    if (short_output) {
-
-	if (write_unformatted) {
-
-	    // Write time, mass, pos, and vel as unformatted data.
-	    // Should allow significantly faster I/O, and converting
-	    // doubles to floats will save additional space.
-
-	    // *** Must coordinate with tdyn_io.C. ***
-
-//  	    vector putpos = something_relative_to_root(this, &hdyn::get_pos);
-//	    vector putvel = something_relative_to_root(this, &hdyn::get_vel);
-	    vector putpos = pos;
-	    vector putvel = vel;
-
-	    if(short_output == 2) {
-		putpos = pred_pos;
-		putvel = pred_vel;
-	    }
-
-	    if(use_floats) {
-		s << "t64mpv32 =" << endl;
-		write_unformatted_real( s, system_time );
-		write_unformatted32_real( s, mass );
-		write_unformatted32_vector( s, putpos );
-		write_unformatted32_vector( s, putvel );
-	    } else {
-		// Write doubles.
-		s << "tmpv =" << endl;
-		write_unformatted_real( s, system_time );
-		write_unformatted_real( s, mass );
-		write_unformatted_vector( s, putpos );
-		write_unformatted_vector( s, putvel );
-	    }
-
-	    // Use kep as a flag here (careful!).
-
-	    if (kep)
-		put_integer(s, "  kep  =  ", 1);
+	    s << "t64mpv32 =" << endl;
+	    write_unformatted_real(s, system_time);
+	    write_unformatted32_real(s, mass);
+	    write_unformatted32_vector(s, putpos);
+	    write_unformatted32_vector(s, putvel);
 
 	} else {
 
-	    // Always print high-precision real system time for t.
+	    // Write doubles.
 
-	    adjust_starlab_precision(HIGH_PRECISION);
-	    put_real_number(s, "  t  =  ", (real)system_time);
-	    adjust_starlab_precision(-1);
+	    s << "tmpv =" << endl;
+	    write_unformatted_real(s, system_time);
+	    write_unformatted_real(s, mass);
+	    write_unformatted_vector(s, putpos);
+	    write_unformatted_vector(s, putvel);
 	}
 
     } else {
 
-	if (print_xreal)
-	    put_real_number(s, "  t  =  ", time);	// OK for real or xreal
-	else
-	    put_real_number(s, "  t  =  ", (real)time);
+	// For formatted output, we can rely on the _dyn_ output
+	// functions to start us off as usual...
 
-	put_real_number(s, "  dt =  ", timestep);
-    }
+	_dyn_::print_dyn_story(s, print_xreal, short_output);
 
-    if (!write_unformatted) {
+	if (!short_output) {
 
-	// (Control output precision with the Starlab "precision" variable.
+	    put_real_number(s, "  steps  =  ", steps);
+	    put_real_number(s, "  dir_f  =  ", direct_force);
+	    put_real_number(s, "  indir_f  =  ", indirect_force);
 
-	if (short_output > 1) {
+	    // Special cases for which only partial information is saved:
 
-	    // Use predicted quantities.
+	    if (kep) {
 
+		// Component of an unperturbed binary -- may be fully or
+		// partially unperturbed.  Store sufficient information for
+		// restart.  Other kepler data can be recomputed from hdyn.
+		//
+		// BOTH components carry full_u and dt_u information (no
+		// particular reason for this, but retain for consistency).
 
-	    put_real_number(s, "  m  =  ", mass);
-	    put_real_vector(s, "  r  =  ", pred_pos);
-	    put_real_vector(s, "  v  =  ", pred_vel);
+		put_integer(s, "  full_u  =  ", fully_unperturbed);
+		put_real_number(s, "  dt_u  =  ", unperturbed_timestep);
+	    }
 
-	    if (kep) put_integer(s, "  kep  =  ", 1);
+	    if (slow) {
 
-	    // put_real_vector(s, "  a  =  ",			// not used in
-	    //		   acc + (system_time-time)*jerk);	// short output
+		// Component of a slow binary.  The value of kappa serves
+		// as a flag for slow motion.  The information needed for
+		// restart is attached to the ELDER component only.
 
-	} else {
-
-//  	    vector putpos = something_relative_to_root(this, &hdyn::get_pos);
-//	    vector putvel = something_relative_to_root(this, &hdyn::get_vel);
-  	    vector putpos = get_pos();
-  	    vector putvel = get_vel();
-
-	    put_real_number(s, "  m  =  ", mass);
-	    put_real_vector(s, "  r  =  ", putpos);
-	    put_real_vector(s, "  v  =  ", putvel);
-
-	    if (!short_output) {
-
-		put_real_vector(s, "  a  =  ", acc);		// not used in
-								// short output
-		put_real_number(s, "  pot  =  ", pot);
-		put_real_number(s, "  R_eff  =  ", radius);
-		put_real_number(s, "  steps  =  ", steps);
-		put_real_number(s, "  dir_f  =  ", direct_force);
-		put_real_number(s, "  indir_f  =  ", indirect_force);
-
-		// Special cases for which only partial information is saved:
-
-		if (kep) {
-
-		    // Component of an unperturbed binary -- may be fully or
-		    // partially unperturbed.  Store sufficient information for
-		    // restart.  Other kepler data can be recomputed from hdyn.
-		    //
-		    // BOTH components carry full_u and dt_u information (no
-		    // particular reason for this, but retain for consistency).
-
-		    put_integer(s, "  full_u  =  ", fully_unperturbed);
-		    put_real_number(s, "  dt_u  =  ", unperturbed_timestep);
+		if (!elder_sister) {
+		    put_integer(s, "  slow_kappa  =  ", get_kappa());
+		    put_real_number(s, "  slow_t_init  =  ", 
+				    slow->get_t_init());
+		    put_real_number(s, "  slow_t_apo  =  ",
+				    slow->get_t_apo());
+		    put_real_number(s, "  slow_tau  =  ", slow->get_tau());
 		}
-
-		if (slow) {
-
-		    // Component of a slow binary.  The value of kappa serves
-		    // as a flag for slow motion.  The information needed for
-		    // restart is attached to the ELDER component only.
-
-		    if (!elder_sister) {
-			put_integer(s, "  slow_kappa  =  ", get_kappa());
-			put_real_number(s, "  slow_t_init  =  ", 
-							slow->get_t_init());
-			put_real_number(s, "  slow_t_apo  =  ",
-							slow->get_t_apo());
-			put_real_number(s, "  slow_tau  =  ", slow->get_tau());
-		    }
-		}
-
-		if (dyn_story)
-		    put_story_contents(s, *dyn_story);
 	    }
 	}
     }
 
-    // For use with full_dump mode...
+    // For use with full_dump mode, formatted or unformatted...
 
-    if (short_output == 3)
-	put_integer(s, "  defunct  =  ", 1);
+    if (short_output) {
 
-    put_story_footer(s, DYNAMICS_ID);
+	// Most convenient to output Star quantities here too.
+	// (Star output is now suppressed in tree_io in the
+	// short_output case, and the tdyn input is simplest
+	// when all relevant data are in Dyn.)
+
+	if (use_sstar && sbase) {
+
+	    // Print out basic stellar information.
+
+	    put_string(s,      "  S  =  ",
+		       type_short_string(sbase->get_element_type()));
+	    put_real_number(s, "  T  =  ", sbase->temperature());
+	    put_real_number(s, "  L  =  ", sbase->get_luminosity());
+
+	}
+
+	// Use kep as a flag here (careful!).
+
+	if (kep)
+	    put_integer(s, "  kep  =  ", 1);
+
+	if (short_output == 3)
+	    put_integer(s, "  defunct  =  ", 1);
+    }
 
     return s;
 }
@@ -525,6 +483,23 @@ void hdyn::find_print_perturber_list(ostream & s, char* pre)
 	s << pnode->format_label() << endl;
 
     pnode->print_perturber_list(s, pre);
+}
+
+#else
+
+main(int argc, char** argv)
+{
+    hdyn  * b;
+    check_help();
+
+    while (b = get_hdyn(cin)) {
+	cout << "TESTING put_hdyn:" << endl;
+        put_node(cout, *b);
+	cout << "TESTING pp2()   :" << endl;
+	pp2(b);
+	delete b;
+    }
+    cerr << "Normal exit" << endl;
 }
 
 #endif
