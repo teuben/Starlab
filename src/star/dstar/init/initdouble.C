@@ -456,21 +456,25 @@ real get_random_eccentricity(real e_lower, real e_upper,
 local void determine_semi_major_axis_limits(real m_prim, real m_sec, real ecc,
                                             real &a_min, real &a_max) {
 
+    // This is very wrong, but has no effect, happily (SPZ+MS 9 July 2003)
+    //    real a_prim=0, a_sec=0;
+    //    if (a_min>0) {
+    //	a_prim = roche_radius(a_min, m_prim, m_sec);
+    //	a_sec  = roche_radius(a_min, m_sec, m_prim);
+    //    }
+    //    PRC(a_prim);PRL(a_sec);
+    //    a_min = Starlab::max(a_min, Starlab::max(a_prim, a_sec));
+
+    if(ecc<0) err_exit("eccentricity <0");
+
     real r_prim = zero_age_main_sequnece_radius(m_prim);
     real r_sec  = zero_age_main_sequnece_radius(m_sec);
-//    PRC(r_prim);PRL(r_sec);
 
-    real a_prim=0, a_sec=0;
-    if (a_min>0) {
-	a_prim = roche_radius(a_min, m_prim, m_sec);
-	a_sec  = roche_radius(a_min, m_sec, m_prim);
-    }
-//    PRC(a_prim);PRL(a_sec);
+    real peri_min = Starlab::max(a_min, r_prim+r_sec);
+    a_min = peri_min/(1-ecc);
 
-    a_min = Starlab::max(a_min, Starlab::max(a_prim, a_sec));
-
-    if (ecc>0)
-	a_min = Starlab::max(a_min, (r_prim+r_sec)/(1-ecc));
+    //    real apo_min = Starlab::max(a_max, r_prim+r_sec);
+    //    a_max = Starlab::max(a_max, a_min);
 
     return;
 }
@@ -487,7 +491,7 @@ void mkrandom_binary( real m_min,  real m_max,
 		     real &ecc) {
 
     m_prim = get_random_stellar_mass(m_min, m_max, mf, m_exp);
-//    PRL(m_prim);
+    //    PRL(m_prim);
 
   // Initial secondary mass (selected between m_min and m_prim
   // with equal probability per unit mass.
@@ -496,7 +500,7 @@ void mkrandom_binary( real m_min,  real m_max,
     real q = get_random_mass_ratio(q_min, q_max, qf, q_exp);
 
     m_sec = q*m_prim;
-//    PRL(m_sec);
+    //    PRL(m_sec);
 
     // Assume for now that
     //	stellar radius [Rsun] = mass [Msun].
@@ -509,20 +513,29 @@ void mkrandom_binary( real m_min,  real m_max,
     if(e_max>=1 && ef!=Equal_ecc) 
 	e_max = Starlab::max(e_min, Starlab::min(1., 1 - (r_prim+r_sec)/a_max));
 
-    ecc = get_random_eccentricity(e_min, e_max, ef, m_prim+m_sec);
-    //    PRL(ecc);
+    // SPZ+MS 9 July 2003
+    // Make sure that binary is initialized between a_min (minimum
+    // pericenter distance) and a_max (maximium orbital
+    // separation). Eccentricity is rechosen until a_min<a_max.
+    real a_min_org = a_min;
+    do {
+      a_min = a_min_org;
+      ecc = get_random_eccentricity(e_min, e_max, ef, m_prim+m_sec);
+      //      PRL(ecc);
 
-    // The Initial orbital separation is chosen flat in log a.
-    determine_semi_major_axis_limits(m_prim, m_sec, ecc, a_min, a_max);
+      // The Initial orbital separation is chosen flat in log a.
+      determine_semi_major_axis_limits(m_prim, m_sec, ecc, a_min, a_max);
+      //      PRC(a_min);PRL(a_max);
+    }
+    while(a_min>a_max);
 
     semi = get_random_semimajor_axis(a_min, a_max, af, a_exp, m_prim, m_sec);
     //    PRL(semi);
 
-
-//    cerr << m_prim <<" "
-//	 << m_sec <<" "
-//	 << semi <<" "
-//	 << ecc << endl;
+    //    cerr << m_prim <<" "
+    //    	 << m_sec <<" "
+    //    	 << semi <<" "
+    //    	 << ecc << endl;
 }
 
 
