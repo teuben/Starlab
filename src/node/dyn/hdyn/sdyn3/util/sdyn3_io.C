@@ -18,7 +18,7 @@ istream & sdyn3::scan_dyn_story(istream & s)
     while (get_line(s, input_line), strcmp(END_DYNAMICS, input_line)) {
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char *val = getequals(input_line, keyword);
+	const char *val = getequals(input_line, keyword);
 
 	// See xreal notes in dyn_io.C...
 
@@ -36,7 +36,7 @@ istream & sdyn3::scan_dyn_story(istream & s)
 	    if (read_xreal)
 		system_time = get_xreal_from_input_line(input_line);
 	    else
-		system_time = strtod(val, &val);
+		system_time = strtod(val, NULL);
 
 	} else {
 
@@ -47,22 +47,22 @@ istream & sdyn3::scan_dyn_story(istream & s)
 		if (read_xreal)
 		    time = get_xreal_from_input_line(input_line);
 		else
-		    time = strtod(val, &val);
+		    time = strtod(val, NULL);
 
 	    } else if (!strcmp("m", keyword))
-		mass = strtod(val, &val);
+		mass = strtod(val, NULL);
 	    else if (!strcmp("r", keyword))
 		set_vector_from_input_line(pos, input_line);
 	    else if (!strcmp("v", keyword))
 		set_vector_from_input_line(vel, input_line);
 	    else if (!strcmp("dt", keyword))
-		timestep = strtod(val, &val);
+		timestep = strtod(val, NULL);
 	    else if (!strcmp("a", keyword))
 		set_vector_from_input_line(acc, input_line);
 	    else if (!strcmp("j", keyword))
 		set_vector_from_input_line(jerk, input_line);
 	    else if (!strcmp("pot", keyword))
-		pot = strtod(val, &val);
+		pot = strtod(val, NULL);
 	    else
 		add_story_line(dyn_story, input_line);
 	}
@@ -75,8 +75,6 @@ ostream& sdyn3::print_dyn_story(ostream& s,
 				bool print_xreal,	// default = true
 				int short_output)	// default = 0
 {
-    put_story_header(s, DYNAMICS_ID);
-
     if (!parent) {
 
 	// See xreal notes in dyn_io.C...
@@ -123,8 +121,6 @@ ostream& sdyn3::print_dyn_story(ostream& s,
 	if (dyn_story)
 	    put_story_contents(s, *dyn_story);
     }
-
-    put_story_footer(s, DYNAMICS_ID);
     
     return s;
 }
