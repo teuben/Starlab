@@ -17,11 +17,16 @@
 // Member functions:
 //
 //	real dyn::get_external_scale_sq()
-//	vec dyn::get_external_center();
+//	vec dyn::get_external_center()	(absolute)
 //
 // Global functions:
 //
+//	void set_friction_beta
+//	void set_friction_mass
+//	void set_friction_vel		(CM vel, absolute)
+//	void set_friction_acc		(const acc for all member stars)
 //	void get_external_acc		(single node)
+//	real vcirc			(at radius r)
 //	real get_external_pot		(root node)
 //	real get_tidal_pot		(root node)
 //	real get_plummer_pot		(root node)
@@ -42,12 +47,16 @@
 //	      get_external uses positions and velocities passed as
 //	      arguments (may be pos or pred_pos, depending on the
 //	      application)
+//
+//	   4. As of 6/03, all "centers" are defined in absolute terms.
+//	      Centers of mass or density now include the pos or vel of
+//	      the root node.  External field centers remain absolute.
 
 //-------------------------------------------------------------------------
 // Tidal field (quadrupole):
 //-------------------------------------------------------------------------
 
-local inline void add_tidal(dyn * b,
+local inline void add_tidal(dyn *b,
 			    vec pos,
 			    vec vel,
 			    real& pot,
@@ -55,15 +64,18 @@ local inline void add_tidal(dyn * b,
 			    vec& jerk,
 			    bool pot_only)
 {
-    // Compute the tidal components of the acceleration, jerk,
-    // and pot of top-level node b.
+    // Compute the tidal components of the acceleration, jerk, and pot
+    // of top-level node b.  The actual position and velocity used are
+    // pos and vel, assumed relative to b.  The node pointer b is used
+    // as only a means of passing global dyn data.  We *assume* that the
+    // root node for the system is correctly set.
 
     real a1 = b->get_alpha1();
     if (a1 == 0) return;
 
     real a3 = b->get_alpha3();
 
-    vec dx = pos - b->get_tidal_center();
+    vec dx = pos + b->get_root()->get_pos() - b->get_tidal_center();
 
     if (!pot_only) {
 
@@ -88,7 +100,7 @@ local inline void add_tidal(dyn * b,
     pot += 0.5*(a1*x*x + a3*z*z);
 }
 
-local inline real tidal_pot(dyn * b)
+local inline real tidal_pot(dyn *b)
 {
     // Determine the tidal component of the potential energy
     // of root node b.
@@ -99,12 +111,15 @@ local inline real tidal_pot(dyn * b)
     real a1 = b->get_alpha1();
     if (a1 == 0) return 0;
 
+    b->set_root(b);				// safety
+
     real a3 = b->get_alpha3();
+    vec cen = b->get_tidal_center() - b->get_pos();
 
     real dpot = 0;
     for_all_daughters(dyn, b, bb) {
-	real x = bb->get_pos()[0] - b->get_tidal_center()[0];
-	real z = bb->get_pos()[2] - b->get_tidal_center()[0];
+	real x = bb->get_pos()[0] - cen[0];
+	real z = bb->get_pos()[2] - cen[0];
 	real dp = a1*x*x + a3*z*z;
 	dpot += bb->get_mass() * dp;
     }
@@ -116,7 +131,7 @@ local inline real tidal_pot(dyn * b)
 // Plummer field:
 //-------------------------------------------------------------------------
 
-local inline void add_plummer(dyn * b,
+local inline void add_plummer(dyn *b,
 			      vec pos,
 			      vec vel,
 			      real& pot,
@@ -125,14 +140,17 @@ local inline void add_plummer(dyn * b,
 			      bool pot_only)
 {
     // Compute the Plummer-field components of the acceleration, jerk,
-    // and pot of top-level node b.
+    // and pot of top-level node b.  The actual position and velocity
+    // used are pos and vel, assumed relative to b.  The node pointer b
+    // is used only as a means of passing global dyn data.  We *assume*
+    // that the root node for the system is correctly set.
 
     real M = b->get_p_mass();
     if (M == 0) return;
 
     real a2 = b->get_p_scale_sq();
 
-    vec dx = pos - b->get_p_center();
+    vec dx = pos + b->get_root()->get_pos() - b->get_p_center();
     real r2 = square(dx) + a2;
     real r1 = sqrt(r2);
 
@@ -145,7 +163,7 @@ local inline void add_plummer(dyn * b,
     pot -= M/r1;
 }
 
-local inline real plummer_pot(dyn * b)
+local inline real plummer_pot(dyn *b)
 {
     // Determine the Plummer-field component of the potential energy
     // of root node b.
@@ -153,11 +171,14 @@ local inline real plummer_pot(dyn * b)
     real M = b->get_p_mass();
     if (M == 0) return 0;
 
+    b->set_root(b);				// safety
+
     real a2 = b->get_p_scale_sq();
+    vec cen = b->get_p_center() - b->get_pos();
 
     real dpot = 0;
     for_all_daughters(dyn, b, bb) {
-	vec dx = bb->get_pos() - bb->get_p_center();
+	vec dx = bb->get_pos() - cen;
 	real r2 = square(dx) + a2;
 	dpot += bb->get_mass() / sqrt(r2);
     }
@@ -165,13 +186,16 @@ local inline real plummer_pot(dyn * b)
     return -M*dpot;
 }
 
-local inline real plummer_virial(dyn * b)
+local inline real plummer_virial(dyn *b)
 {
     // Determine the Plummer-field component of the virial sum
     // of root node b.
 
     real M = b->get_p_mass();
     if (M == 0) return 0;
+
+    b->set_root(b);				// safety
+    int debug = 0;
 
     real a2 = b->get_p_scale_sq();
 
@@ -180,36 +204,42 @@ local inline real plummer_virial(dyn * b)
 
     vec com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
-    // PRL(com_pos);
+    if (debug) PRL(com_pos);
 
     vec dR = com_pos - b->get_p_center();
     vec acc_com = dR * pow(square(dR)+a2, -1.5);
-    // PRL(acc_com);
+    if (debug) PRL(acc_com);
 
-    // Don't actually need the acc_com term, as it should sum to zero
-    // in the loop below...
+    // Note that we don't actually need the acc_com term, as it should
+    // sum to zero in the loop below...
 
     vec dcom_pos = com_pos - b->get_pos();		// com quantities
-    vec dcen_pos = b->get_p_center() - com_pos;	// include root node
+    vec dcen_pos = b->get_p_center() - b->get_pos();	// include root node
+    if (debug) PRL(dcom_pos);
+    if (debug) PRL(dcen_pos);
 
     real vir = 0;
     for_all_daughters(dyn, b, bb) {
-	vec dr = bb->get_pos() - dcom_pos;
-	dR = bb->get_pos() - dcen_pos;
+	vec dr = bb->get_pos() - dcom_pos;		// relative to com
+	if (debug > 1) PRL(dr);
+	dR = bb->get_pos() - dcen_pos;			// relative to p_center
+	if (debug > 1) PRL(dR);
 	vec acc_ext = dR * pow(square(dR)+a2, -1.5);
 	real dvir = bb->get_mass()*dr*(acc_ext - acc_com);
-	// PRL(dvir);
+	if (debug > 1) PRL(dvir);
 	vir += dvir;
     }
-    // PRL(vir);
+    if (debug) PRL(vir);
 
     return -M*vir;
 }
 
-//-------------------------------------------------------------------------
-// Power-law field, M(r) = A r^x (and note that exponent = 0 reduces to
-// a Plummer field with mass = A):
-//-------------------------------------------------------------------------
+//=========================================================================
+// Power-law field, M(r) = A r^x.  Note that exponent = 0 reduces to
+// a Plummer field with mass = A.  However, dynamical friction is
+// implemented only for the power-law case, and currently will *not*
+// work with Plummer or power_law with x = 0.  To be fixed...
+//=========================================================================
 
 //-------------------------------------------------------------------------
 //
@@ -240,9 +270,10 @@ static real Mfric = 0;				// cluster effective mass
 void set_friction_mass(real m) {Mfric = m;}
 
 static vec Vcm = 0;				// cluster CM velocity
-void set_friction_vel(vec v) {Vcm = v;}
+void set_friction_vel(vec v) {Vcm = v;}		// (absolute)
 
 local real density(dyn *b, real r)		// background density
+						
 {
     real A = b->get_pl_coeff();
     if (A == 0) return 0;
@@ -253,8 +284,8 @@ local real density(dyn *b, real r)		// background density
     return A*x*pow(r*r+a2, 0.5*(x-1))/(4*M_PI*r*r);
 }
 
-local real mass(dyn *b, real r)			// mass interior to r
-{
+local real mass(dyn *b, real r)			// mass interior to r, the
+{						// distance from pl_center
     real A = b->get_pl_coeff();
     if (A == 0) return 0;
 
@@ -273,12 +304,14 @@ local real logLambda(dyn *b, real r)
 	    mass_unit = b->get_starbase()->conv_m_dyn_to_star(1);
 
     // Only case where this is meaningful is the power-law field.
+
     real LogLambda;
     if (beta <= 0 || !b->get_pl())
 	LogLambda = 0;
 
     if (mass_unit <= 0)				// no physical mass scale
 	LogLambda = 1;
+
     else {
 
 	// Use M(<r), assuming <m> = 1 Msun.
@@ -299,29 +332,24 @@ local real potential(dyn *b, real r)		// background potential;
     real a2 = b->get_pl_scale_sq();
     real x = b->get_pl_exponent();
 
-    //#ifdef OLD_ERROR_VERSION_5OCT2001
-    //    return -A*pow(r*r+a2, 0.5*x-1);		// *** wrong! ***
-    //#else
     return -A*pow(r*r+a2, 0.5*(x-1))/(x-1);
-    //#endif
 }
 
 static vec Afric = 0;			// frictional acceleration
-void set_friction_acc(dyn *b, real r)
+
+void set_friction_acc(dyn *b,		// root node
+		      real r)		// distance from pl_center
 {
     if (beta > 0) {
 
 	real sigma2 = sqrt(-2*potential(b, r)/3);  // this is sqrt(2) * sigma;
 						   // assume virial equilibrium
 	real V = abs(Vcm);
-	real X = sqrt(2-b->get_pl_exponent());
-	// real X = V/sigma2;			// scaled velocity; BT p. 425
 
-	//#ifndef NEW_4OCT2001
-	//	real coeff = beta;		// discard after current runs
-	//#else
+	// real X = V/sigma2;			   // scaled velocity; BT p. 425
+	real X = sqrt(2-b->get_pl_exponent());	   // (see McM & SPZ 2003)
+
 	real coeff = 4*M_PI*beta*logLambda(b, r);
-	//#endif
 
 	if (X > 0.1)
 
@@ -362,7 +390,7 @@ local inline void set_acx(real A, real c2, real x)
     acx_set = true;
 }
 
-local inline void add_power_law(dyn * b,
+local inline void add_power_law(dyn *b,
 				vec pos,
 				vec vel,
 				real& pot,
@@ -371,7 +399,10 @@ local inline void add_power_law(dyn * b,
 				bool pot_only)
 {
     // Compute the power-law-field components of the acceleration, jerk,
-    // and pot of top-level node b.
+    // and pot of top-level node b.  The actual position and velocity
+    // used are pos and vel, assumed relative to b.  The node pointer b
+    // is used only as a means of passing global dyn data.  We *assume*
+    // that the root node for the system is correctly set.
 
     real A = b->get_pl_coeff();
     if (A == 0) return;
@@ -390,7 +421,7 @@ local inline void add_power_law(dyn * b,
 
     if (!acx_set) set_acx(A, c2, x);
 
-    vec dx = pos - b->get_pl_center();
+    vec dx = pos + b->get_root()->get_pos() - b->get_pl_center();
     real dx2 = square(dx);
     real r2 = dx2 + a2;
 
@@ -459,13 +490,15 @@ local inline void add_power_law(dyn * b,
     }
 }
 
-local inline real power_law_pot(dyn * b)
+local inline real power_law_pot(dyn *b)
 {
     // Determine the power-law-field component of the potential energy
     // of root node b.
 
     real A = b->get_pl_coeff();
     if (A == 0) return 0;
+
+    b->set_root(b);				// safety
 
     real a2 = b->get_pl_scale_sq();
     real x = b->get_pl_exponent();
@@ -474,12 +507,14 @@ local inline real power_law_pot(dyn * b)
     real M = b->get_pl_mass();
     real eps2 = b->get_pl_softening_sq();
 
+    vec cen = b->get_pl_center() - b->get_pos();
+
     if (!acx_set) set_acx(A, c2, x);	//////  *** not implemented yet ***
 
     real dpot = 0;
     for_all_daughters(dyn, b, bb) {
 
-	vec dx = bb->get_pos() - bb->get_pl_center();
+	vec dx = bb->get_pos() - cen;
 	real dx2 = square(dx);
 	real r2 = dx2 + a2;
 
@@ -510,7 +545,7 @@ local inline real power_law_pot(dyn * b)
     return dpot;
 }
 
-local inline real power_law_virial(dyn * b)
+local inline real power_law_virial(dyn *b)
 {
     // Determine the power-law-field component of the virial sum
     // of root node b.
@@ -520,36 +555,43 @@ local inline real power_law_virial(dyn * b)
     real A = b->get_pl_coeff();
     if (A == 0) return 0;
 
+    b->set_root(b);					// safety
+    int debug = 0;
+
     real a2 = b->get_pl_scale_sq();
     real x = b->get_pl_exponent();
 
     // Don't make any assumptions about the locations of the
-    // center of mass of the center of the power-law field...
+    // center of mass or the center of the power-law field...
 
     vec com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
-    // PRL(com_pos);
+    if (debug) PRL(com_pos);
 
     vec dR = com_pos - b->get_pl_center();
     vec acc_com = dR * pow(square(dR)+a2, 0.5*(x-3));
-    // PRL(acc_com);
+    if (debug) PRL(acc_com);
 
-    // We don't actually need the acc_com term, as it should sum
-    // to zero in the loop below...
+    // Note that we don't actually need the acc_com term, as it should
+    // sum to zero in the loop below...
 
     vec dcom_pos = com_pos - b->get_pos();		// com quantities
-    vec dcen_pos = b->get_pl_center() - com_pos;	// include root node
+    vec dcen_pos = b->get_pl_center() - b->get_pos();	// include root node
+    if (debug) PRL(dcom_pos);
+    if (debug) PRL(dcen_pos);
 
     real vir = 0;
     for_all_daughters(dyn, b, bb) {
-	vec dr = bb->get_pos() - dcom_pos;
-	dR = bb->get_pos() - dcen_pos;
+	vec dr = bb->get_pos() - dcom_pos;		// relative to com
+	if (debug > 1) PRL(dr);
+	dR = bb->get_pos() - dcen_pos;			// relative to pl_center
+	if (debug > 1) PRL(dR);
 	vec acc_ext = dR * pow(square(dR)+a2, 0.5*(x-3));
 	real dvir = bb->get_mass()*dr*(acc_ext - acc_com);
-	// PRL(dvir);
+	if (debug > 1) PRL(dvir);
 	vir += dvir;
     }
-    // PRL(vir);
+    if (debug) PRL(vir);
 
     return -A*vir;
 }
@@ -594,7 +636,7 @@ vec dyn::get_external_center()
 
 // Other functions:
 
-void get_external_acc(dyn * b,
+void get_external_acc(dyn *b,
 		      vec pos,
 		      vec vel,
 		      real& pot,
@@ -603,9 +645,10 @@ void get_external_acc(dyn * b,
 		      bool pot_only)	// default = false
 {
     // Compute the external components of the acceleration, jerk,
-    // and pot of top-level node b, using the pos and vel provided.
-    // b is used only as a convenient means of passing and static
-    // dyn data.
+    // and pot of top-level node b, using the pos and vel provided,
+    // assumed relative to b.  The node pointer b is used only as a
+    // convenient means of passing static global dyn data.  We *assume*
+    // that the root node for the system is correctly set.
 
     pot = 0;
     if (!pot_only) acc = jerk = 0;
@@ -642,7 +685,8 @@ void get_external_acc(dyn * b,
 real vcirc(dyn *b, vec r)
 {
     // Return the circular velocity at position r.  Node b is used only
-    // as a convenient means of passing static dyn class data.
+    // as a convenient means of passing static dyn class data.  We *assume*
+    // that the root node for the system is correctly set.
 
     vec acc, jerk;
     real pot;
@@ -663,7 +707,7 @@ real get_tidal_pot(dyn *b) {return tidal_pot(b);}
 real get_plummer_pot(dyn *b) {return plummer_pot(b);}
 real get_power_law_pot(dyn *b) {return power_law_pot(b);}
 
-real get_external_pot(dyn * b,
+real get_external_pot(dyn *b,
 		      void (*pot_func)(dyn *, real))	// default = NULL
 {
     // Determine the external component of the potential of root
@@ -671,6 +715,8 @@ real get_external_pot(dyn * b,
 
     real pot = 0;
     unsigned int ext = b->get_external_field();
+
+    b->set_root(b);				// safety
 
     if (ext) {
 
@@ -683,7 +729,7 @@ real get_external_pot(dyn * b,
 	if (GETBIT(ext, 2)) dpot += power_law_pot(b);
 	// if (GETBIT(ext, 3)) dpot += other_pot(b);
 
-	if (pot_func) (*pot_func)(b, dpot);	// used by kira to set_pot()
+	if (pot_func) pot_func(b, dpot);	// used by kira to set_pot()
 
 	pot += dpot;
     }
@@ -691,13 +737,15 @@ real get_external_pot(dyn * b,
     return pot;
 }
 
-real get_external_virial(dyn * b)
+real get_external_virial(dyn *b)
 {
     // Determine the external component of the potential of root
     // node b, using current positions.
 
     real vir = 0;
     unsigned int ext = b->get_external_field();
+
+    b->set_root(b);				// safety
 
     if (ext) {
 

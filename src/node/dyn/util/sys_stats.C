@@ -50,8 +50,8 @@
 ////                   radius) [no]
 ////             -o    pipe system to cout [no]
 ////
-////         If GRAPE is available, the hdyn version of this will compute the energies even if
-////         the "-n" flag is set false.
+////         If GRAPE is available, the hdyn version of this function will
+////         compute the energies even if the "-n" flag is set false.
 
 // ***  MUST make sure that the definitions of virial radius and virial  ***
 // ***  equilibrium are consistent between scale and sys_stats.          ***
@@ -83,7 +83,7 @@ local void print_relaxation_time(dyn* b,
 							  real&, real&, real&,
 							  bool))
 {
-    // Print the relaxation time
+    // Print the relaxation time.  Energies are returned as a side effect!
 
     real t_relax;
     real total_mass = 0;
@@ -463,8 +463,7 @@ local void print_anisotropy_by_radial_zone(dyn* b, int which)
 
 local real top_level_kinetic_energy(dyn* b)
 {
-    // (Probably should compute energy relative to density center,
-    //  or at least relative to the system center of mass...)
+    // Compute energy relative to the system center of mass.
 
     vec cmv = vec(0);
     real mass = 0;
@@ -476,9 +475,8 @@ local real top_level_kinetic_energy(dyn* b)
     cmv /= mass;
 
     real kin = 0;
-    { for_all_daughters(dyn, b, bb)
+    for_all_daughters(dyn, b, bb)
         kin += bb->get_mass()*square(bb->get_vel()-cmv);
-    }
 
     return 0.5*kin;
 }
@@ -496,43 +494,52 @@ local void print_energies(dyn* b,
     real e_total;
 
     if (kinetic_energy == 0)
-	compute_energies(b, 0.0, potential_energy, kinetic_energy, e_total,
+	compute_energies(b, 0.0,
+			 potential_energy, kinetic_energy,
+			 e_total,
 			 true);				// "true" ==> top-level
 
-    real total_int_energy = kinetic_energy + potential_energy;	// internal pot
+    real total_int_energy = kinetic_energy + potential_energy;	// NB internal
+								// pot and kin
     real external_pot = get_external_pot(b);
     e_total = total_int_energy + external_pot;
+
+    int ppp = cerr.precision(INT_PRECISION);
 
     vec com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
 
-    com_vel -= b->get_vel();		// CM quantities include root node
+    // Center of mass should be the root node.  Any difference
+    // represents a numerical error.
+
     real kin_com = 0.5*b->get_mass()*square(com_vel);
 
-    real kin_int = kinetic_energy - kin_com;
+    // CM quantities include root node.  Want relative quantities here.
+
+    com_pos -= b->get_pos();
+    com_vel -= b->get_vel();
+
+    real kin_int = kinetic_energy;
     real virial_ratio = -kin_int / (potential_energy
 				        + get_external_virial(b));
 
     kT = kin_int / (1.5*b->n_daughters());
 
     cerr << "    top-level nodes:\n";
-    cerr << "        kinetic_energy = " << kin_int
-	 << "  potential_energy = " << potential_energy;
+    cerr << "        (internal) kinetic_energy = " << kin_int
+	 << "  potential_energy = " << potential_energy << endl;
 
-    if (external_pot == 0) {
-	cerr << endl;
-    } else {
-	cerr << " (internal)" << endl;
-
+    if (external_pot) {
 	cerr << "        external_pot = " << external_pot << " (";
 	print_external(b->get_external_field());
 	cerr << ")" << endl;
 	cerr << "        CM kinetic energy = " << kin_com << endl;
     }
 
-    cerr << "        total energy = " << e_total
+    cerr << "        internal energy = " << e_total
 	 << "  kT = " << kT << "  virial_ratio = " << virial_ratio
 	 << endl;
+    // PRL(get_external_virial(b));
 
     real ke = kinetic_energy, pe = potential_energy;
 
@@ -551,9 +558,12 @@ local void print_energies(dyn* b,
 	}
     }
 
-    e_total += external_pot;
-    cerr << "    total energy (full system) = " << e_total
+    e_total += external_pot + kin_com;
+    cerr << "    CM kinetic energy = " << kin_com
+	 << "  total energy (full system) = " << e_total
  	 << endl;
+
+    cerr.precision(ppp);
 }
 
 local void search_for_binaries(dyn* b, real energy_cutoff, real kT,
@@ -938,7 +948,9 @@ local void print_core_parameters(dyn* b, bool allow_n_sq_ops,
     compute_core_parameters(b, 12, allow_n_sq_ops,
 			    density_center, rcore, ncore, mcore);
 
-    cerr << "    density_center = " << density_center << endl;
+    // Note: density_center is relative to the root node.
+
+    cerr << "    density_center = " << density_center+b->get_pos() << endl;
     cerr << "    rcore = " << rcore << "  ncore = " << ncore
 	 << "  mcore = " << mcore << endl;
 

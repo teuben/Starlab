@@ -1,4 +1,13 @@
 
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
 //// compute_mean_cod:  Determine the density center position and velocity
 ////                    for the input N-body system.  The density center is
 ////                    defined analogously to the center of mass, but instead
@@ -44,9 +53,22 @@
 //-----------------------------------------------------------------------------
 
 #define MAX_COUNT 5
+#define TTOL 1.e-6	// arbitrary tolerance
 
 void compute_mean_cod(dyn *b, vec& pos, vec& vel)
 {
+    // First see if the data are already known.
+
+    if (find_qmatch(b->get_dyn_story(), "density_center_type"))
+	if (streq(getsq(b->get_dyn_story(), "density_center_type"), "mean")) {
+	    if (twiddles(getrq(b->get_dyn_story(), "density_center_time"),
+			 b->get_system_time(), TTOL)) {
+		pos = getvq(b->get_dyn_story(), "density_center_pos");
+		vel = getvq(b->get_dyn_story(), "density_center_vel");
+		return;
+	    }
+	}
+
     real total_weight = 0;
     bool print_message = true;
     int count = 0;

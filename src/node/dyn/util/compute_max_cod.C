@@ -1,4 +1,13 @@
 
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
 //// compute_max_cod:  Determine the max density center position and velocity
 ////                   for the input N-body system.  The max density center is
 ////                   defined as the position of the particle with the
@@ -38,9 +47,22 @@
 //-----------------------------------------------------------------------------
 
 #define MAX_COUNT 5
+#define TTOL 1.e-6	// arbitrary tolerance
 
 void compute_max_cod(dyn *b, vec& pos, vec& vel)
 {
+    // First see if the data are already known.
+
+    if (find_qmatch(b->get_dyn_story(), "density_center_type"))
+	if (streq(getsq(b->get_dyn_story(), "density_center_type"), "max")) {
+	    if (twiddles(getrq(b->get_dyn_story(), "density_center_time"),
+			 b->get_system_time(), TTOL)) {
+		pos = getvq(b->get_dyn_story(), "density_center_pos");
+		vel = getvq(b->get_dyn_story(), "density_center_vel");
+		return;
+	    }
+	}
+
     real max_density = 0;
     bool print_message = true;
     int count = 0;

@@ -1,4 +1,13 @@
 
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
 //// compute_mcom:  Determine the "modified center of mass" position and
 ////                velocity of the input N-body system, recursively defined
 ////                as the center of mass of the f [default 90%] particles
@@ -133,9 +142,15 @@ void compute_mcom(dyn *b,
     pos += b->get_pos();
     vel += b->get_vel();
 
-    putrq(b->get_dyn_story(), "mcom_time", b->get_system_time());
-    putvq(b->get_dyn_story(), "mcom_pos", pos);
-    putvq(b->get_dyn_story(), "mcom_vel", vel);
+    // Use INT_PRECISION here because these quentities may be used
+    // in detailed calculations elsewhere.
+
+    putrq(b->get_dyn_story(), "mcom_time", b->get_system_time(),
+	  INT_PRECISION);
+    putvq(b->get_dyn_story(), "mcom_pos", pos,
+	  INT_PRECISION);
+    putvq(b->get_dyn_story(), "mcom_vel", vel,
+	  INT_PRECISION);
     putrq(b->get_dyn_story(), "mcom_f", f);
     putiq(b->get_dyn_story(), "mcom_n_iter", n_iter);
 

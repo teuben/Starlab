@@ -29,14 +29,17 @@
 
 #ifndef TOOLBOX
 
-void dyn::set_com(vec set_pos, vec set_vel)	// defaults = 0
+void dyn::set_com(vec set_pos, vec set_vel)	// defaults = 0, 0
 {
+    // Place the root node at the specified pos and vel, and at the
+    // center of mass of all top-level nodes.
+
     vec com_pos;
     vec com_vel;
 
-    compute_com(this, com_pos, com_vel); 	// includes 'this' pos and vel
+    compute_com(this, com_pos, com_vel); 	// including 'this' pos and vel
 
-    // Force daughters to have zero CM quantities.
+    // Force daughters to have zero CM quantities relative to root.
 
     com_pos -= pos;
     com_vel -= vel;
@@ -46,16 +49,71 @@ void dyn::set_com(vec set_pos, vec set_vel)	// defaults = 0
 	bb->inc_vel(-com_vel);
     }
 
+    // All new CM information resides in the root node.
+
     pos = set_pos;
     vel = set_vel;
 
     // Correct entries in the dyn story.
+    // Use INT_PRECISION here because these quentities may be used
+    // in detailed calculations elsewhere.
 
-    putvq(get_dyn_story(), "com_pos", set_pos);
-    putvq(get_dyn_story(), "com_vel", set_vel);
+    putvq(get_dyn_story(), "com_pos", set_pos,
+	  INT_PRECISION);
+    putvq(get_dyn_story(), "com_vel", set_vel,
+	  INT_PRECISION);
 
     // Note: Do not modify the "center" of any external field.
     // This function adjusts only the N-body center of mass.
+}
+
+void dyn::reset_com()
+{
+    // Place the root node at the center of mass of the system, keeping the
+    // absolute coordinates and velocities of all top-level nodes unchanged.
+    // Note: Do not modify the "center" of any external field.
+
+    vec com_pos;
+    vec com_vel;
+
+    compute_com(this, com_pos, com_vel); 	// including 'this' pos and vel
+
+    // Force daughters to have zero CM quantities relative to root.
+
+    com_pos -= pos;
+    com_vel -= vel;
+
+    for_all_daughters(dyn, this, bb) {
+	bb->inc_pos(-com_pos);
+	bb->inc_vel(-com_vel);
+    }
+
+    // All new CM information resides in the root node.
+
+    pos += com_pos;
+    vel += com_vel;
+
+    // Correct entries in the dyn story.
+
+    putvq(get_dyn_story(), "com_pos", pos,
+	  INT_PRECISION);
+    putvq(get_dyn_story(), "com_vel", vel,
+	  INT_PRECISION);
+}
+
+void dyn::offset_com()
+{
+    // Place the root node at the origin, keeping the absolute coordinates
+    // and velocities of all top-level nodes unchanged.  This transformation
+    // moves from the standard representation to that used internally by kira.
+    // Note: Do not modify the "center" of any external field.
+
+    for_all_daughters(dyn, this, bb) {
+	bb->inc_pos(pos);
+	bb->inc_vel(vel);
+    }
+
+    pos = vel = 0;
 }
 
 #else
@@ -156,11 +214,13 @@ main(int argc, char ** argv)
 	    cerr << "set_com:  interpreting input parameters"
 		 << " as N-body units" << endl;
 
+	real vc = 0;
+
 	if (ext) {
 
 	    // Convert v from units of vcirc into N-body units.
 
-	    real vc = vcirc(b, r);
+	    vc = vcirc(b, r);
 
 	    if (vc > 0) {
 		v *= vc;
@@ -176,6 +236,12 @@ main(int argc, char ** argv)
         b->set_com(r, v);
 	cerr << "          r = (" << r << "),  v = (" << v << ")"
 	     << endl;
+
+	// Add data to the root log story.
+	putvq(b->get_log_story(), "initial_CM_pos", r);
+	putvq(b->get_log_story(), "initial_CM_vel", v);
+	if (ext && vc > 0)
+	    putrq(b->get_log_story(), "initial_CM_period", 2*M_PI*abs(r)/vc);
 
 	put_dyn(b);
 	rmtree(b);

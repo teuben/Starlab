@@ -1,3 +1,12 @@
+
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
  
 //// scale:  (re)scale an N-body system to specified M, Q (=T/U), and E.
 ////         Note that if the required Q implies E > 0, no additional
@@ -13,7 +22,8 @@
 ////             -s/S  scale to "standard" units [not set]
 ////
 ////         NOTE that only top-level nodes are considered in scale_virial
-////         and scale_energy.
+////         and scale_energy.  Also, only internal positions and velocities
+////         are modified -- the root pos and vel are left untouched.
 ////
 ////         Option "-s" is equivalent to "-M 1 -R 1 -Q 0.5".
 ////
@@ -25,14 +35,12 @@
 ////         properties and physical units.  In all cases, command-line
 ////         parameters are specified in N-body units.
 ////
-////         As of 7/01, systems with embedded tidal or other external fields
-////         are also properly scaled (assuming that the Jacobi radius scales
-////         with the virial radius).  Note that the virial radius is defined
-////         in terms of the *internal* potential energy only.  For now, only
-////         allow the energy to be specified if there are no external
-////         (non-tidal) fields.
-////
-//// Note: NO provision for embedded masses yet...
+////         As of 7/01, systems with embedded tidal or other external
+////         fields are also properly scaled (assuming that the Jacobi
+////         radius scales with the virial radius).  Note that the virial
+////         radius is defined in terms of the *internal* potential energy
+////         only.  For now, only allow the energy to be specified if
+////         there are no external (non-tidal) fields.
 
 // Steve McMillan, April 1993
 //
@@ -60,11 +68,13 @@ void scale_mass(dyn* b, real mscale)
 	bb->scale_mass(mscale);
 }
 
+// Note: scale_pos and scale_vel *never* change the root pos and vel.
+
 void scale_pos(dyn* b, real rscale,
 	       vec com_pos)			// default = 0
 {
-    b->set_pos(com_pos + rscale*(b->get_pos()-com_pos));
-
+    PRL(rscale);
+    PRL(com_pos);
     for_all_daughters(dyn, b, bb)		// N.B. all daughters
 	bb->set_pos(com_pos
 		     + rscale*(bb->get_pos()-com_pos));
@@ -73,12 +83,14 @@ void scale_pos(dyn* b, real rscale,
 void scale_vel(dyn* b, real vscale,
 	       vec com_vel)			// default = 0
 {
-    b->set_vel(com_vel + vscale*(b->get_vel()-com_vel));
-
      for_all_daughters (dyn, b, bb)		// N.B. all daughters
 	bb->set_vel(com_vel
 		     + vscale*(bb->get_vel()-com_vel));
 }
+
+// Note that kinetic energies are all defined in the "root" frame
+// -- i.e. they do not include any bulk motion associated with the
+// root node itself.  (Usually what we want in this function.)
 
 real get_top_level_kinetic_energy(dyn *b)	// top-level nodes only
 {
@@ -191,20 +203,21 @@ void scale(dyn *b, real eps,
 		 << " with physical data" << endl;
     }
 
-    // Optionally transform to the center of mass frame.
+    // Optionally transform to the center of mass frame.  In all cases,
+    // make sure that the root node is at the center of mass of its
+    // daughters.
 
     if (c_flag) {
 	cerr << "scale:  transforming to com frame" << endl;
 	b->to_com();
-    }
-
+    } else
+	b->reset_com();		// root node absorbs any numerical errors
 
     // See if we are dealing with test particles only (still can set
     // mass and radius, but velocity scaling will ignore the internal
     // potential).
 
     check_set_ignore_internal(b);
-
 
     // Define various relevant quantities.  Trust the data in the input
     // snapshot, if current.
@@ -284,20 +297,21 @@ void scale(dyn *b, real eps,
     }
 
     // The relevant kinetic energy for scaling should be in the center
-    // of mass frame.  Compute the CM velocity here and correct.
+    // of mass frame, which should be the frame of the root node.
+    // Compute the CM velocity here and correct if necessary.
 
     vec com_pos, com_vel;
     compute_com(b, com_pos, com_vel);
 
-    com_vel -= b->get_vel();		// com includes root node; energies
-    					// computed here are relative to the
+    com_pos -= b->get_pos();		// com includes root node; energies
+    com_vel -= b->get_vel();		// computed here are relative to the
 					// root node
 
-    real com_kin = 0.5*mass*square(com_vel);
+    real com_kin = 0.5*mass*square(com_vel);	// ideally, should be zero
 
-    if (debug) {
-	cerr << "debug: "; PRC(com_vel); PRL(com_kin);
-    }
+//    if (debug) {
+	cerr << "scale:  internal "; PRC(com_vel); PRL(com_kin);
+//    }
 
     // First do the mass scaling, if any.  NOTE: Scaling the total mass
     // changes both the total energy and the virial ratio.  No attempt is

@@ -1,4 +1,13 @@
 
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
 //// compute_com:  Determine the center of mass position and velocity of
 ////               the input N-body system.
 ////
@@ -16,35 +25,52 @@
 
 #ifndef TOOLBOX
 
-void compute_com(dyn *b, vec& pos, vec& vel)
+#define TTOL 1.e-6	// arbitrary tolerance
+
+void compute_com(dyn *b, vec& com_pos, vec& com_vel)
 {
+    // First see if the data are already known.
+
+    if (twiddles(getrq(b->get_dyn_story(), "com_time"),
+		 b->get_system_time(), TTOL)) {
+	com_pos = getvq(b->get_dyn_story(), "com_pos");
+	com_vel = getvq(b->get_dyn_story(), "com_vel");
+	return;
+    }
+
     real total_mass = 0;
-    pos = 0;
-    vel = 0;
+    com_pos = 0;
+    com_vel = 0;
     
     for_all_daughters(dyn, b, d) {
 	total_mass += d->get_mass();
-	pos += d->get_mass() * d->get_pos();
-	vel += d->get_mass() * d->get_vel();
+	com_pos += d->get_mass() * d->get_pos();
+	com_vel += d->get_mass() * d->get_vel();
     }	
 
-    pos /= total_mass;
-    vel /= total_mass;
+    com_pos /= total_mass;
+    com_vel /= total_mass;
 
     // Include the parent quantities.
 
-    pos += b->get_pos();
-    vel += b->get_vel();
+    com_pos += b->get_pos();
+    com_vel += b->get_vel();
 
-    putrq(b->get_dyn_story(), "com_time", b->get_system_time());
-    putvq(b->get_dyn_story(), "com_pos", pos);
-    putvq(b->get_dyn_story(), "com_vel", vel);
+    // Use INT_PRECISION here because these quentities may be used
+    // in detailed calculations elsewhere.
+
+    putrq(b->get_dyn_story(), "com_time", b->get_system_time(),
+	  INT_PRECISION);
+    putvq(b->get_dyn_story(), "com_pos", com_pos,
+	  INT_PRECISION);
+    putvq(b->get_dyn_story(), "com_vel", com_vel,
+	  INT_PRECISION);
 }
 
 void compute_com(dyn *b)
 {
-    vec pos, vel;
-    compute_com(b, pos, vel);
+    vec tmp_pos, tmp_vel;
+    compute_com(b, tmp_pos, tmp_vel);
 }
 
 #else
