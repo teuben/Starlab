@@ -210,7 +210,7 @@ local void print_maximal(hdyn * b, ostream & s, int level)
     if (!b->is_top_level_leaf()) {
 	if (b->is_low_level_node() && b->get_elder_sister() == NULL) {
 	    skip(MAX_INDENT, s);
-	    if (b->get_perturbation_squared() > 0
+	    if (b->get_perturbation_squared() >= 0
 		&& b->get_perturbation_squared() < VERY_LARGE_NUMBER)
 		s << " \tpert_sq: " << b->get_perturbation_squared() << endl;
 	    else

@@ -741,13 +741,19 @@ void split_top_level_node(hdyn * bi,
 				         ->get_younger_sister());
 
 #if 1
-	    PRL(bi->get_perturbation_squared());
-	    hdyn *pnode = bi->find_perturber_node();
-	    if (pnode && pnode->is_valid() && pnode->get_valid_perturbers())
-		PRL(pnode->get_n_perturbers());
-	    else
-		cerr << "perturbers unknown" << endl;
+	    cerr << endl;
+	    PRL(bi->get_oldest_daughter()->get_perturbation_squared());
+	    hdyn *pnode = bi->get_oldest_daughter()->find_perturber_node();
+	    if (pnode && pnode->is_valid()) {
+		PRL(pnode->format_label());
+		if (pnode->get_valid_perturbers())
+		    PRL(pnode->get_n_perturbers());
+		else
+		    cerr << "perturbers unknown" << endl;
+	    } else
+		cerr << "pnode invalid" << endl;
 #endif
+
 
 	    cerr << endl << flush;
 
