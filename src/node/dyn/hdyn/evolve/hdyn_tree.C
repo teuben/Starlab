@@ -708,7 +708,8 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
     // May not be convenient if a daughter step is very short, or just
     // happens to place the daughter in a bad timestep block.
 
-    real min_time = VERY_LARGE_NUMBER;
+    // SPZ: changed real min_time to xreal min_time
+    xreal min_time = VERY_LARGE_NUMBER;
     for_all_nodes(hdyn, bj, bb)
         if (bb != bj && !bb->get_elder_sister()) {
 	    real bb_time = bb->get_next_time();
