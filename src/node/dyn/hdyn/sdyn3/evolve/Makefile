@@ -16,8 +16,8 @@
 ##.............................................................................
 
 CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) -O3 -O0
-LIBFLAGS	= -L$(LIB) -lsdyn3 -lhdyn -l_dyn_ -ldyn -lnode -lstd -lm
-DEPEND_LIBS	= $(LIB)/libsdyn3.a $(LIB)/libhdyn.a $(LIB)/lib_dyn_.a \
+LIBFLAGS	= -L$(LIB) -lsdyn3 -l_dyn_ -ldyn -lnode -lstd -lm
+DEPEND_LIBS	= $(LIB)/libsdyn3.a $(LIB)/lib_dyn_.a \
 		  $(LIB)/libdyn.a $(LIB)/libnode.a $(LIB)/libstd.a
 
 # Note that most applications are NOT routinely built.
