@@ -229,6 +229,13 @@ local void set_runtime_params(hdyn *b, bool verbose,
     choose_param(b, verbose, d_min_sq, false, "d_min_sq");
     b->set_d_min_sq(d_min_sq);
 
+    // Rudimentary check: flag values of d_min_sq very different
+    // from the equilibrium value.
+
+    real ratio = d_min_sq / square(d_min/nbody);
+    if (ratio < 0.0002 || ratio > 5.e3)
+	cerr << "*** warning: d_min_sq ratio = " << ratio << " ***" <<  endl;
+
     choose_param(b, verbose, lag_factor, lag_flag, "lag_factor");
     b->set_lag_factor(square(lag_factor));
 
