@@ -221,6 +221,9 @@ void update_binary_sister(hdyn * bi)
 //-----------------------------------------------------------------------------
 // synchronize_node -- force the time of a node to a specified value,
 //                     by integrating it forward in time to system_time.
+//
+//                     No prediction here -- do in calling function.
+//
 //-----------------------------------------------------------------------------
 
 void hdyn::synchronize_node()
@@ -244,17 +247,20 @@ void hdyn::synchronize_node()
 	return;
     }
 
-    real old_timestep = timestep;
-    timestep = system_time - time;
+    // No need to adjust timestep -- step is now determined by system_time
+    // (Steve, 4/03).
 
-    if (timestep < 0.0) {
-
-	if (do_diag)
-	    cerr << "synchronize_node: negative timestep..." << system_time
-		 << " " << time << flush << endl;
-	put_node(cerr, *this, options->print_xreal);
-	exit(-1);
-    }
+//     real old_timestep = timestep;
+//     timestep = system_time - time;
+//
+//     if (timestep < 0.0) {
+//
+//     if (do_diag)
+//  	    cerr << "synchronize_node: negative timestep..." << system_time
+//  		 << " " << time << flush << endl;
+//  	    put_node(cerr, *this, options->print_xreal);
+//  	    exit(-1);
+//     }
 
     if (do_diag) {
 	cerr << "Synchronize node " << format_label()
@@ -269,21 +275,21 @@ void hdyn::synchronize_node()
     // NOTE: the "false" here means that we do NOT attempt to
     //	     synchronize unperturbed binaries...
 
-    integrate_node(get_root(), false, true);
+    integrate_node(false, true);
 
     // cerr << "Energy after "; print_recalculated_energies(get_root(), 1);
 
     if (do_diag)
 	cerr <<"After integrate_node "<<endl;
 
-    // NOTE: Timestep adjustment below is not clean...
+    // NOTE: Timestep adjustment below is not clean (and no longer necessary).
 
 //    cerr << format_label() << " "; PRC(old_timestep);
-
-    while (fmod(time, old_timestep) != 0.0)
-	old_timestep *= 0.5;
-    timestep = old_timestep;
-
+//
+//    while (fmod(time, old_timestep) != 0.0)
+//	  old_timestep *= 0.5;
+//    timestep = old_timestep;
+//
 //    PRL(timestep);
 
     if (is_low_level_node())
@@ -407,20 +413,25 @@ real kepler_step(hdyn *b,
 
 static int mycount = 0;
 
-local inline real new_timestep(vector& at3,		// 3rd order term
+local inline real new_timestep(hdyn *b,			// this node
+			       vector& at3,		// 3rd order term
 			       vector& bt2,		// 2nd order term
 			       vector& jerk,		// 1st order term
 			       vector& acc,		// 0th order term
-			       real timestep,		// old timestep
+			       real dt,			// current step
 			       real time,		// present time
 			       real correction_factor,
-			       hdyn * b,
 			       real pert_sq)
 {
-    if (timestep == 0)
-	cerr << "new_timestep: old timestep = 0" << endl;
+    if (dt <= 0)
+	cerr << "new_timestep: actual time step <= 0" << endl;
 
-    // N.B. "timestep" may really be dtau (if b->get_kappa() > 1).
+    real timestep = b->get_timestep();
+
+    if (timestep == 0)
+	cerr << "new_timestep: particle timestep = 0" << endl;
+
+    // N.B. "dt" may really be dtau (if b->get_kappa() > 1).
 
     real newstep, altstep;
     bool keplstep = (pert_sq >= 0 && pert_sq < 0.0001
@@ -454,7 +465,7 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 
 	// Use the Aarseth criterion here.
 
-	real dt2 = timestep * timestep;
+	real dt2 = dt * dt;
 	real dt4 = dt2 * dt2;
 	real dt6 = dt4 * dt2;
 
@@ -572,7 +583,7 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 
 	newstep = aarsethstep * correction_factor;
 #if 0
-	PRC(timestep); PRL(newstep);
+	PRC(dt); PRC(timestep); PRL(newstep);
 #endif
     }
 
@@ -592,7 +603,7 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 		PRC(b->get_system_time()); xprint(b->get_system_time());
 		PRC(b->get_time()); xprint(b->get_time());
 		PRC(b->get_t_pred()); xprint(b->get_t_pred());
-		PRL(timestep);
+		PRC(dt); PRL(timestep);
 		xreal xdt = b->get_t_pred() - b->get_time();
 		PRC(xdt); xprint(xdt);
 		PRL(acc);
@@ -625,13 +636,21 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 //*****
 //*****
 
-
-
     // The natural time step is newstep.  Force it into an appropriate
-    // power-of-two block.  A halving of timestep is always OK.  To
-    // preserve the synchronization, a doubling is OK only if the
+    // power-of-two block.  A halving of timestep (not dt!) is always OK.
+    // To preserve the synchronization, a doubling is OK only if the
     // current time could be reached by an integral number of doubled
     // time steps (see use of fmod below).
+
+    // If dt is less than timestep, reduce timestep to match dt.
+    // Note that timestep is always a power of 2.  However, if timestep
+    // differs from dt, it probably means that time is not commensurate
+    // with timestep.  Correct that here (shouldn't happen often...).
+
+    if (dt < timestep) {
+	while (dt < timestep) timestep /= 2;
+	while (fmod(time, timestep) != 0) timestep /= 2;
+    }    
 
     if (newstep < timestep)
 
@@ -666,11 +685,19 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
 					       // avoid recomputation
 {
-    time += timestep;
-    real dt = timestep;
+    // Note from Steve (4/03):  We now draw a distinction betwen dt, the
+    // step actually taken, and timestep, the particle's natural step.
+    // This is inportant in new_timestep, as the derivatives need dt, but
+    // the synchronization needs timestep...
 
-    if (slow) {
-	dt = slow->get_dtau();
+    // time += timestep;
+    // real dt = timestep;
+
+    real dt = system_time - time;
+    time = system_time;
+
+    if (slow) {					// wrong if dt != timestep,
+	dt = slow->get_dtau();			// but shouldn't be permitted
 	slow->inc_tau(dt);
     }
 
@@ -698,8 +725,9 @@ void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
     // Define correction factor for use in new_timestep.
 
     real correction_factor = 1;
+    bool is_low = is_low_level_node();
 
-    if (is_low_level_node()) {
+    if (is_low) {
 
 	// Correction factor reduces the timestep in a close binary,
 	// in order to improve energy errors.
@@ -738,8 +766,8 @@ void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
 
     }
 
-    real new_dt = new_timestep(at3, bt2, jerk, acc, dt, time,
-			       correction_factor, this, perturbation_squared);
+    real new_dt = new_timestep(this, at3, bt2, jerk, acc, dt, time,
+			       correction_factor, perturbation_squared);
 
     if (new_dt <= 0) {
 	cerr << "update:  dt = " << new_dt
@@ -757,14 +785,16 @@ void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
 
     // Update posvel = pos*vel (for use in binary handling).
 
-    if (is_low_level_node()) {
+    if (is_low) {
+
 	prev_posvel = posvel;
 	posvel = pos * vel;
-    }
 
-    // Finally, store a'' for use in prediction of (top-level, for now) nodes.
+    } else
 
-    if (is_top_level_node())
+	// Finally, store a'' for use in prediction of (top-level,
+	// for now) nodes.
+
 	k_over_18 = bt2 / (9*dt*dt);
 
 #if 0
@@ -1052,7 +1082,23 @@ bool hdyn::correct_and_update()
     }
 #endif
 
-    real dt = timestep;
+    // As of 4/03, the step we are taking is not necessarily the time step
+    // for this particle.  Rather, the step runs from time to system_time,
+    // and the actual time step may be less than timestep.  This is
+    // necessary to allow synchronization of nodes without explicitly
+    // modifying their timestep, so timestep remains a good measure of the
+    // natural step, and also a power of 2.
+
+    // Determine the actual step (to be used in calculating derivatives).
+
+    // real dt = timestep;
+    real dt = system_time - time;	// not necessarily timestep
+
+    // if (dt != timestep) {
+    //	cerr << "correct_and_update: " << format_label() << ": ";
+    // 	PRC(dt); PRL(timestep);
+    // }
+
     if (slow) dt = slow->get_dtau();
 
     // For slow binaries and their perturbers, acc and jerk are computed
@@ -1269,8 +1315,8 @@ bool hdyn::correct_and_update()
 		    real ki2 = ki*ki;
 		    real ki3 = ki2*ki;
 
-		    vector acc_p = s->get_acc_p();	// as above, better to
-		    vector jerk_p = s->get_jerk_p();	// have _dyn_ as friend?
+		    vector acc_p = s->get_acc_p();     // as above, better to
+		    vector jerk_p = s->get_jerk_p();   // have _dyn_ as friend?
 
 		    // Scale acc_p and jerk_p (see comment above).
 
@@ -3810,11 +3856,19 @@ void correct_acc_and_jerk(hdyn** next_nodes,	// NEW
 //=============================================================================
 
 //-----------------------------------------------------------------------------
-//  integrate_node -- advance this node by one time step
+//  integrate_node -- advance this node from time to system_time.
+//
+//                    Note that the resulting step may or may not be equal
+//                    to the node's timestep (new feature, Steve, 4/03).
+//
+//                    Looks like we don't predict here -- must be taken care
+//                    of by the calling function.  In that case, the only
+//                    use of system time is in correct_and_update(), in
+//                    determining the actual step.
+//
 //-----------------------------------------------------------------------------
 
-void hdyn::integrate_node(hdyn * root,
-			  bool integrate_unperturbed,	// default = true
+void hdyn::integrate_node(bool integrate_unperturbed,	// default = true
 			  bool force_unperturbed_time)	// default = false
 
 // From Steve: force_unperturbed_time can cause an unperturbed binary
@@ -3872,8 +3926,13 @@ void hdyn::integrate_node(hdyn * root,
     }
 }
 
-void synchronize_tree(hdyn * b)			// update all top-level nodes
-{						// better to use GRAPE if we can
+void synchronize_tree(hdyn * b)		// update all top-level nodes
+{					// better to use GRAPE if we can
+
+    // No prediction is performed here -- up to the calling function.
+    // Also, the step will take us to system_time, which also should
+    // be set on entry.
+
     if (!b->is_root())
 	b->synchronize_node();
 
