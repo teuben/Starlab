@@ -164,6 +164,13 @@ istream & hdyn::scan_dyn_story(istream & s)
 
 		set_system_time(get_xreal_from_input_line(input_line));
 
+		// Note dangerous to separate root time and system time
+		//   -- should probably never be different...
+
+		// PRL(input_line);
+		// PRL(system_time);
+		// xprint(system_time);
+
 	    } else {
 
 		if (sizeof(xreal) != sizeof(real))	// crude test...
