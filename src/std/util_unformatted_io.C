@@ -68,14 +68,21 @@ real read_unformatted_real( istream & s )
     s.read( (char *)&r, 8 );
     return r;
 #else
-    unsigned long long lv;
-    s.read( (char *)&lv, 8 );
-    lv = (lv>>32) | (lv<<32);
-    lv = (lv&0x0000FFFF0000FFFFLL)<<16
-       | (lv>>16)&0x0000FFFF0000FFFFLL;
-    lv = (lv&0x00FF00FF00FF00FFLL)<<8
-       | (lv>>8)&0x00FF00FF00FF00FFLL;
-    return *(real *)&lv;
+
+    // Note from Steve (12/04): the old version of this, in which only
+    // a single lv was used in place of all these, now seems to fail.
+    // Using lv1, ..., lv4 seems to fix the problem.  Not clear why it
+    // occurred -- presumably it afflicts similar operations in other
+    // functions in this file.
+	
+    unsigned long long lv1;
+    s.read( (char *)&lv1, 8 );
+    unsigned long long lv2 = (lv1>>32) | (lv1<<32);
+    unsigned long long lv3 = (lv2&0x0000FFFF0000FFFFLL)<<16
+				| (lv2>>16)&0x0000FFFF0000FFFFLL;
+    unsigned long long lv4 = (lv3&0x00FF00FF00FF00FFLL)<<8
+				| (lv3>>8)&0x00FF00FF00FF00FFLL;
+    return *(real *)&lv4;
 #endif
 }
 
