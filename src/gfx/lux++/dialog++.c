@@ -396,7 +396,7 @@ void create_double_dialog_entry(char* name, double* value)
     d[n_dialog-1].name = name;
     d[n_dialog-1].type = 3;
     d[n_dialog-1].value = (char*)value;
-    d[n_dialog-1].width = 8;
+    d[n_dialog-1].width = 12;
 }
 
 void create_string_dialog_entry(char* name, char* value)
