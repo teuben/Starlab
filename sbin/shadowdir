@@ -24,7 +24,20 @@ set dlist = (`cd $dir; find . -type d | grep -v CVS`)	# not too many, we hope!
 if ($#dlist > 0) then
 
     if (-d $shadow) then
+
+#	Ask before overwriting an existing directory.
+
+	echo -n "Overwrite existing directory $shadow? "
+	set resp = $<
+
+	if (X$resp != Xy && X$resp != XY) then
+	    echo Aborted
+	    exit
+	endif
+
 	/bin/rm -r -f $shadow
+	echo Directory deleted
+
     endif
 
     mkdir $shadow
@@ -78,5 +91,7 @@ if ($#dlist > 0) then
 	    echo "    " $#flist links in $sub
 	endif
     end
+
+    echo "Shadow directory $shadow successfuly created"
 
 endif
