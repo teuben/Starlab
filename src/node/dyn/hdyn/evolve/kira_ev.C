@@ -1,9 +1,4 @@
 
-#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
-#ifndef T_DEBUG_kira_ev
-#   undef T_DEBUG
-#endif
-
        //=======================================================//    _\|/_
       //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
@@ -23,11 +18,12 @@
 //	void clean_up_kira_ev
 
 #include "hdyn.h"
+#include "kira_timing.h"
 
-// Set TIME_INTERNAL to perform timing of force-evaluation functions
-// in calculate_acc_and_jerk_for_list().
-
-//#define TIME_INTERNAL
+#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
+#ifndef T_DEBUG_kira_ev
+#   undef T_DEBUG
+#endif
 
 int calculate_acc_and_jerk_for_list(hdyn *b,
 				    hdyn **next_nodes,
@@ -44,6 +40,14 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
     // order: all prologue calls are performed first, then all
     // top-level (i.e. GRAPE) force calculations, then all epilogue
     // calls.
+
+    kira_counters *kc = b->get_kira_counters();
+    kira_diag *kd = next_nodes[0]->get_kira_diag();
+    kira_options *ko = next_nodes[0]->get_kira_options();
+
+#ifdef CPU_COUNTERS
+    real cpu = cpu_time(), cpu_prev;
+#endif
 
     // Return the number of top-level nodes on the list.
 
@@ -126,6 +130,11 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
 	}
     }
 
+#ifdef CPU_COUNTERS
+    cpu_prev = cpu;
+    kc->cpu_time_predict += (cpu = cpu_time()) - cpu_prev;
+#endif
+
 #ifdef TIME_INTERNAL
     }
     if (kmax > 1) cpu1 = cpu_time();
@@ -146,6 +155,8 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
 #endif
 
     if (!exact) {
+
+	// Top-level forces.
 
 	if (!ignore_internal)
 	    kira_calculate_top_level_acc_and_jerk(next_nodes, n_next,
@@ -179,14 +190,17 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
 		bi->top_level_node_epilogue_force_calculation();
 	    }
 	}
+
+#ifdef CPU_COUNTERS
+	cpu_prev = cpu;
+	kc->cpu_time_top_level_force += (cpu = cpu_time()) - cpu_prev;
+#endif
     }
 
 #ifdef TIME_INTERNAL
     }
     if (kmax > 1) cpu2 = cpu_time();
 #endif
-
-    kira_diag *kd = next_nodes[0]->get_kira_diag();
 
 #ifdef TIME_INTERNAL
     for (int k = 0; k < kmax; k++) {
@@ -226,6 +240,7 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
 
 	    bi->clear_interaction();
 	    bi->calculate_acc_and_jerk(exact);
+	    kc->pert_step++;
 
 	    if (print) {
 		cerr << "after..."<<endl;
@@ -248,6 +263,11 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
 	bi->inc_steps();
     }
 
+#ifdef CPU_COUNTERS
+    cpu_prev = cpu;
+    kc->cpu_time_low_level_force += (cpu = cpu_time()) - cpu_prev;
+#endif
+
 #ifdef TIME_INTERNAL
     }
     if (kmax > 1) cpu3 = cpu_time();
@@ -267,8 +287,6 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
 
     // Complete calculation of accs and jerks by correcting for C.M.
     // interactions.
-
-    kira_options *ko = next_nodes[0]->get_kira_options();
 
 #ifdef TIME_INTERNAL
     for (int k = 0; k < kmax; k++) {
@@ -307,6 +325,10 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
 		n->clear_on_integration_list();
 	}
 
+#ifdef CPU_COUNTERS
+	cpu_prev = cpu;
+	kc->cpu_time_top_level_force += (cpu = cpu_time()) - cpu_prev;
+#endif
     }
 
 #ifdef T_DEBUG
@@ -338,6 +360,11 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
 		bb->inc_acc(acc);
 		bb->inc_jerk(jerk);
 	    }
+
+#ifdef CPU_COUNTERS
+	cpu_prev = cpu;
+	kc->cpu_time_external_force += (cpu = cpu_time()) - cpu_prev;
+#endif
     }
 
 #ifdef TIME_INTERNAL
