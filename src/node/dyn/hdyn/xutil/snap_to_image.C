@@ -16,12 +16,13 @@
 ////            -i index     specify (real) color index for all stars
 ////                                                        [use internal index]
 ////            -l scale     specify size of field of view (+/- scale)       [3]
-////            -m           use mass to determine star size [no]
+////            -m           use mass to determine star color and/or size [no]
 ////            -n nmax      specify maximum number of images to produce [Inf]
 ////            -N nbody     color using a (small-N) colormap [no]
 ////            -p psize     specify star radius, in pixels
 ////                                           [0 (single image), 1 (animation)]
 ////            -P axis      specify projection axis [z]
+////            -r           use stellar radius to set point size [no]
 ////            -s size      specify image size, in pixels [256]
 ////            -S nskip     specify snaps to skip between images [0]
 ////            -t           test the color map [don't test]
@@ -342,6 +343,13 @@ main(int argc, char** argv)
     char filename[64], sunfilename[64], command[1024];
     char* fn;
 
+    char file[64];
+    strcpy(file, "snap");
+
+    bool combine = true;
+    bool compress = false;
+    bool gif = false;
+
     real l = L;
     bool HRD = false;
     real xmin = 5;
@@ -350,34 +358,27 @@ main(int argc, char** argv)
     real ymax = 3;
     int nx = NX, ny = NY;
     int n = 0, nskip = 0;
-    int psize = 1;
-    bool psize_set = false;
-    int axis = 3;		// 1 = x, 2 = y, 3 = z
 
-    char file[64];
-    strcpy(file, "snap");
+    int axis = 3;		// 1 = x, 2 = y, 3 = z
 
     char colormap[64];
     bool colormap_set = false;
 
-    bool combine = true;
-
-    bool compress = false;
-    bool grid = true;
-    bool gif = false;
-    bool mass = false;
-
     bool testmap = false;
 
+    bool grid = true;
+    bool mass = false;
+    bool radius = false;
+    int psize = 1;
+    bool psize_set = false;
     int ncolor = 0;
-
     real index_all = -1;
 
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "1cC:f:gGi:Hl:X:x:Y:y:mn:N:p:P:s:S:t";
+    char* param_string = "1cC:f:gGi:Hl:X:x:Y:y:mn:N:p:P:rs:S:t";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
@@ -433,6 +434,8 @@ main(int argc, char** argv)
 	    		else if (poptarg[0] == 'z' || atoi(poptarg) == 3)
 			    axis = 3;
 			break;
+	    case 'r':	radius = true;
+			break;
 	    case 's':   nx = ny = atoi(poptarg);
 		        break;
 	    case 'S':   nskip = atoi(poptarg);
@@ -446,7 +449,7 @@ main(int argc, char** argv)
     }
 
     if (!psize_set) {
-	if (combine)
+	if (combine && !radius)
 	    psize = 0;
 	else
 	    psize = 1;
@@ -470,29 +473,44 @@ main(int argc, char** argv)
     // If a colormap file is specified, use it and simply use the index
     // (internal or global) as a pointer into the file.  Not recommended.
     //
-    // If no colormap file is specified and we are told to use the
-    // internal particle index, use a standard colormap.
+    // If no colormap file is specified and we are told to use:
     //
-    // If no colormap file is specified and we are told to use a single
-    // index, or some other particle attribute, use the grey map for now.
+    //     - the internal particle index (index_all < 0), use a (local)
+    // 	     standard colormap, or the small-N colormap, if specified
+    //	     (ncolor = 3 or 4: -N)
+    //
+    //     - a single index (index_all > 0: -i), use the grey map for now
+    //
+    //	   - the particle mass (mass: -m), use the (local) alternate colormap
+    //       (note that mass supercedes index for color, if specified)
+    //
+    // Particle radii may be determined by
+    //
+    //	   - the value of psize (command-line option -p)
+    //
+    //	   - the mass, if mass is set (-m) and radius (-r) is not
+    //
+    //     - the radius (scaled by psize) if radius is set (-r)
 
     unsigned char red[256], green[256], blue[256];
 
     if (!colormap_set) {
 
-	// Need to clean up these options...
+	// Need to clean up these options, as they can be mutually
+	// incompatible.
 
-	if (index_all < 0)
-	    make_local_standard_colormap(red, green, blue, psize);
-//	    make_standard_colormap(red, green, blue);
-	else
-	    make_local_greymap(red, green, blue, psize);
-//	    make_greymap(red, green, blue);
-
-	if (mass) make_local_alternate_colormap(red, green, blue, psize);
-
-	if (ncolor > 0)
+	if (mass)
+	    make_local_alternate_colormap(red, green, blue, psize);
+	else if (ncolor > 0)
 	    make_local_small_n_colormap(red, green, blue, ncolor, psize);
+	else {
+	    if (index_all < 0)
+		make_local_standard_colormap(red, green, blue, psize);
+//		make_standard_colormap(red, green, blue);
+	    else
+		make_local_greymap(red, green, blue, psize);
+//		make_greymap(red, green, blue);
+	}
     }
 
     float* a = new float[nx*ny], *zarray = new float[nx*ny];
@@ -500,12 +518,12 @@ main(int argc, char** argv)
 
     if (testmap) {
 
-	// Draw the colormap and exit.
+	// Just draw the colormap and exit.
 
 	for (int j = 0; j < ny; j++)
 	    for (int i = 0; i < nx; i++)
 		*(a+j*nx+i) = (i%256)/256.;
-		write_image(a, nx, ny, NULL, 0, red, green, blue);
+	write_image(a, nx, ny, NULL, 0, red, green, blue);
 	exit(0);
     }
 
@@ -529,7 +547,8 @@ main(int argc, char** argv)
     real color_scale;
 
     real mmin = VERY_LARGE_NUMBER, mmax = -VERY_LARGE_NUMBER;
-    real logfac = 1;
+    real rmin = VERY_LARGE_NUMBER, rmax = -VERY_LARGE_NUMBER;
+    real logfac = 1, rfac = nx/(2*l);
 
     // Loop over input snapshots.
 
@@ -546,19 +565,26 @@ main(int argc, char** argv)
 	    if (count1 == 0) {
 
 		// This is the first frame to be converted into an image.
-		// Determine the overall color scaling (and mass range, if
-		// if relevant) from *this* snapshot.
+		// Determine overall scalings (and the mass range, if
+		// relevant) from *this* snapshot.
 
-		if (mass || index_all < 0) {
+		if (mass || radius || index_all < 0) {
+
+		    // We are coloring by mass or index and sizing by mass
+		    // or radius.
 
 		    for_all_daughters(hdyn, b, bb) {
-			if (bb->get_index() >= 0) {
+			if (index_all < 0 && bb->get_index() >= 0) {
 			    cmin = min(cmin, bb->get_index());
 			    cmax = max(cmax, bb->get_index());
 			}
 			if (mass && bb->get_mass() > 0) {
 			    mmin = min(mmin, bb->get_mass());
 			    mmax = max(mmax, bb->get_mass());
+			}
+			if (radius) {
+			    rmin = min(mmin, bb->get_radius());
+			    rmax = max(mmax, bb->get_radius());
 			}
 		    }
 
@@ -591,22 +617,22 @@ main(int argc, char** argv)
 
 	    for_all_daughters(hdyn, b, bb) {
 
-	      real x, y, z;
-	      if(!HRD) {
-		vector pos = bb->get_pos();
-		x = pos[iax];
-		y = pos[jax];
-		z = pos[kax];
-	      }
-	      else {
-		story *st = bb->get_dyn_story();
-		real T_eff = getrq(st, "T"); 
-		real L_sun = getrq(st, "L");
-		real stp = getrq(st, "S");
-		x = log10(T_eff);
-		y = log10(L_sun);
-		z = 0;
-	      }
+		real x, y, z;
+		if(!HRD) {
+		    vector pos = bb->get_pos();
+		    x = pos[iax];
+		    y = pos[jax];
+		    z = pos[kax];
+		}
+		else {
+		    story *st = bb->get_dyn_story();
+		    real T_eff = getrq(st, "T"); 
+		    real L_sun = getrq(st, "L");
+		    real stp = getrq(st, "S");
+		    x = log10(T_eff);
+		    y = log10(L_sun);
+		    z = 0;
+		}
 
 		if (x > xmax && x < xmin && y > ymin && y < ymax) {
 
@@ -617,9 +643,10 @@ main(int argc, char** argv)
 		    y = ((y-ymin) * 1.0 * ny / ly);
 		    int j = (int) y;
 
-		    // Set color (by mass or index) and radius:
+		    // Set color (by mass or index) and radius (fixed, by mass,
+		    // or by radius):
 
-		    float color = 1;		// default is white
+		    float color = 1;
 		    real r = psize;
 
 		    if (mass && bb->get_mass() > 0) {
@@ -630,7 +657,8 @@ main(int argc, char** argv)
 
 			color = 0.6667 + 0.3333*fac;
 
-			// Minimum size is 1 pixel, maximum radius is psize.
+			// Minimum size is 1 pixel (r=0), maximum radius
+			// is psize.
 
 			r *= fac;
 
@@ -639,6 +667,9 @@ main(int argc, char** argv)
 					+ 0.7;	// note offset !!!
 		    else if (index_all >= 0)
 			color = color_all;
+
+		    if (radius)
+			r = psize * bb->get_radius() * rfac;
 
 		    add_point(a, nx, ny, x, y, i, j, grid, r, color, z, zarray);
 		}
