@@ -215,15 +215,18 @@ Please set environment QTDIR or use --with-qt-dir=QTDIR.])
 
     if test "x$good_qt" = "xyes"; then
 
-#	We want Qt and have a Qt directory name.  Substitute MOC here, but
-#	check that the library is valid before completing the configuration.
+#	We want Qt and have a Qt directory name.  Check that the library
+#	exists and is valid before completing the configuration.
 
+	CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
+	LDFLAGS="$LDFLAGS -L$qt_dir/lib"
 	AC_SUBST(MOC, [$qt_dir/bin/moc])
+
 	AC_CHECK_LIB(qt, main, [good_qt="yes"])
 
 	if test "x$good_qt" = "xyes"; then
 
-#	    LIbrary is valid, but we need version 3 of libqt.
+#	    Library is valid, but we need version 3 of libqt.
 
 	    AC_MSG_CHECKING(whether Qt is version 3 or newer)
             AC_PREPROC_IFELSE(
@@ -244,18 +247,17 @@ Please update Qt, or do not enable it with --with-qt.])
 
 	    if test "x$good_qt" = "xyes"; then
 
-#		Everything seems OK, finally add Qt configuration.
-
-		CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
-		LDFLAGS="$LDFLAGS -L$qt_dir/lib"
+#		Everything seems OK, finally add the Qt configuration.
 
 		AC_DEFINE(HAVE_LIBQT, 1,
 		      [Define to 1 if you have the `qt' library (-lqt).])
 	    fi
 
 	elif test "x$qt" = "xyes"; then
+
     	    AC_MSG_ERROR([Qt was selected but a test program failed to compile.
 See `config.log' for more details.])
+
 	fi
     fi
 fi
