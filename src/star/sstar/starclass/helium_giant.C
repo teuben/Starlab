@@ -397,8 +397,10 @@ void helium_giant::stellar_wind(const real dt) {
 //    PRL(relative_time);
 //    PRL(prev_rel_time);
 //    PRL(wind_constant);
-    
-    real wind_mass = wind_constant 
+
+    real wind_mass = 0;
+    if(relative_time-dt>0)
+      wind_mass = wind_constant 
                    * (pow(relative_time/end_time,
 			cnsts.parameters(massive_star_mass_loss_law))
 	           -  pow((relative_time-dt)/end_time,
