@@ -856,8 +856,9 @@ sdyn* mkscat(char* s) {   // Character string interface to mkscat
 
 main(int argc, char** argv) {
     check_help();
-    //    sdyn * root = mkscat(argc, argv);
-    //    put_sdyn(cout, *root);
+    sdyn * root = mkscat(argc, argv);
+    pp2(root);
+    put_sdyn(cout, *root);
 }
 
 #endif
