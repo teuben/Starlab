@@ -1,0 +1,12 @@
+
+Worldline To Do List (Steve, 10/20/00)
+--------------------------------------
+
+1. How to handle output from binaries -- bound systems produce too
+   much data!  Better to treat all but the most strongly perturbed
+   binaries as kepler objects, retaining the possibility that the
+   kepler parameters may vary along a segment.  Threshhold for this
+   treatment?  How to ensure continuity?
+
+2. How to manage simultaneous disk I/O and computation, using shared
+   memory?
