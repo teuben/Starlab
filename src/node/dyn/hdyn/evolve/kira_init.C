@@ -825,7 +825,7 @@ bool kira_initialize(int argc, char** argv,
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"*:a:Ab.Bc:C:d:D:e:E:f:F.g:G:h:iI:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvW:xX:y:z:Z:";
+"*:a:Ab.Bc:C:d:D:e:E:f:F.g:G:h:iI:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvVW:xX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
@@ -1036,6 +1036,10 @@ bool kira_initialize(int argc, char** argv,
 			break;
 	    case 'v':	verbose = !verbose;
 			break;
+
+	    case 'V':	print_recalculated_energies(b);
+			exit(0);
+
 	    case 'W':	dt_fulldump = atof(poptarg);
 	    		if (dt_fulldump < 0)
 			    dt_fulldump = pow(2.0, dt_fulldump);
@@ -1059,6 +1063,7 @@ bool kira_initialize(int argc, char** argv,
 			break;
 	    case '*':	b->get_kira_diag()->kira_runtime_flag = atoi(poptarg);
 			break;
+
 	    default:
 	    case '?':	params_to_usage(cerr, argv[0], param_string);
 			return false;
