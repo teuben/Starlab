@@ -477,7 +477,7 @@ local void delete_double(hdyn *b,		    // b is binary CM
 
 bool create_or_delete_binary(hdyn *bi,		      // pointer to parent node
 			     bool * update_dynamics,
-			     int full_dump = 0)	      // default = false
+			     int full_dump /*= 0*/ )  // default = false
 {
 // Two "update_dynamics" flags may be modified (by delete_double):
 //
