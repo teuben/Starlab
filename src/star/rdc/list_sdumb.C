@@ -234,6 +234,9 @@ local int print_binary_recursive(hdyn *b, vec dc_pos, vec dc_vel,
   int nb = 0;
   if (b->get_oldest_daughter()) {
     
+    // Not relative to COM SPZ@27 Aug 2004
+    //    vec r_com  = b->get_pos();
+    //    vec v_com  = b->get_vel();
     vec r_com  = b->get_pos() - dc_pos;
     vec v_com  = b->get_vel() - dc_vel;
 //    vec r_com  = dyn_something_relative_to_root(b, &dyn::get_pos) -dc_pos;
@@ -263,7 +266,8 @@ local int print_binary_recursive(hdyn *b, vec dc_pos, vec dc_vel,
 	//           U, B, V, R, I, verbose);
 	vec nul = 0;
 	bool bound = star_is_bound(bb, nul);
-        print_star(bb, bound, bb->get_pos(), bb->get_vel(),
+	// includ correction for density center position.
+        print_star(bb, bound, bb->get_pos()-dc_pos, bb->get_vel()-dc_vel,
 	           U, B, V, R, I, verbose);
 //	if (bb->get_parent()==bb->get_root())
 //	   cerr << endl;
@@ -383,34 +387,12 @@ main(int argc, char ** argv)
 	       << b->get_starbase()->conv_t_dyn_to_star(b->get_system_time())
 	       << endl;
 
-	if (find_qmatch(b->get_dyn_story(), "density_center_pos")) {
-      
-           if (getrq(b->get_dyn_story(), "density_center_time")
-	       != b->get_system_time()) {
-	       warning("mkpovfile: neglecting out-of-date density center");
-	       try_com = true;
-            } else
-	    cod = true;
-      
-            dc_pos = getvq(b->get_dyn_story(), "density_center_pos");
-            dc_vel = getvq(b->get_dyn_story(), "density_center_vel");
-         }
-
-         if (try_com && find_qmatch(b->get_dyn_story(), "com_pos")) {
-
-            if (getrq(b->get_dyn_story(), "com_time")
-	       != b->get_system_time()) {
-
-	       warning("lagrad: neglecting out-of-date center of mass");
-            } else
-	        dc_pos = getvq(b->get_dyn_story(), "com_pos");
-	        dc_vel = getvq(b->get_dyn_story(), "com_vel");
-         }
+	compute_max_cod(b, dc_pos, dc_vel);
 
 	real U,B,V,R,I;
 	U=B=V=R=I=VERY_LARGE_NUMBER;
 
-	//	PRC(dc_pos);PRL(dc_vel);
+	PRC(dc_pos);PRL(dc_vel);
 	if (!C_flag)
 	   print_binary_recursive(b, dc_pos, dc_vel, U, B, V, R, I,
 				  verbose);
