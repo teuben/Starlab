@@ -39,6 +39,11 @@ real dyn::p_mass = 0;
 real dyn::p_scale_sq = 0;
 vector dyn::p_center = vector(0,0,0);
 
+real dyn::pl_coeff = 0;
+real dyn::pl_scale_sq = 0;
+real dyn::pl_exponent = 0;
+vector dyn::pl_center = vector(0,0,0);
+
 static bool read_xreal = false;
 
 istream & dyn::scan_dyn_story(istream& s)
