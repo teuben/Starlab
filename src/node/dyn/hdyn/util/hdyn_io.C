@@ -104,7 +104,7 @@ istream & hdyn::scan_dyn_story(istream & s)
     while (get_line(s, input_line), strcmp(END_DYNAMICS, input_line)) {
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char *val = getequals(input_line, keyword);
+	const char *val = getequals(input_line, keyword);
 
 	// See xreal notes in dyn_io.C...
 
@@ -129,7 +129,7 @@ istream & hdyn::scan_dyn_story(istream & s)
 		     << "time data type is real"
 		     << endl; 
 
-		real_system_time = system_time = strtod(val, &val);
+		real_system_time = system_time = strtod(val, NULL);
 	    }
 	    // PRC(system_time); xprint(system_time);
 
@@ -142,13 +142,13 @@ istream & hdyn::scan_dyn_story(istream & s)
 		if (read_xreal)
 		    time = get_xreal_from_input_line(input_line);
 		else {
-		    time = strtod(val, &val);
+		    time = strtod(val, NULL);
 		}
 
 	    } else if (!strcmp("dt", keyword))
-		timestep = strtod(val, &val);
+		timestep = strtod(val, NULL);
 	    else if (!strcmp("m", keyword))
-		mass = strtod(val, &val);
+		mass = strtod(val, NULL);
 	    else if (!strcmp("r", keyword))
 		set_vector_from_input_line(pos, input_line);
 	    else if (!strcmp("v", keyword)) {
@@ -157,15 +157,15 @@ istream & hdyn::scan_dyn_story(istream & s)
 	    } else if (!strcmp("a", keyword))
 		set_vector_from_input_line(acc, input_line);
 	    else if (!strcmp("pot", keyword))
-		pot = strtod(val, &val);
+		pot = strtod(val, NULL);
 	    else if (!strcmp("R_eff", keyword))
-		radius = strtod(val, &val);
+		radius = strtod(val, NULL);
 	    else if (!strcmp("steps", keyword))
-		steps = strtod(val, &val);
+		steps = strtod(val, NULL);
 	    else if (!strcmp("dir_f", keyword))
-		direct_force = strtod(val, &val);
+		direct_force = strtod(val, NULL);
 	    else if (!strcmp("indir_f", keyword))
-		indirect_force = strtod(val, &val);
+		indirect_force = strtod(val, NULL);
 
 	    // NOTE:  Complete initialization of unperturbed and slow
 	    // binary structures requires knowledge of the tree structure
@@ -176,9 +176,9 @@ istream & hdyn::scan_dyn_story(istream & s)
 	    // Unperturbed motion:
 
 	    else if (!strcmp("dt_u", keyword))
-		unperturbed_timestep = strtod(val, &val);
+		unperturbed_timestep = strtod(val, NULL);
 	    else if (!strcmp("full_u", keyword))
-		fully_unperturbed = strtol(val, &val, 10);
+		fully_unperturbed = strtol(val, NULL, 10);
 
 	    // Slow binary motion:
 
@@ -188,7 +188,7 @@ istream & hdyn::scan_dyn_story(istream & s)
 		// recognize and reconstruct the slow structure is attached
 		// to the ELDER sister only.
 
-		int k = strtol(val, &val, 10);
+		int k = strtol(val, NULL, 10);
 
 		if (k > 1) {
 
@@ -205,19 +205,19 @@ istream & hdyn::scan_dyn_story(istream & s)
 	    } else if (!strcmp("slow_t_init", keyword)) {
 
 		if (slow) {
-		    slow->set_t_init( strtod(val,&val) );
+		    slow->set_t_init( strtod(val,NULL) );
 		}
 
 	    } else if (!strcmp("slow_t_apo", keyword)) {
 
 		if (slow) {
-		    slow->set_t_apo( strtod(val,&val) );
+		    slow->set_t_apo( strtod(val,NULL) );
 		}
 
 	    } else if (!strcmp("slow_tau", keyword)) {
 
 		if (slow) {
-		    slow->set_tau( strtod(val,&val) );
+		    slow->set_tau( strtod(val,NULL) );
 		    slow->init_tau_pred();
 		}
 
