@@ -169,7 +169,7 @@ local real binary_scale(hdyn* cm)
 
 #ifdef T_DEBUG
     real sys_t = cm->get_system_time();
-    if (sys_t > T_DEBUG && T_DEBUG_LEVEL > 0) {
+    if (IN_DEBUG_RANGE(sys_t) && T_DEBUG_LEVEL > 0) {
 	cerr << "DEBUG: in binary_scale for node "
 	     << cm->format_label() << endl << flush;
 	PRI(4); PRC(cm->get_mass()); PRC(sep); PRC(energy); PRL(sma);

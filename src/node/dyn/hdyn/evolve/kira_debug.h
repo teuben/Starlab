@@ -22,8 +22,7 @@
 
 // Debugging time range is [T_DEBUG, T_DEBUG_END].
 
-#define T_DEBUG_END 1000
-//#define T_DEBUG_END 1.e30
+#define T_DEBUG_END VERY_LARGE_NUMBER
 
 // Debugging level may be used in some functions:
 
