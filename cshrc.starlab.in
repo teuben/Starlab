@@ -6,19 +6,22 @@
 #  environment variables for STARLAB.
 #  You can override this file by using a local ~/.cshrc.starlab file
 #
+#  If you modify the settings here, you must re-source this file to have
+#  new settings take effect.
+#
 #...........................................................................
 
-#
-#  find all STARLAB environment variables, and unset them (except STARLAB_PATH :-)
+# First unset all STARLAB environment variables (except STARLAB_PATH :-)).
 #
 set all=(`printenv | grep ^STARLAB_ | grep -v STARLAB_PATH | awk -F= '{print $1}'`)
 if ($#all > 0) unsetenv $all
 
-#
-# Choose compilation options (***** IMPORTANT!! *****).
+#...........................................................................
+
+# Now set environment variables as desired.
+
+# Choose which parts of the package will be compiled (***** IMPORTANT!! *****).
 # Commenting everything out here will compile/tar only the minimal package.
-#
-# Keep everything on the "definitive" machine.
 #
 setenv	STARLAB_STAR	star 		# Stellar evolution
 #setenv	STARLAB_HYDRO	hydro 		# Hydrodynamics
