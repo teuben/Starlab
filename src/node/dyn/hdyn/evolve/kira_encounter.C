@@ -115,9 +115,9 @@ real print_encounter_elements(hdyn* bi, hdyn* bj,
 	    cerr << endl;
 	}
 	else {
-	    cerr << "     E = " << k.get_energy() << ", ";
+	    cerr << "     E = " << k.get_energy() << endl;
 	    real coll_tskip = k.pred_advance_to_radius(2*k.get_periastron());
-	    PRL(coll_tskip);
+	    // PRL(coll_tskip);
 	    putrq(bi->get_log_story(), "coll_tskip", coll_tskip);
 	    putrq(bj->get_log_story(), "coll_tskip", coll_tskip);
 	    putrq(bi->get_log_story(), "coll_tskip", coll_tskip);
