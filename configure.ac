@@ -14,7 +14,8 @@ AM_INIT_AUTOMAKE([1.8 gnu no-exeext nostdinc std-options])
 # HUGE FIXME - $PWD will fail if building outside the source directory
 # but I don't quite understand how ac_top_srcdir/top_srcdir work
 CPPFLAGS="$CPPFLAGS -I$PWD/include -I$PWD/include/star"
-AC_ARG_ENABLE(xreal, AS_HELP_STRING([--enable-xreal], use the xreal type),
+AC_ARG_ENABLE(xreal,
+	AS_HELP_STRING([--enable-xreal], use the xreal type [[[default=no]]]),
 	[AC_DEFINE(USE_XREAL, 1,
 		[Define to 1 if you want to enable the xreal type. Although this significantly increases precision, it also incurs a substantial performance penalty.])])
 # Another HUGE FIXME - pgetopt() must be replaced by getopt_long()
@@ -34,26 +35,40 @@ AC_PROG_YACC
 AC_PROG_INSTALL
 
 # Checks for libraries.
+AC_ARG_WITH(qt, AS_HELP_STRING([--with-qt], use Qt [[[default=yes]]]),
+		[qt="$withval"])
 AC_ARG_WITH(qt-dir,
-        AS_HELP_STRING([--with-qt-dir], directory where Qt is installed),
+	AS_HELP_STRING([--with-qt-dir=QTDIR], directory where Qt is installed),
         [qt_dir="$withval"])
-if test -z "$qt_dir"; then
-   AC_MSG_CHECKING(whether QTDIR environment variable is set)
-   if test "x$QTDIR" = "x"; then
-      AC_MSG_RESULT(no)
-      AC_MSG_ERROR([QTDIR or --with-qt-dir must be properly set])
-   else
-      AC_MSG_RESULT([$QTDIR])
-      qt_dir="$QTDIR"
+if test -z "$qt" -o "x$qt" = "xyes"; then
+   if test -z "$qt_dir"; then
+      AC_MSG_CHECKING(whether QTDIR environment variable is set)
+      if test "x$QTDIR" = "x"; then
+	 AC_MSG_RESULT(no)
+	 if test "x$qt" = "xyes"; then
+	    AC_MSG_ERROR([Qt was selected with --with-qt but QTDIR isn't set.
+Please set QTDIR or use --with-qt-dir.])
+	 fi
+      else
+	AC_MSG_RESULT([$QTDIR])
+	qt_dir="$QTDIR"
+      fi
+   fi
+   CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
+   LDFLAGS="$LDFLAGS -L$qt_dir/lib"
+   AC_SUBST(MOC, [$qt_dir/bin/moc])
+   AC_CHECK_LIB(qt, main, [AC_DEFINE(HAVE_LIBQT, 1,
+   	[Define to 1 if you have the `qt' library (-lqt).])])
+   if test "x$ac_cv_lib_qt_main" != "xyes" -a "x$qt" = "xyes"; then
+	 AC_MSG_ERROR([Qt was selected but a test program failed to compile
+See `config.log' for more details.])
    fi
 fi
-CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
-LDFLAGS="$LDFLAGS -L$qt_dir/lib"
-AC_SUBST(MOC, [$qt_dir/bin/moc])
-AC_CHECK_LIB(qt, main, [AC_DEFINE(HAVE_LIBQT, 1,
-	[Define to 1 if you have the `qt' library (-lqt).])])
+AM_CONDITIONAL(HAVE_LIBQT, [test "x$ac_cv_lib_qt_main" = "xyes"])
+
 AC_CHECK_LIB(png, main, [AC_DEFINE(HAVE_LIBPNG, 1,
-	[Define to 1 if you have the `png' library (-lpng).])])
+		  [Define to 1 if you have the `png' library (-lpng).])])
+AM_CONDITIONAL(HAVE_LIBPNG, [test "x$ac_cv_lib_png_main" = "xyes"])
 
 # Checks for header files.
 AC_LANG_PUSH(C)
