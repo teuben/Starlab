@@ -1,0 +1,46 @@
+#! /bin/sh
+
+# do_big_tar  filelist  > blah.tar
+# does equivalent of "gnutar -c -T filelist -f -"
+
+filelist="$1"
+
+if [ ! -f "$filelist" ]; then
+  echo "Usage: $0 filelist  > blah.tar.gz
+Given an input file containing a list (one per line) of filenames,
+write a tar file to stdout." >&2
+  exit 1
+fi
+
+# First, do we have GNU tar?
+
+for TAR in gnutar gtar tar; do
+  if $TAR 2>&1 | grep " --help" >/dev/null; then
+    gnutar=$TAR
+    break
+  fi
+done
+
+if [ -n "$gnutar" ]; then
+  $gnutar -c -T "$filelist" -f -
+else
+  : ${TMPDIR=/usr/tmp}
+  TMPTAR=$TMPDIR/$$.tar
+  TMPLIST=$TMPDIR/$$.list
+  # Remove temp files on exit or if interrupted
+  trap "/bin/rm -f $TMPF $TMPLIST" 0 1 2 15
+
+  # Split input into modest-sized chunks -- let's say 600 lines
+  maxlines=400
+  i=1
+  taropts="cf"
+  while
+    somefiles=`tail +$i <$filelist | head -$maxlines`
+    test -n "$somefiles"
+  do
+    tar $taropts $TMPTAR $somefiles
+    taropts="rf"
+    i=`expr $i + $maxlines`
+  done
+  cat $TMPTAR
+fi
