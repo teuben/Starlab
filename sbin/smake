@@ -3,11 +3,6 @@
 # Make command-line arguments, starting at the top-level Starlab
 # directory and suppressing some extraneous output..
 
-if [ $# -lt 1 ]; then
-    echo "$0: At least one make argument required." >&2
-    exit 1
-fi
-
 echo Making $@ in $STARLAB_PATH
 make -s -C $STARLAB_PATH $@
 
