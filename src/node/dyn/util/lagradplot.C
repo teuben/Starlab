@@ -4,11 +4,14 @@
 ////
 //// Options:     -c    add a comment to the output snapshot [false]
 ////              -t    use ten-percentiles rather than quartiles [quartiles]
+////              -d    use double width output, 158 rather than 79 columns
+////              -q    use quadruple width output, 158 rather than 79 columns
 
 //.............................................................................
 //    version 1:  May 1989   Piet Hut               email: piet@iassns.bitnet
 //                           Institute for Advanced Study, Princeton, NJ, USA
 //    version 2:  Dec 1992   Piet Hut  --  adopted to the new C++-based starlab
+//    version 3:  Dec 2000   Piet Hut  --  added 1%, 2%, 5% radii
 //.............................................................................
 //  non-local function: 
 //    plot_mass_radii
@@ -150,18 +153,34 @@ void  plot_mass_radii(dyn * b)
 
 //-----------------------------------------------------------------------------
 //  plot_mass_radii_in_percentages  --  Get the massradii for all particles.
+//
+//  Dec. 2000: I added an option for wider output, which triggers the use 
+//	       of these extra symbols:  '  for the 1% mass radius
+//                                      "  for the 2% mass radius
+//                                      :  for the 5% mass radius
+//             These symbols only appear if they don't collide with the
+//             older |,X,@ symbols.  It's a bit of a kluge, but it works.
+//             Piet
 //-----------------------------------------------------------------------------
 
-void  plot_mass_radii_in_percentages(dyn * b)
+void  plot_mass_radii_in_percentages(dyn * b, int width_factor)
     {
     int  i, k;
     int  n;
     real  cumulative_mass;
     real  mass_percent[9];
     bool  within_mass_percent[9];
+    real  mass_percent_1, mass_percent_2, mass_percent_5;
+    bool  within_mass_percent_1, within_mass_percent_2, within_mass_percent_5;
+    real  length_per_column;
+    real  max_number_of_columns;
     rm_pair_ptr  rm_table;
     dyn * bi;
     
+    length_per_column = PMRP_LENGTH_PER_COLUMN / width_factor;
+    max_number_of_columns = MAX_NUMBER_OF_COLUMNS;
+    if (width_factor > 1) max_number_of_columns *= 2;
+
 //  quick fix to determine  n  for a flat tree:
 
     for (n = 0, bi = b->get_oldest_daughter(); bi != NULL;
@@ -170,6 +189,8 @@ void  plot_mass_radii_in_percentages(dyn * b)
 
     for (i = 0; i < 9; i++)
         within_mass_percent[i] = TRUE;
+
+    within_mass_percent_1 = within_mass_percent_2 = within_mass_percent_5=TRUE;
 
     rm_table = new rm_pair[n];
     if (rm_table == NULL)
@@ -188,8 +209,30 @@ void  plot_mass_radii_in_percentages(dyn * b)
 
     qsort((void *)rm_table, (size_t)n, sizeof(rm_pair), compare_radii);
 
+    mass_percent_1 = 0.01*b->get_mass();
+    mass_percent_2 = 0.02*b->get_mass();
+    mass_percent_5 = 0.05*b->get_mass();
+
     for (i = 0; i < 9; i++)
         mass_percent[i] = ((1 + i) / 10.0) * b->get_mass();
+
+    i = 0;
+    cumulative_mass = 0;
+    while (cumulative_mass < mass_percent_1)
+	    cumulative_mass += (rm_table + i++)->mass;
+    mass_percent_1 = (rm_table + i-1)->radius;
+
+    i = 0;
+    cumulative_mass = 0;
+    while (cumulative_mass < mass_percent_2)
+	    cumulative_mass += (rm_table + i++)->mass;
+    mass_percent_2 = (rm_table + i-1)->radius;
+
+    i = 0;
+    cumulative_mass = 0;
+    while (cumulative_mass < mass_percent_5)
+	    cumulative_mass += (rm_table + i++)->mass;
+    mass_percent_5 = (rm_table + i-1)->radius;
 
     for (i = k = 0, cumulative_mass = 0; k < 9; k++)
         {
@@ -198,20 +241,138 @@ void  plot_mass_radii_in_percentages(dyn * b)
         mass_percent[k] = (rm_table + i-1)->radius;
 	}
 
-    for (i= 0; i < MAX_NUMBER_OF_COLUMNS; i++)
+    for (i= 0; i < max_number_of_columns; i++)
         {
-	if (within_mass_percent[0])
+	if (within_mass_percent_1)
 	    {
-	    if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[0])
+	    if (length_per_column * i < mass_percent_1)
+	        printf(" ");
+	    else
+	        {
+		within_mass_percent_1 = FALSE;
+		if (length_per_column * i < mass_percent_2)
+		    {
+		    if (width_factor > 1) printf("`"); else printf(" ");
+		    }
+		else if (length_per_column * i < mass_percent_5)
+		    {
+		    if (width_factor > 1) printf("\""); else printf(" ");
+		    within_mass_percent_2 = FALSE;
+		    }
+		else if (length_per_column * i < mass_percent[0])
+		    {
+		    if (width_factor > 1) printf(":"); else printf(" ");
+		    within_mass_percent_2 = FALSE;
+		    within_mass_percent_5 = FALSE;
+		    }
+		else if (length_per_column * i < mass_percent[1])
+		    {
+		    printf("|");
+		    within_mass_percent_2 = FALSE;
+		    within_mass_percent_5 = FALSE;
+		    within_mass_percent[0] = FALSE;
+		    }
+		else if (length_per_column * i < mass_percent[2])
+		    {
+		    printf("X");
+		    within_mass_percent_2 = FALSE;
+		    within_mass_percent_5 = FALSE;
+		    within_mass_percent[0] = FALSE;
+		    within_mass_percent[1] = FALSE;
+		    }
+		else
+		    {
+		    printf("@");
+		    within_mass_percent_2 = FALSE;
+		    within_mass_percent_5 = FALSE;
+		    within_mass_percent[0] = FALSE;
+		    within_mass_percent[1] = FALSE;
+		    within_mass_percent[2] = FALSE;
+		    }
+	        }
+	    }
+	else if (within_mass_percent_2)
+	    {
+	    if (length_per_column * i < mass_percent_2)
+	        printf(" ");
+	    else
+	        {
+		within_mass_percent_2 = FALSE;
+		if (length_per_column * i < mass_percent_5)
+		    {
+		    if (width_factor > 1) printf("\""); else printf(" ");
+		    }
+		else if (length_per_column * i < mass_percent[0])
+		    {
+		    if (width_factor > 1) printf(":"); else printf(" ");
+		    within_mass_percent_5 = FALSE;
+		    }
+		else if (length_per_column * i < mass_percent[1])
+		    {
+		    printf("|");
+		    within_mass_percent_5 = FALSE;
+		    within_mass_percent[0] = FALSE;
+		    }
+		else if (length_per_column * i < mass_percent[2])
+		    {
+		    printf("X");
+		    within_mass_percent_5 = FALSE;
+		    within_mass_percent[0] = FALSE;
+		    within_mass_percent[1] = FALSE;
+		    }
+		else
+		    {
+		    printf("@");
+		    within_mass_percent_5 = FALSE;
+		    within_mass_percent[0] = FALSE;
+		    within_mass_percent[1] = FALSE;
+		    within_mass_percent[2] = FALSE;
+		    }
+	        }
+	    }
+	else if (within_mass_percent_5)
+	    {
+	    if (length_per_column * i < mass_percent_5)
+	        printf(" ");
+	    else
+	        {
+		within_mass_percent_5 = FALSE;
+		if (length_per_column * i < mass_percent[0])
+		    {
+		    if (width_factor > 1) printf(":"); else printf(" ");
+		    }
+		else if (length_per_column * i < mass_percent[1])
+		    {
+		    printf("|");
+		    within_mass_percent[0] = FALSE;
+		    }
+		else if (length_per_column * i < mass_percent[2])
+		    {
+		    printf("X");
+		    within_mass_percent[0] = FALSE;
+		    within_mass_percent[1] = FALSE;
+		    }
+		else
+		    {
+		    printf("@");
+		    within_mass_percent[0] = FALSE;
+		    within_mass_percent[1] = FALSE;
+		    within_mass_percent[2] = FALSE;
+		    }
+	        }
+	    }
+	else if (within_mass_percent[0])
+	    {
+	    if (length_per_column * i < mass_percent[0])
 	        printf(" ");
 	    else
 	        {
 		within_mass_percent[0] = FALSE;
-		if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[1])
+		if (length_per_column * i < mass_percent[1])
 		    {
 		    printf("|");
 		    }
-		else if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[2])
+		else if (length_per_column * i < mass_percent[2])
 		    {
 		    printf("X");
 		    within_mass_percent[1] = FALSE;
@@ -226,16 +387,16 @@ void  plot_mass_radii_in_percentages(dyn * b)
 	    }
 	else if (within_mass_percent[1])
 	    {
-	    if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[1])
+	    if (length_per_column * i < mass_percent[1])
 	        printf(" ");
 	    else
 	        {
 		within_mass_percent[1] = FALSE;
-		if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[2])
+		if (length_per_column * i < mass_percent[2])
 		    {
 		    printf("|");
 		    }
-		else if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[3])
+		else if (length_per_column * i < mass_percent[3])
 		    {
 		    printf("X");
 		    within_mass_percent[2] = FALSE;
@@ -250,16 +411,16 @@ void  plot_mass_radii_in_percentages(dyn * b)
 	    }
 	else if (within_mass_percent[2])
 	    {
-	    if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[2])
+	    if (length_per_column * i < mass_percent[2])
 	        printf(" ");
 	    else
 	        {
 		within_mass_percent[2] = FALSE;
-		if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[3])
+		if (length_per_column * i < mass_percent[3])
 		    {
 		    printf("|");
 		    }
-		else if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[4])
+		else if (length_per_column * i < mass_percent[4])
 		    {
 		    printf("X");
 		    within_mass_percent[3] = FALSE;
@@ -274,16 +435,16 @@ void  plot_mass_radii_in_percentages(dyn * b)
 	    }
 	else if (within_mass_percent[3])
 	    {
-	    if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[3])
+	    if (length_per_column * i < mass_percent[3])
 	        printf(" ");
 	    else
 	        {
 		within_mass_percent[3] = FALSE;
-		if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[4])
+		if (length_per_column * i < mass_percent[4])
 		    {
 		    printf("|");
 		    }
-		else if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[5])
+		else if (length_per_column * i < mass_percent[5])
 		    {
 		    printf("X");
 		    within_mass_percent[4] = FALSE;
@@ -298,16 +459,16 @@ void  plot_mass_radii_in_percentages(dyn * b)
 	    }
 	else if (within_mass_percent[4])
 	    {
-	    if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[4])
+	    if (length_per_column * i < mass_percent[4])
 	        printf(" ");
 	    else
 	        {
 		within_mass_percent[4] = FALSE;
-		if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[5])
+		if (length_per_column * i < mass_percent[5])
 		    {
 		    printf("|");
 		    }
-		else if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[6])
+		else if (length_per_column * i < mass_percent[6])
 		    {
 		    printf("X");
 		    within_mass_percent[5] = FALSE;
@@ -322,16 +483,16 @@ void  plot_mass_radii_in_percentages(dyn * b)
 	    }
 	else if (within_mass_percent[5])
 	    {
-	    if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[5])
+	    if (length_per_column * i < mass_percent[5])
 	        printf(" ");
 	    else
 	        {
 		within_mass_percent[5] = FALSE;
-		if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[6])
+		if (length_per_column * i < mass_percent[6])
 		    {
 		    printf("|");
 		    }
-		else if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[7])
+		else if (length_per_column * i < mass_percent[7])
 		    {
 		    printf("X");
 		    within_mass_percent[6] = FALSE;
@@ -346,16 +507,16 @@ void  plot_mass_radii_in_percentages(dyn * b)
 	    }
 	else if (within_mass_percent[6])
 	    {
-	    if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[6])
+	    if (length_per_column * i < mass_percent[6])
 	        printf(" ");
 	    else
 	        {
 		within_mass_percent[6] = FALSE;
-		if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[7])
+		if (length_per_column * i < mass_percent[7])
 		    {
 		    printf("|");
 		    }
-		else if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[8])
+		else if (length_per_column * i < mass_percent[8])
 		    {
 		    printf("X");
 		    within_mass_percent[7] = FALSE;
@@ -370,12 +531,12 @@ void  plot_mass_radii_in_percentages(dyn * b)
 	    }
 	else if (within_mass_percent[7])
 	    {
-	    if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[7])
+	    if (length_per_column * i < mass_percent[7])
 	        printf(" ");
 	    else
 	        {
 		within_mass_percent[7] = FALSE;
-		if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[8])
+		if (length_per_column * i < mass_percent[8])
 		    {
 		    printf("|");
 		    }
@@ -388,7 +549,7 @@ void  plot_mass_radii_in_percentages(dyn * b)
 	    }
 	else if (within_mass_percent[8])
 	    {
-	    if (PMRP_LENGTH_PER_COLUMN * i < mass_percent[8])
+	    if (length_per_column * i < mass_percent[8])
 	        printf(" ");
 	    else
 	        {
@@ -409,18 +570,25 @@ main(int argc, char ** argv)
     char  *comment;
     bool  c_flag = FALSE;      /* if TRUE: a comment given on command line   */
     bool  t_flag = FALSE;      /* if TRUE: percentiles rather than quartiles */
+    bool  d_flag = FALSE;      /* if TRUE: double width output, with even    */
+			       /*          more percentiles                  */
+    bool  q_flag = FALSE;      /* if TRUE: quadruple width output            */
 
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:t";
+    char* param_string = "c:tdq";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c)
 	    {
 	    case 'c': c_flag = TRUE;
 		      comment = poptarg;
+		      break;
+	    case 'd': d_flag = TRUE;
+		      break;
+	    case 'q': q_flag = TRUE;
 		      break;
 	    case 't': t_flag = TRUE;
 		      break;
@@ -432,8 +600,12 @@ main(int argc, char ** argv)
     dyn *b;
     while (b = get_dyn(cin))
 	{
-	if (t_flag)
-	    plot_mass_radii_in_percentages(b);
+	if (q_flag)
+	    plot_mass_radii_in_percentages(b,4);
+        else if (d_flag)
+	    plot_mass_radii_in_percentages(b,2);
+        else if (t_flag)
+	    plot_mass_radii_in_percentages(b,1);
 	else
             plot_mass_radii(b);
 
