@@ -34,22 +34,30 @@ class  _dyn_ : public dyn
 {
     protected:
 
-	xreal   time;           //
-	real    timestep;       //
+	xreal time;
+	real  timestep;
 
-	real    pot;            // potential
-	vec  jerk;           // (d/dt) acc
-	vec  old_acc;        //
-	vec  old_jerk;       //
+	real pot;		// potential
+	vec jerk;		// (d/dt) acc
+	vec old_acc;
+	vec old_jerk;
 
-	vec k_over_18;	// for 5th-order prediction (GRAPE-6)
+	vec k_over_18;		// for 5th-order prediction (GRAPE-6)
 
+	// Relocated radius to try to reduce cache misses in
+	// critical functions.  Would like to make it private to force
+	// use of the accessor function, since the actual value may need
+	// processing before use (e.g. black holes).  However, this
+	// apparently also changes the data layout of the class and
+	// worsens the caching problem.  For now, discourage use of the
+	// raw class data by general functions, and return something
+	// usable (e.g. not negative) in the accessor function.
+	//						(Steve, 1/05)
 
-	vec  pred_pos;       // current predicted pos
-	vec  pred_vel;       // current predicted vel
-	xreal   t_pred;		// time corresponding to pred_pos and pred_vel
-
-        real    radius;		// effective (or actual) radius of a node.
+	real radius;		// effective (or actual) radius of a node.
+	vec pred_pos;		// current predicted pos
+	vec pred_vel;		// current predicted vel
+	xreal t_pred;		// time corresponding to pred_pos and pred_vel
 
 	slow_binary * slow;	// indicator of "slow" binary motion
 				// -- affects all time, prediction, and
@@ -161,13 +169,13 @@ class  _dyn_ : public dyn
 	inline void inc_old_acc(const vec& d_acc)     {old_acc += d_acc; }
 	inline void inc_old_jerk(const vec& d_jerk)   {old_jerk += d_jerk; }
 
-	inline vec get_jerk()                {return jerk;}
-	inline vec get_old_acc()             {return old_acc;}
-	inline vec get_old_jerk()            {return old_jerk;}
+	inline vec get_jerk()			{return jerk;}
+	inline vec get_old_acc()		{return old_acc;}
+	inline vec get_old_jerk()       	{return old_jerk;}
 	inline vec get_k_over_18()		{return k_over_18;}
 
-	inline real  get_radius()		{return radius;}
-	void  set_radius(real r)		{radius = r;}
+	inline real get_radius()		{return abs(radius);}
+	void set_radius(real r)			{radius = r;}
 
 	// Slow-binary manipulation functions defined in _dyn_slow.C:
 
