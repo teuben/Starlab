@@ -17,7 +17,10 @@ src/packages.  You can do this by hand, or run the script
 
 	install-autotools
 
-found in that directory.
+found in that directory.  You will also have to modify your search
+path to ensure that the directory containing the newly installed
+autotools *precedes* any system directory before proceeding with
+the Starlab installation.
 
 If you prefer to install everything automatically, run the script
 
