@@ -406,8 +406,8 @@ void hdyn::set_first_timestep(real additional_step_limit) // default = 0
 
 
 
-real kepler_step(hdyn *b,
-		 real correction_factor)	// default = 1
+local inline real local_kepler_step(hdyn *b,
+				    real correction_factor = 1)
 {
     // Simple "kepler" time step criterion for elder binary component.
     // Used at low level, so minimal checks -- be careful!!
@@ -432,6 +432,34 @@ real kepler_step(hdyn *b,
 
 	return 0;
 
+}
+
+real kepler_step(hdyn *b,
+		 real correction_factor)	// default = 1
+{
+    // Globally accessible version of the above.
+
+    real keplstep = local_kepler_step(b, correction_factor);
+
+#if 1
+    if (keplstep > 0) {
+
+	// Debugging repeats earlier calculations...
+
+	hdyn* s = b->get_younger_sister();
+	real dist  = abs(b->get_pos() - s->get_pos());
+	real dtff = sqrt(dist*dist*dist / (2*b->get_parent()->get_mass()));
+	real dtv  = sqrt(square(b->get_pos()) / square(b->get_vel()));
+	real fac = 0.5*correction_factor*b->get_eta();
+
+	cerr << endl << "kepler_step: ";
+	PRC(dist); PRC(dtff); PRL(dtv);
+	PRC(correction_factor); PRC(fac); PRL(keplstep);
+
+    }
+#endif
+
+    return keplstep;
 }
 
 //-----------------------------------------------------------------------------
@@ -495,22 +523,20 @@ local inline real new_timestep(hdyn *b,			// this node
 	// Use a simple "kepler" time step criterion if b is a binary
 	// and the perturbation is fairly small.
 
-	newstep = altstep = kepler_step(b, correction_factor);
+	newstep = altstep = local_kepler_step(b, correction_factor);
 
 	if (newstep == 0) keplstep = false;
 
 
-
 #if 0
-if (newstep < 1.e-11) { // && name_is(b, "14")) {
-    PRL(11111);
-    PRL(b->format_label());
-    PRL(newstep);
-    PRL(correction_factor);
-    PRL(abs(b->get_pos()));
-}
+	if (newstep < 1.e-11) { // && name_is(b, "14")) {
+	    PRL(11111);
+	    PRL(b->format_label());
+	    PRL(newstep);
+	    PRL(correction_factor);
+	    PRL(abs(b->get_pos()));
+	}
 #endif
-
 
 
     }

@@ -4120,7 +4120,8 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    ) {
 
 	    int prec = cerr.precision(HIGH_PRECISION);
-	    cerr << endl << "short time step: "; PRL(time);
+	    cerr << endl << "short time step for " << format_label()
+		 << " at "; PRL(time);
 	    cerr.precision(prec);
 	    PRC(timestep); PRC(keplstep); PRL(peristep);
 
@@ -4164,6 +4165,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 	    int count_pert = 0;
 	    real max_pert = 0;
+	    hdyn *max_pert_node = NULL;
 
 	    real top_mass = top->get_mass();
 	    vec top_pos = top->get_pos();	// pred_pos not necessary
@@ -4181,13 +4183,18 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		real rpert3 = crit_separation_cubed(top, pertlist[i]->mass,
 						    scale, gamma_top);
 		real pert = gamma_top * rpert3 / (r2*sqrt(r2));
-		if (pert > max_pert) max_pert = pert;
+		if (pert > max_pert) {
+		    max_pert = pert;
+		    max_pert_node = pertlist[i];
+		}
 
 		// PRC(r2); PRL(is_pert);
 		// PRC(rpert3); PRL(pert);
 	    }
 
 	    PRC(count_pert); PR(max_pert);
+	    if (max_pert_node && max_pert_node->is_valid())
+		cerr << " (" << max_pert_node->format_label() << ")";
 
 	    if (count_pert) {
 
