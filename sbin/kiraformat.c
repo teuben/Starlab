@@ -239,8 +239,8 @@ main(int argc, char *argv[]) {
 	fprintf(stderr, "Usage: %s [-a] [file.kira] > outfile.kira\n\
 Converts an ASCII kira (tdyn) output stream to binary (tmpv, TL) form.\n\
 With -a option, converts to (indented) ASCII form instead.\n\
-In any case, for each root-level synchronizing snapshot, reports (to stderr)
-the time, and starting and ending byte offsets in the output stream,
+In any case, for each root-level synchronizing snapshot, reports (to stderr)\n\
+the time, and starting and ending byte offsets in the output stream,\n\
 for easy indexing.\n",
 			argv[0]);
 	exit(1);
