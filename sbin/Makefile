@@ -22,3 +22,7 @@ libs:
 install:
 	@echo Nothing to install in sbin
 
+dist:
+distdir:
+	@echo Nothing extra to distribute in sbin
+
