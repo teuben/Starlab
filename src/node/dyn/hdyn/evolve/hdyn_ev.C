@@ -1,4 +1,9 @@
 
+#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
+#ifndef T_DEBUG_hdyn_ev
+#   undef T_DEBUG
+#endif
+
        //=======================================================//    _\|/_
       //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
@@ -290,24 +295,28 @@ void hdyn::synchronize_node()
 
 void hdyn::set_first_timestep(real additional_step_limit) // default = 0
 {
-    real eta_init = eta / 16;	// initial accuracy parameter (arbitrary)
+    real eta_init = eta / 16;		// initial accuracy parameter (arbitrary)
 
     real j2 = jerk * jerk;
     real a2 = acc * acc;
 
-    real step_limit = eta_init;	// another arbitrary limit...
+    real step_limit = eta_init;		// another arbitrary limit...
 
-    real dt_adot = step_limit;	// time step based on rate of change of acc
-    real dt_ff   = step_limit;	// time step based on free-fall time
-    real dt;			// minimum of the two
+    real dt_adot = VERY_LARGE_NUMBER;	// time step based on rate of change of acc
+    real dt_ff   = VERY_LARGE_NUMBER;	// time step based on free-fall time
 
-    if (j2 > 0)
-	dt_adot = eta_init * sqrt(a2 / j2);
+//    if (j2 > 0)
+//	dt_adot = eta_init * sqrt(a2 / j2);
+//
+//    if (pot < 0 && a2 > 0)
+//	dt_ff = eta_init * sqrt(-pot / a2);
+//
+//    real dt = min(dt_adot, dt_ff);
 
-    if (pot < 0 && a2 > 0)
-	dt_ff = eta_init * sqrt(-pot / a2);
+    if (j2 > 0) dt_adot = a2 / j2;
+    if (pot < 0 && a2 > 0) dt_ff = -pot / a2;
 
-    dt = min(dt_adot, dt_ff);
+    real dt = eta_init * sqrt(min(dt_adot, dt_ff));
 
     // Apply an upper limit to the time step:
 
@@ -322,10 +331,6 @@ void hdyn::set_first_timestep(real additional_step_limit) // default = 0
     if (time != 0)
 	while (fmod(time, timestep) != 0)
 	    timestep *= 0.5;
-
-//    cerr << "in set_first_timestep() for " << format_label()
-//	 << " at time " << system_time << endl;
-//    PRC(eta_init); PRC(true_limit); PRL(dt);
 
     xreal tnext = time + timestep;
 
@@ -376,8 +381,11 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 
     real dist, dtff2, dtv2;
 
-    bool timestep_check = (b->get_kira_diag()->timestep_check
+    bool timestep_check = false;
+#if 0
+    timestep_check = (b->get_kira_diag()->timestep_check
 			   && b->get_kira_diag()->check_diag(b));
+#endif
 
     if (keplstep) {
 
@@ -613,7 +621,7 @@ local inline real new_timestep(vector& at3,		// 3rd order term
 //-----------------------------------------------------------------------------
 
 void hdyn::update(vector& bt2, vector& at3)    // pass arguments to
-						      // avoid recomputation
+					      // avoid recomputation
 {
     time += timestep;
     real dt = timestep;
@@ -2349,9 +2357,20 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     set_acc_and_jerk_and_pot(a_2b + pscale * (apert1 - apert2) * get_kappa(),
 			     j_2b + pscale * (jpert1 - jpert2), p_2b);
 
-    // Note that perturbation_squared does *not* contain the slowdown factor.
+    // Note that perturbation_squared does *not* contain a slowdown factor.
 
     perturbation_squared = square(pscale * (apert1 - apert2)) / square(a_2b);
+
+
+#ifdef T_DEBUG
+    if (IN_DEBUG_RANGE(system_time) && T_DEBUG_LEVEL > 0 && name_is("23")) {
+	cerr << "DEBUG: calculate_acc_and_jerk_on_low_level_node" << endl;
+	PRI(4); PRC(p_2b); PRL(a_2b);
+	PRI(4); PRL(apert1);
+	PRI(4); PRL(apert2);
+    }
+#endif
+
 
 #if 0
     if (is_low_level_node()) {
@@ -3543,8 +3562,8 @@ void hdyn::integrate_node(hdyn * root,
 	    inc_jerk(djerk);
 	}
 
-	correct_and_update();			// note: no retry on error
-	// update();
+	correct_and_update();		// sets time, timestep,...
+	// update();			// note: no retry on error
 
 	store_old_force();
 
