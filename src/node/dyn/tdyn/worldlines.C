@@ -8,7 +8,7 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\
 
-//// worldlines: returns n workslines from worldbundles 
+//// worldlines: returns n worldlines from worldbundles 
 ////
 ////    options:
 ////          -B starting  worldbundle [0]

@@ -8,10 +8,10 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\
 
-//// tdyn_io:  Starlab tdyn class I/O functions.
+//// tdyn_io:  Starlab pdyn and tdyn class I/O functions.
 ////
 ////           Define scan_dyn_story and print_dyn_story for
-////           the tdyn class.
+////           the pdyn and tdyn classes.
 ////
 //// Options: none
 
@@ -189,7 +189,7 @@ ostream & pdyn::print_dyn_story(ostream & s,
 				bool print_xreal,	// default = true
 				int short_output)	// default = 0, ignored
 {
-    // Use dyn::print_dyn_story() to print dyn stuff...
+    // Use dyn::print_dyn_story() to print the dyn stuff...
 
     dyn::print_dyn_story(s, print_xreal, short_output);
 
@@ -211,7 +211,7 @@ ostream & tdyn::print_dyn_story(ostream & s,
 
     if (parent) print_local_time(time, s, print_xreal, short_output);
 
-    // Use pdyn::print_dyn_story() to print dyn stuff...
+    // Use pdyn::print_dyn_story() to print the pdyn stuff...
 
     pdyn::print_dyn_story(s, print_xreal, short_output);
 
