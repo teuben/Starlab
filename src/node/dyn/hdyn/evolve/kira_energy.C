@@ -23,7 +23,7 @@
 
 local void set_pot(dyn *b, real pot)
 {
-    ((hdynptr)b)->set_pot(pot);		// allow dyn function to access get_pot
+    ((hdynptr)b)->set_pot(pot);		// allow dyn function to access set_pot
 }
 
 void calculate_energies_with_external(hdyn* b,
@@ -61,6 +61,9 @@ void print_recalculated_energies(hdyn* b,
     real etot = 0;
 
     calculate_energies_with_external(b, epot, ekin, etot);
+
+    // Here, epot includes both external and internal potential energy
+    // terms, and ekin includes the kinetic energy of the center of mass.
 
     int p = cerr.precision(INT_PRECISION);
     cerr << "Energies: " << epot << " " << ekin << " " << etot;
@@ -122,8 +125,15 @@ void print_recalculated_energies(hdyn* b,
 	de_prev = de;
 
     if (save_story) {
-	putrq(b->get_dyn_story(), "energy_time", b->get_system_time());
-	putrq(b->get_dyn_story(), "kinetic_energy", ekin);
-	putrq(b->get_dyn_story(), "potential_energy", epot);
+
+	// Use high precision here because results may be used for
+	// detailed output elsewhere.
+
+	putrq(b->get_dyn_story(), "energy_time", b->get_system_time(),
+	      HIGH_PRECISION);
+	putrq(b->get_dyn_story(), "potential_energy", epot,
+	      HIGH_PRECISION);
+	putrq(b->get_dyn_story(), "kinetic_energy", ekin,
+	      HIGH_PRECISION);
     }
 }

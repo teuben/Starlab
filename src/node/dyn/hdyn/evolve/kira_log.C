@@ -601,9 +601,11 @@ void log_output(hdyn * b,
 		real count, real steps,
 		real count_top_level, real steps_top_level,
 		kira_counters* kc_prev,
-		int long_binary_output)	// default = 2
+		int long_binary_output)		// default = 2
 {
     // Standard log output (to stderr, note).
+
+    int p = cerr.precision(STD_PRECISION);
 
     vec cod_pos, com_vel, cod_vel;
     compute_com(b, cod_pos, com_vel);
@@ -665,26 +667,71 @@ void log_output(hdyn * b,
     if (b->get_use_sstar())
 	print_sstar_time_scales(b);
 
-    int p = cerr.precision(INT_PRECISION);
+    cerr << "          root pos = " << b->get_pos() << endl
+	 << "               vel = " << b->get_vel() << endl;
+    cerr << endl;
+
     print_recalculated_energies(b, true, true);
-
-    // Extra output on external fields:
-
-    unsigned int ext = b->get_external_field();
-    if (ext) {
-	cerr << "          external potential = " << get_external_pot(b)
-	     << " (";
-	print_external(ext);
-	cerr << ")" << endl;
-    }
-    cerr << "          CM kinetic energy = "
-	 << 0.5*b->get_mass()*square(com_vel) << endl;
-
-    cerr.precision(p);
 
     // Note: on return from print_recalculated_energies, hdyn::pot
     // is properly set, and includes the external field, if any.
     // The earlier "bound" quantities may be suspect...
+
+    // Determine "internal" quantities and determine r_vir, kT, q, etc.
+    // Use the story as a handy way to get the energies back without
+    // adding more arguments.  Data saved at HIGH_PRECISION.
+
+    real pot_int = getrq(b->get_dyn_story(), "potential_energy");
+    real kin_int = getrq(b->get_dyn_story(), "kinetic_energy");
+
+    // Extra output on external fields and center of mass energy:
+
+    unsigned int ext = b->get_external_field();
+    if (ext) {
+	real pot_ext = get_external_pot(b);
+	pot_int -= pot_ext;
+	cerr << "          external potential = " << pot_ext << " (";
+	print_external(ext);
+	cerr << ")" << endl;
+    }
+
+    real kin_CM = 0.5*b->get_mass()*square(com_vel);
+    kin_int -= kin_CM;
+    cerr << "          CM kinetic energy = " << kin_CM << endl;
+
+    real r_vir = -0.5*square(b->get_mass())/pot_int;	// standard definition
+    real kT = kin_int / (1.5*b->n_daughters());		// inefficient (counts N)
+    real q = -kin_int					// also inefficient
+	        / (pot_int + get_external_virial(b));	//     (recomputes com)
+
+    cerr << "          internal potential = " << pot_int
+	 << ",  kinetic = " << kin_int << endl;
+    PRI(10); PRC(r_vir); PRC(kT); PRL(q);
+    // PRL(get_external_virial(b));
+
+#if 0
+
+    // Check some basics...
+
+    vec cmvel = 0;
+    real mm = 0;
+    real k = 0, kk = 0;
+    for_all_daughters(hdyn, b, bb) {
+	mm += bb->get_mass();
+	cmvel += bb->get_mass()*bb->get_vel();
+	k += 0.5*bb->get_mass()*square(bb->get_vel());
+	kk += 0.5*bb->get_mass()*square(bb->get_vel()-com_vel);
+    }
+    cmvel /= mm;
+    real kcm = 0.5*mm*square(cmvel);
+    PRC(mm); PRL(b->get_mass());
+    PRL(cmvel); PRL(com_vel);
+    PRC(kcm); PRL(kcm-kin_CM);
+    PRC(k); PRC(kk); PRL(k - kk - kcm);
+    PRL(-kk/(pot_int + get_external_virial(b)));
+#endif
+
+    cerr.precision(p);
 
     // Update, but don't print, counters if steps = 0.  Note that kc_prev
     // is set equal to kc in print_counters.  (Steve, 5/02)
