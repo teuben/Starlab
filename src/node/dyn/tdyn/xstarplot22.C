@@ -1981,6 +1981,12 @@ main(int argc, char** argv)
     // print_worldlines(wh, nh);
     // print_escapes(wh, nh);
 
+    set_next_center(wh, nh, true);
+    set_next_center(wh, nh, true);
+    set_next_center(wh, nh, true);
+    set_next_center(wh, nh, true);
+    PRL(get_center_id());
+
     // Now display the data.
 
     bool eod = false;

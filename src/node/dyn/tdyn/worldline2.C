@@ -220,7 +220,121 @@ local inline void update_interpolated_tree(worldbundle *wb,
     }
 }
 
-// For center tracking:
+// For center tracking.  The position and velocity of the current
+// center are computed in create_interpolated_tree2.  To change the
+// center type, just swap in the new root pos and vels from the stories
+// and set jerk = 0.  The rest will be handled automatically by the
+// interpolation routines.
+
+local bool scan_root_nodes(worldbundleptr wh[],
+			   int nh,
+			   bool verbose,
+			   char *pos_id,
+			   char *vel_id,
+			   bool check)
+{
+    for (int ih = 0; ih < nh; ih++) {
+
+	worldbundle *wb = wh[ih];
+	worldline *w = wb->get_bundle()[0];	// root worldline
+
+	// Each root worldline should contain only one segment, made
+	// up of two events, but do this more generally and check.
+
+	segment *s = w->get_first_segment();
+	int is = 0;
+
+	while (s) {
+
+	    tdyn *b = s->get_first_event();
+	    int ie = 0;
+
+	    while (b) {
+
+		if (check) {
+
+		    // Look for pos and vel entries in the dyn story.
+
+		    if (!find_qmatch(b->get_dyn_story(), pos_id)
+			|| !find_qmatch(b->get_dyn_story(), vel_id))
+			return false;
+		} else {
+
+		    // Story entries exist.  Set the root pos and vels.
+		    // (Actually, only pos is currently needed, but...)
+
+		    b->set_pos(getvq(b->get_dyn_story(), pos_id));
+		    b->set_vel(getvq(b->get_dyn_story(), vel_id));
+		    b->clear_acc();
+		    b->clear_jerk();
+		}
+
+		b = b->get_next();
+		ie++;
+	    }
+
+	    if (verbose & ie == 1)
+		cerr << "warning: set_next_center: segment "
+		     << is << "is a single event" << endl;
+
+	    s = s->get_next();
+	    is++;
+	}
+
+	if (verbose & is != 1)
+	    cerr << "warning: set_next_center: root worldline  "
+		<< ih << "contains more than one segment" << endl;
+    }
+
+    return true;
+}
+
+static int  n_center = 2;
+static char *center_id[] = {"standard-center", "bound-center"};
+static int  which_center = 0;
+
+char *set_next_center(worldbundleptr wh[],	// entire worldbundle array
+		      int nh,
+		      bool verbose)		// default = false
+{
+    // Set all root nodes to use the next defined center, and return
+    // a string describing that center.  Don't attempt to tie the
+    // descriptive string to the strings used in the root dyn stories.
+
+    int old_center = which_center;
+    which_center++;
+    if (which_center >= n_center) which_center = 0;
+
+    char center_pos_id[128], center_vel_id[128];
+    if (which_center == 0) {
+	strcpy(center_pos_id, "center_pos");	// default in read_tdyn
+	strcpy(center_vel_id, "center_vel");
+    } else if (which_center == 1) {
+	strcpy(center_pos_id, "bound_center_pos");
+	strcpy(center_vel_id, "bound_center_vel");
+    }
+
+    // Only make the change if the specified id exists in all root entries.
+    // Scan the entire worldbundle array; also make some other basic checks.
+
+    bool change = scan_root_nodes(wh, nh, verbose,
+				  center_pos_id, center_vel_id, true);
+    if (change) {
+	scan_root_nodes(wh, nh, false, center_pos_id, center_vel_id, false);
+	if (verbose)
+	    cerr << "set_next_center: new center is "
+		 << center_id[which_center] << endl;
+    } else {
+	if (verbose)
+	    cerr << "set_next_center: unable to change center to "
+		 << center_id[which_center] << endl;
+	which_center = old_center;
+    }
+
+    return center_id[which_center];
+}
+
+char *get_center_id() {return center_id[which_center];}
 
 static vector center_pos = 0;
 vector get_center_pos()	{return center_pos;}

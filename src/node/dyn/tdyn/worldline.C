@@ -856,12 +856,29 @@ vector interpolate_pos(tdyn *p, real t,
 	// *** jerk = 0 as the tree is constructed.          ***
 
 	if (p->get_jerk()[0] == 0) {
+
+	    // Set up the interpolating acc and jerk.
+
 	    real dti = 1/dt;
 
-	    p->set_acc((3*(n->get_pos()-p->get_pos())
-			- dt*(2*p->get_vel()+n->get_vel()))*dti*dti);
-	    p->set_jerk((p->get_vel()+n->get_vel()
-			 - 2*dti*(n->get_pos()-p->get_pos()))*dti*dti);
+	    if (streq(p->get_name(), "root")) {		// infrequent...
+
+		// Use linear interpolation for the cluster center.
+		// Discard vel information to make pos continuous.
+
+		p->set_vel(dti*(n->get_pos() - p->get_pos()));
+		p->set_acc(0);
+		p->set_jerk(vector(VERY_SMALL_NUMBER, 0, 0));
+
+	    } else {
+
+		// Standard fourth-order interpolation otherwise.
+
+		p->set_acc((3*(n->get_pos()-p->get_pos())
+			    - dt*(2*p->get_vel()+n->get_vel()))*dti*dti);
+		p->set_jerk((p->get_vel()+n->get_vel()
+			     - 2*dti*(n->get_pos()-p->get_pos()))*dti*dti);
+	    }
 	}
 
 	dt = t - tp;
