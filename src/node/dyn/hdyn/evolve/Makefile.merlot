@@ -14,8 +14,8 @@
 ##    Mar 1999					Steve McMillan
 ##.............................................................................
 #
-# This Makefile is for merlot ONLY.  See Makefile.* for versions used
-# on other systems.
+# This Makefile is for Steve's merlot ONLY.  See Makefile.* for versions
+# used on other systems.
 #
 # Local (i.e. non-environment) macros used in Makefile.worker.inc:
 #
@@ -63,11 +63,6 @@ CFLAGS       =	$(STARLAB_CCC_FLAGS) -I$(INC) \
 		  -DSTARLAB_HAS_GRAPE4 -DSHARE_GRAPE -DUSE_HALF_CHIP \
 		  $(CC_EXTRA)
 
-# For GRAPE-6:
-
-#CFLAGS       =	$(STARLAB_CCC_FLAGS) -I$(INC) \
-#		  -DSTARLAB_HAS_GRAPE6 -DSHARE_GRAPE $(CC_EXTRA)
-
 # Note from Steve, 3/99:
 #
 # Using "-pg" here for gprof causes strange problems assembling
@@ -86,14 +81,6 @@ CPPFLAGS     =
 # For GRAPE-4 on merlot:
 
 GRAPELIB =	-L/usr/users/makino/src/harplibs -lg4a -lrt
-
-# For GRAPE-6 on bourgogne@hongo:
-
-#GRAPELIB = -L/usr2/makino/src/g6hib -lg6 -L/usr2/makino/src/grape6 -lg6sim2
-
-# For GRAPE-6 on neomuscat@hongo:
-
-#GRAPELIB = -L/usr2/makino/src/g6hib -lg6test -L/usr2/makino/src/grape6 -lg6sim2
 
 LIBFLAGS     =	-L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
                 -ldstar  -lsstar -lstd \
