@@ -60,124 +60,167 @@ istream & tdyn::scan_star_story(istream & s, int level)
 istream & tdyn::scan_dyn_story(istream & s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];
+    bool last_real = false;
 
     while (get_line(s, input_line), !matchbracket(END_DYNAMICS, input_line)) {
 
-	// Special case:
+	char keyword[MAX_INPUT_LINE_LENGTH];
+	const char *val = getequals(input_line, keyword);
 
-	if (streq("tmpv =", input_line)) {
+	// See xreal notes in dyn_io.C...
 
-	    // Read time, mass, pos, and vel as unformatted data.
-	    // Input time will be real, independent of USE_XREAL.
-
-	    // *** Must coordinate with hdyn_io.C. ***
-
-	    time = read_unformatted_real( s );
-
-	    mass = read_unformatted_real( s );
-	    read_unformatted_vector( s, pos );
-	    read_unformatted_vector( s, vel );
-
-	} else if(streq("t64mpv32 =", input_line)) {
-
-	    time = read_unformatted_real( s );
-	    mass = read_unformatted32_real( s );
-	    read_unformatted32_vector( s, pos );
-	    read_unformatted32_vector( s, vel );
-
-	} else {
-
-	    // Usual formatted input.
-
-	    real last_real = false;
-
-	    char keyword[MAX_INPUT_LINE_LENGTH];
-	    const char *val = getequals(input_line, keyword);
-
-	    // See xreal notes in dyn_io.C...
-
-	    if (!strcmp("real_system_time", keyword)) {
-
-		read_xreal = true;
-		last_real = true;
-
-	    } else if (!strcmp("system_time", keyword)) {
-
-		// Check input format before reading.
-
-		if (!last_real) read_xreal = false;
-
-		if (read_xreal) {
-
-		    set_system_time(get_xreal_from_input_line(input_line));
-
-		} else {
-
-		    real_system_time = system_time = strtod(val, NULL);
-
+	switch(keyword[0]) {
+	    case 'r':
+		if(!strcmp("r", keyword)) {
+		    set_vector_from_input_line(pos, input_line);
+		    break;
 		}
+		if (!strcmp("real_system_time", keyword)) {
+		    // "real_system_time" (a) gives the root-node time in real format
+		    // and (b) serves as a flag that all other times are given in xreal form.
+		    read_xreal = true;
+		    last_real = true;
+		    break;
+		}
+		goto other;
 
-	    } else {
+	    case 's':
 
-		last_real = false;
+		if (!strcmp("system_time", keyword)) {
+		    // Check input format before reading.
+		    // If we see "system_time" and haven't ever encountered "real_system_time",
+		    // then all our times are plain "real"s.
 
-		// Dynamical data:
+		    if (!last_real) read_xreal = false;
 
+		    if (read_xreal) {
+
+			set_system_time(get_xreal_from_input_line(input_line));
+
+		    } else {
+
+			real_system_time = system_time = strtod(val, NULL);
+
+		    }
+		    break;
+		}
+		goto other;
+	    
+	    case 't':
 		if (!strcmp("t", keyword)) {
-
 		    if (read_xreal)
 			time = get_xreal_from_input_line(input_line);
 		    else {
 			time = strtod(val, NULL);
 		    }
-
-		} else if (!strcmp("m", keyword))
-		    mass = strtod(val, NULL);
-		else if (!strcmp("r", keyword))
-		    set_vector_from_input_line(pos, input_line);
-		else if (!strcmp("v", keyword))
-		    set_vector_from_input_line(vel, input_line);
-		else if (!strcmp("a", keyword))
-		    set_vector_from_input_line(acc, input_line);
-		else if (!strcmp("j", keyword))
-		    set_vector_from_input_line(jerk, input_line);
-		else if (!strcmp("kep", keyword)) {
-		    int i;
-		    i = strtol(val, NULL, 10);
-		    kep = (kepler*)1;		// just use as a flag for now
+		    break;
 		}
+		if(!strcmp("tmpv", keyword)) {
+		    // Read time, mass, pos, and vel as unformatted data.
+		    // Input time will be real, independent of USE_XREAL.
+
+		    // *** Must coordinate with hdyn_io.C. ***
+		    time = read_unformatted_real( s );
+		    mass = read_unformatted_real( s );
+		    read_unformatted_vector( s, pos );
+		    read_unformatted_vector( s, vel );
+		    break;
+		}
+		if(!strcmp("t64mpv32", keyword)) {
+		    time = read_unformatted_real( s );
+		    mass = read_unformatted32_real( s );
+		    read_unformatted32_vector( s, pos );
+		    read_unformatted32_vector( s, vel );
+		    break;
+		}
+		goto other;
+	    
+	    case 'm':
+		if(!strcmp("m", keyword)) {
+		    mass = strtod(val, NULL);
+		    break;
+		}
+		goto other;
+	    
+	    case 'v':
+		if(!strcmp("v", keyword)) {
+		    set_vector_from_input_line(vel, input_line);
+		    break;
+		}
+		goto other;
+	    
+	    case 'a':
+		if (!strcmp("a", keyword)) {
+		    set_vector_from_input_line(acc, input_line);
+		    break;
+		}
+		goto other;
+	    
+	    case 'j':
+		if (!strcmp("j", keyword)) {
+		    set_vector_from_input_line(jerk, input_line);
+		    break;
+		}
+		goto other;
+	    
+	    case 'k':
+		if (!strcmp("kep", keyword)) {
+		    int i;
+		    i = strtol(val, NULL, 10);	// ignore value, always 1
+		    kep = (kepler*)1;		// just use as a flag for now
+		    break;
+		}
+		goto other;
 
 		// Stellar data:
 
-		else if (!strcmp("S", keyword)) {
+	    case 'S':
+		if (!strcmp("S", keyword)) {
 
 //		    char cptr[MAX_INPUT_LINE_LENGTH];
 //		    sscanf(val,"%s",cptr);
 //		    set_stellar_type(cptr);
 
 		    stellar_type = strtol(val, NULL, 10);
+		    break;
+		}
+		goto other;
+	    
+	    case 'T':
 
-		} else if (!strcmp("T", keyword))
-		    temperature = strtod(val, NULL);
-		else if (!strcmp("L", keyword))
-		    luminosity = strtod(val, NULL);
-		else if(streq("TL =", input_line)) {
-
+		if (!strcmp("TL", keyword)) {
 		    // Short output always uses floats for T and L.
 
 		    temperature = read_unformatted32_real( s );
 		    luminosity = read_unformatted32_real( s );
+		    break;
 		}
+		if (!strcmp("T", keyword)) {
+		    temperature = strtod(val, NULL);
+		    break;
+		}
+		goto other;
 
+	    case 'L':
+		if (!strcmp("L", keyword)) {
+		    luminosity = strtod(val, NULL);
+		    break;
+		}
+		goto other;
+
+	    case 'd':
 		// Bookkeeping:
-
-		else if (!strcmp("defunct", keyword))
+		if (!strcmp("defunct", keyword)) {
 		    defunct = true;
+		    break;
+		}
+		goto other;
 
+	    default:
+	      other:
 		// else
 		//    add_story_line(dyn_story, input_line);	// no stories
-
-	    }
+		;
 	}
     }
     return s;
