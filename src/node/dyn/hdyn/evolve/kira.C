@@ -48,7 +48,8 @@
 ////              -e    specify softening length [0][*]
 ////              -E    use exact calculation [false]
 ////              -f    specify close-encounter distance [1 --> 1/N][*]
-////              -F    specify dynamical friction coefficient [none]
+////              -F    turn on dynamical friction and specify the
+////                                     rescaling coefficient [none]
 ////              -g    specify hysteresis factor [2.5][*]
 ////              -G    specify initial stripping radius [none][*]
 ////              -h    specify stellar-evolution time step [0.015625 = 1/64][*]
@@ -62,7 +63,7 @@
 ////                        based on input snapshot data [allow]
 ////              -O    save (and overwrite) extra snapshot at each output [no]
 ////              -q    specify initial virial ratio [0.5]
-////              -R    specify snapshot file for (re)start [none: stdin]
+////              -R    specify snapshot file for (re)start [none: use stdin]
 ////              -s    specify random seed [take from system clock]
 ////              -S    turn on stellar evolution [off][*]
 ////              -t    specify time span of calculation [10]

@@ -764,7 +764,7 @@ bool kira_initialize(int argc, char** argv,
     real q_vir = 0.5;           // virial ratio (instead of time scaling)
     real T_start = 0;
 
-    real friction_beta = 0;	// "BT" value ~ 40 pi, for log Lambda ~ 10
+    real friction_beta = 0;	// "BT" value = 1
 
     real sec = 0, smc = 0, stc = 0;
     bool sec_flag = false;
@@ -788,7 +788,7 @@ bool kira_initialize(int argc, char** argv,
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"*:a:b.Bc:C:d:D:e:E:f:F:g:G:h:I:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvW:xX:y:z:Z:";
+"*:a:b.Bc:C:d:D:e:E:f:F.g:G:h:I:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvW:xX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
@@ -918,8 +918,12 @@ bool kira_initialize(int argc, char** argv,
 	    case 'f':	d_min = atof(poptarg);
 			d_min_flag = true;
 			break;
-	    case 'F':	//err_exit("kira: -F option removed: use add_tidal");
-			friction_beta = atof(poptarg);
+	    case 'F':	// err_exit("kira: -F option removed: use add_tidal");
+			if (poptarg)
+			    friction_beta = atof(poptarg);
+			else
+			    friction_beta = 1;
+	    		if (friction_beta < 0) friction_beta = 0;
 			break;
 	    case 'g':	lag_factor = atof(poptarg);
 			lag_flag = true;
@@ -1187,6 +1191,9 @@ bool kira_initialize(int argc, char** argv,
     // specified *only* via the initial snapshot.
 
     check_set_external(b, verbose);
+
+    if (friction_beta > 0 && !b->get_pl())
+	cerr << "warning: dynamical friction, but no external field." << endl;
 
     //----------------------------------------------------------------------
 
