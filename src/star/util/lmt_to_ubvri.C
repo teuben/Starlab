@@ -652,7 +652,7 @@ void get_ubvri_star(dyn *bi, stellar_type& stype,
 //     }
 }
 
-local print_star(stellar_type stype, int nstar, real mass, vector pos, 
+local void print_star(stellar_type stype, int nstar, real mass, vector pos, 
 		 real U, real B, real V, real R, real I) {
 
      cerr << stype <<" "<< nstar<<" "<<mass << " " << pos << " " 
