@@ -42,6 +42,7 @@ foreach dir ($autoconf $automake $libtool)
 #   Start by checking whether we should actually build the package.  Compare
 #   its version with the version number of any installed version of the tool.
 
+    rehash
     set build = 1
 
 #   Determine the tool name and version from dir.  We assume that the format
@@ -111,7 +112,6 @@ foreach dir ($autoconf $automake $libtool)
 	    make install			>>& ../$log
 	    chdir ..
 
-	    rehash
 	endif
 
     endif

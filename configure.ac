@@ -215,14 +215,29 @@ Please set environment QTDIR or use --with-qt-dir=QTDIR.])
 
     if test "x$good_qt" = "xyes"; then
 
-#	We want Qt and have a Qt directory name.  Check that the library
-#	exists and is valid before completing the configuration.
+#	We want Qt and have a Qt directory name.  Check that the
+#	library is usable.  Look in both lib and lib64 if necessary.
 
-	CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
-	LDFLAGS="$LDFLAGS -L$qt_dir/lib"
 	AC_SUBST(MOC, [$qt_dir/bin/moc])
+	CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
 
-	AC_CHECK_LIB(qt, main, [good_qt="yes"])
+	found_qt=no
+	save_LDFLAGS="$LDFLAGS"
+	if test -d "$qt_dir/lib"; then
+	    LDFLAGS="$LDFLAGS -L$qt_dir/lib"
+	    AC_CHECK_LIB(qt, main, [found_qt="yes"], [found_qt="no"])
+	fi
+
+	if test "x$found_qt" = "xno"; then
+	    if test -d "$qt_dir/lib64"; then
+		LDFLAGS="$save_LDFLAGS -L$qt_dir/lib64"
+		AC_MSG_NOTICE(trying lib64...)
+		unset ac_cv_lib_qt_main		# (avoid possible caching)
+		AC_CHECK_LIB(qt, main, [found_qt="yes"], [found_qt="no"])
+	    fi
+	fi
+
+	good_qt=$found_qt
 
 	if test "x$good_qt" = "xyes"; then
 
@@ -257,6 +272,11 @@ Please update Qt, or do not enable it with --with-qt.])
 
     	    AC_MSG_ERROR([Qt was selected but a test program failed to compile.
 See `config.log' for more details.])
+
+	else
+
+	    AC_MSG_NOTICE(*** unable to compile test program: disabling Qt ***)
+	    good_qt=no
 
 	fi
     fi
