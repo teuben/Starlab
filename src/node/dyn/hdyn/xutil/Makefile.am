@@ -31,7 +31,7 @@ libxhdyn_la_SOURCES = Qt_pp3.C
 
 if HAVE_LIBQT
   bin_PROGRAMS += Qt_pp3
-  libxhdyn_la_LDFLAGS += -lqt $(X_PRE_LIBS) -lX11 $(X_EXTRA_LIBS)
+  libxhdyn_la_LDFLAGS += @QT_LIBS@ $(X_PRE_LIBS) -lX11 $(X_EXTRA_LIBS)
   libxhdyn_la_SOURCES += pp3_widget.C moc_pp3_widget.C
   Qt_pp3_CPPFLAGS = -DTOOLBOX
   Qt_pp3_LDADD = libxhdyn.la

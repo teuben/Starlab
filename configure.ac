@@ -24,7 +24,7 @@ m4_include([version.m4])
 AC_INIT(Starlab, VERSION_NUMBER, [steve@physics.drexel.edu])
 
 all_args="$@"		# seems to pick up the proper args
-			# too soon, ignired, too late, args changed
+			# too soon, ignored, too late, args changed
 
 AC_CONFIG_AUX_DIR(config)
 # doesn't really matter because there is a bug in Autoconf that disregards this
@@ -171,7 +171,10 @@ as shown in `local/grape.sh.examples'.])
     AC_SUBST(GRAPE_LIBS, "$GRAPE_LIBS_")
     OLDFLAGS="$LDFLAGS"
     LDFLAGS="$LDFLAGS $GRAPE_LDFLAGS_"
-    AC_CHECK_LIB(g6lx, g6_open_, grape6=yes, grape6=no)
+    for gl in $GRAPE_LIBS_; do
+        AC_CHECK_LIB(${gl/-l/}, g6_open_, grape6=yes, grape6=no)
+	if test "x$grape6" = "xyes"; then break; fi
+    done
     if test "x$grape6" = "xno"; then
         AC_CHECK_LIB(g4x, h3open_, grape4=yes, grape4=no)
 	if test "x$grape4" = "xyes"; then
@@ -250,6 +253,7 @@ Please set environment QTDIR or use --with-qt-dir=QTDIR.])
 #	library is usable.  Look in both lib64 and lib if necessary.
 
 	AC_SUBST(MOC, [$qt_dir/bin/moc])
+	qt_libs=-lqt
 	CPPFLAGS="$CPPFLAGS -I$qt_dir/include"
 
 	found_qt=no
@@ -268,10 +272,19 @@ Please set environment QTDIR or use --with-qt-dir=QTDIR.])
 	    fi
 	fi
 
+	if test "x$found_qt" = "xno"; then
+	    if test -d "$qt_dir/lib"; then
+		LDFLAGS="$save_LDFLAGS -L$qt_dir/lib"
+		AC_MSG_NOTICE(trying qt-mt...)
+		AC_CHECK_LIB(qt-mt, main, [found_qt="yes"], [found_qt="no"])
+		qt_libs=-lqt-mt		
+	    fi
+	fi
+
 	good_qt=$found_qt
 
 	if test "x$good_qt" = "xyes"; then
-
+	    AC_SUBST(QT_LIBS, [$qt_libs])
 #	    Library is valid, but we need version 3 of libqt.
 
 	    AC_MSG_CHECKING(whether Qt is version 3 or newer)
