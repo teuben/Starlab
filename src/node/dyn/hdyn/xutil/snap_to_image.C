@@ -2,10 +2,10 @@
 //// snap_to_image:  Construct images (in Sun rasterfile format) of
 ////                 a series of snapshots.
 ////
-//// Options:   -1           toggle combine all frames in a single image [yes]
-////            -c           compress the image file(s) using gzip [no]
-////            -C colormap  specify a colormap file name [no]
-////            -f filename  specify root name of image files [snap, - = stdout]
+//// Options:   -1           toggle combine all frames in a single image   [yes]
+////            -c           compress the image file(s) using gzip          [no]
+////            -C colormap  specify a colormap file name                   [no]
+////            -f filename  specify root name of image files   ["-" --> stdout]
 ////            -F format    specify image file format
 ////                             (0 = PNG, 1 = SUN, 2 = GIF)                 [0]
 ////            -g           write GIF files (currently uses convert and
@@ -19,17 +19,17 @@
 ////            -i index     specify (real) color index for all stars
 ////                                                        [use internal index]
 ////            -l scale     specify size of field of view (+/- scale)       [3]
-////            -m           use mass to determine star color and/or size [no]
-////            -n nmax      specify maximum number of images to produce [Inf]
-////            -N nbody     color using a (small-N) colormap [no]
+////            -m           use mass to determine star color and/or size   [no]
+////            -n nmax      specify maximum number of images to produce   [Inf]
+////            -N nbody     color using a (small-N) colormap               [no]
 ////            -p psize     specify star radius, in pixels
 ////                                           [0 (single image), 1 (animation)]
-////            -P axis      specify projection axis [z]
+////            -P axis      specify projection axis                         [z]
 ////            -q           toggle suppression of diagnostic output
 ////                                                            [don't suppress]
-////            -r           use stellar radius to set point size [no]
-////            -s size      specify image size, in pixels [256]
-////            -S nskip     specify snaps to skip between images [0]
+////            -r           use stellar radius to set point size           [no]
+////            -s size      specify image size, in pixels                 [256]
+////            -S nskip     specify snaps to skip between images            [0]
 ////            -t           test the color map [don't test]
 ////            -x           specify right (log effective temparature) edge
 ////                             of HRD (-H only)                            [3]
@@ -392,7 +392,7 @@ main(int argc, char** argv)
     char* fn;
 
     char file[64];
-    strcpy(file, "snap");
+    strcpy(file, "-");
 
     bool combine = true;
     bool compress = false;
@@ -533,9 +533,6 @@ main(int argc, char** argv)
 #endif
 
     if (gif) compress = false;
-
-    if (format == 0 && streq(file, "-")) 	// can't write PNG to stdout yet
-	strcpy(file, "tmp");
 
     if (HRD) {
 	if (!xlim_set) {

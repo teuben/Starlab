@@ -60,19 +60,24 @@ int write_png(png_bytep image, png_uint_32 width, png_uint_32 height,
     png_bytep row_pointers[height];
 
     if (!image || width <= 0 || height <= 0) return (ERROR);
-    if (!file_name) return (ERROR);
    
     /* Open the output file. */
 
-    fp = fopen(file_name, "wb");
-    if (!fp) return (ERROR);
+    if (file_name) {
+	fp = fopen(file_name, "wb");
+	if (!fp) return (ERROR);
+	// cerr << "opened " << file_name << endl;
+    } else {
+	fp = stdout;
+	// cerr << "opened stdout" << endl;
+    }
 
     /* Create and initialize the png_struct. */
 
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
 				      NULL, NULL, NULL);
     if (!png_ptr) {
-	fclose(fp);
+	if (file_name) fclose(fp);
 	return (ERROR);
     }
 
@@ -80,7 +85,7 @@ int write_png(png_bytep image, png_uint_32 width, png_uint_32 height,
 
     info_ptr = png_create_info_struct(png_ptr);
     if (info_ptr == NULL) {
-	fclose(fp);
+	if (file_name) fclose(fp);
 	png_destroy_write_struct(&png_ptr,  (png_infopp)NULL);
 	return (ERROR);
     }
@@ -91,7 +96,7 @@ int write_png(png_bytep image, png_uint_32 width, png_uint_32 height,
 
 	/* If we get here, we had a problem reading the file. */
 
-	fclose(fp);
+	if (file_name) fclose(fp);
 	png_destroy_write_struct(&png_ptr, &info_ptr);
 	return (ERROR);
     }
@@ -149,7 +154,7 @@ int write_png(png_bytep image, png_uint_32 width, png_uint_32 height,
    png_free(png_ptr, palette);
    palette = NULL;
    png_destroy_write_struct(&png_ptr, &info_ptr);
-   fclose(fp);
+   if (file_name) fclose(fp);
 
    return (OK);
 }
