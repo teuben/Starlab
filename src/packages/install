@@ -1,20 +1,25 @@
 #!/bin/tcsh -f
 
-# Install public-domain packages distributed as is with Starlab.
+# Install public-domain packages distributed with Starlab.
 
-echo Making gifsicle
-set dir = gifsicle-1.40
-set log = gifsicle-install.log
+set log = install.log
+set plist = (`cat package-list`)
 
-if (! -d $dir) then
-    if (-e $dir.tar.gz) then
-	tar xzf $dir.tar.gz
+#--------------------------------------------------------------
+
+set package = $plist[1]
+echo Making $package
+echo Making $package				>! $log
+
+if (! -d $package) then
+    if (-e $package.tar.gz) then
+	tar xzf $package.tar.gz
     endif
 endif
 
-if (-d $dir) then
-    cd $dir
-    ./configure					>! ../$log
+if (-d $package) then
+    cd $package
+    ./configure					>> ../$log
     make clean					>> ../$log
     make					>> ../$log
 
@@ -23,3 +28,35 @@ if (-d $dir) then
     cd ../..
 endif
 
+#--------------------------------------------------------------
+
+# Next three are all built the same way...
+
+if (! -d inc) mkdir inc
+if (! -d lib) mkdir lib
+
+foreach package ($plist[2] $plist[3] $plist[4])
+
+    echo Making $package
+    echo Making $package			>> $log
+
+    if (! -d $package) then
+        if (-e $package.tar.gz) then
+    	tar xzf $package.tar.gz
+        endif
+    endif
+
+    if (-d $package) then
+        cd $package
+        make clean				>> ../$log
+        make depend				>> ../$log
+        make					>> ../$log
+
+        cp -p *.h ../inc
+        mv lib*.a ../lib			>& /dev/null
+	if (-e banner) mv banner $STARLAB_PATH/sbin
+        cd ..
+    endif
+end
+
+#--------------------------------------------------------------
