@@ -26,6 +26,33 @@
 
 static bool read_xreal = false;
 
+istream & tdyn::scan_star_story(istream & s, int level)
+{
+    char input_line[MAX_INPUT_LINE_LENGTH];
+
+    // In this case, simply read the Star info into the dyn variables.
+    // This code replicates part of scan_dyn_story() below, and allows
+    // us to read a snapshot with the stellar information encoded in
+    // a (Star...)Star clause instead of in Dyn.
+
+    while (get_line(s, input_line), !matchbracket(END_STAR, input_line)) {
+
+	char keyword[MAX_INPUT_LINE_LENGTH];
+	const char *val = getequals(input_line, keyword);
+
+	if (!strcmp("S", keyword)) {
+	    char cptr[MAX_INPUT_LINE_LENGTH];
+	    sscanf(val,"%s",cptr);
+	    set_stellar_type(cptr);
+	} else if (!strcmp("T", keyword))
+	    temperature = strtod(val, NULL);
+	else if (!strcmp("L", keyword))
+	    luminosity = strtod(val, NULL);
+
+	// Ignore everything else -- no stories!
+    }
+}
+
 istream & tdyn::scan_dyn_story(istream & s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];
@@ -133,8 +160,10 @@ istream & tdyn::scan_dyn_story(istream & s)
 
 		else if (!strcmp("defunct", keyword))
 		    defunct = true;
-		else
-		    add_story_line(dyn_story, input_line);
+
+		// else
+		//    add_story_line(dyn_story, input_line);	// no stories
+
 	    }
 	}
     }
@@ -163,6 +192,10 @@ ostream & pdyn::print_dyn_story(ostream & s,
     // Use dyn::print_dyn_story() to print dyn stuff...
 
     dyn::print_dyn_story(s, print_xreal, short_output);
+
+    if (stellar_type) put_string(s,      "  S  =  ", stellar_type);
+    put_real_number(s, "  T  =  ", temperature);
+    put_real_number(s, "  L  =  ", luminosity);
 
     return s;
 }
@@ -194,11 +227,11 @@ main(int argc, char** argv)
     tdyn *b;
     check_help();
 
-#if 0
+#if 1
 
     while (b = get_tdyn(cin)) {
 	cout << "TESTING put_tdyn:" << endl;
-        put_node(cout, *b);
+        put_node(cout, *b, true, 1);
 	cout << "TESTING pp2()   :" << endl;
 	pp2(b);
 	delete b;
@@ -212,7 +245,7 @@ main(int argc, char** argv)
 	char tmp;
 	cin >> tmp;
 
-	b = get_tdyn(s, NULL, NULL, false);//, NULL, NULL, false);
+	b = get_tdyn(s, NULL, NULL, false);
 
 	cerr << "pause..." << flush;
 	cin >> tmp;

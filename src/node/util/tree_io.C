@@ -83,6 +83,8 @@ istream & node::scan_star_story(istream& s, int level)
 
 	// (See hydrobase note above.)
 
+	cerr << "hello..." << endl;
+
 	char input_line[MAX_INPUT_LINE_LENGTH];
 	while (get_line(s,input_line), !matchbracket(END_STAR, input_line));
     }
@@ -239,7 +241,7 @@ local node * get_node_recursive(istream& s,
 	} else if (matchbracket(START_HYDRO, line)) {
 	    b->scan_hydro_story(s);
 	} else if (matchbracket(START_STAR, line)) {
-	    b->scan_star_story(s, level);
+	    b->scan_star_story(s, level);		// virtual (for tdyn)
 	} else if (matchbracket(START_LOG, line)) {
 
                 // bug: every node gets a log story, but when you see
