@@ -30,6 +30,10 @@ real hdyn::alpha1	= 0;
 real hdyn::alpha3	= 0;
 vector hdyn::tidal_center = vector(0,0,0);
 
+real hdyn::p_mass = 0;
+real hdyn::p_scale_sq = 0;
+vector hdyn::p_center = vector(0,0,0);
+
 bool hdyn::use_dstar	= false;
 
 real hdyn::stellar_encounter_criterion_sq = 1;

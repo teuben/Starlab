@@ -23,14 +23,14 @@
 
 #include "hdyn.h"
 
-// NOTE: This file is the *only* place where tidal and other external
-//       fields are specified.
+// NOTES:  1. This file is the *only* place where tidal and other
+//            external fields are specified.
 //
-//	 Routines add_external() and de_external_pot() MUST be kept
-//	 consistent when changes are made!
+//	   2. Routines add_external() and de_external_pot() MUST be
+//	      kept consistent when changes are made!
 //
-//	 Need functions add_xxx() and de_xxx_pot() for each external
-//	 field xxx introduced.
+//	   3. We need functions add_xxx() and de_xxx_pot() for each
+//	      external field xxx introduced.
 
 local inline void add_tidal(hdyn * b,
 			    bool pot_only)
@@ -86,7 +86,7 @@ local inline void add_tidal(hdyn * b,
 
 local inline real de_tidal_pot(hdyn * b)
 {
-    // Determine tidal component to the potential of body b.
+    // Determine the tidal component of the potential of body b.
     // ASSUME that tidal_type is set and that b is a top-level node.
 
     // Add tidal and centrifugal terms for top-level nodes only.
@@ -105,10 +105,55 @@ local inline real de_tidal_pot(hdyn * b)
 	dpot += bb->get_mass() * dp;
     }
 
-    dpot *= 0.5;
-    return dpot;
+    return 0.5*dpot;
+}
+
+local inline void add_plummer(hdyn * b,
+			      bool pot_only)
+{
+    // Add a Plummer field to the aceleration of body b.
+    // CANNOT neglect the contribution to the jerk.
+    // Also include the tidal potential in pot.
+
+    // ASSUME that b is a top-level node.
+
+    real M = b->get_p_mass();
+    if (M == 0) return;
+
+    real a2 = b->get_p_scale_sq();
+
+    vector dx = b->get_pred_pos() - b->get_p_center();
+    real r2 = square(dx) + a2;
+    real r1 = sqrt(r2);
+
+    if (!pot_only) {
+	vector dv = b->get_pred_vel();
+	b->inc_acc(-M*dx/(r1*r2));
+	b->inc_jerk(-M*(3*dx*(dx*dv)/r2 - dv));
+    }
+
+    b->inc_pot(-M/r1);
 }
 
+local inline real de_plummer_pot(hdyn * b)
+{
+    // Determine the Plummer component of the potential of body b.
+    // ASSUME that b is a top-level node.
+
+    real M = b->get_p_mass();
+    if (M == 0) return 0;
+
+    real a2 = b->get_p_scale_sq();
+
+    real dpot = 0;
+    for_all_daughters(hdyn, b, bb) {
+	vector dx = bb->get_pred_pos() - bb->get_p_center();
+	real r2 = square(dx) + a2;
+	dpot += bb->get_mass() / sqrt(r2);
+    }
+
+    return -M*dpot;
+}
 
 void add_external(hdyn * b,
 		  bool pot_only)	// default = false
@@ -121,10 +166,11 @@ void add_external(hdyn * b,
 
     int ext = b->get_external_field();
 
-    // Loop through known tidal fields.
+    // Loop through the known external fields.
 
     if (GETBIT(ext, 0)) add_tidal(b, pot_only);
-    // if (GETBIT(ext, 1)) add_external1(b, pot_only);
+    if (GETBIT(ext, 1)) add_plummer(b, pot_only);
+    // if (GETBIT(ext, 2)) add_other(b, pot_only);
 }
 
 real de_external_pot(hdyn * b)
@@ -137,10 +183,11 @@ real de_external_pot(hdyn * b)
     real dpot = 0;
     int ext = b->get_external_field();
 
-    // Loop through known tidal fields.
+    // Loop through the known external fields.
 
     if (GETBIT(ext, 0)) dpot += de_tidal_pot(b);
-    // if (GETBIT(ext, 1)) dpot += de_external1_pot(b);
+    if (GETBIT(ext, 1)) dpot += de_plummer_pot(b);
+    // if (GETBIT(ext, 2)) dpot += de_other_pot(b);
 
     return dpot;
 }
