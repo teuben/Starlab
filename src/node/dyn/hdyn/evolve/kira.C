@@ -621,11 +621,13 @@ local void evolve_system(hdyn * b,		// hdyn array
     // Complete the setup of static class data:
 
     real initial_step_limit = Starlab::min(INITIAL_STEP_LIMIT, dt_max);
-    initial_step_limit = Starlab::min(initial_step_limit, dt_snap);
 
-    real step_limit = Starlab::min(dt_max, dt_snap); // no initial_step_limit
+    // Replaced dt_snap by dt_reinit in the next 2 lines.  (Steve, 1/05)
 
-    b->set_mbar(b->get_mass()/b->n_leaves());	     // mass scale
+    initial_step_limit = Starlab::min(initial_step_limit, dt_reinit);
+    real step_limit = Starlab::min(dt_max, dt_reinit);	// no initial_step_limit
+
+    b->set_mbar(b->get_mass()/b->n_leaves());		// mass scale
     b->set_initial_step_limit(initial_step_limit);
     b->set_step_limit(step_limit);
 
