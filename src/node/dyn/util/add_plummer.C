@@ -55,7 +55,7 @@ main(int argc, char *argv[])
     int c;
     char* param_string = "a:c:C:::M:nR:";
 
-    dyn *b = get_dyn(cin);
+    dyn *b = get_dyn();
     if (b == NULL) err_exit("Can't read input snapshot");
 
     b->log_history(argc, argv);
@@ -88,7 +88,7 @@ main(int argc, char *argv[])
     }
 
     add_plummer(b, mass, scale, center, n_flag, true);
-    put_node(cout, *b);
+    put_node(b);
 }
 
 #endif

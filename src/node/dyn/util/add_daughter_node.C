@@ -84,7 +84,7 @@ main(int argc, char ** argv)
     dyn * y;       // younger daughter node
     dyn * n;       // new daughter node
 
-    root = get_dyn(cin);
+    root = get_dyn();
     root->log_comment(seedlog);
 
     if (!root)
@@ -140,7 +140,7 @@ main(int argc, char ** argv)
     
     if (e_flag) root->pretty_print_tree(cerr);
 
-    put_node(cout, *root);
+    put_node(root);
     rmtree(root);
 }
 

@@ -1514,12 +1514,13 @@ main(int argc, char** argv)
 	rel_point_size = 1.0/rel_point_size;
         
     int   gfx_counter = 0;
-    while (b = get_sdyn3(cin)) {
+    while (b = get_sdyn3()) {
 	convert_relative_to_absolute(b);
         xstarplot(b, scale, k, d, lmax,
 		  point_mode, rel_point_size, D, cenergy,
 		  b_flag, f_flag, t_flag, gfx_counter++);
-	if (o_flag) put_node(cout, *b);
+	if (o_flag)
+	    put_node(b);
 	rmtree(b);
     }
 

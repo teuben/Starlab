@@ -49,22 +49,22 @@ main(int argc, char ** argv)
     node *b;
     for (int i = 0; i < s; i++){
 	cerr << " skipping snapshot " << i << endl;
-	if (! forget_node(cin)) exit(1);
+	if (!forget_node()) exit(1);
     }
     
     
     int node_read = 0;
-    while (b = get_node(cin))
+    while (b = get_node())
     {
         node_read++;
         if (c_flag == TRUE)
 	b->log_comment(comment);
         b->log_history(argc, argv);
-	put_node(cout,*b);
+	put_node(b);
 	rmtree(b);
 	
         for (int i = 1; i < k; i++)
-	  if (! forget_node(cin)) {
+	  if (!forget_node()) {
 	    exit(1);
 	  }
 

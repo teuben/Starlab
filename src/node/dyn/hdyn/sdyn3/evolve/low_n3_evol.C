@@ -889,7 +889,7 @@ bool low_n3_evolve(sdyn3* b,	   // sdyn3 array
 	    if (t >= t_snap) {
 
 		if (system_in_cube(b, snap_cube_size)) {
-		    put_node(cout, *b, false, 2);
+		    put_node(b, cout, false, 2);
 		    cout << flush;
 		    total_snaps++;
 		    putiq(b->get_log_story(), "total_snaps", total_snaps);
@@ -1058,7 +1058,7 @@ main(int argc, char **argv)
 
     if (!D_flag) dt_snap = delta_t;
 
-    b = get_sdyn3(cin);
+    b = get_sdyn3();
     b->log_history(argc, argv);
     cpu_init();
 

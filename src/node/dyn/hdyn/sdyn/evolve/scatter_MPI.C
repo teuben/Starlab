@@ -153,7 +153,7 @@ void scatter(sdyn* b, real eta,
 	     << "  Etot = " << ekin + epot 
 	     << "  Tinf = " << ekin/epot << endl;
       }
-      //      put_sdyn(cout, *b);
+      //      put_sdyn(b);
       t_out += dt_out;
     }
     

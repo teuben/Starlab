@@ -1033,7 +1033,7 @@ main(int argc, char **argv)
       dyn *b;
 
       int nsnap = 0;	
-      while (b = get_dyn(cin)) {
+      while (b = get_dyn()) {
 
 	cerr << "Time = " << b->get_system_time() 
 	     << " ("<<b->get_starbase()->conv_t_dyn_to_star(b->get_system_time())<<" [Myr])" 
@@ -1053,7 +1053,7 @@ main(int argc, char **argv)
 	put_ubvri(b);
 
 	if (v_flag)
-	  put_dyn(cout, *b);
+	  put_dyn(b);
 	
 	rmtree(b);
       }

@@ -395,7 +395,7 @@ main(int argc, char ** argv)
     int actual_seed = srandinter(random_seed);
     sprintf(seedlog, "       random number generator seed = %d",actual_seed);
 
-       dyn* b = get_dyn(cin);
+       dyn* b = get_dyn();
 
        b->log_history(argc, argv);
        b->log_comment(seedlog);
@@ -416,7 +416,7 @@ main(int argc, char ** argv)
            random_initialization=true;
        adddouble(b, t_start, type, random_initialization,
 	         a_min, a_max, e_min, e_max);
-       put_dyn(cout, *b);	
+       put_dyn(b);
        delete b;
     }
 

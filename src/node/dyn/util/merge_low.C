@@ -94,14 +94,14 @@ main(int argc, char ** argv)
 
     dyn *b;
 
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
         if (c_flag == TRUE)
             b->log_comment(comment);
         b->log_history(argc, argv);
 
         merge_low_level_nodes(b, frac, option);
-	put_dyn(cout, *b);	
+	put_dyn(b);
 	delete b;
     }
 }

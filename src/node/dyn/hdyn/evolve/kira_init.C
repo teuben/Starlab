@@ -855,7 +855,7 @@ bool kira_initialize(int argc, char** argv,
 	b = get_hdyn(s);
     } else {
 	cerr << "reading input from stdin" << endl;
-	b = get_hdyn(cin);
+	b = get_hdyn();
     }
 
     if (b == NULL) err_exit("Can't read input snapshot");

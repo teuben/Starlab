@@ -3,7 +3,7 @@
 
 main()
 {
-    hdyn *b = get_hdyn(cin);
+    hdyn *b = get_hdyn();
     if (b == NULL) err_exit("Can't read input snapshot");
 
     while(1) {

@@ -865,7 +865,7 @@ main(int argc, char** argv) {
     check_help();
     sdyn * root = mkscat(argc, argv);
     pp2(root);
-    put_sdyn(cout, *root);
+    put_sdyn(root);
 }
 
 #endif

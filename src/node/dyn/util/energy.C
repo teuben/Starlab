@@ -32,7 +32,7 @@ main(int argc, char **argv)
 
     // Loop over input until no more data remain.
 
-    while ( (root = get_dyn(cin)) != NULL) {
+    while ( (root = get_dyn()) != NULL) {
 
 	real kinetic_energy, potential_energy;
 	get_top_level_energies(root, eps*eps, potential_energy, kinetic_energy);

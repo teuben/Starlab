@@ -36,9 +36,9 @@ kira_diag::kira_diag() {		    // (Steve's 6/00
     report_impending_multiple_status		= false;
     report_zero_unpert_steps			= false;
     report_multiple				= true;
-    unpert_report_level				= 2;
-    end_unpert_report_level			= 2;
-    multiple_report_level			= 2;
+    unpert_report_level				= 0;
+    end_unpert_report_level			= 0;
+    multiple_report_level			= 0;
 
     tree					= true;
     tree_level					= 0;

@@ -837,7 +837,7 @@ main(int argc, char ** argv) {
     int count = 0;
     bool cod, try_com = false;
     vector dc_pos = 0;
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
 	b->flatten_node();
 

@@ -1194,7 +1194,7 @@ main(int argc, char ** argv)
   vector density_center=0;
   vector density_velocity=0;
   real rcore;
-  while (b = get_dyn(cin)) {
+  while (b = get_dyn()) {
     
     if (c_flag == TRUE)
       b->log_comment(comment);
@@ -1220,7 +1220,7 @@ main(int argc, char ** argv)
     red_stellar_system(b, nzones, binning, radius_cut, option,
 		       sort_param, l_min, scale_flag, verbatim);
 
-    if (out) put_dyn(cout, *b);	
+    if (out) put_dyn(b);
     delete b;
   }
 }

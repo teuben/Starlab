@@ -371,7 +371,7 @@ int main(int argc, char ** argv)
 	err_exit("mkbinary: Illegal limits");
 
     dyn* b;
-    b = get_dyn(cin);
+    b = get_dyn();
 
     b->log_history(argc, argv);
 
@@ -420,7 +420,7 @@ int main(int argc, char ** argv)
 
     mkbinary(b, lower, upper, function_select, option, emax);
 
-    put_dyn(cout, *b);
+    put_dyn(b);
     rmtree(b);
     return 0;
 }

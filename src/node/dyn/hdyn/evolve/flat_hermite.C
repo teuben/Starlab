@@ -213,7 +213,7 @@ void evolve_system(hdyn * b,		// hdyn array
 	if (ttmp > t_snap || ttmp > t_end) {
 	    if (snap_cube_size < VERY_LARGE_NUMBER)
 		shift_cm(b, snap_cube_size);
-	    put_node(cout, *b);
+	    put_node(b);
 	    cout << flush;
 	    t_snap += dt_snap;
 	}
@@ -320,7 +320,7 @@ main(int argc, char **argv)
     if (!D_flag)
 	dt_snap = delta_t;
 
-    b = get_hdyn(cin);
+    b = get_hdyn();
 
     if (c_flag == TRUE)
 	b->log_comment(comment);

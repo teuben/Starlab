@@ -105,7 +105,7 @@ main(int argc, char ** argv)
     b->log_history(argc, argv);
 
     b->to_com();
-    put_node(cout, *b);
+    put_node(b);
 }
 
 #endif

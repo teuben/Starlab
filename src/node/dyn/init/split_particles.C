@@ -247,7 +247,7 @@ int main(int argc, char ** argv)
     check_help();
 
     dyn* b;
-    b = get_dyn(cin);
+    b = get_dyn();
 
     b->log_history(argc, argv);
 
@@ -317,7 +317,7 @@ int main(int argc, char ** argv)
 			     semi_major_axis, mass_ratio,
 			     iname);
 
-    put_dyn(cout, *b);
+    put_dyn(b);
     return 0;
 }
 

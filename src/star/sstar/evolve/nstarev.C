@@ -108,8 +108,8 @@ local void  evolve_the_stellar_system(dyn* b, real time) {
       }
    }
 
-int main(int argc, char ** argv) {
-
+int main(int argc, char ** argv)
+{
     bool s_flag = false;
     bool c_flag = false;
     bool m_flag = false;
@@ -166,7 +166,7 @@ int main(int argc, char ** argv) {
     actual_seed = srandinter(input_seed);
 
     // make flat tree 
-    dyn* root = get_dyn(cin);
+    dyn* root = get_dyn();
     //    node *root  = mknode(1);
     root->log_history(argc, argv);
 //    root->get_starbase()->set_stellar_evolution_scaling(m_tot, r_hm, t_hc);
@@ -177,7 +177,7 @@ int main(int argc, char ** argv) {
 
     cerr.precision(STD_PRECISION);
 
-    //    put_node(cout, *root);
+    //    put_node(root);
 
     real dt, time = 0;
     real delta_t = t_end/((real)n_steps);
@@ -224,10 +224,9 @@ int main(int argc, char ** argv) {
     }
 #endif
 
-    put_node(cout, *root);
+    put_node(root);
     delete root;
-
-  }
+}
 
 #if 0
 
@@ -238,7 +237,7 @@ int main(int argc, char ** argv) {
 
     node *b;
 
-    b = get_node(cin);
+    b = get_node();
     if (c_flag == TRUE)
         b->log_comment(comment);
     b->log_history(argc, argv);
@@ -246,7 +245,7 @@ int main(int argc, char ** argv) {
 
     addstar(b, t_start, type);
 
-    //put_node(cout, *b);
+    // put_node(b);
 
     real t_out, dt = t_end/n;
     for (int i=0; i<n; i++) {
@@ -256,7 +255,7 @@ int main(int argc, char ** argv) {
       //      for_all_daughters(node, b, bi) 
       //	bi->get_starbase()->evolve_element(t_out);
 
-      put_node(cout, *b);
+      put_node(b);
     }
     return 0;
 }

@@ -134,15 +134,14 @@ void main(int argc, char ** argv)
 	}
 
 
-    node* b;
-    b = get_node(cin);
+    node *b;
+    b = get_node();
     b->log_history(argc, argv);
 
     renumber(b, istart, M_flag, N_flag);
 
-    put_node(cout, *b);
+    put_node(b);
     rmtree(b);
-
 }
 #endif
 

@@ -437,10 +437,10 @@ local void merge(sdyn3 * bi, sdyn3 * bj)
     if (bi->get_index() < 4 && bj->get_index() < 4) new_index++;
     bn->set_label(new_index);
 
-    detach_node_from_general_tree(*bi);
-    detach_node_from_general_tree(*bj);
+    detach_node_from_general_tree(bi);
+    detach_node_from_general_tree(bj);
   
-    add_node(*bn, *b);
+    add_node(bn, b);
 }
 
 // merge_collisions: recursively merge any stars in contact.

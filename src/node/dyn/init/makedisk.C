@@ -273,7 +273,7 @@ main(int argc, char ** argv)
 	   m_central, m_disk,
 	   r_inner, r_outer, radius, v_disp);
 
-    put_node(cout, *b);
+    put_node(b);
 }
 
 #endif

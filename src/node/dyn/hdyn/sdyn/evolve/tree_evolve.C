@@ -127,7 +127,7 @@ main(int argc, char **argv)
 
     if (!D_flag) dt_snap = delta_t; // Guarantee output at end
 
-    b = get_sdyn(cin);
+    b = get_sdyn();
     b->log_history(argc, argv);
     cpu_init();
 

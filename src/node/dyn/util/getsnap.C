@@ -40,14 +40,14 @@ main(int argc, char ** argv)
     dyn *b;
     
     int node_read = 0;
-    while (b = get_dyn(cin))
+    while (b = get_dyn())
     {
         node_read++;
         if (c_flag == TRUE)
 	b->log_comment(comment);
         b->log_history(argc, argv);
 	if(b->get_system_time()==t) {
-	  put_dyn(cout,*b);
+	  put_dyn(b);
 	  exit(1);
 	}
 	rmtree(b);

@@ -146,8 +146,8 @@ main(int argc, char ** argv)
 
     dyn * b1;
     dyn * b2;
-    b1 = get_dyn(cin);
-    b2 = get_dyn(cin);
+    b1 = get_dyn();
+    b2 = get_dyn();
 
     if (n_flag == FALSE)
 	n_intervals = 4;                       // defaults: quartiles

@@ -80,7 +80,7 @@ local bool remove_escapers(hdyn* b,
 		bj->remove_from_perturbed_list();
 
 	    esc_list[n_esc++] = bj;
-	    detach_node_from_general_tree(*bj);
+	    detach_node_from_general_tree(bj);
 
 	    b->inc_mass(-bj->get_mass());	// Not done by detach_node...
 	}

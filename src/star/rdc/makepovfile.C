@@ -352,8 +352,8 @@ local void print_star(dyn *bi, vector pos,
 
      if (bi->get_star_story()) {
 //       if (find_qmatch(bi->get_star_story(), "Type")) {
-	  //cerr <<"Reading"<<endl;
-	  //put_dyn(cerr, *bi);
+	  // cerr << "Reading"<< endl;
+	  // put_dyn(bi, cerr);
 	  stype = extract_stellar_type_string(
 		      getsq(bi->get_star_story(), "Type"));
 	  M_tot = getrq(bi->get_star_story(), "M_rel");
@@ -388,7 +388,7 @@ local void print_star(dyn *bi, vector pos,
      }
      else if (bi->get_use_sstar()) {
 
-       put_dyn(cerr, *bi);
+        put_dyn(bi, cerr);
        	stype = bi->get_starbase()->get_element_type();
 	M_tot  = bi->get_starbase()->conv_m_dyn_to_star(bi->get_mass());
         t_cur = bi->get_starbase()->get_current_time();
@@ -1284,19 +1284,19 @@ main(int argc, char ** argv)
     
     int nread = nstart;
     int j=0;
-    for (int i = 0; i < nskip; i++){
+    for (int i = 0; i < nskip; i++) {
 	cerr << " skipping snapshot " << i << endl;
-	if (! forget_node(cin)) exit(1);
-	if(j==nint_skip) {
-	  nread++;
-	  j=0;
+	if (!forget_node()) exit(1);
+	if (j == nint_skip) {
+	    nread++;
+	    j=0;
 	}
 	else
-	  j++;
+	    j++;
     }
     
     int nsnap = 0;	
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
       if(nsnap==0)
 	for_all_leaves(dyn, b, bi) {
@@ -1348,14 +1348,14 @@ main(int argc, char ** argv)
 	last_frame++;
 
 	if (v_flag)
-	  put_dyn(cout, *b);
+	  put_dyn(b);
 	
 	rmtree(b);
 
 	for (int i = 0; i < nint_skip; i++){
 	  nsnap ++;
 	  cerr << " skipping snapshot " << nsnap << endl;
-	  if (! forget_node(cin)) exit(1);
+	  if (!forget_node()) exit(1);
 	}
 
 	if (nsnap==nsteps)

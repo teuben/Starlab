@@ -448,7 +448,7 @@ bool evolve_stars(hdyn* b,
 		    // Print out the state of bi before the supernova.
 
 		    bt = bi->get_top_level_node();
-		    put_node(cout, *bt, false, 1);
+		    put_node(bt, cout, false, 1);
 		}
 
 		// For single stars, dm is the total mass loss.  We draw no
@@ -499,7 +499,7 @@ bool evolve_stars(hdyn* b,
 
 			// Print out the state of bi after the supernova.
 
-			put_node(cout, *bt, false, 1);
+			put_node(bt, cout, false, 1);
 		    }
 
 		    correct_leaf_for_change_of_vector(bi, dv, &hdyn::get_vel,

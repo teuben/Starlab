@@ -1,5 +1,6 @@
 
-// Turn on/off various pieces of timing code.
+// Turn on/off various pieces of timing code.  Use in kira_ev.C has
+// been suppressed as of 4/03, following rewrite of code.
 
 // In calculate_acc_and_jerk_for_list (kira_ev.C):  Set TIME_INTERNAL
 // to perform timing of force-evaluation functions.

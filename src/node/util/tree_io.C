@@ -201,7 +201,7 @@ void node::pretty_print_tree(ostream & s)
     pretty_print_tree(0, s);
 }
 
-void pp(node * b, ostream & s)
+void pp(node *b, ostream & s)
 {
     s << "(";
     b->pretty_print_node(s);
@@ -210,7 +210,7 @@ void pp(node * b, ostream & s)
     s << ")";
 }
 
-void pp2(node * b, ostream & s,  int level)
+void pp2(node *b, ostream & s,  int level)
 {
     for (int i = 0; i<level*2; i++) {s << " ";}
     b->pretty_print_node(s);
@@ -219,19 +219,19 @@ void pp2(node * b, ostream & s,  int level)
 	pp2(daughter, s, level + 1);	
 }
 
-local node * get_node_recursive(istream& s,
-				npfp the_npfp,
-				hbpfp the_hbpfp,
-				sbpfp the_sbpfp,
-				bool use_stories,
-				int level)
+local node *get_node_recursive(istream& s,
+			       npfp the_npfp,
+			       hbpfp the_hbpfp,
+			       sbpfp the_sbpfp,
+			       bool use_stories,
+			       int level)
 {
-    node * b = (*the_npfp)(the_hbpfp, the_sbpfp, use_stories);
+    node *b = (*the_npfp)(the_hbpfp, the_sbpfp, use_stories);
     char line[MAX_INPUT_LINE_LENGTH];
 
     get_line(s, line);
 
-    node * elder_sister = (node *)42;	// to make some compilers happy
+    node *elder_sister = (node *)42;	// to make some compilers happy
 
     // Would be highly desirable to have the code ignore unexpected data
     // when seeking e.g. a START_PARTICLE line.  Currently, the input is
@@ -255,7 +255,7 @@ local node * get_node_recursive(istream& s,
 	    b->scan_log_story(s, line);
 
 	} else if (matchbracket(START_PARTICLE, line)) {
-	    node * daughter =
+	    node *daughter =
 		get_node_recursive(s, the_npfp, the_hbpfp, the_sbpfp,
 				   use_stories, level+1);
 	    if (b->get_oldest_daughter() == NULL) {
@@ -289,17 +289,17 @@ local node * get_node_recursive(istream& s,
     return b;
 }
 
-local node * get_node_init(istream& s,
-			   npfp the_npfp,
-			   hbpfp the_hbpfp,
-			   sbpfp the_sbpfp,
-			   bool use_stories)
+local node *get_node_init(istream& s,
+			  npfp the_npfp,
+			  hbpfp the_hbpfp,
+			  sbpfp the_sbpfp,
+			  bool use_stories)
 {
 
     if (!check_and_skip_input_line(s, START_PARTICLE))
 	return NULL;
 
-    node* root = get_node_recursive(s, the_npfp, the_hbpfp, the_sbpfp,
+    node *root = get_node_recursive(s, the_npfp, the_hbpfp, the_sbpfp,
 				    use_stories, 0);
     root->set_root(root);
     return root;
@@ -307,7 +307,8 @@ local node * get_node_init(istream& s,
 
 static bool first_log = true;
 
-inline local void put_node_body(ostream & s, node & b,
+inline local void put_node_body(node *b,
+				ostream &s = cout,
 				bool print_xreal = true,
 				int short_output = 0)
 {
@@ -320,18 +321,18 @@ inline local void put_node_body(ostream & s, node & b,
 
 	// Need i for scatter3; see if this breaks anything...
 
-	// put_string(s, "  name = ", b.format_label());
-	if (b.get_index() >= 0) put_integer(s, "  i = ", b.get_index());
-	if (b.get_name() != NULL) put_string(s, "  name = ", b.get_name());
+	// put_string(s, "  name = ", b->format_label());
+	if (b->get_index() >= 0) put_integer(s, "  i = ", b->get_index());
+	if (b->get_name() != NULL) put_string(s, "  name = ", b->get_name());
 
     } else {
-	if (b.get_index() >= 0) put_integer(s, "  i = ", b.get_index());
-	if (b.get_name() != NULL) put_string(s, "  name = ", b.get_name());
-	put_integer(s, "  N = ", b.n_leaves());
+	if (b->get_index() >= 0) put_integer(s, "  i = ", b->get_index());
+	if (b->get_name() != NULL) put_string(s, "  name = ", b->get_name());
+	put_integer(s, "  N = ", b->n_leaves());
     }
 
-    if (!short_short || (b.is_root() && first_log)) {
-	b.print_log_story(s);
+    if (!short_short || (b->is_root() && first_log)) {
+	b->print_log_story(s);
 	first_log = false;
     }
 
@@ -348,10 +349,10 @@ inline local void put_node_body(ostream & s, node & b,
 
     put_story_header(s, DYNAMICS_ID);			// new
 
-    b.print_dyn_story(s, print_xreal, short_output);
+    b->print_dyn_story(s, print_xreal, short_output);
 
-    if (!short_short && b.get_dyn_story())
-        put_story_contents(s, *b.get_dyn_story());	// new
+    if (!short_short && b->get_dyn_story())
+        put_story_contents(s, *b->get_dyn_story());	// new
 
     put_story_footer(s, DYNAMICS_ID);			// new
 
@@ -360,36 +361,35 @@ inline local void put_node_body(ostream & s, node & b,
     // For now, all short output is handled as part of Dyn.
 
    if (!short_short) {
-       b.print_hydro_story(s);
-       b.print_star_story(s, short_output);
+       b->print_hydro_story(s);
+       b->print_star_story(s, short_output);
    }
 }
 
-inline local void put_node_recursive(ostream & s, node & b,
+inline local void put_node_recursive(node *b,
+				     ostream & s = cout, 
 				     bool print_xreal = true,
 				     int short_output = 0)
 {
     put_story_header(s, PARTICLE_ID);
 
-    put_node_body(s, b, print_xreal, short_output);
+    put_node_body(b, s, print_xreal, short_output);
 
-    for(node * daughter = b.get_oldest_daughter();
-	daughter != NULL;
-	daughter = daughter->get_younger_sister()){
-	put_node_recursive(s, *daughter, print_xreal, short_output);
-    }
+    for_all_daughters(node, b, daughter)
+	put_node_recursive(daughter, s, print_xreal, short_output);
 
     put_story_footer(s, PARTICLE_ID);
 }
 
-void put_single_node(ostream & s, node & b,
+void put_single_node(node *b,
+		     ostream & s,		// default = cout
 		     bool print_xreal,		// default = true
 		     int short_output)		// default = 0
 {
     // Same as put_node, but without recursion.
 
     put_story_header(s, PARTICLE_ID);
-    put_node_body(s, b, print_xreal, short_output);
+    put_node_body(b, s, print_xreal, short_output);
     put_story_footer(s, PARTICLE_ID);
 }
 
@@ -397,8 +397,11 @@ void put_single_node(ostream & s, node & b,
 #include <pfstream.h>	// (May not exist on all systems...)
 #endif
 
-node * get_node(istream& s, npfp the_npfp, hbpfp the_hbpfp, sbpfp the_sbpfp,
-		bool use_stories)
+node *get_node(istream& s,		// default = cin
+	       npfp the_npfp,		// default = new_node
+	       hbpfp the_hbpfp,		//	     etc.
+	       sbpfp the_sbpfp,	 	//
+	       bool use_stories)	// default = true
 {
     // If STARLAB_USE_GZIP is defined, the input will be decompressed
     // by gzip first.  This is accomplished by redefining the stream s.
@@ -422,7 +425,8 @@ node * get_node(istream& s, npfp the_npfp, hbpfp the_hbpfp, sbpfp the_sbpfp,
 // put_node: the function that does all the work of outputting nodes
 //	     of all sorts...
 
-void put_node(ostream & s, node & b,
+void put_node(node *b,
+	      ostream & s, 		// default = cout
 	      bool print_xreal,		// default = true
 	      int short_output)		// default = 0
 {
@@ -434,13 +438,13 @@ void put_node(ostream & s, node & b,
 	if (char * zip = getenv("STARLAB_USE_GZIP")) {
 	    opfstream sz("|gzip -c -f");
 	    if (sz) {
-		put_node_recursive(sz, b, print_xreal, short_output);
+		put_node_recursive(b, sz, print_xreal, short_output);
 		return;
 	    }
 	}
     }
 #endif
-    put_node_recursive(s, b, print_xreal, short_output);
+    put_node_recursive(b, s, print_xreal, short_output);
 }
 
 local void forget_node_recursive(istream& s)
@@ -463,7 +467,7 @@ local void forget_node_recursive(istream& s)
 
 bool forget_node(istream& s)
 {
-    if(!check_and_skip_input_line(s, START_PARTICLE)) {
+    if (!check_and_skip_input_line(s, START_PARTICLE)) {
 	return FALSE;
     }
     forget_node_recursive(s);

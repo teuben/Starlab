@@ -422,7 +422,7 @@ main(int argc, char ** argv)
 
     if (!n_flag) {
 
-	b = get_dyn(cin);
+	b = get_dyn();
 	n = b->n_leaves();
     }
     else {
@@ -474,7 +474,7 @@ main(int argc, char ** argv)
     }
 
     if (n_flag)
-	put_node(cout, *b);
+	put_node(b);
 }
 
 #endif

@@ -287,7 +287,7 @@ main(int argc, char ** argv)
 
     srandinter(seed);
 
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 	dyn *bi = b->get_oldest_daughter();
 	int nd = (int)(randinter(0, 1) * b->n_daughters());
 	for (int i = 0; i < nd-1; i++) bi = bi->get_younger_sister();

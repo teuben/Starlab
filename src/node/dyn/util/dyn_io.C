@@ -50,6 +50,8 @@ real dyn::pl_cutoff_sq = 0;
 real dyn::pl_mass = 0;
 real dyn::pl_softening_sq = 0;
 
+FILE* dyn::fp = 0;
+
 void dyn::print_static(ostream& s)		// default = cerr
 {
     node::print_static(s);
@@ -195,15 +197,74 @@ ostream& dyn::print_dyn_story(ostream& s,
     return s;
 }
 
+// gets called by get_dyn when input format is columns of numbers.
+
+dyn* get_col(istream& s,
+	     npfp the_npfp,		// note: return value is always node*
+	     hbpfp the_hbpfp,
+	     sbpfp the_sbpfp,
+	     bool use_stories)
+{
+  dyn* root = (dyn*)the_npfp(the_hbpfp, the_sbpfp, use_stories);
+  root->set_index(0);
+  static int t;
+
+  // Write time to both the root node (static class data) and to
+  // the root node (dyn story), because different user functions
+  // may expect either placement.  (To be cleaned up...)
+
+  root->set_system_time(t++);
+  if (use_stories)
+    putrq(root->get_dyn_story(), "t", t);
+
+  static unsigned i = 0;
+  int id, n = 0;
+  dyn* bo;
+
+  char line[256];
+  while (true) {
+
+    if (dyn::get_fp()) fgets(line, sizeof line, dyn::get_fp());
+    else s.getline(line, sizeof line), strcat(line, "\n");
+    if (++i, !line) break;
+    if (line[0] == '\n') return root;
+    if (line[0] == '#') {
+      if (use_stories) {
+	line[strlen(line)-1] = '\0';
+	if (strlen(&line[1])) root->log_comment(&line[1]);
+      }
+      continue;
+    }
+    double m, x[3], v[3];
+    if (sscanf(line, "%i %lg %lg %lg %lg %lg %lg %lg\n", &id, &m, &x[0], &x[1],
+               &x[2], &v[0], &v[1], &v[2]) != 8)
+      cerr << "Malformed input on line #" << i << endl, exit(1);
+    dyn* b = (dyn*)the_npfp(the_hbpfp, the_sbpfp, use_stories);
+    b->set_index(id);
+    b->set_mass(m);
+    b->set_pos(vector(x[0], x[1], x[2]));
+    b->set_vel(vector(v[0], v[1], v[2]));
+    b->set_parent(root);
+    if (n++) b->set_elder_sister(bo), bo->set_younger_sister(b);
+    else root->set_oldest_daughter(b);
+    b->set_index(n);
+    bo = b;
+  }
+
+  if (n) return root;
+  delete root;
+  return NULL;
+}
+
 #else
 main(int argc, char** argv)
 {
-    dyn  * b;
+    dyn *b;
     check_help();
 
-    while (b = (dyn *) get_node(cin, new_dyn)) {
+    while (b = get_dyn()) {
 	cout << "TESTING put_dyn:" << endl;
-        put_node(cout,*b);
+        put_node(b);
 	cout << "TESTING pp2()   :" << endl;
 	pp2(b);
 	delete b;

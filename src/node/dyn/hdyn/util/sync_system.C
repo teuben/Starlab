@@ -66,7 +66,7 @@ main(int argc, char ** argv)
 
     hdyn *b;
 
-    while (b = get_hdyn(cin)) {
+    while (b = get_hdyn()) {
 
         if (c_flag == TRUE)
             b->log_comment(comment);
@@ -78,7 +78,7 @@ main(int argc, char ** argv)
 
 	sync_system(b, time);
 
-	put_hdyn(cout, *b);	
+	put_hdyn(b);	
 	rmtree(b);
     }
 }

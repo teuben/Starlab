@@ -554,12 +554,13 @@ main(int argc, char ** argv)
 	exit(1);
     }
 
-    dyn *b = get_dyn(cin);
-    b->log_history(argc, argv);
+    dyn *b = get_dyn();
 
-    scale(b, eps, c_flag, e_flag, e, m_flag, m, q_flag, q, r_flag, r, debug);
-
-    put_node(cout, *b);
+    if (b) {
+	b->log_history(argc, argv);
+	scale(b, eps, c_flag, e_flag, e, m_flag, m, q_flag, q, r_flag, r, debug);
+	put_node(b);
+    }
 }
 
 #endif

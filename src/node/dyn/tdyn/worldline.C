@@ -1107,7 +1107,7 @@ local inline bool check_and_initialize(tdyn *p,
 	    real dt = n->get_time() - tp;
 	    real dti = 1/dt;
 
-	    if (streq(p->get_name(), "root")) {		// infrequent...
+	    if (p->get_name() && streq(p->get_name(), "root")) {  // infrequent
 
 		// Use linear interpolation for the cluster center.
 		// Discard vel information to make pos continuous.
@@ -1530,7 +1530,7 @@ local INLINE void add_to_interpolated_tree(worldbundle *wb,
 
     if (debug) {
 	PRC(top); PRL(top->format_label());
-	// put_node(cerr, *top, false);
+	// put_node(top, cerr, false);
     }
 
     // Copy the entire tree below top to the new tree.
@@ -1694,7 +1694,7 @@ main(int argc, char *argv[])
     worldbundle *wb = read_bundle(s);
 
     pdyn *root = create_interpolated_tree(wb, t, true);
-    put_node(cout, *root, false);
+    put_node(root, cout, false);
     rmtree(root);
 
 #if 0
@@ -1754,7 +1754,7 @@ main(int argc, char *argv[])
     real t = 0.8;
     while (t < 0.85) {
 	pdyn *root = create_interpolated_tree(wb, t);
-	put_node(cout, *root, false);
+	put_node(root, cout, false);
 	rmtree(root);
 	t += 0.01;
     }

@@ -21,8 +21,8 @@ main(int argc, char** argv)
     _dyn_  * b;
     check_help();
 
-    while (b = get__dyn_(cin)) {
-        put_node(cout, *b, false);
+    while (b = get__dyn_()) {
+        put_node(b, cout, false);
 	delete b;
     }
 }

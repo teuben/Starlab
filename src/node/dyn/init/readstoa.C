@@ -75,7 +75,7 @@ local void write_stoa() {
   real ndim = 3; // x, y and z
 
   dyn *b;
-  b = get_dyn(cin);
+  b = get_dyn();
   
   b->flatten_node();
   
@@ -128,12 +128,12 @@ int main(int argc, char ** argv)
     dyn *root;
 
     if(w_flag) {
-      write_stoa();
+        write_stoa();
     }
     else {
-      root = read_stoa(i_flag);
-      root->log_history(argc, argv);
-      put_node(cout, *root);
+        root = read_stoa(i_flag);
+        root->log_history(argc, argv);
+        put_node(root);
     }
     return 0;
 }

@@ -1567,7 +1567,7 @@ main(int argc, char** argv)
 	    if (first_snap >= MAX_SNAP) first_snap = 0;
 	}
 
-	if ( (b[snap_counter] = get_sdyn3(cin)) == NULL ) break;
+	if ( (b[snap_counter] = get_sdyn3()) == NULL ) break;
 
 	// We have a legal snapshot.  Transform and display it.
 
@@ -1575,7 +1575,8 @@ main(int argc, char** argv)
         xstarplot(b[snap_counter], scale, k, d, lmax,
 		  point_mode, rel_point_size, D, cenergy,
 		  b_flag, f_flag, t_flag, gfx_counter++);
-	if (o_flag) put_node(cout, *b[snap_counter]);
+	if (o_flag)
+	    put_node(b[snap_counter]);
     }
 
     if (o_flag) cout << "End of data\n" << flush;

@@ -22,7 +22,7 @@
  *-----------------------------------------------------------------------------
  */
 main(int argc, char ** argv)
-    {
+{
     bool  c_flag = FALSE;
     bool  i_flag = FALSE;
     real m = 1;               // default mass: unity
@@ -35,8 +35,7 @@ main(int argc, char ** argv)
     char* param_string = "c:im:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
-	switch(c)
-	    {
+	switch(c) {
 	    case 'c': c_flag = TRUE;
 		      comment = poptarg;
 		      break;
@@ -47,7 +46,7 @@ main(int argc, char ** argv)
             case '?': params_to_usage(cerr, argv[0], param_string);
 		      get_help();
 		      exit(1);
-	    }            
+	}            
     
     node * root;
 
@@ -61,9 +60,9 @@ main(int argc, char ** argv)
     if (i_flag)
         root->set_label(1);
 
-    put_node(cout, *root);
+    put_node(root);
     rmtree(root);
-    }
+}
 
 #endif
 

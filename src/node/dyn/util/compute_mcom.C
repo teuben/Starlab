@@ -169,7 +169,7 @@ main(int argc, char ** argv)
                       exit(1);
         }            
 
-    if ((b = get_dyn(cin)) == NULL)
+    if ((b = get_dyn()) == NULL)
        err_exit("compute_mcom: No N-body system on standard input");
 
     while (b) {
@@ -182,9 +182,9 @@ main(int argc, char ** argv)
 
 	// Write system to stdout and get next system (if any).
 
-        put_dyn(cout, *b);
+        put_dyn(b);
 	rmtree(b);
-	b = get_dyn(cin);
+	b = get_dyn();
     }
 }
 

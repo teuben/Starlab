@@ -14,7 +14,7 @@ main(int argc, char ** argv)
     dyn *b = NULL;
     int count = 0;
 
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
 	cerr << "snap " << ++count;
 	real time = getrq(b->get_dyn_story(),"t");

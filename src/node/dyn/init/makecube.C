@@ -146,7 +146,7 @@ main(int argc, char ** argv) {
 
     if (n > 0) mkcube(b, n, u_flag);
 
-    put_node(cout, *b);
+    put_node(b);
 }
 
 #endif

@@ -53,12 +53,14 @@ int main(int argc, char ** argv)
 
     while (!cin.eof()) {
 
-	real mass; cin >> mass; if (cin.eof()) break;	// note: only minimal
-	vector pos; cin >> pos; if (cin.eof()) break;	// checking for
-	vector vel; cin >> vel;				// corrupted data
+	int index; cin >> index; if (cin.eof()) break;	// note: only minimal
+	real mass; cin >> mass; if (cin.eof()) break;	// checking for
+	vector pos; cin >> pos; if (cin.eof()) break;	// corrupted data
+	vector vel; cin >> vel;
 
 	dyn * b = new dyn();
 
+	b->set_index(index);
 	b->set_mass(mass);
 	b->set_pos(pos);
 	b->set_vel(vel);
@@ -81,7 +83,7 @@ int main(int argc, char ** argv)
     root->log_history(argc, argv);
     if (c_flag) root->log_comment(comment);
 
-    put_node(cout, *root);
+    put_node(root);
     return 0;
 }
 

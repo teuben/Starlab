@@ -42,7 +42,7 @@ main(int argc, char *argv[])
     int c;
     char* param_string = "c:F:J:";
 
-    dyn *b = get_dyn(cin);
+    dyn *b = get_dyn();
     if (b == NULL) err_exit("Can't read input snapshot");
 
     b->log_history(argc, argv);
@@ -165,6 +165,6 @@ main(int argc, char *argv[])
 	cerr << "add_tidal:  Rt/Rv = " << RtRv << ", field type = "
 	     << tidal_field_type << endl;
 
-    put_node(cout, *b);
+    put_node(b);
 }
 #endif

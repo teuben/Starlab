@@ -48,7 +48,7 @@ main(int argc, char ** argv) {
 	}
 
     // real input snapshot
-    root = get_dyn(cin);
+    root = get_dyn();
     root->log_history(argc, argv);
     
     real mtot = root->get_mass();
@@ -125,7 +125,7 @@ main(int argc, char ** argv) {
     root->get_starbase()->print_stellar_evolution_scaling(cerr);
 
     root->set_mass(1);
-    put_node(cout, *root);
+    put_node(root);
 }
 
 #endif

@@ -67,7 +67,7 @@ int main(int argc, char ** argv)
     check_help();
 
     _dyn_* b;
-    b = get__dyn_(cin);
+    b = get__dyn_();
 
     b->log_history(argc, argv);
 
@@ -90,7 +90,7 @@ int main(int argc, char ** argv)
 		default:  get_help();
 	    }
 
-    put__dyn_(cout, *b);
+    put__dyn_(b);
     return 0;
 }
 

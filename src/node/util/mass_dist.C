@@ -93,7 +93,7 @@ local void get_mass_dist(node* b, int num_of_bins, bool verbose)
 
 int main(int argc, char ** argv)
 {
-    node* b;
+    node *b;
     int num_of_bins = 25;
     bool verbose = false;
 
@@ -115,7 +115,7 @@ int main(int argc, char ** argv)
 		  exit(1);
 	}
 
-    while ((b = get_node(cin))) {
+    while ((b = get_node())) {
         get_mass_dist(b, num_of_bins, verbose); 
         delete b;
     }

@@ -126,7 +126,7 @@ main(int argc, char ** argv)
                       exit(1);
         }            
 
-    if ((b = get_dyn(cin)) == NULL)
+    if ((b = get_dyn()) == NULL)
        err_exit("compute_mean_cod: No N-body system on standard input");
 
     while (b) {
@@ -137,9 +137,9 @@ main(int argc, char ** argv)
 
         compute_mean_cod(b);
 
-        put_dyn(cout, *b);
+        put_dyn(b);
 	rmtree(b);
-	b = get_dyn(cin);
+	b = get_dyn();
     }
 }
 

@@ -124,11 +124,11 @@ char* get_normal_form(node* b)	// Unused...
 main(int argc, char ** argv)
     {
     int i = 0;
-    node * root;    /* root node */
+    node *root;    // root node
 
     check_help();
 
-    while (root = get_node(cin))
+    while (root = get_node())
 	{
 	// cerr << "snapshot #" << ++i << ":  n = "
 	//      << root->n_leaves() << endl;

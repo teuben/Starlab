@@ -41,7 +41,7 @@ main(int argc, char **argv)
 
     hdyn *b;
 
-    if (b = get_hdyn(cin)) {
+    if (b = get_hdyn()) {
 
 	// Determine min and max top-level time.
 
@@ -213,7 +213,7 @@ main(int argc, char **argv)
 		bb->get_younger_sister()->set_time(t);
 	    }
 
-	put_node(cout, *b);
+	put_node(b);
     }
 }
 

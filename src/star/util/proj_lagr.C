@@ -264,7 +264,7 @@ main(int argc, char ** argv)
 
     dyn *b;
 
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
       //        addstar(b);
 	
@@ -314,7 +314,7 @@ main(int argc, char ** argv)
 
 	}
 
-	//put_dyn(cout, *b);	
+	// put_dyn(b);
 	delete b;
     }
 }

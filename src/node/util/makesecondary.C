@@ -435,8 +435,8 @@ int main(int argc, char ** argv)
     if (max_mprim < min_mprim)
         err_exit("Invalid upper and lower primary mass selections");
 
-    node* b;
-    b = get_node(cin);
+    node *b;
+    b = get_node();
 
     b->log_history(argc, argv);
 
@@ -449,7 +449,7 @@ int main(int argc, char ** argv)
 		lower_limit, upper_limit, force_index, q_flag,
 		ignore_limits, split);
 
-    put_node(cout, *b);
+    put_node(b);
     rmtree(b);
     return 0;
 }

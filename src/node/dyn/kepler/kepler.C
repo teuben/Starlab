@@ -1829,7 +1829,7 @@ main(int argc, char **argv)
 	    by->set_vel( (m1/mass)*vel);
 
 	    // PRL(time);
-	    put_node(cout, *b);
+	    put_node(b);
 
 	    time += dt_step;
 	}

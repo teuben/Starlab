@@ -183,17 +183,15 @@ void main(int argc, char ** argv) {
 
     dyn *b;
 
-    b = get_dyn(cin);
+    b = get_dyn();
     if (c_flag == TRUE)
         b->log_comment(comment);
     b->log_history(argc, argv);
     b->get_starbase()->set_stellar_evolution_scaling(m_tot, r_hm, t_hc);
 
     adddouble(b, start_time, type);
-
-    put_dyn(cout, *b);
+    put_dyn(b);
 
     evolve_binary(b, end_time);
-
-    put_dyn(cout, *b);
+    put_dyn(b);
 }

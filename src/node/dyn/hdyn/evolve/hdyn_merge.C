@@ -489,8 +489,8 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 		pp3(bcoll, cerr);
 		if (diag->tree_level > 2) {
 		    cerr << endl;
-		    put_node(cerr, *this,  options->print_xreal);
-		    put_node(cerr, *bcoll, options->print_xreal);
+		    put_node(this, cerr,  options->print_xreal);
+		    put_node(bcoll, cerr, options->print_xreal);
 		}
 		cerr << endl;
 	    }
@@ -627,12 +627,12 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	    if (sister != bcoll) {
 
 		if (full_dump)
-		    put_node(cout, *(get_top_level_node()), false, 3);
+		    put_node(get_top_level_node(), cout, false, 3);
 	
 	        move_node(bcoll, this);		// move bcoll to become
 		  				// sister of this
 		if (full_dump)
-		    put_node(cout, *(get_top_level_node()), false, 2);
+		    put_node(get_top_level_node(), cout, false, 2);
 	    }
 	
 	    if (decombine) {
@@ -650,7 +650,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	    // pp2(get_top_level_node(), cerr);
 
 	    if (full_dump)
-		put_node(cout, *(get_top_level_node()), false, 3);
+		put_node(get_top_level_node(), cout, false, 3);
 
 	    // cerr << "merge_nodes: calculating energies 0..."
 	    //      << endl << flush;
@@ -667,7 +667,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
 	    pp3(ancestor);
 
 	    if (full_dump)
-		put_node(cout, *(get_top_level_node()), false, 2);
+		put_node(get_top_level_node(), cout, false, 2);
 	}		
     }
 
@@ -677,7 +677,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     // pp2(get_top_level_node(), cerr);
 
     if (full_dump)
-	put_node(cout, *(get_top_level_node()), false, 3);
+	put_node(get_top_level_node(), cout, false, 3);
 
     // Compute energies prior to merger, for bookkeeping purposes:
 
@@ -987,7 +987,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     if (full_dump) {
 	hdyn *top = cm->get_top_level_node();
 	predict_loworder_all(top, cm->get_system_time());
-	put_node(cout, *top, false, 2);
+	put_node(top, cout, false, 2);
     }
 
     return cm;

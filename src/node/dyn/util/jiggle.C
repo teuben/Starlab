@@ -78,14 +78,14 @@ main(int argc, char ** argv)
 
     dyn *b;
 
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
         b->log_history(argc, argv);
         if (c_flag) b->log_comment(comment);
 	b->log_comment(seedlog);
 
         jiggle(b, f);
-	put_dyn(cout, *b);	
+	put_dyn(b);
 	rmtree(b);
     }
 }

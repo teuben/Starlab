@@ -29,7 +29,7 @@ main(int argc, char *argv[])
     int c;
     char* param_string = "";
 
-    dyn *b = get_dyn(cin);
+    dyn *b = get_dyn();
     if (b == NULL) err_exit("Can't read input snapshot");
 
     b->log_history(argc, argv);
@@ -46,7 +46,7 @@ main(int argc, char *argv[])
 //      }
 
     putrq(b->get_log_story(), "ignore_internal", 1);
-    put_node(cout, *b);
+    put_node(b);
 }
 
 #endif

@@ -157,7 +157,7 @@ main(int argc, char **argv)
     int i = 0;
     vector zero = 0;
     bool mass_spectrum = true;
-    while (b = get_hdyn(cin)) {
+    while (b = get_hdyn()) {
 
       if(find_qmatch(b->get_oldest_daughter()
 		 ->get_starbase()->get_star_story(), "Type")) {
@@ -176,7 +176,7 @@ main(int argc, char **argv)
       if (i++ > 0) cerr << endl;
       dstar_stats(b, mass_spectrum, zero,  verbose);
 
-      if (out) put_hdyn(cout, *b);
+      if (out) put_hdyn(b);
       rmtree(b);
     }
 }

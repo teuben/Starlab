@@ -326,7 +326,7 @@ int main(int argc, char ** argv) {
 	putrq(b->get_log_story(), "r_reflect", r_max);
     }
 
-    put_node(cout, *b);
+    put_node(b);
     return 0;
 }
 

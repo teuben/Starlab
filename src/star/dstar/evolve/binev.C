@@ -136,7 +136,7 @@ void main(int argc, char ** argv) {
 				 start_time, id, bin_type);
 
     root->get_starbase()->set_use_hdyn(false);
-    put_node(cout, *root);
+    put_node(root);
 
 //	Test pointer structure
     node *b = root->get_oldest_daughter();
@@ -147,7 +147,7 @@ void main(int argc, char ** argv) {
     double_star* bin_star = dynamic_cast(double_star*, 
 					 the_binary->get_starbase());
     bin_star->dump(cerr);
-    put_node(cout, *root);
+    put_node(root);
 }
 
 #endif

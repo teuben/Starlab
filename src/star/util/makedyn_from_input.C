@@ -124,7 +124,7 @@ int main(int argc, char ** argv)
     }
 
     root->log_history(argc, argv);
-    put_dyn(cout, *root);
+    put_dyn(root);
     rmtree(root);
     return 0;
 }

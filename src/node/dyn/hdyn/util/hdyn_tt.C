@@ -511,19 +511,19 @@ void hdyn::setup_binary_node()
     younger_daughter->pred_vel -= pred_vel;
 }
 
-void create_binary_from_toplevel_nodes(hdyn * bi, hdyn * bj)
+void create_binary_from_toplevel_nodes(hdyn *bi, hdyn *bj)
 {
     if (!bi->is_top_level_node())
 	err_exit("create_binary_from_toplevel_nodes: bi not top level node");
     if (!bj->is_top_level_node())
 	err_exit("create_binary_from_toplevel_nodes: bj not top level node");
 
-    detach_node_from_general_tree(*bj);
+    detach_node_from_general_tree(bj);
     bj->set_younger_sister(NULL);
     bj->set_elder_sister(NULL);
 
     hdyn *new_n = new hdyn();
-    insert_node_into_binary_tree(*bj, *bi, *new_n);
+    insert_node_into_binary_tree(bj, bi, new_n);
 
     label_binary_node(bj->get_parent());
     bj->get_parent()->setup_binary_node();
@@ -615,7 +615,7 @@ void remove_node_and_correct_upto_ancestor(hdyn * ancestor, hdyn * node)
 
     if (node->is_top_level_node()) {
 
-	detach_node_from_general_tree(*node);
+	detach_node_from_general_tree(node);
 
     } else {
 
@@ -659,7 +659,7 @@ void remove_node_and_correct_upto_ancestor(hdyn * ancestor, hdyn * node)
 
 	sister->init_pred();
 
-	detach_node_from_binary_tree(*node);
+	detach_node_from_binary_tree(node);
 
 	// parent must be deleted.... (17-Aug-1996)
 
@@ -742,16 +742,16 @@ local void calculate_new_physical_quantities(hdyn * ancestor,
 					  &hdyn::get_old_jerk));
 }
 
-local void insert_node_and_correct_upto_ancestor(hdyn * ancestor,
-						 hdyn * node,
-						 hdyn * new_sister)
+local void insert_node_and_correct_upto_ancestor(hdyn *ancestor,
+						 hdyn *node,
+						 hdyn *new_sister)
 {
     if (new_sister->get_parent() == NULL) {
-	add_node(*node, *new_sister);	// Convention for new top-level node
+	add_node(node, new_sister);	// convention for new top-level node
 
     } else {
 	hdyn *new_n = new hdyn();
-	insert_node_into_binary_tree(*node, *new_sister, *new_n);
+	insert_node_into_binary_tree(node, new_sister, new_n);
 
 	hdyn *parent = node->get_parent();
 	parent->set_mass(new_sister->get_mass());

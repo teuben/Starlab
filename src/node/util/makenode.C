@@ -52,7 +52,7 @@ int main(int argc, char ** argv)
 
     root->log_history(argc, argv);
 
-    put_node(cout, *root);
+    put_node(root);
     rmtree(root);
     return 0;
 }

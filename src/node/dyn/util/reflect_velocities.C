@@ -46,14 +46,14 @@ main(int argc, char ** argv)
 
     dyn *b;
 
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
         if (c_flag == TRUE)
             b->log_comment(comment);
         b->log_history(argc, argv);
 
         flip_velocities(b);
-	put_dyn(cout, *b);	
+	put_dyn(b);
 	delete b;
     }
 }

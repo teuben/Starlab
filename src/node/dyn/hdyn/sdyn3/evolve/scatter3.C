@@ -413,7 +413,7 @@ void scatter3(initial_state3 & init,
 	if (n_stars > 0) {
 	    if (dt_snap < VERY_LARGE_NUMBER
 		&& system_in_cube(b, snap_cube_size)) {
-		put_node(cout, *b, false, 2);
+		put_node(b, cout, false, 2);
 		cout << flush;
 	    }
 	}
@@ -481,7 +481,7 @@ void scatter3(initial_state3 & init,
     // final state, if the "-D" command-line option was specified.
 
     if (dt_snap < VERY_LARGE_NUMBER && system_in_cube(b, snap_cube_size)) {
-	put_node(cout, *b, false, 2);
+	put_node(b, cout, false, 2);
 	cout << flush;
     }
 

@@ -731,7 +731,7 @@ main(int argc, char **argv)
 	
     real geometric, grav_foc, encounter_rate, total_rate;
     
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
       total_rate = rcore = vcore=0;
       

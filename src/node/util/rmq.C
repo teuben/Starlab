@@ -60,7 +60,7 @@ void  rm_all_star_q(node * n, char * qname)
  *-----------------------------------------------------------------------------
  */
 main(int argc, char ** argv)
-    {
+{
     bool  h_flag = FALSE;
     bool  s_flag = FALSE;
     bool  q_flag = FALSE;
@@ -97,8 +97,7 @@ main(int argc, char ** argv)
 
     node *n;
 
-    while (n = get_node(cin))
-	{
+    while (n = get_node()) {
         if (c_flag)
             n->log_comment(comment);
         n->log_history(argc, argv);
@@ -110,9 +109,9 @@ main(int argc, char ** argv)
 	else
 	    rm_all_dyn_q(n, qname);
 
-	put_node(cout, *n);	
+	put_node(n);
 	delete n;
-	}
     }
+}
 
 #endif

@@ -155,7 +155,7 @@ main(int argc, char ** argv) {
 
     if (n > 0) mksphere(b, n, u_flag);
 
-    put_node(cout, *b);
+    put_node(b);
     rmtree(b);
 }
 

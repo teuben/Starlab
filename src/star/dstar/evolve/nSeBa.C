@@ -307,7 +307,7 @@ void main(int argc, char ** argv) {
     if (n <= 0) {
       hdyn *b;
 
-      b = get_hdyn(cin);
+      b = get_hdyn();
       if (c_flag == TRUE)
         b->log_comment(comment);
       b->log_history(argc, argv);
@@ -321,16 +321,16 @@ void main(int argc, char ** argv) {
       ds = new_double_star(the_binary, sma, ecc, start_time, 
 			   i + n_init, bin_type);
 
-    put_node(cout, *b);
+    put_node(b);
 
     real t_out, dt = t_end/n;
     for (int i=0; i<n; i++) {
-      t_out = dt * (i+1);
+        t_out = dt * (i+1);
       
-      for_all_daughters(node, b, bi) 
-	bi->get_starbase()->evolve_element(t_out);
+        for_all_daughters(node, b, bi) 
+	    bi->get_starbase()->evolve_element(t_out);
 
-      put_node(cout, *b);
+        put_node(b);
     }
 
 
@@ -429,10 +429,7 @@ void main(int argc, char ** argv) {
 
       the_binary->get_starbase()->dump(cerr, false);
 
-//      if(the_binary
-//      detach_node_from_general_tree(node & n);
-
-      //      put_node(cout, *root);
+      // put_node(root);
 
       rmtree(root);
       //      delete ds->get_primary();

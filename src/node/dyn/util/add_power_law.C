@@ -180,7 +180,7 @@ main(int argc, char *argv[])
     int c;
     char* param_string = "A:a:c:C:::e:E:GnR:x:X:";
 
-    dyn *b = get_dyn(cin);
+    dyn *b = get_dyn();
     if (b == NULL) err_exit("Can't read input snapshot");
 
     b->log_history(argc, argv);
@@ -239,7 +239,7 @@ main(int argc, char *argv[])
     }
 
     add_power_law(b, coeff, exponent, scale, center, n_flag, true, G_flag);
-    put_node(cout, *b);
+    put_node(b);
 }
 
 #endif

@@ -903,7 +903,7 @@ main(int argc, char ** argv)
 
     if (!n_flag) {
 
-	b = get_dyn(cin);
+	b = get_dyn();
 	n = b->n_leaves();
 
 	if (n < 1)
@@ -954,7 +954,7 @@ main(int argc, char ** argv)
 
     mkking(b, n, w0, n_flag, u_flag, test);
 
-    put_node(cout, *b);
+    put_node(b);
 }
 
 #endif

@@ -255,7 +255,7 @@ main(int argc, char ** argv)
     if (n_flag == FALSE)
         nlines = BIG_NUMBER;               // default
 
-    while (b = get_dyn(cin))
+    while (b = get_dyn())
 	{
 	if (c_flag) cout << "\33[H";
         starplot(b, k, lmax, nlines);

@@ -373,7 +373,7 @@ main(int argc, char ** argv)
     bool cod, try_com = false;
     vector dc_pos = 0;
     vector dc_vel = 0;
-    while (b = get_hdyn(cin)) {
+    while (b = get_hdyn()) {
 
 	real rd_min = b->get_starbase()->conv_r_star_to_dyn(r_min);
 	real rd_max = b->get_starbase()->conv_r_star_to_dyn(r_max);

@@ -510,7 +510,7 @@ void set_merger_dyn(sdyn3 * bn, sdyn3 * bi, sdyn3 * bj)
 // merge: replace two particles by their center of mass.
 
 void merge(sdyn3 * bi, sdyn3 * bj)
-    {
+{
     sdyn3 * b = bi->get_parent();
     if (b != bj->get_parent()) err_exit("merge: parent conflict...");
 
@@ -536,11 +536,11 @@ void merge(sdyn3 * bi, sdyn3 * bj)
 
     bn->set_label(max_index+1);
 
-    detach_node_from_general_tree(*bi);
-    detach_node_from_general_tree(*bj);
+    detach_node_from_general_tree(bi);
+    detach_node_from_general_tree(bj);
   
-    add_node(*bn, *b);
-    }
+    add_node(bn, b);
+}
 
 // merge_collisions: recursively merge any stars in contact.
 

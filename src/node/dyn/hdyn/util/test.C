@@ -8,11 +8,11 @@ main()
 {
     hdyn *b;
     cout << "Hi \n";
-    b = get_hdyn(cin);
+    b = get_hdyn();
 
     cout << "Hi 2\n";
     pp3(b);
     cout << "Hi 3\n";
-    put_node(cout,*b);
+    put_node(b);
 }
 

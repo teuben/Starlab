@@ -51,8 +51,8 @@ int main(int argc, char ** argv)
 
     check_help();
 
-    node* b;
-    b = get_node(cin);
+    node *b;
+    b = get_node();
 
     b->log_history(argc, argv);
 
@@ -72,7 +72,7 @@ int main(int argc, char ** argv)
 		default:  get_help();
 	    }
 
-    put_node(cout, *b);
+    put_node(b);
     return 0;
 }
 

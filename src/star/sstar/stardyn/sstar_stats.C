@@ -1179,7 +1179,7 @@ main(int argc, char **argv)
     int i = 0;
     vector zero = 0;
     bool mass_spectrum = true;
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
         // NOTE:  get_xxx() reads NaN in as legal garbage...
 
@@ -1197,7 +1197,8 @@ main(int argc, char **argv)
 
       }
       
-      if (out) put_node(cout, *b);
+      if (out)
+	  put_node(b);
       rmtree(b);
     }
 }

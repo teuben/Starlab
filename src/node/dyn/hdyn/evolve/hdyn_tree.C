@@ -572,8 +572,8 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
 		if (bj->get_kira_diag()->tree_level > 2) {
 		    cerr << endl;
-		    put_node(cerr, *bj, bj->get_kira_options()->print_xreal);
-		    put_node(cerr, *bi, bi->get_kira_options()->print_xreal);
+		    put_node(bj, cerr, bj->get_kira_options()->print_xreal);
+		    put_node(bi, cerr, bi->get_kira_options()->print_xreal);
 		}
 
 		cerr << endl;
@@ -618,8 +618,8 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 	// cerr << "  put_node for " << endl << "    " << bi->format_label();
 	// cerr << " and " << bj->format_label() << endl;
 
-	put_node(cout, *bi, false, 3);
-	put_node(cout, *bj, false, 3);
+	put_node(bi, cout, false, 3);
+	put_node(bj, cout, false, 3);
     }
 
     // Remove any slow_perturbed references to the components from
@@ -702,7 +702,7 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 	// cerr << "  put_node for " << bj->get_parent()->format_label()
 	//      << endl;
 
-	put_node(cout, *bj->get_parent(), false, 2);
+	put_node(bj->get_parent(), cout, false, 2);
     }
 
     bi->get_kira_counters()->top_level_combine++;
@@ -771,7 +771,7 @@ void split_top_level_node(hdyn * bi,
 		// Excessive output?
 
 		if (bi->get_kira_diag()->tree_level > 2)
-		    put_node(cerr, *bi, bi->get_kira_options()->print_xreal);
+		    put_node(bi, cerr, bi->get_kira_options()->print_xreal);
 	    }
 
 	} else {
@@ -827,7 +827,7 @@ void split_top_level_node(hdyn * bi,
 	// cerr << "split_top_level_node: time " << bi->get_system_time();
 	// cerr << "  put_node for " << bi->format_label() << endl;
 
-	put_node(cout, *bi, false, 3);
+	put_node(bi, cout, false, 3);
     }
 
     // Express od and yd quantities relative to root.
@@ -864,7 +864,7 @@ void split_top_level_node(hdyn * bi,
 
     hdyn *root = bi->get_root();
 
-    detach_node_from_general_tree(*bi);
+    detach_node_from_general_tree(bi);
 
     // Imperfect correction of neighbor pointers:
 
@@ -891,8 +891,8 @@ void split_top_level_node(hdyn * bi,
 
     delete bi;
 
-    add_node(*od, *root);
-    add_node(*yd, *root);
+    add_node(od, root);
+    add_node(yd, root);
 
     // halve_timestep(od);
     // halve_timestep(yd);
@@ -909,8 +909,8 @@ void split_top_level_node(hdyn * bi,
 	// cerr << "  put_node for " << endl << "    " << od->format_label();
 	// cerr << " and " << yd->format_label() << endl;
 
-	put_node(cout, *od, false, 2);
-	put_node(cout, *yd, false, 2);
+	put_node(od, cout, false, 2);
+	put_node(yd, cout, false, 2);
     }
 
     bi->get_kira_counters()->top_level_split++;
@@ -991,7 +991,7 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 	// cerr << "  put_node for " << old_top_level_node->format_label()
 	//      << endl;
 
-	put_node(cout, *old_top_level_node, false, 3);
+	put_node(old_top_level_node, cout, false, 3);
     }
 
     // Note from Steve, 3/99:
@@ -1117,7 +1117,7 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 	// cerr << "combine_low_level_nodes: time " << bi->get_system_time();
 	// cerr << "  put_node for " << top_level_node->format_label() << endl;
 
-	put_node(cout, *top_level_node, false, 2);
+	put_node(top_level_node, cout, false, 2);
     }
 
     if (pp3_at_end) {

@@ -2203,11 +2203,11 @@ main(int argc, char** argv)
 	}
         
     int gfx_counter = 0;
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 	convert_relative_to_absolute(b);
         xstarplot(b, scale, k, d, lmax, rel_point_size, D, cenergy,
 		  b_flag, f_flag, t_flag, gfx_counter++);
-	if (p_flag) put_node(cout, *b);
+	if (p_flag) put_node(b);
 	rmtree(b);
     }
 

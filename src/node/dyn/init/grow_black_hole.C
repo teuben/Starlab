@@ -126,9 +126,9 @@ real radius_containting_mass(dyn * b, real mass) {
     return rlagr;
 }
 
-void merge_bh_with_coll(dyn * bh, dyn * bcoll) {
+void merge_bh_with_coll(dyn *bh, dyn *bcoll) {
 
-    detach_node_from_general_tree(*bcoll);
+    detach_node_from_general_tree(bcoll);
     bcoll->set_younger_sister(NULL);
     bcoll->set_elder_sister(NULL);
 
@@ -181,7 +181,7 @@ local void grow_black_hole(dyn* b, real m_bh) {
 //	    cerr << "merge bh with " << bi->format_label() << endl;
 	    merge_bh_with_coll(bh, bi);
 //	    PRL(bh->get_mass());
-//	    put_dyn(cerr, *bh);
+//	    put_dyn(bh, cerr);
 	    break;
 	  }
 	}
@@ -212,12 +212,12 @@ int main(int argc, char ** argv) {
 
 
     dyn* b;
-    b = get_dyn(cin);
+    b = get_dyn();
     b->log_history(argc, argv);
 
     grow_black_hole(b, m_bh);
 
-    put_dyn(cout, *b);
+    put_dyn(b);
     rmtree(b);
     return 0;
 }

@@ -785,7 +785,7 @@ local void hw_err_exit(char *func, int id, hdyn *b)
 
     ofstream dump(dumpfile);
     if (dump) {
-	put_node(dump, *b->get_root(), b->get_kira_options()->print_xreal);
+	put_node(b->get_root(), dump, b->get_kira_options()->print_xreal);
 	dump.close();
 	cerr << "Data written to file " << dumpfile << endl;
     }

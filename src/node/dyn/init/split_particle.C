@@ -167,7 +167,7 @@ void main(int argc, char ** argv)
 	err_exit("must specify a particle label");
 
     dyn* b;
-    b = get_dyn(cin);
+    b = get_dyn();
 
     // Bookkeeping.
 
@@ -211,7 +211,7 @@ void main(int argc, char ** argv)
 	// Do nothing in this case, but don't stop the flow of data.
 
 	cerr << "Warning: particle " << label << " not found.\n";
-	put_dyn(cout, *b);
+	put_dyn(b);
 
     } else {
 
@@ -225,7 +225,7 @@ void main(int argc, char ** argv)
 	// If a real error occurs, terminate the data flow.
 
 	if (split_particle(bi, eccentricity, semi_major_axis, mass_ratio))
-	    put_dyn(cout, *b);
+	    put_dyn(b);
     }
 }
 

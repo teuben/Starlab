@@ -35,11 +35,11 @@ void  addhydro(node * b, real R_eff)
 #else
 
 /*-----------------------------------------------------------------------------
- *  main  --
+ *  main  --n
  *-----------------------------------------------------------------------------
  */
 main(int argc, char ** argv)
-    {
+{
     int  c;
     bool  R_flag = FALSE;
     bool  c_flag = FALSE;
@@ -64,18 +64,17 @@ main(int argc, char ** argv)
     
     node *b;
 
-    while (b = get_node(cin))
-	{
+    while (b = get_node()) {
         if (c_flag == TRUE)
             b->log_comment(comment);
         b->log_history(argc, argv);
 
 	addhydro(b, R_eff);
 
-	put_node(cout, *b);	
+	put_node(b);
 	delete b;
-	}
     }
+}
 
 #endif
 

@@ -12,8 +12,13 @@
 // The only difference between this program and the dyn version is that
 // possible GRAPE and dstar extensions are used here.
 
-//// sys_stats:  Print out various diagnostic statistics on the input
-////             system.  These include:
+//// sys_stats:  This is the "hdyn" (kira output) version of sys_stats.
+////             It contains all of the "dyn" sys_stats functionality (and
+////             will work with standard dyn data files), but includes
+////             additional functions specific to the hdyn class.
+////
+////             Print out various diagnostic statistics on the input system.
+////             These include:
 ////
 ////                 system time, number, mass, mass distribution
 ////                 relaxation time
@@ -95,7 +100,7 @@ main(int argc, char **argv)
     hdyn *b;
     int i = 0;
 
-    while (b = get_hdyn(cin)) {
+    while (b = get_hdyn()) {
 
 	check_addstar(b);
 	check_set_external(b, true);	// true ==> verbose output
@@ -124,7 +129,7 @@ main(int argc, char **argv)
 
 	if (out) {
 	    b->log_history(argc, argv);
-	    put_node(cout, *b);
+	    put_node(b);
 	}
 
 	rmtree(b);	// causes core dump if B_flag is enabled...

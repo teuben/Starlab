@@ -156,7 +156,7 @@ int main(int argc, char ** argv)
 
     cerr.precision(STD_PRECISION);
 
-    //    put_node(cout, *root);
+    //    put_node(root);
 
     real dt, time = 0;
     real delta_t = t_end/((real)n_steps);
@@ -182,7 +182,7 @@ int main(int argc, char ** argv)
             << "   " << type_string(bi->get_starbase()->get_element_type())
 	    << endl;
     }
-//    put_node(cout, *root);
+//    put_node(root);
     delete root;
     return 0;
 }

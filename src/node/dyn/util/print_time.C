@@ -22,7 +22,7 @@ main(int argc, char ** argv)
     real prev_time = -VERY_LARGE_NUMBER;
     cerr.precision(HIGH_PRECISION);
 
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
 	real time = b->get_system_time();
 

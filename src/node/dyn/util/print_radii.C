@@ -33,7 +33,7 @@ main(int argc, char** argv)
     cerr.precision(p);
     int i = 0;
 
-    while (root = get_dyn(cin)) {
+    while (root = get_dyn()) {
 
 	for_all_daughters(dyn, root, ni) {
 

@@ -17,11 +17,11 @@
  */
 main(int argc, char ** argv)
     {
-    node * root;    /* root node */
+    node *root;    // root node
 
     check_help();
 
-    while (root = get_node(cin))
+    while (root = get_node())
 	{
 	root->pretty_print_tree(cerr);
 	rmtree(root);

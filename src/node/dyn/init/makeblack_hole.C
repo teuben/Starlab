@@ -91,7 +91,7 @@ int main(int argc, char ** argv) {
 	}
 
     dyn* b;
-    b = get_dyn(cin);
+    b = get_dyn();
     b->log_history(argc, argv);
 
     if (id>b->n_leaves())
@@ -115,7 +115,7 @@ int main(int argc, char ** argv) {
 							 old_t_vir);
     }
 
-    put_dyn(cout, *b);
+    put_dyn(b);
     rmtree(b);
     return 0;
 }

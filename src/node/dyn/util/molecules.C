@@ -2030,7 +2030,7 @@ main(int argc, char ** argv)
 	exit(1);
     } 
 
-    dyn *b =  get_dyn(cin);
+    dyn *b =  get_dyn();
 
     printf("\n");
 
@@ -2059,7 +2059,7 @@ main(int argc, char ** argv)
 	}
         delete b;
 
-        b = get_dyn(cin);
+        b = get_dyn();
     }
 }
 

@@ -32,7 +32,7 @@ main(int argc, char** argv)
 
     cout.precision(p);
 
-    while (root = get_dyn(cin)) {
+    while (root = get_dyn()) {
 
 	real n = 0;
 	for_all_daughters(dyn, root, ni) n += 1;

@@ -386,16 +386,16 @@ void low_n_evolve(sdyn * b,       // sdyn array
 	    // Looks like we can't just make a tree and flatten it
 	    // again before continuing--better to work with a copy.
 
-/*	    sdyn* c = copy_flat_tree(b);
+/*	    sdyn *c = copy_flat_tree(b);
 
 	    bool dynamics = FALSE;
 	    bool stability = FALSE;
 	    int k_max = 2;
 	    make_tree(c, dynamics, stability, k_max, 0);
-	    put_node(cout, *c);
+	    put_node(c);
 	    delete_node(c);
 */
-	    put_node(cout, *b);
+	    put_node(b);
 
 	    cout << flush; 
 	    t_snap += dt_snap;
@@ -542,7 +542,7 @@ main(int argc, char **argv)
 
     if (!D_flag) dt_snap = delta_t; // Guarantee output at end
 
-    b = get_sdyn(cin);
+    b = get_sdyn();
     b->log_history(argc, argv);
 
     cpu_init();

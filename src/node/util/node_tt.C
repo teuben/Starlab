@@ -411,34 +411,34 @@ node * node_with_name(char* s, node * top)	// recursive; default top = NULL
 // delete node n. Do not check if the parent has more than 2 remaining
 // daughters or not.  Do not correct parent mass for removal of node.
 
-void detach_node_from_general_tree(node & n)
+void detach_node_from_general_tree(node *n)
 {
-    if(&n == NULL){
-	cerr << "Warning: detach_node_from_general_tree, n is null\n";
+    if (n == NULL) {
+	cerr << "Warning: detach_node_from_general_tree, n is NULL\n";
 	return;
     }
 
-    node *  parent = n.get_parent();
+    node *parent = n->get_parent();
     
     // check if n is head without parent or sisters
-    if(parent == NULL){
+    if (parent == NULL) {
 	cerr << "Warning: detach_node_from_general_tree, n has no parent\n";
 	return;
     }
 
-    n.set_parent(NULL);
+    n->set_parent(NULL);
 
-    node *  elder_sister = n.get_elder_sister();
-    node *  younger_sister = n.get_younger_sister();
+    node *elder_sister = n->get_elder_sister();
+    node *younger_sister = n->get_younger_sister();
 
-    if (parent->get_oldest_daughter() == &n){
+    if (parent->get_oldest_daughter() == n) {
 	parent->set_oldest_daughter(younger_sister);
     }
 
-    if(elder_sister != NULL){
+    if (elder_sister != NULL) {
 	elder_sister->set_younger_sister(younger_sister);
     }
-    if(younger_sister != NULL){
+    if (younger_sister != NULL) {
 	younger_sister->set_elder_sister(elder_sister);
     }
 }
@@ -452,39 +452,40 @@ void detach_node_from_general_tree(node & n)
 // work, but I'm not sure what is actually
 // done if delete is called in this
 // function...
-void remove_node_with_one_daughter(node &n)
+void remove_node_with_one_daughter(node *n)
 {
-    if(n.get_oldest_daughter()->get_younger_sister()!=NULL){
-	cerr << "remove_node_with_one_daughter: daughters of n is "
+    if (n->get_oldest_daughter()->get_younger_sister()) {
+	cerr << "remove_node_with_one_daughter: #daughters of n is "
 	     << "larger than 1\n";
 	exit(1);
     }
-    node *  daughter = n.get_oldest_daughter();
-    if (daughter->get_elder_sister() != NULL ||
-	daughter->get_younger_sister() != NULL ){
-	cerr << "remove_node_with_one_daughter: daughter of n has  sisters\n";
+    node *daughter = n->get_oldest_daughter();
+    if (daughter->get_elder_sister() ||
+	daughter->get_younger_sister()) {
+	cerr << "remove_node_with_one_daughter: daughter of n has sisters\n";
 	exit(1);
     }
 
-    node *  parent = n.get_parent();
+    node *parent = n->get_parent();
     
     // check if n is head without parent or sisters
-    if(parent == NULL){
+
+    if (parent == NULL) {
 	cerr << "Warning: remove_node_with_one_daughter, n has no parent\n";
 	return;
     }
 
-    node *  elder_sister = n.get_elder_sister();
-    node *  younger_sister = n.get_younger_sister();
+    node *elder_sister = n->get_elder_sister();
+    node *younger_sister = n->get_younger_sister();
 
-    if (parent->get_oldest_daughter() == &n) {
+    if (parent->get_oldest_daughter() == n) {
 	parent->set_oldest_daughter(daughter);
     }
 
-    if (elder_sister != NULL) {
+    if (elder_sister) {
 	elder_sister->set_younger_sister(daughter);
     }
-    if (younger_sister != NULL) {
+    if (younger_sister) {
 	younger_sister->set_elder_sister(daughter);
     }
 
@@ -499,17 +500,17 @@ void remove_node_with_one_daughter(node &n)
 // detach_node_from_binary_tree
 // delete node n and repair the tree
 
-void detach_node_from_binary_tree(node & n)
+void detach_node_from_binary_tree(node *n)
 {
-    if (&n == NULL) {
-	cerr << "Warning: detach_node_from_binary_tree, n is null\n";
+    if (n == NULL) {
+	cerr << "Warning: detach_node_from_binary_tree, n is NULL\n";
 	return;
     }
 
-    node *  parent = n.get_parent();
+    node *parent = n->get_parent();
 
     detach_node_from_general_tree(n);
-    remove_node_with_one_daughter(*parent);
+    remove_node_with_one_daughter(parent);
 }
     
 
@@ -520,46 +521,46 @@ void detach_node_from_binary_tree(node & n)
 // newly created node
 //
 
-void extend_tree(node& old_n, node& new_n)
+void extend_tree(node *old_n, node *new_n)
 {
-    if (&old_n == NULL) {
-	cerr << "Warning:extend_tree, old_n is null\n";
+    if (old_n == NULL) {
+	cerr << "Warning:extend_tree, old_n is NULL\n";
 	return;
     }
 
     // check if old_n is root
 
-    if (old_n.get_parent() == NULL) {
+    if (old_n->get_parent() == NULL) {
 	cerr << "extend_tree, old_n is root, cannot insert\n";
 	exit(1);
     }
 
     // set the pointer of ex-parent of old_n if she was the oldest daughter
 
-    node *  parent = old_n.get_parent();
-    if (parent->get_oldest_daughter() == (&old_n)) {
+    node *parent = old_n->get_parent();
+    if (parent->get_oldest_daughter() == old_n) {
 	// old_n is the oldest daughter of her parent
-	parent->set_oldest_daughter(&new_n);
+	parent->set_oldest_daughter(new_n);
     }
     
     // set the pointers of ex-sisters of old_n
-    node *  elder = old_n.get_elder_sister();
-    if(elder != NULL){
-	elder->set_younger_sister(&new_n);
+    node *elder = old_n->get_elder_sister();
+    if (elder) {
+	elder->set_younger_sister(new_n);
     }
-    node *  younger = old_n.get_younger_sister();
-    if(younger != NULL){
-	younger->set_elder_sister(&new_n);
+    node *younger = old_n->get_younger_sister();
+    if (younger) {
+	younger->set_elder_sister(new_n);
     }
     
-    new_n.set_parent(old_n.get_parent());
-    new_n.set_elder_sister(old_n.get_elder_sister());
-    new_n.set_younger_sister(old_n.get_younger_sister());
-    new_n.set_oldest_daughter(&old_n);
+    new_n->set_parent(old_n->get_parent());
+    new_n->set_elder_sister(old_n->get_elder_sister());
+    new_n->set_younger_sister(old_n->get_younger_sister());
+    new_n->set_oldest_daughter(old_n);
 
-    old_n.set_elder_sister(NULL);
-    old_n.set_younger_sister(NULL);
-    old_n.set_parent(&new_n);
+    old_n->set_elder_sister(NULL);
+    old_n->set_younger_sister(NULL);
+    old_n->set_parent(new_n);
 }
 
 
@@ -569,57 +570,56 @@ void extend_tree(node& old_n, node& new_n)
 // parent. The ex-oldest node of the parent becomes the
 // younger sister of n.
 
-void add_node(node &n, node & parent)
+void add_node(node *n, node *parent)
 {
-    if (&n == NULL) {
-	cerr << "Warning:add_node, n is null\n";
+    if (n == NULL) {
+	cerr << "Warning:add_node, n is NULL\n";
 	return;
     }
 
-    if (&parent == NULL) {
-	cerr << "Warning:add_node, parent is null\n";
+    if (parent == NULL) {
+	cerr << "Warning:add_node, parent is NULL\n";
 	return;
     }
 
-// The following part test if n is completely isolated
+// The following part tests if n is completely isolated.
 
 #if 0
-    // check if n is head without parent or sisters
+    // Check if n is head without parent or sisters
 
-    if (n.get_parent() != NULL) {
+    if (n->get_parent()) {
 	cerr << "add_node, n has parent\n";
 	exit(1);
     }
-    if (n.get_elder_sister() != NULL) {
+    if (n->get_elder_sister()) {
 	cerr << "add_node, n has an elder sister\n";
 	exit(1);
     }
-    if (n.get_younger_sister() != NULL) {
+    if (n->get_younger_sister()) {
 	cerr << "add_node, n has an younger sister\n";
 	exit(1);
     }
 #endif
 
-    // set the pointers of ex-oldest-daughter of parent
+    // Set the pointers of ex-oldest-daughter of parent.
 
-    node *  ex = parent.get_oldest_daughter();
-    if (ex != NULL) {
-	ex->set_elder_sister(&n);
+    node *ex = parent->get_oldest_daughter();
+    if (ex) {
+	ex->set_elder_sister(n);
     }
 
-    parent.set_oldest_daughter(&n);
+    parent->set_oldest_daughter(n);
 
-    n.set_elder_sister(NULL);
-    n.set_younger_sister(ex);
-    n.set_parent(&parent);
+    n->set_elder_sister(NULL);
+    n->set_younger_sister(ex);
+    n->set_parent(parent);
 }
-    
 
-// insert_node_into_binary_tree : put in n into the tree by creating
+// insert_node_into_binary_tree : put n into the tree by creating
 // a new node at the location of old_n and making both old_n and n
 // its daughters
 
-void insert_node_into_binary_tree(node& n, node& old_n, node& new_n)
+void insert_node_into_binary_tree(node *n, node *old_n, node *new_n)
 {
     extend_tree(old_n, new_n);
     add_node(n, new_n);
@@ -628,7 +628,7 @@ void insert_node_into_binary_tree(node& n, node& old_n, node& new_n)
 // next_node: return the next node to look at when traversing the tree
 //            below node b
 
-node* node::orig_next_node(node* b)
+node* node::orig_next_node(node *b)
 {
 
     if (oldest_daughter)

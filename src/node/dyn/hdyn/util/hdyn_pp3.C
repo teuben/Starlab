@@ -374,7 +374,7 @@ main(int argc, char ** argv)
 
     hdyn *b;
 
-    while (b = get_hdyn(cin)) {
+    while (b = get_hdyn()) {
 	pp3_tree(b);
 	delete b;
     }

@@ -100,7 +100,7 @@ local INLINE void clean_up_subtree(worldbundle *wb, pdyn *old, bool debug)
 	    }
 	}		
 	
-	detach_node_from_general_tree(*old);
+	detach_node_from_general_tree(old);
 
 	// Function rmtree() actually deletes the old nodes.
 	// May not be necessary to go that far.
@@ -170,7 +170,7 @@ local INLINE void update_interpolated_tree(worldbundle *wb,
 	print_details(wb, bn, t);
 
 	PRC(top); PRL(top->format_label());
-	// put_node(cerr, *top, false);
+	// put_node(top, cerr, false);
     }
 
     // Create the portion of the tree corresponding to the top-level
@@ -652,7 +652,7 @@ main(int argc, char *argv[])
     worldbundle *wb = read_bundle(s);
 
     pdyn *root = create_interpolated_tree2(wb, t, true);
-    put_node(cout, *root, false);
+    put_node(root, cout, false);
 
 #if 0
     // Some statistics:
@@ -711,7 +711,7 @@ main(int argc, char *argv[])
     real t = 0.8;
     while (t < 0.85) {
 	pdyn *root = create_interpolated_tree2(wb, t);
-	put_node(cout, *root, false);
+	put_node(root, cout, false);
 	t += 0.01;
     }
 #endif

@@ -128,7 +128,7 @@ main(int argc, char **argv)
 
     if (!D_flag) dt_snap = delta_t;
 
-    b = get_sdyn3(cin);
+    b = get_sdyn3();
     
     b->log_history(argc, argv);
 

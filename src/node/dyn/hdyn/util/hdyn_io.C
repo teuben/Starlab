@@ -641,9 +641,9 @@ main(int argc, char** argv)
     hdyn  * b;
     check_help();
 
-    while (b = get_hdyn(cin)) {
+    while (b = get_hdyn()) {
 	cout << "TESTING put_hdyn:" << endl;
-        put_node(cout, *b);
+        put_node(b);
 	cout << "TESTING pp2()   :" << endl;
 	pp2(b);
 	delete b;

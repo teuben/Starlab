@@ -238,7 +238,7 @@ main(int argc, char ** argv)
 	    }
 
     node *b;
-    b = get_node(cin);
+    b = get_node();
 
     if (c_flag == TRUE)
       b->log_comment(comment);
@@ -371,7 +371,7 @@ main(int argc, char ** argv)
     }
 #endif
 
-    put_node(cout, *b);	
+    put_node(b);	
     delete b;
 }
 

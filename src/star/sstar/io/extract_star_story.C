@@ -192,7 +192,7 @@ void  addstar(node * b, real t_rel, stellar_type type,
  *-----------------------------------------------------------------------------
  */
 main(int argc, char ** argv)
-    {
+{
     int  c;
     bool  t_flag = FALSE;
     bool  M_flag = FALSE;
@@ -238,17 +238,16 @@ main(int argc, char ** argv)
 
     node *b;
 
-    while (b = get_node(cin))
-	{
+    while (b = get_node()) {
         if (c_flag == TRUE)
             b->log_comment(comment);
         b->log_history(argc, argv);
 
 	addstar(b, t_rel, type, mf, rf, tf);
 
-	put_node(cout, *b);	
+	put_node(b);
 	delete b;
-	}
     }
+}
 
 #endif

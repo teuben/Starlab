@@ -15,7 +15,7 @@
 #ifdef TOOLBOX
 
 main(int argc, char ** argv)
-    {
+{
     int  i;
     bool  c_flag = FALSE;
     bool  i_flag = FALSE;
@@ -28,8 +28,7 @@ main(int argc, char ** argv)
     char* param_string = "c:i";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
-	switch(c)
-	    {
+	switch(c) {
 	    case 'c': c_flag = TRUE;
 		      comment = poptarg;
 		      break;
@@ -38,15 +37,14 @@ main(int argc, char ** argv)
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
                       exit(1);
-	    }            
+	}            
     
     dyn b, b1, b2, b3;
-    if (i_flag)
-	{
+    if (i_flag) {
         b1.set_label(1);
         b2.set_label(2);
         b3.set_label(3);
-	}
+    }
     b.set_oldest_daughter(&b1);
     b1.set_parent(&b);
     b2.set_parent(&b);
@@ -70,9 +68,8 @@ main(int argc, char ** argv)
     b3.set_pos(vector(1,-1,0));
 
     b.to_com();
-
-    put_node(cout, b);
-    }
+    put_node(&b);
+}
 
 #endif
 

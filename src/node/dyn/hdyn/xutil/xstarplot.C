@@ -1,5 +1,10 @@
 
-//// xstarplot:  plot an N-body system in an X environment.
+//// xstarplot:  Plot an N-body system in an X environment.
+////
+////             This is the "hdyn" (kira output) version of xstarplot.  It contains
+////             all of the "dyn" xstarplot functionality (and will work with standard
+////             dyn data files), but includes additional functions specific to the
+////             hdyn class.
 ////
 //// Options:    -a    specify viewing axis [1/2/3 = x/y/z]
 ////             -b    allow backward steps [no]
@@ -1783,7 +1788,7 @@ main(int argc, char** argv)
 		// Read in a new snapshot from stdin.
 
 		hdyn* bbb;
-		bbb = get_hdyn(cin);
+		bbb = get_hdyn();
 
 		if (bbb == NULL) {
 
@@ -1831,7 +1836,8 @@ main(int argc, char** argv)
 		    frame_id[snap_counter] = frame_id[prev_snap] + 1;
 
 		    snap_display = snap_counter;
-		    if (o_flag) put_node(cout, *b[snap_display]);
+		    if (o_flag)
+			put_node(b[snap_display]);
 		}
 
 	    } else {

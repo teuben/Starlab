@@ -17,7 +17,7 @@
  *-----------------------------------------------------------------------------
  */
 main(int argc, char ** argv)
-    {
+{
     bool  c_flag = FALSE;
     char  *comment;
 
@@ -38,22 +38,20 @@ main(int argc, char ** argv)
 		      exit(1);
 	    }            
     
-    node * root;
+    node *root;
 
-    while (root = get_node(cin))
-	{
+    while (root = get_node()) {
 	for_all_daughters(node, root, daughter)
-	    if (daughter->is_parent())
-		{
+	    if (daughter->is_parent()) {
 		if (c_flag == TRUE)
 		    daughter->log_comment(comment);
 		daughter->log_history(argc, argv);
 
-		put_node(cout, *daughter);
-		}
+		put_node(daughter);
+	    }
 	rmtree(root);
-	}
     }
+}
 
 #endif
 

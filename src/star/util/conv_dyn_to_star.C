@@ -39,7 +39,7 @@ main(int argc, char ** argv) {
                       exit(1);
 	}
 
-    root = get_dyn(cin);
+    root = get_dyn();
     root->log_history(argc, argv);
 
     real P, K, E;
@@ -78,7 +78,7 @@ main(int argc, char ** argv) {
     root->get_starbase()->set_stellar_evolution_scaling(-1, -1, -1);
     root->get_starbase()->print_stellar_evolution_scaling(cerr);
 
-    put_node(cout, *root);
+    put_node(root);
 }
 
 #endif

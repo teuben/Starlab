@@ -695,9 +695,9 @@ main(int argc, char** argv)
 
 #if 1
 
-    while (b = get_tdyn(cin)) {
+    while (b = get_tdyn()) {
 	cout << "TESTING put_tdyn:" << endl;
-        put_node(cout, *b, true, 1);
+        put_node(b, cout, true, 1);
 	cout << "TESTING pp2()   :" << endl;
 	pp2(b);
 	delete b;

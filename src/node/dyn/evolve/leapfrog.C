@@ -99,13 +99,13 @@ local void evolve(real& t,        // time
 	// Output a snapshot to cout at the scheduled time, or at end of run.
 
 	if (termination_flag == 1) {
-	    put_node(cout, *b);
+	    put_node(b);
 	    cout << flush;
 	    break;                          // end the run
 	}
 
 	if (t >= t_snap) {
-	    put_node(cout, *b);             // do not synchronize all particles
+	    put_node(b);             	    // do not synchronize all particles
 	    cout << flush;
 	    t_snap += dt_snap;              // and continue the run
 	}
@@ -188,7 +188,7 @@ main(int argc, char **argv)
 
     if (!D_flag) dt_snap = delta_t;
 
-    b = get_dyn(cin);
+    b = get_dyn();
     
     if (c_flag == TRUE) b->log_comment(comment);
     b->log_history(argc, argv);

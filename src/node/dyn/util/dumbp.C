@@ -41,10 +41,9 @@ main(int argc, char** argv)
     cout.precision(p);
 #endif
 
-    while (root = get_dyn(cin)) {
+    while (root = get_dyn()) {
 
-	for (ni = root->get_oldest_daughter(); ni != NULL;
-	     ni = ni->get_younger_sister()) {
+	for_all_daughters(dyn, root, ni) {
 
 	    real t = getrq(ni->get_dyn_story(), "t");
 
@@ -52,6 +51,7 @@ main(int argc, char** argv)
 
 	    if (time) printf(prec, t);
 
+	    printf("%d ", ni->get_index());
 	    printf(prec, ni->get_mass());
 	    vector temp;
 	    temp = ni->get_pos();
@@ -64,7 +64,8 @@ main(int argc, char** argv)
 #else
 
 	    if (time) cout << t << " ";
-	    cout << ni->get_mass() << " "
+	    cout << ni->get_index() << " "
+		 << ni->get_mass() << " "
 		 << ni->get_pos()  << " "
 		 << ni->get_vel()
 		 << endl;
@@ -72,6 +73,12 @@ main(int argc, char** argv)
 #endif
 
 	}
+
+#ifdef BAD_GNU_IO
+	    printf("\n");
+#else
+	    cout << endl;
+#endif
 
 	rmtree(root);
     }

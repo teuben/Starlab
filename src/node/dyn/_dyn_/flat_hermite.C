@@ -168,7 +168,7 @@ local void evolve_system(_dyn_ * b,	// root node
 	// at rest at the origin.
 
 	if (ttmp > t_snap || ttmp > t_end) {
-	    put_node(cout, *b);
+	    put_node(b);
 	    cout << flush;
 	    t_snap += dt_snap;
 	}
@@ -263,7 +263,7 @@ main(int argc, char **argv)
     if (!D_flag)
 	dt_snap = delta_t;
 
-    b = get__dyn_(cin);
+    b = get__dyn_();
 
     if (c_flag == TRUE)
 	b->log_comment(comment);

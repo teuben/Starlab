@@ -53,7 +53,7 @@ main(int argc, char ** argv)
 
     hdyn *b;
 
-    while (b = get_hdyn(cin)) {
+    while (b = get_hdyn()) {
 
         if (c_flag == TRUE)
             b->log_comment(comment);
@@ -61,7 +61,7 @@ main(int argc, char ** argv)
 
 	for_all_nodes(hdyn, b, bi)
 	    reset_counters(bi);
-	put_dyn(cout, *b);	
+	put_dyn(b);
 	delete b;
     }
 }

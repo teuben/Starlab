@@ -49,13 +49,13 @@ main(int argc, char ** argv)
 	exit(1);
     }
 
-    hdyn *b = get_hdyn(cin);
+    hdyn *b = get_hdyn();
     b->log_history(argc, argv);
 
     scale(b, eps, c_flag, e_flag, e, m_flag, m, q_flag, q, r_flag, r,
 	  debug, kira_top_level_energies);
 
-    put_node(cout, *b);
+    put_node(b);
 }
 
 #endif

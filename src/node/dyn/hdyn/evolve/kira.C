@@ -1565,7 +1565,7 @@ local void backward_step_exit(hdyn* b, real ttmp, real t,
 	cerr << next_nodes[i]->get_next_time()<<endl;
 	pp3(next_nodes[i]->get_top_level_node(), cerr);
     }
-    put_node(cerr, *b, b->get_kira_options()->print_xreal);
+    put_node(b, cerr, b->get_kira_options()->print_xreal);
     exit(0);
 }
 
@@ -2192,7 +2192,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    if (ttmp > t_end) short_output = 4;		// new (7/01)
 
 	    set_complete_system_dump(true);
-	    put_node(cout, *b,
+	    put_node(b, cout,
 		     false,		// don't print xreal
 		     short_output);	// short output (uses STARLAB_PRECISION)
 	    set_complete_system_dump(false);
@@ -2220,7 +2220,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    ofstream f(name);
 	    if (f) {
 
-		// put_node(f, *b);
+		// put_node(b, f);
 		pp3(b, f);
 		cerr << "wrote TMP file " << name << endl;
 
@@ -2300,7 +2300,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	if (full_dump_now) {
 
 	    set_complete_system_dump(true);
-	    put_node(cout, *b, false, 1);
+	    put_node(b, cout, false, 1);
 	    set_complete_system_dump(false);
 
 	    cerr << endl << "Full dump (tdyn format) at time " << t << endl;
@@ -2735,7 +2735,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 			// cerr << "  put_node " << i << "/" << n_next << "  "
 			//      << curr->format_label() << endl;
 
-			put_single_node(cout, *curr, false, 1);
+			put_single_node(curr, cout, false, 1);
 
 			// Note that we have to use binary_sister here, not
 			// younger_sister, because this node may become the
@@ -2748,9 +2748,8 @@ local void evolve_system(hdyn * b,	       // hdyn array
 			    //	                    ->format_label()
 			    //	    << endl;
 
-			    put_single_node(cout,
-					    *(curr->get_binary_sister()),
-					    false, 1);
+			    put_single_node(curr->get_binary_sister(),
+					    cout, false, 1);
 			}
 		    }
 		}

@@ -31,7 +31,7 @@ local INLINE void attach_new_node(worldbundle *wb, worldline *ww,
 	pdyn *n = root->get_oldest_daughter();
 
 	if (!n)
-	    add_node(*curr, *root);
+	    add_node(curr, root);
 
 	else {
 	    while (n->get_younger_sister())

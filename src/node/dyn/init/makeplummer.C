@@ -353,7 +353,7 @@ main(int argc, char ** argv)
 	if (R_flag) reshuffle_all(b, n);
     }
 
-    put_node(cout, *b);
+    put_node(b);
     rmtree(b);
 }
 

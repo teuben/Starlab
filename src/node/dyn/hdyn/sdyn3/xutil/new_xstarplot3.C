@@ -1608,7 +1608,7 @@ main(int argc, char** argv)
 		    if (first_snap >= MAX_SNAP) first_snap = 0;
 		}
 
-		if ( (b[snap_counter] = get_sdyn3(cin)) == NULL ) break;
+		if ( (b[snap_counter] = get_sdyn3()) == NULL ) break;
 
 		// Convert all coordinates to absolute values.
 
@@ -1646,7 +1646,8 @@ main(int argc, char** argv)
         xstarplot(b[snap_display], scale, k, d, lmax,
 		  point_mode, rel_point_size, D, cenergy,
 		  b_flag, f_flag, t_flag, frame_id[snap_display], step_mode);
-	if (o_flag) put_node(cout, *b[snap_display]);
+	if (o_flag)
+	    put_node(b[snap_display]);
     }
 
     if (o_flag) cout << "End of data\n" << flush;

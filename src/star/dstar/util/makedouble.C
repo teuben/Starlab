@@ -169,7 +169,7 @@ void main(int argc, char ** argv) {
     adddouble(root, t_start, bin_type, reandom_initialization, 
 	      a_min, a_max, e_min, e_max);
 
-    put_node(cout, *root);
+    put_node(root);
 //	Test pointer structure
     cerr<<"est pointer structure"<<endl;
     node *b = root->get_oldest_daughter();
@@ -190,7 +190,7 @@ void main(int argc, char ** argv) {
                            <<st->get_companion(st->get_primary())<< endl; 
    
     evolve_the_stellar_system(root, t_end);
-    put_node(cout, *root);
+    put_node(root);
 }
 
 #endif

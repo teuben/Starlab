@@ -189,9 +189,9 @@ main(int argc, char** argv)
     _dyn_  * b;
     check_help();
 
-    while (b = get__dyn_(cin)) {
+    while (b = get__dyn_()) {
 	cout << "TESTING put__dyn_:" << endl;
-        put_node(cout, *b);
+        put_node(b);
 	cout << "TESTING pp2()   :" << endl;
 	pp2(b);
 	delete b;

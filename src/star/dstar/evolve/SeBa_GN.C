@@ -424,10 +424,7 @@ void main(int argc, char ** argv) {
 
 //      ((star*)the_binary->get_starbase())->set_seba_counters(new_seba_counters);
 
-//      if(the_binary
-//      detach_node_from_general_tree(node & n);
-
-      //      put_node(cout, *root);
+      // put_node(root);
 
 //      rmtree(root);
 

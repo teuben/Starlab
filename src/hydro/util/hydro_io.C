@@ -1,6 +1,4 @@
-//
 // hydro_io.C
-//
 
 #include "hydro.h"
 #include "util_io.h"
@@ -12,17 +10,17 @@ istream & hydro::scan_hydro_story(istream& s)
     while(get_line(s,input_line), !matchbracket(END_HYDRO, input_line)){
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
-	char *val = getequals(input_line, keyword);
+	const char *val = getequals(input_line, keyword);
 
     	if(0){   // trick to keep the if() statement, for the else below
 	}else if(!strcmp("R_eff",keyword)){
-	    effective_radius = strtod(val, &val);
+	    effective_radius = strtod(val, NULL);
 	}else if(!strcmp("mf",keyword)){
-            m_conv_hydro_to_dyn = strtod(val, &val);
+            m_conv_hydro_to_dyn = strtod(val, NULL);
 	}else if(!strcmp("rf",keyword)){
-            r_conv_hydro_to_dyn = strtod(val, &val);
+            r_conv_hydro_to_dyn = strtod(val, NULL);
 	}else if(!strcmp("tf",keyword)){
-            t_conv_hydro_to_dyn = strtod(val, &val);
+            t_conv_hydro_to_dyn = strtod(val, NULL);
 	}else{
 	    add_story_line(hydro_story, input_line);
 	}

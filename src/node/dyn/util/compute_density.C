@@ -253,7 +253,7 @@ main(int argc, char ** argv)
 
     dyn *b;
     int i = 0;
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
 	if (verbose) cerr << "snap #" << ++i
 	                  << ", time = " << b->get_system_time() << endl;
@@ -263,7 +263,7 @@ main(int argc, char ** argv)
 
         compute_density(b, k);
 
-        put_dyn(cout, *b);
+        put_dyn(b);
 	rmtree(b);
     }
 }

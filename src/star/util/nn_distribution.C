@@ -90,7 +90,7 @@ main(int argc, char ** argv)
 	    }    
 
     dyn* b;
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
       if (c_flag == TRUE)
 	b->log_comment(comment);

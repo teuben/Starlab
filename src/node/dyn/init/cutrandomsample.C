@@ -50,14 +50,14 @@ local dyn* cut_randomsample(dyn * b, int nd, real mmin, bool S_flag) {
     if(get_primary_mass(bi, S_flag)>mmin && paccept>=r) {
 	bi->pretty_print_node(cerr);
 
-      if(bi != NULL && bi->get_younger_sister()!= NULL) {
+      if (bi != NULL && bi->get_younger_sister()!= NULL) {
 	bj = bi->get_younger_sister();
-	detach_node_from_general_tree(*bi);
+	detach_node_from_general_tree(bi);
 
 	//	bi->pretty_print_node(cerr);
 	//	PRI(3);PRL(bi->get_mass());
 
-	add_node(*bi, *d);
+	add_node(bi, d);
 	mtot += bi->get_mass();
 	if(bj->get_elder_sister()!=NULL) {
 	  bi = bj->get_elder_sister();
@@ -126,7 +126,7 @@ int main(int argc, char ** argv)
 		      exit(1);
 	}
 
-    dyn *b = get_dyn(cin);
+    dyn *b = get_dyn();
 
     b->log_history(argc, argv);
 
@@ -160,7 +160,7 @@ int main(int argc, char ** argv)
       d->get_starbase()->print_stellar_evolution_scaling(cerr);
 
 
-    put_dyn(cout, *d);
+    put_dyn(d);
     return 0;
 }
 

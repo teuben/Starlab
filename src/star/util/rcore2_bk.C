@@ -683,7 +683,7 @@ main(int argc, char **argv)
     real geometric, grav_foc, encounter_rate, total_rate;
     total_rate = 0;
     
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
       
       for (int i=0; i<=nzones; i++) {
 	core_radius[i] = m_mean[i] = v_disp[i] = vc_disp[i] = r_mean[i] = 0;

@@ -1,118 +1,108 @@
-//
+
 // hydro_leapfrog.C
-// 
+
+// Replaced all dyn references by dyn pointers... (Steve, 5/03).
 
 #include "dyn.h"
 #include "hydro.h"
 
 #ifdef TOOLBOX
 
-void accumulate_acceleration(dyn& bj,           // target body reference
-			     dyn& bi,           // body whose force is required
-			     real eps_squared,  // softening length squared
-			     dyn *& bm)         // if non-null, merger has
-                                                // happened between bi and bm
+local void accumulate_acceleration(dyn *bj,           // target body
+				   dyn *bi,           // body whose force is required
+				   real eps_squared,  // softening length squared
+				   dyn *& bm)         // if non-null, merger has
+						      // happened between bi and bm
 {
-    bm = NULL;    
-    if(bj.get_oldest_daughter() != NULL){
-	for(dyn * bb = bj.get_oldest_daughter();bb != NULL;
-	    bb = bb->get_younger_sister()){
-	    accumulate_acceleration(*bb,bi,eps_squared, bm);
-    	    if (bm != NULL)
-		return;                // merger has happened, go back to merge
+    bm = NULL;
+    if (bj->get_oldest_daughter()) {
+	for_all_daughters(dyn, bj, bb) {
+	    accumulate_acceleration(bb, bi, eps_squared, bm);
+    	    if (bm) return;            // merger has happened, go back to merge
 	}                              // and recalculate all accelerations
-    }else{
-	if(&bi != &bj){
-	    vector  d_pos = bi.get_pos() - bj.get_pos();
-	    real  d_pos_squared = d_pos * d_pos;
-	    real  sum_of_stellar_r_eff =
-		    get_effective_radius(&bi) + get_effective_radius(&bj);
-	    if (sum_of_stellar_r_eff * sum_of_stellar_r_eff > d_pos_squared)
-		{
-		bm = &bj;
+    } else {
+	if (bi != bj) {
+	    vector d_pos = bi->get_pos() - bj->get_pos();
+	    real d_pos_squared = d_pos * d_pos;
+	    real sum_of_stellar_r_eff =
+		    get_effective_radius(bi) + get_effective_radius(bj);
+	    if (sum_of_stellar_r_eff * sum_of_stellar_r_eff > d_pos_squared) {
+		bm = bj;
 		return;                // merger has happened, go back to merge
-		}                      // and recalculate all accelerations
+	    }                          // and recalculate all accelerations
 
 	    real soft_d_pos_squared = d_pos_squared + eps_squared;
 
 	    real inverse_d_pos_cubed =
-	    1 / ( soft_d_pos_squared * sqrt( soft_d_pos_squared ));      
+		1 / (soft_d_pos_squared * sqrt(soft_d_pos_squared));
 
-	    bi.inc_acc(-inverse_d_pos_cubed * bj.get_mass() * d_pos);
+	    bi->inc_acc(-inverse_d_pos_cubed * bj->get_mass() * d_pos);
 	}
     }
 }
 
 
-void calculate_acceleration(dyn & bj,
-			    dyn & b,           // n-body system pointer
-			    real eps_squared,   // softening length squared
-			    dyn *& bm1,        // if non-null, merger has
-                            dyn *& bm2)        // happened between bm1 and bm2
+local void calculate_acceleration(dyn *bj,
+				  dyn *b,            // n-body system pointer
+				  real eps_squared,  // softening length squared
+				  dyn *& bm1,        // if non-null, merger has
+				  dyn *& bm2)        // happened between bm1 and bm2
 {
     bm1 = bm2 = NULL;
-    if(b.get_oldest_daughter() != NULL){
-	for(dyn * bb = b.get_oldest_daughter();bb != NULL;
-	    bb = bb->get_younger_sister()){
-	    calculate_acceleration(bj,*bb,eps_squared, bm1, bm2);
-	    if (bm1 != NULL)
-		return;
+    if (b->get_oldest_daughter()) {
+	for_all_daughters(dyn, b, bb) {
+	    calculate_acceleration(bj, bb, eps_squared, bm1, bm2);
+	    if (bm1) return;
 	}
-    }else{
-	b.clear_acc();
-	dyn * bm;                             // points to potential merger
-	accumulate_acceleration(bj,b,eps_squared, bm);
-	if (bm != NULL)
-	    {
-	    bm1 = &b;
+    } else {
+	b->clear_acc();
+	dyn *bm;                             // points to potential merger
+	accumulate_acceleration(bj, b, eps_squared, bm);
+	if (bm) {
+	    bm1 = b;
 	    bm2 = bm;
-	    }
-    }
-}
-
-void predict_step(   dyn &b,          // n-body system pointer
-		  real dt)  // timestep
-{
-    if(b.get_oldest_daughter() !=NULL){
-	for(dyn * bb = b.get_oldest_daughter();bb != NULL;
-	    bb = bb->get_younger_sister()){
-	    predict_step(*bb,dt);
 	}
-    }else{
-	b.inc_vel( 0.5 * dt * b.get_acc() );
-	b.inc_pos( dt * b.get_vel() );
     }
 }
 
-void old_correct_step(   dyn &b,          // n-body system pointer
-		  real dt)  // timestep
+local void predict_step(dyn *b,		// n-body system pointer
+			real dt)	// timestep
 {
-
-    //full recursive implementation
-    
-    if(b.get_oldest_daughter() != NULL){
-	old_correct_step(*b.get_oldest_daughter(),dt);
-    }else{
-	b.inc_vel( 0.5 * dt * b.get_acc() );
-    }
-    if(b.get_younger_sister() != NULL){
-	old_correct_step(*b.get_younger_sister(),dt);
+    if (b->get_oldest_daughter()) {
+	for_all_daughters(dyn, b, bb)
+	    predict_step(bb, dt);
+    } else {
+	b->inc_vel(0.5 * dt * b->get_acc());
+	b->inc_pos(dt * b->get_vel());
     }
 }
 
-void correct_step(   dyn &b,          // n-body system pointer
-		  real dt)  // timestep
+local void old_correct_step(dyn *b,	// n-body system pointer
+			    real dt)	// timestep
 {
 
-// non full-recursive implementation
+    // Full recursive implementation.
     
-    if(b.get_oldest_daughter() !=NULL){
-	for(dyn * bb = b.get_oldest_daughter();bb != NULL;
-	    bb = bb->get_younger_sister()){
-	    correct_step(*bb,dt);
-	}
-    }else{
-	b.inc_vel( 0.5 * dt * b.get_acc() );
+    if (b->get_oldest_daughter()) {
+	old_correct_step(b->get_oldest_daughter(), dt);
+    } else {
+	b->inc_vel( 0.5 * dt * b->get_acc() );
+    }
+    if (b->get_younger_sister())
+	old_correct_step(b->get_younger_sister(), dt);
+}
+
+local void correct_step(dyn *b,		// n-body system pointer
+			real dt)	// timestep
+{
+
+//  *** Non full-recursive implementation...
+    
+    if (b->get_oldest_daughter()) {
+	for_all_daughters(dyn, b, bb)
+	    correct_step(bb,dt);
+    } else {
+	b->inc_vel(0.5 * dt * b->get_acc());
     }
 }
 
@@ -120,34 +110,35 @@ void correct_step(   dyn &b,          // n-body system pointer
 // delete node b. Do not check if the parent has more than 2 remaining
 // daughters or not.
 
-void delete_node_from_general_tree(dyn & b)
+local void delete_node_from_general_tree(dyn *b)
 {
-    if(&b == NULL){
-	cerr << "Warning: delete_node_from_general_tree, b is null\n";
+    if (b) {
+	cerr << "Warning: delete_node_from_general_tree, b is NULL\n";
 	return;
     }
 
-    dyn *  parent = b.get_parent();
+    dyn *parent = b->get_parent();
     
     // check if b is head without parent or sisters
-    if(parent == NULL){
+
+    if (parent == NULL) {
 	cerr << "Warning: delete_node_from_general_tree, b has no parent\n";
 	return;
     }
 
-    b.set_parent(NULL);
+    b->set_parent(NULL);
 
-    dyn *  elder_sister = b.get_elder_sister();
-    dyn *  younger_sister = b.get_younger_sister();
+    dyn *elder_sister = b->get_elder_sister();
+    dyn *younger_sister = b->get_younger_sister();
 
-    if (parent->get_oldest_daughter() == &b){
+    if (parent->get_oldest_daughter() == b) {
 	parent->set_oldest_daughter(younger_sister);
     }
 
-    if(elder_sister != NULL){
+    if (elder_sister) {
 	elder_sister->set_younger_sister(younger_sister);
     }
-    if(younger_sister != NULL){
+    if (younger_sister) {
 	younger_sister->set_elder_sister(elder_sister);
     }
 }
@@ -157,41 +148,41 @@ void delete_node_from_general_tree(dyn & b)
 // parent. The ex-oldest node of the parent becomes the
 // younger sister of b.
 
-void add_node(dyn &b, dyn & parent)
+local void add_node(dyn *b, dyn *parent)
 {
-    if(&b == NULL){
-	cerr << "Warning:add_node, b is null\n";
+    if (b == NULL) {
+	cerr << "Warning: add_node, b is NULL\n";
 	return;
     }
 
-    if(&parent == NULL){
-	cerr << "Warning:add_node, parent is null\n";
+    if (parent == NULL) {
+	cerr << "Warning: add_node, parent is NULL\n";
 	return;
     }
 
-    // set the pointers of ex-oldest-daughter of parent
-    dyn *  ex = parent.get_oldest_daughter();
-    if(ex != NULL){
-	ex->set_elder_sister(&b);
-    }
+    // Set the pointers of ex-oldest-daughter of parent.
 
-    parent.set_oldest_daughter(&b);
+    dyn *ex = parent->get_oldest_daughter();
+    if (ex)
+	ex->set_elder_sister(b);
 
-    b.set_elder_sister(NULL);
-    b.set_younger_sister(ex);
-    b.set_parent(&parent);
+    parent->set_oldest_daughter(b);
+
+    b->set_elder_sister(NULL);
+    b->set_younger_sister(ex);
+    b->set_parent(parent);
 }
 
-void merge(dyn * bm1,         // stellar radius proportional to mass
-           dyn * bm2,         // i.e.  R_bm = R_bm1 + R_bm2
-           real t)            // time
-    {
-    dyn * bm = new dyn();
+local void merge(dyn *bm1,         // stellar radius proportional to mass
+		 dyn *bm2,         // i.e.  R_bm = R_bm1 + R_bm2
+		 real t)           // time
+{
+    dyn *bm = new dyn();
 
-cerr << "entering merge(" << bm1->get_index() << ", " << bm2->get_index()
-     << ") with r1 = " << bm1->get_pos() << "\n                     "
-     << " and r2 = " << bm2->get_pos()   << "\n                     "
-     << "   at t = " << t << endl;
+    cerr << "entering merge(" << bm1->get_index() << ", " << bm2->get_index()
+	 << ") with r1 = " << bm1->get_pos() << "\n                     "
+         << " and r2 = " << bm2->get_pos()   << "\n                     "
+	 << "   at t = " << t << endl;
 
     real  m1 = bm1->get_mass();
     real  m2 = bm2->get_mass();
@@ -205,57 +196,56 @@ cerr << "entering merge(" << bm1->get_index() << ", " << bm2->get_index()
     
     addhydro(bm, new_r_eff);
     
-    dyn * root = bm1->get_parent(); 
+    dyn *root = bm1->get_parent(); 
 
-    delete_node_from_general_tree(*bm1);
-    delete_node_from_general_tree(*bm2);
+    delete_node_from_general_tree(bm1);
+    delete_node_from_general_tree(bm2);
   
-    add_node(*bm, *root);
-    }
+    add_node(bm, root);
+}
 
-void calculate_acc_and_merge(dyn & bj,
-			     dyn & b,           // n-body system pointer
-			     real eps_squared,   // softening length squared
-			     real t)             // time
-    {
-    dyn * bm1;           // if non-null, merger has
-    dyn * bm2;           // happened between bm1 and bm2
+local void calculate_acc_and_merge(dyn *bj,
+				   dyn *b,             // n-body system pointer
+				   real eps_squared,   // softening length squared
+				   real t)             // time
+{
+    dyn *bm1;           // if non-null, merger has
+    dyn *bm2;           // happened between bm1 and bm2
 
     calculate_acceleration(bj, b, eps_squared, bm1, bm2);
 
-    while (bm1 != NULL)
-	{
+    while (bm1) {
 	merge(bm1, bm2, t);
-        calculate_acceleration(bj, b, eps_squared, bm1, bm2); //recalculate acc
-	}
+        calculate_acceleration(bj, b, eps_squared, bm1, bm2); // recalculate acc
     }
+}
 
-void step(real& t,        // time                         
-	  dyn* b,        // dyn array                   
-	  real dt,        // time step of the integration 
-	  real eps)       // softening length             
+local void step(real &t,        // time
+		dyn  *b,        // dyn array                   
+		real dt,        // time step of the integration 
+		real eps)       // softening length             
 {
     t += dt;
     
-    predict_step(*b,dt);
-    calculate_acc_and_merge(*b,*b, eps*eps, t);
-    correct_step(*b,dt);
+    predict_step(b,dt);
+    calculate_acc_and_merge(b, b, eps*eps, t);
+    correct_step(b, dt);
 }
 
-void evolve(real& t,        // time                         
-	    dyn* b,         // dyn array                   
-	    real delta_t,   // time span of the integration 
-	    real dt,        // time step of the integration 
-	    real dt_out,    // output time interval
-	    real dt_snap,   // snapshot output interval
-	    real eps)       // softening length             
+local void evolve(real &t,        // time                         
+		  dyn *b,         // dyn array                   
+		  real delta_t,   // time span of the integration 
+		  real dt,        // time step of the integration 
+		  real dt_out,    // output time interval
+		  real dt_snap,   // snapshot output interval
+		  real eps)       // softening length             
 {
     real t_end = t + delta_t;      // final time, at the end of the integration
     real t_out = t + dt_out;       // time of next diagnostic output
     real t_snap = t + dt_snap;     // time of next snapshot;
     int  steps = 0;
  
-    calculate_acc_and_merge(*b, *b, eps*eps, t);
+    calculate_acc_and_merge(b, b, eps*eps, t);
     
     while (t < t_end){
 	step(t, b, dt, eps);
@@ -271,8 +261,8 @@ void evolve(real& t,        // time
 //      Output a snapshot at the scheduled time or at the end of the run.
 
 	if (t >= t_snap || t >= t_end) {
-	    cerr<<"time = "<<t<<endl;
-	    put_node(cout, *b);
+	    cerr << "time = " << t << endl;
+	    put_node(b);
 	    cout << flush;
 	    t_snap += dt_snap;
 	}
@@ -303,8 +293,7 @@ main(int argc, char **argv)
     bool  t_flag = FALSE;
     
     while ((c = pgetopt(argc, argv, "a:c:d:D:e:qt:")) != -1)
-	switch(c)
-	    {
+	switch(c) {
 	    case 'a': a_flag = TRUE;
 		      dt = atof(poptarg);
 		      break;
@@ -332,7 +321,7 @@ main(int argc, char **argv)
 		      "d (output interval) D (snapshot output interval) " <<
 		      "and e (softening length)\n";
 		      exit(1);
-	    }            
+	}            
 
     if (!q_flag) {
 

@@ -711,7 +711,7 @@ void snap_output(hdyn * b, real steps, int& snaps,
 
 	if (file) {
 	    set_complete_system_dump(true);
-	    put_node(file, *b, b->get_kira_options()->print_xreal);
+	    put_node(b, file, b->get_kira_options()->print_xreal);
 	    set_complete_system_dump(false);
 	    file.close();
 	    cerr << "Snapshot saved in file "
@@ -737,7 +737,7 @@ void snap_output(hdyn * b, real steps, int& snaps,
 	if (verbose) cerr << endl;
 
 	set_complete_system_dump(true);
-	put_node(cout, *b, b->get_kira_options()->print_xreal);
+	put_node(b, cout, b->get_kira_options()->print_xreal);
 	set_complete_system_dump(false);
 	cout << flush;
 

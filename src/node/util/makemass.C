@@ -452,8 +452,8 @@ int main(int argc, char ** argv)
       mf = extract_mass_function_type_string(mfc);
     delete mfc;
 
-    node* b;
-    b = get_node(cin);
+    node *b;
+    b = get_node();
 
     b->log_history(argc, argv);
 
@@ -480,7 +480,7 @@ int main(int argc, char ** argv)
 							 old_r_vir,
 							 old_t_vir);
     }
-    put_node(cout, *b);
+    put_node(b);
     rmtree(b);
     return 0;
 }

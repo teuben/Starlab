@@ -85,7 +85,7 @@ main(int argc, char **argv)
 
     } else {
 
-	b = get_dyn(cin);
+	b = get_dyn();
 	if (b == NULL) err_exit("Can't read input snapshot");
 
 	n = 0;

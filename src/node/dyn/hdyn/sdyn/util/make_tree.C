@@ -841,7 +841,7 @@ main(int argc, char **argv)
 
     // Note that we are simply assuming that the tree is flat initially...
 
-    while (root = get_sdyn(cin)) {
+    while (root = get_sdyn()) {
 
 //        sdyn* copy_root;	      // pointer to a copy of the N-body system
 //        copy_tree(root, copy_root); // Should really save a copy
@@ -852,7 +852,7 @@ main(int argc, char **argv)
 	make_tree(root, dynamics, stability, k_max, debug);
 
 	if (debug) pp(root, cerr);
-	if (output) put_sdyn(cout, *root);
+	if (output) put_sdyn(root);
 
 	// Delete the newly constructed tree.
 

@@ -82,8 +82,8 @@ int main(int argc, char ** argv)
     //    if (lower_limit <= 0 || lower_limit > 1)
     //	err_exit("mkheavystar: Illegal mass ratio limit");
 
-    node* b;
-    b = get_node(cin);
+    node *b;
+    b = get_node();
 
     b->log_history(argc, argv);
 
@@ -95,7 +95,7 @@ int main(int argc, char ** argv)
 
     mkheavystar(b, fraction_doubled, lower_limit, mass_ratio);
 
-    put_node(cout, *b);
+    put_node(b);
     return 0;
 }
 #endif

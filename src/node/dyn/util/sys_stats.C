@@ -1713,7 +1713,7 @@ main(int argc, char **argv)
     dyn *b;
     int i = 0;
 
-    while (b = get_dyn(cin)) { // NB:  get_xxx() reads NaN as legal garbage...
+    while (b = get_dyn())	{ // NB:  get_xxx() reads NaN as legal garbage...
 
 	check_addstar(b);
 	check_set_external(b, true);	// true ==> verbose output
@@ -1723,7 +1723,7 @@ main(int argc, char **argv)
 	sys_stats(b, 0.5, verbose, binaries, long_binary_output,
 		  which_lagr, true, calc_e, n_sq);
 
-	if (out) put_node(cout, *b);
+	if (out) put_node(b);
 	rmtree(b);
     }
 }

@@ -68,9 +68,9 @@ main(int argc, char** argv)
 {
     check_help();
 
-    node * b;
-    while (b = get_node(cin)){
-        put_node(cout,*b);
+    node *b;
+    while (b = get_node()) {
+        put_node(b);
 	pp2(b);
     }
     cerr << "Normal exit\n";

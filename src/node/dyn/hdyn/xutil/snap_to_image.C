@@ -648,7 +648,7 @@ main(int argc, char** argv)
     // Loop over input snapshots.
 
     hdyn* b;
-    while (b = get_hdyn(cin)) {
+    while (b = get_hdyn()) {
 
 	float color_all = 1;
 	if (index_all >= 0) color_all = 0.6667 + 0.3333*index_all; // !!

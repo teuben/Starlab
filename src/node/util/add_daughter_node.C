@@ -21,7 +21,7 @@
  *-----------------------------------------------------------------------------
  */
 main(int argc, char ** argv)
-    {
+{
     int  i;
     int  j;
     bool  c_flag = FALSE;
@@ -64,7 +64,7 @@ main(int argc, char ** argv)
     node * y;       /* younger daughter node */
     node * n;       /* new daughter node */
 
-    root = get_node(cin);
+    root = get_node();
 
     if (root == NULL)
 	err_exit("add_daughter_node: no input nodes provided");
@@ -103,9 +103,9 @@ main(int argc, char ** argv)
     if (e_flag)
 	root->pretty_print_tree(cerr);
 
-    put_node(cout, *root);
+    put_node(root);
     rmtree(root);
-    }
+}
 
 #endif
 

@@ -266,7 +266,7 @@ void hdyn::synchronize_node()
 //     if (do_diag)
 //  	    cerr << "synchronize_node: negative timestep..." << system_time
 //  		 << " " << time << flush << endl;
-//  	    put_node(cerr, *this, options->print_xreal);
+//  	    put_node(this, cerr, options->print_xreal);
 //  	    exit(-1);
 //     }
 

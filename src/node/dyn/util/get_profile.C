@@ -36,7 +36,7 @@ main(int argc, char ** argv)
 
     dyn *b;
 
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
         real msum = 0;
 	int i = 0, n = 0;

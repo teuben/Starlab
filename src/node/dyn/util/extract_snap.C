@@ -60,7 +60,7 @@ main(int argc, char ** argv)
     dyn *b = NULL, *bp = NULL;
     int i = 0;
 
-    while (b = get_dyn(cin)) {
+    while (b = get_dyn()) {
 
 	real time = b->get_system_time();
 	i++;
@@ -75,7 +75,7 @@ main(int argc, char ** argv)
 		    b->log_comment(comment);
 
 		b->log_history(argc, argv);
-		put_dyn(cout, *b);
+		put_dyn(b);
 	    }
 
 	    if (--n <= 0) exit(0);
@@ -89,7 +89,7 @@ main(int argc, char ** argv)
 
     if (n > 0 && !t_flag) {
 	bp->log_history(argc, argv);
-	put_dyn(cout, *bp);
+	put_dyn(bp);
     }
 
 }

@@ -1031,7 +1031,7 @@ local void dump_to_file(hdyn* b, char* name)
 	if (file.get(dumpfile, 128, '\n')) {
 	    ofstream dump(dumpfile);
 	    if (dump) {
-		put_node(dump, *b, b->get_kira_options()->print_xreal);
+		put_node(b, dump, b->get_kira_options()->print_xreal);
 		dump.close();
 		cerr << "Data written to file " << dumpfile << endl;
 		written = true;

@@ -57,7 +57,7 @@ void  addchydro(node * b, real R_eff, real r_core, real m_core)
  *-----------------------------------------------------------------------------
  */
 main(int argc, char ** argv)
-    {
+{
     int  c;
     bool  r_flag = FALSE;
     bool  R_flag = FALSE;
@@ -94,17 +94,16 @@ main(int argc, char ** argv)
     
     node *b;
 
-    while (b = get_node(cin))
-	{
+    while (b = get_node()) {
         if (c_flag == TRUE)
             b->log_comment(comment);
         b->log_history(argc, argv);
 
         addchydro(b, R_eff, r_core, m_core);
-	put_node(cout, *b);	
+	put_node(b);
 	delete b;
-	}
     }
+}
 
 #endif
 

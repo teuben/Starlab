@@ -132,9 +132,9 @@ main(int argc, char** argv)
 {
     check_help();
 
-    sdyn * b;
-    while (b = (sdyn *) get_node(cin, new_sdyn)){
-	put_node(cout,*b);
+    sdyn *b;
+    while (b = get_sdyn()){
+	put_node(b);
 	pp2(b);
     }
     cerr << "Normal exit\n";

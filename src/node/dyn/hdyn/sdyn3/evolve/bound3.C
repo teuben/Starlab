@@ -99,7 +99,7 @@ void bound3(sdyn3 * b,
 
     sdyn3_to_system(b, init.system);
 
-//    put_node(cerr, *b);
+//    put_node(b, cerr);
 //    print_bodies(cerr, init.system, STD_PRECISION);
 
     real e_init = energy(b);
@@ -155,7 +155,7 @@ void bound3(sdyn3 * b,
 	if (n_stars > 0) {
 	    if (dt_snap < VERY_LARGE_NUMBER
 		&& system_in_cube(b, snap_cube_size)) {
-		put_node(cout, *b);
+		put_node(b);
 		cout << flush;
 	    }
 	}
@@ -218,7 +218,7 @@ void bound3(sdyn3 * b,
     // final state, if the "-D" command-line option was specified.
 
     if (dt_snap < VERY_LARGE_NUMBER && system_in_cube(b, snap_cube_size)) {
-	put_node(cout, *b);
+	put_node(b);
 	cout << flush;
     }
 }

@@ -111,10 +111,10 @@ cerr << "entering merge(" << bi->get_index() << ", " << bj->get_index()
     else
       bn->set_label(construct_merger_label(bj, bi));
 
-    detach_node_from_general_tree(*bi);
-    detach_node_from_general_tree(*bj);
+    detach_node_from_general_tree(bi);
+    detach_node_from_general_tree(bj);
   
-    add_node(*bn, *b);
+    add_node(bn, b);
 }
 
 // merge_collisions: recursively merge any stars in contact.
