@@ -208,23 +208,30 @@ local inline real plummer_virial(dyn * b)
 // a Plummer field with mass = A):
 //-------------------------------------------------------------------------
 
-
-
-
 //-------------------------------------------------------------------------
+//
+// Notes from Steve (10/01):
+//
 // For now, handle here the bits and pieces related to dynamical friction.
-// Expression (Binney & Tremaine) is:
+// The expression given by Binney & Tremaine is:
 //
-//	Afric  =  -beta Mfric Vcm rho [erf(X) - 2Xexp(-X^2)/sqrt(pi)] / Vcm^3
+//	Afric = -4 pi log(Lambda) beta Mfric Vcm rho
+//				[erf(X) - 2Xexp(-X^2)/sqrt(pi)] / |Vcm|^3
 //
-// (see definitions below).
-//
-// *** Details to be cleaned up!!
+// where the non-obvious terms are defined below and Lambda ~ N(<r).
+// We obtain N(<r) from M(<r) assuming a mean mass of 1 Msun and using
+// known scalings.  The quantity "1 Msun" is defined if physical units
+// are enabled; if they aren't, then it is not clear what scaling we
+// should use, or indeed what the meaning of dyamical friction is...
+// Beta is a "fudge factor," = 1 according to Binney and Tremaine.
+// We introduce some flexibility by allowing beta to be specified on
+// the command line, and letting log Lambda default to 1 in the case
+// where no physical scale is known.
 //
 //-------------------------------------------------------------------------
 
-static real beta = 0;				// tunable parameter; BT
-void set_friction_beta(real b) {beta = b;}	// say 4 pi log Lambda
+static real beta = 0;				// tunable parameter;
+void set_friction_beta(real b) {beta = b;}	// BT say beta = 1
 
 static real Mfric = 0;				// cluster effective mass
 void set_friction_mass(real m) {Mfric = m;}
@@ -241,6 +248,40 @@ local real density(dyn *b, real r)		// background density
     real x = b->get_pl_exponent();
 
     return A*x*pow(r*r+a2, 0.5*(x-1))/(4*M_PI*r*r);
+}
+
+local real mass(dyn *b, real r)			// mass interior to r
+{
+    real A = b->get_pl_coeff();
+    if (A == 0) return 0;
+
+    real a2 = b->get_pl_scale_sq();
+    real x = b->get_pl_exponent();
+
+    return A*pow(r*r+a2, 0.5*x);
+}
+
+#define LAMBDA_FAC	1
+
+local real logLambda(dyn *b, real r)
+{
+    real mass_unit = -1;
+    if (b->get_starbase())
+	    mass_unit = b->get_starbase()->conv_m_dyn_to_star(1);
+
+    // Only case where this is meaningful is the power-law field.
+
+    if (beta <= 0 || !b->get_pl())
+	return 0;
+
+    if (mass <= 0)				// no physical mass scale
+	return 1;
+
+    else
+
+	// Use M(<r), assuming <m> = 1 Msun.
+
+	return log(LAMBDA_FAC*mass(b, r)*mass_unit);
 }
 
 local real potential(dyn *b, real r)		// background potential;
@@ -265,29 +306,28 @@ void set_friction_acc(dyn *b, real r)
 	real V = abs(Vcm);
 	real X = V/sigma2;			   // scaled velocity; BT p. 425
 
+	real coeff = 4*M_PI*beta*logLambda(b, r);
+
 	if (X > 0.1)
 
-	    Afric = -beta * Mfric * Vcm * density(b, r) * pow(V, -3)
-			  * (erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
+	    Afric = -coeff * Mfric * Vcm * density(b, r) * pow(V, -3)
+			   * (erf(X) - 2*X*exp(-X*X)/sqrt(M_PI));
 	else
 
 	    // Expand for small X:
 
-	    Afric = -beta * Mfric * Vcm * density(b, r)
-			  * 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
+	    Afric = -coeff * Mfric * Vcm * density(b, r)
+			   * 4 / (3*sqrt(M_PI)*pow(sigma2, 3));
 
 #if 1
 	cerr << endl << "set_friction_acc: "; PRL(Afric);
-	PRC(beta); PRC(Mfric); PRL(density(b, r));
+	PRC(beta); PRC(coeff); PRC(Mfric); PRL(density(b, r));
 	PRL(Vcm);
 #endif
     }
 }
 
 //-------------------------------------------------------------------------
-
-
-
 
 local inline void add_power_law(dyn * b,
 				vector pos,
