@@ -62,7 +62,7 @@ local void sort_names(int n, char** list)	// Bubble sort!!
     }
 }
 
-local void construct_node_name(node* b)
+void construct_node_name(node* b)
 {
     if (!b->is_leaf()) {
 	for_all_daughters(node, b, b1)
