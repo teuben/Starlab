@@ -43,7 +43,8 @@
 // Convenient to allow inline functions to be separated out for
 // debugging and profiling purposes.
 
-#define INLINE	// inline
+// #define INLINE	inline
+#define INLINE
 
 #define ONE2	0.5
 #define ONE6	0.16666666666666666667
@@ -742,6 +743,8 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 // Called by:	grape_calculate_energies()			// global
 
 {
+//    if (b->get_system_time() > 173.077
+//	&& b->get_system_time() < 173.08) {
     if (DEBUG) {
 	cerr << "  send_all_leaves_to_grape"
 	     << endl << flush;
@@ -749,6 +752,9 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 
     int nj = 0;
     e_unpert = 0;
+
+//    if (b->get_system_time() > 173.077
+//	&& b->get_system_time() < 173.08) PRL(cm);
 
     if (!cm) {
 	for_all_leaves(hdyn, b, bb) {
@@ -762,6 +768,9 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 
 	    bool reset_bb = false;
 
+//	    if (b->get_system_time() > 173.077
+//		&& b->get_system_time() < 173.08) pp3(bb, cerr, -1);
+
 	    while (use_cm_approx(bb)) {
 		hdyn *sis = bb->get_younger_sister();
 		hdyn *par = bb->get_parent();
@@ -771,6 +780,9 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 		bb = par;
 		reset_bb = true;
 	    }
+
+//	    if (b->get_system_time() > 173.077
+//		&& b->get_system_time() < 173.08) PRL(reset_bb);
 
 	    // Must be careful to avoid an infinite loop (because of the
 	    // logic used by for_all_leaves():
@@ -784,6 +796,9 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 		if (!bb) break;
 //		PRL(bb->format_label());
 	    }
+
+//	    if (b->get_system_time() > 173.077
+//		&& b->get_system_time() < 173.08) PRL(bb->get_external_field());
 
 	    // For now, let GRAPE index = address.
 
@@ -804,11 +819,15 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 	
 	    // Copy the node to the GRAPE with index = address.
 
+//	    if (b->get_system_time() > 173.077
+//		&& b->get_system_time() < 173.08) PRL(bb->get_external_field());
+
 	    send_j_node_to_grape(bb, true);	// "true" ==> send predicted pos
 	}
     }
 
     if (DEBUG) {
+//    if (b->get_system_time() > 173.077) {
 	cerr << "  ...leaving send_all_leaves_to_grape:  ";
 	PRL(nj);
     }

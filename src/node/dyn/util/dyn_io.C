@@ -50,6 +50,40 @@ real dyn::pl_cutoff_sq = 0;
 real dyn::pl_mass = 0;
 real dyn::pl_softening_sq = 0;
 
+void dyn::print_static(ostream& s)		// default = cerr
+{
+    node::print_static(s);
+
+    s << "system_time = " << system_time << endl;
+    s << "real_system_time = " << real_system_time << endl;
+
+    s << "use_sstar = " << use_sstar << endl;
+    s << "ignore_internal = " << ignore_internal << endl;
+
+    s << "external_field = " << external_field << endl;
+    s << "tidal_type = " << tidal_type << endl;
+
+    s << "omega = " << omega << endl;
+    s << "omega_sq = " << omega_sq << endl;
+    s << "alpha1 = " << alpha1 << endl;
+    s << "alpha3 = " << alpha3 << endl;
+    s << "tidal_center = " << tidal_center << endl;
+
+    s << "p_mass = " << p_mass << endl;
+    s << "p_scale_sq = " << p_scale_sq << endl;
+    s << "p_center = " << p_center << endl;
+
+    s << "pl_coeff = " << pl_coeff << endl;
+    s << "pl_scale_sq = " << pl_scale_sq << endl;
+    s << "pl_exponent = " << pl_exponent << endl;
+    s << "pl_center = " << pl_center << endl;
+
+    s << "pl_cutoff = " << pl_cutoff << endl;
+    s << "pl_cutoff_sq = " << pl_cutoff_sq << endl;
+    s << "pl_mass = " << pl_mass << endl;
+    s << "pl_softening_sq = " << pl_softening_sq << endl;
+}
+
 static bool read_xreal = false;
 
 istream & dyn::scan_dyn_story(istream& s)

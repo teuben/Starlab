@@ -21,6 +21,11 @@
 
 node * node::root           = NULL;
 
+void node::print_static(ostream& s)		// default = cerr
+{
+    s << "root = " << root << endl;
+}
+
 istream& node::scan_dyn_story(istream& s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];

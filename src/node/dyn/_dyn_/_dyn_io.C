@@ -26,6 +26,11 @@
 
 static bool read_xreal = false;
 
+void _dyn_::print_static(ostream& s)		// default = cerr
+{
+    dyn::print_static(s);
+}
+
 void _dyn_::null_pointers()
 {
     // Clear all pointers (don't touch what they point to)

@@ -508,6 +508,20 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     cerr << "back" << endl << flush;
     PRL(cpu_time());
 
+    // Yes, it really is possible that 'this' or bcoll is unperturbed
+    // (probably in periastron passage)!  Better delete any kepler
+    // structures here to avoid problems later.  Probably OK simply
+    // to get rid of the keplers, since we are about to merge the
+    // nodes...
+
+    if (get_kepler()) {
+	rmkepler();
+	cerr << "deleted kepler for " << format_label() << endl;
+    } else if (get_binary_sister() != bcoll) {
+	if (bcoll->get_kepler()) bcoll->rmkepler();
+	cerr << "deleted kepler for " << bcoll->format_label() << endl;
+    }
+
     if (is_top_level_node() || get_binary_sister() != bcoll) {
 
         // Nodes to be merged ('this' and bcoll) are not binary
@@ -731,6 +745,21 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     cerr << "new node name = " << cm->format_label() << endl;
     PRL(cpu_time());
 
+//     pp3(cm->get_top_level_node());
+//     PRL(get_use_sstar());
+//     PRL(get_ignore_internal());
+//     PRL(get_external_field());
+//     PRL(tidal_type);
+//     PRL(get_omega());
+//     PRL(get_alpha1());
+//     PRL(get_alpha3());
+//     PRL(get_use_dstar());
+//     PRL(get_stellar_encounter_criterion_sq());
+//     PRL(get_stellar_capture_criterion_sq());
+//     PRL(get_stellar_merger_criterion_sq());
+//     PRL(get_perturbed_list());
+//     PRL(get_n_perturbed());
+
 //     real tmp1, tmp2, tmp3;
 //     cerr << endl << "computing energies #2:"
 // 	 << endl << flush;
@@ -754,12 +783,12 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     cm->set_oldest_daughter(NULL);
     cm->remove_perturber_list();
 
-    PRL(cm->get_sp());
-    PRL(get_kepler());
-    PRL(get_slow());
-    PRL(get_sp());
-    PRL(bcoll->get_slow());
-    PRL(bcoll->get_sp());
+//     PRL(cm->get_sp());
+//     PRL(get_kepler());
+//     PRL(get_slow());
+//     PRL(get_sp());
+//     PRL(bcoll->get_slow());
+//     PRL(bcoll->get_sp());
 
     // Do not try to free memory by simply
     //		delete bcoll;
@@ -767,9 +796,25 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll,
     // -- causes a (not so very) strange error.
 
 //     cerr << endl << "computing energies #3:"
-// 	 << endl << flush;
+//  	 << endl << flush;
 //     calculate_energies_with_external(get_root(), tmp1, tmp2, tmp3);
 //     cerr << "OK" << endl << endl << flush;
+//     PRC(tmp1); PRC(tmp2); PRL(tmp3);
+
+//     pp3(cm->get_top_level_node());
+//     PRL(get_use_sstar());
+//     PRL(get_ignore_internal());
+//     PRL(get_external_field());
+//     PRL(tidal_type);
+//     PRL(get_omega());
+//     PRL(get_alpha1());
+//     PRL(get_alpha3());
+//     PRL(get_use_dstar());
+//     PRL(get_stellar_encounter_criterion_sq());
+//     PRL(get_stellar_capture_criterion_sq());
+//     PRL(get_stellar_merger_criterion_sq());
+//     PRL(get_perturbed_list());
+//     PRL(get_n_perturbed());
 
     real epot, ekin, etot;
 

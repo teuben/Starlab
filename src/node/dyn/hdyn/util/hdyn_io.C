@@ -90,6 +90,49 @@ void check_sanity_of_timestep(xreal & time, real & timestep)
 
 static bool read_xreal = false;
 
+void hdyn::print_static(ostream& s)		// default = cerr
+{
+    _dyn:_:print_static(s);
+
+    s << "kc = " << kc << endl;
+    s << "options = " << options << endl;
+    s << "diag = " << diag << endl;
+
+    s << "use_dstar = " << use_dstar << endl;
+
+    s << "stellar_encounter_criterion_sq = "
+      << stellar_encounter_criterion_sq << endl;
+    s << "stellar_merger_criterion_sq = "
+      << stellar_merger_criterion_sq << endl;
+    s << "stellar_capture_criterion_sq = "
+      << stellar_capture_criterion_sq << endl;
+
+    s << "perturbed_list = " << perturbed_list << endl;
+    s << "n_perturbed = " << n_perturbed << endl;
+
+    s << "eta = " << eta << endl;
+    s << "eps = " << eps << endl;
+    s << "eps2 = " << eps2 << endl;
+
+    s << "d_min_fac = " << d_min_fac << endl;
+    s << "d_min_sq = " << d_min_sq << endl;
+    s << "lag_factor = " << lag_factor << endl;
+    s << "mbar = " << mbar << endl;
+
+    s << "gamma2 = " << gamma2 << endl;
+    s << "gamma23 = " << gamma23 << endl;
+
+    s << "initial_step_limit = " << initial_step_limit << endl;
+    s << "step_limit = " << step_limit << endl;
+    s << "unpert_step_limit = " << unpert_step_limit << endl;
+
+    s << "scaled_stripping_radius = " << scaled_stripping_radius << endl;
+  
+    s << "max_slow_factor = " << max_slow_factor << endl;
+    s << "max_slow_perturbation = " << max_slow_perturbation << endl;
+    s << "max_slow_perturbation_sq = " << max_slow_perturbation_sq << endl;
+}
+
 istream & hdyn::scan_dyn_story(istream & s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];

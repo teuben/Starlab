@@ -15,6 +15,7 @@
 
 // Externally visible functions:
 //
+//	void pp3_maximal
 //	void pp3
 //	void pp3_minimal
 //	void pp3_tree
@@ -237,11 +238,38 @@ local void print_maximal(hdyn * b, ostream & s, int level)
 //
 // Externally visible functions:
 
-void pp3(hdyn * b,					// maximal, recursive
+void pp3_maximal(hdyn * b,				// maximal, recursive
+		 ostream & s,	// default = cerr
+		 int level)	// default = 0		// -1 ==> no recursion
+{
+    if (!pp3_check(b)) return;
+
+    if (b->is_root() && level >= 0) {
+	s << endl << "Static data:" << endl << endl;
+	b->print_static(s);
+    }
+
+    int p = s.precision(PP3_PRECISION);
+    print_maximal(b, s, level);
+    s.precision(p);
+    print_tree(b, s, level);
+
+    if (level >= 0) {
+	for_all_daughters(hdyn, b, daughter)
+	    pp3_maximal(daughter, s, level + 1);
+    }
+}
+
+void pp3(hdyn * b,					// standard, recursive
 	 ostream & s,	// default = cerr
 	 int level)	// default = 0			// -1 ==> no recursion
 {
     if (!pp3_check(b)) return;
+
+    if (b->is_root() && level >= 0) {
+	s << endl << "Static data:" << endl << endl;
+	b->print_static(s);
+    }
 
     int p = s.precision(PP3_PRECISION);
     print_maximal(b, s, level);
