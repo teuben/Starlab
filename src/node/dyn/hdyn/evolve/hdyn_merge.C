@@ -568,7 +568,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
 
     cerr << "The hard-ware way: ";
     calculate_internal_energies(get_root(), epot0, ekin0, etot0);
-    PRC(epot0); PRC(ekin0); PRL(etolst0);
+    PRC(epot0); PRC(ekin0); PRL(etot0);
 
 
     hdyn* cm = get_parent();

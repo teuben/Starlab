@@ -10,6 +10,7 @@
 
 // Steve's replacement for the pow function (in limited circumstances).
 
+//#include "hdyn.h"
 #include "stdinc.h"
 
 #define POW -0.125		// approximations work best for POW close to 0
