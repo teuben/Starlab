@@ -3072,7 +3072,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 	hdyn *par = get_parent(), *pnn = par->get_nn();
 
-	if (pnn) {
+	if (pnn && binary_type != NOT_APPROACHING) {
 
 	    vec ppos = hdyn_something_relative_to_root(par,
 						       &hdyn::get_pred_pos);
@@ -3117,7 +3117,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			     << "applied random rotation to "
 			     << parent->format_label()
 			     << endl
-			     << "    at time " << system_time << ",  ";
+			     << "    at time " << system_time << ",  outer ";
 			cerr.precision(p);
 			PRL(E/kT);
 		    }
