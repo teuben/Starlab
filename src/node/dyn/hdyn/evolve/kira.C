@@ -810,6 +810,12 @@ local int integrate_list(hdyn * b,
 		    && streq(bi->format_label(), "(5394,21337)")) {
 		    cerr << endl;
 		    pp3(bi);
+		    cerr << endl;
+		    print_nn(bi, 1);
+		    PRC(bi->get_nn()); PRL(bi->get_d_nn_sq());
+		    cerr << endl;
+		    bi->print_pert();
+		    cerr << endl;
 		}
 #endif
 
@@ -2352,7 +2358,10 @@ main(int argc, char **argv)
 		  exact, cpu_time_limit,
 		  verbose, save_snap_at_log, snap_save_file, n_stop);
 
-    cerr << endl << "End of run at time " << b->get_system_time() << endl;
+    cerr << endl << "End of run at time " << b->get_system_time()
+	 << endl
+	 << "Total CPU time for this segment = " << cpu_time()
+	 << endl;
 
     //--------------------------------------------------------------------
 

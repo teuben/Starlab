@@ -557,6 +557,15 @@ local INLINE int force_by_grape(xreal xtime,
 		nodes[i]->set_nn(nn);
 		nodes[i]->set_d_nn_sq(d_nn_sq);
 
+
+#if 1
+		if (streq(nodes[i]->format_label(), "(5394,21337)")) {
+		    cerr << "hdyn_grape6:  ";
+		    PRC(nodes[i]); PRC(inn[i]); PRC(nn); PRL(d_nn_sq);
+		}
+#endif
+
+
 		if (DEBUG > 1) {
 
 		    // Cross-check:
@@ -1204,6 +1213,14 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
     bool found_neighbor = false;
 
+
+#if 1
+    if (b->name_is("(5394,21337)")) {
+	PRC(b); PRC(b->get_grape_rnb_sq()); PRL(n_neighbors);
+    }
+#endif
+
+
     if (n_neighbors > 0) {
 
 	// Found at least one neighbor -- find the nearest and
@@ -1304,6 +1321,17 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	if (bmin) {
 	    b->set_nn(bmin);
 	    b->set_d_nn_sq(dmin_sq);
+
+
+#if 1
+	    if (streq(b->format_label(), "(5394,21337)")) {
+		cerr << "get_nbrs:  ";
+		PRC(b); PRC(bmin); PRL(dmin_sq);
+	    }
+#endif
+
+
+
 	} else
 	    found_neighbor = false;
 
@@ -1358,6 +1386,17 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 		    bb->set_nn(bb);			// kira checks
 							// for nn = bb
 		    bb->set_d_nn_sq(2*h2_crit);
+
+
+#if 1
+		    if (streq(bb->format_label(), "(5394,21337)")) {
+			cerr << "get_coll:  setting nn = bb for ";
+			PRC(bb); PRL(bb->get_d_nn_sq());
+			PRL(count_force);
+		    }
+#endif
+
+
 		    break;
 
 		} else {
