@@ -1,0 +1,54 @@
+# BEGIN Testfile
+
+# --- standard local variables
+
+DIR  = src/node/dyn/init
+TEST = _mkplummer _mkmass
+NEED = mkmass mkplummer
+OUT  = mkplummer.test mkmass.test
+
+# temporary variables, can be overridded
+
+NBODY = 1024
+SEED = 42
+BASEDIR = .
+
+# --- probably don't modify this, maybe clean needs to do more
+
+help:
+	@echo $(DIR)
+
+test:
+	@echo $(TEST)
+
+need:
+	@echo $(NEED)
+
+clean:
+	@echo Cleaning $(DIR)
+	@rm -f $(OUT)
+
+out:
+	@echo $(OUT)
+
+all:	$(TEST)
+
+diff:
+	-@for i in $(OUT); do\
+	(diff $$i $(BASEDIR)); done
+
+	
+
+# ---- write your individual tests below, in usual makefile language
+
+_mkplummer: mkplummer.test
+
+mkplummer.test:
+	mkplummer -n $(NBODY) -s $(SEED) > mkplummer.test
+
+_mkmass:	mkmass.test
+
+mkmass.test:
+	mkmass -l 1 -u 100 -s $(SEED) < mkplummer.test  > mkmass.test
+
+# END Testfile
