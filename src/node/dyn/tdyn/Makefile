@@ -14,12 +14,14 @@
 ##    Sep 2000					Steve McMillan
 #..............................................................................
 
-OBJECT_FILES = tdyn_io.o tdyn_tt.o worldline.o
+OBJECT_FILES = tdyn_io.o tdyn_tt.o worldline.o worldline2.o
 
 LIBRARY = libtdyn.a
 
 EXECUTABLES = read_tdyn sizeof tdyn_io test_tdyn worldline worldlines \
-	      xstarplot2
+	      xstarplot2 xstarplot22
+
+# Note from Steve (5/01): worldline2 and xstarplot22 are experimental...
 
 NON_CCC_EXECUTABLES = 
 
@@ -44,6 +46,13 @@ xstarplot2:	xstarplot2.C gfx_util.o dyn_util.o
 		-D_SRC_=\"$(PWD)/$@.C\" \
 		-D_COMPILE_DATE_=\"`date +%a_%b_%d_%Y,_%T_%Z`\"
 	@touch xstarplot2
+
+xstarplot22:	xstarplot22.C gfx_util.o dyn_util.o
+	$(STARLAB_CCC) $(CFLAGS) $(STARLAB_CCC_FLAGS) -o $(BIN)/$@ \
+		xstarplot22.C gfx_util.o dyn_util.o $(LIBFLAGS) \
+		-D_SRC_=\"$(PWD)/$@.C\" \
+		-D_COMPILE_DATE_=\"`date +%a_%b_%d_%Y,_%T_%Z`\"
+	@touch xstarplot22
 
 #..............................................................................
 

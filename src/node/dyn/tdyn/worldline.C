@@ -23,10 +23,10 @@
 //	void worldbundle::print()
 //	int worldbundle::find_index(real id)
 //	int worldbundle::find_index(char *name)
-//	int worldbundle::find_index(tdyn *b)
+//	int worldbundle::find_index(pdyn *b)
 //	worldline *worldbundle::find_worldline(real id)
 //	worldline *worldbundle::find_worldline(char *name)
-//	worldline *worldbundle::find_worldline(tdyn *b)
+//	worldline *worldbundle::find_worldline(pdyn *b)
 //	void worldbundle::attach(tdyn *bn, int verbose)
 //	void worldbundle::print_worldline(char *name, real dt)
 //
@@ -37,7 +37,7 @@
 // Other externally visible functions:
 //
 //	real unique_id(char *name)
-//	real unique_id(tdyn *b)
+//	real unique_id(pdyn *b)
 //	worldbundle *read_bundle(istream &s, int verbose)
 //	tdyn *find_event(tdyn *bn, real t)
 //	void print_event(tdyn *bn, real t)
@@ -111,7 +111,7 @@ real unique_id(char *name)
     return id;
 }
 
-real unique_id(tdyn *b)
+real unique_id(pdyn *b)
 {
     // Return a unique non-negative real number identifying this node.
     // Use the index if available (assume unique!), otherwise, construct
@@ -302,7 +302,7 @@ int worldbundle::find_index(real id)
 }
 
 int worldbundle::find_index(char *name)	{return find_index(unique_id(name));}
-int worldbundle::find_index(tdyn *b)	{return find_index(unique_id(b));}
+int worldbundle::find_index(pdyn *b)	{return find_index(unique_id(b));}
 
 worldline *worldbundle::find_worldline(real id)
 {
@@ -316,7 +316,7 @@ worldline *worldbundle::find_worldline(real id)
 worldline *worldbundle::find_worldline(char *name)
 {return find_worldline(unique_id(name));}
 
-worldline *worldbundle::find_worldline(tdyn *b)
+worldline *worldbundle::find_worldline(pdyn *b)
 {return find_worldline(unique_id(b));}
 
 //======================================================================
@@ -631,7 +631,7 @@ int count_events(worldbundle *wb)
 
 //======================================================================
 
-// Navigation of the 4tree data.
+// Navigation of the 4tree data and diagnostic output.
 
 tdyn *find_event(tdyn *bn, real t)
 {
@@ -712,18 +712,21 @@ local void print_details(worldbundle *wb, tdyn *p, real t)
     print_events(s, t);
 }
 
-//#if 0
+//======================================================================
+
+// Interpolation of part of the 4tree to a specific time.
+
 vector interpolate_pos(tdyn *p, real t,
 		       tdyn *bn)		// default = NULL; specifies
 						// actual base node
 {
     // The range (p to p->next) includes time t.
-    // Interpolate and return pos.
+    // Interpolate and return the pos of this particle.
 
     // Check...
 
     if (p->get_time() > t) {
-	cerr << "interpolate_pos: error 1: ";
+	cerr << "interpolate_pos: error 1: specified time below range: ";
 	PRC(p->format_label()); PRC(t); PRL(p->get_time());
 	// print_details(wb, p, t); // wb not available here...
 
@@ -737,7 +740,7 @@ vector interpolate_pos(tdyn *p, real t,
     tdyn *n = p->get_next();
 
     if (!n) {
-	cerr << "interpolate_pos: error 2: ";
+	cerr << "interpolate_pos: error 2: next node not found: ";
 	PRC(p->format_label()); PRL(t);
 	PRI(26); PRC(bn); PRL(bn->get_time());
 	PRI(26); PRC(p); PRL(p->get_time());
@@ -751,7 +754,7 @@ vector interpolate_pos(tdyn *p, real t,
     }
 
     if (n->get_time() < t) {
-	cerr << "interpolate_pos: error 3: ";
+	cerr << "interpolate_pos: error 3: specified time above range: ";
 	PRC(p->format_label()); PRC(t); PRL(p->get_time());
 	// print_details(wb, p, t);
 
@@ -797,9 +800,10 @@ vector interpolate_vel(tdyn *p, real t,
 		       tdyn *bn)		// default = NULL; specifies
 						// actual base node
 {
-    // Interpolate and return vel.  Only called after a call
-    // to interpolate_pos, so skip checks and recomputation of
-    // acc and jerk.
+    // Interpolate and return the vel of this particle.
+
+    // Only called after a call to interpolate_pos, so skip checks
+    // and recomputation of acc and jerk.
 
     // Special case:
 
@@ -818,143 +822,15 @@ vector interpolate_vel(tdyn *p, real t,
 
 	return p->get_vel();
 }
-//#endif
 
-#if 0
-vector interpolate_pos(tdyn *p, real t,
-		       tdyn *bn)		// default = NULL; specifies
-						// actual base node
-{
-    // The range (p to p->next) includes time t.
-    // Interpolate and return pos.
-
-    // Check...
-
-    if (p->get_time() > t) {
-	cerr << "interpolate_pos: error 1: ";
-	PRC(p->format_label()); PRC(t); PRL(p->get_time());
-	// print_details(wb, p, t); // wb not available here...
-
-	something_relative_to_root(p, &dyn::get_pos);
-
-//	return p->get_pos();
-    }
-
-    // Special case:
-
-    if (p->get_time() == t) return something_relative_to_root(p, &dyn::get_pos);
-//    if (p->get_time() == t) return p->get_pos();
-
-    tdyn *n = p->get_next();
-
-    if (!n) {
-	cerr << "interpolate_pos: error 2: ";
-	PRC(p->format_label()); PRL(t);
-	PRI(26); PRC(bn); PRL(bn->get_time());
-	PRI(26); PRC(p); PRL(p->get_time());
-	PRI(26); PRL(p->get_time()-t);
-	if (bn) {
-	    PRI(26); PRL(bn->format_label());
-	}
-	// print_details(wb, p, t);
-
-	return something_relative_to_root(p, &dyn::get_pos);
-//	return p->get_pos();
-    }
-
-    if (n->get_time() < t) {
-	cerr << "interpolate_pos: error 3: ";
-	PRC(p->format_label()); PRC(t); PRL(p->get_time());
-	// print_details(wb, p, t);
-
-	return something_relative_to_root(p, &dyn::get_pos);
-//	return p->get_pos();
-    }
-
-    // Time t is included in the range.
-
-    // Interpolate using pos and vel for now...
-    // Note that we overwrite acc and jerk by equivalent
-    // vectors that guarantee continuity of pos and vel.
-
-    real tp = p->get_time();
-    real dt = n->get_time() - tp;
-
-    if (dt > 0) {
-
-	// Recompute acc/2 and jerk/6 to fit pos and vel.
-
-	// *** Flag this to prevent recalculation by setting ***
-	// *** jerk = 0 as the tree is constructed.          ***
-
-        vector npos = something_relative_to_root(n, &dyn::get_pos);
-        vector nvel = something_relative_to_root(n, &dyn::get_vel);
-        vector ppos = something_relative_to_root(p, &dyn::get_pos);
-        vector pvel = something_relative_to_root(p, &dyn::get_vel);
-
-	if (p->get_jerk()[0] == 0) {
-	    real dti = 1/dt;
-
-	    p->set_acc((3*(npos-ppos)
-			- dt*(2*pvel+nvel))*dti*dti);
-	    p->set_jerk((pvel+nvel
-			 - 2*dti*(npos-ppos))*dti*dti);
-//	    p->set_acc((3*(npos-ppos)
-//			- dt*(2*p->get_vel()+n->get_vel()))*dti*dti);
-//	    p->set_jerk((p->get_vel()+n->get_vel()
-//			 - 2*dti*(n->get_pos()-p->get_pos()))*dti*dti);
-	}
-
-	dt = t - tp;
-
-	return ppos + dt * (pvel + dt * (p->get_acc() + dt * p->get_jerk()));
-//	return p->get_pos() + dt * (p->get_vel()
-//				    + dt * (p->get_acc()
-//					    + dt * p->get_jerk()));
-    } else
-
-      return something_relative_to_root(n, &dyn::get_pos);
-//	return p->get_pos();
-}
-
-vector interpolate_vel(tdyn *p, real t,
-		       tdyn *bn)		// default = NULL; specifies
-						// actual base node
-{
-    // Interpolate and return vel.  Only called after a call
-    // to interpolate_pos, so skip checks and recomputation of
-    // acc and jerk.
-
-    // Special case:
-
-    vector ppos = something_relative_to_root(p, &dyn::get_pos);
-    vector pvel = something_relative_to_root(p, &dyn::get_vel);
-
-    if (p->get_time() == t) return pvel;
-//    if (p->get_time() == t) return p->get_vel();
-
-    tdyn *n = p->get_next();
-    real tp = p->get_time();
-    real dt = n->get_time() - tp;
-
-    if (dt > 0) {
-
-	dt = t - tp;
-	return pvel + dt * (2*p->get_acc() + dt * 3*p->get_jerk());
-//	return p->get_vel() + dt * (2*p->get_acc()
-//				    + dt * 3*p->get_jerk());
-    } else
-
-	return pvel;
-//	return p->get_vel();
-}
-#endif
+// Old versions of interpolate_pos() and interpolate_vel() are
+// (for now) saved in old_interpolate.C
 
 vector get_pos(tdyn *b, tdyn *bn,
 	       real t)			// default = -VERY_LARGE_NUMBER
 {
-    // Return the current position of node b, properly corrected
-    // for its location in the tree.
+    // Return the current absolute position of node b, properly
+    // corrected for its location in the tree.
 
     // The node of interest is b; the base node for the worldline
     // segment (containing all parental information) is bn.
@@ -1041,6 +917,273 @@ void worldbundle::print_worldline(char *name,
 
 //======================================================================
 
+// Creation of an entire interpolated tree at some specific time.
+
+local void print_binary_diagnostics(real t, tdyn *b, tdyn *bb, pdyn *curr)
+{
+    PRC(t); PRL(b->format_label());
+    PRL(bb->get_time());
+    PRL(b->get_time());
+
+    tdyn *n = b->get_next();
+    if (n) PRL(n->get_time());
+
+    real fac = 1 + bb->get_mass()
+		/ bb->get_binary_sister()->get_mass();
+    real M = bb->get_parent()->get_mass();
+
+    real rbb = abs(fac*bb->get_pos());
+    real vbb = square(fac*bb->get_vel());
+    real ebb = 0.5*vbb - M / rbb;
+
+    real rb = abs(fac*b->get_pos());
+    real vb = square(fac*b->get_vel());
+    real eb = 0.5*vb - M / rb;
+
+    real rc = abs(fac*curr->get_pos());
+    real vc = square(fac*curr->get_vel());
+    real ec = 0.5*vc - M / rc;
+
+    PRI(4); PRC(rbb); PRC(vbb); PRL(ebb);
+    PRI(4); PRC(rb); PRC(vbb); PRL(eb);
+    PRI(4); PRC(rc); PRC(vc); PRL(ec);
+
+    if (n) {
+	real rn = abs(fac*n->get_pos());
+	real vn = square(fac*n->get_vel());
+	real en = 0.5*vn - M / rn;
+	PRI(4); PRC(rn); PRC(vn); PRL(en);
+    }
+
+    PRI(4); PRL(-M/(2*ebb));
+
+    PRL(interpolate_pos(b, b->get_time(), bb));
+    PRL(interpolate_pos(b, t, bb));
+    if (n)
+	PRL(interpolate_pos(b, n->get_time(),
+			    bb));
+
+    real dt = t - (real)b->get_time();
+    real dtn = 0;
+    if (n) dtn = n->get_time() - b->get_time();
+    cerr << "interpolation..." << endl;
+    PRC(dt); PRL(dtn);
+    PRL(b->get_pos());
+    PRL(dt*b->get_vel());
+    PRL(dt*dt*b->get_acc());
+    PRL(dt*dt*dt*b->get_jerk());
+}
+
+local inline pdyn *attach_new_node(worldbundle *wb, worldline *ww,
+				   pdyn *root, tdyn *top, tdyn *bb,
+				   bool debug)
+{
+    // Attach a new node corresponding to worldline ww.  The root node
+    // for the interpolated tree is root; bb is the base node for worldline
+    // ww; top is its top-level base node (at the start of the segment).
+
+    // The traversal of the tree is such that parents are always seen
+    // before children and elder sisters are always seen before younger
+    // sisters.
+
+    if (debug)
+	cerr << "base node " << bb << " "
+	     << bb->get_time() << " "
+	     << bb->format_label() << endl;
+
+    pdyn *curr = new pdyn(NULL, NULL, false);
+
+    // Don't use add_node, as it will create a tree with nodes in the
+    // reverse order!
+
+    if (bb == top) {
+
+	// Attach the top-level node.
+	// Add curr to the end of the top-level list.
+
+	pdyn *n = root->get_oldest_daughter();
+
+	if (!n)
+	    add_node(*curr, *root);
+
+	else {
+	    while (n->get_younger_sister())
+		n = n->get_younger_sister();
+	    n->set_younger_sister(curr);
+	    curr->set_elder_sister(n);
+	    curr->set_parent(root);
+	}
+
+    } else {
+
+	// Attach a low-level node.
+
+	// Parent and elder sister pointers are derived
+	// (awkwardly!) from the existing tree structures.
+
+	pdyn *par = wb->find_worldline(bb->get_parent())
+	    	      ->get_tree_node();
+	curr->set_parent(par);
+
+	tdyn * bb_sis = bb->get_elder_sister();
+
+	if (!bb_sis)
+	    par->set_oldest_daughter(curr);
+	else {
+	    pdyn *sis = wb->find_worldline(bb_sis)
+			  ->get_tree_node();
+	    curr->set_elder_sister(sis);
+	    sis->set_younger_sister(curr);
+	}
+    }
+
+    ww->set_tree_node(curr);
+    return curr;
+}
+
+local inline void update_node(worldbundle *wb,
+			      pdyn *curr, real t,
+			      tdyn *bb, tdyn *top, bool vel,
+			      bool debug)
+{
+    // Copy or interpolate all relevant quantities from the base node
+    // bb to the node curr in the interpolated tree.
+
+    tdyn *b = find_event(bb, t);
+
+    if (debug)
+	cerr << "current node " << b << " "
+	     << b->get_time() << " "
+	     << b->format_label() << endl;
+
+    // May be better to attach the worldline ID as index...
+    // But then we have no connection between the index seen by
+    // the display program and the index in the original data.
+
+#if 0
+    if (b->get_name()) {
+	curr->set_name(b->get_name());
+	curr->set_index(atoi(b->get_name()));
+    }
+    if (b->get_index() >= 0)
+	curr->set_index(b->get_index());
+#else
+    curr->set_index(wb->find_index(b));
+#endif
+
+    curr->set_mass(b->get_mass());
+
+    if (!b->get_kepler())
+	curr->set_pos(interpolate_pos(b, t, bb));
+    else
+	curr->set_pos(b->get_pos());
+
+    if (bb != top || vel) {
+
+	// Need velocity information on low-level nodes.
+	// Very inefficient!
+
+	if (!b->get_kepler())
+	    curr->set_vel(interpolate_vel(b, t, bb));
+	else
+	    curr->set_vel(b->get_vel());
+
+#if 0
+	// Diagnostic output, invoked for the elder sister of a
+	// perturbed binary.
+
+	if (!b->get_elder_sister()
+	    && !b->get_kepler())
+	    print_binary_diagnostics(t, b, bb, curr);
+#endif
+
+    }
+
+    if (b->get_kepler())
+	curr->set_kepler((kepler*)1);
+
+    // **** NEW for pdyn data (Steve, 5/01). ****
+
+    curr->set_stellar_type(b->get_stellar_type());
+    curr->set_temperature(b->get_temperature());
+    curr->set_luminosity(b->get_luminosity());
+
+    // cerr << "added " << curr->format_label()
+    //      << endl;
+}
+
+local inline void add_to_interpolated_tree(worldbundle *wb,
+					   worldline *w, segment *s,
+					   pdyn *root, real t, bool vel,
+					   bool debug)
+{
+    // Current worldline is w, segment is s.  Find the base node
+    // (containing all relevant tree information) for this particle,
+    // and the current event.
+
+    // *** By construction, on entry, w and s represent a leaf. ***
+
+    tdyn *bn = s->get_first_event();
+
+    if (debug) {
+	cerr << "s = " << s << endl
+	     << "first event = " << bn << " "
+	     << bn->format_label() << " "
+	     << bn->get_time() << endl;
+
+	print_details(wb, bn, t);
+    }
+
+    // Create the entire portion of the tree corresponding to the
+    // top-level node of bn.  Note that top will probably be bn most
+    // of the time.
+
+    // Need to be careful with top-level nodes, as they  generally
+    // won't have parent nodes (no root), so standard functions like
+    // "is_top_level_node()" and "get_top_level_node()" may fail.
+    // (Choice of root in calling function should correct this...)
+
+    tdyn *top = bn;
+    while (top->get_parent()
+	   && unique_id(top->get_parent()) > 0)
+	top = top->get_parent();
+
+    if (debug) {
+	PRC(top); PRL(top->format_label());
+	// put_node(cerr, *top, false);
+    }
+
+    // Copy the entire tree below top to the new tree.
+
+    for_all_nodes(tdyn, top, bb) {
+
+	// Find the worldline of bb.
+
+	worldline *ww;
+
+	if (bb == bn)
+	    ww = w;
+	else {
+	    ww = wb->find_worldline(bb);
+	    if (!ww)
+		cerr << "create_interpolated_tree: error:"
+		     << "can't find worldline of subtree member." << endl;
+	}
+
+	if (ww) {
+
+	    // Create and attach a new node.
+
+	    pdyn *curr = attach_new_node(wb, ww, root, top, bb, debug);
+
+	    // Update the new tree entry: copy or interpolate all
+	    // relevant quantities from bb to curr.
+
+	    update_node(wb, curr, t, bb, top, vel, debug);
+	}
+    }
+}
+
 #define EPS 1.e-12
 
 pdyn *create_interpolated_tree(worldbundle *wb, real t,
@@ -1049,6 +1192,8 @@ pdyn *create_interpolated_tree(worldbundle *wb, real t,
     // All leaves on the bundle list are still current, by construction.
     // Find the base segment corresponding to each and use it to build
     // a new pdyn tree interpolated to the current time.
+
+    bool debug = false;
 
     // Try to take care of rounding error in t.  Management of worldbundles
     // should be the responsibility of the calling program.  (This would not
@@ -1066,38 +1211,46 @@ pdyn *create_interpolated_tree(worldbundle *wb, real t,
     else if (dt < 0)
 	t = wb->get_t_min();
 
-    bool debug = false;
+    // Find the array of worldlines (worldbundle), and initialize
+    // the tree_node pointers.
 
     worldlineptr *bundle = wb->get_bundle();
 
     for (int i = 0; i < wb->get_nw(); i++)
 	bundle[i]->clear_tree_node();
 
+    // Create a root node.
+
     pdyn *root = new pdyn(NULL, NULL, false);
     root->set_system_time(t);
     root->set_pos(0);
 
     // Establish root as the global root node (should clean up problems
-    // with "top_level_node" functions...).
+    // with "top_level_node" functions...).  Stored in location 0 of the
+    // worldline array.
 
     root->set_root(root);
-
     bundle[0]->set_tree_node(root);
 
-    for (int i = 0; i < wb->get_nw(); i++) {
+    // Loop through remaining worldlines and take action for leaves only.
+    // Logic: we are really dealing with top-level nodes, but we don't know
+    // which component we will encounter first.  When we find a component
+    // of a clump of particles, we update the entire clump, and flag all
+    // components accordingly.
+
+    for (int i = 1; i < wb->get_nw(); i++) {
 
 	worldline *w = bundle[i];
 
 	if (!w->get_tree_node()) {
 
-	    // Tree entry for this node has not yet been created.
+	    // Tree entry for this node has not yet been created/updated.
 
 	    real id = w->get_id();
 
 	    if (id >= 1 && id < 2) {
 
 		// Worldline w represents a leaf.  Locate its current segment.
-
 
 		if (debug) {
 		    cerr.precision(16);
@@ -1114,242 +1267,15 @@ pdyn *create_interpolated_tree(worldbundle *wb, real t,
 		    print_events(s, t);
 		}
 
-		if (s) {
+		// If s is NULL, it should mean that w refers to a CM node
+		// that does not exist at time t.  Particle worldlines
+		// should be continuous -- could check in debugging mode...
 
-		    // Current segment is s.  Find the base node (containing
-		    // all relevant tree information) and the current event.
-
-		    tdyn *bn = s->get_first_event();
-
-		    if (debug) {
-			cerr << "s = " << s << endl
-			     << "first event = " << bn << " "
-			     << bn->format_label() << " "
-			     << bn->get_time() << endl;
-
-			print_details(wb, bn, t);
-		    }
-
-		    // Create the entire portion of the tree corresponding
-		    // to the top-level node of bn.  Note that top will
-		    // likely be bn most of the time.
-
-		    // Need to be careful with top-level nodes, as they
-		    // generally won't have parent nodes (no root), so
-		    // standard funtions like "is_top_level_node()" and
-		    // "get_top_level_node()" will likely fail.
-
-		    tdyn *top = bn;
-		    while (top->get_parent()
-			   && unique_id(top->get_parent()) > 0)
-			top = top->get_parent();
-
-		    if (debug) {
-			PRC(top); PRL(top->format_label());
-			// put_node(cerr, *top, false);
-		    }
-
-		    // Copy the entire tree below top to the new tree.
-
-		    for_all_nodes(tdyn, top, bb) {
-
-			// Find the worldline of bb.
-
-			worldline *ww;
-
-			if (bb == bn)
-			    ww = w;
-			else {
-			    ww = wb->find_worldline(bb);
-			    if (!ww)
-				cerr << "create_interpolated_tree: error 1"
-				     << endl;
-			}
-
-			if (ww) {
-
-			    if (debug)
-				cerr << "base node " << bb << " "
-				     << bb->get_time() << " "
-				     << bb->format_label() << endl;
-
-			    pdyn *curr = new pdyn(NULL, NULL, false);
-
-			    // The traversal of the tree is such that
-			    // parents are always seen before children
-			    // and elder sisters are always seen before
-			    // younger sisters.
-
-			    // Don't use add_node, as it will create a
-			    // tree with nodes in the reverse order!
-
-			    if (bb == top) {
-
-				// Add bb to the end of the top-level list.
-
-				pdyn *n = root->get_oldest_daughter();
-
-				if (!n)
-				    add_node(*curr, *root);
-
-				else {
-				    while (n->get_younger_sister())
-					n = n->get_younger_sister();
-				    n->set_younger_sister(curr);
-				    curr->set_elder_sister(n);
-				    curr->set_parent(root);
-				}
-
-			    } else {
-
-				// Parent and elder sister pointers
-				// are derived (awkwardly!) from the
-				// existing tree structures.
-
-				pdyn *par = wb->find_worldline(bb->get_parent())
-				    	     ->get_tree_node();
-				curr->set_parent(par);
-
-				tdyn * bb_sis = bb->get_elder_sister();
-
-				if (!bb_sis)
-				    par->set_oldest_daughter(curr);
-				else {
-				    pdyn *sis = wb->find_worldline(bb_sis)
-						  ->get_tree_node();
-				    curr->set_elder_sister(sis);
-				    sis->set_younger_sister(curr);
-				}
-			    }
-
-			    ww->set_tree_node(curr);
-
-			    // Update the new tree entry.
-
-			    tdyn *b = find_event(bb, t);
-
-			    if (debug)
-				cerr << "current node " << b << " "
-				     << b->get_time() << " "
-				     << b->format_label() << endl;
-
-			    // May be better to attach the worldline ID
-			    // as index...
-
-#if 0
-			    if (b->get_name()) {
-				curr->set_name(b->get_name());
-				curr->set_index(atoi(b->get_name()));
-			    }
-			    if (b->get_index() >= 0)
-				curr->set_index(b->get_index());
-#else
-			    curr->set_index(wb->find_index(b));
-#endif
-
-			    curr->set_mass(b->get_mass());
-
-			    if (!b->get_kepler())
-				curr->set_pos(interpolate_pos(b, t, bb));
-			    else
-				curr->set_pos(b->get_pos());
-
-			    // Need velocity information on low-level nodes.
-			    // Very inefficient!
-
-			    if (bb != top || vel) {
-				if (!b->get_kepler())
-				    curr->set_vel(interpolate_vel(b, t, bb));
-				else
-				    curr->set_vel(b->get_vel());
-#if 0
-				if (!b->get_elder_sister()
-				    && !b->get_kepler()) {
-
-				    PRC(t); PRL(b->format_label());
-				    PRL(bb->get_time());
-				    PRL(b->get_time());
-
-				    tdyn *n = b->get_next();
-				    if (n) PRL(n->get_time());
-
-				    real fac = 1 + bb->get_mass()
-				    	/ bb->get_binary_sister()->get_mass();
-				    real M = bb->get_parent()->get_mass();
-
-				    real rbb = abs(fac*bb->get_pos());
-				    real vbb = square(fac*bb->get_vel());
-				    real ebb = 0.5*vbb - M / rbb;
-
-				    real rb = abs(fac*b->get_pos());
-				    real vb = square(fac*b->get_vel());
-				    real eb = 0.5*vb - M / rb;
-
-				    real rc = abs(fac*curr->get_pos());
-				    real vc = square(fac*curr->get_vel());
-				    real ec = 0.5*vc - M / rc;
-
-				    PRI(4); PRC(rbb); PRC(vbb); PRL(ebb);
-				    PRI(4); PRC(rb); PRC(vbb); PRL(eb);
-				    PRI(4); PRC(rc); PRC(vc); PRL(ec);
-
-				    if (n) {
-					real rn = abs(fac*n->get_pos());
-					real vn = square(fac*n->get_vel());
-					real en = 0.5*vn - M / rn;
-					PRI(4); PRC(rn); PRC(vn); PRL(en);
-				    }
-
-				    PRI(4); PRL(-M/(2*ebb));
-
-				    PRL(interpolate_pos(b, b->get_time(), bb));
-				    PRL(interpolate_pos(b, t, bb));
-				    if (n)
-					PRL(interpolate_pos(b, n->get_time(),
-							    bb));
-
-
-				    real dt = t - (real)b->get_time();
-				    real dtn = 0;
-				    if (n) dtn = n->get_time() - b->get_time();
-				    cerr << "interpolation..." << endl;
-				    PRC(dt); PRL(dtn);
-				    PRL(b->get_pos());
-				    PRL(dt*b->get_vel());
-				    PRL(dt*dt*b->get_acc());
-				    PRL(dt*dt*dt*b->get_jerk());
-				}
-#endif
-			    }
-
-			    if (b->get_kepler())
-				curr->set_kepler((kepler*)1);
-
-			    // **** NEW for pdyn data. ****
-
-			    curr->set_stellar_type(b->get_stellar_type());
-			    curr->set_temperature(b->get_temperature());
-			    curr->set_luminosity(b->get_luminosity());
-
-			    // cerr << "added " << curr->format_label()
-			    //      << endl;
-
-			}
-		    }
-		}
+		if (s) add_to_interpolated_tree(wb, w, s,
+						root, t, vel, debug);
 	    }
 	}
     }
-
-//    int nb = 0, nm = 0;
-//    for_all_daughters(tdyn, root, b)
-//	if (b->get_oldest_daughter()) {
-//	    if (b->n_leaves() == 2)
-//		nb++;
-//	    else
-//		nm++;
-//	}
-//    PRC(nb); PRL(nm);
 
     return root;
 }
