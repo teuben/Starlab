@@ -215,7 +215,8 @@ void black_hole::adjust_initial_star() {
 real black_hole::get_radius() {
 
     real r_eff = radius;
-    if (is_binary_component() &&
+    if (get_use_hdyn() &&
+	is_binary_component() &&
 	!get_companion()->remnant()) {
 
         real m_sec = get_companion()->get_total_mass();
@@ -223,8 +224,11 @@ real black_hole::get_radius() {
         real r_tide = r_sec * (1 + pow(get_total_mass()/m_sec,
                                        cnsts.mathematics(one_third)));
         r_eff = r_tide;
-
+    } 
+    else {
+      r_eff = 4.25e-6*core_mass;
     }
+
 
     return r_eff;
 }
