@@ -1,0 +1,58 @@
+# BEGIN Testfile
+
+# --- standard local variables
+
+DIR  = src/node/util
+TEST =  _makemass _makenode
+NEED = makemass makeplummer
+OUT  = makenode.test makemass.test
+
+# temporary variables, can be overridded
+
+NBODY = 1024
+SEED = 42
+BASEDIR = .
+
+# --- probably don't modify this, maybe clean needs to do more
+
+help:
+	@echo $(DIR)
+
+test:
+	@echo $(TEST)
+
+need:
+	@echo $(NEED)
+
+clean:
+	@echo Cleaning $(DIR)
+	@rm -f $(OUT)
+
+out:
+	@echo $(OUT)
+
+all:	$(TEST)
+
+diff:
+	-@for i in $(OUT); do\
+	(diff $$i $(BASEDIR)); done
+
+	
+
+# ---- write your individual tests below, in usual makefile language
+
+_makenode:	makenode.test
+
+makenode.test:
+	makenode -n $(NBODY)  > makenode.test
+
+_makemass:	makemass.test
+
+makemass.test:	makenode.test
+	makemass -m 1 -l 0.1 -u 100 -s $(SEED) -f 1 < makenode.test  > makemass.test
+	makemass -m 1 -l 0.1 -u 100 -s $(SEED) -f 2 < makenode.test  > makemass.test
+	makemass -m 1 -l 0.1 -u 100 -s $(SEED) -f 3 < makenode.test  > makemass.test
+	makemass -m 1 -l 0.1 -u 100 -s $(SEED) -f 4 < makenode.test  > makemass.test
+	makemass -m 1 -l 0.1 -u 100 -s $(SEED) -f 5 < makenode.test  > makemass.test
+
+# END Testfile
