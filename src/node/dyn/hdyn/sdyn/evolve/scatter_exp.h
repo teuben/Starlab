@@ -66,18 +66,16 @@ class scatter_exp {
     char final_form[255];
 
     real time;
-
     real min_min_ssd;              // minimum distance squared
     real min_min_time;             // time at mimimun distance
 
+
     // Add information about minimal distance to next stellar surface
     // and information about which star is near to what other.
-    // That information should be initialized in 
-    // scatter.C 
+    // That information should be initialized in scatter.C 
     
-
-    real *min_nn_dr2;    // minimum-ever nearest neighbor distance squared
-    int *min_nn_label;   // identity of nearest-ever neighbor
+    real *min_nn_dr2;     // minimum-ever nearest neighbor distance squared
+    int *min_nn_label;    // identity of nearest-ever neighbor
     int *min_nn_of_label; // we should also keep track of the one who'se nn this is..
 
     real energy_error;
@@ -279,8 +277,10 @@ class scatter_exp {
   int count_character_in_string(char string[], char search);
   int count_character_in_string(char string[], char search[], int n_char);
   int count_multiplicity();
-
-  bool check_for_exchange();
+ 
+  bool exch_or_exchion(char string[], char search1, char search2); 
+  bool check_for_exchange_ionization();
+ 
 
   friend ostream& operator<<(ostream& s, scatter_exp&);
   bool operator == (scatter_exp& ha) const;

@@ -99,8 +99,8 @@ bool scatter_exp::operator == (scatter_exp& ha) const {
   if(strcmp(&initial_form[0], ha.get_initial_form())==0 && 
      strcmp(&final_form[0], ha.get_final_form())==0 &&
      resonance == ha.get_resonance() &&
-    sd == ha.get_scatter_discriptor()) {
-      
+     sd == ha.get_scatter_discriptor()) {
+    
     the_same = true;
   }
 
@@ -135,9 +135,9 @@ local char * type_string(scatter_discriptor sd) {
        break;
   case collision_ionization:             return "c_ion";
        break;
-  case stable_triple:                    return "trip";
+  case stable_triple:                    return "triple";
        break;
-  case stable_higher_order:              return "ntup";
+  case stable_higher_order:              return "ntuple";
        break;
   case two_body_collision:               return "2_coll";
        break;
@@ -166,28 +166,29 @@ ostream& operator<<(ostream& s, scatter_exp& hi) {
     << hi.sd << " " <<hi.resonance << " "
     << hi.get_final_form() << " \t";
 
-  for(int i=0; i<N_RHO_ZONE_MAX; i++) 
-    s << hi.get_nhits(i) << " ";
+  for(int i=0; i<N_RHO_ZONE_MAX; i++)   s << hi.get_nhits(i) << " ";
   s << endl;
 #endif
 
   int i;
   s << hi.id_scenario;
-  for(i=0; i<3-floor(log10((real)hi.id_scenario)+1); i++)
-    s << " ";
+
+  //for(i=0; i<3-floor(log10((real)hi.id_scenario)+1); i++)
+  for(i=0; i<4-floor(log10((real)hi.id_scenario)+1); i++)  s << " ";
   s << hi.n_found;
-  for(i=0; i<2-floor(log10((real)hi.n_found+1)); i++)
-    s << " ";
+
+  //for(i=0; i<2-floor(log10((real)hi.n_found+1)); i++)
+  for(i=0; i<5-floor(log10((real)hi.n_found+1)); i++) s << " ";
   s << type_string(hi.sd);
-  for(i=0; i<8-strlen(type_string(hi.sd)); i++)
-    s << " ";
-  if(hi.resonance)
-    s << "r  ";
-  else
-    s << "   ";
+
+  for(i=0; i<8-strlen(type_string(hi.sd)); i++) s << " ";
+
+  if(hi.resonance)  s << "r  ";
+  else  s << "   ";
+  
   int istrl = strlen(hi.get_initial_form());
-  for(i=0; i<istrl-strlen(hi.get_final_form()); i++)
-    s << " ";
+  for(i=0; i<istrl-strlen(hi.get_final_form()); i++)  s << " ";
+  
   s << hi.get_final_form();
   //       for(i=0; i<N_RHO_ZONE_MAX; i++) 
   //	 s << hi.get_nhits(i);
@@ -196,12 +197,13 @@ ostream& operator<<(ostream& s, scatter_exp& hi) {
   int n_space = 0;
   for(i=0; i<N_RHO_ZONE_MAX; i++) 
     n_space += (int)floor(log10((real)hi.get_nhits(i)+1));
-  for(i=0; i<Starlab::max(0,N_RHO_ZONE_MAX-n_space-15); i++) 
-    s << ".";
+  //for(i=0; i<Starlab::max(0,N_RHO_ZONE_MAX-n_space-15); i++) 
+  //  s << ".";
+  s << "....";
 
   for(i=0; i<N_RHO_ZONE_MAX; i++) {
-    for(int j=0; j<1-floor(log10((real)hi.get_nhits(i)+1)); j++)
-      s << " ";
+    //for(int j=0; j<1-floor(log10((real)hi.get_nhits(i)+1)); j++)
+    for(int j=0; j<4-floor(log10((real)hi.get_nhits(i)+1)); j++) s << " ";
     s << hi.get_nhits(i);
   }
 
@@ -273,8 +275,7 @@ void scatter_exp::final_scatter_exp(sdyn* b) {
 
 int scatter_exp::count_character_in_string(char string[], char search) {
 
-
-  int counts = 0;
+   int counts = 0;
   for(int i=0; i<strlen(string); i++) {
     if(strncmp(&string[i], &search, 1)==0)
       counts++;
@@ -284,9 +285,7 @@ int scatter_exp::count_character_in_string(char string[], char search) {
 
 }
 
-int scatter_exp::count_character_in_string(char string[], char search[],
-					   int n_char) {
-
+int scatter_exp::count_character_in_string(char string[], char search[], int n_char) {
 
   int counts = 0;
   for(int i=0; i<strlen(string); i++) {
@@ -297,6 +296,24 @@ int scatter_exp::count_character_in_string(char string[], char search[],
   return counts;
 
 }
+
+
+bool scatter_exp::exch_or_exchion(char string[], char search1, char search2) {
+  
+  bool ion;
+
+  if (strncmp(&string[1], &search1, 1)==0  || strncmp(&string[strlen(string)-2], &search2, 1)==0) 
+     ion=true;
+  
+  else ion=false;
+  
+  return ion;
+  
+}
+
+
+
+
 
 // returns 3 if triple, 4 if quadruple etc.
 int scatter_exp::count_multiplicity() {
@@ -320,7 +337,7 @@ int scatter_exp::count_multiplicity() {
 }
 
 // At the moment quite rudimentary
-bool scatter_exp::check_for_exchange() {
+bool scatter_exp::check_for_exchange_ionization() {
 
   bool exchange = false;
 
@@ -365,8 +382,10 @@ bool scatter_exp::check_for_exchange() {
 }
 
 
-scatter_discriptor scatter_exp::classify_scatter() {
 
+scatter_discriptor scatter_exp::classify_scatter() {
+  // cerr << "classify_scatter 1: \n" << endl;
+    
   scatter_discriptor discriptor = preservation;
 
   if(sd == stopped) {
@@ -390,27 +409,30 @@ scatter_discriptor scatter_exp::classify_scatter() {
   else if(count_multiplicity()==3) 
     discriptor = stable_triple;                         // (p1,(p2,(t1,t2)))
   else if(count_multiplicity()>3) 
-    discriptor = stable_higher_order;               // (p11,(p12,(p2,(t1,t2))))
+    discriptor = stable_higher_order;                   // (p11,(p12,(p2,(t1,t2))))
   else if(count_character_in_string(get_final_form(), '(')==1)
     discriptor = total_ionization;                      // (p1,p2,t1,t2)
-  else if(check_for_exchange()) {
-    if (count_character_in_string(get_initial_form(), '(') >
-	count_character_in_string(get_final_form(), '('))
-      discriptor = exchange_ionization;                 // (p1,t1,(p2,t2))
-    else
-      discriptor = exchange;                            // ((p1,t1),(p2,t2))
-  }
-  else if(count_character_in_string(get_initial_form(), '(') >
-	  count_character_in_string(get_final_form(), '(')+1)
-    discriptor = multiple_ionization;                   // (p11,p12,p2,t1,t2)
-  else if(count_character_in_string(get_initial_form(), '(') >
-	  count_character_in_string(get_final_form(), '('))
-    discriptor = single_ionization;                     // (p1,p2,(t1,t2))
+
+  else if(count_character_in_string(get_final_form(), '(')==3 &&
+	  count_character_in_string(get_final_form(), ')')==3)
+    discriptor = exchange;                              // ((p1,t1),(p2,t2)) or ((p1,t2),(p2,t1))
+
+  else if(check_for_exchange_ionization())
+    discriptor = exchange_ionization;                   // ((p1,t1),p2,t2) or ((p1,t2),p2,t1) or (p1,(p2,t2),t1)
+ 
+  //I still have to distinguish between ionization ((p1,p2),t1,t2) or (p1,p2,(t1,t2)) 
+  //and exchange-ionization (p1,(p2,t1),t2)
+  
+  else if ( exch_or_exchion(get_final_form(), '(', ')')==true)
+    discriptor = single_ionization;   // ((p1,p2),t1,t2) or (p1,p2,(t1,t2)) 
+  else if ( exch_or_exchion(get_final_form(), '(', ')')==false)
+    discriptor = exchange_ionization; //(p1,(p2,t1),t2)
+  
   else
     discriptor = unknown;
-
+  
   n_coll = count_character_in_string(get_final_form(), '+');
-
+  
   return discriptor;
 }
 
