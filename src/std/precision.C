@@ -86,12 +86,7 @@ int adjust_starlab_precision(int p)
 main(int argc, char** argv)
 {
     check_help();
-    extern char *poptarg;
-    int c;
-    char* param_string = "c:";
-
-    while ((c = pgetopt(argc, argv, param_string,
-		    "$Revision$", _SRC_)) != -1) {}
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
     set_starlab_precision(cout);
     

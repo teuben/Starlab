@@ -1215,14 +1215,9 @@ int  is_quantity_name(story * a_story, char * name)
 #else
 
 main(int argc, char** argv)
-    {
+{
     check_help();
-    extern char *poptarg;
-    int c;
-    char* param_string = "c:";
-
-    while ((c = pgetopt(argc, argv, param_string,
-		    "$Revision$", _SRC_)) != -1) {}
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
     story * s;
 
@@ -1250,6 +1245,6 @@ main(int argc, char** argv)
 //	}
 
 //    cerr << "story.C : TOOLBOX : Normal exit\n";
-    }
+}
 
 #endif

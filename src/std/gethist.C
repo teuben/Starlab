@@ -200,12 +200,7 @@ char *gethist(int argc, char ** argv)
 main(int argc, char ** argv)
 {
     check_help();
-    extern char *poptarg;
-    int c;
-    char* param_string = "c:";
-
-    while ((c = pgetopt(argc, argv, param_string,
-		    "$Revision$", _SRC_)) != -1) {}
+    pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
     printf("%s\n", gethist(argc, argv));
 }
