@@ -161,7 +161,7 @@ istream & dyn::scan_dyn_story(istream& s)
 
 ostream& dyn::print_dyn_story(ostream& s,
 			      bool print_xreal,		// default = true
-			      int short_output)	// default = 0
+			      int short_output)		// default = 0
 {
     // Modifications by Steve (5/01) to streamline output.
 
@@ -200,29 +200,25 @@ ostream& dyn::print_dyn_story(ostream& s,
     return s;
 }
 
-// gets called by get_dyn when input format is columns of numbers.
+
+
+// Called by get_dyn when input format is columns of numbers.
+
 dyn* get_col(istream& s,
 	     npfp the_npfp,		// note: return value is always node*
 	     hbpfp the_hbpfp,
 	     sbpfp the_sbpfp,
 	     bool use_stories)
 {
-
-  static int t;
   dyn* root = (dyn*)the_npfp(the_hbpfp, the_sbpfp, use_stories);
   root->set_index(0);
-  // Write time to both the root node (static class data) and to
-  // the root node (dyn story), because different user functions
-  // may expect either placement.  (To be cleaned up...)
-  root->set_system_time(t++);
-  // Is time supposed to be incremented here?
-  if (use_stories) putrq(root->get_dyn_story(), "t", t);
 
   static unsigned lineno = 0;
   bool first_dyn = true;
   dyn* bo;
 
   dyn::set_col_output(true);
+  bool first_data = true;
 
   while (true) {
     char line[256];
@@ -233,22 +229,65 @@ dyn* get_col(istream& s,
       else break;
     }
     switch (++lineno, line[0]) {
-    case '\n': return root;
-    case '#': continue;
-    case ';':
-      if (use_stories) {	      // deal with Log (;) and Dyn (;;) stories
-	line[strlen(line)-1] = '\0';
-	if (line[1] == ';') {
-	  if (strlen(&line[2])) {
+      case '\n': return root;
+      case '#': continue;
+      case ';':
+	if (use_stories) {	      // deal with Log (;) and Dyn (;;) stories
+	  line[strlen(line)-1] = '\0';
+	  if (line[1] == ';') {
+	    if (strlen(&line[2])) {
 	      story *st = root->get_dyn_story();
 	      if (st)
 		add_story_line(st, line+2);
-	  }
-	} else
-	  if (strlen(&line[1])) root->log_comment(&line[1]);
-      }
+	    }
+	  } else
+	    if (strlen(&line[1])) root->log_comment(&line[1]);
+        }
       continue;
     }
+
+    // OK, looks like we have real data.  ASSUME that all comments and
+    // non-particle data precede the data, and update the root node from
+    // the Dyn story before proceeding.
+
+    if (first_data) {
+
+	// Upgrade root-node Dyn story data, if any, to dyn class data.
+	// Delete story entries as we promote them.
+
+	// Choices follow data in scan_dyn_story() above, except that we
+	// never write xreal time, so omit real_system_time.  Also allow
+	// "time" as a synomym for "system_time" (for non-Starlab users).
+
+	story *st = root->get_dyn_story();
+
+	if (find_qmatch(st, "time")) {
+	    real system_time = getrq(st, "time");
+	    root->set_system_time(system_time);
+	    rmq(st, "time");
+	}
+
+	if (find_qmatch(st, "system_time")) {
+	    real system_time = getrq(st, "system_time");
+	    root->set_system_time(system_time);
+	    rmq(st, "system_time");
+	}
+
+	if (find_qmatch(st, "r")) {
+	    vector pos = getvq(st, "r");
+	    root->set_pos(pos);
+	    rmq(st, "r");
+	}
+
+	if (find_qmatch(st, "v")) {
+	    vector vel = getvq(st, "v");
+	    root->set_vel(vel);
+	    rmq(st, "v");
+	}
+
+	first_data = false;
+    }
+
     int id;
     double m, x[3], v[3];
     if (sscanf(line, "%i %lg %lg %lg %lg %lg %lg %lg\n", &id, &m, &x[0], &x[1],
@@ -269,34 +308,70 @@ dyn* get_col(istream& s,
   else { delete root; return NULL; }
 }
 
-// this I/O problem is getting to be a real pain in the (my) ass
+// This I/O problem is getting to be a real pain in the (my) ass...
 
 void put_col(dyn* root, ostream& s) {
 
-  story *st;		// note elegant replicated code below!
+  int p = adjust_starlab_precision(-1);	  // odd name, but establishes
+					  // the precision of the output
+
+  story *st;		// note the elegant use of replicated code below...
 
   if (dyn::get_ofp()) {
 
-    // Special treatment to preserve the root Log and Dyn stories.
+    // Define format strings for use below.
+
+    char fmt1[80], fmt2[80], fmt3[80];
+    sprintf(fmt1, "%%s%%.%dg\n", p);
+    sprintf(fmt2, "%%s%%.%dg %%.%dg %%.%dg\n", p, p, p);
+    sprintf(fmt3, "%%d %%.%dg %%.%dg %%.%dg %%.%dg %%.%dg %%.%dg %%.%dg\n",
+	    p, p, p, p, p, p, p);
+
+    // Special treatment to preserve the root node member data
+    // and Log and Dyn stories.
 
     st = root->get_log_story();
     if (st) put_simple_story_contents(dyn::get_ofp(), *st, ";");
+
+    // Root node member data won't be properly written out by the loop below.
+    // Save it as Dyn story data (see get_col above) -- less than elegant.
+    // Don't bother with xreal output in this format, so don't print a
+    // real_system_time line.
+
+    fprintf(dyn::get_ofp(), fmt1, ";;  system_time  =  ",
+	    (real)root->get_system_time());
+    fprintf(dyn::get_ofp(), fmt2, ";;  r  =  ",
+	    root->get_pos()[0], root->get_pos()[1], root->get_pos()[2]);
+    fprintf(dyn::get_ofp(), fmt2, ";;  v  =  ",
+	    root->get_vel()[0], root->get_vel()[1], root->get_vel()[2]);
 
     st = root->get_dyn_story();
     if (st) put_simple_story_contents(dyn::get_ofp(), *st, ";;");
 
     for_all_daughters(dyn, root, i)
-      fprintf(dyn::get_ofp(), "%i %g %g %g %g %g %g %g\n", i->get_index(),
+      fprintf(dyn::get_ofp(), fmt3, i->get_index(),
 	      i->get_mass(), i->get_pos()[0], i->get_pos()[1], i->get_pos()[2],
 	      i->get_vel()[0], i->get_vel()[1], i->get_vel()[2]);
     putc('\n', dyn::get_ofp());
 
   } else {
 
-    // Special treatment to preserve the root Log and Dyn stories.
+    int oldp = s.precision(p);
+
+    // Special treatment to preserve the root node member data
+    // and Log and Dyn stories.
 
     st = root->get_log_story();
     if (st) put_simple_story_contents(s, *st, ";");
+
+    // Root node member data won't be properly written out by the loop below.
+    // Save it as Dyn story data (see get_col above) -- less than elegant.
+    // Don't bother with xreal output in this format, so don't print a
+    // real_system_time line.
+
+    s << ";;  system_time  =  " <<  root->get_system_time() << endl;
+    s << ";;  r  =  " << root->get_pos() << endl;
+    s << ";;  v  =  " << root->get_vel() << endl;
 
     st = root->get_dyn_story();
     if (st) put_simple_story_contents(s, *st, ";;");
@@ -305,10 +380,13 @@ void put_col(dyn* root, ostream& s) {
       s << i->get_index() << ' ' << i->get_mass() << ' ' << i->get_pos() << ' '
 	<< i->get_vel() << '\n';
     s << '\n';
+
+    s.precision(oldp);
   }
 
 }
 
+
 
 #else
 main(int argc, char** argv)

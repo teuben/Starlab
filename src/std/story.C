@@ -293,7 +293,7 @@ void put_simple_story_contents(FILE *fp, story& s,
 	    if (!is_chapter(d)){
 		if (prefix) 
 		    fprintf(fp, "%s", prefix);
-		fprintf(fp, "%s\n", s.get_text());
+		fprintf(fp, "%s\n", d->get_text());
 	    }
 	}
     }
