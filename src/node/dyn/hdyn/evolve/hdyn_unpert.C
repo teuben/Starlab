@@ -2218,6 +2218,10 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
     // *** NOTE: Do not assume approaching components, or ***
     // ***	 time = system_time or parent time...	  ***
 
+
+    if (!kep) return 0;
+
+
 //    cerr << "in get_unperturbed_steps for " << format_label()
 //	 << " at " << time << "/" << system_time << endl;
 
@@ -2579,7 +2583,8 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 #if 0
 		// (These debugging lines can be quite expensive...)
 
-		if (name_is("15943")) {
+//		if (name_is("15943")) {
+		if (system_time > 0.112) {
 
 		    cerr << endl << "get_unperturbed_steps for "
 			 << format_label() << " at time " << system_time << ":"
@@ -2681,6 +2686,10 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
     // NOTE: Integrating a binary to a time other than the scheduled
     //	     end of its timestep may result in its being resolved at
     //	     an undesirable part of its orbit, causing large errors.
+
+
+    if (!kep) return 0;
+
 
     if (diag->unpert_function_id) {
 	cerr << endl << ">> integrate_unperturbed_motion for "
@@ -2914,7 +2923,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		cerr << endl;
 
 #if 1
-		PRL(get_effective_block(time));
+//		PRI(4); PRL(get_effective_block(time));
 		PRI(4); PRL(sym_angle(kep->get_mean_anomaly()));
 //		int pp = cerr.precision(20);
 //		PRI(4); PRL(time);
