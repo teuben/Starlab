@@ -190,7 +190,7 @@ real get_initial_virial_radius(dyn* b,
 	    r_virial = -1;
 
 	    if (verbose && rvir_msg)
-		cerr << "**** get_initial_virial_radius:  "
+		cerr << "get_initial_virial_radius:  "
 		     << "initial_rvirial unknown (set with scale)" << endl;
 #else
 	    r_virial = 1;
@@ -793,6 +793,9 @@ void check_set_power_law(dyn *b,
     //		kira_pl_scale		=  R
     //		kira_pl_exponent	=  e
     //		kira_pl_center		=  x y z
+    //		kira_pl_cutoff		=  C
+    //		kira_pl_mass		=  M
+    //		kira_pl_softening	=  eps
 
      if (find_qmatch(b->get_log_story(), "kira_pl_coeff")
 	 && find_qmatch(b->get_log_story(), "kira_pl_scale")) {
@@ -813,13 +816,32 @@ void check_set_power_law(dyn *b,
 	     center = getvq(b->get_log_story(), "kira_pl_center");
 	 b->set_pl_center(center);
 
+	 real cutoff = 0;
+	 if (find_qmatch(b->get_log_story(), "kira_pl_cutoff"))
+	     cutoff = getrq(b->get_log_story(), "kira_pl_cutoff");
+	 b->set_pl_cutoff(cutoff);
+
+	 real mass = 0;
+	 if (find_qmatch(b->get_log_story(), "kira_pl_mass"))
+	     mass = getrq(b->get_log_story(), "kira_pl_mass");
+	 b->set_pl_mass(mass);
+
+	 real softening = 0;
+	 if (find_qmatch(b->get_log_story(), "kira_pl_softening"))
+	     softening = getrq(b->get_log_story(), "kira_pl_softening");
+	 b->set_pl_softening_sq(softening*softening);
+
 	 if (verbose) {
 	     real A = b->get_pl_coeff();
 	     real a = sqrt(b->get_pl_scale_sq());
 	     real x = b->get_pl_exponent();
 	     vector center = b->get_pl_center();
+	     real C = b->get_pl_cutoff();
+	     real M = b->get_pl_mass();
+	     real eps2 = b->get_pl_softening_sq();
 	     cerr << "check_set_power_law:  ";
 	     PRC(A); PRC(a); PRC(x); PRL(center);
+	     PRI(22); PRC(C); PRC(M); PRL(eps2);
 	 }
      }
 }
@@ -832,4 +854,17 @@ void check_set_external(dyn *b,
     check_set_tidal(b, verbose);
     check_set_plummer(b, verbose);
     check_set_power_law(b, verbose);
+}
+
+void check_set_ignore_internal(dyn *b,
+			       bool verbose)		// default = false
+{
+    // Check for and set flag to skip internal interactions.
+
+    bool ignore_internal = false;
+    if (find_qmatch(b->get_log_story(), "ignore_internal")
+	&& getiq(b->get_log_story(), "ignore_internal") == 1)
+	ignore_internal = true;
+
+    b->set_ignore_internal(ignore_internal);
 }
