@@ -19,8 +19,15 @@
 noinst_LTLIBRARIES = libdyn-3.la
 bin_PROGRAMS = makecube makedisk makeplummer makepyth makesphere makewrite \
     apply_plummer makebinary split_particles makeking makeheavystar readp \
-    readstoa makeplanetary makeblack_hole grow_black_hole make_aniso_king \
-    makepowerlaw cutrandomsample
+    readstoa makeplanetary makeblack_hole grow_black_hole makepowerlaw \
+    cutrandomsample
+
+if HAVE_F77
+  bin_PROGRAMS += make_aniso_king
+  make_aniso_king_CPPFLAGS = -DTOOLBOX
+  make_aniso_king_LDADD = ../libdyn.la $(FLIBS)
+  make_aniso_king_SOURCES = make_aniso_king.C aking.f
+endif
 
 libdyn_3_la_SOURCES = makesphere.C
 
@@ -40,7 +47,6 @@ readstoa_CPPFLAGS = -DTOOLBOX
 makeplanetary_CPPFLAGS = -DTOOLBOX
 makeblack_hole_CPPFLAGS = -DTOOLBOX
 grow_black_hole_CPPFLAGS = -DTOOLBOX
-make_aniso_king_CPPFLAGS = -DTOOLBOX
 makepowerlaw_CPPFLAGS = -DTOOLBOX
 cutrandomsample_CPPFLAGS = -DTOOLBOX
 
@@ -60,7 +66,6 @@ readstoa_LDADD = ../libdyn.la
 makeplanetary_LDADD = ../libdyn.la
 makeblack_hole_LDADD = ../libdyn.la
 grow_black_hole_LDADD = ../libdyn.la
-make_aniso_king_LDADD = ../libdyn.la $(FLIBS)
 makepowerlaw_LDADD = ../libdyn.la
 cutrandomsample_LDADD = ../libdyn.la
 
@@ -80,6 +85,5 @@ readstoa_SOURCES = readstoa.C
 makeplanetary_SOURCES = makeplanetary.C
 makeblack_hole_SOURCES = makeblack_hole.C
 grow_black_hole_SOURCES = grow_black_hole.C
-make_aniso_king_SOURCES = make_aniso_king.C aking.f
 makepowerlaw_SOURCES = makepowerlaw.C
 cutrandomsample_SOURCES = cutrandomsample.C

@@ -39,7 +39,10 @@ CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_F77
-AC_F77_WRAPPERS
+if test "x$ac_cv_prog_f77" = "xyes"; then
+    AC_F77_WRAPPERS
+fi
+AM_CONDITIONAL(HAVE_F77, [test "x$ac_cv_prog_f77" = "xyes"])
 AC_PROG_CXX
 # disable shared libs for now - I'll work this out later
 AC_DISABLE_SHARED
