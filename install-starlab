@@ -31,7 +31,7 @@ if ($#argv > 0) set install_dir = $1
 # Attach /usr to install_dir in all those cases.  Use readlink to
 # expand all paths before comparing.
 
-make -s -C sbin readlink	>& /dev/null
+(chdir sbin; make -s readlink)	>& /dev/null
 
 set install_dir = `sbin/readlink -f $install_dir`
 
