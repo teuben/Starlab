@@ -76,9 +76,7 @@ particles:	  { $$ = 0; } | particles particle {
 
 log:		  '(' LOG log_story ')' LOG;
 
-log_story:	| log_story LOG_STORY {
-  if (*$2) p.top()->log_comment($2); free($2);
-};
+log_story:	| log_story LOG_STORY { if (*$2) p.top()->log_comment($2); free($2); };
 
 dynamics:	  '(' DYNAMICS { section.push(D); }
 		  key_val_pairs ')' DYNAMICS { section.pop(); };
