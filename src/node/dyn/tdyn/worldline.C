@@ -444,6 +444,13 @@ void worldbundle::attach(tdyn *bn,
 
 //======================================================================
 
+static real physical_mass = 0;
+
+real mass_scale_factor()
+{
+    return physical_mass;
+}
+
 // From Steve (10/00):
 //
 // Root dumps are done by kira twice per synchronization interval, so each
@@ -460,6 +467,14 @@ worldbundle *read_bundle(istream &s,
 
     tdyn *b = get_tdyn(s, NULL, NULL, false);		// "stripped tdyn"
     if (!b || !streq(b->format_label(), "root")) return NULL;
+
+    // Need to keep track of the physical initial mass, but this only
+    // appears in the first Log story and is not saved in the usual
+    // story structure, to save space.  Grab it here and make it
+    // globally accessible.
+
+    if (b->get_log_story())
+	physical_mass = getrq(b->get_log_story(), "physical_initial_mass");
 
     // Create the initial list of node IDs.
 

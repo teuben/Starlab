@@ -18,6 +18,7 @@
 // Other externally visible functions:
 //
 //	pdyn *create_interpolated_tree2(worldbundle *wb, real t)
+//	real physical_mass_scale()
 //
 //----------------------------------------------------------------------
 

@@ -85,8 +85,6 @@ istream & tdyn::scan_dyn_story(istream & s)
 	    read_unformatted32_vector( s, pos );
 	    read_unformatted32_vector( s, vel );
 
-	// No unformatted options for stellar input yet...
-
 	} else {
 
 	    // Usual formatted input.
@@ -163,6 +161,13 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    temperature = strtod(val, NULL);
 		else if (!strcmp("L", keyword))
 		    luminosity = strtod(val, NULL);
+		else if(streq("TL =", input_line)) {
+
+		    // Short output always uses floats for T and L.
+
+		    temperature = read_unformatted32_real( s );
+		    luminosity = read_unformatted32_real( s );
+		}
 
 		// Bookkeeping:
 

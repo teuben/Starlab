@@ -24,7 +24,7 @@ local inline void update_node(worldbundle *wb,
 	// Should not be necessary to copy these data at each update.
 	//
 	//		name/index
-	//		mass
+	//		worldline index
 	//-----------------------------------------------------------------
 
 	// Moved to attach_new_node.C for NEW = 1 (Steve, 5/30/01):
@@ -45,9 +45,9 @@ local inline void update_node(worldbundle *wb,
 	// Cleanest way to get the worldline index:
 
 	curr->set_worldline_index(wb->find_index(b));
-
-	curr->set_mass(b->get_mass());
     }
+
+    curr->set_mass(b->get_mass());
 
     // See if we need to deal with unperturbed motion.
 

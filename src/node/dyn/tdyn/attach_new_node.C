@@ -70,7 +70,7 @@ local inline void attach_new_node(worldbundle *wb, worldline *ww,
 	// Should not be necessary to copy these data at each update.
 	//
 	//		name/index
-	//		mass
+	//		worldline index
 	//-----------------------------------------------------------------
 
 	// Moved here from update_node.C (Steve, 5/30/01):

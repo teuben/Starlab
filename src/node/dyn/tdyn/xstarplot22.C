@@ -1918,6 +1918,8 @@ main(int argc, char** argv)
     int nh = 0;
     while (nh < 1024 && (wb = read_bundle(s, verbose))) wh[nh++] = wb;
 
+    // PRL(mass_scale_factor());
+
     cerr << endl << "statistics on " << nh << " worldbundle";
     if (nh != 1) cerr << "s";
     cerr << ":" << endl;
