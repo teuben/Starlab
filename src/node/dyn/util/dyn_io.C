@@ -91,6 +91,58 @@ void dyn::print_static(ostream& s)		// default = cerr
 
 static bool read_xreal = false;
 
+bool dyn::check_and_correct_node(bool verbose)	// default = true
+{
+    // cerr << "dyn::check_and_correct_node: "; PRL(this);
+
+    bool ok = true;
+
+    if (oldest_daughter) {
+
+	real m = 0;
+	vec p = 0, v = 0;
+	bool low = false;
+
+	for_all_daughters(dyn, this, bb) {
+	    if (bb->oldest_daughter)
+		ok &= bb->check_and_correct_node(verbose);
+	    real mm = bb->get_mass();
+	    m += mm;
+	    p += mm*bb->get_pos();
+	    v += mm*bb->get_vel();
+	}
+	if (!ok) low = true;
+
+	if (!twiddles(m, mass)) ok = false;
+	if (!twiddles(abs(p), 0)) ok = false;
+	if (!twiddles(abs(v), 0)) ok = false;
+
+	mass = m;
+	if (m > 0) {
+	    p /= m;
+	    v /= m;
+
+	    // Force daughters to have zero CM quantities relative to parent.
+
+	    for_all_daughters(dyn, this, bb) {
+		bb->inc_pos(-p);
+		bb->inc_vel(-v);
+	    }
+	}
+
+	if (!ok && verbose && parent == NULL) {
+	    cerr << "check_and_correct_node: applied ";
+	    if (low)
+		cerr << "low-level";
+	    else
+		cerr << "top-level";
+	    cerr << " mass/pos/vel correction" << endl;
+	}
+    }
+
+    return ok;
+}
+
 istream & dyn::scan_dyn_story(istream& s)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];
