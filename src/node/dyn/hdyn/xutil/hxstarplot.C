@@ -1587,7 +1587,9 @@ void xstarplot(hdyn* b, float scale, int k, int d, float lmax,
     //------------------------------------------------------------------------
 
     // Always express all positions and velocities relative to the root node.
-    // (There is no requirement that the root node be at rest at the origin...)
+    // There is no requirement that the root node be at rest at the origin,
+    // but standard hdyn usage always does this on input, so this line is
+    // normally not necessary in the hdyn version of this program.
 
     make_relative_to_root(b);
 
