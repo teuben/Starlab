@@ -16,23 +16,24 @@ if (! -d $src) then
     exit
 endif
 
-set dst = {$1}s
+set dst = {$1}_s
 if (-d $dst) then
     echo Shadow directory $dst already exists
     exit
 else if (-e $dst) then
-    echo $dst already exists
+    echo Non-directory $dst already exists
     exit
 endif
 
 set dirs   = (`cd $src; find . -type d -print`)
-set files1 = (`cd $src; find inc src -name '*.[hcCfF]' -type f -print`)
-set files2 = (`cd $src; find . -name '[A-Z]*'          -type f -print`)
-set files3 = (`cd $src; find local sbin                        -print`)
+set files1 = (`cd $src; find inc src -name '*.[hcCfF]'	-type f -print`)
+set files2 = (`cd $src; find . -name '[A-Z]*'		-type f -print`)
+set files3 = (`cd $src; find sbin templates		-type f -print`)
+set files4 = (`cd $src; /bin/ls config* missing mkin* *-sh *_end* *.{m4,in}`)
 
-set files = ($files1 $files2 $files3)
+set files = ($files1 $files2 $files3 $files4)
 
-@ nf = $#files1 + $#files2 + $#files3
+@ nf = $#files1 + $#files2 + $#files3 + $#files4
 if ($nf != $#files) then
     echo Too many files...	# overflow, presumably...
     exit
@@ -43,8 +44,14 @@ echo Found $#dirs directories and $#files files in directory $src
 mkdir $dst
 echo Making shadow directories in $dst \(1 dot per directory\):
 foreach dir ($dirs)
-    echo -n "."
-    mkdir -p $dst/$dir
+
+#   Skip bin, lib, and local directories (created by configure/Starlab build).
+
+    if (X$dir != X./bin && X$dir != X./lib && X$dir != X./local) then
+	echo -n "."
+	mkdir -p $dst/$dir
+    endif
+
 end
 echo ""
 
@@ -70,5 +77,5 @@ echo ""
 echo ""
 echo The shadow directory $dst now mirrors directory $src
 echo All source and Makefiles in $dst are symbolic links into $src
-echo The lib and bin directories in $dst are real \(not links\)
+echo Run AAA_SOURCE_ME to complete the build and create local directories.
 echo ""
