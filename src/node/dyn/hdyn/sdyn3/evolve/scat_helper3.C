@@ -172,15 +172,19 @@ void print_scatter3_report(initial_state3& init,
 {
     int flag1 = b_flag, flag2 = b_flag;
 
-    // Don't want init body output if b_flag = 2.
+    // No body output if b_flag = 0.
+    // All body output if b_flag = 1 (cerr) or 3 (file).
+    // No init body output if b_flag = 2.
+    // No body output if b_flag = 2 and no merger occurred.
 
-    if (b_flag == 2) flag1 = 0;
+    // Note that the intermediate and final body arrays will be the
+    // same unless a merger occurred, and neither will be particularly
+    // interesting in the non-merger case.
 
-    // Intermediate and final body arrays will be the same unless a
-    // merger occurred.  Suppress intermediate output for b_flag = 2
-    // if there were no mergers.
-
-    if (b_flag == 2 && final.descriptor < merger_binary_1) flag2 = 0;
+    if (b_flag == 2) {
+	flag1 = 0;
+	if (final.descriptor < merger_binary_1) flag2 = b_flag = 0;
+    }
 
     print_initial(s, init, flag1);
     print_intermediate(s, inter, flag2);
