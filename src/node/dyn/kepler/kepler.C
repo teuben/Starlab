@@ -682,6 +682,177 @@ void kepler::to_pred_rel_pos_vel_linear(real true_an) // Special case.
     }
 }
 
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// New "fast" static data and accessors:
+
+static bool kepler_fast_flag = false;
+static real kepler_fast_tol = 1.0e-6;
+
+void set_kepler_fast_flag(bool flag)		// default = true
+						{kepler_fast_flag = flag;}
+void clear_kepler_fast_flag()			{kepler_fast_flag = false;}
+bool get_kepler_fast_flag()			{return kepler_fast_flag;}
+
+void set_kepler_fast_tol(real tol)		// default = 1.e-6
+						{kepler_fast_tol = tol;}
+void reset_kepler_fast_tol()			{kepler_fast_tol = 1.e-6;}
+real get_kepler_fast_tol()			{return kepler_fast_tol;}
+
+local inline void fast_keplerseq(real M, real e, real tol,
+				 real &s, real &c)
+{
+    // Newton-Raphson solver, with "Danby" initial guess.
+    // See test_solver.C for timing code.
+
+    M = sym_angle(M);			// -pi < M < pi
+
+    // Make an initial guess for E (Danby would have a coefficient of 0.85).
+
+    real dE = 0.94*e;
+    if (M < 0) dE = -dE;
+
+    real E = M + dE;
+
+    while (1) {
+
+	s = sin(E);
+//	c = cos(E);
+
+	// May be marginally faster to use the trig. identity:
+
+	c = sqrt(1 - s*s);
+	if (fabs(E) > M_PI/2) c = -c;
+
+	real func = E - e*s - M;
+	if (fabs(func) <= tol) return;
+
+	E -= func/(1 - e*c);	// NR iteration
+    }
+}
+
+// New kepler member functions (Steve, 6/01):
+
+void kepler::fast_to_pred_rel_pos_vel(real r_cos_true_an,	// r cos f
+				      real r_sin_true_an)	// r sin f
+{
+    // Relative position vector:
+
+    pred_rel_pos = r_cos_true_an * longitudinal_unit_vector +
+                    r_sin_true_an * transverse_unit_vector;
+
+    // Now compute the relative velocity vector.
+
+    real ri = 1 / pred_separation;
+    vector r_unit = ri * pred_rel_pos;
+
+    real rel_vel_squared = 2 * (energy + total_mass * ri);
+    real v_t = angular_momentum * ri;
+    real v_r = sqrt(max(0.0, rel_vel_squared - v_t * v_t));
+               // It is assumed here that negative values for the argument
+               // arise from round-off errors, and can be replaced by zero.
+    if (r_sin_true_an < 0) v_r = -v_r;
+
+    pred_rel_vel = v_r * r_unit
+	            + v_t * ri * (-r_sin_true_an * longitudinal_unit_vector
+				  + r_cos_true_an * transverse_unit_vector);
+}
+
+void  kepler::fast_pred_mean_anomaly_to_pos_and_vel()
+{
+    real cos_ecc_an, sin_ecc_an;
+    fast_keplerseq(pred_mean_anomaly, eccentricity, kepler_fast_tol,
+		   sin_ecc_an, cos_ecc_an);
+
+    pred_separation = semi_major_axis * (1 - eccentricity * cos_ecc_an);
+    real r_cos_true_an = semi_major_axis * (cos_ecc_an - eccentricity);
+
+    // Writing b this way avoids sqrt(1 - eccentricity*eccentricity)!
+
+    real semi_minor_axis = angular_momentum * period / (2*M_PI*semi_major_axis);
+    real r_sin_true_an = semi_minor_axis * sin_ecc_an;
+
+    fast_to_pred_rel_pos_vel(r_cos_true_an, r_sin_true_an);
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+// Modified kepler member function (Steve, 6/01):
+
+void  kepler::pred_mean_anomaly_to_pos_and_vel()
+{
+    if (!kepler_fast_flag || energy >= 0 || angular_momentum == 0) {
+
+	// Standard method, as used by kira:
+
+	real ecc_an;
+
+	// Determine the separation and true anomaly.
+
+	if (energy != 0) {
+
+	    if (energy < 0) {		// ellipse or linear bound orbit
+
+		keplerseq(pred_mean_anomaly, eccentricity,
+			  pred_true_anomaly, ecc_an);
+
+		pred_separation = semi_major_axis 
+		    			* (1 - eccentricity * cos(ecc_an));
+
+	    } else {		 	// hyperbola or linear unbound orbit
+
+		keplershypeq(pred_mean_anomaly, eccentricity,
+			     pred_true_anomaly, ecc_an);
+
+		pred_separation = semi_major_axis 
+					* (eccentricity * cosh(ecc_an) - 1);
+	    }
+
+	    // Note: Use ecc_an for better results for very eccentric orbits.
+	    //
+	    // pred_separation = periastron * (1 + eccentricity)
+	    //                    / (1 + eccentricity * cos(pred_true_anomaly));
+
+	} else {				// parabola or linear orbit
+
+	    if (angular_momentum > 0) {
+
+		real tan_half_true_an = 
+		    keplerspareq(pred_mean_anomaly, pred_true_anomaly);
+
+		pred_separation = periastron
+				    * (1 + tan_half_true_an*tan_half_true_an);
+
+	    } else {	// linear case (note convention).
+
+		pred_true_anomaly = pred_mean_anomaly;
+		pred_separation = pow(abs(pred_true_anomaly), 2/3.0);
+
+	    }
+	}
+
+	// Calculate position and velocity.
+
+	if (angular_momentum > 0)
+	    to_pred_rel_pos_vel(cos(pred_true_anomaly), sin(pred_true_anomaly));
+	else
+	    to_pred_rel_pos_vel_linear(pred_true_anomaly);
+
+    } else {
+
+	// New faster function for bound orbits does everything in
+	// a single call.  For use by the 4tree interpolation.
+
+	fast_pred_mean_anomaly_to_pos_and_vel();	// <--- new ---
+    }
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+#if 0
+
+// ***** OLD CODE: *****
+
 void  kepler::pred_mean_anomaly_to_pos_and_vel()
 {
     real ecc_an;
@@ -738,6 +909,8 @@ void  kepler::pred_mean_anomaly_to_pos_and_vel()
     else
         to_pred_rel_pos_vel_linear(pred_true_anomaly);
 }
+
+#endif
 
 //----------------------------------------------------------------------------
 

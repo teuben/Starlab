@@ -231,6 +231,11 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
 
     static real t_int = -VERY_LARGE_NUMBER;	// time last the interpolated
 						// tree was updated
+
+    // Use the "fast" kepler solver...
+
+    if (!root) set_kepler_fast_flag();
+
     if (wb != wb_last) {
 	if (root) {
 	    rmtree(root);
