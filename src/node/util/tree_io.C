@@ -24,7 +24,28 @@ void  node::log_history(int argc, char ** argv)
 {
     if (log_story) {
 	char *hist = gethist(argc, argv);
-	add_story_line(log_story, hist);
+
+	// Note from Steve, 05/30/03.  Gethist returns a string
+	// containing a line break.  This doesn't coexist well
+	// with the "col" output format, which is line oriented.
+	// Rather than rewrite gethist, split the line here...
+
+	int n = strlen(hist);
+	if (n > 0) {
+	    char *tmp = new char[n+1];
+	    int j = 0;
+	    for (int i = 0; i < strlen(hist); i++) {
+		if (hist[i] == '\n') {
+		    strncpy(tmp, hist+j, i-j);
+		    tmp[i-j] = '\0';
+		    add_story_line(log_story, tmp);
+		    j = i + 1;
+		}
+	    }
+	    if (j < n)
+		add_story_line(log_story, hist+j);
+	    delete tmp;
+	}
 	delete hist;
     }
 }

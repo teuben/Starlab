@@ -258,6 +258,47 @@ void put_chapter(ostream& str, story& s)
     put_tailline(str, s);
 }
 
+void put_simple_story_contents(ostream& str, story& s,
+			       char *prefix)		// default = NULL
+{
+    // Assume s is a chapter and ignore any subchapters.
+    // Intended for use with put_col() -- Log and Dyn stories,
+    // without substructure.  Easy to extend if ever necessary.
+    //						Steve, 5/03
+
+    if (is_chapter(&s)) {
+	for (story * d = s.get_first_daughter_node(); d != NULL;
+	     d = d->get_next_story_node()) {
+
+	    if (!is_chapter(d)) {
+		if (prefix) str << prefix;
+		put_line_text(str, *d);
+	    }
+	}
+    }
+}
+
+void put_simple_story_contents(FILE *fp, story& s,
+			       char *prefix)		// default = NULL
+{
+    // Assume s is a chapter and ignore any subchapters.
+    // Intended for use with put_col() -- Log and Dyn stories,
+    // without substructure.  Easy to extend if ever necessary.
+    //						Steve, 5/03
+
+    if (is_chapter(&s)) {
+	for (story * d = s.get_first_daughter_node(); d != NULL;
+	     d = d->get_next_story_node()) {
+
+	    if (!is_chapter(d)){
+		if (prefix) 
+		    fprintf(fp, "%s", prefix);
+		fprintf(fp, "%s\n", s.get_text());
+	    }
+	}
+    }
+}
+
 void put_story_contents(ostream& str, story& s,
 			char *prefix)		// default = NULL
 {

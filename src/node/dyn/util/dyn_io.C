@@ -236,9 +236,16 @@ dyn* get_col(istream& s,
     case '\n': return root;
     case '#': continue;
     case ';':
-      if (use_stories) {
+      if (use_stories) {	      // deal with Log (;) and Dyn (;;) stories
 	line[strlen(line)-1] = '\0';
-	if (strlen(&line[1])) root->log_comment(&line[1]);
+	if (line[1] == ';') {
+	  if (strlen(&line[2])) {
+	      story *st = root->get_dyn_story();
+	      if (st)
+		add_story_line(st, line+2);
+	  }
+	} else
+	  if (strlen(&line[1])) root->log_comment(&line[1]);
       }
       continue;
     }
@@ -263,15 +270,37 @@ dyn* get_col(istream& s,
 }
 
 // this I/O problem is getting to be a real pain in the (my) ass
+
 void put_col(dyn* root, ostream& s) {
 
+  story *st;		// note elegant replicated code below!
+
   if (dyn::get_ofp()) {
+
+    // Special treatment to preserve the root Log and Dyn stories.
+
+    st = root->get_log_story();
+    if (st) put_simple_story_contents(dyn::get_ofp(), *st, ";");
+
+    st = root->get_dyn_story();
+    if (st) put_simple_story_contents(dyn::get_ofp(), *st, ";;");
+
     for_all_daughters(dyn, root, i)
       fprintf(dyn::get_ofp(), "%i %g %g %g %g %g %g %g\n", i->get_index(),
 	      i->get_mass(), i->get_pos()[0], i->get_pos()[1], i->get_pos()[2],
 	      i->get_vel()[0], i->get_vel()[1], i->get_vel()[2]);
     putc('\n', dyn::get_ofp());
+
   } else {
+
+    // Special treatment to preserve the root Log and Dyn stories.
+
+    st = root->get_log_story();
+    if (st) put_simple_story_contents(s, *st, ";");
+
+    st = root->get_dyn_story();
+    if (st) put_simple_story_contents(s, *st, ";;");
+
     for_all_daughters(dyn, root, i)
       s << i->get_index() << ' ' << i->get_mass() << ' ' << i->get_pos() << ' '
 	<< i->get_vel() << '\n';
