@@ -13,7 +13,8 @@
 //    version 1:  Jul 2000   Steve McMillan, Jun Makino
 //.............................................................................
 //
-//	Externally visible functions (note that GRAPE number is unspecified):
+//	Externally visible functions (note that the GRAPE version
+//	is not specified):
 //
 //	void check_release_grape
 //	void grape_calculate_energies
@@ -640,8 +641,21 @@ void check_release_grape(kira_options *ko, xreal time)
 //  *                                                                   *
 //  *********************************************************************
 
+local inline bool use_cm_approx(hdyn *bb)
+{
+    if (bb->get_kepler()) {
 
-local int send_all_leaves_to_grape(hdyn *b)			// root node
+	// Treat the binary as unperturbed for purposes of computing
+	// its energy if the estimated tidal effect of its neighbors
+	// is enegligible.  For now, accept any unperturbed binary.
+
+	return true;
+    }
+    return false;
+}
+
+local int send_all_leaves_to_grape(hdyn *b,		// root node
+				   real& e_unpert)	// unperturbed energy
 
 // Send predicted positions (velocities, etc. are not needed to
 // compute the potentials) of all leaves to GRAPE j-particle memory.
@@ -656,7 +670,24 @@ local int send_all_leaves_to_grape(hdyn *b)			// root node
     }
 
     int nj = 0;
+    e_unpert = 0;
+
     for_all_leaves(hdyn, b, bb) {
+
+	// In center of mass approximation, replace bb by its parent.
+	// The order of traversal of the tree means that this should
+	// occur at the elder component of a binary, and will skip the
+	// other component.  The while loop should also take care of
+	// unperturbed multiples!  For efficiency, keep and return a
+	// running sum of all internal energies excluded.
+
+	while (use_cm_approx(bb)) {
+	    hdyn *sis = bb->get_younger_sister();
+	    hdyn *par = bb->get_parent();
+	    real reduced_mass = bb->get_mass()*sis->get_mass()/par->get_mass();
+	    e_unpert += reduced_mass * bb->get_kepler()->get_energy();
+	    bb = par;
+	}
 
 	// For now, let GRAPE index = address.
 
@@ -664,7 +695,7 @@ local int send_all_leaves_to_grape(hdyn *b)			// root node
 	
 	// Copy the leaf to the GRAPE with index = address.
 
-	send_j_node_to_grape(bb, true);		// "true" ==> send predicted pos
+	send_j_node_to_grape(bb, true);	// "true" ==> send predicted pos
     }
 
     if (DEBUG) {
@@ -743,7 +774,8 @@ void grape_calculate_energies(hdyn *b,				// root node
 	reattach_grape(b->get_real_system_time(),
 		       "grape_calculate_energies", b->get_kira_options());
 
-    int nj =  send_all_leaves_to_grape(b);
+    real e_unpert;
+    int nj =  send_all_leaves_to_grape(b, e_unpert);
 
     if (force_by_grape_on_all_leaves(b,  nj)) {
 
@@ -764,7 +796,7 @@ void grape_calculate_energies(hdyn *b,				// root node
 	vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
 	ekin += 0.5*mi*vel*vel;
     }
-    etot = ekin + epot;
+    etot = ekin + epot + e_unpert;
 
     if (DEBUG) {
 	cerr << "...leaving grape_calculate_energies...  ";
