@@ -2365,8 +2365,7 @@ void hdyn::create_low_level_perturber_list(hdyn* pnode)
     else if (pnode->valid_perturbers_low)
 	np = pnode->n_perturbers_low;
 
-    if (np <= 0) return; 		// WRONG -- FOR DEBUGGING...
-//    if (np < 0) return;		// CORRECT -- RESTORE!
+    if (np < 0) return;
 
     // Looks as if we have enough info to build the list.
 
