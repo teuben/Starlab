@@ -1,0 +1,19 @@
+#!/usr/local/bin/tcsh -f
+
+if ($#argv < 1) exit
+
+set tmp = $1
+set ext = $tmp:e
+
+alias CAT cat
+if (X$ext == XZ) then
+    alias CAT 'uncompress -c'
+else if (X$ext == Xgz) then
+    alias CAT 'gunzip -c'
+endif
+
+CAT $* | egrep 'Time = |CPU time =' \
+       | tr -d '(),' #\
+       | awk '{ if ($1 == "Time") t = $3; \
+		if ($1 == "CPU" && $5 == "delta") print t, $7;}' \
+       | plot_data -q -x 'time' -y 'd(CPU)' -C red -h "Data from $*"
