@@ -100,7 +100,7 @@ const char *getequals(const char *input_line, char *keyword)
     /* Grab first token from line, like sscanf %s */
     while(isspace(*cp)) cp++;
     int i;
-    for(i = 0; isalnum(*cp); )
+    for(i = 0; isalnum(*cp) || *cp == '_'; )
 	keyword[i++] = *cp++;
     keyword[i] = '\0';
 
