@@ -1,0 +1,1647 @@
+ 
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\     
+ //                                                       //            _\|/_
+//=======================================================//              /|\
+
+//// sys_stats:  Print out various diagnostic statistics on the input
+////             system.  These include:
+////
+////                 system time, number, mass, mass distribution
+////                 relaxation time
+////                 system energy
+////                 core parameters
+////                 lagrangian radii
+////                     for quartiles [default]
+////                     for ten-percentiles
+////                     for "special" choice of Lagrangian masses,
+////                         currently 0.005, 0.01, 0.02, 0.05,
+////                                   0.1, 0.25, 0.5, 0.75, 0.9
+////                 mass distribution by lagrangian zone
+////                 anisotropy by lagrangian zone
+////                 binary parameters
+////
+////             In addition, Lagrangian radii are written to the root
+////             dyn story.  If N^2_ops	is selected, then core parameters
+////             and particle densities are also written to the root
+////             and particle dyn stories.
+////
+////             If N^2_ops is selected, Lagrangian radii are computed
+////             relative to the density center, as are binary radial
+////             coordinates.  Otherwise, the modified center of mass
+////             (center of mass with outliers excluded)  is used.
+////
+//// Options:    -b    specify level of binary statistics [2]
+////                       0:		  none
+////                       1 (or no arg): short binary output
+////                       2:		  full binary output
+////             -e    recalculate the total energy (even if -n is no) [yes]
+////             -l    specify percentile choice [2]
+////                       0:             quartiles (1-3)
+////                       1:             10-percentiles (10-90)
+////                       2 (or no arg): nonlinear Lagrangian masses
+////                                      (0.5, 1, 2, 5, 10, 25, 50, 75, 90%)
+////             -n    perform/don't perform actions requiring O(N^2)
+////                   operations (e.g. computation of energy and core
+////                   radius) [yes]
+////             -o    pipe system to cout [no]
+////
+//// Note: dyn sys_stats does *not* take tidal fields into account.
+
+//   Note:  Because of the reference to libstar.a in sys_stats, the
+//          only global function in this file is sys_stats itself.
+//          Other "stats-related" functions are found in dyn_stats.C.
+//	    Thus, any "dyn-only" tools referencing just the helper
+//	    functions will not have to load the "star" libraries.
+
+#include "dyn.h"
+#include "star/sstar_to_dyn.h"
+
+#ifndef TOOLBOX
+
+local bool check_for_doubling(dyn* b)
+{
+    if (getrq(b->get_log_story(), "fraction_of_masses_doubled") > 0)
+	return true;
+    else
+	return false;
+}
+
+local real print_relaxation_time(dyn* b,
+				 real& kinetic_energy,
+				 real& potential_energy,
+				 void (*compute_energies)(dyn*, real,
+							  real&, real&, real&,
+							  bool))
+{
+    // Print the relaxation time
+
+    real r_virial, t_relax;
+    real total_mass = 0;
+    int N = b->n_leaves();
+    
+    for_all_leaves(dyn, b, bj)
+	total_mass += bj->get_mass();
+
+    real e_total;
+    compute_energies(b, 0.0, kinetic_energy, potential_energy, e_total, true);
+
+    r_virial = -0.5 * total_mass * total_mass / potential_energy;
+
+    // Note suspect choice of Lambda...
+
+    t_relax = 9.62e-2 * sqrt(r_virial * r_virial * r_virial / total_mass)
+              * N / log10(0.4 * N);
+
+    PRI(4); cerr << "r_virial = " << r_virial << endl;
+    PRI(4); cerr << "t_relax = "  << t_relax  << endl;
+
+    return r_virial;
+}
+
+local bool print_numbers_and_masses(dyn* b)
+{
+    // Numbers of stars and nodes:      
+
+    real total_cpu_time = getrq(b->get_log_story(), "total_cpu_time");
+    if (total_cpu_time > -VERY_LARGE_NUMBER) {
+	PRI(4); PRL(total_cpu_time);
+    } else {
+	PRI(4); cerr << "total_cpu_time = (undefined)" << endl;
+    }
+
+    int N = b->n_leaves();
+    int N_top_level = b->n_daughters();
+    cerr << "    N = " << N << "  N_top_level = " << N_top_level << endl;
+
+    // Masses and averages:
+
+    real total_mass_nodes = 0;
+    for_all_daughters(dyn, b, bi)
+	total_mass_nodes += bi->get_mass();
+
+    real total_mass_leaves = 0;
+    real m_min = VERY_LARGE_NUMBER, m_max = -m_min;
+    for_all_leaves(dyn, b, bj) {
+	total_mass_leaves += bj->get_mass();
+	m_min = min(m_min, bj->get_mass());
+	m_max = max(m_max, bj->get_mass());
+    }
+    real m_av = total_mass_leaves / max(1, N);
+
+    cerr << "    total_mass = " << b->get_mass();
+    cerr << "  nodes: " << total_mass_nodes;
+    cerr << "  leaves: " << total_mass_leaves << endl;
+
+    cerr << "    m_min = " << m_min << "  m_max = " << m_max
+	 << "  m_av = " << m_av << endl;
+
+    return (m_min < m_max);
+}
+
+local int which_zone(dyn* bi, vector& center_pos, int n_lagr, real* r_lagr)
+{
+    vector dr = bi->get_pos() - center_pos;
+    real dr2 = dr*dr;
+
+    for (int j = 0; j < n_lagr; j++)
+      if (r_lagr[j] > dr2) return j;
+
+    return n_lagr;
+}
+
+local void print_numbers_and_masses_by_radial_zone(dyn* b, int which)
+{
+    if (find_qmatch(b->get_dyn_story(), "n_lagr")) {
+
+        // Make a list of previously computed lagrangian radii.
+
+        int n_lagr = getiq(b->get_dyn_story(), "n_lagr");
+	real *r_lagr = new real[n_lagr];
+
+	getra(b->get_dyn_story(), "r_lagr", r_lagr, n_lagr);
+
+	// Numbers of top-level nodes (leaves in multiple case):
+
+	int *N = new int[n_lagr+1];
+
+	// Note that r_lagr omits the 0% and 100% radii.
+
+	// Masses and averages:
+
+	real *total_mass_nodes = new real[n_lagr+1];
+	real *m_min = new real[n_lagr+1];
+	real *m_max = new real[n_lagr+1];
+
+	// Initialization:
+
+	for (int i = 0; i <= n_lagr; i++) {
+	    N[i] = 0;
+	    total_mass_nodes[i] = 0;
+	    m_min[i] = VERY_LARGE_NUMBER;
+	    m_max[i] = -VERY_LARGE_NUMBER;
+	    if (i < n_lagr) r_lagr[i] *= r_lagr[i];
+	}
+
+	// Use the same center as lagrad, or the geometric center
+	// in case of error (shouldn't happen, as lagr_pos is written
+	// whenever r_lagr is).
+
+	vector center_pos = 0;
+
+	if (find_qmatch(b->get_dyn_story(), "lagr_pos"))
+	    center_pos = getvq(b->get_dyn_story(), "lagr_pos");
+	else
+	    warning(
+	    "print_numbers_and_masses_by_radial_zone: lagr_pos not found");
+
+	int N_total = 0;
+
+	// PRL(which);
+
+	for_all_daughters(dyn, b, bi)
+
+	    // Count single stars and binaries separately.
+	    // Count single and doubled-mass stars separately also.
+
+	    if ( (which == 0 && bi->get_oldest_daughter() == NULL)
+		|| (which == 1 && bi->get_oldest_daughter() != NULL)
+                || (which == 2 && getiq(bi->get_log_story(),
+					"mass_doubled") == 0 ) 
+		|| (which == 3 && getiq(bi->get_log_story(),
+					"mass_doubled") == 1) ) {
+		 //		 || (which == 2)
+		 //		 || (which == 3) ) {
+
+	        // Find which zone we are in.
+
+	        int i = which_zone(bi, center_pos, n_lagr, r_lagr);
+
+		// Update statistics.
+
+		if (which != 1) {
+		    N[i]++;
+		    N_total++;
+		} else {
+		    N[i] += bi->n_leaves();
+		    N_total += bi->n_leaves();
+		}
+
+		total_mass_nodes[i] += bi->get_mass();
+		m_min[i] = min(m_min[i], bi->get_mass());
+		m_max[i] = max(m_max[i], bi->get_mass());
+	    }
+
+	if (N_total > 0) {
+
+	    int i;
+	    for (i = 0; i <= n_lagr; i++) {
+	        cerr << "    zone " << i << "  N = " << N[i];
+	        if (N[i] > 0)
+		    cerr << "  m_av = " << total_mass_nodes[i] / max(N[i], 1)
+		         << "  m_min = " << m_min[i]
+		         << "  m_max = " << m_max[i];
+		cerr << endl;
+	    }
+
+	    cerr << "\n  Cumulative:\n";
+
+	    int  Nc = 0;
+	    real m_totc = 0;
+	    real m_minc = VERY_LARGE_NUMBER;
+	    real m_maxc = -VERY_LARGE_NUMBER;
+
+	    for (i = 0; i <= n_lagr; i++) {
+	        Nc += N[i];
+		m_totc += total_mass_nodes[i];
+		m_minc = min(m_minc, m_min[i]);
+		m_maxc = max(m_maxc, m_max[i]);
+		cerr << "    zone " << i << "  N = " << Nc;
+		if (Nc > 0) 
+		    cerr << "  m_av = " << m_totc / max(Nc, 1)
+		         << "  m_min = " << m_minc
+		         << "  m_max = " << m_maxc;
+		cerr << endl;
+	    }
+
+	} else
+
+	    cerr << "    (none)\n";
+
+	delete [] r_lagr;
+	delete [] N;
+	delete [] total_mass_nodes;
+	delete [] m_min;
+	delete [] m_max;
+    }
+}
+
+local void print_anisotropy_by_radial_zone(dyn* b, int which)
+{
+    if (find_qmatch(b->get_dyn_story(), "n_lagr")) {
+
+        // Make a list of previously computed lagrangian radii.
+
+        int n_lagr = getiq(b->get_dyn_story(), "n_lagr");
+	real *r_lagr = new real[n_lagr];
+	getra(b->get_dyn_story(), "r_lagr", r_lagr, n_lagr);
+
+	real *total_weight = new real[n_lagr+1];
+	real *vr2_sum = new real[n_lagr+1];
+	real *vt2_sum = new real[n_lagr+1];
+
+	// Note that r_lagr omits the 0% and 100% radii.
+
+	// Initialization:
+
+	for (int i = 0; i <= n_lagr; i++) {
+	    total_weight[i] = 0;
+	    vr2_sum[i] = 0;
+	    vt2_sum[i] = 0;
+	    if (i < n_lagr) r_lagr[i] *= r_lagr[i];
+	}
+
+	// Use the same center as lagrad, or the geometric center
+	// in case of error (shouldn't happen, as lagr_pos is written
+	// whenever r_lagr is).
+
+	vector center_pos = 0, center_vel = 0;
+	if (find_qmatch(b->get_dyn_story(), "lagr_pos"))
+	    center_pos = getvq(b->get_dyn_story(), "lagr_pos");
+	else
+	    warning("print_anisotropy_by_radial_zone: lagr_pos not found");
+
+	if (find_qmatch(b->get_dyn_story(), "lagr_vel"))
+	    center_vel = getvq(b->get_dyn_story(), "lagr_vel");
+
+	int N_total = 0;
+
+	// PRL(which);
+
+	for_all_daughters(dyn, b, bi)
+
+	    // Count single stars and binaries separately.
+
+	    if ( (which == 0 && bi->get_oldest_daughter() == NULL)
+		|| (which == 1 && bi->get_oldest_daughter() != NULL) 
+		|| (which == 2 && getiq(bi->get_log_story(),
+					"mass_doubled") == 0) 
+		|| (which == 3 && getiq(bi->get_log_story(),
+					"mass_doubled") == 1) ) {
+
+	        // Find which zone we are in.
+
+	        int i = which_zone(bi, center_pos, n_lagr, r_lagr);
+
+		// Update statistics.
+
+		N_total++;
+
+		real weight = bi->get_mass();
+		weight = 1;			// Heggie/Binney & Tremaine
+
+		vector dr = bi->get_pos() - center_pos;
+		vector dv = bi->get_vel() - center_vel;
+
+		real r2 = square(dr);
+		real v2 = square(dv);
+		real vr = dr*dv;
+
+		real vr2 = 0;
+		if (r2 > 0) vr2 = vr * vr / r2;
+
+		total_weight[i] += weight;
+		vr2_sum[i] += weight * vr2;
+		vt2_sum[i] += weight * (v2 - vr2);		
+	    }
+
+	if (N_total > 0) {
+
+	    int k;
+	    for (k = 0; k <= n_lagr; k += 5) {
+	        if (k > 0) cerr << endl;
+		cerr << "           ";
+		for (int i = k; i < k+5 && i <= n_lagr; i++) {
+		    if (vr2_sum[i] > 0)
+		        cerr << " " << 1 - 0.5 * vt2_sum[i] / vr2_sum[i];
+		    else
+		        cerr << "   ---   ";
+		}
+	    }
+	    cerr << endl;
+
+	    cerr << "\n  Cumulative anisotropy:\n";
+
+	    real vr2c = 0;
+	    real vt2c = 0;
+
+	    for (k = 0; k <= n_lagr; k += 5) {
+	        if (k > 0) cerr << endl;
+		cerr << "           ";
+		for (int i = k; i < k+5 && i <= n_lagr; i++) {
+		    vr2c += vr2_sum[i];
+		    vt2c += vt2_sum[i];
+		    if (vr2c > 0)
+		        cerr << " " << 1 - 0.5 * vt2c / vr2c;
+		    else
+		        cerr << "   ---   ";
+		}
+	    }
+	    cerr << endl;
+
+	} else
+
+	    cerr << "    (none)\n";
+
+	delete [] r_lagr;
+        delete [] total_weight;
+	delete [] vr2_sum;
+	delete [] vt2_sum;
+    }
+}
+
+// local real system_energy(dyn* b)
+// {
+//     real kin = 0;
+//     for_all_leaves(dyn, b, bj)
+// 	kin += bj->get_mass()
+// 	        * square(something_relative_to_root(bj, &dyn::get_vel));
+//     kin *= 0.5;
+// 
+//     real pot = 0.0;
+//     for_all_leaves(dyn, b, bi) {
+// 	real dpot = 0.0;
+// 	for_all_leaves(dyn, b, bj) {
+// 	    if (bj == bi) break;
+// 	    vector dx = something_relative_to_root(bi, &dyn::get_pos)
+// 			  - something_relative_to_root(bj, &dyn::get_pos);
+// 	    dpot += bj->get_mass() / abs(dx);
+// 	}
+// 	pot -= bi->get_mass() * dpot;
+//     }
+// 
+//     return kin + pot;
+// }
+
+local real top_level_kinetic_energy(dyn* b)
+{
+    // (Probably should compute energy relative to density center,
+    //  or at least relative to the system center of mass...)
+
+    vector cmv = vector(0);
+    real mass = 0;
+
+    for_all_daughters(dyn, b, bb) {
+	mass += bb->get_mass();
+	cmv += bb->get_mass()*bb->get_vel();
+    }
+    cmv /= mass;
+
+    real kin = 0;
+    for_all_daughters(dyn, b, bb)
+        kin += bb->get_mass()*square(bb->get_vel()-cmv);
+
+    return 0.5*kin;
+}
+
+local void print_energies(dyn* b,
+			  real& kinetic_energy,		// top-level
+			  real& potential_energy,	// top-level
+			  real& kT,
+			  void (*compute_energies)(dyn*, real,
+						   real&, real&, real&,
+						   bool))
+{
+    // Energies (top-level nodes):
+
+    real e_total;
+
+    if (kinetic_energy == 0)
+	compute_energies(b, 0.0, kinetic_energy, potential_energy, e_total,
+			 true);
+
+    real total_energy = kinetic_energy + potential_energy;
+    e_total = total_energy;
+    real virial_ratio = -kinetic_energy / potential_energy;
+    kT = -total_energy / (1.5*b->n_daughters());
+
+    cerr << "    top-level nodes:\n";
+    cerr << "        kinetic_energy = " << kinetic_energy
+	 << "  potential_energy = " << potential_energy << endl;
+    cerr << "        total_energy = " << total_energy
+	 << "  kT = " << kT << "  virial_ratio = " << virial_ratio
+	 << endl;
+
+    real ke = kinetic_energy, pe = potential_energy;
+
+    // Recompute energies, resolving any top-level nodes.
+
+    for_all_daughters(dyn, b, bb) {
+	if (bb->is_parent()) {
+	    compute_energies(b, 0.0, pe, ke, e_total, false);
+	    break;
+	}
+    }
+
+    cerr << "    total energy (full system) = " << e_total
+ 	 << endl;
+}
+
+local void search_for_binaries(dyn* b, real energy_cutoff, real kT,
+			       vector center, bool verbose,
+			       bool long_binary_output)
+{
+    // Search for bound binary pairs among top-level nodes.
+
+    bool found = false;
+
+    for_all_daughters(dyn, b, bi)
+	for_all_daughters(dyn, b, bj) {
+	    if (bj == bi) break;
+
+	    real E = get_total_energy(bi, bj);
+
+	    // Convention: energy_cutoff is in terms of kT if set,
+	    //		   in terms of E/mu if kT = 0.
+
+	    if ((kT > 0 && E < -energy_cutoff*kT)
+		|| (kT <= 0 && E * (bi->get_mass() + bj->get_mass())
+		    	< -energy_cutoff * bi->get_mass() * bj->get_mass())) {
+
+		print_binary_from_dyn_pair(bi, bj,
+					   kT, center, verbose,
+					   long_binary_output);
+		cerr << endl;
+
+		found = true;
+	    }
+	}    
+
+    if (!found) cerr << "    (none)\n";
+}
+
+
+// Histogram routines -- accumulate and print out key binary statistics.
+
+// Convenient to keep these global:
+
+#define P_MAX	0.1
+#define E_MIN	0.5
+#define NP	12
+#define NR	10
+#define NE	12
+
+static int p_histogram[NP][NR];	// first index:  log period
+				// second index: radius
+
+static int e_histogram[NP][NR];	// first index:  log E/kT
+				// second index: radius
+
+bool have_kT = false;
+
+local void initialize_histograms()
+{
+    for (int ip = 0; ip < NP; ip++)
+	for (int jr = 0; jr < NR; jr++)
+	    p_histogram[ip][jr] = e_histogram[ip][jr] = 0;
+}
+
+local void bin_recursive(dyn* bi,
+			 vector center, real rcore, real rhalf,
+			 real kT)
+{
+    // Note: inner and outer multiple components are counted
+    //	      as separate binaries.
+
+    have_kT = false;
+    if (kT > 0) have_kT = true;
+
+    for_all_nodes(dyn, bi, bb) {
+	dyn* od = bb->get_oldest_daughter();
+
+	if (od) {
+
+	    // Get period of binary with CM bb.
+
+	    bool del_kep = false;
+
+	    if (!od->get_kepler()) {
+		new_child_kepler(bb);
+		del_kep = true;
+	    }
+
+	    real P = od->get_kepler()->get_period();
+	    real R = abs(something_relative_to_root(bb, &dyn::get_pos)
+			   - center);
+	    real mu = od->get_mass() * od->get_younger_sister()->get_mass()
+			/ bb->get_mass();
+	    real E = -mu*od->get_kepler()->get_energy();
+	    if (kT > 0) E /= kT;
+
+	    if (del_kep) {
+		delete od->get_kepler();
+		od->set_kepler(NULL);
+	    }
+
+	    // Bin by P and R and by E and R.
+
+	    if (P > 0) {
+
+		// P bins are half dex, decreasing.
+		// P > P_MAX in bin 0, P_MAX >= P > 0.316 P_MAX in bin 1, etc.
+
+		int ip = (int) (1 - 2*log10(P/P_MAX));
+		if (ip < 0) ip = 0;
+		if (ip >= NP) ip = NP - 1;
+
+		int ir = 0;
+		if (R > rcore) {
+
+		    // R bin 0 is the core.
+		    // Linear binning in rcore < r < rhalf, logarithmic
+		    // outside rhalf (x2); bin NR/2 has rhalf <= R < 2*rhalf.
+
+		    if (R < rhalf) {
+			real x = R/rhalf;
+			ir = (int) (NR*x/2);
+			if (ir < 1) ir = 1;
+		    } else {
+			real rlim = 2*rhalf;
+			ir = NR/2;
+			while (R > rlim) {
+			    if (ir >= NR-1) break;
+			    rlim *= 2;
+			    ir++;
+			}
+		    }
+		}
+
+		int ie = 0;
+		real elim = E_MIN;
+
+		// E bin 0 is 0 < E < 0.5 (kT), increase by factors of 2.
+
+		while (elim < E) {
+		    ie++;
+		    elim *= 2;
+		    if (ie >= NE-1) break;
+		}
+
+		// Simply count binaries, for now.
+
+		p_histogram[ip][ir]++;
+		e_histogram[NE-1-ie][ir]++;	// histogram will be
+						// printed backwards
+	    }
+	}
+    }	
+}
+
+local void print_histogram(int histogram[][NR], int n, char *label)
+{
+    cerr << endl
+	 << "  Binary distribution by " << label << " and radius:" 
+	 << endl;
+
+    PRI(13+5*n);
+    cerr << "total" << endl;
+
+    for (int jr = NR-1; jr >= 0; jr--) {
+
+	if (jr == NR/2)
+	    cerr << "   Rhalf->";
+	else if (jr == 0)
+	    cerr << "   core-> ";
+	else
+	    PRI(10);
+
+	int sum = 0;
+	for (int i = n-1; i >= 0; i--) {
+	    fprintf(stderr, "%5d", histogram[i][jr]);
+	    sum += histogram[i][jr];
+	}
+	fprintf(stderr, "  %5d\n", sum);		// total by radius
+    }
+
+    cerr << endl << "   total  ";
+
+    // Totals by column.
+
+    int total = 0;
+    for (int i = n-1; i >= 0; i--) {
+	int sum = 0;
+	for (int jr = NR-1; jr >= 0; jr--) sum += histogram[i][jr];
+	fprintf(stderr, "%5d", sum);
+	total += sum;
+    }
+
+    fprintf(stderr, "  %5d\n", total);			// grand total
+}
+
+// Print out whatever histograms we have just accumulated.
+
+local void print_binary_histograms()
+{
+    // Print period histogram...
+
+    print_histogram(p_histogram, NP, "period");
+
+    // ...and add caption.
+
+    cerr << endl;
+    PRI(14); cerr << "<";
+    PRI((NP/2-1)*5-6); cerr << "period (0.5 dex)";
+    PRI((NP/2)*5-13); cerr << "> " << P_MAX << endl;
+
+    // Print energy histogram...
+
+    print_histogram(e_histogram, NE, "energy");
+
+    // ...and add caption.
+
+    cerr << endl;
+    PRI(11); cerr << "< "; fprintf(stderr, "%3.1f", E_MIN);
+    PRI((NE/2-1)*5-4); 
+    if (have_kT)
+	cerr << "E/kT (x 2)";
+    else
+	cerr << "E/mu (x 2)";
+    PRI((NE/2)*5-8); cerr << ">" << endl;
+}
+
+
+local void print_binaries(dyn* b, real kT,
+			  vector center, real rcore, real rhalf,
+			  bool verbose,
+			  bool long_binary_output = true,
+			  void (*dstar_params)(dyn*) = NULL)
+{
+    // Print out the properties of "known" binaries (i.e. binary subtrees),
+    // and get some statistics on binaries in the core.  Note that *all*
+    // binary subtrees are printed, regardless of energy.
+    // Node b is the root node.
+
+    // Printout occurs in four passes:	(0) perturbed multiples
+    //					(1) unperturbed multiples
+    //					(2) perturbed binaries
+    //					(3) unperturbed binaries
+
+    real eb = 0;
+    real nb = 0;
+    int n_unp = 0;
+    real e_unp = 0;
+
+    real mbcore = 0;
+    int nbcore = 0;
+
+    initialize_histograms();
+
+    bool found = false;
+
+    for (int pass = 0; pass < 4; pass++)
+    for_all_daughters(dyn, b, bi) {
+
+	dyn* od = bi->get_oldest_daughter();
+
+	if (od &&
+	    (pass == 0 && bi->n_leaves()  > 2 && od->get_kepler() == NULL) ||
+	    (pass == 1 && bi->n_leaves()  > 2 && od->get_kepler() != NULL) ||
+	    (pass == 2 && bi->n_leaves() == 2 && od->get_kepler() == NULL) ||
+	    (pass == 3 && bi->n_leaves() == 2 && od->get_kepler() != NULL)) {
+
+	    if (verbose) {
+		if (od->get_kepler() == NULL)
+		    cerr << "    ";
+		else
+		    cerr << "  U ";
+		bi->pretty_print_node(cerr);
+	    }
+
+	    if (bi->n_leaves() > 2) {
+
+		if (verbose) cerr << "   is a multiple system:\n";
+
+		// Recursively print out the structure :
+
+		kepler k;
+		eb += print_structure_recursive(bi,
+						dstar_params,
+						n_unp, e_unp,
+						kT, center, &k, verbose);
+
+		bin_recursive(bi, center, rcore, rhalf, kT);
+
+	    } else {
+
+		int init_indent = BIN_INDENT - 4 - strlen(bi->format_label());
+
+		// if (verbose) {
+		//    if (od->get_kepler()) {
+		//	PRI(init_indent);
+		//	cerr << "is unperturbed (has a kepler pointer)"
+		//	     << endl;
+		//
+		//	init_indent = BIN_INDENT;
+		//    }
+		// }
+
+		bool reset = false;
+		if (od->get_kepler() == NULL) {
+		    new_child_kepler(bi);	// attach temporary kepler
+		    reset = true;		// to oldest daughter
+		}
+
+		real dist_from_center = abs(bi->get_pos() - center);
+
+		eb += print_binary_params(od->get_kepler(), od->get_mass(),
+					  kT, dist_from_center, verbose,
+					  long_binary_output, init_indent);
+		nb++;
+
+		// Indirect reference to dstar output:
+
+		if (dstar_params != NULL)
+		    dstar_params(bi);
+
+		if (rcore > 0) {
+		    if (dist_from_center <= rcore) {
+			nbcore++;
+			mbcore += bi->get_mass();
+		    }
+		}
+
+		bin_recursive(bi, center, rcore, rhalf, kT);
+
+		if (reset) {
+		    delete od->get_kepler();
+		    od->set_kepler(NULL);
+		}
+
+		// Virtual reference to additional binary output.
+		// Must do this *after* temporary keplers have been removed.
+
+		real e = od->print_pert(long_binary_output);
+		if (e != 0) {
+		    n_unp++;
+		    e_unp += e;
+		}
+	    }
+
+	    found = true;
+	}
+    }
+
+    if (!found)
+
+	cerr << "    (none)\n";
+
+    else {
+
+	if (verbose) cerr << endl;
+	cerr << "  Total binary energy ("
+	     << nb << " binaries) = " << eb << endl;
+
+	if (n_unp != 0) {
+	    cerr << "  Total unperturbed binary energy ("
+		 << n_unp << " binaries) = " << e_unp << endl;
+	}
+
+	if (rcore > 0)
+	    cerr << "  nbcore = " << nbcore
+		 << "  mbcore = " << mbcore << endl;
+
+	print_binary_histograms();	// should this always be done, or
+					// only when binary output is turned
+					// on (as at present)?
+					//
+					// -- histograms are presently only 
+					//    computed if binary output is
+					//    enabled
+    }
+}
+
+local void print_core_parameters(dyn* b, bool allow_n_sq_ops,
+				 vector& density_center, real& rcore)
+{
+    real mcore;
+    int ncore;
+
+    compute_core_parameters(b, 12, allow_n_sq_ops,
+			    density_center, rcore, ncore, mcore);
+
+    cerr << "    density_center = " << density_center << endl;
+    cerr << "    rcore = " << rcore << "  ncore = " << ncore
+	 << "  mcore = " << mcore << endl;
+
+    // Place the data in the root dyn story.
+
+    putrq(b->get_dyn_story(), "core_radius_time", b->get_system_time());
+    putrq(b->get_dyn_story(), "core_radius", rcore);
+    putiq(b->get_dyn_story(), "n_core", ncore);
+    putrq(b->get_dyn_story(), "m_core", mcore);
+}
+
+// Linear interpolation routine.
+
+local real linear_interpolation(const real x,
+				const real x1, const real x2,
+				const real y1, const real y2) {
+
+        real a = (y2-y1)/(x2-x1);
+	real b = y1 - a*x1;
+
+	real y = a*x + b;
+	return y;
+}
+
+#if 0
+// Currently in /star/util/kingfit.C   
+
+// Fitting function for N-body Rc/Rvir to King's concentration parameter c. 
+// Argument is core radius / virial radius.
+
+local real kingCfit(const real rc_rvir) {
+
+  int nfit = 12;
+  real WoKing[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  real Cking[] = {0., 0.295643, 0.505349, 0.673898, 0.840487,
+		  1.03059, 1.25598, 1.5284, 1.83414, 2.12028,
+		  2.35155, 2.5495, 2.7396};
+  real Rc_Rvir[] = {1., 0.497, 0.492, 0.428, 0.376, 0.314,
+		    0.241, 0.179, 0.110, 0.0568, 0.0369,
+		    0.0185, 0.0129};
+  
+  if (rc_rvir>=Rc_Rvir[1])
+    return 0;
+  else if(rc_rvir<=Rc_Rvir[nfit])
+    return 3;
+  else
+    for (int i=1; i<=nfit; i++) 
+      if (rc_rvir>=Rc_Rvir[i])
+	return linear_interpolation(rc_rvir,
+				    Rc_Rvir[i-1], Rc_Rvir[i],
+				    Cking[i-1], Cking[i]);
+  return 0;
+}
+
+// Fitting function for N-body Rc/Rvir to King's dimentionless Wo.
+// Argument is core radius / virial radius.
+
+local real kingWfit(const real rc_rvir) {
+
+  int nfit = 12;
+  real WoKing[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  real Rc_Rvir[] = {1., 0.497, 0.492, 0.428, 0.376, 0.314,
+		    0.241, 0.179, 0.110, 0.0568, 0.0369,
+		    0.0185, 0.0129};
+
+  if (rc_rvir>=Rc_Rvir[1])
+    return 1;
+  else if (rc_rvir <= Rc_Rvir[nfit])
+    return 12;
+  else
+    for (int i=1; i<=nfit; i++) 
+      if (rc_rvir >= Rc_Rvir[i])
+	return  linear_interpolation(rc_rvir,
+				     Rc_Rvir[i-1], Rc_Rvir[i],
+				     WoKing[i-1], WoKing[i]);
+  return 1;
+}
+
+local void print_king_parameters(const real rc_rvir) {
+
+  real Wo = kingWfit(rc_rvir);
+  real C  = kingCfit(rc_rvir);
+  
+    PRI(4); cerr << "Wo = " << Wo 
+		 << "  c = " << C
+		 << endl;
+  
+}
+
+#endif
+
+local bool testnode(dyn * b)
+{
+    if (b->is_top_level_node())
+	return true;
+    else
+	return false;
+}
+
+local bool binary_fn(dyn * b)
+{
+    if (b->get_oldest_daughter())
+	return true;
+    else
+	return false;
+}
+
+local bool single_fn(dyn * b)
+{
+    if (getiq(b->get_log_story(), "mass_doubled") == 0)
+	return true;
+    else
+	return false;
+}
+
+local bool double_fn(dyn * b)
+{
+    if (getiq(b->get_log_story(), "mass_doubled") == 1)
+	return true;
+    else
+	return false;
+}  
+
+local real print_lagrangian_radii(dyn* b, int which_lagr,
+				  bool verbose = true, int which_star = 0)
+{
+    char tmp[3];
+    bool nonlin = false;
+
+    real rhalf = 1;
+    int ihalf;
+
+    int nl, indent;
+    if (which_lagr == 0) {
+	nl = 4;
+	indent = 15;
+	ihalf = 1;
+    } else if (which_lagr == 1) {
+	nl = 10;
+	indent = 20;
+	ihalf = 4;
+    } else {
+	nl = 10;
+	indent = 26;
+	nonlin = true;
+	ihalf = 6;
+    }
+
+    if (which_star == 0)
+	compute_general_mass_radii(b, nl, nonlin);
+    else if (which_star == 1)
+	compute_general_mass_radii(b, nl, nonlin, binary_fn);
+    else if (which_star == 2)
+	compute_general_mass_radii(b, nl, nonlin, single_fn);
+    else if (which_star == 3)
+	compute_general_mass_radii(b, nl, nonlin, double_fn);
+
+    if (find_qmatch(b->get_dyn_story(), "n_lagr")
+	&& getrq(b->get_dyn_story(), "lagr_time") == b->get_system_time()) {
+
+	// Assume that lagr_pos has been properly set if n_lagr is set
+	// and lagr_time is current.
+
+	vector lagr_pos = getvq(b->get_dyn_story(), "lagr_pos");
+
+	if (verbose) {
+	    cerr << endl << "  Lagrangian radii relative to ("
+		 << lagr_pos << "):" << endl;
+	    if (find_qmatch(b->get_dyn_story(), "pos_type"))
+		cerr << "                               ( = "
+		     << getsq(b->get_dyn_story(), "pos_type")
+		     << ")" << endl;
+	    if (which_lagr == 0)
+		cerr << "    quartiles: ";
+	    else if (which_lagr == 1)
+		cerr << "    10-percentiles: ";
+	    else
+		cerr << "    selected percentiles: ";
+	}
+
+        int n_lagr = getiq(b->get_dyn_story(), "n_lagr");  // should be nl - 1
+	real *r_lagr = new real[n_lagr];
+
+	getra(b->get_dyn_story(), "r_lagr", r_lagr, n_lagr);
+
+	for (int k = 0; k < n_lagr; k += 5) {
+	    if (k > 0) {
+		cerr << endl;
+		for (int kk = 0; kk < indent; kk++) cerr << " ";
+	    }
+	    for (int i = k; i < k+5 && i < n_lagr; i++)
+		cerr << " " << r_lagr[i];
+	}
+	cerr << endl << flush;
+
+	rhalf = r_lagr[ihalf];
+	delete [] r_lagr;
+    }
+    return rhalf;
+}
+
+//-----------------------------------------------------------------------------
+//
+// Local functions for dominated ("disk") motion:
+
+local dyn* dominant_mass(dyn* b, real f)
+{
+    // Return a pointer to the most massive top-level node contributing
+    // more than fraction f of the total mass.
+
+    real total_mass = 0, max_mass = 0;
+    dyn* b_dom;
+
+    for_all_daughters(dyn, b, bi) {
+	total_mass += bi->get_mass();
+	if (bi->get_mass() > max_mass) {
+	    max_mass = bi->get_mass();
+	    b_dom = bi;
+	}
+    }
+
+    if (max_mass < f*total_mass)
+	return NULL;
+    else
+	return b_dom;
+}
+
+typedef  struct
+{
+    real  radius;
+    real  mass;
+} rm_pair, *rm_pair_ptr;
+
+//-----------------------------------------------------------------------------
+//  compare_radii  --  compare the radii of two particles
+//-----------------------------------------------------------------------------
+
+local int compare_radii(const void * pi, const void * pj)  // increasing radius
+{
+    if (((rm_pair_ptr) pi)->radius > ((rm_pair_ptr) pj)->radius)
+        return +1;
+    else if (((rm_pair_ptr)pi)->radius < ((rm_pair_ptr)pj)->radius)
+        return -1;
+    else
+        return 0;
+}
+
+local void print_dominated_lagrangian_radii(dyn* b, dyn* b_dom)
+{
+    // Compute and print 10, 20, 30, ..., 90% radii of current system,
+    // taking particle b_dom as the center.
+
+    if (!b_dom) return;
+
+    int n = 0;
+    for_all_daughters(dyn, b, bi)
+	if (bi != b_dom) n++;
+
+    // Set up an array of (radius, mass) pairs.  Also find the total
+    // mass of all nodes under consideration.
+
+    rm_pair_ptr rm_table = new rm_pair[n];
+
+    if (rm_table == NULL) {
+	cerr << "print_dominated_lagrangian_radii: "
+	     << "not enough memory left for rm_table\n";
+	return;
+    }
+
+    real total_mass = 0;
+    int i = 0;
+
+    for_all_daughters(dyn, b, bi)
+	if (bi != b_dom) {
+	    vector dr = bi->get_pos() - b_dom->get_pos();
+
+	    // "Radius" is 2-D (x-y) only.
+
+	    dr[2] = 0;
+
+	    total_mass += bi->get_mass();
+	    rm_table[i].radius = abs(dr);
+	    rm_table[i].mass = bi->get_mass();
+	    i++;
+	}
+
+    // Sort the array by radius.
+
+    qsort((void *)rm_table, (size_t)i, sizeof(rm_pair), compare_radii);
+
+    // Print out the percentile radii:
+
+    cerr << endl << "  Lagrangian radii: ";
+
+    real cumulative_mass = 0.0;
+    i = 0;
+
+    for (int k = 1; k <= 9; k++) {
+
+        while (cumulative_mass < 0.1*k*total_mass)
+	    cumulative_mass += rm_table[i++].mass;
+
+	cerr << " " << rm_table[i-1].radius;
+	if (k == 5) cerr << endl << "                    ";
+    }
+    cerr << endl;
+}
+
+local void print_dominated_velocity_dispersions(dyn* b, dyn* b_dom)
+{
+
+    // Compute and print system velocity dispersions in the radial,
+    // transverse, and vertical (z) directions.
+
+    // Assume that dominated motion is primarily in the x-y plane,
+    // and compute the transverse dispersion relative to keplerian
+    // motion.
+
+    if (!b_dom) return;
+
+    real total_mass = 0;
+    real v2r = 0, v2t = 0, v2z = 0;
+
+    for_all_daughters(dyn, b, bi)
+	if (bi != b_dom) {
+	    vector dr = bi->get_pos() - b_dom->get_pos();
+	    vector dv = bi->get_vel() - b_dom->get_vel();
+
+	    total_mass += bi->get_mass();
+	    v2z += bi->get_mass() * dv[2]*dv[2];
+
+	    // Restrict motion to x-y plane and subtract off
+	    // keplerian motion in the positive sense.
+
+	    dr[2] = 0;
+	    dv[2] = 0;
+	    real r = abs(dr);
+
+	    if (r > 0) {
+		real vr = dr*dv/r;
+
+		// Subtract off keplerian motion.
+
+		real vkep = sqrt(b_dom->get_mass()/r);
+		dv[0] -= -dr[1]*vkep/r;
+		dv[1] -=  dr[0]*vkep/r;
+
+		v2r += bi->get_mass() * vr*vr;
+		v2t += bi->get_mass() * (dv*dv - vr*vr);
+	    }
+	}
+
+    if (total_mass > 0)
+	cerr << endl << "  Velocity dispersions:  "
+	     << sqrt(v2r/total_mass) << "  "
+	     << sqrt(v2t/total_mass) << "  "
+	     << sqrt(v2z/total_mass)
+	     << endl;
+}
+
+//-----------------------------------------------------------------------------
+
+bool parse_sys_stats_main(int argc, char *argv[],
+			  int &which_lagr,
+			  bool &binaries,
+			  bool &long_binary_output,
+			  bool &B_flag,
+			  bool &calc_e,
+			  bool &n_sq,
+			  bool &out,
+			  bool &verbose)
+{
+    // Parse the sys_stats command-line (used by both dyn and hdyn versions).
+
+    // Set standard defaults for standalone tools:
+    
+    which_lagr = 2;			// print nonlinear Lagrangian zones
+
+    binaries = true;			// print binary output
+    B_flag = false;			// force binary evolution (hdyn version)
+    calc_e = true;			// compute energy
+    n_sq = true;			// allow n^2 operations
+    out = false;			// write cin to cout
+    long_binary_output = true;		// long binary output
+    verbose = true;			// extended output
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "b.Bnel.o";	// note: "v" removed because only the
+					// "verbose = true" option works!
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1)
+	switch(c) {
+
+	    case 'b': {int b = 1;
+		      if (poptarg) b = atoi(poptarg);
+		      if (b == 0) {
+			  binaries = false;
+			  long_binary_output = false;
+		      } else if (b == 1) {
+			  binaries = true;
+			  long_binary_output = false;
+		      } else {
+			  binaries = true;
+			  long_binary_output = true;
+		      }}
+	    case 'B': B_flag = true;
+		      break;
+	    case 'e': calc_e = false;
+		      break;
+	    case 'l': if (poptarg)
+			  which_lagr = atoi(poptarg);
+		      else
+			  which_lagr = 2;
+		      break;
+	    case 'n': n_sq = false;
+		      break;
+	    case 'o': out = true;
+		      break;
+	    case 'v': verbose = false;
+		      break;
+            case '?': params_to_usage(cerr, argv[0], param_string);
+		      return false;
+	}
+
+    return true;
+}
+
+void check_addstar(dyn* b)
+{
+    if(find_qmatch(b->get_oldest_daughter()
+		    ->get_starbase()->get_star_story(), "Type")) {
+
+	real T_start = 0;
+
+	addstar(b,                            // Note that T_start and
+		T_start,                      // Main_Sequence are
+		Main_Sequence,                // defaults. They are
+		true);                        // ignored if a star
+	b->set_use_sstar(true);               // is there.
+    }
+}
+
+void sys_stats(dyn* b,
+	       real energy_cutoff,			// default = 1
+	       bool verbose,				// default = true
+	       bool binaries,				// default = true
+	       bool long_binary_output,			// default = true
+	       int which_lagr,				// default = true
+	       bool print_time,				// default = true
+	       bool compute_energy,			// default = true
+	       bool allow_n_sq_ops,			// default = true
+	       void (*compute_energies)(dyn*, real,	// default = calculate_
+					real&, real&,	//		energies
+					real&, bool),
+	       void (*dstar_params)(dyn*),		// default = NULL
+	       bool (*print_dstar_stats)(dyn*, bool,	// default = NULL
+					 vector, bool))
+
+// The last three arguments are a nasty C way of allowing this dyn function
+// to output additional dyn/dstar information when called from kira and
+// other hdyn programs.
+
+{
+    int p = cerr.precision(STD_PRECISION);
+
+    if (print_time) {
+
+	real time = getrq(b->get_dyn_story(), "t");
+	if (time <= -VERY_LARGE_NUMBER)
+	    time = b->get_system_time();
+
+	if (time > -VERY_LARGE_NUMBER)
+	    cerr << "Time = " << time << endl;
+	else
+	    cerr << "Time = (undefined)" << endl;
+
+	if (b->get_use_sstar())
+	    print_sstar_time_scales(b);
+    }
+
+    if (verbose) cerr << "\n  Overall parameters:\n";
+    bool mass_spectrum = print_numbers_and_masses(b);
+
+    vector com_pos, com_vel;
+    compute_com(b, com_pos, com_vel);
+    cerr << "    center of mass position = " << com_pos << endl
+	 << "                   velocity = " << com_vel << endl;
+
+    bool heavy_stars = check_for_doubling(b);
+    // PRI(4); PRL(heavy_stars);
+
+    real kinetic_energy = 0, potential_energy = 0;
+
+    real r_virial = -1;
+    if (compute_energy)				// Need virial radius for tR
+	r_virial  = print_relaxation_time(b, kinetic_energy, potential_energy,
+					  compute_energies);
+
+    if (r_virial == -1) {
+        if (find_qmatch(b->get_dyn_story(), "energy_time")
+	    && getrq(b->get_dyn_story(), "energy_time")
+	                         == b->get_system_time()) {
+
+	    // Take energies from the dyn story.
+
+	    if (find_qmatch(b->get_dyn_story(), "kinetic_energy")
+		&& find_qmatch(b->get_dyn_story(), "kinetic_energy")) {
+
+		kinetic_energy = getrq(b->get_dyn_story(), "kinetic_energy");
+		potential_energy = getrq(b->get_dyn_story(),
+					 "potential_energy");
+		if (potential_energy < 0)
+		    r_virial = -0.5*b->get_mass()*b->get_mass()
+					/ potential_energy;
+	    }
+	}
+    }
+
+    // Note: even if allow_n_sq_ops is false, we can still compute kT
+    // from the kinetic energy.
+
+    real kT = 0;
+
+    if (compute_energy)					// Recompute energies
+        print_energies(b, kinetic_energy, potential_energy, kT,
+		       compute_energies);
+    else if (b->get_oldest_daughter()) {
+	kT = top_level_kinetic_energy(b) / (1.5*b->n_daughters());
+    }
+    PRI(4); PRL(kT);
+
+    vector center = com_pos;
+    real rcore = 0, rhalf = 0;
+
+    // "Dominant" mass means > 50% of the total mass of the system.
+
+    dyn* b_dom = dominant_mass(b, 0.5);
+
+    if (!b_dom) {
+
+	// No dominant mass.
+
+	bool has_densities = (getrq(b->get_dyn_story(), "density_time")
+			       == b->get_system_time());
+
+	if (has_densities || allow_n_sq_ops) {
+
+	    // Function compute_core_parameters will look in the dyn story
+	    // for densities and use them if they are current.  It will
+	    // only do n_sq operations if no current densities are found
+	    // and allow_n_sq_ops is true.
+
+	    if (verbose) {
+		cerr << "\n  Core parameters";
+		if (has_densities)
+		    cerr << " (densities from input snapshot)";
+		cerr << ":\n";
+	    }
+
+	    // Core parameters are always expressed relative to the
+	    // (mean) density center.
+
+	    print_core_parameters(b, allow_n_sq_ops, center, rcore);
+
+	    if (rcore > 0 && r_virial > 0) {
+		if (verbose) cerr << "\n  Dynamical King parameters:\n";
+		print_fitted_king_model(rcore/r_virial, rcore_rvirial);
+	    }
+	}
+
+	// If core parameters were computed, then center now is the mean
+	// density center.  If not, then center is the center of mass.
+	// However, this value of center is presently not used, as the
+	// vector is set equal to lagr_pos below.
+	//
+	// The vector lagr_pos is set when the Lagrangian radii are
+	// computed; lagr_pos and the associated Lagrangian radii are
+	// used internally by *all* functions which print quantities
+	// by radial zone.
+
+	// final variable which = 0 : single stars/CMs
+	//			= 1 : binaries
+	//			= 2 : light stars (heavy_stars = true)
+	//			= 3 : heavy stars (heavy_stars = true)
+
+	rhalf = print_lagrangian_radii(b, which_lagr, verbose, 0);
+
+	// cerr << "first Lagrangian radii calc, all stars" << endl;
+
+	// PRL(heavy_stars);
+
+	if (verbose) {
+	    if (heavy_stars) {
+		cerr << "\n  Lagrangian radii (light stars):\n";
+		print_lagrangian_radii(b, which_lagr, verbose, 2);
+		cerr << "\n  Lagrangian radii (heavy stars):\n";
+		print_lagrangian_radii(b, which_lagr, verbose, 3);
+	    }
+	}
+
+	if (mass_spectrum) {
+
+	    if (verbose)
+		cerr << endl
+		     << "  Mass distribution by Lagrangian zone (singles):"
+		     << endl;
+	    print_numbers_and_masses_by_radial_zone(b, 0);
+
+	    if (verbose)
+		cerr << endl
+		     << "  Mass distribution by Lagrangian zone (multiples):"
+		     << endl;
+	    print_numbers_and_masses_by_radial_zone(b, 1);
+
+	}
+
+	if (verbose)
+	    cerr << "\n  Anisotropy by Lagrangian zone (singles):\n";
+	print_anisotropy_by_radial_zone(b, 0);
+
+	if (verbose)
+	    cerr << "\n  Anisotropy by Lagrangian zone (multiple CMs):\n";
+	print_anisotropy_by_radial_zone(b, 1);
+
+	if (heavy_stars && verbose) {
+	    // if (verbose)
+	    cerr << endl
+		 << "  Mass distribution by Lagrangian zone (light stars):"
+		 << endl;
+	    print_numbers_and_masses_by_radial_zone(b, 2);
+
+	    // if (verbose)
+	    cerr << endl
+		 << "  Mass distribution by Lagrangian zone (heavy stars):"
+		 << endl;
+	    print_numbers_and_masses_by_radial_zone(b, 3);
+
+	    // if (verbose)
+	    cerr << "\n  Anisotropy by Lagrangian zone (light stars):\n";
+	    print_anisotropy_by_radial_zone(b, 2);
+
+	    // if (verbose)
+	    cerr << "\n  Anisotropy by Lagrangian zone (heavy stars):\n";
+	    print_anisotropy_by_radial_zone(b, 3);
+	}
+
+    } else {
+
+	// Node b_dom dominates the motion ("central black hole").
+
+	center = b_dom->get_pos();
+	putvq(b->get_dyn_story(), "lagr_pos", center);
+
+	// Assume we have a disk system of some sort, and that the
+	// primary plane is x-y.  All functions relating to this
+	// option are currently local, but may be made global later,
+	// if appropriate.
+
+	cerr << endl << "  Motion dominated by node "
+	     << b_dom->format_label() << endl
+	     << "      (mass = " << b_dom->get_mass()
+	     << ",  pos = " << center << ")" << endl;
+	cerr << "  Taking x-y plane as plane of symmetry." << endl;
+
+	print_dominated_lagrangian_radii(b, b_dom);
+	print_dominated_velocity_dispersions(b, b_dom);
+    }
+
+    bool sstar = b->get_use_sstar();
+
+    if (print_dstar_stats != NULL)
+	sstar = !print_dstar_stats(b, mass_spectrum, center, verbose);
+
+    if (sstar)
+	  sstar_stats(b, mass_spectrum, center, verbose);
+
+    if (binaries) {
+
+	// Use the same center as used by the Lagrangian radii functions.
+
+	if (find_qmatch(b->get_dyn_story(), "lagr_pos"))
+	    center = getvq(b->get_dyn_story(), "lagr_pos");
+	else
+	    warning("sys_stats: lagr_pos not found");
+
+	set_kepler_tolerance(2);	// avold termination on error
+
+	if (verbose) {
+	    cerr << endl;
+	    cerr << "  Binaries/multiples";
+	    if (!long_binary_output) cerr << " (short output)";
+	    cerr << ":" << endl;
+	}
+
+	print_binaries(b, kT, center, rcore, rhalf,
+		       verbose, long_binary_output, dstar_params);
+
+	if (allow_n_sq_ops) {
+
+	    if (verbose) {
+		cerr << "\n  Other bound pairs with ";
+		if (kT > 0)
+		    cerr << "|E| > " << energy_cutoff << " kT:\n";
+		else
+		    cerr << "|E/mu| > " << energy_cutoff << ":\n";
+	    }
+	    search_for_binaries(b, energy_cutoff, kT,
+				center, verbose, long_binary_output);
+
+	} else {
+
+	    // Do an NN search for binaries (hdyn only).
+
+	    int which = 0;
+	    bool found = false;
+	    for_all_daughters(dyn, b, bb)
+		found |= bb->nn_stats(energy_cutoff, kT,   // Dummy function for
+				      center, verbose,     // dyn; get NN binary
+				      long_binary_output, // info for hdyn
+				      which++);
+	    if (!found)
+		cerr << "    (none)\n";
+	}
+    }
+
+    cerr.precision(p);
+}
+
+#else
+
+main(int argc, char **argv)
+{
+    check_help();
+
+    bool binaries, long_binary_output, B_flag, verbose, out, n_sq, calc_e;
+    int which_lagr;
+
+    if (!parse_sys_stats_main(argc, argv,
+			      which_lagr,
+			      binaries, long_binary_output, B_flag,
+			      calc_e, n_sq, out, verbose)) {
+	get_help();
+	exit(1);
+    }
+
+    // For dyn version, calc_e requires n_sq.
+
+    if (!n_sq) calc_e = false;
+
+    // Loop over input until no more data remain.
+
+    dyn *b;
+    int i = 0;
+
+    while (b = get_dyn(cin)) {
+
+        // NOTE:  get_xxx() reads NaN as legal garbage...
+
+	check_addstar(b);
+
+	if (i++ > 0) cerr << endl;
+	sys_stats(b, 0.5, verbose, binaries, long_binary_output,
+		  which_lagr, true, calc_e, n_sq);
+
+	if (out) put_node(cout, *b);
+	rmtree(b);
+    }
+}
+
+#endif
