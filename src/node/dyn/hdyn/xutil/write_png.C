@@ -1,5 +1,8 @@
 
+#include "stdinc.h"
+
 #ifndef TOOLBOX
+#ifdef HAS_PNG
 
 // Write_png - Write an image using libpng -- stripped-down version.
 // This should eventually find its way to src/gfx/util.
@@ -12,12 +15,24 @@
 #define ERROR	1
 #define OK	0
 
-void set_palette_colors(png_color palette[], int n)
+local void convert_palette_colors(png_color palette[], int n,
+				  unsigned char *red,
+				  unsigned char *green,
+				  unsigned char *blue)
 {
-    int i;
-    for (i = 0; i < n; i++)
+    for (int i = 0; i < n; i++) {
+	palette[i].red = red[i];
+	palette[i].green = green[i];
+	palette[i].blue = blue[i];
+    }
+//    printf("Using %d-color palette.\n", n);
+}
+
+local void set_palette_grey(png_color palette[], int n)
+{
+    for (int i = 0; i < n; i++)
 	palette[i].red = palette[i].green = palette[i].blue = i;
-    // printf("Using %d-color palette.\n", n);
+//    printf("Using %d-color grey palette.\n", n);
 }
 
 // Use separate red, green, and blue on input because existing software
@@ -30,10 +45,10 @@ void set_palette_colors(png_color palette[], int n)
 // no option exists for output to stdout -- must specify a file name.
 
 int write_png(png_bytep image, png_uint_32 width, png_uint_32 height,
-	      unsigned char red[],
-	      unsigned char green[],
-	      unsigned char blue[],
-	      char *file_name)
+	      char *file_name,
+	      unsigned char *red,	// defaults = NULL
+	      unsigned char *green,
+	      unsigned char *blue)
 {
     FILE *fp;
     png_structp png_ptr;
@@ -87,17 +102,22 @@ int write_png(png_bytep image, png_uint_32 width, png_uint_32 height,
 
     /* Set image information. */
 
-   png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth,
-		PNG_COLOR_TYPE_PALETTE,
-		PNG_INTERLACE_NONE,
-		PNG_COMPRESSION_TYPE_BASE,
-		PNG_FILTER_TYPE_BASE);
+    png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth,
+		 PNG_COLOR_TYPE_PALETTE,
+		 PNG_INTERLACE_NONE,
+		 PNG_COMPRESSION_TYPE_BASE,
+		 PNG_FILTER_TYPE_BASE);
 
-   /* Set up the palette. */
+    /* Set up the palette. */
 
-   palette = (png_colorp)png_malloc(png_ptr, PNG_MAX_PALETTE_LENGTH
-				    		* sizeof (png_color));
-   set_palette_colors(palette, PNG_MAX_PALETTE_LENGTH);
+    palette = (png_colorp)png_malloc(png_ptr, PNG_MAX_PALETTE_LENGTH
+				     		* sizeof (png_color));
+    if (red && green && blue)
+	convert_palette_colors(palette, PNG_MAX_PALETTE_LENGTH,
+			       red, green, blue);
+    else
+	set_palette_grey(palette, PNG_MAX_PALETTE_LENGTH);
+
    png_set_PLTE(png_ptr, info_ptr, palette, PNG_MAX_PALETTE_LENGTH);
 
    /* Write the file header information. */
@@ -134,15 +154,20 @@ int write_png(png_bytep image, png_uint_32 width, png_uint_32 height,
    return (OK);
 }
 
+#endif
+
 #else
 
+#ifdef HAS_PNG
+
 #include "write_png.h"
+
 #define N 512
 
 main()
 {
     unsigned char image[N*N];
-    unsigned char red[256], green[256], blue[256];
+//    unsigned char red[256], green[256], blue[256];
     int i, j;
 
     for (j = N-1; j >= 0; j--)
@@ -158,7 +183,16 @@ main()
 #endif
 	}
 
-    write_png(image, N, N, red, green, blue, "xxx.png");
+    write_png(image, N, N, "xxx.png");	// default is simple greyscale
 }
+
+#else
+
+main()
+{
+	cerr << "PNG not available" << endl;
+}
+
+#endif
 
 #endif

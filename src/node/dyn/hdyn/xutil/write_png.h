@@ -1,7 +1,7 @@
 int write_png(unsigned char *image,
 	      unsigned long width,
 	      unsigned long height,
-	      unsigned char red[],
-	      unsigned char green[],
-	      unsigned char blue[],
-	      char *file_name);
+	      char *file_name,
+	      unsigned char *red = NULL,
+	      unsigned char *green = NULL,
+	      unsigned char *blue = NULL);

@@ -6,9 +6,12 @@
 ////            -c           compress the image file(s) using gzip [no]
 ////            -C colormap  specify a colormap file name [no]
 ////            -f filename  specify root name of image files [snap, - = stdout]
+////            -F format    specify image file format
+////                             (0 = PNG, 1 = SUN, 2 = GIF)                 [0]
 ////            -g           write GIF files (currently uses convert and
 ////                             gifsicle; slow and messy, and may become
-////                             uninterruptible, but saves disk space)     [no]
+////                             uninterruptible, but saves disk space)
+////                             -- same as "-F 2"                          [no]
 ////            -G           toggle forcing particles to grid (nicer single
 ////                             frames, but jerkier movies)              [true]
 ////            -H           toggle Herzsprung-Russel diagram or positional
@@ -36,7 +39,9 @@
 ////                             of HRD (-H only)                           [-3]
 ////            -Y           specify maximum (log luminosity/Lsun) limit
 ////                             of HRD (-H only)                            [3]
-
+////
+//// Note: If PNG output is requested and the PNG libraries are unavailable,
+////       GIF output is used instead.
 //.............................................................................
 //
 //    version 1:  Nov 1998   Steve McMillan	 email: steve@zonker.drexel.edu
@@ -55,6 +60,8 @@ void write_image(float* a, int m, int n, char* filename, int scale,
 		 unsigned char *red,
 		 unsigned char *green,
 		 unsigned char *blue);
+
+#include "write_png.h"
 
 // From gfx/util/make_header.C:
 
@@ -299,9 +306,26 @@ local void initialize_arrays(float *a, float *zarray, int n)
     }
 }
 
+local void write_png_image(float *a, int nx, int ny,
+			   char *file_name,
+			   unsigned char *red,
+			   unsigned char *green,
+			   unsigned char *blue)
+{
+    // Input a is in the range [0, 1).  Convert to unsigned char.
+
+    unsigned char *image = (unsigned char *)malloc(nx*ny*sizeof(unsigned char));
+    for (int j = 0; j < ny; j++)
+	for (int i = 0; i < nx; i++)
+	    *(image + nx*j + i) = (unsigned char) (255.9 * (*(a + nx*j + i)));
+#ifdef HAS_PNG
+    write_png(image, nx, ny, file_name, red, green, blue);
+#endif
+}
+
 local void write_image_file(float *a, int nx, int ny,
 			    char *fn, char *filename,
-			    bool compress, bool gif,
+			    bool compress, int format,
 			    bool colormap_set, char *colormap,
 			    unsigned char *red,
 			    unsigned char *green,
@@ -324,17 +348,22 @@ local void write_image_file(float *a, int nx, int ny,
 
     if (colormap_set)
 	write_image(a, nx, ny, fn, 0, colormap);	// 0 ==> no scaling
-    else
-	write_image(a, nx, ny, fn, 0, red, green, blue);
+    else {
+	if (format == 0)
+	    write_png_image(a, nx, ny, fn, red, green, blue);	// PNG format
+	else
+	    write_image(a, nx, ny, fn, 0, red, green, blue);	// SUN format
+    }
 
     if (fn) {
-	if (compress) {
+	if (format == 1 && compress) {
 
 	    // Runtime compression:
 
 	    sprintf(command, "gzip -f -q %s.sun &", filename);
+	    system(command);
 
-	} else if (gif) {
+	} else if (format == 2) {
 
 	    // Create a GIF file (messy!).
 	    // Note that this system command (without the &) is
@@ -344,11 +373,9 @@ local void write_image_file(float *a, int nx, int ny,
 	    sprintf(command,
 "convert %s.sun tmp1.gif && gifsicle tmp1.gif -o tmp2.gif && mv tmp2.gif %s.gif && rm %s.sun tmp1.gif",
 		    filename, filename, filename);
+	    system(command);
 
 	}
-
-	// PRL(command);
-	system(command);
     }
 }
 
@@ -361,7 +388,7 @@ local void write_image_file(float *a, int nx, int ny,
 main(int argc, char** argv)
 {
     int count = 0, count1 = 0;
-    char filename[64], sunfilename[64], command[1024];
+    char filename[64], im_filename[64], command[1024];
     char* fn;
 
     char file[64];
@@ -370,6 +397,7 @@ main(int argc, char** argv)
     bool combine = true;
     bool compress = false;
     bool gif = false;
+    int format = 0;
 
     real l = L;
     real xleft = -L;
@@ -404,13 +432,13 @@ main(int argc, char** argv)
     int ncolor = 0;
     real index_all = -1;
 
-    bool quiet = false;
+    bool quiet = true;
 
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "1cC:f:gGi:Hl:X:x:Y:y:mn:N:p:P:qrs:S:t";
+    char* param_string = "1cC:f:F:gGi:Hl:X:x:Y:y:mn:N:p:P:qrs:S:t";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1) {
 	switch (c) {
@@ -425,7 +453,11 @@ main(int argc, char** argv)
 	    case 'f':	strncpy(file, poptarg, 63);
 			file[63] = '\0';	// just in case
 			break;
+	    case 'F':	format = atoi(poptarg);
+			gif = (format == 2);
+			break;
 	    case 'g':	gif = !gif;
+			format = 2 - format;
 			break;
 	    case 'G':	grid = !grid;
 			break;
@@ -493,7 +525,17 @@ main(int argc, char** argv)
 	    psize = 1;
     }
 
+#ifndef HAS_PNG
+    if (format == 0) {
+	format = 2;
+	gif = true;
+    }
+#endif
+
     if (gif) compress = false;
+
+    if (format == 0 && streq(file, "-")) 	// can't write PNG to stdout yet
+	strcpy(file, "tmp");
 
     if (HRD) {
 	if (!xlim_set) {
@@ -657,14 +699,18 @@ main(int argc, char** argv)
 
 		    initialize_arrays(a, zarray, nx*ny);
 
-		    // Open the output file.
+		    // Open the output file.  For now, we don't know how
+		    // to write a PNG file to stdout.
 
 		    if (streq(file, "-"))
 			fn = NULL;
 		    else {
 			sprintf(filename, "%s", file);
-			sprintf(sunfilename, "%s.sun", file);
-			fn = sunfilename;
+			if (format == 0)
+			    sprintf(im_filename, "%s.png", file);
+			else
+			    sprintf(im_filename, "%s.sun", file);
+			fn = im_filename;
 		    }
 		}
 	    }
@@ -771,11 +817,14 @@ main(int argc, char** argv)
 		    fn = NULL;
 		else {
 		    sprintf(filename, "%s.%3.3d", file, count1);
-		    sprintf(sunfilename, "%s.%3.3d.sun", file, count1);
-		    fn = sunfilename;
+		    if (format == 0)
+			sprintf(im_filename, "%s.%3.3d.PNG", file, count1);
+		    else
+			sprintf(im_filename, "%s.%3.3d.sun", file, count1);
+		    fn = im_filename;
 		}
 
-		write_image_file(a, nx, ny, fn, filename, compress, gif,
+		write_image_file(a, nx, ny, fn, filename, compress, format,
 				 colormap_set, colormap, red, green, blue);
 	    }
 	}
@@ -796,7 +845,7 @@ main(int argc, char** argv)
 
 	// Write the output file.
 
-	write_image_file(a, nx, ny, fn, filename, compress, gif,
+	write_image_file(a, nx, ny, fn, filename, compress, format,
 			 colormap_set, colormap, red, green, blue);
 
     }
