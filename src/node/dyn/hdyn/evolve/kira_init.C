@@ -75,8 +75,9 @@ local void correct_multiples(hdyn* b,
 			cerr << "daughter node "
 			     << bb->get_oldest_daughter()->format_label()
 			     << " not unperturbed.  Correcting...\n";
-		    bb->get_oldest_daughter()->
-			reinitialize_kepler_from_hdyn();
+		    hdyn *od = bb->get_oldest_daughter();
+		    od->reinitialize_kepler_from_hdyn();
+		    od->recompute_unperturbed_step();
 		} else
 		    if (verbose)
 			cerr << "daughter node uperturbed.\n";
@@ -616,6 +617,24 @@ local char* stredit(char* s, char c1, char c2)	// duplicate in runtime_help.C
 
 local void kira_system_id(int argc, char** argv)
 {
+    // Attempt to identify the user and host.
+
+    cerr << "kira run by user ";
+    if (getenv("LOGNAME"))
+	cerr << getenv("LOGNAME");
+    else
+	cerr << "(unknown)";
+    cerr << " on host ";
+    if (getenv("HOST"))
+	cerr << getenv("HOST");
+    else if (getenv("HOSTNAME"))
+	cerr << getenv("HOSTNAME");
+    else
+	cerr << "(unknown)";
+    if (getenv("HOSTTYPE"))
+	cerr << " (host type " << getenv("HOSTTYPE") <<")";
+    cerr << endl;
+
     cerr << "Starlab version " << STARLAB_VERSION;
 
     char* s = stredit(_COMPILE_DATE_, '_', ' ');
@@ -626,7 +645,7 @@ local void kira_system_id(int argc, char** argv)
     cerr << endl;
 
     cerr << "Command line reference:  " << argv[0] << endl;
-    cerr << "Arguments:  ";
+    cerr << "Arguments: ";
     for (int i = 1; i < argc; i++) cerr << " " << argv[i];
     cerr << endl;
 
@@ -635,31 +654,29 @@ local void kira_system_id(int argc, char** argv)
 	||  argv[0][0] == '/') {
     } else {
 
-	cerr << "System `which " << argv[0] << "` = ";
-
 	char tmp[256];
-	sprintf(tmp, "which %s > KIRA_TEMP", argv[0]);
+	sprintf(tmp, "which %s > ./KIRA_TEMP", argv[0]);
+	cerr << tmp << endl;
 
 	system(tmp);		// Note: "system" adds newline and insists
 				// on writing to stdout, so we must capture
 				// the output in a file and read it back...
 
-	ifstream file("KIRA_TEMP");
+	ifstream file("./KIRA_TEMP");
 	if (file) {
 
 	    file >> tmp;
-	    cerr << tmp << endl;
+	    cerr << "System `which " << argv[0] << "` = " << tmp << endl;
 
 	    file.close();
-	    sprintf(tmp, "rm KIRA_TEMP");
+	    sprintf(tmp, "rm ./KIRA_TEMP");
 	    system(tmp);	
 	}
 
     }
 
     cerr << "Current directory = " << getenv("PWD") << endl;
-
-    // cerr << endl;
+    cerr << endl;
 }
 
 #define MASS_TOL 1.e-12
@@ -1026,6 +1043,8 @@ bool kira_initialize(int argc, char** argv,
 
     if (c_flag)
 	b->log_comment(comment);
+
+    // Perform one-time correction/initialization of various system components.
 
     correct_multiples(b, verbose);
     initialize_index(b, verbose);
