@@ -14,7 +14,7 @@ struct rasterfile {
 	int	ras_maptype;		// type of colormap; see RMT_* below
 	int	ras_maplength;		// length (bytes) of following map
 
-	// color map follows for ras_maplength bytes, followed by image
+	// color map follows for ras_maplength bytes, followed by the image
 };
 
 // Note: colormap and image are in bytes, so no compatibility problems
@@ -90,9 +90,9 @@ void write_word(unsigned char * x, int n, FILE* out_file)
 //   compatibility, code reading rasterfiles must be prepared to compute the
 //   true length from the width, height, and depth fields.
 
-static void make_colormap(unsigned char* red,
-		   unsigned char* green,
-		   unsigned char* blue)
+void make_standard_colormap(unsigned char* red,
+			    unsigned char* green,
+			    unsigned char* blue)
 {
     // Make a simple standard colormap.
 
@@ -124,41 +124,22 @@ static void make_colormap(unsigned char* red,
     }
 }
 
-void make_header(int m, int n, FILE* out_file, char* colormap_file)
+void make_greymap(unsigned char* red,
+		  unsigned char* green,
+		  unsigned char* blue)
 {
-    // Construct a SUN rasterfile header.
+    // Make a simple greyscale colormap.
 
-    int i;
-    unsigned char red[256], green[256], blue[256];
+    for (int i = 0; i < 256; i++)
+        red[i] = green[i] = blue[i] = i;
+}
 
+void make_header(int m, int n, FILE* out_file,
+		 unsigned char *red,
+		 unsigned char *green,
+		 unsigned char *blue)
+{
     struct rasterfile r;
-    FILE* mapfile;
-
-    // Attempt to read a color map.
-
-    if (colormap_file) {
-	if ((mapfile = fopen(colormap_file, "r")) == NULL) {
-	    fprintf(stderr, "Can't open color map file %s: using default\n",
-		    colormap_file);
-	    colormap_file = NULL;
-	} else {
-	    if (fread(red, 1, 256, mapfile) != 256) {
-		fprintf(stderr, "Error reading color map: using default\n");
-		colormap_file = NULL;
-	    } else {
-		if (fread(green, 1, 256, mapfile) != 256) {
-		    fprintf(stderr, "Error reading color map: using default\n");
-		    colormap_file = NULL;
-		} else {
-		    if (fread(blue, 1, 256, mapfile) != 256) {
-			fprintf(stderr,
-				"Error reading color map: using default\n");
-			colormap_file = NULL;
-		    }
-		}
-	    }
-	}
-    }
 
     r.ras_magic = RAS_MAGIC;
     r.ras_width = m;
@@ -187,9 +168,51 @@ void make_header(int m, int n, FILE* out_file, char* colormap_file)
 
     // Remaining elements are all bytes, so no special treatment needed.
 
-    if (!colormap_file) make_colormap(red, green, blue);
-
     fwrite(red, 1, 256, out_file);
     fwrite(green, 1, 256, out_file);
     fwrite(blue, 1, 256, out_file);
 }
+
+void make_header(int m, int n, FILE* out_file,
+		 char* colormap_file)		// (make our own if NULL)
+{
+    // Construct a SUN rasterfile header.
+
+    unsigned char red[256], green[256], blue[256];
+
+    FILE* mapfile;
+
+    // Attempt to read a color map.
+
+    if (colormap_file) {
+	if ((mapfile = fopen(colormap_file, "r")) == NULL) {
+	    fprintf(stderr, "Can't open color map file %s: using default\n",
+		    colormap_file);
+	    colormap_file = NULL;
+	} else {
+	    if (fread(red, 1, 256, mapfile) != 256) {
+		fprintf(stderr, "Error reading color map: using default\n");
+		colormap_file = NULL;
+	    } else {
+		if (fread(green, 1, 256, mapfile) != 256) {
+		    fprintf(stderr, "Error reading color map: using default\n");
+		    colormap_file = NULL;
+		} else {
+		    if (fread(blue, 1, 256, mapfile) != 256) {
+			fprintf(stderr,
+				"Error reading color map: using default\n");
+			colormap_file = NULL;
+		    }
+		}
+	    }
+	}
+    }
+
+    // Default colormap is now greyscale.
+
+    if (!colormap_file) // make_standard_colormap(red, green, blue);
+        make_greymap(red, green, blue);
+
+    make_header(m, n, out_file, red, green, blue);
+}
+

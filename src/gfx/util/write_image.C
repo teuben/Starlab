@@ -9,7 +9,12 @@
 
 // From make_header.C:
 
-void make_header(int m, int n, FILE* output_file, char* colormap_file);
+void make_header(int m, int n, FILE* out_file,
+		 char* colormap_file);
+void make_header(int m, int n, FILE* out_file,
+		 unsigned char *red,
+		 unsigned char *green,
+		 unsigned char *blue);
 
 // The description and construction of the header for SUN raster
 // images is now in make_header.c
@@ -56,7 +61,11 @@ static void get_limits(float* a, int n, float* amin, float* amax)
     }
 }
 
-void write_image(float* a, int m, int n, char* filename, int scale)
+// These "write_image" functions are identical except for the arguments
+// and the calls to make_header.  (Sorry...)
+
+void write_image(float* a, int m, int n, char* filename, int scale,
+		 char *colormap)
 
 // Write the contents of the 2-D array a to a file as a SUN raster image.
 // If no file is specified, use stdout.
@@ -83,7 +92,57 @@ void write_image(float* a, int m, int n, char* filename, int scale)
     nn = n;
     if (nn%2 != 0) nn++;
 
-    make_header(mm, nn, file, NULL);
+    make_header(mm, nn, file, colormap);
+
+    // Scan 2-D array top to bottom, left to right.
+
+//    if (scale) {
+	get_limits(a, m*n, &amin, &amax);
+//	fprintf(stderr, "%s: min = %f max = %f\n", filename, amin, amax);
+//    }
+
+    // Note: j ordering goes from top to bottom...
+
+    for (j = n - 1; j >= 0; j--) write_line(a+m*j, m, file,
+					    scale, amin, amax);
+
+    if (nn != n) write_line(a, m, file,		// Pad to 16-bit boundary.
+			    scale, amin, amax);
+	
+    if (filename != NULL) fclose(file);
+}
+
+void write_image(float* a, int m, int n, char* filename, int scale,
+		 unsigned char *red,
+		 unsigned char *green,
+		 unsigned char *blue)
+
+// Write the contents of the 2-D array a to a file as a SUN raster image.
+// If no file is specified, use stdout.
+// Scale the data before writing if scale is set.
+
+{
+    FILE* file;
+    int file_open = 0;
+    int j, mm, nn;
+    float amin, amax;
+
+    if (m > BUFSIZE) exit(1);
+
+    if (filename != NULL) {
+	if ((file = fopen(filename, "w")) == NULL) exit(1);
+    } else
+	file = stdout;
+
+    // Make dimensions even (pad if necessary):
+
+    mm = m;
+    if (mm%2 != 0) mm++;
+
+    nn = n;
+    if (nn%2 != 0) nn++;
+
+    make_header(mm, nn, file, red, green, blue);
 
     // Scan 2-D array top to bottom, left to right.
 
@@ -135,10 +194,10 @@ void write_image_f77(float* a, int* m, int* n, char* filename,
 
     // Use the C routine to do the work.
 
-    write_image(a, *m, *n, f, *scale);
+    write_image(a, *m, *n, f, *scale, NULL);
 }
 
-// Some brain-dead Fortrans (e.g. on the Sun and the Cray!) want global
+// Some brain-dead Fortrans (e.g. on the Sun and Cray) want global
 // names to be uppercase or terminated with "_"...
 
 void WRITE_IMAGE_F77(float* a, int* m, int* n, char* filename,
