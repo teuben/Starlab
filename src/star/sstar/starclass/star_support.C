@@ -623,6 +623,61 @@ bool remmant(stellar_type tpe) {
   return false;
 }
 
+int convert_SeBa_stellar_type_to_BSE(stellar_type tpe) {
+   
+      switch(tpe) {
+         case Static_Star:	        
+         case SPZDCH_Star:	        
+         case Proto_Star:	        
+         case Planet:		        
+         case Brown_Dwarf:		return 0;
+	   
+         case Main_Sequence: 		return 0;
+      case Hyper_Giant:  		return 6; //?
+         case Hertzsprung_Gap:  	return 2;
+         case Sub_Giant:		return 3;
+         case Horizontal_Branch:	return 4;
+         case Super_Giant:	        return 5;
+         case Thorn_Zytkow:		return 5;
+         case Helium_Star:		return 7;
+         case Carbon_Star:	
+         case Helium_Giant:		return 8;
+         case Helium_Dwarf:             return 10;
+         case Carbon_Dwarf:             return 11;
+         case Oxygen_Dwarf:		return 12;
+         case Xray_Pulsar:
+         case Radio_Pulsar:
+         case Neutron_Star:             return 13;
+         case Black_Hole:		return 14;
+         case NAS:			return 15;
+         case Disintegrated:	
+         case Double:		
+         default:			return -1;
+      }
+   }
+
+stellar_type convert_BSE_to_SeBa_stellar_type(int tpe) {
+   
+      switch(tpe) {
+         case 0:                       return Brown_Dwarf;
+         case 1: 		       return Main_Sequence;
+         case 2:                       return Hertzsprung_Gap;
+         case 3:    		       return Sub_Giant;
+         case 4:    	               return Horizontal_Branch;
+         case 5:	               return Super_Giant;
+         case 6:                       return Hyper_Giant; //?
+         case 7:		       return Helium_Star;
+         case 8:		       return Helium_Giant;
+         case 10:                      return Helium_Dwarf;
+         case 11:                      return Carbon_Dwarf;
+         case 12:		       return Oxygen_Dwarf;
+         case 13:                      return Neutron_Star;
+         case 14:		       return Black_Hole;
+         case 15:		       return NAS;
+      default:		               return NAS;
+      };
+}
+
 #if 0
 real main_sequence_mass_loss() {
 

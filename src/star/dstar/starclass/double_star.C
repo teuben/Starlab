@@ -323,20 +323,26 @@ void double_star::dump(ostream & s, bool brief) {
     //    else
     //	s << get_node()->format_label() << " ";
 
-    s << binary_age << " "
+    s << identity << " "
+      << binary_age << " "
       << semi << " "
-      << eccentricity << "    "
+      << eccentricity << "    ";
 
-      //      << stp->get_identity() << " "	  
-      << stp->get_element_type() << " "
-      << m1 << " "
-      << stp->get_effective_radius()/primary_roche_lobe  << "    "
+	s << stp->get_identity() << " "	  
+	  << stp->get_element_type() << " "
+	  << m1 << " "
+	  << stp->get_effective_radius() << " "
+	  << stp->get_core_mass() << "    "
+	  //      << stp->get_effective_radius()/primary_roche_lobe  << "    "
 
-      //      << sts->get_identity() << " "	  
-      << sts->get_element_type() << " "
-      << m2 << " "
-      << sts->get_effective_radius()/secondary_roche_lobe
-      << endl;
+	  << sts->get_identity() << " "	  
+	  << sts->get_element_type() << " "
+	  << m2 << " "
+	  << sts->get_effective_radius() << " "
+	  << sts->get_core_mass() 
+	  //      << sts->get_effective_radius()/secondary_roche_lobe
+	  << endl;
+
 
       //get_initial_primary()->dump(s, brief);
       //      s << "    ";
