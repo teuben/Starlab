@@ -707,15 +707,10 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
     
     cm->set_oldest_daughter(NULL);
 
-    
-    // To try to free memory by simply 
+    // Do not
     //		delete bcoll;
     //		delete this;
-    // caused a very strange error.  What is wrong?
-    //
-    // *** Dangerous to delete here, as the pointers may be used in ***
-    // *** the calling function.  Delete this and bcoll there.	    ***
-
+    // here
     
     real epot, ekin, etot;
     calculate_energies(get_root(), eps2, epot, ekin, etot);	// dyn function

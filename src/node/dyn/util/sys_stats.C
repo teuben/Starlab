@@ -1349,11 +1349,11 @@ void sys_stats(dyn* b,
 	       real energy_cutoff,			// default = 1
 	       bool verbose,				// default = true
 	       bool binaries,				// default = true
-	       bool long_binary_output,			// default = true
-	       int which_lagr,				// default = true
-	       bool print_time,				// default = true
-	       bool compute_energy,			// default = true
-	       bool allow_n_sq_ops,			// default = true
+	       bool long_binary_output,			// default = false
+	       int which_lagr,				// default = 0
+	       bool print_time,				// default = false
+	       bool compute_energy,			// default = false
+	       bool allow_n_sq_ops,			// default = false
 	       void (*compute_energies)(dyn*, real,	// default = calculate_
 					real&, real&,	//		energies
 					real&, bool),
