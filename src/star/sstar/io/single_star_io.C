@@ -72,33 +72,43 @@ ostream& single_star::print_star_story(ostream& s,
 {
     put_story_header(s, STAR_ID);
 
-    put_string(s,      "  Type   =  ", type_string(get_element_type()));
-    if (get_spec_type(Accreting)==Accreting)
-      put_string(s,      "  Class   =  ", type_string(get_spec_type(Accreting)));
-    put_real_number(s, "  T_cur  =  ", get_current_time());
-    if (get_current_time()!=get_relative_age())
-      put_real_number(s, "  T_rel  =  ", get_relative_age());
-    put_real_number(s, "  M_rel  =  ", get_relative_mass());
-    put_real_number(s, "  M_env  =  ", get_envelope_mass());
-    put_real_number(s, "  M_core =  ", get_core_mass());
-    put_real_number(s, "  T_eff  =  ", temperature());
-    put_real_number(s, "  L_eff  =  ", get_luminosity());
+    if (short_output) {
 
-    // Extra output for stars with CO cores
-    if (star_with_COcore()) {
-      put_real_number(s, "  M_COcore  =  ", get_COcore_mass());
+	put_string(s,      "  S  =  ", type_short_string(get_element_type()));
+	put_real_number(s, "  T  =  ", temperature());
+	put_real_number(s, "  L  =  ", get_luminosity());
+
+    } else {
+
+	put_string(s,      "  Type   =  ", type_string(get_element_type()));
+	if (get_spec_type(Accreting)==Accreting)
+	    put_string(s,  "  Class   =  ",
+		       type_string(get_spec_type(Accreting)));
+	put_real_number(s, "  T_cur  =  ", get_current_time());
+	if (get_current_time()!=get_relative_age())
+	    put_real_number(s, "  T_rel  =  ", get_relative_age());
+	put_real_number(s, "  M_rel  =  ", get_relative_mass());
+	put_real_number(s, "  M_env  =  ", get_envelope_mass());
+	put_real_number(s, "  M_core =  ", get_core_mass());
+	put_real_number(s, "  T_eff  =  ", temperature());
+	put_real_number(s, "  L_eff  =  ", get_luminosity());
+
+	// Extra output for stars with CO cores
+	if (star_with_COcore()) {
+	    put_real_number(s, "  M_COcore  =  ", get_COcore_mass());
+	}
+
+	// Extra output for radio- and X-ray pulsars.
+	if (get_element_type()==Xray_Pulsar ||
+	    get_element_type()==Radio_Pulsar ||
+	    get_element_type()==Neutron_Star) {
+	    put_real_number(s, "  P_rot  =  ", get_rotation_period());
+	    put_real_number(s, "  B_fld  =  ", get_magnetic_field());
+	}
+
+	if (star_story)
+	    put_story_contents(s, *star_story);
     }
-
-    // Extra output for radio- and X-ray pulsars.
-    if (get_element_type()==Xray_Pulsar ||
-	get_element_type()==Radio_Pulsar ||
-	get_element_type()==Neutron_Star) {
-      put_real_number(s, "  P_rot  =  ", get_rotation_period());
-      put_real_number(s, "  B_fld  =  ", get_magnetic_field());
-    }
-
-    if (star_story)
-      put_story_contents(s, *star_story);
 
     put_story_footer(s, STAR_ID);
 
