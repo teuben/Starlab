@@ -16,19 +16,6 @@
 #include "story.h"
 #include <ctype.h>
 
-// Until we get an official word from autoconf,
-// try to guess whether we're little-endian or not.
-
-#ifndef WORDS_BIGENDIAN
-# if MIPSEB || __MIPSEB || __MIPSEB__ || sparc || __sparc || __sparc__
-#  define WORDS_BIGENDIAN 1
-# elif i386 || __i386__ || alpha || __alpha__ || MIPSEL || __MIPSEL || __MIPSEL__
-#  define WORDS_BIGENDIAN 0
-# else
-#  error  Is this machine big- or little-endian?  Define WORDS_BIGENDIAN=1 or 0.
-# endif
-#endif
-
 #undef isalnum	    // hacks for Irix 6.5 <ctype.h> backward compatibility
 #undef isspace
 

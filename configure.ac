@@ -5,10 +5,11 @@ AC_PREREQ(2.59)
 AC_INIT(Starlab, 4.3, [steve@physics.drexel.edu])
 AC_CONFIG_AUX_DIR(config)
 #AC_CONFIG_MACRO_DIR(local)    # not implemented yet as of 2.59
-AC_CONFIG_SRCDIR(src/std/util_math.C)
-AM_INIT_AUTOMAKE([1.8 gnu no-exeext nostdinc std-options])
 AC_CONFIG_HEADERS(include/config.h)
+AC_CONFIG_SRCDIR(src/std/util_math.C)
 AC_LANG([C++])
+AC_PREFIX_DEFAULT([$PWD/usr])
+AM_INIT_AUTOMAKE([1.8 gnu no-exeext nostdinc std-options])
 
 # HUGE FIXME - $PWD will fail if building outside the source directory
 # but I don't quite understand how ac_top_srcdir/top_srcdir work
@@ -60,6 +61,7 @@ AC_PATH_XTRA
 AC_HEADER_STDBOOL
 
 # Checks for typedefs, structures, and compiler characteristics.
+AC_C_BIGENDIAN
 AC_C_CONST
 AC_C_INLINE
 AC_LANG_POP
