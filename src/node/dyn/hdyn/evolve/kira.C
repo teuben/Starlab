@@ -1455,14 +1455,16 @@ local void evolve_system(hdyn * b,		// hdyn array
 	    || (kd->check_heartbeat
 		&& fmod(count, kd->n_check_heartbeat) == 0)) {
 
-	    PRC(count), PRC(t), PRC(t-t_prev), PRC(cpu_time()); PRL(n_next);
+	    PRC(count), PRC(t), PRC(t-t_prev), PRL(cpu_time());
+	    PRL(n_next);
 
-//  	    for (int i = 0; i < n_next && i < 5; i++)
-//  		if (next_nodes[i] && next_nodes[i]->is_valid()) {
-//  		    cerr << i << " " << next_nodes[i]->format_label()
-//  			 << " " << next_nodes[i]->get_timestep() << endl;
+  	    for (int i = 0; i < n_next && i < 5; i++)
+  		if (next_nodes[i] && next_nodes[i]->is_valid()) {
+  		    PRI(4);
+		    cerr << i << " " << next_nodes[i]->format_label()
+			 << " " << next_nodes[i]->get_timestep() << endl;
 //  		    pp3_minimal(next_nodes[i]);
-//  		}
+  		}
 
 	    if (fmod(count, 4*kd->n_check_heartbeat) == 0)
 		print_recalculated_energies(b);
