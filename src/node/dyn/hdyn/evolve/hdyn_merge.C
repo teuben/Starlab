@@ -716,31 +716,10 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
     // causes a not so very strange error.
     
     real epot, ekin, etot;
-<<<<<<< hdyn_merge.C
-<<<<<<< hdyn_merge.C
-<<<<<<< hdyn_merge.C
     //calculate_energies(get_root(), eps2, epot, ekin, etot);	//dyn function
-
     // replaced by GRAPE friendly function (SPZ, March 2001)
-    calculate_internal_energies(get_root(), epot0, ekin0, etot0); //dyn function
-    
+    calculate_internal_energies(get_root(), epot0, ekin0, etot0); 
     PRC(epot); PRC(ekin); PRL(etot);
-=======
-=======
-
->>>>>>> 1.6
-    calculate_energies(get_root(), eps2, epot, ekin, etot);	// dyn function
-    cerr << "The hard way: ";
-    PRC(epot); PRC(ekin); PRL(etot);
-
-    cerr << "The hard-ware way: ";
-=======
->>>>>>> 1.7
-    calculate_internal_energies(get_root(), epot, ekin, etot);
-    PRC(epot); PRC(ekin); PRL(etot);
-
->>>>>>> 1.5
-    // pp3(cm, cerr);
     
     real de_total = etot - etot0;
     vector vcm = hdyn_something_relative_to_root(cm, &hdyn::get_vel);
