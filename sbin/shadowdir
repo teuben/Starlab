@@ -23,6 +23,9 @@ set dlist = (`cd $dir; find . -type d | grep -v CVS`)	# not too many, we hope!
 
 if ($#dlist > 0) then
 
+    set precious = (hdyn/evolve hdyn/util)		# Makefiles to save
+    set savelist = ()
+
     if (-d $shadow) then
 
 #	Ask before overwriting an existing directory.
@@ -34,6 +37,40 @@ if ($#dlist > 0) then
 	    echo Aborted
 	    exit
 	endif
+
+#	Must save some Makefiles in a Starlab shadow directory tree to
+#	avoid having them overwritten or deleted.  Their directories are
+#	defined in $precious.  If the Makefiles exist in the current
+#	shadow directory tree, save them and restore them at the end.
+#	A somewhat half-baked way of doing this follows:
+
+	cd $shadow
+	set mlist = (`find . -name Makefile`)
+	if ($#mlist > 0) then
+	    @ i = 0
+	    foreach m ($precious)
+	    foreach M ($mlist)
+		set tmp = (`echo $M | grep $m`)
+		if ("X$tmp" != "X") then
+		    if (! -l $tmp) then
+
+			@ i++
+
+#			Makefile exists and is a real file (not a link).
+#			Save Makefile $tmp as $corr/Makefile.save.$i
+#			and store its name in $savelist[$i].
+
+			mv $tmp $curr/Makefile.save.$i
+			set savelist = ($savelist $tmp)
+
+			echo Saved $shadow/$tmp in $curr/Makefile.save.$i
+
+		    endif
+		endif
+	    end
+	    end
+	endif
+	cd $curr
 
 	/bin/rm -r -f $shadow
 	echo Directory deleted
@@ -93,5 +130,21 @@ if ($#dlist > 0) then
     end
 
     echo "Shadow directory $shadow successfuly created"
+
+    if ($#savelist > 0) then
+
+#	Restore saved Makefiles.
+
+	cd $shadow
+        @ i = 0
+	foreach m ($savelist)
+	    @ i++
+	    mv $curr/Makefile.save.$i $savelist[$i]
+
+	    echo Restored $shadow/$savelist[$i]
+
+	end
+	cd $curr
+    endif
 
 endif
