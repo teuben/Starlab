@@ -22,7 +22,7 @@
 //	real hdyn::get_unperturbed_steps
 //	bool hdyn::is_weakly_perturbed
 //	bool hdyn::is_stable
-
+//
 // To do:  Should keep track of tidal errors associated with termination
 //	   of unperturbed motion.
 //
@@ -561,7 +561,7 @@ void hdyn::print_unperturbed_binary_params()
     PRI(4); print_nn(get_parent(), 2);
 }
 
-void hdyn::update_dyn_from_kepler()
+void hdyn::update_dyn_from_kepler(bool need_acc_and_jerk)	// default = true
 {
     if (diag->unpert_function_id) {
 	cerr << ">> update_dyn_from_kepler for "
@@ -618,12 +618,37 @@ void hdyn::update_dyn_from_kepler()
     sister->pos = kep->get_rel_pos() * sfactor;
     sister->vel = kep->get_rel_vel() * sfactor;
 
-    clear_interaction();
-    calculate_acc_and_jerk(true);	// recomputes perturbation_squared
-					// based on updated pos and vel
-    store_old_force();
+    // Convenient, but possibly unnecessary, to update accelerations,
+    // jerks, etc. for the binary components at the end of every
+    // unperturbed step.  Doesn't seem to be expensive to do this.
+    // However, should it be desirable to limit computation of acc and
+    // jerk, use need_acc_and_jerk to do so.  We don't need acc and
+    // jerk at the end of a normal (continuing) unperturbed step, but
+    // we do need them if unperturbed motion is about to end.  Modify
+    // integrate_unperturbed_motion as needed.
+    //							(Steve, 5/02)
 
-    update_binary_sister(this);
+    // Continue to set perturbation_squared for use elsewhere.
+
+    if (!need_acc_and_jerk) {
+
+	hdyn* pnode = find_perturber_node();
+
+	if (pnode && pnode->valid_perturbers && pnode->n_perturbers == 0)
+	    perturbation_squared = 0;
+	else
+	    need_acc_and_jerk = true;
+    }
+
+    if (need_acc_and_jerk) {
+
+	clear_interaction();
+	calculate_acc_and_jerk(true);	// recomputes perturbation_squared
+					// based on updated pos and vel
+	store_old_force();
+    }
+
+    update_binary_sister(this);		// seems to repeat some of the above...
 }
 
 bool hdyn::is_close_pair()
