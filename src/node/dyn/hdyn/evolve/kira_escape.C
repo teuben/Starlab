@@ -18,14 +18,16 @@
 #include <star/dstar_to_kira.h>
 
 local bool remove_escapers(hdyn* b,
-			   real rmax, vector lagr_pos, vector lagr_vel)
+			   real rmax,
+			   vector center_pos,
+			   vector center_vel)
 {
     bool correct_dynamics = false;
     real rmax2 = rmax*rmax;
     int n_esc = 0;
 
     for_all_daughters(hdyn, b, bi)
-	if (square(bi->get_pos()-lagr_pos) > rmax2)
+	if (square(bi->get_pos()- center_pos) > rmax2)
 	    n_esc++;
 
     if (n_esc <= 0) {
@@ -45,14 +47,14 @@ local bool remove_escapers(hdyn* b,
 
 	// Escape criterion (note that we do NOT check E > 0):
 	
-	if (square(bj->get_pos()-lagr_pos) > rmax2) {
+	if (square(bj->get_pos()- center_pos) > rmax2) {
 	    
 	    cerr << "    " << bj->format_label() << " " << bj->get_mass()
 		 << endl;
-	    cerr << "    pos: " << bj->get_pos()-lagr_pos << "   |pos| = "
-		 << abs(bj->get_pos()-lagr_pos) << endl;
-	    cerr << "    vel: " << bj->get_vel()-lagr_vel << "   |vel| = "
-		 << abs(bj->get_vel()-lagr_vel) << endl;
+	    cerr << "    pos: " << bj->get_pos()- center_pos << "   |pos| = "
+		 << abs(bj->get_pos()- center_pos) << endl;
+	    cerr << "    vel: " << bj->get_vel()- center_vel << "   |vel| = "
+		 << abs(bj->get_vel()- center_vel) << endl;
 
 	    if (b->get_use_sstar())
 		if (has_sstar(bj)) {
@@ -84,12 +86,13 @@ local bool remove_escapers(hdyn* b,
 	}
     }
 
-    // Note from Steve ates (7/01):  Used to reset the CM because of
-    // the chance we might compute escapers relative to the origin of
+    // Note from Steve (7/01):  Used to reset the CM because of the
+    // chance we might compute escapers relative to the origin of
     // coordinates (rather than, say, the density center).  Without
     // resetting, recoil would eventually carry the entire system
     // beyond the tidal radius!  Now we should *never* use the
-    // coordinate origin, so no need to correct.
+    // coordinate origin in determining escapers, so there is no need
+    // to correct here.
 
     // b->to_com();
 
@@ -98,6 +101,7 @@ local bool remove_escapers(hdyn* b,
     correct_perturber_lists(b, esc_list, n_esc);
 
     // Should possibly recompute accs and jerks on top-level nodes here too.
+    // Not necessary if we are going to reinitialize next.
 
 #if 0
     calculate_acc_and_jerk_on_all_top_level_nodes(b);
@@ -151,17 +155,10 @@ void check_and_remove_escapers(hdyn* b,
 
     real mass0 = total_mass(b);
 
-    vector lagr_pos = 0;
-    if (find_qmatch(b->get_dyn_story(), "lagr_pos"))
-	lagr_pos = getvq(b->get_dyn_story(), "lagr_pos");
+    vector center_pos, center_vel;
+    get_std_center(b, center_pos, center_vel);
 
-    vector lagr_vel = 0;
-    if (find_qmatch(b->get_dyn_story(), "pos_type"))
-	if(streq(getsq(b->get_dyn_story(), "pos_type"), "density center"))
-	    if (find_qmatch(b->get_dyn_story(), "density_center_vel"))
-		lagr_vel = getvq(b->get_dyn_story(), "density_center_vel");
-
-    if (remove_escapers(b, stripping_radius, lagr_pos, lagr_vel)) {
+    if (remove_escapers(b, stripping_radius, center_pos, center_vel)) {
 
 	PRI(2); PRC(b->get_scaled_stripping_radius());
 	PRL(stripping_radius);

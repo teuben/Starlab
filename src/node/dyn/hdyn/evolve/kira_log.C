@@ -577,8 +577,8 @@ void refine_cluster_mass(hdyn *b)
     //
     //		phi  =  -GM/r + (alpha1 x^2 + alpha3 z^2) / 2
     //
-    // where we measure everything relative to lagr_pos (which is
-    // the density center, if known, and the modified center of mass
+    // where we measure everything relative to the standard center (which
+    // is the density center, if known, and the modified center of mass
     // otherwise).  The Jacobi radius for this field is
     //
     //		r_J  =  (-GM/alpha1)^{1/3}
@@ -587,9 +587,10 @@ void refine_cluster_mass(hdyn *b)
     //
     //		phi_J  =  1.5 alpha1 r_J^2.
 
-    vector center(0);
-    if (find_qmatch(b->get_dyn_story(), "lagr_pos"))
-	center = getvq(b->get_dyn_story(), "lagr_pos");
+    vector center, vcenter;
+    int which = get_std_center(b, center, vcenter);
+
+    // which = 1 for density center, 2 for mcom.
 
     real M_inside = total_mass(b), M = -1;
     real r_J, r_x2, r_y2, r_z2, r_max_inside;
@@ -802,8 +803,8 @@ void log_output(hdyn * b, real count, real steps,
 
 //#if 0
 
-    // Suppressed for now while we are debugging other parts of
-    // the GRAPE-6 interface (Steve, 7/00):
+    // Suppressed while debugging other parts of
+    // the GRAPE-6 interface (Steve, 7/00).
 
     compute_densities(b, cod_pos, cod_vel);	// does nothing unless
 						// GRAPE is present
