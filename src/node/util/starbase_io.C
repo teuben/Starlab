@@ -53,7 +53,6 @@ istream & starbase::scan_star_story(istream& s, int level)
 ostream& starbase::print_star_story(ostream& s,
 				    int short_output)	// default = 0
 {
-
     put_story_header(s, STAR_ID);
 
     if (the_node->is_root()) {
