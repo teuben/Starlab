@@ -48,6 +48,9 @@
 #define DEFAULT_GRAPE_MAX_CPU			15.0	// seconds
 #define DEFAULT_GRAPE_LAST_CPU			0.0
 
+#define DEFAULT_GRAPE_COLL_FREQ			8
+#define DEFAULT_GRAPE_PERT_FREQ			1
+
 #define DEFAULT_USE_PERTURBED_LIST		true
 
 // Used in util/hdyn_io.C and evolve/kira_runtime.C:
