@@ -135,7 +135,7 @@ void print_final(ostream & s, final_state3 & f,
 
 void print_scatter3_outcome(intermediate_state3& inter,
 			    final_state3& final,
-			    ostream& s)
+			    ostream& s)		// default = cerr
 {
     s << state_string(inter.descriptor) << " "
       << state_string(final.descriptor) << endl;
@@ -144,7 +144,7 @@ void print_scatter3_outcome(intermediate_state3& inter,
 void print_scatter3_summary(intermediate_state3& inter,
 			    final_state3& final,
 			    real cpu,
-			    ostream& s)
+			    ostream& s)		// default = cerr
 {
     int p = s.precision(STD_PRECISION);
     s << "  time = " << final.time
@@ -163,7 +163,7 @@ void print_scatter3_report(initial_state3& init,
 			   final_state3& final,
 			   real cpu,
 			   bool b_flag,
-			   ostream& s)
+			   ostream& s)		// default = cerr
 {
     print_initial(s, init, b_flag);
     print_intermediate(s, inter, b_flag);

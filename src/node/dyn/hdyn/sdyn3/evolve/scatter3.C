@@ -40,6 +40,7 @@
 ////            -n    specify number of scattering experiments [1]
 ////            -N    specify random number count [0]
 ////            -o    specify outer orbit orientation [random]
+////            -O    specify filename for summary output [stderr]
 ////            -p    force planar prograde [not forced]
 ////            -P    force planar retrograde [not forced]
 ////            -q    minimal output [false]
@@ -380,6 +381,31 @@ void scatter3(initial_state3 & init,
 
 #else
 
+local void log_output_1(int n_experiments, int i, ostream &s)
+{
+    if (n_experiments > 1) s << i+1 << ": ";
+
+    s << "Random seed = " << get_initial_seed()
+      << "  n_rand = " << get_n_rand() << flush;
+}
+
+local void log_output_2(initial_state3 &init,
+			intermediate_state3 &inter,
+			final_state3 &final,
+			bool Q_flag, bool q_flag, bool b_flag,
+			real cpu,
+			ostream &s)
+{
+    s << ":  ";
+
+    print_scatter3_outcome(inter, final, s);
+
+    if (Q_flag) print_scatter3_summary(inter, final, cpu, s);
+
+    if (!q_flag) print_scatter3_report(init, inter, final,
+				       cpu, b_flag, s);
+}
+
 main(int argc, char **argv)
 {
     initial_state3 init;
@@ -405,12 +431,15 @@ main(int argc, char **argv)
     bool  q_flag = FALSE;
     bool  Q_flag = FALSE;
 
+    char outfile[512];
+    bool outfile_set = false;
+
     check_help();
 
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "A:bc:C:d:D:e:g:l:L::m:M:n:N:o:pPqQr:R:s:S:U:v:x:X:::y:z:";
+    char* param_string = "A:bc:C:d:D:e:g:l:L::m:M:n:N:o:O:pPqQr:R:s:S:U:v:x:X:::y:z:";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c) {
@@ -449,6 +478,9 @@ main(int argc, char **argv)
 	    case 'o': psi = atof(poptarg);
 		      psi_flag = 1;
 		      break;
+	    case 'O': strncpy(outfile, poptarg, 511);
+		      outfile[511] = '\0';
+	    	      outfile_set = true;
 	    case 'p': planar_flag = 1;
 		      break;
 	    case 'P': planar_flag = -1;
@@ -494,12 +526,27 @@ main(int argc, char **argv)
     cpu_init();
     int random_seed = srandinter(seed, n_rand);
 
+    if (outfile_set) {
+
+	// Delete any existing file.
+
+	ofstream s(outfile, ios::trunc);
+	if (s)
+	    s.close();
+	else
+	    outfile_set = false;
+    }
+
+    int status = 0;
     for (int i = 0; i < n_experiments; i++) {
 
-	if (n_experiments > 1) cerr << i+1 << ": ";
+	if (outfile_set) {
+	    ofstream s(outfile, ios::app);
+	    log_output_1(n_experiments, i, s);
+	    s.close();
+	} else
+	    log_output_1(n_experiments, i, cerr);
 
-	cerr << "Random seed = " << get_initial_seed()
-	     << "  n_rand = " << get_n_rand() << flush;
 	init.id = get_initial_seed() + get_n_rand();
 
 	// Normally, we just want random angles and phases.
@@ -528,17 +575,17 @@ main(int argc, char **argv)
 		 dt_out, dt_snap, snap_cube_size);
 	cpu = cpu_time() - cpu;
 
-	cerr << ":  ";
-	print_scatter3_outcome(inter, final, cerr);
+	if (outfile_set) {
+	    ofstream s(outfile, ios::app);
+	    log_output_2(init, inter, final, Q_flag, q_flag, b_flag, cpu, s);
+	    s.close();
+	} else
+	    log_output_2(init, inter, final, Q_flag, q_flag, b_flag, cpu, cerr);
 
-	if (Q_flag) print_scatter3_summary(inter, final, cpu, cerr);
-
-	if (!q_flag) print_scatter3_report(init, inter, final,
-					   cpu, b_flag, cerr);
-
-	// PRL(final.descriptor);
-	exit(100+final.descriptor);
+	status = final.descriptor;
     }
+
+    exit(status);
 }
 
 #endif
