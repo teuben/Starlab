@@ -1,4 +1,13 @@
 
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
 //// makesecondary:  Create binary secondary components for randomly
 ////               selected stars in the input snapshot, placing the
 ////               results in a binary tree.  Only secondary masses

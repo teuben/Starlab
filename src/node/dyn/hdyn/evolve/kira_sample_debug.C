@@ -107,7 +107,7 @@ local void dump_binaries(hdyn* b)
 		    pp3(n, cerr);
 		}
 	    }
-	    print_recalculated_energies(b, eps * eps);
+	    print_recalculated_energies(b);
  	}
 	if (t > 19.1) exit(0);
 #endif
@@ -146,7 +146,7 @@ local void dump_binaries(hdyn* b)
 		}
 	    }
 	    cerr << endl;
-	    print_recalculated_energies(b, eps * eps);
+	    print_recalculated_energies(b);
 
 	} else {
 
@@ -223,7 +223,7 @@ local void dump_binaries(hdyn* b)
 		    print_energy = true;
 	    }
 	    if (print_energy)
-		print_recalculated_energies(b, eps * eps);
+		print_recalculated_energies(b);
 	}
 
 
