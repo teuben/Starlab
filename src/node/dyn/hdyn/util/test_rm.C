@@ -14,8 +14,8 @@ local void hsys_stats(hdyn* b,
 	      which_lagr, print_time, compute_energy, allow_n_sq_ops,
 	      print_dstar_params,
 	      print_dstar_stats,
-	      get_energies_with_tidal);	// uses calculate_internal_energies
-					// from kira_grape_include.C
+	      get_energies_with_external); // uses calculate_internal_energies
+					   // from kira_grape_include.C
 }
 
 main(int argc, char **argv)

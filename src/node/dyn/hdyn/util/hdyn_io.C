@@ -26,6 +26,7 @@ real hdyn::omega	= 0;
 real hdyn::omega_sq	= 0;
 real hdyn::alpha1	= 0;
 real hdyn::alpha3	= 0;
+vector hdyn::tidal_center = vector(0,0,0);
 
 bool hdyn::use_dstar	= false;
 

@@ -121,8 +121,8 @@ local void sys_stats(hdyn* b,
 	      print_time,
 	      compute_energy,
 	      allow_n_sq_ops,
-	      get_energies_with_tidal,	// uses calculate_internal_energies
-					// from kira_grape_include.C
+	      get_energies_with_external, // uses calculate_internal_energies
+					  // from kira_grape_include.C
 	      print_dstar_params,
 	      print_dstar_stats);
 
