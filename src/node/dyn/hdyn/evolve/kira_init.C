@@ -774,6 +774,8 @@ bool kira_initialize(int argc, char** argv,
     real input_r_virial;
 
     bool force_nogrape = false;
+    bool force_nodens = false;
+    bool force_nodma = false;
 
     char seedlog[SEED_STRING_LENGTH];
 
@@ -874,8 +876,10 @@ bool kira_initialize(int argc, char** argv,
 	    case '0':	force_nogrape = true;
 			break;
 	    case '1':	force_nodensity();
+	    		force_nodens = true;
 			break;
 	    case '2':	grape6_force_nodma();
+	    		force_nodma = true;
 			break;
 	    case 'a':	eta = atof(poptarg);
 			eta_flag = true;
@@ -1488,6 +1492,11 @@ bool kira_initialize(int argc, char** argv,
         kira_config(b, 0);
         cerr << "GRAPE suppressed" << endl;
     }
+
+    if (force_nodens)
+	cerr << "density computation suppressed" << endl;
+    if (config && force_nodma)
+	cerr << "GRAPE DMA transfers suppressed" << endl;
 
     //----------------------------------------------------------------------
 
