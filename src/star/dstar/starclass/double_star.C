@@ -2457,7 +2457,7 @@ real double_star::zeta(star * donor,
        if( d_lnr<=0 || d_lnm<=0) {
 	 cerr << "WARNING: d_lnm (= " << d_lnm << ") has an illegal value"
 	      << endl;
-	 zeta = 0
+	 zeta = 0;
        }
        else {
 	 zeta = d_lnr/d_lnm;
