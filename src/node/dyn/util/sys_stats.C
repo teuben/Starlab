@@ -1398,7 +1398,7 @@ void sys_stats(dyn* b,
 	    print_sstar_time_scales(b);
     }
 
-    if (verbose) cerr << "\n  Overall parameters:\n";
+    if (verbose) cerr << "\n  Overall parameters (sys_stats):\n";
     bool mass_spectrum = print_numbers_and_masses(b);
 
     vector com_pos, com_vel;
