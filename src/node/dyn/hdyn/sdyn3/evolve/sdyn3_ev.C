@@ -61,7 +61,8 @@ void sdyn3::accumulate_new_acc_and_jerk_from_new(
     if (bj->get_oldest_daughter() != NULL)
         for_all_daughters(sdyn3, bj, bb)
 	    accumulate_new_acc_and_jerk_from_new(bb, eps2,
-						 no_ssd_flag, collision_flag);
+						 no_ssd_flag,
+						 collision_flag);
     else
 	if (this != bj) {
 
@@ -69,7 +70,7 @@ void sdyn3::accumulate_new_acc_and_jerk_from_new(
 	    vec d_vel = new_vel - bj->get_new_vel();
 	    real r2 = d_pos*d_pos;
 
-	    if (r2 < (radius + bj->get_radius()) * (radius + bj->get_radius()))
+	    if (r2 < pow(radius + bj->get_radius(), 2))
 		collision_flag = 1;
 
 	    real r2inv = 1.0/(r2 + eps2);

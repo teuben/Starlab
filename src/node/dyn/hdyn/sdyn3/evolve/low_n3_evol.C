@@ -280,10 +280,12 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
     sdyn3* bj = bi->get_younger_sister();
     sdyn3* bk = bj->get_younger_sister();
 
-    real min_sep_sq = Starlab::min(Starlab::min(bi->get_nn_dr2(), bj->get_nn_dr2()),
-			  bk->get_nn_dr2());
-    real max_sep_sq = Starlab::max(Starlab::max(bi->get_nn_dr2(), bj->get_nn_dr2()),
-			  bk->get_nn_dr2());
+    real min_sep_sq = Starlab::min(Starlab::min(bi->get_nn_dr2(),
+						bj->get_nn_dr2()),
+				   bk->get_nn_dr2());
+    real max_sep_sq = Starlab::max(Starlab::max(bi->get_nn_dr2(),
+						bj->get_nn_dr2()),
+				   bk->get_nn_dr2());
 
     // The following mass factor represents a "worst-case" scenario
     // (see the comments about tidal factors in scatter3.C).  For
@@ -636,13 +638,16 @@ real dynamic_timestep(sdyn3* b, real eta)
 
     for_all_daughters(sdyn3, b, bb) {
 	global_min_encounter_time_sq =
-	    Starlab::min(global_min_encounter_time_sq, bb->get_min_encounter_time_sq());
+	    Starlab::min(global_min_encounter_time_sq,
+			 bb->get_min_encounter_time_sq());
 	global_min_free_fall_time_sq =
-	    Starlab::min(global_min_free_fall_time_sq, bb->get_min_free_fall_time_sq());
+	    Starlab::min(global_min_free_fall_time_sq,
+			 bb->get_min_free_fall_time_sq());
     }
 
     return eta *
-	sqrt(Starlab::min(global_min_encounter_time_sq, global_min_free_fall_time_sq));
+	sqrt(Starlab::min(global_min_encounter_time_sq,
+			  global_min_free_fall_time_sq));
 }
 
 local tfp get_timestep_function_ptr(char* timestep_name)

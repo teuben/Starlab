@@ -404,7 +404,6 @@ void scatter3(initial_state3 & init,
 	// to continue the integration using b.)
 
 	collision_to_peri_to_system(b, inter);
-
 	merge_collisions(b);
 
 	// See if the number of stars has decreased.
@@ -430,7 +429,8 @@ void scatter3(initial_state3 & init,
     for_all_daughters(sdyn3, b, bb) {
         inter.index[inter.n_stars] = bb->get_index();
         inter.r_min[inter.n_stars] = sqrt(bb->get_min_nn_dr2());
-	inter.r_min_min = Starlab::min(inter.r_min_min, inter.r_min[inter.n_stars]);
+	inter.r_min_min = Starlab::min(inter.r_min_min,
+				       inter.r_min[inter.n_stars]);
         inter.n_stars++;
     }
 
