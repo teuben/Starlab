@@ -28,9 +28,8 @@
 //   version 2:  Apr 2004   Ernest Mamikonyan
 //-----------------------------------------------------------------------------
 
-#include "dyn.h"
 #include <vector>
-#include <algorithm>
+#include "dyn.h"
 
 #ifndef TOOLBOX
 
@@ -55,7 +54,7 @@ local bool compare_radii(const rm_pair& rm1, const rm_pair& rm2)
     return rm1.r_sq < rm2.r_sq;
 }
 
-vector<real>& get_radial_densities(dyn *b, vec cpos, vector<real>& r,
+vector<real>& get_radial_numdensities(dyn *b, vec cpos, vector<real>& r,
 				   bool (*filter)(dyn*))
 {
     //if (r.size() < 2) return 0;
@@ -82,17 +81,9 @@ vector<real>& get_radial_densities(dyn *b, vec cpos, vector<real>& r,
 	    rj2 = r[j]*r[j];
 	}
 	if (j >= r.size()) break;
-	rho[j] += (*table)[i].mass;
+	++rho[j];
     }
     delete table;
-    // Convert from mass to density.
-
-    real v0 = 0;	// assume that the first zone extends in to r = 0
-    for (int j = 0; j < r.size(); j++) {
-	real v1 = pow(r[j], 3);
-	rho[j] /= (4*M_PI/3) * (v1 - v0);	// dM --> dM/dV
-	v0 = v1;
-    }
     return rho;
 }
 
@@ -164,7 +155,7 @@ main(int argc, char ** argv)
 
 	// Compute and print the density array.
 
-	vector<real>& rho = get_radial_densities(b, cpos, r);
+	vector<real>& rho = get_radial_numdensities(b, cpos, r);
 
 	real r0 = 0;
 	for (int i = 0; i < n_zones; i++) {

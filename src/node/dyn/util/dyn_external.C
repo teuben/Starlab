@@ -665,7 +665,7 @@ void get_external_acc(dyn *b,
 	if (GETBIT(ext, 2))
 	    add_power_law(b, pos, vel, pot, acc, jerk, pot_only);
 
-	// if (GETBIT(ext, 3))
+	//if (GETBIT(ext, 3))
 	//     add_other(b, pos, vel, pot, acc, jerk, pot_only);
 
 	if (GETBIT(ext, 0))

@@ -245,6 +245,16 @@ ostream& dyn::print_dyn_story(ostream& s,
 
 
 
+local inline dyn* _fget_dyn(FILE* fp) {
+#ifdef STARLAB_USE_FDYN
+  // cerr << "get_dyn:  using fget_dyn." << endl;
+  return fget_dyn(fp);
+#else
+  cerr << "get_dyn: fget_dyn not available." << endl;
+  return NULL;
+#endif
+}
+
 // Newest get_dyn() is a switch between several input formats.
 
 dyn *get_dyn(istream & s,		// default = cin
@@ -262,7 +272,7 @@ dyn *get_dyn(istream & s,		// default = cin
   FILE* ifp = dyn::get_ifp() ?: stdin;
   switch (format) {
   case DYN:
-    return fast ? fget_dyn(ifp) :
+    return fast ? _fget_dyn(ifp) :
       (dyn*)get_node(s, new_dyn, the_hbpfp, the_sbpfp, use_stories);
   case COL: return get_col(s, new_dyn, the_hbpfp, the_sbpfp, use_stories);
   case NUL:

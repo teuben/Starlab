@@ -20,7 +20,7 @@
 
 	#include <vector>
 	#include "dyn.h"
-	#include "dyn_parser.H"
+	#include "dyn_parser.h"
 
 	// we define this ourselves due to the peeking at the first character
 	// in get_dyn() after which read(2) wouldn't work right

@@ -226,6 +226,8 @@ void scale(dyn *b, real eps,
 
     real mass = 0;
 
+    // Believe initial_mass if system_time = 0.
+
     if (b->get_system_time() == 0
 	&& find_qmatch(b->get_log_story(), "initial_mass"))
 	mass = getrq(b->get_log_story(), "initial_mass");
@@ -319,6 +321,9 @@ void scale(dyn *b, real eps,
     // the command line.
 
     if (m_flag) {
+
+PRC(m); PRL(mass);
+
         real mfac = m/mass;
 	// PRL(mfac);
 

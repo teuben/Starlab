@@ -147,6 +147,7 @@ local void print_numbers_and_masses(dyn* b, bool& mass_spectrum)
     mass_spectrum = (m_min < m_max);
 }
 
+
 local void print_parameters_for_massive_black_holes(dyn *b,
 						    real kT,
 						    vec center,
@@ -154,9 +155,13 @@ local void print_parameters_for_massive_black_holes(dyn *b,
 {
     int n_bh = 0;
     for_all_daughters(dyn, b, bi) {
-	if(find_qmatch(bi->get_log_story(), "black_hole")) {
+	if (find_qmatch(bi->get_log_story(), "black_hole")) {
 
-	    n_bh ++;
+	    if (n_bh++ == 0 && verbose)
+		cerr << endl
+		     << "  Orbital parameters for massive black holes:"
+		     << endl;
+
 	    bool long_binary_output = true;	
 	    print_binary_from_dyn_pair(b, bi,
 				       kT, center, verbose,
@@ -164,15 +169,14 @@ local void print_parameters_for_massive_black_holes(dyn *b,
 	}
     }
 
-    if (!n_bh) {
-	cerr << "           "
-	     << "   ---   "
-	     << "No massive black holes"
-	     << "   ---   "
-	     << endl;
-    }
+//    if (!n_bh) {
+//	cerr << "           "
+//	     << "   ---   "
+//	     << "No massive black holes"
+//	     << "   ---   "
+//	     << endl;
+//    }
 }
-
 
 
 local int which_zone(dyn* bi, vec& center_pos, int n_lagr, real* r_lagr)
@@ -1043,36 +1047,55 @@ local void print_king_parameters(const real rc_rvir) {
 
 #endif
 
+
 local bool testnode(dyn * b)
 {
-    if (b->is_top_level_node())
-	return true;
-    else
-	return false;
+    return (b->is_top_level_node());
 }
 
 local bool binary_fn(dyn * b)
 {
-    if (b->get_oldest_daughter())
-	return true;
-    else
-	return false;
+    return (b->get_oldest_daughter());
 }
 
 local bool single_fn(dyn * b)
 {
-    if (getiq(b->get_log_story(), "mass_doubled") == 0)
-	return true;
-    else
-	return false;
+    return (getiq(b->get_log_story(), "mass_doubled") == 0);
 }
 
 local bool double_fn(dyn * b)
 {
-    if (getiq(b->get_log_story(), "mass_doubled") == 1)
-	return true;
-    else
-	return false;
+    return (getiq(b->get_log_story(), "mass_doubled") == 1);
+}
+
+static real cutoff_mass = 0;
+
+#include <vector>
+#include <algorithm>
+
+local void set_cutoff_mass(dyn *b, real frac)
+{
+    // Determine a cutoff for the "most massive" single stars, as follows.
+    // Start with the 90th percentile mass, then move up the list toward
+    // the more massive end until an increase in mass occurs, and use
+    // that new mass.  This will choose a mass very close to the 90th in
+    // case of a continuous mass function, and should pick out the next
+    // group up if have discrete mass groups.
+
+    vector<real> *m = new vector<real>;
+    for_all_daughters (dyn, b, bb)
+	if (bb->is_leaf()) m->push_back(bb->get_mass());
+    sort(m->begin(), m->end());
+
+    int n90 = (int)frac*m->size(), i = n90;
+    while ((*m)[i] == (*m)[n90]) i++;
+
+    cutoff_mass = (*m)[i];
+}
+
+local bool massive_fn(dyn * b)
+{
+    return (b->get_mass() >= cutoff_mass);
 }
 
 local real print_lagrangian_radii(dyn* b, int which_lagr,
@@ -1107,6 +1130,8 @@ local real print_lagrangian_radii(dyn* b, int which_lagr,
 	compute_general_mass_radii(b, nl, nonlin, single_fn);
     else if (which_star == 3)
 	compute_general_mass_radii(b, nl, nonlin, double_fn);
+    else if (which_star == 4)
+	compute_general_mass_radii(b, nl, nonlin, massive_fn);
 
     if (find_qmatch(b->get_dyn_story(), "n_lagr")
 	&& getrq(b->get_dyn_story(), "lagr_time") == b->get_system_time()) {
@@ -1552,23 +1577,33 @@ void sys_stats(dyn* b,
 	//			= 1 : binaries
 	//			= 2 : light stars (heavy_stars = true)
 	//			= 3 : heavy stars (heavy_stars = true)
+	//			= 4 : most massive stars (mass_spectrum = true)
 
+	cerr << endl << "  All single stars/CMs:";
 	rhalf = print_lagrangian_radii(b, which_lagr, verbose, 0);
-
-	// cerr << "first Lagrangian radii calc, all stars" << endl;
+	PRI(4); PRL(rhalf);
 
 	// PRL(heavy_stars);
 
-	if (verbose) {
-	    if (heavy_stars) {
-		cerr << "\n  Lagrangian radii (light stars):\n";
-		print_lagrangian_radii(b, which_lagr, verbose, 2);
-		cerr << "\n  Lagrangian radii (heavy stars):\n";
-		print_lagrangian_radii(b, which_lagr, verbose, 3);
-	    }
+	if (heavy_stars && verbose) {
+	    cerr << endl << "  \"Light\" stars only:";
+	    print_lagrangian_radii(b, which_lagr, verbose, 2);
+	    cerr << endl << "  \"Heavy\" stars only:";
+	    print_lagrangian_radii(b, which_lagr, verbose, 3);
 	}
 
 	if (mass_spectrum) {
+
+	    set_cutoff_mass(b, 0.90);
+
+	    // Print out Lagrangian radii of the most massive stars, as
+	    // defined by set_cutoff_mass() above.
+
+	    cerr << endl << "  Most massive stars (cutoff_mass = "
+		 << cutoff_mass << "):";
+	    real rhalf_massive = print_lagrangian_radii(b, which_lagr,
+							verbose, 4);
+	    PRI(4); PRL(rhalf_massive);
 
 	    if (verbose)
 		cerr << endl
@@ -1584,14 +1619,7 @@ void sys_stats(dyn* b,
 
 	}
 
-	bool black_hole = true;
-	if(black_hole) {
-	  if (verbose)
-	    cerr << endl
-	         << "  Orbital parameters for massive black holes:"
-		 << endl;
-	    print_parameters_for_massive_black_holes(b, kT, center, verbose);
-	}	
+	print_parameters_for_massive_black_holes(b, kT, center, verbose);
 
 	if (verbose)
 	    cerr << "\n  Anisotropy by Lagrangian zone (singles):\n";
