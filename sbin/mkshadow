@@ -29,12 +29,23 @@ endif
 
 set dst = {$src}_s
 if ($#argv > 1) set dst = $2
+set bad = 0
 if (-d $dst) then
-    echo Shadow directory $dst already exists
-    exit
+    echo Shadow directory $dst already exists.
+    set bad = 1
 else if (-e $dst) then
-    echo Non-directory $dst already exists
-    exit
+    echo Non-directory $dst already exists.
+    set bad = 2
+endif
+
+if ($bad != 0) then
+    echo -n "Delete $dst (y or n)? [n] "
+    set resp = $<
+    if ("x$resp" == "xy" || "x$resp" == "xY") then
+	/bin/rm -rf $dst
+    else
+	exit
+    endif
 endif
 
 echo Shadowing directory $src with $dst
@@ -52,10 +63,10 @@ set dirs  = (`find . -type d -print | egrep -v '/CVS$|/local$|/config$'`)
 # The list of files to link excludes local and config, which always copied.
 
 set files = ( \
-    `find include src -name '*.[hcCfF]' -print -o -name '*.[ly][ly]' -print` \
-    `find doc etc sbin scripts src/packages -name CVS -prune -o -type f -print` \
-    `/bin/ls -d [A-Z]* *.ac install* *.{m4,in} | egrep -v 'Makefile|CVS'` \
-    `find . -name Makefile.am -print` `/bin/ls include/stamp.h.in` \
+  `find include src -name '*.[hcCfF]' -print -o -name '*.[ly][ly]' -print` \
+  `find doc etc sbin scripts src/packages -name CVS -prune -o -type f -print` \
+  `/bin/ls -d [A-Z]* *.ac install* *.{m4,in} | egrep -v 'Makefile|CVS'` \
+  `find . -name Makefile.am -print` `/bin/ls include/stamp-h.in` \
 )
 
 cd $curr
