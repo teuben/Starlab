@@ -79,7 +79,7 @@ endif
 if (X$OK == "X1") then
 cat <<EOF
 
-Congratulations, Starlab appears to have been successfully installed!
+Congratulations, you have successfully installed Starlab!
 To use the Starlab tools, please make sure that the directory
 
         $install_dir/bin
@@ -93,8 +93,9 @@ end the libraries are in
 
         $install_dir/lib/starlab
 
-Developers should find that any changes made to the automake "Makefile.am"
-files will cause the relevant Makefiles to be automagically regenerated.
+Developers should find that any changes made to the automake
+"Makefile.am" files will cause the relevant Makefiles to be
+automagically regenerated.
 
                                       Enjoy!
                                       The Starlab Team
