@@ -793,9 +793,6 @@ void check_set_power_law(dyn *b,
     //		kira_pl_scale		=  R
     //		kira_pl_exponent	=  e
     //		kira_pl_center		=  x y z
-    //		kira_pl_cutoff		=  C
-    //		kira_pl_mass		=  M
-    //		kira_pl_softening	=  eps
 
      if (find_qmatch(b->get_log_story(), "kira_pl_coeff")
 	 && find_qmatch(b->get_log_story(), "kira_pl_scale")) {
@@ -803,8 +800,7 @@ void check_set_power_law(dyn *b,
 	 b->set_pl();
 
 	 b->set_pl_coeff(getrq(b->get_log_story(), "kira_pl_coeff"));
-	 b->set_pl_scale_sq(pow(getrq(b->get_log_story(),
-				      "kira_pl_scale"), 2));
+	 b->set_pl_scale(getrq(b->get_log_story(), "kira_pl_scale"));
 
 	 real exponent = 0;
 	 if (find_qmatch(b->get_log_story(), "kira_pl_exponent"))
@@ -816,32 +812,13 @@ void check_set_power_law(dyn *b,
 	     center = getvq(b->get_log_story(), "kira_pl_center");
 	 b->set_pl_center(center);
 
-	 real cutoff = 0;
-	 if (find_qmatch(b->get_log_story(), "kira_pl_cutoff"))
-	     cutoff = getrq(b->get_log_story(), "kira_pl_cutoff");
-	 b->set_pl_cutoff(cutoff);
-
-	 real mass = 0;
-	 if (find_qmatch(b->get_log_story(), "kira_pl_mass"))
-	     mass = getrq(b->get_log_story(), "kira_pl_mass");
-	 b->set_pl_mass(mass);
-
-	 real softening = 0;
-	 if (find_qmatch(b->get_log_story(), "kira_pl_softening"))
-	     softening = getrq(b->get_log_story(), "kira_pl_softening");
-	 b->set_pl_softening_sq(softening*softening);
-
 	 if (verbose) {
 	     real A = b->get_pl_coeff();
-	     real a = sqrt(b->get_pl_scale_sq());
+	     real a = b->get_pl_scale();
 	     real x = b->get_pl_exponent();
 	     vec center = b->get_pl_center();
-	     real C = b->get_pl_cutoff();
-	     real M = b->get_pl_mass();
-	     real eps2 = b->get_pl_softening_sq();
 	     cerr << "check_set_power_law:  ";
 	     PRC(A); PRC(a); PRC(x); PRL(center);
-	     PRI(22); PRC(C); PRC(M); PRL(eps2);
 	 }
      }
 }

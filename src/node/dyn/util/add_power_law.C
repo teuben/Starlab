@@ -15,9 +15,7 @@
 ////
 ////                 M(r)  =  A r^x
 ////
-//// except that r is modified to include a softening scale parameter:
-////
-////                 r  -->  sqrt(r^2 + a^2)
+//// except that the density is constant for r < a.
 ////
 //// Options:      -A/M  specify coefficient [1]
 ////               -c    add comment [none]
@@ -34,9 +32,8 @@
 //// and are written to the root log story for subsequent use by set_com,
 //// scale, kira, etc.
 ////
-//// Note: NO provision for embedded masses yet...
-////
-//// Note that -e 0 gives a Plummer field, and is flagged as such.
+//// Note that -e 0 is currently implemented as a Plummer field, and is
+//// flagged as such.
 
 //   version 1:  Aug/Sep 2001   Steve McMillan
 

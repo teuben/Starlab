@@ -42,13 +42,9 @@ real dyn::p_scale_sq = 0;
 vec dyn::p_center = vec(0,0,0);
 
 real dyn::pl_coeff = 0;
-real dyn::pl_scale_sq = 0;
+real dyn::pl_scale = 0;
 real dyn::pl_exponent = 0;
 vec dyn::pl_center = vec(0,0,0);
-real dyn::pl_cutoff = 0;
-real dyn::pl_cutoff_sq = 0;
-real dyn::pl_mass = 0;
-real dyn::pl_softening_sq = 0;
 
 FILE* dyn::ifp = 0;
 FILE* dyn::ofp = 0;
@@ -79,14 +75,9 @@ void dyn::print_static(ostream& s)		// default = cerr
     s << "p_center = " << p_center << endl;
 
     s << "pl_coeff = " << pl_coeff << endl;
-    s << "pl_scale_sq = " << pl_scale_sq << endl;
+    s << "pl_scale = " << pl_scale << endl;
     s << "pl_exponent = " << pl_exponent << endl;
     s << "pl_center = " << pl_center << endl;
-
-    s << "pl_cutoff = " << pl_cutoff << endl;
-    s << "pl_cutoff_sq = " << pl_cutoff_sq << endl;
-    s << "pl_mass = " << pl_mass << endl;
-    s << "pl_softening_sq = " << pl_softening_sq << endl;
 }
 
 static bool read_xreal = false;

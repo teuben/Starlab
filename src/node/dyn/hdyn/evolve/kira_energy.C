@@ -21,9 +21,11 @@
 					// -- beware of runaway neutron
 					// stars!
 
-local void set_pot(dyn *b, real pot)
+local void inc_pot(dyn *b, real dpot)	// allow dyn function to access set_pot
 {
-    ((hdynptr)b)->set_pot(pot);		// allow dyn function to access set_pot
+    hdyn *bb = (hdynptr)b;
+    real pot = bb->get_pot();
+    bb->set_pot(pot+dpot);
 }
 
 void calculate_energies_with_external(hdyn* b,
@@ -44,7 +46,7 @@ void calculate_energies_with_external(hdyn* b,
 	// Add the external contribution to the total potential, and
 	// add external terms to hdyn::pot of all top-level nodes.
 
-	real dpot = get_external_pot(b, set_pot);
+	real dpot = get_external_pot(b, inc_pot);
 	epot += dpot;
 	etot += dpot;
     }

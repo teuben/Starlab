@@ -163,7 +163,8 @@ local inline void add_plummer(dyn *b,
     pot -= M/r1;
 }
 
-local inline real plummer_pot(dyn *b)
+local inline real plummer_pot(dyn *b,
+			      void (*pot_func)(dyn *, real) = NULL)
 {
     // Determine the Plummer-field component of the potential energy
     // of root node b.
@@ -180,10 +181,12 @@ local inline real plummer_pot(dyn *b)
     for_all_daughters(dyn, b, bb) {
 	vec dx = bb->get_pos() - cen;
 	real r2 = square(dx) + a2;
-	dpot += bb->get_mass() / sqrt(r2);
+	real dp = -M/sqrt(r2);
+	dpot += bb->get_mass() * dp;
+	if (pot_func) pot_func(bb, dp);
     }
 
-    return -M*dpot;
+    return dpot;
 }
 
 local inline real plummer_virial(dyn *b)
@@ -235,10 +238,27 @@ local inline real plummer_virial(dyn *b)
 }
 
 //=========================================================================
-// Power-law field, M(r) = A r^x.  Note that exponent = 0 reduces to
-// a Plummer field with mass = A.  However, dynamical friction is
-// implemented only for the power-law case, and currently will *not*
-// work with Plummer or power_law with x = 0.  To be fixed...
+// Power-law field, M(r) = A r^x for r >> a.  Note that the implementation
+// has changed as of 2/04.  We now use a pure power law in density for r > a,
+// with constant density for r < a.  (We previously, used a as a softening
+// parameter, in analogy to the Plummer model).  Thus, exponent = 0 no longer
+// reduces to a Plummer field with mass = A.
+//
+// We preserve the above asymptotic form for compatibility with previous
+// work (and with the literature on the density near the Galactic center).
+// However, for ease of computation, the "primary" quantity is actually
+// the density rho, which we now *define* to be
+//
+//	rho  =  (Ax / 4pi) a^(x-3)		r < a
+//		(Ax / 4pi) r^(x-3)		r >= a,
+//
+// whence
+//
+//	M(r) =  (Ax a^x /3) (r/a)^3		r < a
+//		 A a^x (x/3 - 1) + A r^x	r >= a.
+//
+// Dynamical friction is currently implemented only for the power-law case,
+// and *not* for the Plummer field -- to be fixed.
 //=========================================================================
 
 //-------------------------------------------------------------------------
@@ -272,36 +292,42 @@ void set_friction_mass(real m) {Mfric = m;}
 static vec Vcm = 0;				// cluster CM velocity
 void set_friction_vel(vec v) {Vcm = v;}		// (absolute)
 
-local real density(dyn *b, real r)		// background density
+local inline real pl_density(dyn *b, real r)	// background density
 						
 {
     real A = b->get_pl_coeff();
     if (A == 0) return 0;
 
-    real a2 = b->get_pl_scale_sq();
+    real a = b->get_pl_scale();
     real x = b->get_pl_exponent();
 
-    return A*x*pow(r*r+a2, 0.5*(x-1))/(4*M_PI*r*r);
+    if (r <= a)
+	return (A*x/(4*M_PI))*pow(a,x-3);
+    else
+	return (A*x/(4*M_PI))*pow(r,x-3);
 }
 
-local real mass(dyn *b, real r)			// mass interior to r, the
+local inline real pl_mass(dyn *b, real r)	// mass interior to r, the
 {						// distance from pl_center
     real A = b->get_pl_coeff();
     if (A == 0) return 0;
 
-    real a2 = b->get_pl_scale_sq();
+    real a = b->get_pl_scale();
     real x = b->get_pl_exponent();
 
-    return A*pow(r*r+a2, 0.5*x);
+    if (r <= a)
+	return A*x*pow(a,x)*pow(r/a,3) / 3;
+    else
+	return A*pow(a,x)*(x/3-1) + A*pow(r,x);
 }
 
 #define LAMBDA_FAC	1
 
-local real logLambda(dyn *b, real r)
+local inline real pl_logLambda(dyn *b, real r)
 {
     real mass_unit = -1;
     if (b->get_starbase())
-	    mass_unit = b->get_starbase()->conv_m_dyn_to_star(1);
+	mass_unit = b->get_starbase()->conv_m_dyn_to_star(1);
 
     // Only case where this is meaningful is the power-law field.
 
@@ -315,37 +341,22 @@ local real logLambda(dyn *b, real r)
     else {
 
 	// Use M(<r), assuming <m> = 1 Msun.
+
 	LogLambda = 6.6; // Spinnato et al 2003
 
-//	return log(LAMBDA_FAC*mass(b, r)*mass_unit);
+	// return log(LAMBDA_FAC*pl_mass(b, r)*mass_unit);
     }
 
     return LogLambda;
 }
 
-local real potential(dyn *b, real r)		// background potential;
-						// assume x != 1 for now...
-{
-    real A = b->get_pl_coeff();
-    if (A == 0) return 0;
-
-    real a2 = b->get_pl_scale_sq();
-    real x = b->get_pl_exponent();
-
-    return A*pow(r*r+a2, 0.5*(x-1))/(x-1);	// leading "-" removed by
-						// by Steve, 2/04
-}
-
-local real vcirc2(dyn *b, real r)		// circular orbit speed:
+local inline real pl_vcirc2(dyn *b, real r)	// circular orbit speed:
 						// recall vc^2 = r d(phi)/dr
 {
-    real A = b->get_pl_coeff();
-    if (A == 0) return 0;
-
-    real a2 = b->get_pl_scale_sq();
-    real x = b->get_pl_exponent();
-
-    return A*r*r*pow(r*r+a2, 0.5*(x-3));	// note: --> 0 as r --> 0
+    if (r > 0)
+	return pl_mass(b,r)/r;
+    else
+	return 0;
 }
 
 static vec Afric = 0;				// frictional acceleration
@@ -358,8 +369,8 @@ void set_friction_acc(dyn *b,			// root node
 	real A = b->get_pl_coeff();
 	if (A <= 0) return;
 
-	real alpha = b->get_pl_exponent();
-	real a2 = b->get_pl_scale_sq();
+	real x = b->get_pl_exponent();
+	real a = b->get_pl_scale();
 
 	// Binney & Tremaine expression needs a 1-D velocity dispersion
 	// sigma for the background stars.  Note that sigma2 here is
@@ -367,25 +378,18 @@ void set_friction_acc(dyn *b,			// root node
 
 	// Define sigma2 in terms of the circular orbit speed vc.
 
-	real vc2;
+	real vc2 = pl_vcirc2(b, r), sigma2;
 
-	if (r*r > a2)
-	    vc2 = vcirc2(b, r);
+	if (x < 2 && r > a)
+	    sigma2 = sqrt(vc2/(2-x));		// see McM & SPZ 2003
 	else
-	    vc2 = vcirc2(b, sqrt(a2));		// use value at r = a
-
-	real sigma2;
-
-	if (alpha < 2)
-	    sigma2 = sqrt(vc2/(2-alpha));	// see McM & SPZ 2003
-	else
-	    sigma2 = sqrt(vc2);			// shouldn't happen...
+	    sigma2 = sqrt(vc2/2);
 
 	real V = abs(Vcm);
 	real X = V/sigma2;			// scaled velocity; BT p. 425
 
-	real coeff = 4*M_PI*beta*logLambda(b, r);
-	real ffac = coeff * Mfric * density(b, r);
+	real coeff = 4*M_PI*beta*pl_logLambda(b, r);
+	real ffac = coeff * Mfric * pl_density(b, r);
 
 	if (X > 0.1)
 
@@ -401,8 +405,8 @@ void set_friction_acc(dyn *b,			// root node
 
 #if 1
 	cerr << endl << "set_friction_acc: "; PRL(Afric);
-	PRC(A); PRC(a2); PRL(beta);
-	PRC(coeff); PRC(Mfric); PRL(density(b, r));
+	PRC(A); PRC(a); PRL(beta);
+	PRC(coeff); PRC(Mfric); PRL(pl_density(b, r));
 	PRC(r); PRC(sigma2); PRC(V); PRL(X);
 	PRL((erf(X) - 2*X*exp(-X*X)/sqrt(M_PI)) * pow(V, -3));
 	PRL(4 / (3*sqrt(M_PI)*pow(sigma2, 3)));
@@ -414,19 +418,38 @@ void set_friction_acc(dyn *b,			// root node
 
 //-------------------------------------------------------------------------
 
-bool acx_set = false;		// kludge...
-static real acx = 0, acx1 = 0;
+static bool set = false;
+static real ax, ax1;			// evaluate a^x etc. once per run
 
-local inline void set_acx(real A, real c2, real x)
+local inline void set_pl(dyn *b)
 {
-    if (c2 > 0) {
-	acx = A*pow(c2, x/2);
-	if (x != 1)
-	    acx1 = acx*x/(sqrt(c2)*(x-1));
-	else
-	    acx1 = A*(1+0.5*log(c2));
+    if (!set) {
+	real a = b->get_pl_scale();
+	real x = b->get_pl_exponent();
+	ax = pow(a,x);
+	ax1 = ax/a;
+	set = true;
     }
-    acx_set = true;
+}
+
+real rx;				// evaluate r^x once per call
+
+local inline void set_rx(real x, real a, real r)
+{
+    rx = r;
+    if (r > a && x != 1) rx = pow(r,x);
+}
+
+local inline real pl_dpot(real A, real x, real a, real r)
+{
+    if (r <= a)
+	return A*x*ax1*pow(r/a,2)/6;
+    else {
+	if (x == 1)
+	    return A    *(x/6 + (x/3-1)*(1-a/r) + log(r/a));
+	else
+	    return A*ax1*(x/6 + (x/3-1)*(1-a/r) + (rx/(r*ax1)-1)/(x-1));
+    }
 }
 
 local inline void add_power_law(dyn *b,
@@ -446,90 +469,42 @@ local inline void add_power_law(dyn *b,
     real A = b->get_pl_coeff();
     if (A == 0) return;
 
-    real a2 = b->get_pl_scale_sq();
+    real a = b->get_pl_scale();
     real x = b->get_pl_exponent();
 
-    real c2 = b->get_pl_cutoff_sq();
-    real M = b->get_pl_mass();
-    real eps2 = b->get_pl_softening_sq();
-
-#if 0
-    PRC(A); PRC(a2); PRL(x);
-    PRC(c2); PRC(M); PRL(eps2);
-#endif
-
-    if (!acx_set) set_acx(A, c2, x);
+    if (!set) set_pl(b);
 
     vec dx = pos + b->get_root()->get_pos() - b->get_pl_center();
-    real dx2 = square(dx);
-    real r2 = dx2 + a2;
+    real r2 = square(dx);
+    real r = sqrt(r2);
 
-    real dx1i;
-    if (M > 0 || c2 > 0) dx1i = 1/sqrt(dx2+eps2);
+    set_rx(x, a, r);
+    pot += pl_dpot(A, x, a, r);
 
-    if (x == 1) {				// special case (acx = Ac)
+    if (!pot_only) {
 
-	real dpot;
-	if (dx2 <= c2)
-	    dpot = -M*dx1i + acx1;
-	else {
-	    dpot = 0.5*A*log(r2);
-	    if (M > 0 || c2 > 0) dpot -= (M-acx)*dx1i;
-	}
-	pot += dpot;
-    }
+	real m;					// mass interior to r
 
-    if (x != 1 || !pot_only) {			// ugly logic...
+	if (r <= a)
+	    m = A*x*ax*pow(r/a,3) / 3;
+	else
+	    m = A*ax*(x/3-1) + A*rx;		// <-- rx
 
-	real r1 = pow(r2, 0.5*(1-x));		// in analogy to Plummer case
+	real r3i = 1/(r*r2);
+	real mr3 = m*r3i;
 
-	if (!pot_only) {
+	acc -= dx*mr3;
 
-	    real dx3i;
-	    if (M > 0 || c2 > 0) dx3i = dx1i/(dx2+eps2);
-
+	jerk -= vel*mr3;
+	if (r > a) {				// no extra piece for r < a
 	    vec vr = dx*(dx*vel);
-
-	    if (dx2 > c2) {
-
-		real r3i = A/(r1*r2);
-		acc -= dx*r3i;
-		jerk += ((3-x)*vr/r2 - vel)*r3i;
-
-		if (M > 0 || c2 > 0) {
-		    dx3i *= M-acx;
-		    acc -= dx*dx3i;
-		    jerk += (3*vr/(dx2+eps2) - vel)*dx3i;
-		}
-
-	    } else if (M > 0) {
-
-		dx3i *= M;
-		acc -= dx*dx3i;
-		jerk += (3*vr/(dx2+eps2) - vel)*dx3i;
-
-	    }
-	}
-
-	// if (b->name_is("2481")) {
-	// 	PRC(dx2); PRC(dx*vel); PRL(dx2*abs(acc));
-	// }
-
-	if (x != 1) {
-	    real dpot;
-	    if (dx2 <= c2)
-		dpot = -M*dx1i + acx1;
-	    else {
-		real r1 = pow(r2, 0.5*(1-x));
-		dpot = -A/(r1*(1-x));
-		if (M > 0 || c2 > 0) dpot -= (M-acx)*dx1i;
-	    }
-	    pot += dpot;
+	    jerk += A*(3-x)*vr*r3i*rx/r2;	// <-- rx
 	}
     }
 }
 
-local inline real power_law_pot(dyn *b)
+local inline real power_law_pot(dyn *b,
+				void (*pot_func)(dyn *, real) = NULL)
 {
     // Determine the power-law-field component of the potential energy
     // of root node b.
@@ -539,46 +514,19 @@ local inline real power_law_pot(dyn *b)
 
     b->set_root(b);				// safety
 
-    real a2 = b->get_pl_scale_sq();
+    real a = b->get_pl_scale();
     real x = b->get_pl_exponent();
-
-    real c2 = b->get_pl_cutoff_sq();
-    real M = b->get_pl_mass();
-    real eps2 = b->get_pl_softening_sq();
-
     vec cen = b->get_pl_center() - b->get_pos();
 
-    if (!acx_set) set_acx(A, c2, x);	//////  *** not implemented yet ***
+    if (!set) set_pl(b);
 
     real dpot = 0;
     for_all_daughters(dyn, b, bb) {
-
-	vec dx = bb->get_pos() - cen;
-	real dx2 = square(dx);
-	real r2 = dx2 + a2;
-
-	real dx1i;
-	if (M > 0 || c2 > 0) dx1i = 1/sqrt(dx2+eps2);
-
-	real ddpot;
-	if (x == 1) {				// same code as in add_power_law
-	    if (dx2 <= c2)
-		ddpot = -M*dx1i + acx1;
-	    else {
-		ddpot = 0.5*A*log(r2);
-		if (M > 0 || c2 > 0) ddpot -= (M-acx)*dx1i;
-	    }
-	} else {
-	    if (dx2 <= c2)
-		ddpot = -M*dx1i + acx1;
-	    else {
-		real r1 = pow(r2, 0.5*(1-x));
-		ddpot = -A/(r1*(1-x));
-		if (M > 0 || c2 > 0) ddpot -= (M-acx)*dx1i;
-	    }
-	}
-
-	dpot += bb->get_mass()*ddpot;
+	real r = abs(bb->get_pos()-cen);
+	set_rx(x, a, r);
+	real dp = pl_dpot(A, x, a, r);
+	dpot += bb->get_mass()*dp;
+	if (pot_func) pot_func(bb, dp);
     }
 
     return dpot;
@@ -589,15 +537,13 @@ local inline real power_law_virial(dyn *b)
     // Determine the power-law-field component of the virial sum
     // of root node b.
 
-    // *** New embedded mass/cutoff not yet implemented (Steve, 12/01). ***
-
     real A = b->get_pl_coeff();
     if (A == 0) return 0;
 
-    b->set_root(b);					// safety
+    b->set_root(b);				// safety
     int debug = 0;
 
-    real a2 = b->get_pl_scale_sq();
+    real a = b->get_pl_scale();
     real x = b->get_pl_exponent();
 
     // Don't make any assumptions about the locations of the
@@ -608,7 +554,10 @@ local inline real power_law_virial(dyn *b)
     if (debug) PRL(com_pos);
 
     vec dR = com_pos - b->get_pl_center();
-    vec acc_com = dR * pow(square(dR)+a2, 0.5*(x-3));
+    real r2 = square(dR);
+    real r = sqrt(r2);
+    
+    vec acc_com = dR * pl_mass(b,r) / (r*r2);
     if (debug) PRL(acc_com);
 
     // Note that we don't actually need the acc_com term, as it should
@@ -625,7 +574,9 @@ local inline real power_law_virial(dyn *b)
 	if (debug > 1) PRL(dr);
 	dR = bb->get_pos() - dcen_pos;			// relative to pl_center
 	if (debug > 1) PRL(dR);
-	vec acc_ext = dR * pow(square(dR)+a2, 0.5*(x-3));
+	r2 = square(dR);
+	r = sqrt(r2);
+	vec acc_ext = dR * pl_mass(b,r) / (r*r2);
 	real dvir = bb->get_mass()*dr*(acc_ext - acc_com);
 	if (debug > 1) PRL(dvir);
 	vir += dvir;
@@ -652,7 +603,7 @@ real dyn::get_external_scale_sq()
     else if (get_plummer())
 	return p_scale_sq;
     else if (get_pl())
-	return pl_scale_sq;
+	return pow(pl_scale, 2);
     else
 	return 0;
 }
@@ -764,9 +715,9 @@ real get_external_pot(dyn *b,
 	// Loop through the known external fields.
 
 	if (GETBIT(ext, 0)) dpot += tidal_pot(b);
-	if (GETBIT(ext, 1)) dpot += plummer_pot(b);
-	if (GETBIT(ext, 2)) dpot += power_law_pot(b);
-	// if (GETBIT(ext, 3)) dpot += other_pot(b);
+	if (GETBIT(ext, 1)) dpot += plummer_pot(b, pot_func);
+	if (GETBIT(ext, 2)) dpot += power_law_pot(b, pot_func);
+	// if (GETBIT(ext, 3)) dpot += other_pot(b, pot_func);
 
 	if (pot_func) pot_func(b, dpot);	// used by kira to set_pot()
 
