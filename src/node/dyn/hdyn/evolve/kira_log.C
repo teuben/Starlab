@@ -608,6 +608,7 @@ void log_output(hdyn * b, real count, real steps,
     compute_densities(b, cod_pos, cod_vel);	// does nothing unless
 						// GRAPE is present
     cpu = cpu_time() - cpu;
+    if (cpu < 0) cpu = 0;
     PRL(cpu);
 
 //#endif

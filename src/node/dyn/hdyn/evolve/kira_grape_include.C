@@ -153,5 +153,9 @@ void compute_densities(hdyn* b, vector& cod_pos, vector& cod_vel)
 	 << "  cod " << cpu2 - cpu1
 	 << endl;
 
+#else
+
+    cerr << "Skipping density calculation..." << endl;
+
 #endif
 }
