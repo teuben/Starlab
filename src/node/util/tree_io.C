@@ -313,7 +313,12 @@ inline local void put_node_body(ostream & s, node & b,
 				bool print_xreal = true,
 				int short_output = 0)
 {
-    if (short_output)
+    // Now have one "short" option that basically is full output,
+    // for restart purposes.  Check for it explicitly.
+
+    bool short_short = (short_output && short_output != 4);
+
+    if (short_short)
 	put_string(s, "  name = ", b.format_label());
     else {
 	if (b.get_index() >= 0) put_integer(s, "  i = ", b.get_index());
@@ -321,7 +326,7 @@ inline local void put_node_body(ostream & s, node & b,
 	put_integer(s, "  N = ", b.n_leaves());
     }
 
-    if (!short_output || (b.is_root() && first_log)) {
+    if (!short_short || (b.is_root() && first_log)) {
 	b.print_log_story(s);
 	first_log = false;
     }
@@ -341,7 +346,7 @@ inline local void put_node_body(ostream & s, node & b,
 
     b.print_dyn_story(s, print_xreal, short_output);
 
-    if (!short_output && b.get_dyn_story())
+    if (!short_short && b.get_dyn_story())
         put_story_contents(s, *b.get_dyn_story());	// new
 
     put_story_footer(s, DYNAMICS_ID);			// new
@@ -350,7 +355,7 @@ inline local void put_node_body(ostream & s, node & b,
 
     // For now, all short output is handled as part of Dyn.
 
-   if (!short_output) {
+   if (!short_short) {
        b.print_hydro_story(s);
        b.print_star_story(s, short_output);
    }

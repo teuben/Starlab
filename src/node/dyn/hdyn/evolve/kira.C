@@ -1699,17 +1699,21 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	if (full_dump_now && !first_full_dump) {
 
-	    // If we want the last full dump (t_end) to be a complete
-	    // snapshot, so we can restart from the end of the
-	    // worldbundle file, this is the place to do it...
-	    //
-	    // To be implemented and tested (Steve, 7/01)...
+	    // We want the last full dump (t_end) to be a complete
+	    // snapshot, so we can restart from the data at the end
+	    // of the worldbundle file.  (Steve, 7/01)
+
+	    int short_output = 1;
+	    if (ttmp > t_end) short_output = 4;		// new (7/01)
 
 	    put_node(cout, *b,
 		     false,		// don't print xreal
-		     1);		// short output (uses STARLAB_PRECISION)
+		     short_output);	// short output (uses STARLAB_PRECISION)
 
-	    cerr << "Full dump (tdyn format) at time " << t << endl;
+	    cerr << "Full dump (";
+	    if (short_output == 1) cerr << "t";
+	    else cerr << "h";
+	    cerr << "dyn format) at time " << t << endl;
 	}
 
 	first_full_dump = false;

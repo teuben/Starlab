@@ -269,14 +269,16 @@ ostream & hdyn::print_dyn_story(ostream & s,
     // 		1:	short output using current time, pos, ...
     //		2:	short output using current time, predicted pos, ...
     //		3:	as for 2, but mark as defunct
-    //		4:	new -- to allow restart; combines hdyn and tdyn...
-    //			    -- to come (Steve, 7/01)
+    //		4:	new (Steve, 7/01) to allow restart; combines hdyn
+    //			and tdyn...  Don't allow unformatted output.
     //
-    // Short output is:  time, mass, pos, vel.
+    // Short output is:  time, mass, pos, vel (options 1-3).
     //
     // Particle name is printed in node/util/tree_io.C
 
-    if (write_unformatted) {
+    bool short_short = (short_output && short_output != 4);
+
+    if (write_unformatted && short_short) {
 
 	// In this case, we have to do everything ourselves, and we
 	// can't rely on the base class output functions to help us.
@@ -328,7 +330,7 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
 	_dyn_::print_dyn_story(s, print_xreal, short_output);
 
-	if (!short_output) {
+	if (!short_short) {
 
 	    put_real_number(s, "  steps  =  ", steps);
 	    put_real_number(s, "  dir_f  =  ", direct_force);
@@ -369,7 +371,7 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
     if (short_output) {
 
-	// Most convenient to output Star quantities here too.
+	// Convenient to output Star quantities here too.
 	// (Star output is now suppressed in tree_io in the
 	// short_output case, and the tdyn input is simplest
 	// when all relevant data are in Dyn.)
@@ -383,7 +385,7 @@ ostream & hdyn::print_dyn_story(ostream & s,
 //		       type_short_string(sbase->get_element_type()));
 	    put_integer(s,     "  S  =  ", (int)sbase->get_element_type());
 
-	    if (write_unformatted) {
+	    if (write_unformatted && short_short) {
 
 		// Always write floats for T and L.
 
