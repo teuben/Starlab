@@ -1663,7 +1663,7 @@ void sys_stats(dyn* b,
 
     // Finally, refine estimates of the cluster mass (moved here from hdyn...)
 
-    refine_cluster_mass(b);
+    refine_cluster_mass(b, 1);
 }
 
 #else

@@ -125,10 +125,6 @@ local void sys_stats(hdyn* b,
 					  // from kira_grape_include.C
 	      print_dstar_params,
 	      print_dstar_stats);
-
-    // Then perform hdyn-specific operations.
-
-    refine_cluster_mass(b);
 }
 
 // Main code follows dyn/util/sys_stats.C version.

@@ -1546,6 +1546,11 @@ local void evolve_system(hdyn * b,	       // hdyn array
 					// 	note: apply IMMEDIATE check
     real t_reinit = tt; // + dt_reinit;	// time of next reinitialization
 
+    // Frequency of internal escaper checks (write to story only):
+
+    real dt_esc_check = min(dt_sync, 1.0/16);
+    real t_esc_check = tt + dt_esc_check;
+
     if (verbose) {
 	cerr << endl;
 	PRC(t), PRL(t_end);
@@ -1556,6 +1561,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	PRL(dt_esc);
 	PRL(dt_reinit);
 	PRL(dt_sstar);
+	PRL(dt_sync);
 
 	PRC(t_snap); PRC(t_log); PRC(t_sync); PRL(t_esc);
 
@@ -1588,10 +1594,11 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	// New order of actions (Steve, 7/01):
 	//
 	//	1. log output
-	//	2. check STOP
-	//	3. snapshot/full dump output
-	//	4. remove escapers
-	//	5. reinitialize
+	//	2. flag escapers
+	//	3. check STOP
+	//	4. snapshot/full dump output
+	//	5. remove escapers
+	//	6. reinitialize
 	//
 	// These differ significantly from the previous version...
 
@@ -1635,9 +1642,20 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+	if (full_dump && ttmp > t_esc_check) {
+
+	    // 2. Flag escapers (full_dump mode only).  System may or may not
+	    // be synchronized, but dyn functions don't know about pred_pos...
+
+	    refine_cluster_mass(b, 0);
+	    update_step(ttmp, t_esc_check, dt_esc_check);
+	}
+
+	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 	if (ttmp > t_sync) {
 
-	    // 2. System is synchronized.
+	    // 3. System is synchronized.
 	    // Check to see if we should stop the run.
 
 	    if (check_file("STOP")) {
@@ -1655,7 +1673,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-	// 3. Output a snapshot to cout at the scheduled time, or at end of
+	// 4. Output a snapshot to cout at the scheduled time, or at end of
 	// run. NOTE: This is the *only* place where output to cout can occur.
 
 	// Not essential to have dt_snap >= dt_reinit, but should have this
@@ -1679,7 +1697,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-	// 3. Full dumps should precede and follow major changes when the
+	// 5. Full dumps should precede and follow major changes when the
 	// system is properly synchronized.
 
 	// bool full_dump_now = (full_dump
@@ -1759,7 +1777,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	if (ttmp > t_esc) {
 
-	    // 4. Check for and remove escapers.
+	    // 5. Check for and remove escapers.
 
 	    // System is reinitialized and time step list is
 	    // recomputed if any stars are removed.
@@ -1791,7 +1809,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	if (reinit) {
 
-	    // 5. Reinitialize the system.
+	    // 6. Reinitialize the system.
 
 	    // *** REQUIRE dt_reinit >= dt_sync. ***
 

@@ -493,6 +493,41 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 }
 
 
+local void check_merge_esc_flags(hdyn *bi, hdyn *bj)
+{
+    // Update any escaper flags in two nodes being combined.
+    // The CM node is flagged as escaping iff both components are.
+
+    bool iesc = find_qmatch(bi->get_dyn_story(), "t_esc");
+    bool jesc = find_qmatch(bj->get_dyn_story(), "t_esc");
+
+    if (iesc && jesc) {
+
+	// Both components are flagged as escapers.
+
+	real t_esc = max(getrq(bi->get_dyn_story(), "t_esc"),
+			 getrq(bj->get_dyn_story(), "t_esc"));
+	putrq(bi->get_parent()->get_dyn_story(), "esc", 1);
+	putrq(bi->get_parent()->get_dyn_story(), "t_esc", t_esc);
+
+    } else {
+
+	// One component wasn't flagged as escaping.
+
+	putrq(bi->get_parent()->get_dyn_story(), "esc", 0);
+
+	if (iesc) {
+	    putrq(bi->get_dyn_story(), "esc", 0);
+	    rmq(bi->get_dyn_story(), "t_esc");
+	}
+
+	if (jesc) {
+	    putrq(bj->get_dyn_story(), "esc", 0);
+	    rmq(bj->get_dyn_story(), "t_esc");
+	}
+    }    
+}
+
 void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 			     bool full_dump)		// default = false
 {
@@ -643,8 +678,10 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
     bj->init_pred();
     bj->get_parent()->init_pred();
 
-    // for diagnostic output...
+    // For diagnostic output...
     init_predictor_tree(bj->get_parent());
+
+    check_merge_esc_flags(bi, bj);
 
     if (full_dump) {
 
@@ -1007,6 +1044,8 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 	label_binary_node(bn);
 	bn = bn->get_parent();
     }
+
+    check_merge_esc_flags(bi, bi->get_binary_sister());
 
     if (full_dump) {
 

@@ -10,6 +10,7 @@
 
 // refine_mass2.C:  More careful determination of cluster mass and center,
 //		    for use with an external non-tidal field.
+//		    Also flag escapers.
 //
 // Externally visible functions:
 //
@@ -170,13 +171,13 @@ void refine_cluster_mass2(dyn *b,
     // standard center and the center of the external potential.
 
     real M_inside = 0;
-    R = abs(center - b->get_external_center());	// global R, same definition
+    R = abs(center - b->get_external_center());		// global R
 
     for_all_daughters(dyn, b, bb)
 	if (abs(bb->get_pos() - center) <= R)
 	    M_inside += bb->get_mass();
 
-    real M = -1;				// (to start the loop)
+    real M = -1;					// (to start the loop)
     int N_inside;
     vector cen = center, vcen = vcenter;
 
@@ -256,7 +257,7 @@ void refine_cluster_mass2(dyn *b,
 	    vcen /= M_inside;
 	}
 
-	// Linearly interpolate an estimate of the 50% center.
+	// Linearly interpolate an estimate of the "50% center."
 
 	if ((M > 0.5*M0 && M_inside <= 0.5*M0)
 	    || (M < 0.5*M0 && M_inside >= 0.5*M0)) {
@@ -271,17 +272,23 @@ void refine_cluster_mass2(dyn *b,
 	}
     }
 
-    if (iter >= M_ITER_MAX)
-	warning("refine_cluster_mass2: too many iterations");
+    if (iter >= M_ITER_MAX) {
+	if (verbose) PRI(2);
+	cerr << "warning: refine_cluster_mass: too many iterations at time "
+	     << b->get_system_time() << endl;
+    }
 
     if (verbose == 1) {
 	PRI(2); PRC(iter); PRC(N_inside); PRL(M_inside);
 	PRI(2); PRL(cen);
     }
 
-    bool modify_center = false;
+    // Too many iterations probably means a limit cycle of some sort;
+    // accept the results in that case.
 
-    if (iter >= M_ITER_MAX || M_inside < 0.01*M0) {
+    bool disrupted = (M_inside < 0.01*M0);
+
+    if (disrupted) {
 
 	// Looks like the cluster no longer exists.  Use 50% or ext center.
 
@@ -292,32 +299,29 @@ void refine_cluster_mass2(dyn *b,
 	    center = ext_center;
 	    vcenter = 0;
 	}
-	modify_center = true;
+
+	if (verbose) {
+	    PRI(2); PRL(center);
+	}
 
     } else {
 
 	center = cen;
 	vcenter = vcen;
-
     }
 
     // Now center and vcenter should be usable, even if M_inside and
     // N_inside aren't very meaningful.
 
-    if (verbose && modify_center) {
-	PRI(2); PRL(center);
-    }
-
     // Write our best estimate of the center to the dyn story.
 
-    putrq(b->get_dyn_story(), "bound_center_time", b->get_system_time());
+    putrq(b->get_dyn_story(), "bound_center_time", (real)b->get_system_time());
     putvq(b->get_dyn_story(), "bound_center_pos", center);
     putvq(b->get_dyn_story(), "bound_center_vel", vcenter);
 
     // Repeat the inner loop above and flag stars as escapers or not.
 
-    bool disrupted = (iter >= M_ITER_MAX || M_inside < 0.01*M0);
-
+    int n_mem = 0;
     for_all_daughters(dyn, b, bb) {
 	bool escaper = true;
 	if (!disrupted) {
@@ -327,5 +331,25 @@ void refine_cluster_mass2(dyn *b,
 		escaper = false;
 	}
 	putiq(bb->get_dyn_story(), "esc", escaper);
+	if (!escaper) n_mem++;
+
+	// Print out t_esc if this is a new escaper.
+
+	if (escaper && !find_qmatch(bb->get_dyn_story(), "t_esc"))
+	    putrq(bb->get_dyn_story(), "t_esc", (real)b->get_system_time());
+
+	// Delete t_esc if this is not an escaper.
+
+	if (!escaper && find_qmatch(bb->get_dyn_story(), "t_esc"))
+	    rmq(bb->get_dyn_story(), "t_esc");
+
+	// Note that the esc flag is redundant -- all necessary
+	// information is contained in the t_esc line.
     }
+
+#if 0
+    if (verbose) PRI(2);
+    cerr << "refine_mass2: "; PRC(b->get_system_time()); PRL(n_mem);
+#endif
+
 }

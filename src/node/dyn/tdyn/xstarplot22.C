@@ -6,6 +6,7 @@
 ////             -d    dimensionality of plot [2]
 ////             -D    time interval between frames [0.015625 = 1/64]
 ////             -e    color by energy [no]
+////             -E    toggle display of stars flagged as escapers [true]
 ////             -f    solid-color stars [true]
 ////             -F    input file [world.dat]
 ////             -k    maximum size of CM indicator is k/N [2]
@@ -957,7 +958,7 @@ local void show_static_rotation(DYN* b, bool f_flag)
 }
 
 local char check_for_input(unsigned long win, DYN* b,
-			   real &t, real &dt,
+			   real &t, real &dt, bool &E_flag,
 			   bool r_flag, bool f_flag, bool eod)
 {
     // Check for (and immediately act upon) interactive input.
@@ -1197,6 +1198,10 @@ local char check_for_input(unsigned long win, DYN* b,
 
 //		show_color_scheme(colwin, c_energy, c_index,
 //				  r_factor, cenergy, r_flag, 1);
+
+	    } else if (key == 'E') {		// toggle escaper display
+
+		E_flag = !E_flag;
 
 	    } else if (key == 'e') {		// color by energy
 
@@ -1569,7 +1574,7 @@ static int count_instr = 0;
 void xstarplot22(DYN* b, float scale, int k, int d, float lmax,
 		int point_mode, float rel_point_size,
 		real &t, real &dt, float D, int ce,
-		bool r_flag, bool f_flag, bool t_flag,
+		bool &E_flag, bool r_flag, bool f_flag, bool t_flag,
 		int init_flag, int& step_mode, bool eod)
 {
     if (!b) return;
@@ -1765,7 +1770,7 @@ void xstarplot22(DYN* b, float scale, int k, int d, float lmax,
 
     while (true) {
 
-	char c = check_for_input(win, b, t, dt, r_flag, f_flag, eod);
+	char c = check_for_input(win, b, t, dt, E_flag, r_flag, f_flag, eod);
 
  	// Special treatment required for forward/backward step modes.
 
@@ -1816,6 +1821,25 @@ local void print_worldlines(worldbundleptr wh[], int nh)
     }
 }
 
+local void print_escapes(worldbundleptr wh[], int nh)
+{
+    DYN *b = create_interpolated_tree2(wh[0], 0);
+    for_all_daughters(DYN, b, bb) {
+
+	PRL(bb->format_label());
+
+	// Follow the complete worldline set (all worldbundles) of bb.
+
+	for (int ih = 0; ih < nh; ih++) {
+
+	    worldline *w = wh[ih]->find_worldline(bb);
+	    if (w->get_start_esc_flag() || w->get_end_esc_flag()) {
+		PRC(ih); PRL(w->get_t_esc());
+	    }
+	}
+    }
+}
+
 /*-----------------------------------------------------------------------------
  *  main  --  driver to use  xstarplot22()  as a tool. 
  *               The argument -a is interpreted as the axis along which to
@@ -1844,17 +1868,18 @@ main(int argc, char** argv)
     char infile[128];
     strcpy(infile, "world.dat");
 
-    bool  f_flag = TRUE;        // if TRUE, the star is solid
-    bool  o_flag = FALSE;	// if TRUE, output stdin to stdout
-    bool  r_flag = TRUE;        // if TRUE, the background is black
-    bool  t_flag = FALSE;	// if TRUE, show tree structure
+    bool f_flag = TRUE;		// if TRUE, the star is solid
+    bool o_flag = FALSE;	// if TRUE, output stdin to stdout
+    bool r_flag = TRUE;		// if TRUE, the background is black
+    bool t_flag = FALSE;	// if TRUE, show tree structure
+    bool E_flag = true;		// if true, show escapers
 
     int verbose = 0;
 
     check_help();
 
     extern char *poptarg;
-    char* params = "a:bd:D:efF:lL:mop:P:rs:tuv.";
+    char* params = "a:bd:D:eEfF:lL:mop:P:rs:tuv.";
     int   c;
 
     while ((c = pgetopt(argc, argv, params)) != -1)
@@ -1870,6 +1895,8 @@ main(int argc, char** argv)
 		      break;
 	    case 'e': cenergy = 1;		// color by energy [no]
 		      break;
+	    case 'E': E_flag = !E_flag;
+	    	      break;
 	    case 'f': f_flag = FALSE;		// fill star points [yes]
 		      break;
 	    case 'F': strcpy(infile, poptarg);
@@ -1952,6 +1979,7 @@ main(int argc, char** argv)
 	 << endl << endl;
 
     // print_worldlines(wh, nh);
+    // print_escapes(wh, nh);
 
     // Now display the data.
 
@@ -1969,11 +1997,20 @@ main(int argc, char** argv)
 
 	DYN *root = create_interpolated_tree2(wb, t);
 
-	// Flag non-members.
+	if (!E_flag) {
 
-	for_all_nodes(DYN, root, bb)
-	    if (bb != root && !is_member(wb, bb))
-		bb->set_index(-42);
+	    // Flag non-members (not switchable at runtime...).
+
+	    int n_mem = 0;
+	    for_all_nodes(DYN, root, bb)
+		if (bb != root) {
+		    if (is_member(wb, bb))
+			n_mem++;
+		    else
+			bb->set_index(-42);		// or whatever
+		}
+	    // PRC(t); PRL(n_mem);
+	}
 
 	if (!max_cm_set) {
 	    max_cm /= root->n_daughters();
@@ -1987,7 +2024,7 @@ main(int argc, char** argv)
 	    xstarplot22(root, scale, k, d, lmax,
 		       point_mode, rel_point_size,
 		       t, dt, D, cenergy,
-		       r_flag, f_flag, t_flag, init++,
+		       E_flag, r_flag, f_flag, t_flag, init++,
 		       step_mode, eod);
 	    if (dt != dts) PRL(dt);
 	    //rmtree(root);

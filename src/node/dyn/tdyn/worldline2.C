@@ -228,15 +228,16 @@ vector get_center_pos()	{return center_pos;}
 static vector center_vel = 0;
 vector get_center_vel()	{return center_vel;}
 
-// For membership determination:
+// Membership determination:
 
 bool is_member(worldbundle *wb, pdyn *p)
 {
     // A node is a member if any of its children is.
+    // Use knowledge of t_esc to determine the precise time of escape.
 
     for_all_leaves(pdyn, p, pp) {
 	worldline *w = wb->find_worldline(pp);
-	if (w && w->is_member()) return true;
+	if (w && w->is_member(p->get_system_time())) return true;
     }
     return false;
 }

@@ -162,6 +162,8 @@ void worldline::dump(int offset)	// default = 0
 {
     // Print a worldline, start to finish.
 
+    PRI(offset+4); PRC(start_esc_flag); PRC(end_esc_flag); PRL(t_esc);
+
     segment *s = get_first_segment();
     int is = 0;
     while (s) {
@@ -529,6 +531,25 @@ real mass_scale_factor()
     return physical_mass;
 }
 
+local void check_final_escapers(worldbundle *wb, tdyn *b)
+{
+    for_all_nodes(tdyn, b, bb) {
+	worldline *w = NULL;
+	if (bb->get_prev()) {			// esc flag is set
+	    bb->set_prev(NULL);
+	    w = wb->find_worldline(bb);
+	    if (w) w->set_end_esc_flag(1);
+	}
+	if (bb->get_next()) {			// t_esc is specified
+	    real *t_esc = (real*)bb->get_next();
+	    bb->set_next(NULL);
+	    if (!w) w = wb->find_worldline(bb);
+	    if (w) w->set_t_esc(*t_esc);
+	    delete t_esc;
+	}
+    }
+}
+
 // From Steve (10/00):
 //
 // Root dumps are done by kira twice per synchronization interval, so each
@@ -575,14 +596,22 @@ worldbundle *read_bundle(istream &s,
 	// changes, so pointers should be correctly maintained.
 	// Links are found at the start of each worldline segment.
 
+	// If this is the terminating full snapshot, we must check
+	// the prev pointers for updated information on escapers
+	// before we attach to the 4tree.
+
+	bool stop = (b->get_oldest_daughter()
+		     && streq(b->format_label(), "root"));
+	if (stop)
+	    check_final_escapers(wb, b);
+
 	// Connect b to the 4tree.
 
 	wb->attach(b, verbose);
 
 	// Stop once we have read in another complete system.
 
-	if (b->get_oldest_daughter()
-	    && streq(b->format_label(), "root")) {
+	if (stop) {
 	    if (verbose)
 		cerr << "break at t = " << b->get_time() << endl;
 	    break;

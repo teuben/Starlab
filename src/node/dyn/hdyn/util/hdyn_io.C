@@ -247,8 +247,9 @@ bool get_write_unformatted()
     return write_unformatted;
 }
 
-// Another kludge -- we need to know if this print_dyn_story() use is
+// Another kludge -- we need to know if this print_dyn_story() is
 // part of a complete snapshot, or just a single node or subtree.
+// Set complete_system_dump before put_node, unset it afterward.
 
 static bool complete_system_dump = false;
 
@@ -447,12 +448,30 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	// Extra output for complete system dumps only.
 
 	if (complete_system_dump) {
-	    if (!is_root()) {
-		hdyn *top = get_top_level_node();
-		bool esc = false;
-		if (find_qmatch(top->get_dyn_story(), "esc"))
-		    esc = getiq(top->get_dyn_story(), "esc");
-		put_integer(s, "  esc  =  ", esc);
+
+	    if (external_field) {
+
+		// Not needed if short_output = 4, as the data are already
+		// contained in the dyn story...
+
+		if (short_output != 4) {
+
+		    if (!is_root()) {
+			hdyn *top = get_top_level_node();
+
+			// The esc flag is probably redundant...
+
+			bool esc = false;
+			if (find_qmatch(top->get_dyn_story(), "esc"))
+			    esc = getiq(top->get_dyn_story(), "esc");
+			put_integer(s, "  esc  =  ", esc);
+
+			if (find_qmatch(top->get_dyn_story(), "t_esc"))
+			    put_real_number(s, "t_esc  =  ",
+					    getrq(top->get_dyn_story(),
+						  "t_esc"));
+		    }
+		}
 	    }
 	}
     }

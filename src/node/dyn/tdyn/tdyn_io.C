@@ -100,7 +100,7 @@ istream & pdyn::scan_dyn_story(istream & s)
 
 		// Mass:
 
-		if(!strcmp("m", keyword)) {
+		if (!strcmp("m", keyword)) {
 		    mass = strtod(val, NULL);
 		    break;
 		}
@@ -110,7 +110,7 @@ istream & pdyn::scan_dyn_story(istream & s)
 
 		// Position:
 
-		if(!strcmp("r", keyword)) {
+		if (!strcmp("r", keyword)) {
 		    if (!reading_root)
 			set_vector_from_input_line(pos, input_line);
 		    else
@@ -177,7 +177,7 @@ istream & pdyn::scan_dyn_story(istream & s)
 	    
 	    case 't':
 
-		if(!strcmp("tmpv", keyword)) {
+		if (!strcmp("tmpv", keyword)) {
 		    // Read time, mass, pos, and vel as unformatted data.
 		    // Input time will be real, independent of USE_XREAL.
 
@@ -201,7 +201,7 @@ istream & pdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 
-		if(!strcmp("t64mpv32", keyword)) {
+		if (!strcmp("t64mpv32", keyword)) {
 		    real time = read_unformatted_real( s );
 		    mass = read_unformatted32_real( s );
 
@@ -245,7 +245,7 @@ istream & pdyn::scan_dyn_story(istream & s)
 
 		// Velocity:
 
-		if(!strcmp("v", keyword)) {
+		if (!strcmp("v", keyword)) {
 		    if (!reading_root)
 			set_vector_from_input_line(vel, input_line);
 		    else
@@ -370,10 +370,13 @@ istream & tdyn::scan_dyn_story(istream & s)
 
 		// Cluster escaper flag:
 
-		if(!strcmp("esc", keyword)) {
+		if (!strcmp("esc", keyword)) {
 
-		    // Use the prev pointer for temporary storage.
-		    // Note: NULL means that esc is false.  Careful!!
+		    // Use the prev pointer for temporary storage.  Careful!!
+		    // Note: NULL means that esc is false.
+
+		    // The esc flag is largely redundant, as all necessary
+		    // information is contained in t_esc (below).
 
 		    int esc = strtol(val, NULL, 10);
 		    if (esc == 1) prev = (tdyn*) 42;
@@ -417,20 +420,8 @@ istream & tdyn::scan_dyn_story(istream & s)
 
 		// Mass:
 
-		if(!strcmp("m", keyword)) {
+		if (!strcmp("m", keyword)) {
 		    mass = strtod(val, NULL);
-		    break;
-		}
-
-		// Cluster member flag:
-
-		if(!strcmp("mem", keyword)) {
-
-		    // Use the prev pointer for temporary storage.
-		    // Note: NULL means that mem is true.  Careful!!
-
-		    int mem = strtol(val, NULL, 10);
-		    if (mem != 1) prev = (tdyn*) 42;
 		    break;
 		}
 		goto other;
@@ -439,7 +430,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 
 		// Position:
 
-		if(!strcmp("r", keyword)) {
+		if (!strcmp("r", keyword)) {
 		    if (!reading_root)
 			set_vector_from_input_line(pos, input_line);
 		    else
@@ -517,11 +508,13 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 
-		if(!strcmp("tmpv", keyword)) {
+		if (!strcmp("tmpv", keyword)) {
+
 		    // Read time, mass, pos, and vel as unformatted data.
 		    // Input time will be real, independent of USE_XREAL.
 
 		    // *** Must coordinate with hdyn_io.C. ***
+
 		    time = read_unformatted_real( s );
 		    mass = read_unformatted_real( s );
 
@@ -541,7 +534,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    break;
 		}
 
-		if(!strcmp("t64mpv32", keyword)) {
+		if (!strcmp("t64mpv32", keyword)) {
 		    time = read_unformatted_real( s );
 		    mass = read_unformatted32_real( s );
 
@@ -560,6 +553,20 @@ istream & tdyn::scan_dyn_story(istream & s)
 		    }
 		    break;
 		}
+
+		// Escape time.
+
+		if (!strcmp("t_esc", keyword)) {
+
+		    // Another kludge...  Careful again!!
+		    // Return t_esc pointed to by t_next.
+		    // MUST be sure to delete it on return.
+
+		    real *t_esc = new real;
+		    *t_esc = strtod(val, NULL);
+
+		    next = (tdyn *)t_esc;
+		}		
 		goto other;
 	    
 	    case 'T':
@@ -585,7 +592,7 @@ istream & tdyn::scan_dyn_story(istream & s)
 
 		// Velocity:
 
-		if(!strcmp("v", keyword)) {
+		if (!strcmp("v", keyword)) {
 		    if (!reading_root)
 			set_vector_from_input_line(vel, input_line);
 		    else

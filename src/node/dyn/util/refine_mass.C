@@ -9,6 +9,11 @@
 //=======================================================//              /|\
 
 // refine_mass.C:  More careful determination of cluster mass.
+//		   Also flag escapers.
+//
+//		   Separate from refine_mass2 because the solution
+//		   for the Jacobi radius is analytical, and the
+//		   form of the potential is particularly simple.
 //
 // Externally visible functions:
 //
@@ -45,11 +50,13 @@ local real solve3(real a, real b, real c)
 #define M_TOL 1.e-4
 #define M_ITER_MAX 20
 
-void refine_cluster_mass(dyn *b)
+void refine_cluster_mass(dyn *b,
+			 int verbose)		// default = 0
 {
     if (b->get_external_field() == 0) return;
+
     if (b->get_tidal_field() == 0) {
-	refine_cluster_mass2(b, 1);			// experimental
+	refine_cluster_mass2(b, verbose);	// experimental
 	return;
     }
 
@@ -91,9 +98,10 @@ void refine_cluster_mass(dyn *b)
     real M_J, M_x, M_y, M_z;
     int  N_J, N_x, N_y, N_z;
 
-    cerr << endl << "  refine_cluster_mass: getting M by iteration"
-	 << "; total system mass = " << M_inside
-	 << endl;
+    if (verbose)
+	cerr << endl << "  refine_cluster_mass: getting M by iteration"
+	     << endl << "  initial total system mass = " << M_inside
+	     << endl;
 
     while (iter++ < M_ITER_MAX
 	   && M_inside > 0
@@ -197,31 +205,37 @@ void refine_cluster_mass(dyn *b)
 
     }
 
-    if (iter >= M_ITER_MAX)
-	cerr << "    (too many iterations)" << endl;
+    if (iter >= M_ITER_MAX) {
+	if (verbose) PRI(2);
+	cerr << "warning: refine_cluster_mass: too many iterations at time "
+	     << b->get_system_time() << endl;
+    }
 
-    cerr << "  within last zero-velocity surface:"
-	 << "  M = " << M_inside << "  N = " << N_inside
-	 << endl
-	 << "                                    "
-	 << "  r_J = " << r_J << "  r_max = " << r_max_inside
-	 << endl
-	 << "  within r_J:                       "
-	 << "  M = " << M_J << "  N = " << N_J
-	 << endl
-	 << "  within r_J (projected):           "
-	 << "  M = " << M_x << "  N = " << N_x
-	 << endl
-	 << "  within r_y (projected):           "
-	 << "  M = " << M_y << "  N = " << N_y << "  r_y = " << sqrt(r_y2)
-	 << endl
-	 << "  within r_z (projected):           "
-	 << "  M = " << M_z << "  N = " << N_z << "  r_z = " << sqrt(r_z2)
-	 << endl;
+    if (verbose) 
+	cerr << "  within last zero-velocity surface:"
+	     << "  M = " << M_inside << "  N = " << N_inside
+	     << endl
+	     << "                                    "
+	     << "  r_J = " << r_J << "  r_max = " << r_max_inside
+	     << endl
+	     << "  within r_J:                       "
+	     << "  M = " << M_J << "  N = " << N_J
+	     << endl
+	     << "  within r_J (projected):           "
+	     << "  M = " << M_x << "  N = " << N_x
+	     << endl
+	     << "  within r_y (projected):           "
+	     << "  M = " << M_y << "  N = " << N_y << "  r_y = " << sqrt(r_y2)
+	     << endl
+	     << "  within r_z (projected):           "
+	     << "  M = " << M_z << "  N = " << N_z << "  r_z = " << sqrt(r_z2)
+	     << endl;
 
     // Repeat the inner loop above and flag stars as escapers or not.
+    // Too many iterations probably means a limit cycle of some sort;
+    // accept the results in that case.
 
-    bool disrupted = (iter >= M_ITER_MAX || M_inside < 0.01*M0);
+    bool disrupted = (M_inside < 0.01*M0);
 
     for_all_daughters(dyn, b, bb) {
 
@@ -232,11 +246,22 @@ void refine_cluster_mass(dyn *b)
 	real r = abs(dx);
 
 	bool escaper = true;
-	if (r < r_J
-	    && (r == 0 || -M/r + 0.5 * (b->get_alpha1()*x*x
-					+ b->get_alpha3()*z*z) < phi_J))
-	    escaper = false;
-
+	if (!disrupted) {
+	    if (r < r_J
+		&& (r == 0 || -M/r + 0.5 * (b->get_alpha1()*x*x
+					     + b->get_alpha3()*z*z) < phi_J))
+		escaper = false;
+	}
 	putiq(bb->get_dyn_story(), "esc", escaper);
+
+	// Print out t_esc if this is a new escaper.
+
+	if (escaper && !find_qmatch(bb->get_dyn_story(), "t_esc"))
+	    putrq(bb->get_dyn_story(), "t_esc", (real)b->get_system_time());
+
+	// Delete t_esc if this is not an escaper.
+
+	if (!escaper && find_qmatch(bb->get_dyn_story(), "t_esc"))
+	    rmq(bb->get_dyn_story(), "t_esc");
     }
 }
