@@ -1854,30 +1854,38 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 
 	binary_type = PERICENTER_REFLECTION;
 
-	// Note: pred_advance_to_periastron() may not yield a very
-	// accurate time...
-
 	// real peri_time = kep->pred_advance_to_periastron() - time;
 
 	// Old code used pred_advance_to_periastron(), but this may be quite
 	// inaccurate.  Better to use mean motion.  (Steve, 4/99)
 
-	real mean_anomaly = sym_angle(kep->get_mean_anomaly());  // in (-PI, PI]
-	real peri_time = -mean_anomaly / kep->get_mean_motion();
+	real mean_anomaly = kep->get_mean_anomaly();
+	if (kep->get_energy() < 0)
+	    mean_anomaly = sym_angle(mean_anomaly);	// place in (-PI, PI]
 
-	// Note that we expect mean_anomaly < 0.
+	if (mean_anomaly >= 0) {
 
-	steps = ceil(2 * peri_time / timestep);
+	    // Note that we always expect mean_anomaly < 0, so this
+	    // should never happen:
 
-	// Recall that ceil rounds to the next integer up, so we
-	// overshoot slightly.  We *don't want to do this for slow
-	// binaries, as we must terminate (components receding) at
-	// the end of the step.
+	    steps = 0;
 
-	if (slow) steps--;
+	} else {
+
+	    real peri_time = -mean_anomaly / kep->get_mean_motion();
+	    steps = ceil(2 * peri_time / timestep);
+
+	    // Recall that ceil rounds to the next integer up, so we
+	    // overshoot slightly.  We *don't want to do this for slow
+	    // binaries, as we must terminate (components receding) at
+	    // the end of the step.
+
+	    if (slow) steps -= 1;
+
+	}
     }
 
-    if (kep->get_energy() < 0.0) {
+    if (kep->get_energy() < 0) {
 
 	// Consider the possibility of complete merging in a bound orbit.
 
@@ -2050,8 +2058,6 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
     unperturbed_timestep = timestep * steps;
     if (slow) unperturbed_timestep *= get_kappa();
 
-    // PRL(steps);
-
     sister->kep = kep;
     sister->unperturbed_timestep = unperturbed_timestep;
     sister->fully_unperturbed = fully_unperturbed;
@@ -2062,6 +2068,7 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 	     << " -- the code will break soon...;-("
 	     << endl;
 	PRC(timestep); PRC(steps); PRL(unperturbed_timestep);
+	kep->print_all();
     }
     
     return steps;
