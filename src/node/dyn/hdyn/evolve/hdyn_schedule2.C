@@ -327,7 +327,7 @@ local void update_sort_counters(int n)
     total_count[ic]++;
 }
 
-void print_sort_counters()
+void print_sort_counters2()
 {
     cerr << endl << "Sort counters:" << endl << "    ";
     for (int i = 0; i < NC; i++) cerr << counter[i] << " ";
@@ -523,17 +523,17 @@ static int nprev = 0;
 
 // Allow possibility of cleaning up if necessary:
 
-void clean_up_hdyn_schedule() {if (nodes) delete [] nodes;}
+void clean_up_hdyn_schedule2() {if (nodes) delete [] nodes;}
 
 // ***** NOTE that the scheduling may become badly corrupted if bodies not
 // ***** on the list have been integrated (e.g. by synchronize_tree()).
 // ***** If this is done, then a reset *must* be forced.
 
-void fast_get_nodes_to_move(hdyn * b,
-			    hdyn * list[],
-			    int &nlist,
-			    xreal & tmin,
-			    bool & reset)
+void fast_get_nodes_to_move2(hdyn * b,
+			     hdyn * list[],
+			     int &nlist,
+			     xreal & tmin,
+			     bool & reset)
 {
     if (nbody == 0) reset = true;
 
@@ -617,7 +617,7 @@ void fast_get_nodes_to_move(hdyn * b,
 }
 
 
-void dump_node_list(int n) // default = 1000000000
+void dump_node_list2(int n) // default = 1000000000
 {
     int p = cerr.precision(HIGH_PRECISION);
     cerr << endl << "Current node list (nbody = " << nbody << "):\n";
