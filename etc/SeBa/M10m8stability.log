@@ -1,0 +1,63 @@
+This is TeX, Version 3.1415 (C version 6.1) (format=latex 95.11.8)  5 OCT 1998 18:32
+**M10m8stability
+(M10m8stability.tex
+LaTeX2e <1995/06/01> patch level 1
+(/usr/local/lib/texmf/tex/latex2e/base/article.cls
+Document Class: article 1995/06/26 v1.3g Standard LaTeX document class
+(/usr/local/lib/texmf/tex/latex2e/base/size10.clo
+File: size10.clo 1995/06/26 v1.3g Standard LaTeX file (size option)
+)
+\c@part=\count82
+\c@section=\count83
+\c@subsection=\count84
+\c@subsubsection=\count85
+\c@paragraph=\count86
+\c@subparagraph=\count87
+\c@figure=\count88
+\c@table=\count89
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+)
+No file M10m8stability.aux.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 12.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 12.
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 77.
+(/usr/local/lib/texmf/tex/latex2e/base/OMScmr.fd
+File: OMScmr.fd 1995/04/22 v2.3f Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 77.
+
+Overfull \hbox (41.67264pt too wide) in paragraph at lines 12--80
+[][] 
+ []
+
+
+LaTeX Warning: Float too large for page by 239.1508pt on input line 80.
+
+[1] (M10m8stability.aux) ) 
+Here is how much of TeX's memory you used:
+ 230 strings out of 10957
+ 2323 string characters out of 73501
+ 61510 words of memory out of 262141
+ 3133 multiletter control sequences out of 9500
+ 3640 words of font info for 14 fonts, out of 100000 for 255
+ 14 hyphenation exceptions out of 607
+ 23i,10n,18p,350b,370s stack positions out of 300i,40n,60p,3000b,4000s
+
+Output written on M10m8stability.dvi (1 page, 6780 bytes).

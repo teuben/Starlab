@@ -1,0 +1,8 @@
+#!/bin/tcsh -f
+
+set tarfile = mcpak.tar.gz
+set dirs = (lux libs draw palettes)
+
+tar cvf - Local_setup.inc Makefile.standalone STANDALONE_README makewalk \
+    `(find $dirs -name '[A-Z]*' -print; find $dirs -name '*.[CcFfh]' -print)` \
+    | gzip -c > $tarfile

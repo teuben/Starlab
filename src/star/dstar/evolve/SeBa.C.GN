@@ -1,0 +1,352 @@
+//// SeBa:        Binary evolution program SeBa.
+////              computes the evolution of a binary given any 
+////              initial conditions (M, m, a, e).
+////             
+//// Output:      in the form of the following files:
+////              -init.dat           contains selected initial conditons.
+////              -SeBa.data           contains binary evolution histories
+////              -binev.data          contains remnant formation information
+////
+////              in the form of standard output (cerr).
+////
+////              Initialized parameters include:
+////              - mass of the most massice component (primary star)
+////              - mass of its binary companion (secondary star)
+////              - semi-major axis of the binary system
+////              - orbital eccentricity
+////
+////              routines incuded can be found in double_star.h.
+////              The mass function routines are adoped from mkmass.C
+////              and are defined in starbase.h
+//// 
+////              externally visible routines are:
+////              -get_random_mass_ratio
+////              -get_random_semi_major_axis
+////              -get_random_eccentricity
+////              The two utilities for the various parameter are:
+////              -extract_...._distribution_type_string(....)
+////              and
+////              -type_string(char*)
+////
+////              The executable takes initial conditions (see Options)
+////              and returns randomized binary parameters.                 
+////                 
+//// Options:   -M    upper primary mass limit [100[Msun]]
+////            -m    lower limit to primary mass [0.1[Msun]]
+////            -x    mass function exponent in case of power law [-2.35]
+////            -F/f  mass function option: 0) Equal mass
+////                                        1) Power-law [default]
+////                                        2) Miller & Scalo
+////                                        3) Scalo
+////                                        4) Kroupa
+////            Option -F requires one of the following strings:
+////                      (mf_Power_Law, Miller_Scalo, Scalo, Kroupa)
+////                   -f requires the appropriate interger (see mkmass.C)
+////             -A   maximum semi-major axis limit [1000000[Rsun]]   
+////             -a   minimum semi-major axis limit [0] 
+////             -y   exponent for a power-law distribution [0] (flat in log)
+////             -G/g Semi major axis option: 0) Equal_sma
+////                                          1) Power Law [default]
+////                                          2) Duquennoy & Mayor (1987)
+////            Option -G requires one of the following strings:
+////                      (Equal_sma, sma_Power_Law, Duquennoy_Mayor)
+////                   -g requires appropriate interger (see double_star.h)
+////             -E   maximum eccentricity [1] 
+////             -e   minimum eccentricity [0] 
+////             -v   exponent for a power-law distribution 
+////             -U/u eccentricity option: 0) Equal eccentricity
+////                                       1) Power Law 
+////                                       2) Thermal distribution [default]
+////            Option -U requires one of the following strings:
+////                      (Equal_ecc, ecc_Power_Law, Thermal_Distribution)
+////                   -u requires appropriate interger (see double_star.h)
+////             -Q   maximum mass ratio [1]
+////             -q   minimum mass ratio [<-m option/selected primary mass>]
+////             -w   exponent for a power-law distribution  
+////             -P/p eccentricity option: 0) constant mass ratio
+////                                       1) Power Law 
+////                                       2) Hogeveen (1992)
+////            Option -P requires one of the following strings:
+////                      (Equal_q, qf_Power_Law, Hogeveen)
+////                   -p requires appropriate interger (see double_star.h)
+////
+////            -I select input file for reading initial conditions.
+////               -uses: double_star::dump as input format.  [no default]
+////            -R select random initial conditions    [false]
+////               with parameters as discribed above.   
+////            -n number of binaries to be simulated.  [1]
+////               Options: -I all binaries in input file are computed.
+////                        -R the number of binaries indicated.
+////                        oterwise one binary is simulated with
+////                        -M, -m, -a, -e as initial conditions.
+////
+//   Note:  libnode.a is referenced for the routines which produce the 
+//          mass function
+//
+//	version 1.0	Simon Portegies Zwart, Utrecht, 1992
+//                      -First version with class structure
+//	version 2.0	Simon Portegies Zwart, Utrecht, 1994
+//                      -Coupling to starlab
+//	version 3.0	Simon Portegies Zwart, Amsterdam, June 1997
+//	version 3.3	Simon Portegies Zwart, Cambridge, March 1999
+//
+
+#include "node.h"
+#include "double_star.h"
+#include "main_sequence.h"
+//#include "dstar_to_dyn.h"
+
+#ifdef TOOLBOX
+
+/*-----------------------------------------------------------------------------
+ *  binev  --
+ *-----------------------------------------------------------------------------
+ */
+local bool not_contact(double_star* double_str) {
+  bool no_contact=true;
+  star* a = double_str->get_primary();
+  star* b = double_str->get_secondary();
+  real rl_p = double_str->roche_radius(a);
+  real rl_s = double_str->roche_radius(b);
+
+  real rp = a->get_radius();
+  real rs = b->get_radius();  
+  if (rp>=rl_p || rs>=rl_s) no_contact=false;
+  return no_contact;
+}
+
+local bool  evolve_binary(node * bi,
+                          real start_time, real end_time) { 
+
+  double_star* ds = dynamic_cast(double_star*, 
+				 bi->get_starbase());
+  
+  //		Setup star from input data.
+  real dt, time=start_time;
+  ds->evolve_element(time);
+  
+  //ds->dump("init.dat", true);
+  ds->dump("SeBa.data", true);
+
+  if (!bi->is_root() &&
+      bi->get_parent()->is_root()) 
+
+    do {
+
+      dt = bi->get_starbase()->get_evolve_timestep();
+      time = min(time+dt, end_time);
+      
+      ds->evolve_element(time);
+
+//      if (ds->get_bin_type() == Merged || 
+//	  ds->get_bin_type() == Disrupted)
+//	return false;
+
+//      if (ds->get_primary()->remnant() && ds->get_secondary()->remnant())
+//	return false;
+
+    }
+    while (time<end_time);
+    
+  return true;
+
+}
+
+
+void main(int argc, char ** argv) {
+
+    bool e_flag = false;
+    bool R_flag = false;
+
+    bool reandom_initialization = false;
+    int  n = 1;
+    int  n_init = 0;
+    int id=1;
+    int contacts = 0;
+    stellar_type type = Main_Sequence;
+    binary_type bin_type = Detached;
+    real binary_fraction = 1.0;
+
+    real m_tot = 1;
+    real r_hm = 1;
+    real t_hc = 1;
+
+    char *mfc = new char[64];
+    mass_function mf = mf_Power_Law;
+    real m_min = 0.1;
+    real m_max = 100;
+    real m_exp = -2.35;
+    char *qfc = new char[64];
+    mass_ratio_distribution qf = qf_Power_Law;
+    real q_min = 0;
+    real q_max = 1;
+    real q_exp = 0;
+    char *afc = new char[64];
+    sma_distribution af = sma_Power_Law;
+    real a_min = 0;
+    real a_max = 1.e+6; 
+    real a_exp = -1;                           
+    char *efc = new char[64];
+    ecc_distribution ef = Thermal_Distribution;
+    real e_min = -1;    // allow detection of constant eccentricity
+    real e_max = 1;
+    real e_exp;
+
+
+    real lm_min = log10(m_min);
+    real lm_max = log10(m_max);
+    real la_min = log10(a_min);
+    real la_max = log10(a_max);
+
+    real sma    = 138;
+    real ecc    = 0.0;
+    real m_prim = 13.1;
+    real m_sec  =  9.8;
+
+    real start_time = 0;
+    real end_time   = 10000;
+
+    int input_seed=0, actual_seed;
+    char seedlog[64],paramlog[65];
+    extern char *poptarg;
+    int c;
+    char* param_string = "A:a:e:M:m:N:n:Q;q:Rs:x:T:";
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1)
+	switch(c) {
+            case 'A': a_max = atof(poptarg);
+	              la_max = log10(a_max);
+                      break;
+            case 'a': a_min = atof(poptarg);
+	              la_min = log10(a_min);
+                      break;
+            case 'e': ecc = atof(poptarg);
+	              e_flag = true;
+                      break;
+            case 'M': m_max = atof(poptarg);
+	              lm_max = log10(m_max);
+                      break;
+            case 'm': m_min = atof(poptarg);
+	              lm_min = log10(m_min);
+                      break;
+	    case 'n': n = atoi(poptarg);
+		      break;
+	    case 'N': n_init = atoi(poptarg);
+		      break;
+            case 'Q': q_max = atof(poptarg);
+                      break;
+            case 'q': q_min = atof(poptarg);
+                      break;
+            case 'R': R_flag = true;
+                      break;
+            case 'T': end_time = atof(poptarg);
+                      break;
+            case 's': input_seed = atoi(poptarg);
+                      break;
+            case 'x': m_exp = atof(poptarg);
+                      break;
+            case '?': params_to_usage(cerr, argv[0], param_string);
+		      exit(1);
+	}
+
+    actual_seed = srandinter(input_seed);
+    sprintf(seedlog, "         random number generator seed = %d",actual_seed);
+    sprintf(paramlog, 
+"         alpha  = %3.1f\n         lambda = %3.1f\n         beta   = %3.1f",
+	    cnsts.parameters(common_envelope_efficiency),
+	    cnsts.parameters(envelope_binding_energy),
+	    cnsts.parameters(specific_angular_momentum_loss));
+
+    if (!R_flag) {
+
+//		Add the stars and secondary.
+      m_prim = m_max;
+      m_sec  = m_min;
+      sma    = a_min;
+      //      ecc    = 0;
+
+      node *root  = mknode(1);
+      root->log_history(argc, argv);
+      root->log_comment(seedlog);
+      root->log_comment(paramlog);
+      root->print_log_story(cout);
+      root->get_starbase()->set_stellar_evolution_scaling(m_prim, r_hm, t_hc);
+      
+      node* the_binary = root->get_oldest_daughter();
+      add_secondary(the_binary, m_sec/m_prim);
+      
+      addstar(root, start_time, type);
+      double_star* ds =	new_double_star(the_binary, sma, ecc, 
+					start_time, n_init, bin_type);
+      ds->set_use_hdyn(false);
+      ds->get_primary()->set_identity(0);
+      ds->get_secondary()->set_identity(1);
+	
+      root->log_history(argc, argv);
+      root->log_comment(seedlog);
+      root->log_comment(paramlog);
+      root->print_log_story(cout);
+
+      evolve_binary(the_binary, 0, end_time);
+
+    }
+    else
+      for (int i=0; i<n; i++) {
+
+
+	mkrandom_binary(m_min, m_max, mf, m_exp,
+			q_min, q_max, qf, q_exp,
+			a_min, a_max, af, a_exp,
+			e_min, e_max, ef, e_exp,
+			m_prim, m_sec, sma, ecc);
+
+//      mkrandom_binary(lm_min, lm_max, m_exp, la_min, la_max, e_flag,
+//	m_prim, m_sec, sma, ecc);
+
+// (GN Apr  9 1999) for dwd
+//      cerr << m_sec << endl;
+//      if (m_sec > 0.95 ) {
+
+      node *root  = mknode(1);
+      root->get_starbase()->set_stellar_evolution_scaling(m_prim, r_hm, t_hc);
+      
+      node* the_binary = root->get_oldest_daughter();
+      add_secondary(the_binary, m_sec/m_prim);
+      
+      addstar(root, start_time, type);
+      double_star* ds =	new_double_star(the_binary, sma, ecc, 
+					start_time, i + n_init, bin_type);
+
+      ds->set_use_hdyn(false);
+      ds->get_primary()->set_identity(0);
+      ds->get_secondary()->set_identity(1);
+	
+      if (i==0) {
+	root->log_history(argc, argv);
+	root->log_comment(seedlog);
+	root->log_comment(paramlog);
+	root->print_log_story(cout);
+      }
+
+      if (not_contact(ds)) 
+	evolve_binary(the_binary, 0, end_time);
+      else {
+         i--;
+         contacts++;
+      }
+
+      if (i==n-1) {
+	root->log_history(argc, argv);
+	root->log_comment(seedlog);
+	root->log_comment(paramlog);
+	root->print_log_story(cout);
+      }
+
+      rmtree(root);
+
+//    }
+   }
+    cout <<"number of contacts at t=0:"<< contacts << endl;
+}
+
+#endif

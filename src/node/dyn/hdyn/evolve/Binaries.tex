@@ -1,0 +1,240 @@
+
+% Binaries.tex:  Some background on how kira deals with binary motion.
+%		 Steve McMillan, August 1998
+
+\documentclass{article}
+
+\textwidth 6.5in
+\textheight 9in
+\voffset -0.9in
+\hoffset -1in
+
+\pagestyle{empty}
+
+\newcommand{\mbar}{\langle m \rangle}
+\newcommand{\simlt}{\ \hbox{\rlap{\raise0.425ex\hbox{$<$}}\lower0.65ex\hbox{$\sim$}}\ }
+\newcommand{\simgt}{\ \hbox{\rlap{\raise0.425ex\hbox{$>$}}\lower0.65ex\hbox{$\sim$}}\ }
+
+\begin{document}
+
+\begin{center}
+	\LARGE{\bf Binary Handling in {\tt kira}}\\
+\vskip 6pt
+	\Large{\it Steve McMillan}\\
+	{\it August 1998}
+\end{center}
+
+\bigskip
+\noindent
+{\it Notation:} A binary has mass $m_b$, separation $r$, semi-major
+axis $a$, and period $P$.  We define $R_b = \max(r,a)$.  A perturber
+has mass $m_p$ and distance $D_p$.  We use standard N-body units, so
+the cluster mass, length, and time scales are all 1.  The mean stellar
+mass is therefore $\mbar \equiv 1/N$.
+
+\bigskip\bigskip\noindent
+{\large\it 1.~ Binaries without unperturbed motion}
+
+\bigskip\noindent Binaries are constrained by the following
+operational parameters:
+
+\begin{enumerate}
+
+\item	A close pair (of total mass $m_b$) is treated as a ``binary''
+	(i.e. motion of the center of mass is separated from the
+	relative motion of the components) when 
+$$
+	r < r_{crit} \equiv \frac{f}{N} {\cal M}_1^\alpha\,,
+$$
+	where $f$ is a free parameter, ${\cal M}_1 = m_b/2\mbar$, and
+	$\alpha =$ 0, 0.5, or 1, depending on the precise criterion
+	(distance, force, or potential, respectively) used for binary
+	recognition.  A binary is split back into single particles
+	when $r > 2.5\, r_{crit}$.
+
+\item	The dimensionless number $\gamma$ controls which neighbors are
+	regarded as perturbers of a given binary.  Particle $p$ is a
+	perturber of binary $b$ if
+$$
+	\frac{{\cal M}_2 R_b}{D_p^3} \ge \frac{\gamma}{R_b^2}\,,
+$$
+	or
+$$
+	D_p < \gamma^{-1/3} {\cal M}_2^{1/3} R_b\,,
+$$
+	where ${\cal M}_2 = \max(2m_p/m_b, 1)$.  The use of ${\cal
+	M}_2$ allows us to include all perturbers within a given
+	distance, as well as more massive particles at greater
+	distances.
+
+\item	The number of perturbers $N_p$ must be less than $N_{p,max}$,
+	the maximum allowed length of the perturber list in the {\tt
+	hdyn} class.
+
+\item	The speed-up obtained by using the GRAPE hardware is a factor
+	of $S_G \sim 100$--$500$.
+
+\end{enumerate}
+
+The value of $\gamma$ is determined primarily by the accuracy desired,
+as the error incurred in binary integration scales as $\gamma$.
+Empirically, we find that a typical error per unit time associated
+with perturbed binary motion is a few times $\gamma$ (in standard
+units, with no initial binaries).  We take $\gamma\simlt 10^{-7}$
+(with accuracy parameter $\eta = 0.1$) for reasonable accuracy.  Once
+$\gamma$ is chosen, the choice of $f$ is dictated by by efficiency
+considerations and the values of the other parameters.  The number of
+perturbers is
+$$
+	N_p \sim n D_p^3,
+$$
+where $n$ is the local density.  We define $n = \rho N$, where $\rho$
+is an overdensity factor, which could easily lie in the range
+100--1000 for binary interactions in the core.  Thus, the limit on the
+total number of perturbers for a binary of size $r_{crit}$ requires
+$$
+	f \simlt \biggl(\frac{N^2 N_{p,max} \gamma}
+			{\rho {\cal M}_1^{3\alpha} {\cal M}_2}\biggr)^{1/3}\,.
+$$
+For $N = 10^4N_4$, $\gamma = 10^{-7}\gamma_7$, and $N_{p,max} = 256$,
+and taking $\rho = {\cal M}_1 = {\cal M}_2 = 1$, this implies
+$$
+	f \simlt 14 N_4^{2/3} \gamma_7^{1/3}
+$$
+to avoid perturber-list overflow.  Taking the factors in the
+denominator into account, the ``standard'' choice of $f = 1$ seems
+conservatively safe.
+
+For a binary with $N_p$ perturbers, we must perform $2 N_p$ pairwise
+force calculations per time step.  With $\sim$200 steps per orbit and
+an orbital period of $2\pi\sqrt{a^3/m_b}$, this implies a total of
+$$
+	N_{f,bin} \sim 100 N^{1/2} a^{3/2} \gamma^{-1}
+	 		\rho {\cal M}_1^{1/2} {\cal M}_2
+$$
+force calculations per orbit (replacing $R_b$ by $a$ in the definition
+of $D$ above, and taking $200\sqrt{2}/\pi \sim 100$).  For the same
+binary treated as two separate particles, the equivalent number of
+force calculations is obtained by replacing $N_p$ by $N$ and dividing
+by $S_G$:
+$$
+	N_{f,nobin} \sim \frac{100}{S_G} N^{1/2} a^{-3/2} {\cal M}_1^{1/2}\,.
+$$
+We thus do less work in the binary case when
+$$
+	a^3 \gamma^{-1} \rho {\cal M}_2 S_G \simlt 1\,,
+$$
+or, substituting $a = r_{crit}$,
+$$
+	f \simlt \frac{\gamma^{1/3} N}
+		      {{\cal M}_1^{\alpha} {\cal M}_2^{1/3}
+			\rho^{1/3}S_G^{1/3}}\,.
+$$
+Again neglecting the mass and density factors (possibly amounting to a
+factor of 10 or more, note), and taking $S_G \sim 100$, we obtain
+$$
+	f \simlt 10 \gamma_7^{1/3} N_4\,.
+$$
+Given the extra factors in practice, and given the fact that the
+direct calculation is likely to be more accurate than the perturbed
+binary formulation, even with $\gamma = 10^{-7}$, the standard choice
+of $f \sim 1$ again seems reasonable.  In the core of a collapsed
+system with a wide range of masses, a reduction of $f$ to $\sim
+0.25$--0.5 may be desirable.
+
+The original implementation of perturber lists associated the list
+with the top-level node of a binary/multiple system and used the same
+list for all internal motion.  The list is recomputed at each
+center-of-mass time step.  As of August 1998, we optionally allow the
+use of low-level perturber lists for more efficient treatment of
+multiple systems.  As with the top-level lists, low-level lists are
+updated each center-of-mass time step; membership is drawn from the
+top-level list, applying the same perturbation criteria for inner
+binaries as is used in creating the top-level list for the outer
+binary.
+
+\bigskip\bigskip\noindent
+{\large\it 2.~ Unperturbed binaries}
+
+\bigskip\noindent Direct integration of a lightly perturbed binary in
+an orbit that is not too eccentric, with accuracy parameter $\eta =
+0.1$ and $\sim 300$ steps per orbit, conserves energy at the level of
+$\sim10^{-8}$ (relative error) per orbit.  (The number of steps is
+modified over and above the standard Aarseth criterion, depending on
+the mass of the binary, in order to increase the integration accuracy
+for energetic binaries.)  While this is a small error, it is
+systematic, always {\it decreasing} the total energy of the system.
+Two types of unperturbed binary motion are recognized, defined by
+additional parameters:
+
+\begin{enumerate}
+
+\item	{\it Pericenter reflection.}  A binary may be regarded as
+	unperturbed during pericenter passage (i.e. its motion is
+	treated as simple two-body motion and the binary step amounts
+	to a reflection about the pericenter point) if its
+	perturbation is less than $\gamma_p$.
+
+\item	{\it Fully unperturbed motion.}  If the external perturbation
+	(determined at apocenter) is less than $\gamma_f$, the entire
+	binary orbit is treated as unperturbed, allowing time steps
+	many orbits long.
+
+\end{enumerate}
+
+During unperturbed motion, the internal motion of the components is
+treated in the kepler approximation, and the binary is followed as a
+point mass.  The component positions and velocities are taken into
+account in computing the total energy of the system, however, and are
+updated at the end of each unperturbed step.  A tidal error is incurred
+during pericenter reflection, as the configuration of the binary
+relative to the external field changes during the step with no
+corresponding change in acc or jerk until the end of the unperturbed
+motion.  At present, this error is simply included in the overall
+integration error.  It should probably be accumulated as a separate
+item in {\tt kira\_counters}.  This tidal error is seen immediately in
+the instantaneously energy, and may also introduce an anomalously
+large jerk into the motions of the binary center of mass and the
+closest perturbers.
+
+In order to minimize the tidal error in pericenter reflection (which
+often is systematic, as the same reflection configuration is typically
+repeated many times), $\gamma_p$ is kept small---$0.1\gamma$ is the
+standard choice.  Systematic tidal errors are less of a problem for
+fully unperturbed motion, which proceeds an orbit at a time.
+Moreover, most perturbative terms are periodic in nature, and so
+vanish over a full orbital period, allowing $\gamma_f$ to be
+substantially greater than $\gamma$.  We adopt $\gamma_f = 100
+\gamma$.
+
+As a practical matter, long-lived multiple systems, such as
+hierarchical triples, can pose severe problems, as the inner binary is
+often not ``unperturbed'' by the above criteria, but the system
+survives for many binary periods, resulting in large energy errors.  A
+triple system is treated as unperturbed (i.e. both the inner and outer
+orbits are followed as two-body motion, and the center of mass is
+advanced as a point mass) if
+
+\begin{enumerate}
+
+\item	The outer orbit is ``weakly perturbed''---that is, its
+	dimensionless perturbation is less than some value
+	$\gamma_t$---and
+
+\item	The internal motion is stable---that is, the ratio of the outer
+	periastron to the inner semi-major axis exceeds some critical
+	ratio $R$.
+
+\end{enumerate}
+
+We currently (pragmatically) take $\gamma_t = 10^{-4}$ and $R = 5$.
+To minimize the tidal error, both the inner and outer orbits are
+advanced through integral numbers of periods.  Any residual error is
+absorbed in the same way as for binary motion.
+
+Unperturbed binary--binary systems are treated similarly, applying the
+stability criterion to each interior binary separately.  Hierarchical
+systems are treated as unperturbed if the inner system is stable (by
+the above definition) and the outer orbit is weakly perturbed.
+
+\end{document}

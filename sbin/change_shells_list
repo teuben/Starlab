@@ -1,0 +1,24 @@
+# csh -f
+# DON'T change the "csh" above!
+# Ideally, this should become a Bourne(again) shell script.
+
+# Change the shell in a specific set of files which need tcsh on
+# Redhat Linux and are exported with /bin/tcsh as their shell.
+# Use general script change_shell to perform the task.
+
+if ($#argv < 2) then
+    echo Two arguments requied.
+    exit
+endif
+
+echo Changing $1 to $2 in make-related files.
+
+foreach file (makewalk \
+	      makewalk.quiet \
+	      make_ar_cleanup \
+	      make_cond_build \
+	      make_cond_compile \
+	      make_list_files \
+	      make_touch_src)
+    csh change_shell $1 $2 $file
+end

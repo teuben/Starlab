@@ -1,0 +1,70 @@
+
+	***** NOTES to Redhat Linux users (and others)! *****
+
+1.  Some of the scripts in this directory fail under tcsh unless the
+first line explicitly specifies the use of tcsh, e.g. by
+
+#/bin/tcsh -f
+
+i.e. tcsh must be used instead of csh.  This problem apparently only
+occurs in Redhat LINUX, version 4 -- /bin/csh has been OK for every
+other OS tried. (Note the arbitrary choice of location for tcsh,
+incidentally.)
+
+    The reason for this problem is unclear, as are the circumstances
+under which it occurs.  Make has been known to fail suddenly when only
+the Starlab version ID is changed!  However, all make-related scripts
+are suspect; the following files are potentially affected by this
+problem:
+
+	makewalk
+	makewalk.quiet
+	make_ar_cleanup
+	make_cond_build
+	make_cond_compile
+	make_list_files
+	make_touch_src
+
+Currently, we know of no alternative to simply editing the files in
+order to switch back and forth between shells (e.g. for systems
+without tcsh).  The (csh) script change_shell automates this process.
+The command
+
+	change_shells_list  /bin/tcsh  /bin/csh
+
+will edit the above-named files to replace the standard /bin/tcsh by
+/bin/csh instead.  This script may also be used to change the location
+of tcsh.
+
+2.  More generally, the locations of both tcsh and csh may differ from
+system to system.  Accordingly, we adopt the following convention:
+
+	(i)   Scripts that are known to need tcsh (for whatever reason)
+	      on some systems are headed by #!/bin/tcsh -f.  If this
+	      location for tcsh is not correct, change it using the
+	      command
+
+		    change_shells_list  /bin/tcsh  new-tcsh
+
+	(ii)  Possibly a better way to reset these files to the standard
+	      /bin/tcsh or some other shell is to use
+
+		    reset_list
+	      or
+		    reset_list  new-tcsh
+
+	     to use tcsh in some other location.
+
+	(iii) All other scripts are headed by #!/bin/csh -f.  Should
+	      csh reside somewhere else, you can perform a global edit
+	      on all scripts using change_shell:
+
+		    change_shell  old-shell  new-shell  file(s)
+
+	      It should be OK to perform this operation on all files
+	      with
+
+		    change_shell  old-shell  new-shell  *
+
+	In all cases, originals of all modified files are stored in
+	the subdirectory .save.

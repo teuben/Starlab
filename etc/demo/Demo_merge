@@ -1,0 +1,20 @@
+#!/bin/csh -f
+#
+# To get a taste, invoke this command for 20 particles, say:
+#       Demo_merge 20 0.03 (the default)
+#
+if ($#argv < 1) then
+    set n = 20
+else
+    set n = $1
+endif
+#
+if ($#argv < 2) then
+    set R = 0.03
+else
+    set R = $2
+endif
+#
+mkplummer -n $n -i | addhydro -R $R | hydro_leapfrog -t 2 -d 5 -a 0.02 -q | head
+
+

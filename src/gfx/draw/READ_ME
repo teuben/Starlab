@@ -1,0 +1,972 @@
+
+
+
+				 MCDRAW primer
+				 -------------
+
+
+			        Steve McMillan
+
+			      Version 2.0, 6/22/94
+
+
+
+   The purpose of MCDRAW is to produce reasonable-quality two-dimensional
+graphs, complete with axes, labels, error bars, etc. (in full color, if
+available).  The program reads in data in columnar form from an external
+file, processes it, and produces the desired plot(s).  It contains many
+built-in functions to permit the user to manipulate both the data and the
+appearance of the final output, but its default options are adequate for
+quick drafts with a minimum of user input.  Several different output devices
+are recognized; more can be (relatively) easily added, as desired.
+
+
+NOTES: 	0. The default length of all internal arrays is 10000.  Change this
+	   to N by invoking the program with "mcdraw N".  (See below for a
+	   list of command-line arguments.)
+
+	1. The units are always chosen so that the width of the graphics
+	   window is 10.  The height depends on the aspect ratio of the
+	   physical output device, and the aspect ratio specified by the
+	   user.  These units will be referred to as "absolute" or "screen"
+	   units.  When a box (i.e. axes, labels, etc.) is displayed, it
+	   is also possible to use "box" or "user" units, where coordinates
+	   refer to the values shown on the axes.
+
+	2. Useful device choices are:
+
+		s	for a square SunCore window
+			Some options:	-a x	aspect ratio = x	[1.0]
+					-s s	window size/screen width = s
+									[0.5]
+					-l n	select n color levels	[128]
+					-g	grey palette
+
+		v	for VersaTerm-PRO
+
+		p	for the laser printer
+					-l	landscape mode
+					-h	no header on top
+					-n	save, but don't print, the
+						graphics output
+						(default: print, don't save)
+					-k 	save the output after printing
+					-f filename
+						store the graphics output in
+						the specified file
+						(default: POSTSCRIPT.OUT_nnn)
+		x	for an X-window
+			Some options:	-a x	aspect ratio = x	[1.0]
+					-i	take input from stdin only
+						(useful for automated scripts)
+						The default is to accept input
+						through the X-display also.
+
+	3. The bottom left corner of the box inside which plotting takes
+	   place always starts at location (1.75, 1.25*aspect ratio).
+
+	4. Most input data comes from files with data arranged in columns
+	   (e.g. suitable for reading with a FORTRAN list-directed READ).
+	   Presently, MCDRAW can handle files with up to 50 columns of data
+	   (UNIX places no restrictions on the length of a line, even in
+	   FORTRAN!) The data may be saved in one of three internal arrays,
+	   which can be referred to as x, y, or z (or 1, 2, or 3).  Most
+	   plotting uses only x and y; the z array is used for more complex
+	   plots, and for array arithmetic.
+
+	   MCDRAW can also read images and unstructured (but formatted)
+	   data files, for use by some of its specialized functions.
+
+	5. A typical simple plotting session:
+
+		file DATA	# open a data file called DATA
+		c 2 3		# get x from column 2, y from column 3
+		lim		# determine limits on x and y
+		de s		# initialize graphics in SunView
+		xl X-axis	# specify the x-label as "X-axis"
+		yl Y-axis	# specify the y-label as "Y-axis"
+		box		# draw a box, with labelled axes, etc.
+				# NOTE: lim, xl, yl must come before this.
+		plot		# plot y(x)
+		la LABEL	# put an overall label ("LABEL") on the figure.
+		quit		# exit from MCDRAW.
+
+	   Commands may be ruthlessly abbreviated (see below for minimal
+	   choices), and several can be typed on a single line (separated
+	   by semicolons).  Commands entered on the same line are treated
+	   as a single unit for the purposes of the history list.
+
+	6. USER UNITS AND LOGARITHMIC AXES.  For historical reasons, there
+	   is some slight awkwardness in making logarithmic plots.  In the
+	   "l" command, the specified limits are the actual values, not their
+	   logarithms (i.e. for a log plot from 1 to 100, set mode = -1 and
+	   use limits of 1 and 100, not 0 and 2).  However, all other quan-
+	   tities are logarithms.  Thus, the array being plotted in x, for
+	   example, will be assumed to be a logarithm.  (See the "lgx" etc.
+	   commands below.)  Again, when referring to locations for the "d",
+	   "m" etc. commands, the relevant coordinate should be logarithmic.
+
+	7. ENVIRONMENT.  The code needs to know where to find the font file
+	   and where to send PostScript output for printing.  These are 
+	   specified in the environment variables:
+
+		MCD_FONT_DIR	for the fonts (and this help file).
+
+				The defaults (tried in order) are:
+
+					'.'
+					'..'
+					'/home/astro_export/steve'
+
+				This is overridden if MCD_FONT_DIR is set.
+
+		PS_PRINTER	for the print queue.
+
+				The default is 'lpps'
+
+		MCD_DEVICE	can also be used to establish a default
+				plotting device, i.e. instead of
+
+					de device-specification
+
+				in MCDRAW, you can say
+
+					setenv MCD_DEVICE device-specification
+
+				beforehand. This environment variable is 
+				overridden by the internal "de" command.
+
+	8. COMMAND-LINE ARGUMENTS.  MCDRAW understands some command-line
+	   arguments, in the form "-switch argument".  They are:
+
+		-h:		print out the available arguments
+		-n size:	set array size (same as simply specifying
+				the size with no "-n")
+		-s:		same as "-n"
+		-f file:	take initial input from the specified file
+		-c command:	execute the MCDRAW specified command(s)
+				before seeking interactive input.  For
+				multiple commands, enclose the entire
+				string in double-quotes, to prevent the
+				shell from interpreting the semicolons.
+
+	   Thus, the quickest way to print out the current version of this
+	   help file is to type:
+
+		mcdraw -c "hh; q" | lpr
+
+	9. SETUP.  If a file named ".mcdrc" exists in the user's login
+	   directory, commands will be read from that file before interactive
+	   input starts.  If such a file exists in the current directory
+	   when MCDRAW is started up, it will be used instead.
+
+	10. NOTE ON USING MULTIPLE DEVICES.  We allow an arbitrary number
+	    of X-windows, and one each of any other kind.  Most windows
+	    are reinitialized when reselected, but X and PostScript have
+	    memories.  Returning to a PostScript file with "de p" will
+	    NOT print the file and open a new one, as in mcdraw 1.3.
+	    Instead, it simply reopens the file and appends to it.  To
+	    print the contents and continue, you must enter "pr" to print,
+	    then "de p" to restart.  Saying "de x" will always open a new
+	    X window.  To move to an existing window (from within X mode,
+	    or from another mode), use the "wi" command.
+
+	    A major improvement with version 2.0 is that each device and
+	    window has its own graphics settings.  Thus, colors, weights,
+	    offsets, scalings, etc. are all remembered by each window and
+	    device, and are restored when the device is reactivated.
+
+	    NOTE that the x, y, z, and history arrays are not saved and
+	    restored.  Data must be reloaded if it changed while the
+	    output was directed to another window.
+
+
+Command Descriptions:
+--------------------
+
+Once upon a time, the names were intended to be mnemonic.  Now there are too
+many possible choices, so the names have become somewhat ideosyncratic...
+
+!range:	Reexecute historical command(s).
+	The commands are numbered; the prompt contains the current number.
+	To see a list of previous commands, use the "hi" command.  The string
+ 	"range" can refer to a single command (by number): !3, or a range of
+	commands: 3:5 (3, 4, and 5), 3#5 (3, 4, 5, 6 and 7), etc.  Repeat
+	references in repeated strings are recursively expanded.
+
+!!^xxx"yyy":  Reexecute last command, after replacing string xxx by yyy.
+!n^xxx"yyy":  Reexecute command #n, after replacing string xxx by yyy.
+
+	If a line begins with ^xxx"yyy", a leading "!!" is assumed.
+
+	As in UNIX, it is also possible to refer to a previous command by
+	its first few letters, so !string may be used instead of !n in all
+	of the above commands.
+
+?:	Type out short help information.
+
+=#:	Specify box location and size.
+	The entire screen can be used (=0), or the top left (=1), top right
+	(=2), bottom left (=3), or bottom right (=4).  By default, the
+	relevant region will be erased before use.  To avoid this, type
+	"=-2", "=-0", etc.  For more precise control of the box, see "bo"
+	below.  Note that both this command and "bo" will reset the symbol,
+	number, and point heights (see "hb", "hn", and "hp") to their
+	(scaled) default values.  The defaults are the values in place
+	when the FIRST box is initialized.
+
+*:	Toggle suppression of most output.  Useful for automated scripts.
+
+2d [array]:  Enter 2-D (contour) plot mode.  This allows a contour plot
+	of the data in the specified array to be displayed (default: use
+	the z-array).  You will be prompted for the actual dimensions of
+	the 2-D array contained in "array," and the contour levels to plot. 
+	Exit this mode by entering "q."  Limited online help may be obtained
+	by typing "h."  The line color, width, and type may be modified
+	without going back to the MCDRAW prompt. Most other operations will
+	involve typing "q," performing the desired action, and typing "2d"
+	again. Note that the list of contours used is saved between visits
+	to the 2d routine, as are the array dimensions. This option can
+	also paint the screen according to the value of the array, allowing
+	a limited form of imaging to be performed.
+
+	The contour level list may be modified interactively using the
+	"g," "gd," "d," "s," and "x" commands. The entire list may be
+	redrawn with "r." All of these commands work properly in replay
+	mode. However, the use of the previous array dimensions (the
+	default if CR is entered at the "Array sub-dimensions:" prompt)
+	will almost certainly cause replay problems.  Any graphics-
+	state changes (color, weight, etc.) made in 2d mode remain in
+	effect on return to the main program.
+
+	The contour plot will be drawn within the region that would be
+	enclosed by the box created by the "b" command. Thus, several
+	contour plots on a single page can be produced by combining
+	"2d" with "=1," "=2," "bo," etc. However, the box itself is not
+	necessary, nor do its axes affect the contours in any way.  The
+	box can therefore be drawn before or after the contouring, as
+	an aid to the eye, or not at all. The contour-drawing routine
+	sees only an array stored on a uniform integer grid, and
+	interpolates accordingly.  If, for example, a semi-logarithmic
+	plot is required, the data must already have been saved in that
+	form before entering MCDRAW.
+	
+3d [array]:  Enter 3-D plot mode.  This allows a very simple three-
+	dimensional representation of the data in the specified array to
+	be displayed (default: use the z-array).  As with "2d," you will be 
+	prompted for the actual dimensions of the 2-D array contained in 
+	"array," and the viewing angles desired.  Exit this mode by entering
+	"q" or "e" at the prompt.  Limited online help may be obtained by
+	typing "h."
+
+	The 3-D plotter works on the same array as the 2-D contour drawing
+	package. Thus, all the above comments about data storage and non-
+	uniform grids apply here, too.
+
+a+(-*/^) array1 array2 [array3]:  Perform simple array arithmetic.
+	Arrays can be referred to as x, y, z, 1, 2, or 3.  Thus, the
+	command "a+ x y" has the effect of adding x to y, and saving
+	the result in y (the second argument is used if no third one
+	is specified).  The command "a/ y z x" is like "x := y/z", etc.
+
+a> array1 array2 array3:  Set array3 = max(array1, array2).
+
+a< array1 array2 array3:  Set array3 = min(array1, array2).
+
+a= array1 array2:  Set array2 equal to array1.
+
+a\ array:  Reverse the order (1 <--> n, etc.) of the specified array.
+
+a! array n:  Compress array by selecting every (n+1)-th element.
+
+aa array:  Replace the specified array by its absolute value.
+
+ac array min max: Array clip: ensure that the specified array lies between
+	the limits min and max.
+
+ai array:  Invert the specified array (e.g. x := 1/x).
+
+an angle:  Specify angle at which subsequent strings (using "s" or "ss")
+	will be drawn.  Doesn't affect axes or labels.
+
+an-:	Revert to the previous angle specified.
+
+ao array offset:  Offset the specified array by a given amount, padding
+	with zeros if necessary (e.g. x(i+noff) = x(i), i = 1,...,nx).
+
+ar xt yt xh yh:  Draw an arrow from (xt,yt) to (xh,yh).  The coordinates
+	are specified in absolute units if no box is displayed.  Otherwise,
+	they are expressed in the units appearing on the coordinate axes.
+
+arh size:  Specify, in screen units, the size of the arrowhead drawn by ar.
+	If size < 0 (the default), arrowhead sizes scale with the length
+	of the arrow.
+
+as ratio:  Define the aspect ratio of the box.  Normally, this is determined
+	by the aspect ratio of the output device.  This command modifies
+	that default.  Aspect ratios less than unity shrink the y-axis;
+	those greater than unity shrink the x-axis.  The aspect ratio goes
+	into effect when the screen parameters are next changed, i.e. when
+	"de", "bo", or "=#" is specified.
+
+au array:  Replace the specified array by its autocorrelation function.
+	The autocorrelation is calculated on the assumption of EQUALLY-
+	SPACED data points, and will extend up to a lag equal to HALF the
+	length of the original array.  In a typical use, x will be time,
+	y will be the signal.  Typing "au y" will replace y by its auto-
+	correlation and reduce the lengths of both the y AND the x arrays
+	by a factor of 2, so the command sequence "l; b; p" will
+	correctly plot the autocorrelation function.
+
+b:	Draw box (all parameters settable).
+	A box will be drawn, to the size determined by the "as", "bi", and
+	"sm" commands, with x- and y-axes linear or logarithmic, according
+	to the "mo" settings, and limits as determined by the "l" command,
+	and with x- and y-labels given by the "xl" and "yl" commands.  This
+	command establishes the scalings for subsequent "plot" commands.
+	See the note above on the use of logarithmic modes.  The appearance
+	of the box can be modified with the "xon/xoff", "yon/yoff", and "ya"
+	commands described below.
+
+b- [n flag]:  Return to an earlier box setting.  If n is specified, it is
+	the number of settings to be popped from the stack (default = 1).
+	The flag is the same as for "bo".
+
+bb:	Unadorned box.  Perform scaling, etc., as for "b," but don't put
+	labels, tick-marks, etc., on the box.
+
+bc:	Normally, when the screen is split into four (by "=#"), one plot
+	is placed in each quadrant.  Issuing the "bc" command will make
+	MCDRAW attempt to place the boxes closer together, for a better-
+	looking display.  A second "bc" reverts to the default.
+
+bi: 	Increase box size (and all other scales) by 10%.
+
+bn:	Perform all the scalings as for "b", but don't draw anything.
+
+bo x y scale [flag]:  Offset box bottom left corner to absolute location (x, y)
+	on the screen, and scale it to a fraction "scale" of its normal size.
+	If flag is set nonzero, erase the new plotting region prior to use.
+	These settings are saved on a stack, which is cleared by the "=#"
+	comand.  This command allows more general, but less convenient,
+	control over the location and size of the plotting region.
+	WARNING:  It is possible to corrupt the stack when using this
+	feature in "replay" mode.
+	BUG/FEATURE: Points and numeric and text labels are also rescaled,
+	but based on their initial sizes, not those set by "hn," "hs," etc.
+	The scaling is not the same as is applied to the box (actually, it
+	is the square root of the box scaling), for aesthetic reasons.
+
+bs:	List the current box stack (x, y, scale).
+
+c col#1 col#2:  Input data.  Columns #1 goes to x, column #2 to y.
+
+cb color:  Set the background color (0 to 255), if applicable.
+
+cd directory:  Change working directory, as in UNIX, except that the "home"
+	directory (just "cd") is where MCDRAW was started up.  This directory
+	name is	used in ALL commands that use a directory ("f", "in", "sy").
+	To go to your login directory, use "cd ~".
+
+cm filename:  Read a new color map from the specified file, if any, then
+	display the current color map.  NOTE: For now, at least, the filename
+	is relative to the directory specified by "cd" (default = .).
+
+co color:  Specify the color of subsequent lines and text, if applicable.
+
+co-:	Revert to the previous color.
+
+cu array:  Replace the specified array by its cumulative sum (starting
+	from element #1).
+
+cx filename:  Read x from the image file "filename", assumed to be in
+	standard image format.  The first 8 (header) bytes are ignored.
+
+cy filename:  As for "cx," but for the y-array.
+
+cz filename:  As for "cx," but for the z-array.
+
+d x y:	Draw a line from the current point to (x y), in "user" units.
+	See the note above on the use of logarithmic modes.
+
+da x y:	Draw a line to (x y), in "absolute" units.
+
+dd x y: Draw a dashed line (set pattern with "t") to (x y).  If no box is
+	displayed, (x y) is absolute; otherwise, it is in user units.
+
+de device:  Specify the graphics device.  A list of possible devices will
+	be printed out if no device (or an illegal one) is entered.  The
+	program will stop after three errors.  The device may also be
+	specified through the environment variable MCD_DEVICE.
+	
+diff array1 array2 array3:  Numerically differentiate array2 with respect
+	to array1, placing the resuly in array3 (default: array2), i.e.
+
+	array3(i) = (array2(i+1) - array2(i-1)) / (array1(i+1) - array1(i-1)).
+
+dx(y,z):  Decimal exponentiation of the specified array (x := 10**x, etc.).
+	Note that there is no space between the "d" and the other letter,
+	and that "d1", "d2", and "d3" should also work.
+
+e[a]: 	Erase the entire screen.
+
+eb: 	Erase the interior of the current box.
+
+ec string:  Echo the input string (useful for scripts).
+
+el:	Erase the current label.
+
+er [xmin xmax ymin ymax]:  Erase the specified rectangle.  If no box is
+	displayed, the coordinates are absolute; otherwise, they are in
+	user units.  No argument ==> erase the entire screen.
+
+erc size:  Specify the size of the "caps" at the ends of an error bar.
+
+err direction #sides:  Draw error bars at each point, taken from the z array.
+	If direction is "1" or "x", the bars are horizontal; it it is "2" or
+	"y", the bars are vertical.  The bars are one-sided, in the positive
+	(negative) direction, if #sides = 1 (-1), two-sided if #sides  = 2.
+
+erp direction #sides:  As for err, but don't draw error bars that are smaller
+	than the current point size in use.
+
+ex(y,z):  Exponentiate the specified array (x := exp(x), etc.). See "dx" above.
+
+f filename [\nh]:  Specify the input file for x, y and z input as "filename".
+	If the "\nh" is present, the first nh lines of the file are taken to
+	be a header, and are skipped.
+
+f1[p] [xl xu]:  Find the best least-squares linear fit to y(x) in [xl, xu],
+	and print out its parameters (y = a x + b).  If the "p" is there,
+	plot that fit on the output device.  If no parameters are given,
+	the fit is performed to the entire range of x.  All points have the
+	same weight in the fitting procedure.
+
+f2[p] [xl xu]:  As for f1, but weighted by the z array.
+
+fc:	Close the currently open data file.
+
+fo: 	Toggle between plain and fancy numeric labels.  The plain text is
+	much faster, especially noticeable on a slow output device (e.g. a
+	1200 baud dialup line).  In "plain-font" mode, all numeric labels
+	and any numbers in strings will be drawn using the simpler font.
+
+fp[p] m [xl xu]:  Find the best least-squares fit to y(x) in [xl, xu] by
+	a polynomial of order m, and print out the fitting coefficients.
+	The meaning of "p" and unspecified xl, xu are as for f1.  All
+	points have the same weight.  The fitting procedure is described
+	in "Numerical Recipes," section 14.3.  Presently, m must be < 21.
+
+ft[p] m [xl xu]:  As for fp[p], but using trigonometric polynomials.
+
+fz[p] [xl xu]:  As for fp, but weighted by the z array.
+
+g: 	Get graphic input, if applicable.  A pointer will appear on the
+	screen.  Click in the desired location, and the specified location
+	will be saved in memory.
+
+gc: 	Get a color from the color bar.  Point and click, and the color
+	value will be printed, and the color set.
+
+gd(m): 	Draw or move to the specified point on the screen.
+
+gs prompt:  Read a character string from standard input.  If a prompt string
+	is specified, it will be written to stdout first. The input string
+	becomes the default for the "s" and "la" commands.
+
+h [char]:  Type out more complete (less incomplete?) help information.
+	If one or two characters are entered, only help on commands
+	beginning with those characters is printed.
+
+h?:	Print out current hn, hp, and hs settings.
+
+hg[n] del [ref]:  Draw a [normalized] histogram, using the data in the
+	z array.  The bins will be chosen to be del (user) units wide,
+	and, if ref is specified, it will be located on a bin boundary.
+	The range will be clipped if there are too many outlying points.
+	The the form of the output is strongly tied to the mode settings
+	(see "mo" below). If the x-mode is negative, the x-axis	will be
+	logarithmic, del will be the bin width in log10(x), and ref will
+	refer to x, not its logarithm.  If the y-mode is negative, the
+	y-axis will be logarithmic.  Thus, for example, to make a
+	histogram of the z-data, binned logarithmically, and displayed
+	with a logarithmic vertical axis, it is NOT necessary to modify
+	the data in z -- just use "mo -1 -1; hg ...". 
+	This command will optionally save the histogramming information
+	(e.g. for use by the "hgxy" command -- see below) in the x and y
+	arrays.  This option is selected by the "hgs" command.
+	If the "hge" flag is set, the output will consist of points and
+	standard error bars instead of a histogram.
+
+hg1[n] del [ref]:  Draw a second [normalized] histogram,using the current
+	z array and the input binning parameters, but with the same box as
+	the last use of "hg".
+
+hg2: 	Draw a second histogram, using the current z array, but the bin
+	and box parameters from the last use of "hg".
+
+hgxy: 	Draw a histogram from the x and y arrays, i.e. assume that the
+	binning has already been done, so that x(i) is the left-hand edge
+	of the i-th bin, and y(i) is its height.
+
+hge:	Toggle histogram/error-bar mode.  Draw either a "normal" histogram,
+	or plot points and standard error bars instead.  Default: "normal."
+
+hgm:	Toggle histogram mode. The default is to draw full vertical lines
+	between bins. The alternative is to draw no internal lines, producing
+	a "skyline" appearance instead.
+
+hgs:	Toggle histogram save mode.  If set, the histogramming information
+	will OVERWRITE the x and y arrays.  Default: off.
+
+hh:	Full help--print this file (piped through "more").
+
+hi range:  List a range (as above) of historical commands.
+
+hk keyword:  Print all help entries containing the specified keyword.
+
+hl: 	Try to make the label on the y-axis horizontal, if possible.
+
+hn height:  Set number heights (for "box").  Initial value = 0.2.
+
+hn* factor:  Increase the number height by the specified factor.
+
+hn/ factor:  Decrease the number height by the specified factor.
+
+hn-:	Restore "hn" setting prior to the last "hn" command.
+
+hp height:  Set point heights (for "plot" commands).  Initial value = 0.1.
+	(See also "j" and "n" below.)
+
+hp* factor:  Increase the point height by the specified factor.
+
+hp/ factor:  Decrease the point height by the specified factor.
+
+hp-:	Restore "hp" setting prior to the last "hp" command.
+
+hs height:  Set symbol heights (for labels, strings,...)  Initial value = 0.25.
+
+hs* factor:  Increase the symbol height by the specified factor.
+
+hs/ factor:  Decrease the symbol height by the specified factor.
+
+hs-:	Restore "hs" setting prior to the last "hs" command.
+
+i [array]:  Print out info on array(s) [no argument ==> x and y].
+
+ic [character]:  Allow/disallow  comment lines in the input data file.
+	Normally, all lines are processed.  This command toggles between
+	allowing and neglecting comment characters, and optionally lets
+	the user specity the comment character.  The default is "%".
+
+id:	Idle mode.  Wait for graphic or other input before continuing.
+
+im:	Toggle between "fast but stupid" and "slow but clever" input modes.
+	The former reads data via FORTRAN list-directed reads, and is more
+	efficient, but will fail if any column (even one not being used)
+	contains non-numeric data.  The latter mode will read files with
+	non-numeric columns (still returning an error if the specific column
+	to be read contains a non-numeric entry), but it is much slower.
+	The default is "fast but stupid" mode.
+
+in filename:  Take input from the specified file instead of from standard
+	input.  If no filename is specified, input reverts to stdin.
+
+int array1 array2 array3:  Numerically integrate array2 with respect
+	to array1, using the trapezoid rule, placing the resuly in array3
+	(default: array2).
+
+iw window:  Iconify the specified X-window.  If window is not specified,
+	then iconify all windows.
+
+j jth: 	This command ("join") determines exactly what gets drawn when a
+	"plot" command is issued.  If jth >= 0, the points are connected
+	by lines.  If jth < 0, no lines are drawn, only points are plotted.
+	If jth > 0, points and lines are drawn.  If |jth| > 1, only every
+	|jth|-th point is plotted.  (See also "n" below, for a definition
+	of "point".)
+
+k/ki/kw: Kill the specified (X) window.
+
+l [xmin xmax ymin ymax]:  Get the x and y limits (for "b").  If no arguments
+	are specified, the limits are taken from the x and y arrays.  If
+	arguments are specified, the limits are forced.  If a single argument
+	"+L" is specified, limits +/-L on each axis are forced.
+
+l=:	Choose the box location from the current loop counter.  [Equivalent
+	to "=n", where n = (loop-counter, modulo 4).]
+
+la label:  Draw an overall label, centered above the current box.
+
+lc:	Set the color from the current loop counter.
+
+lo offset: Specify the label offset, in units of the string height ("hs"),
+	 above the top of the box.
+
+loop i1 i2 inc:  Repeat the rest of the current line a specified number
+	of times.  The internal loop counter goes from i1 to i2 in steps
+	of inc.  The syntax is the same as the FORTRAN do-loop construct
+	"do i=i1,i2,inc".  If no arguments are specified, the default of
+	"1 1000000 1" is assumed.  If only i1 is specified, the loop is
+	executed as though "1 i1 1" had been entered.  If i1 is specified
+	but i2 is not, i2 is taken to be 1000000.  If inc is not specified,
+	it is taken to be 1.  If inc has the wrong sign, its sign will be
+	reversed.
+	Any error within the lop will cause it to terminate.
+
+lgx(y,z):  Decimal logarithm: log10(x[y,z]).  See "dx" above.
+
+ln:	Set the number of sides in a polygon from the current loop counter.
+
+lnx(y,z):  Natural logarithm: ln(x[y,z]).  See "dx" above.
+
+lp:	Print the current loop counter.
+
+lw:	Set the line weight from the current loop counter.
+
+ly:	Read y from the column specified by the loop counter.
+
+m x y: 	Move the pointer to (x,y), specified as for "d" above.
+
+ma x y: Move pointer to absolute (x,y), specified as for "da" above.
+
+mo modex modey:  Specify frame modes (for "box", "hg", etc.).  Each mode
+	can be -2, -1, 1, or 2.  If mode > 0, the appropriate axis is
+	linear; for mode < 0, it is logarithmic.  If |mode| = 1, the limits
+	from the "l" command are taken as is; if |mode| = 2, the limits are
+	expanded to coincide with some "natural" choice (default setting).
+	See the note above on the use of logarithmic modes.
+	if only modex is specified, modey is set equal to modex.
+
+mv array1 array2:  Move array1 ("x", "1", etc.) to array2.  This overwrites
+	the contents of array2.  (Same as "a="...)
+
+n #: 	Specify what constitutes a "point".  If # is 0 (default), a "point"
+	is a pixel (which may be very hard to see).  If # > 0, a "point" is
+	a polygon, with the specified number of sides, and of diameter hp.
+	The polygon may be filled with a color specified by "pf" (below).
+	If # < 0, the "point" is a star (with radial spokes), of diameter hp.
+	For # = 0, PIXELS are plotted, regardless of hp.
+
+	If "#" is a character, then that character will be plotted instead
+	of a polygon.  If the character is "#", then a symbol representing
+	the number of the point	is plotted at each point.
+
+nc:	"No comma" mode.  Suppress/permit the use of commas as delimiters 
+	in "smart" input mode.  Default: commas are allowed.
+
+np x y:   Plot an n-gon (see "n") at (x,y), specified as for "m" and "d" above.
+
+nx value:  Explicitly (re)set the length of the x-array.
+
+nxy value:  Explicitly (re)set the length of the x- and y-arrays.
+
+nxyz value:  Explicitly (re)set the length of the x-, y- and z-arrays.
+
+ny value:  Explicitly (re)set the length of the y-array.
+
+nz value:  Explicitly (re)set the length of the z-array.
+
+o frx fry:  Specify string positioning offsets.  (See "s" below.)
+	A string is drawn relative to a reference point.  By default, this
+	point represents the bottom left corner of the first character in
+	the string.  By specifying (frx fry), the reference point is placed
+	a fraction frx of the way along the string, and a fraction fry of
+	its height above its baseline.  Examples:  (0 0) is the default;
+	(1 0) right justifies, (0.5 0.5) centers, etc.
+
+o-:	Restore the previous "o" offsets.
+
+of dx [dy [dz]]:  Specify offsets to be applied to the incoming data. Useful
+	if the dynamic range of the data is more than single precision can
+	accommodate.  Data are read in double precision, offset and/or scaled,
+	then converted to single precision.  See also sc.
+
+p [i1 i2]:  Plot the graph y(x), relative to the current box.  If i1 and i2
+	are specified, only that range of the x and y arrays are used.  If
+	not, the entire arrays are drawn.  The line type is set by "t" (below).
+
+pa: 	New page.  Clear the screen or send a form feed to the printer.
+
+pc [i1 i2]:  Plot y(x), as for "p", but color each segment of the graph
+	according to the z array (normalized to the size of the color map).
+
+pf color:  Specify the color with which polygons are to be filled.
+
+pr:	Print the current PostScript document and reinitialize
+	PostScript graphics.
+
+prc:	Print the current PostScript document and terminate
+	PostScript graphics.
+
+ps:	Take the power-spectrum of y.  It is assumed that x contains equally-
+	spaced time values and y is the signal, and the FFT of y (reduced in
+	length to a power of 2) is calculated.  The x array is replaced by
+	frequency, y by the power spectrum.
+
+psc:	Toggle use of color in PostScript (default: off ==> greyscale).
+
+psc:	Close the current PostScript output file.
+
+psw:	Normally, long Postscript files are not rewritten at the end of
+	the session to place the BoundingBox information at the start.
+	This option forces rewriting to occur.
+
+pwd:	Print working directory.
+
+px x1 x2:  Plot y(x), for x1 <= x <= x2.  The value of x used is precisely
+	the quantity stored in the x-array.
+
+pz z1 z2:  Plot y(x), showing only those points with z1 <= z <= z2.
+
+q: 	Quit MCDRAW.
+
+q1:	Quit MCDRAW, after waiting for input (typically, clicking the
+	mouse in the graphics window) first.  This is used to prevent the
+	graphic display from vanishing immediately on completion of an
+	automated script.
+
+qc:	Terminate all graphics, but don't quit the program.
+
+quiet	Suppress most output.  Useful for automated scripts.
+
+r i: 	Set the register to x(i).  Only a single register is presently used.
+	It provides a default for some scalar operations.
+
+ra array:  Put a "ramp" in the specified array, i.e. a(1) = 1, a(2) = 2, etc.
+
+reb array interval:  Rebin the specified array linearly, using the specified
+	interval between new points. This is useful if the input data are
+	spaced in a non-linear fashion, or have been transformed internally
+	(e.g. by the "lgx" command).
+
+rep range:  Replay the specified range of commands, ignoring those that
+	are inappropriate (e.g. "de", "h", etc.). This allows output on
+	the screen to be printed, by repeating the appropriate commands.
+
+res:	Restore most plotting parameters to their initial states.  The
+	device in use is unchanged.  This is intended as part of the 
+	"replay" command sequence.
+
+rn array:  Fill the specified array with random numbers in [0,1).
+
+rp: 	Print out the value of the register.
+
+rr line1 line2:	Specify the range of lines to read from the data file the
+	next time "c", "x", "y", etc. is used.
+
+rs value:  Set the register to the specified value.
+
+rx[y,z] i:  Save the value of x[y,z](i) in the register.
+
+s[s] string:  Draw a string at the current location.  If the second "s"
+	is supplied, the string is from the X/SUN/Postscript character set.
+	Otherwise, the built-in character set is used.  For the built-in
+	character set (only), this command has the property that it does not
+	plot exactly the ASCII string found in "string", but rather interprets
+ 	it using some simple rules.  In particular, the characters ^ (up-
+	arrow), \ (backslash), @ (at-sign), % (percent sign) and ~ (tilde)
+	are not plotted literally, but are interpreted as modifiers for one
+	or more following characters. There can be more than one modifier
+	before a printing character. In general, the modifiers set flags which
+	are not interpreted until a printing character (anything except ^, \,
+	@, %, ~) is encountered; then the modified character is plotted, and
+	(in most cases) the flags are all reset to their default values until
+	the modifier is used again.
+
+             ^  the next printing character will be superscript (or if
+                already superscript, then super-superscript, or if already
+                subscript, then superscript to subscript, etc.)
+
+             \  the next printing character will be subscript.
+
+             @  the next printing character will be taken from the second
+                font, which contains Greek and some symbols.
+
+             %  the next printing character will be taken from the third
+                font, which contains Script and Gothic, and some symbols.
+
+             @@ the next character will be centered over the last plotted
+                character (i.e. backspaced).
+
+             @% the next character will be increased in size (by the same
+                factor as sub- and superscripts are reduced).
+
+             %@ the next character will be reduced in size.
+
+             ~  all subsequent printing Roman characters will be printed in
+                Italics, until either another ~ is encountered or else the
+                end of the string is reached.  (This is an example of a
+                flag which is not reset after a single printing character.)
+                By default, Italics are turned OFF initially.
+
+             %% is a two-character sequence with the reserved meaning "end
+                of string".
+
+s+(-*/^) array1 [scalar [array2]]:  Perform simple scalar arithmetic.
+	As with "a+" etc. above, arrays can be referred to as x, y, z, 1,
+	2, or 3.  The command "s+ x s" has the effect of adding s to each
+	element of x, and saving the result in x (the first argument is
+	used if no third one is specified).  The command "s/ y s x" is
+	like "x := y/s", etc.  If "scalar" is not specified, the contents
+	of the register are used.
+
+s= array scalar:  Set each element of the specified array equal to the given
+	scalar. As with "s+," if "scalar" is not specified, the contents of
+	the register are used.
+
+sa filename:  Save the x, y and z arrays in the file "filename".
+
+sb border erase fraction:  Specify parameters for the "symbol-box."  If
+	border = 1, use of "s" (but NOT "ss") will result in a border being
+	drawn around the string.  If erase = 1, the background will be
+	erased before the string is drawn.  The size of the border and/or
+	the erased region is set with fraction, which represents the height
+	of the affected region relative to the string height (default: .5).
+	Use fraction < 0 to preserve the previous setting.  The length of the
+	affected region is NOT fraction times the length of the string.
+	Instead, the horizontal border extent is constrained to be less than
+	(1) the vertical border size and (2) the string character height.
+
+sc sx [sy [sz]]:  Specify scaling to be applied to the incoming data. Useful
+	if the dynamic range of the data is more than single precision can
+	accommodate.  Data are read in double precision, offset and/or scaled,
+	then converted to single precision.  See also of.
+
+sleep time:  Pause for the specified number of seconds.
+
+sm factor:  Decrease box size (and all other scales) by 10% (see "bi" above).
+
+smo dx i1 i2:  Perform smoothing on y, placing the result in z. The smoothing
+	interval is dx, and the type of smoothing is determined by i1 and i2.
+	For i1 = 0, 1, 2, 3, y is replaced by its median (0), its mean (1),
+	its harmonic mean (2) or its logarithmic (geometric) mean (3) over an
+	interval of the specified x-width centered on each point.  For i2 = 0,
+	all points in the window are weighted equally; for i2 = 1, a triangular
+	("sawtooth") weighting is used.  NOTE: the default smoothing is
+	"median," which presently involves sorting data at each point.  If 
+	the smoothing interval is large, this can be very slow.
+
+so array:  Sort the specified array (in increasing order).
+
+so- array:  Sort the specified array (in decreasing order).
+
+so2 array1 array2:  Sort array1, carrying array2 around with it.
+
+stat:	Print out the status of the package.  Information on the working
+	directory, current file, input mode, columns used, graphics device,
+	display settings, and some internal variables is displayed.
+
+sw array1 array2:  Swap the specified arrays.
+
+sy command:  Execute a UNIX command.  WARNING: if the graphics device is "s",
+	this may cause the program to hang if a data input file is currently
+	opened, or a graphics window is in use.  Use "fc" or "qc" first.
+
+t [i1 i2 i3 i4]:  Specify the line type to be used in subsequent plots.
+	If no arguments are given, lines are solid.  The arguments define
+	the pattern for dashed lines: i1 is the length of the first dash
+	(integer -- the unit is a "short" dash), i2 is the length of the
+	first space, i3 is the length of the next dash, i4 is the length
+	of the next space.  Thus, "t 0 0 0 0" gives a dotted line, while
+	"t 1 1 1 1" gives a reasonable dashed line, "t 1 0 0 0" a dot-dash
+	line, and so on.
+
+ti [level]:	Specify tick-mark level.  1 (default) = all, 2 = no "small"
+	ticks, 3 = only "large" ticks.
+
+tx[y,z] n:  Type out the first n elements of the x[y,z] array.
+
+u: 	Unplot the graph last plotted by "p".
+
+v: 	Invert the plot color (i.e. switch black and white) for subsequent
+	commands.
+
+vl: 	Make the y-axis label vertical.
+
+w width:  Specify line widths (affects ALL lines subsequently drawn).  The
+	"width" is an integer: 1 is normal, 10 is "heavy" -- good for 
+	"publication quality" plots on the laser writer.  Each further
+	increment of 10 represents a comparable increase in line thickness.
+
+wi[n] window:  Make the specified (X) window the output window.  If window
+	is not specified, just print out the current window (as with xw).
+	The window will be deiconified and brought to the top of the stack,
+	if necessary.
+
+w-:	Restore the previous line width.
+
+x col#: Load x from the specified column of the input file.
+
+xl label:  Specify the x-label for "box".
+
+xlp label:  Specify the x-label for "box" and draw it (if a box is already
+	on the screen)
+
+xon: 	Draw both x-axes in the "box" command.
+
+xoff: 	Omit both x-axes in the "box" command (useful for speeding things
+	up when the "ya" command is used on a slow terminal, or for
+	tailoring the appearance of the output).
+
+xw:	Print current (X) window.
+
+xx [npoints]:  Load x from the input file, neglecting any column structure.
+	If npoints is specified, that is the number of data points read in.
+	If not, keep reading until the end of the file is reached (this
+	operation may be rather slow compared to other input commands).
+
+y col#:	Load y from the specified column of the input file.
+
+ya option:  Specify the y-axis mode.  If "option" is 0 (default), both
+	vertical edges of the box have tick marks, and the label (if any)
+	and numbers appear at the left.  If "option" is 1, the right-hand
+	axis has no tick marks.  If "option" is 2, the left-hand axis is
+	bare, and tick marks, label and numbers are at the right.  This
+	option is included to allow different scales and labels to appear
+	on the right and left sides of the box.
+
+yh:	Often, the sizes of numeric labels on the box are scaled to fit the
+	space available.  By default, the y-labels "inherit" any changes
+	made to x.  Sometimes, however, it is desireable for the y-labels
+	*not* to be affected by any x-rescaling.  Toggle between these two
+	options with the "yh" command.  Unfortunately, since y is drawn
+	after x, it is presently not possible to propogate y rescalings to
+	the numeric labels on the x-axis.
+
+yl label:  Specify the y-label for "box".
+
+ylp label:  Specify the y-label for "box" and draw it (if a box is already
+	on the screen)
+
+yon: 	Draw both y-axes in the "box" command (same as "ya 0").
+
+yoff: 	Omit both y-axes in the "box" command.
+
+yy [npoints]:  As for xx, but for the y-array.
+
+z col#: Load z from the specified column of the input file.
+
+z- nskip:  Go back to a previous zoom level.  If no argument is specified, the
+	previous frame parameters are restored.  Otherwise, nskip - 1 previous
+	frames are skipped.
+
+z0:	Return to the top level (i.e. to an unzoomed frame).
+
+zoom:	Zoom in on a specified region of a plot.  The user is asked to 
+	indicate two points on the screen.  These are taken to represent
+	two opposite corners of the new plotting window.  The screen is
+	erased, and a new box appears.  Because there are many ways of
+	plotting points, no new plotting is done -- the plot commands must
+	be reissued by the user (alternatively, say "zoom; plot").  The
+	old frame limits are saved, and can be recalled with the "z-"
+	command.  The zoom stack is cleared when new limits are explicitly
+	set or recalculated.
+	WARNING:  This feature may not interact gracefully with the box
+	stack and "replay" mode.  It is possible to corrupt the stacks by
+	combining these commands.
+
+zs:	Display the current zoom stack.
+
+zz [npoints]:  As for xx, but for the z-array.
+

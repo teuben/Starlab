@@ -1,0 +1,47 @@
+This directory contains the new user interface, and (is assumed)
+to live in $STARLAB_PATH/src/std/pjt
+
+There is a start of a users and programmers guide to this mess,
+for which you have to run something like this:
+
+	echo ui.inc | latex latest
+	dvips latest -o
+
+(don't ask - relic of latex manual develoment)
+
+Please don't change the code, apart from major problems, without
+consulting me. Or at least inform me of any changes. In particular
+August 1996 almost daily this class is changing.
+
+peter
+
+INSTALLATION:
+   - cp program.h $STARLAB_PATH/inc
+     make lib
+
+THINGS DONE:
+   - "key=val" works, including setting by position instead of by keyword
+
+   - a number of "--XXX" ``system keywords'' were implemented. Not sure
+     how much of this survives since the current set pollutes namespace.
+     Use "--help" to see what i mean.
+
+   - a few system keywords (help=, error=, debug=) read, but it really
+     needs environment variable setting too.
+
+   - Error and Warning implemented, although not symmetric.
+
+THINGS TO DO: (in approximate order of importance)
+
+ - improve error and warning messages based on new Error/Warning.
+ - implement unix-options style (long and short form)
+ - implement system keywords and reading from environment variables
+ - change Warning back to printf() style [like name], Error already has this.
+ - write Debug(int level, char *fmt, ...)
+ - syntax checking when parsing integers and reals. (now atof/atoi are
+   still used, cf. the herinp routies in NEMO). 
+ - advanced parsing of keywords (@file macro include, $key referencing)
+ - expression parsing, e.g. pi, sqrt(2), array syntax "0.1:0.9:0.2"
+ - keyword file I/O (overloading << and >> for Program ?)
+ - hash table or faster access for keyword searching?
+

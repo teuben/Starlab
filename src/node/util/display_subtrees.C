@@ -1,0 +1,63 @@
+
+//// display_subtrees:  output all subtrees in input snapshot(s), neglecting
+////                    the root and top-level nodes.
+////
+//// Options:     -c    add a comment to snapshot [false]
+
+//   version 1:  Nov 1994   Piet Hut
+
+#include "node.h"
+
+/*===========================================================================*/
+
+#ifdef TOOLBOX
+
+/*-----------------------------------------------------------------------------
+ *  main  --  driver, to directly display subtrees.
+ *-----------------------------------------------------------------------------
+ */
+main(int argc, char ** argv)
+    {
+    bool  c_flag = FALSE;
+    char  *comment;
+
+    check_help();
+
+    extern char *poptarg;
+    int  c;
+    char* param_string = "c:";
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1)
+	switch(c)
+	    {
+	    case 'c': c_flag = TRUE;
+		      comment = poptarg;
+		      break;
+            case '?': params_to_usage(cerr, argv[0], param_string);
+		      get_help();
+		      exit(1);
+	    }            
+    
+    node * root;
+
+    while (root = get_node(cin))
+	{
+	for_all_daughters(node, root, daughter)
+	    if (daughter->is_parent())
+		{
+		if (c_flag == TRUE)
+		    daughter->log_comment(comment);
+		daughter->log_history(argc, argv);
+
+		put_node(cout, *daughter);
+		}
+	rmtree(root);
+	}
+    }
+
+#endif
+
+/*===========================================================================*/
+
+/* endof: display_subtrees.C */
+

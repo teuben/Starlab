@@ -1,0 +1,156 @@
+
+Starlab standalone tools (type "tool-name --help" for more information)
+----------------------------------------------------------------------
+
+Note:  Most tools are just simple interfaces onto the corresponding
+       library functions, so virtally all of the functionality listed
+       below is accessible in both command-line (piped) and program
+       (compiled) contexts.
+
+1. TOOLS OPERATING ON NODES.
+
+  * node/util
+
+    add_daughter_node add one extra node to the tree structure in
+                         the input snapshot
+    display_subtrees output all subtrees in input snapshot(s),
+                        neglecting the root and top-level nodes
+    mass_dist        compute a mass histogram from the input
+                        snapshot(s)
+    m_bar            determine the mean mass of a power-law mass
+                        distribution 
+    mkmass           add a mass spectrum to an input snapshot
+    mknode           create a linked list of equal-mass nodes
+    mksecondary      create binary secondary components for randomly
+                        selected stars in the input snapshot
+    mksecondary_spz  create binary secondary components for randomly
+                        selected stars in the input snapshot
+    mk_single_node   create a single node
+    pretty_print_tree print out the tree structure of the input
+                         snapshot(s)
+    print_normal     print out the tree structure of the input
+                         snapshot(s) in normal form
+    rmq              remove a quantity from the dyn (or star or
+                         hydro) story of the input snapshot(s)
+    setmass	     set the mass of one or more particles in the
+			 input snapshot
+    snapprune        pass through only one out of every k snapshots
+                         from the input stream
+
+2. TOOLS OPERATING ON DYNS.
+
+  * node/dyn/init
+
+    addplummer       apply a Plummer-model spatial and velocity
+                        distribution to an existing snapshot
+    mkbinary         add binary orbits to an existing binary tree
+    mkbinary_spz     add binary orbits to an existing binary tree
+    mkcube           construct a simple homogeneous cube
+    mkheavystar      double the mass of one or more stars in a
+                        snapshot 
+    mkking           construct a King model
+    mk_aniso_king    construct an anisotropic King model
+    mkplummer        construct a Plummer model, with a spatial or
+                        mass cut-off 
+    mkpyth           set up a 3-body system corresponding to the
+                        Pythagorean problem
+    mksphere         construct a simple homogeneous sphere
+    mkwrite          turn a text file into a snapshot
+    split_particles  split specified particles in input snapshot
+
+  * node/dyn/util
+
+    compute_com      determine the center of mass of an N-body system
+    compute_density  compute local densities around particles based
+                        on k-th nearest neighbors
+    compute_max_cod  determine the max density center for an N-body
+                        system
+    compute_mean_cod determine the mean density center for an N-body
+                        system
+    dumbp            dump out an N-body system in a format suitable
+                        for input to NBODY1-5 
+    dyndiff          compute the rms distance in phase space between
+                        two N-body systems 
+    dyndist          compute statistics for the separations between
+                        corresponding particles in two N-body systems,
+                        using both configuration space and velocity
+                        data 
+    energy           print out the energy of an N-body system
+    extract_snap     find and print the last snapshot, or the first
+                        snapshot following a specified time
+    flatten          flatten a dyn tree to a single-level linked list
+    freeze           set all velocities to zero, leaving positions
+                        unchanged 
+    lagrad           compute Lagrangian (mass) radii for an N-body
+                        system 
+    lagradplot       compute and plot Lagrangian radii for N-body
+                        system(s)
+    molecules        print a hierarchical decomposition of a (small!)
+                        system 
+    reflect_velocities  reverse all velocity components in an N-body
+                        system
+    renumber         renumber all particles sequentially
+    scale            (re)scale an N-body system to specified M,
+                        Q (=T/U), and E 
+    starplot         plot input N-body system(s) on a non-graphics
+                        screen 
+    sys_stats        print out various diagnostic statistics on the
+                        input system
+    to_cod           bring all positions and velocities to
+                        center-of-density frame 
+    to_com           bring all positions and velocities to
+                        center-of-mass frame 
+
+  * node/dyn/xutil
+
+    xstarplot        plot an N-body system in an X environment
+
+  * node/dyn/evolve
+
+    leapfrog         leapfrog integrator for flat N-body dyn systems
+
+3. TOOLS OPERATING ON HDYNS.
+
+  * node/dyn/hdyn/xutil
+
+    xstarplot        plot an N-body system in an X environment
+                        (supercedes dyn version)
+
+  * node/dyn/hdyn/evolve
+
+    kira	     Hermite N-body integrator with evolving hierarchical
+                     tree structure, stellar and binary evolution, and
+                     an external tidal field
+
+    kira_harp3       GRAPE version of kira
+
+4. TOOLS OPERATING ON SDYN3S.
+
+  * node/dyn/hdyn/sdyn3/scatter3
+
+    low_n3_evol     three-body time-symmetrized Hermite integrator
+    rate3           compute Maxwellian averaged cross-sections for
+                       3-body scattering
+    scatter3        perform three-body scattering experiments
+    sigma3          determine cross-sections for 3-body scattering
+    tree3_evolve    simpler interface to low_n3_evolve
+
+  * node/dyn/hdyn/sdyn3/xutil
+
+    xstarplot3      plot an N-body sdyn3 system in an X environment
+
+5. TOOLS OPERATING ON SDYNS.
+
+  * node/dyn/hdyn/sdyn/init
+
+    mkscat          write a general scattering configuration to cout
+
+  * node/dyn/hdyn/sdyn/util
+
+    make_tree       hierarchically decompose a flat tree into substructure
+
+  * node/dyn/hdyn/sdyn/evolve
+
+    low_n_evolve    time symmetrized Hermite integrator for low-N systems
+    scatter         simple N-body scattering program
+    tree_evolve     simpler interface to low_n_evolve

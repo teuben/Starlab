@@ -1,0 +1,35 @@
+
+Specification of key scattering routines:
+----------------------------------------
+
+low_n_evolve ( = tree_evolve, for now)
+
+	input:	sdyn root pointer
+		integration time
+		output, snapshot intervals
+		integration parameters (eps, eta, etc.)
+		print interval	(default)
+		print function	(default)
+
+	output:	new sdyn root pointer
+
+scatter3:
+
+	input:	initial state structure
+		output, snapshot, print intervals
+		print function	(default)
+
+	output:	intermediate state structure	(?problem with n_osc?)
+		final state structure
+
+sigma3:
+
+	input:	target number of hits
+		scatter profile structure
+		debug flag
+		scattering function (default)
+		print function	(default)
+
+	output:	scatter outcome structure
+		
+		

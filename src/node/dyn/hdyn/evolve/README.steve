@@ -1,0 +1,45 @@
+
+Steve's TO DO list...
+==================
+
+1. Unperturbed binaries and binary evolution.
+
+2. In progress (stable).  Scheduling -- quicksort dominates total cost
+   in binary-rich runs.  See ~/profile/bin6.
+
+3. In progress (stable).  Perturbed binary lists implemented.  Small
+   differences between old ("-*") and new versions, with hint of
+   larger (but still small) errors in the latter.  Check and correct.
+
+Previous items:
+--------------
+
+1. Check correction of perturber lists on merge/escape.
+
+2. Should perturber lists simply be recomputed on reinitialization?
+	-- fixes problem of missing members
+	-- probably necessary for restart
+
+3. Restart/reinitialization with binaries (perturbed or unperturbed).
+	perturbed binaries:	perturber lists
+	unperturbed binaries:	keplers
+
+4. Proper implementation (system-wide) of tidal fields, and handling
+   of Jacobi/stripping/... radii on restart.
+
+   >> More generally, proper propagation of snap data through
+   >> the system.
+
+5. Also:
+
+	check per-particle accounting
+
+	GRAPE density calculation needs work -- can be quite expensive
+
+	Global variables -- eps, eta, dt_max, etc. -- would avoid a
+	lot of argument passing... (did someone say "common blocks"?)
+
+	eps argument in integrate_unperturbed and dstar_to_kira is
+	redundant.
+
+	order of nn//perturber data for multiples in sys_stats

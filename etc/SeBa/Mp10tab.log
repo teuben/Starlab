@@ -1,0 +1,78 @@
+This is TeX, Version 3.1415 (C version 6.1) (format=latex 95.11.8)  5 OCT 1998 13:57
+**Mp10tab
+(Mp10tab.tex
+LaTeX2e <1995/06/01> patch level 1
+(/usr/local/lib/texmf/tex/latex2e/base/article.cls
+Document Class: article 1995/06/26 v1.3g Standard LaTeX document class
+(/usr/local/lib/texmf/tex/latex2e/base/size10.clo
+File: size10.clo 1995/06/26 v1.3g Standard LaTeX file (size option)
+)
+\c@part=\count82
+\c@section=\count83
+\c@subsection=\count84
+\c@subsubsection=\count85
+\c@paragraph=\count86
+\c@subparagraph=\count87
+\c@figure=\count88
+\c@table=\count89
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+) (Mp10tab.aux)
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 7.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 7.
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 14.
+
+(/usr/local/lib/texmf/tex/latex2e/base/OMScmr.fd
+File: OMScmr.fd 1995/04/22 v2.3f Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 14.
+
+Overfull \hbox (77.86717pt too wide) in paragraph at lines 7--59
+[][] 
+ []
+
+
+LaTeX Warning: Float too large for page by 59.98413pt on input line 59.
+
+
+Overfull \hbox (108.08942pt too wide) in paragraph at lines 63--108
+[][] 
+ []
+
+
+Overfull \hbox (86.20053pt too wide) in paragraph at lines 113--157
+[][] 
+ []
+
+
+Overfull \hbox (86.20053pt too wide) in paragraph at lines 163--199
+[][] 
+ []
+
+[1] [2] [3] [4] (Mp10tab.aux) ) 
+Here is how much of TeX's memory you used:
+ 233 strings out of 10957
+ 2289 string characters out of 73501
+ 89510 words of memory out of 262141
+ 3133 multiletter control sequences out of 9500
+ 3640 words of font info for 14 fonts, out of 100000 for 255
+ 14 hyphenation exceptions out of 607
+ 23i,10n,18p,149b,370s stack positions out of 300i,40n,60p,3000b,4000s
+
+Output written on Mp10tab.dvi (4 pages, 17180 bytes).

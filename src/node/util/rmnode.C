@@ -1,0 +1,20 @@
+/*
+ *  rmnode.C: recursively deletes a node together with all of its offspring
+ *.............................................................................
+ *    version 1:  Nov 1994   Piet Hut
+ *.............................................................................
+ */
+#include "node.h"
+
+void rmnode(node* b)
+{
+    node* d = b->get_oldest_daughter();
+    while (d) {
+	node* tmp = d->get_younger_sister();
+	rmnode(d);
+	d = tmp;
+    }
+    delete b;
+}
+
+/* endof: rmnode.c */

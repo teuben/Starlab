@@ -1,0 +1,60 @@
+Changes to SeBa version 1.0
+C version
+Changes to SeBa version 2.0
+C++ version
+Changes to SeBa version 3.0
+Implementation to Starlab version 3.0
+Changes to SeBa version 3.1
+implementation of class constants 
+Changes to SeBa version 3.3
+
+- Orbital timestep implemented in double_star::determine_dt.
+- Core mass determination for giants.
+- Core radus for giants equals radius of helium star .
+- structure double_star::recursive..
+- timestep decrement to end of stellar phase.
+- double_star::set_donor_timescale() in recursive::recursive...
+- Carbon cores for helium_stars.
+- Stellar wind for helium_stars and helium_giants.
+- Stellar wind for main_sequence stars and giants.
+- Enhanced stellar wind for massive main_sequence stars.
+- Stellar wind for wolf_rayet stars.
+- Core-mass and radius altered in wolf_rayet stars.
+- Low-mass helium stars turn into white dwarfs directly.
+- Mass not accreted by compact object leaves binary with
+  specific angular momentum parameterized as for other stars,
+- single_star::update_relative_mass() mplemented in ::add_mass_to_accretor() 
+- stellar rejuvenation made Hydrogen/Helium dependent.
+- single_star::adjust_accretor_radius() removed.
+- main_sequence donors enlarged in transfer on dynamic and thermal timescale.
+- relative mass of low-mass main_sequence donors reduced upon mass loss.
+- ::common_envelope and ::spiral_in changed.
+- ::double_spiral_in() added for merging contact binaries.
+- Tidal instability depends not on gyration radius.
+- ::gyration_radius() added to single_star.
+- Thermal and adiabatic resonce functions for stars adjusted.
+- double_star::zeta() altered.
+- mass transfer type parametrized.
+- donor_timescale is now also member of double_hist::.
+- nuclear timescale for giants is made shorter.
+- double_star::mdot_according_to_roche_radius_change changed.
+- amount of mass lost in spiral in increased for mergers.
+- relative_mass and relative_age determination of mergers altered.
+- added function: single_star::add_mass_to_core();
+- single_star::reduce_donor_mass() is now ::reduce_mass().
+- Black hole mass made relative_mass dependent.
+- (Core) mass limits for black_ hole and neutron_star changed. 
+- helium_giants receive own ::adjust_next_update_age().
+  This function shoud only be called in the constructor.
+- age of newly created helium_star:: is larger for horizontal_branch:: and 
+  super_giant:: progenitors.
+- Stars with M > 20.97184...Msun do not ascend the sub_giant branch
+  but become directly a horizontal branch star.
+- temperature is now in Kelvin, was in units of 1000 Kelvin.
+- Giant luminosities altered according to Tout et al. 97.
+- nuclear timescale for main-sequence stars reformulated.
+- single_star::mass_ratio_mdot_limit() removed.
+- wolf_rayet stars changes into helium_star when mass drops below
+  minimum_helium_star_mass
+- minimal_timestep is used in mass transfer.
+- dt is set at beginning op double_star::recursive..

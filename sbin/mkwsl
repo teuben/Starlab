@@ -1,0 +1,9 @@
+
+mkdir -p .save
+mv wsll* wsl_* .save
+
+ln -s wsl wsll
+ln -s wsl wsl_node
+ln -s wsl wsll_node
+ln -s wsl wsl_star
+ln -s wsl wsll_star

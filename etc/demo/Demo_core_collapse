@@ -1,0 +1,33 @@
+#!/bin/csh -f
+#
+# To get a taste, invoke this command for 20 particles, say:
+#       Demo_core_collapse_1 20 0.0625 (the default for: N = 20, 16 lines)
+#
+# More interesting results would require at least 100 particles, but
+# this may take hours on a workstation.
+#
+if ($#argv < 1) then
+    set n = 20
+else
+    set n = $1
+endif
+#
+if ($#argv < 2) then
+    set D = 0.0625
+else
+    set D = $2
+endif
+#
+if ($#argv < 3) then
+    set random = ' '
+else
+    set random = "-s $3"
+endif
+#
+# Specify other useful parameters:
+#
+alias integrate flat_hermite -t 1 -d 2 -D $D -a 0.05 -e 0.001
+#
+mkplummer -n $n $random | integrate | lagradplot -t
+
+

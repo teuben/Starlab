@@ -1,0 +1,30 @@
+#!/bin/csh -f
+#
+# To get a taste, invoke this command for 20 particles, say:
+#       Demo_nbody5 100 0.25 (the default for: N = 100, 20 plots)
+#
+if ($#argv < 1) then
+    set n = 100
+else
+    set n = $1
+endif
+#
+if ($#argv < 2) then
+    set D = 0.25
+else
+    set D = $2
+endif
+#
+if ($#argv < 3) then
+    set random = ' '
+else
+    set random = "-s $3"
+endif
+#
+# Specify other useful parameters:
+#
+alias integrate nbody5s -t 5 -D $D
+#
+mkplummer -n $n $random | dumbp | integrate | starplot -l 4
+
+

@@ -1,0 +1,13 @@
+
+* To pack a standalone version (into mcpak.tar.gz):
+
+	Make_tar
+
+* To unpack:
+
+	tar xzf mcpak.tar.gz
+	mv Makefile.standalone Makefile
+
+	*** edit Local_setup.inc to set local system options ***
+
+	make all

@@ -1,0 +1,31 @@
+#!/bin/csh -f
+#
+#  to run this demo, you have to provide input in graphic form; for an
+#  example, see Example_mkwrite.input.
+#
+if ($#argv < 1) then
+    set niter = 100
+else
+    set niter = $1
+endif
+#
+set nlines = 21
+set TMP0 = ./.tmp0
+set TMP1 = ./.tmp1
+alias integrate leapfrog -t 0.1 -d 1 -a 0.01 -e 0.05 -q
+alias plot starplot -n $nlines
+#
+onintr cleanup
+#
+mkwrite | tee $TMP0 | plot
+#
+@ i = 0
+while ($i < $niter)
+  integrate < $TMP0 | tee $TMP1 | plot
+  integrate < $TMP1 | tee $TMP0 | plot
+  @ i++
+end
+#
+cleanup:
+/bin/rm -f $TMP0 $TMP1
+unalias integrate plot

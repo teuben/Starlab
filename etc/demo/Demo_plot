@@ -1,0 +1,35 @@
+#!/bin/csh -f
+#
+# To get a taste, invoke this command for 100 particles, say:
+#
+#   Demo_plot 100 0 5	(the default for: N = 100, auto-scaling,
+#			 25 plots spanning 5 time units)
+#
+if ($#argv < 1) then
+    set n = 100
+else
+    set n = $1
+endif
+#
+if ($#argv < 2) then
+    set l = 0
+else
+    set l = $2
+endif
+#
+if ($#argv < 3) then
+    set T = 5
+else
+    set T = $3
+endif
+#
+alias integrate leapfrog -t $T -D .2 -d .2 -a 0.025 -e 0.05 -q
+#
+set nlines = 21
+if ($l > 0) then
+    alias plot starplot -l $l -n $nlines
+else
+    alias plot starplot -n $nlines
+endif
+#
+mkplummer -n $n -m 0.5 | freeze | integrate | plot

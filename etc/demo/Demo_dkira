@@ -1,0 +1,16 @@
+#!/bin/csh -f
+#
+if ($#argv > 0) then
+    set n = $1
+else
+    set n = 50
+endif
+#
+$STARLAB_PATH/bin/mkplummer -i -n $n |\
+mkmass -l 0.1 -u 1 |\
+scale -E 0.25 -m 1 |\
+dstar_kira -e .05 -t 50 -d 10 -D .03125 \
+    -S -B -R 0.00001 -M 0.02 -T 0.03 \
+| xstarplot  -l 4 -t -p 1
+
+

@@ -1,0 +1,15 @@
+
+
+SRC = Makefile Makefile.pjt  README.pjt \
+	getparam.C main.C \
+	p_description.C p_examples.C p_keywords.C p_usage.C p_version.C \
+	program.C \
+	program.h \
+	test1.C test2.C
+
+
+help:
+	@echo no help
+
+tar:
+	tar cvf pjt.tar $(SRC)

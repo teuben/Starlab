@@ -1,0 +1,38 @@
+
+Kira parameters stored in the input snapshot
+--------------------------------------------
+
+initial_mass
+
+	Defines the run's initial mass (in N-body units).
+	May be set by mk*, scale, or kira.
+
+initial_rvirial
+
+	Defines the run's initial virial radius (in N-body units).
+	May be set by mk*, scale, or kira.
+
+initial_rtidal_over_rvirial
+
+	Defines the initial "tidal" radius of the system.
+	Used by kira in initial determination of tidal parameters.
+	Set by mk*king.
+
+kira_initial_jacobi_radius
+
+	Defines the initial Jacobi radius, as determined by kira.
+	Used by kira for restart.  Overrides any command-line input.
+	Set by kira.
+
+alpha3_over_alpha1
+
+	Defines the form of the tidal field (point-mass ==> -1/3).
+	Used by kira to determine tidal parameters.
+	Set by mk_aniso_king.
+
+kira_scaled_stripping_radius
+
+	Defines the scaled stripping radius, as determined by kira.
+	Used by kira for restart.  Overrides any command-line input.
+	Set by kira.
+

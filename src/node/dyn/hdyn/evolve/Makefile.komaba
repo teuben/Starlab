@@ -1,0 +1,101 @@
+# 
+#       #=======================================================#     _\|/_
+#      #  __  _____           ___                    ___       #       /|\
+#     #  /      |      ^     |   \  |         ^     |   \     #           _\|/_
+#    #   \__    |     / \    |___/  |        / \    |___/    #             /|\
+#   #       \   |    /___\   |  \   |       /___\   |   \   #  _\|/_
+#  #     ___/   |   /     \  |   \  |____  /     \  |___/  #    /|\
+# #                                                       #             _\|/_
+##=======================================================#               /|\
+#
+##
+##  src/node/dyn/hdyn/evolve/Makefile
+##.............................................................................
+##    Dec 1994					Piet Hut & Steve McMillan
+##.............................................................................
+##
+
+# Optimization for DEC C++ on DEC Alpha:\
+
+# DEC_FLAGS =	-g3 -inline speed -arch ev5 -tune ev5 -fp_reorder \
+# 		-D_FASTMATH -non_shared -om \
+#DEC_FLAGS =	-g3 -inline -arch -tune \
+#		-D_FASTMATH -non_shared -om \
+DEC_FLAGS =	-inline -arch -tune \
+		-D_FASTMATH -non_shared -om \
+
+CCC_FLAGS =	$(DEC_FLAGS) 
+#		-fhandle-exceptions
+
+CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC) $(CCC_FLAGS) \
+		  -DSHARE_GRAPE4 -DUSE_HALF_CHIP -static
+#CFLAGS    =	$(STARLAB_CCC_FLAGS) -I$(INC) $(CCC_FLAGS) \
+#		  -DSHARE_GRAPE4 -DUSE_HALF_CHIP -p -pg -g3 -static
+
+# -pg fails on Dec Alpha with g++...
+# -ffast_math invalid with DEC C++
+# Removed -static 8/4/97.  DEC C++ claims it is obsolete...
+
+# Comment out the "HARP =" line if we don't have GRAPE hardware.
+
+# Oppenheimer and Alexandria
+#HARP =  -L/home2/makino/disk3src/harplibs -lharp3 -lrt
+# Latour and Steinberger
+#HARP =  -L/usr6/kawai/pub/lib -lg4a
+#HARP =  -L/usr6/kawai/pub/lib/ -lg4asteinberger 
+HARP =  -L/usr6/kawai/pub/lib/ -lg4akyohou
+#HARP =  -L/usr/users/makino/src/harplibs -lg4a -lrt
+
+# -fschedule-insns -fschedule-insns2 -pg
+# -g3 -O3 -p -ffast-math -funroll-loops -msupersparc
+
+LIBFLAGS  =	-L$(LIB) -lhdyn -L. -ldyn -lnode \
+                -ldstar  -lsstar -lstd \
+	         $(HARP) \
+                -L/usr/local/lib -lg++ -lstdc++ -lstd \
+                -lm \
+#                -ldstar  -lsstar -lg++ -lstdc++ -lstd \
+
+#
+# To link simulator, change -lharp3 to -lharp3sim
+#
+
+DEPEND_LIBS	= $(LIB)/libhdyn.a $(LIB)/libdyn.a $(LIB)/libnode.a \
+		  $(LIB)/libdstar.a $(LIB)/libsstar.a $(LIB)/libstd.a
+
+#LIBFLAGS	= -L$(LIB) -lhdyn -L. -ldyn -lnode -lstd -lm
+
+#EXECUTABLES = flat_hermite dstar_kira dstar_kira_harp3
+EXECUTABLES =  dstar_kira # flat_hermite
+
+OBJECT_FILES = hdyn_unpert.o hdyn_ev.o hdyn_flat.o hdyn_tree.o \
+               hdyn_debug.o hdyn_harp3.o hdyn_schedule.o \
+	       kira_init.o kira_runtime.o
+
+LIBRARY = libhdyn.a
+
+#..............................................................................
+
+include $(STARLAB_PATH)/inc/Makefile.worker.inc
+
+UNOPT_CFLAGS	= $(STARLAB_CCC_FLAGS) -I$(INC) 
+
+dstar_kira_harp3.C : dstar_kira.C
+	echo "#define STARLAB_HAS_HARP" > dstar_kira_harp3.C
+	cat dstar_kira.C >> dstar_kira_harp3.C
+
+#..............................................................................
+#..............................................................................
+
+##=======================================================================//
+##  +---------------+        _\|/_        +------------------------------\\
+##  |  the end of:  |         /|\         |  src/node/dyn/hdyn/evolve/Makefile
+##  +---------------+                     +------------------------------//
+##========================= STARLAB =====================================\\
+
+
+
+
+
+
+

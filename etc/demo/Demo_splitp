@@ -1,0 +1,21 @@
+#!/bin/csh -f
+#
+# This creates a hierarchical system, by hierarchically splitting one of the
+# particles.
+#
+# To get a taste, invoke this command for 5 particles, say:
+#       Demo_splitp 5 (the default)
+#
+# The maximum number of particles (right now) is 8
+#
+if ($#argv < 1) then
+    set n = 5
+else
+    set n = $1
+    if ($n > 8) then
+	set n = 8
+    endif
+endif
+#
+mkplummer -n $n | splitp -x 10 -e 0 | splitp -x 100 | renumber | molecules
+

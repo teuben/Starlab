@@ -1,0 +1,38 @@
+#!/usr/local/bin/tcsh -f
+
+# Uncompress and/or untar a Starlab-format tar file in the current
+# directory.  Assume first that the file is compressed with gzip.
+# If no such file is found, look for an uncompressed file.
+
+set tarfile = ' '
+
+if ($#argv < 1) then
+
+    set tmp = (*s_tar*gz)	# Note: filename format assumed and no ls
+
+    if ($#tmp < 1) then
+	set tmp = (*s_tar*)
+    endif
+
+    if ($#tmp < 1) then
+	echo No files found
+	exit
+    endif
+
+    set tarfile = $tmp[$#tmp]
+
+else
+
+    set tarfile = $1
+
+endif
+
+if (X$tarfile == X) exit
+
+echo Extracting tar file $tarfile
+
+if ($tarfile:e == gz) then
+    gunzip -c $tarfile | tar xf -
+else
+    tar xf $tarfile
+endif

@@ -1,0 +1,30 @@
+Remaining bugs:
+
+1:
+- Restart binaries and in general bug
+  Pericenter reflecting binaries are not restartable because they are 
+  flagged as full_u = 0
+-Result: the times of the components is smaller than the output time.
+-Solution: Synchronize system before output.
+
+2:
+- Continue unperturbed motion bug
+  A unperturbed binary can be flagged as perturbed at the end of
+  unperturbed motion.
+- Result: the unperturbed motion is terminated.
+- Solution: flag it as such or be more liberate in determining unperturbed.
+
+3:
+- Slow-fast-slow mass loss bug
+  Multiple phases of mass los (slow and fast mass loss) in an
+  unperturbed binary is currently treated as slow (resolved first) and
+  fast (resolved secondly). 
+- Result: for some binaries this prescription is too idealized
+- Solution: create an iterative loop over binary evolution is small
+            subsequent steps followd my dynamical update.
+
+
+4++:
+- Mildly perturbed binaries with evolution.
+- Triple evolution.
+- Hyrarchical multiple systems.

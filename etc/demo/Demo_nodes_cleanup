@@ -1,0 +1,6 @@
+#!/bin/csh -f
+#
+# Demo_nodes_cleanup:
+#
+set TMP = tmp_demo_nodes
+rm  $TMP.*

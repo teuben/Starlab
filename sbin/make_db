@@ -1,0 +1,5 @@
+#csh
+
+# Make/remake a Starlab source file database.
+
+find $STARLAB_PATH/src -print >! $STARLAB_PATH/sbin/starlab_db

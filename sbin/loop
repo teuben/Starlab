@@ -1,0 +1,22 @@
+# csh -f
+#
+# Usage: loop wait-time command(s)
+#
+# Wait-time is in seconds, commands with embedded spaces should
+# be enclosed in quotation marks.
+#
+if ($#argv < 2) then
+    echo "Usage: loop wait-time command(s)"
+    exit 1
+endif
+#
+loop:
+@ i = 1
+while ( $i < $#argv )
+    @ i++
+    alias temp_command "$argv[$i]"
+    temp_command
+end
+sleep $1
+echo "-----"
+goto loop

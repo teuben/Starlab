@@ -1,0 +1,15 @@
+#!/bin/csh -f
+#
+# This demo shows the `molecular' structure of a small group of (maximal 10)
+# particles.
+#
+# To get a taste, invoke this command for 4 particles, say:
+#       Demo_molecules 4 (the default)
+#
+if ($#argv < 1) then
+    set n = 4
+else
+    set n = $1
+endif
+#
+mkplummer -n $n -i | molecules 

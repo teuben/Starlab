@@ -1,0 +1,30 @@
+#!/bin/csh -f
+#
+# Simple SPH test script.
+#
+# To get a taste, invoke this command for 20 particles, say:
+#       Demo_sph 20 0.03 (the default)
+#
+if ($#argv < 1) then
+    set n = 20
+else
+    set n = $1
+endif
+#
+if ($#argv < 2) then
+    set R = 0.03
+else
+    set R = $2
+endif
+#
+if ($#argv < 3) then
+    set random = "-s 42"
+else
+    set random = "-s $3"
+endif
+#
+echo \(This may take some time to complete...\)
+#
+mkplummer -n $n -i $random \
+	| addhydro -R $R \
+	| sph_leapfrog -t 2 -d 1 -D 1 -a 0.01 -q | starplot

@@ -1,0 +1,43 @@
+#!/bin/csh -f
+#
+echo ""
+echo "Demo_molecules:"
+echo ""
+Demo_molecules 5
+Demo_molecules 5
+Demo_molecules 5
+#
+echo ""
+echo "Demo_splitp:"
+echo ""
+Demo_splitp 5
+Demo_splitp 5
+Demo_splitp 5
+#
+echo ""
+echo "Demo_merge:"
+echo ""
+#
+Demo_merge 20 0.03
+#
+echo ""
+echo "Demo_plot:"
+echo ""
+#
+time Demo_plot 50 2 3
+#
+echo ""
+echo "Demo_Lagrange:"
+echo ""
+#
+time Demo_Lagrange 50 4 42
+#
+echo ""
+echo "Demo_core_collapse:"
+echo ""
+#
+time Demo_core_collapse 20 .0625
+#
+echo ""
+echo "normal successful completion"
+echo ""

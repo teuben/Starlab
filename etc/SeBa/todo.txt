@@ -1,0 +1,138 @@
+To be investigated:
+
+- gyration radii
+  especially helium giants
+  and        compact objects.
+
+- Zeta for Roche-lobe:
+  Mass transfer timescales may flip-flop between boundaries.
+
+- Effective radius variation in case of mass transfer.
+  what is the effective radius for different timescales (types) of
+  mass transfer. And how does it adjust after mass transfer is
+  completed or if the mass transfer timescale changes.
+  Also importand in case of mildly perturbed triples.
+
+- Output functions need to be modernized.....
+
+- Function and variable nomenclature.
+
+- How to determine the evolutionary state and age of a merger product?
+
+- Low mass main-sequence stars which lose mass may become brown dwarfs. 
+
+- Thermo nuclear flash is currently implemented for all accreting
+  white dwarfs. For some this treatment may be far to violent.
+
+- Dynamical timescale: currently implemented as
+  sqrt(t_dyn * t_kh)
+
+- Nuclear timescale for non-main-sequence stars: currently implemented as
+  sqrt(t_kh * t_nuc)
+  Published timescales for slow mass transfer indicate similar
+  timescales. The current implementation, however, is rather un-physical.
+
+- Core-mass determination for Hertzsprung-gap stars. Currently linear.
+
+- Brown dwarfs require update.
+
+- Radii for Wolf-Rayet stars.
+
+- Angular momentum loss for mass transfer onto compact objects.
+  Currently implemented in similar fashion as for other accretors.
+  No discrimination is made between various types of compact objects.
+
+- Stellar rotation.
+  a) Initial rotation
+  b) spin-down due to expansion and core-halo discrimination.
+  c) spin-up in mass accretion phase
+
+- Exchange of mass in stellar wind should be performed consistently.
+  Perform wind mass loss in ::double_star instead of ::single_star.
+
+- What is the strucure of a `ZAMS' helium star.
+
+- Mergers and contact binaries can be the result of a `too big' timestep.
+
+To be solved by experts (wij niet dus):
+Peter, GertJan, Lev, Onno, Ed, Frank, Norbert, Alex, Lex, Martijn, Chris, Lit
+SE/BE    SE     BE    BE   BE   Obs    HMS      HMS  Obs   CV       BE
+
+  - Peter
+? New EFT equations: stellar evolution fits.
+  SeBa version 4.0
+
+  - ? Lit
+? How much mass is lost in stellar wind by low-mass stars.
+  What is the time dependence of this wind?
+
+  - Lit?
+? Zeta adiabatic and Zeta Thermal.
+  Values are not avaiable for many stellar types and the range in mass 
+  is extremley limited.
+
+- Habets lezen...
+? How far can one strip a helium star?
+- Mario, Lev, Nomoto
+? How do ONeMg stars evolve?
+- Mario, Lev, Nomoto
+? How do helium stars with an ONeMg core (the cores of stripped helium
+  stars) form?  
+
+Stellar evolution
+  - Peter, Onno
+? What happens to a helium star which accretes hydrogen.
+? What happens to a star with a hydrogen envelope which accretes helium.
+
+- Key:  Peter, GertJan, Norbert, Alex
+? Naked core helium stars:
+  a) What is the difference between helium stars (with the same mass) 
+     formed from stripping 
+     a sub-giant (hydrogen shell burning star) and from stripping
+     a super-giant (double shell burning star).
+
+  b) Currently we assume that hertzsprung-gap and sub_giants form `ZAMS' 
+     helium stars, where horizontal branch and super giants form
+     `evolved' helium stars.
+     -We assume the following parametrization:
+      1) the `age' of the helium star is zero for hg and gs stars.
+      2) the `age' of the helium star is proportional to the time
+         spent on the hb.
+      3) the `age' of the helium star is 0.9 of the total lifetime of
+	 a helium star with the same mass if the he star was formed
+	 from a Sg.
+
+  c) How massive is the CO core for a helium star which ascends the
+     helium giant branch.
+
+  d) How much mass loses a helium star in stellar wind.
+
+  e) What is the radius of the helium core of a giant?
+
+
+
+
+Binary evolution
+  - Onno, Peter
+? To which published binary evolution tracks should the results of
+  SeBa be compared/calibrated.
+
+- De Kool
+? a) Reaction of low-mass main-sequence stars to mass loss on a nuclear
+     and thermal timescale.
+- Norbert
+  b) And what about high mass main-sequence stars.
+     Is it possible to strip a massive (M>~25Msun) main-sequence star to
+     less than ~1Msun? 
+
+- Key: Onno, Chris, Peter 
+? Is it possibile that mass transfer on a dynamical
+  timescale stabilizes and becomes thermal or even nuclear (for
+  convective stars)?
+  Can a star go from Dynamic -> Thermal or
+                from Dynamic -> Nuclear.
+
+- Onno, Peter, GertJan
+? How does the radius of the donor react on mass loss.
+  Is this reaction mass-transfer timescale dependent, and how.
+

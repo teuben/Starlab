@@ -1,0 +1,32 @@
+mkplummer -n 25 > plum0
+leapfrog -t .125 -d .125 -a 0.01 < plum0 > lf01
+leapfrog -t .125 -d .125 -a 0.001 < plum0 > lf001
+leapfrog -t .125 -d .125 -a 0.0001 < plum0 > lf0001
+flat_hermite -t .125 -d .125 -a 0.04 < plum0 > h04
+flat_hermite -t .125 -d .125 -a 0.02 < plum0 > h02
+flat_hermite -t .125 -d .125 -a 0.01 < plum0 > h01
+flat_hermite -t .125 -d .125 -a 0.001 < plum0 > h001
+echo "lf01 lf001 : "
+cat lf01 lf001 | dyndiff -r
+echo "lf001 lf0001 : "
+cat lf001 lf0001 | dyndiff -r
+echo "h04 h001 : "
+cat h04 h001 | dyndiff -r
+echo "h02 h001 : "
+cat h02 h001 | dyndiff -r
+echo "h01 h001 : "
+cat h01 h001 | dyndiff -r
+echo "lf0001 h001 : "
+cat lf0001 h001 | dyndiff -r
+echo "lf01 lf001 : "
+cat lf01 lf001 | dyndist
+echo "lf001 lf0001 : "
+cat lf001 lf0001 | dyndist
+echo "h04 h001 : "
+cat h04 h001 | dyndist
+echo "h02 h001 : "
+cat h02 h001 | dyndist
+echo "h01 h001 : "
+cat h01 h001 | dyndist
+echo "lf0001 h001 : "
+cat lf0001 h001 | dyndist

@@ -1,0 +1,45 @@
+#!/bin/csh -f
+#
+# Demo_nodes:
+#
+set TMP = tmp_demo_nodes
+rm  $TMP.*
+
+echo "mk_single_node > $TMP.0"
+mk_single_node > $TMP.0
+
+echo "add_daughter_node -j 1 -e < $TMP.0 > $TMP.1"
+add_daughter_node -j 1 -e < $TMP.0 > $TMP.1
+
+echo "add_daughter_node -j 2 -e < $TMP.1 > $TMP.2"
+add_daughter_node -j 2 -e < $TMP.1 > $TMP.2
+
+echo "add_daughter_node -j 3 -e < $TMP.2 > $TMP.3"
+add_daughter_node -j 3 -e < $TMP.2 > $TMP.3
+
+echo "add_daughter_node -j 4 -e < $TMP.3 > $TMP.4"
+add_daughter_node -j 4 -e < $TMP.3 > $TMP.4
+
+echo "add_daughter_node -i 2 -j 5 -e < $TMP.4 > $TMP.5"
+add_daughter_node -i 2 -j 5 -e < $TMP.4 > $TMP.5
+
+echo "add_daughter_node -i 2 -j 6 -e < $TMP.5 > $TMP.6"
+add_daughter_node -i 2 -j 6 -e < $TMP.5 > $TMP.6
+
+echo "add_daughter_node -i 4 -j 7 -m 0.25  < $TMP.6   | \"
+echo "add_daughter_node -i 4 -j 8 -m 0.5                        | \"
+echo "add_daughter_node -i 4 -j 9 -m 0.25                       | \"
+echo "add_daughter_node -i 8 -j 10 -m 0.4                       | \"
+echo "add_daughter_node -i 8 -j 11 -m 0.1  > $TMP.7"
+
+add_daughter_node -i 4 -j 7 -m 0.25  < $TMP.6   | \
+add_daughter_node -i 4 -j 8 -m 0.5              | \
+add_daughter_node -i 4 -j 9 -m 0.25             | \
+add_daughter_node -i 8 -j 10 -m 0.4             | \
+add_daughter_node -i 8 -j 11 -m 0.1  > $TMP.7
+
+echo "pretty_print_tree < $TMP.7"
+pretty_print_tree < $TMP.7
+
+echo "display_subtrees < $TMP.7 | pretty_print_tree"
+display_subtrees < $TMP.7 | pretty_print_tree

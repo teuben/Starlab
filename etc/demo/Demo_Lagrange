@@ -1,0 +1,27 @@
+#!/bin/csh -f
+#
+# To get a taste, invoke this command for 100 particles, say:
+#
+#   Demo_Lagrange 100 5 (the default for: N = 100, run to t = 5 in steps of 0.2)
+#
+if ($#argv < 1) then
+    set n = 100
+else
+    set n = $1
+endif
+#
+if ($#argv < 2) then
+    set T = 5
+else
+    set T = $2
+endif
+#
+if ($#argv < 3) then
+    set random = ' '
+else
+    set random = "-s $3"
+endif
+#
+alias integrate leapfrog -t $T -D 0.2 -d 1000 -a 0.05 -e 0.05 -q
+#
+mkplummer -n $n -m 0.5 $random | freeze | integrate | lagradplot -t

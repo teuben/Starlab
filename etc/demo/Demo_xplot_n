@@ -1,0 +1,9 @@
+#!/bin/csh -f
+#
+if ($#argv > 0) then
+    set n = $1
+else
+    set n = 10
+endif
+#
+mkplummer -i -n $n | flat_hermite -e .05 -t 100 -d 10 -D .05 -C 4 | make_tree -k 2 | xstarplot -s 1.4 -l 4 -t

@@ -1,0 +1,13 @@
+
+This directory contains a flat-tree Hermite integrator and related
+functions that use the _dyn_ base class.
+
+Not enough here (for now) to bother splitting files into separate
+subdirectories.
+
+All "flat_" global and member functions defined here are redefined
+for hdyn use in the dyn/hdyn directory.
+
+					Steve McMillan
+					June 1999
+
