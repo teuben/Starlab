@@ -1859,7 +1859,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
     real t_end = tt + delta_t;		// final time, at end of integration
 
     real t_log = tt;			// time of next log output
-    // if (t > 0) 
+    if (t > 0) 
     	t_log += dt_log;
 
     real t_snap = tt + dt_snap;		// time of next snapshot output
