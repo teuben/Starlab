@@ -108,7 +108,7 @@ istream & hdyn::scan_dyn_story(istream & s)
 
 	// See xreal notes in dyn_io.C...
 
-    	if (!strcmp("real_system_time", keyword)) {
+  	if (!strcmp("real_system_time", keyword)) {
 
 	    read_xreal = true;
 	    last_real = true;
@@ -282,6 +282,9 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
 	// Note that short_output is implicit.
 
+	if (is_root()) put_real_number(s, "  system_time  =  ",
+				       real_system_time);
+
 	// Write time, mass, pos, and vel as unformatted data.
 	// Allows significantly faster I/O, and converting doubles
 	// to floats saves additional space.
@@ -363,8 +366,6 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	}
     }
 
-    // For use with full_dump mode, formatted or unformatted...
-
     if (short_output) {
 
 	// Most convenient to output Star quantities here too.
@@ -402,6 +403,18 @@ ostream & hdyn::print_dyn_story(ostream & s,
 
 	if (short_output == 3)
 	    put_integer(s, "  defunct  =  ", 1);
+
+	// Add information on the system center to the root node.
+	// Must do this explicitly here because story output is
+	// suppressed in short_output mode.
+
+	if (is_root()) {
+	    vector pos, vel;
+	    int which = get_std_center(this, pos, vel);
+	    put_real_vector(s, "  center_pos  =  ", pos);
+	    put_real_vector(s, "  center_vel  =  ", vel);
+	    put_integer(s, "  center_type  =  ", which);
+	}
     }
 
     return s;
