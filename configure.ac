@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(Starlab, 4.3, [steve@zonker.physics.drexel.edu])
+AC_INIT(Starlab, 4.3, [steve@physics.drexel.edu])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(local)
 AC_CONFIG_SRCDIR(src/std/util_math.C)
