@@ -908,12 +908,14 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 
 	    else if ((s = strstr(line, "report_stellar_evolution"))
 		       || (s = strstr(line, "report_stellar_e"))
-		       || (s = strstr(line, "stellar_e")))
+		     || (s = strstr(line, "stellar_e"))) {
 
 		b->get_kira_diag()->report_stellar_evolution
 		    = get_value(s, 1);
 
-	    else if ((s = strstr(line, "report_stellar_mass_loss"))
+//		PRL(b->get_kira_diag()->report_stellar_evolution);
+
+	    } else if ((s = strstr(line, "report_stellar_mass_loss"))
 		       || (s = strstr(line, "report_stellar_m"))
 		       || (s = strstr(line, "stellar_m")))
 

@@ -2717,6 +2717,21 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	    // print_energy_from_pot(b);	// should be free, but
 						// doesn't quite work...
+
+
+#if 0
+
+	    real tstellev = VERY_LARGE_NUMBER;
+	    for_all_daughters(hdyn, b, bb) {
+		real ts = bb->get_starbase()->get_evolve_timestep();
+		if (ts < tstellev) tstellev = ts;
+	    }
+	    PRL(tstellev);
+
+
+#endif
+
+
 	}
 
 	if (tree_changed) set_n_top_level(b);

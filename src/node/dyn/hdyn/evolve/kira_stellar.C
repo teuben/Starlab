@@ -554,7 +554,7 @@ bool evolve_stars(hdyn* b,
     if (b->get_kira_diag()->report_stellar_evolution) {
 	cerr << "\nEnd of evolve_stars: "; PRL(correct_dynamics);
 	PRL(b->get_kira_counters()->de_kick);
-	cerr << "---------\n\n";
+	cerr << "===============\n\n";
     }
 
     return correct_dynamics;
