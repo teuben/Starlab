@@ -2050,6 +2050,7 @@ local INLINE int sort_nodes_and_reduce_rnb(hdynptr ilist[], int ni)
     // ...then place the CM node with the biggest neighbor radius (a
     // guess at the node that caused the overflow) at inext...
 
+    PRC(inext); PRL(imax);
     if (imax != inext) swap(ilist, inext, imax);
 
     // ...then adjust the neighbor radii of the others (starting at inext),
@@ -2057,8 +2058,10 @@ local INLINE int sort_nodes_and_reduce_rnb(hdynptr ilist[], int ni)
     // (in location inext, by construction).
 
     for (int i = inext; i < ni; i++) {
-	if (ilist[i]->is_leaf() || i == inext)
+	if (ilist[i]->is_leaf() || i == inext) {
 	    ilist[i]->set_grape_rnb_sq(0.5*ilist[i]->get_grape_rnb_sq());
+	    PRC(i); PRL(ilist[i]->get_grape_rnb_sq());
+	}
     }
 
 //    PRC(ni); PRL(inext);
@@ -2700,6 +2703,7 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 							  nj_on_grape, n_pipes,
 							  true)) {
 
+			cerr << "after get_force_and_neighbors 1: ";
 			PRL(stat);
 
 			if (stat == 2) {
@@ -2977,6 +2981,10 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 	if (stat = get_force_and_neighbors(xtime,current_nodes + i, ni,
 					   nj_on_grape, n_pipes,
 					   need_neighbors)) {
+
+	    cerr << "after get_force_and_neighbors 2: ";
+	    PRL(stat);
+
 
 	    if (stat == 2) {
 
