@@ -772,62 +772,22 @@ int integrate_list(hdyn * b,
 			//
 			// New (Steve, 2/04): this may fail if the neighbor
 			// has changed while the parent was being updated!
-			// Also set a flag in the root dyn story.  Note that
-			// the only way the nn could change is if par were
-			// updated and not on the list.  In that case, par
-			// should cause the rescheduling itself.  If not,
-			// then the nn should be valid.  So keep the old
-			// approach for now (which doesn't pollute the
-			// story with flags).
+			// Also, the logic becomes more tricky if par->nn
+			// and pnn are not the same thing...  Best to rely
+			// on the resched flag.
 
 			if (!pert) {
 
-//			    story *s = b->get_root()root->get_dyn_story();
-//			    if (find_qmatch(s, "resched")) {
-//				
-//				tree_changed = true;	// force a new
-//							// timestep list
-//
-//				cerr << "kira: recomputing scheduling list "
-//				     << "at time " << sys_t << endl;
-//
-//				rmq(s, "resched");
-//			    }
+			    story *s = b->get_root()->get_dyn_story();
+			    if (find_qmatch(s, "resched")) {
+				
+				tree_changed = true;	// force a new
+							// timestep list
 
-			    hdyn *par = bi->get_parent(), *pnn = par->get_nn();
+				cerr << "kira: recomputing scheduling list "
+				     << "at time " << sys_t << endl;
 
-			    // Be careful of the possibility that pnn wasn't
-			    // the node actually synchronized (see above).
-
-			    if ((par && par->get_time() == sys_t)
-				|| (pnn && pnn->get_time() == sys_t)) {
-
-				// Parent and/or pnn is up to date.
-				// See if it was on the scheduler list.
-
-				bool par_sched = false, pnn_sched = false;
-
-				for (int ii = 0; ii < n_next; ii++) {
-				    hdyn *bii = next_nodes[ii];
-				    if (bii && bii->is_valid()) {
-					if (bii == par) par_sched = true;
-					if (bii == pnn) pnn_sched = true;
-				    }
-				}
-
-				// Logic seems a bit redundant here...
-
-				if ((par && !par_sched
-				     && par->get_time() == sys_t)
-				    || (pnn && !pnn_sched
-					&& pnn->get_time() == sys_t)) {
-
-				    tree_changed = true;	// force a new
-								// timestep list
-
-				    cerr << "kira: recomputing scheduling list "
-					 << "at time " << sys_t << endl;
-				}
+				rmq(s, "resched");
 			    }
 			}
 
@@ -855,6 +815,7 @@ int integrate_list(hdyn * b,
 		cpu_prev = cpu;
 		kc->cpu_time_unperturbed += (cpu = cpu_time()) - cpu_prev;
 #endif
+
 	    }
 	}
     }

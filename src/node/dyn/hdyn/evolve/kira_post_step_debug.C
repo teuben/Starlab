@@ -1,6 +1,23 @@
 
 // Place temporary post-step debugging code here, to clean up kira.C.
 
+#if 0
+    if (t > 122.36 && t < 122.37) {
+	for (int ii = 0; ii < n_next; ii++)
+	if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
+	    hdyn *n = next_nodes[ii];
+	    hdyn *top = n->get_top_level_node();
+	    if (node_contains(top, "(94,10)")
+		|| node_contains(top, "27"))
+		pp3(n);
+	}
+	hdyn *n = (hdyn*)node_with_name("(94,10)", b);
+	int p = cerr.precision(HIGH_PRECISION);
+	PRC(n->get_time()); PRL(n->get_timestep());
+	cerr.precision(p);
+    }
+#endif
+
 
 #if 0
     if (t_prev == 252) {

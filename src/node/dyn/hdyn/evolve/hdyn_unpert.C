@@ -3673,8 +3673,14 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			    // it seems that the problem can only occur in
 			    // situations where par would itself trigger the
 			    // rescheduling in any case.
+			    //
+			    // Also, since pnn and par->nn are not necessarily
+			    // the same thing, just setting a flag may be the
+			    // cleanest way to avoid complicated logic in the
+			    // calling function.  (Steve, 8/04)
 
 			    bool resched = false;
+			    rmq(root->get_dyn_story(), "resched");
 
 			    if (par->time < system_time) {
 				if (verbose) {
@@ -3699,7 +3705,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 					 << ":  time step "
 					 << pnn->get_timestep();
 				}
-				
+
 				pnn->synchronize_node();
 				resched = true;
 
@@ -3708,8 +3714,8 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 					 << endl;
 			    }
 
-			    // if (resched) putiq(root->get_dyn_story(),
-			    //		       "resched", 1);
+			    if (resched) putiq(root->get_dyn_story(),
+			    		       "resched", 1);
 
 			    // Note that we should really repeat the entire
 			    // previous calculation, since all quantities will
