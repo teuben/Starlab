@@ -28,6 +28,10 @@
 #
 #---------------------------------------------------------------------
 
+# NOTE that by hard-wiring the paths, this script will not work properly
+# if Starlab is moved after installation.  See starlab_start.csh for how
+# to correct this (not yet implemented here...)
+
 old_path=""
 if [ "x$STARLAB_PATH" != "x" ]; then
     old_path=$STARLAB_PATH

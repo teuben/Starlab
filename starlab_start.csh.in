@@ -7,9 +7,6 @@
 #	STARLAB_PATH	Root directory of the Starlab source distribution.
 #			Used by many scripts in sbin, but nowhere else in
 #			the Starlab make process or by any Starlab program.
-#			Could easily be removed, as all the Starlab scripts
-#			could be autoconfigured.  However, retain for
-#			compatibility with older setup and other scripts.
 #
 #	STARLAB_INSTALL_PATH	Directory in which the Starlab bin, include,
 #				info, lib, man, and share directories are
@@ -29,19 +26,67 @@
 #
 #---------------------------------------------------------------------
 
-set old_path = " "
-if ($?STARLAB_PATH == 1) then
-    set old_path = $STARLAB_PATH
+# See if the version of STARLAB_PATH set at configuration time differs
+# from the value (if any) now, and try to correct the environment
+# accordingly, to keep this script portable.
+
+set conf_ssp = "@STARLAB_SOURCE_PATH@"
+set conf_sip = "@STARLAB_INSTALL_PATH@"
+
+if ($?STARLAB_PATH == 0) then
+
+#   No STARLAB_PATH set.  Just use the paths from configure.
+
+    setenv STARLAB_PATH		"$conf_ssp"
+    setenv STARLAB_INSTALL_PATH	"$conf_sip"
+
+else
+
+#   Check if the paths conflict.
+
+    if ("$STARLAB_PATH" != "$conf_ssp") then
+
+	if ($?TERM == 1) then
+	    echo Warning: STARLAB_PATH = $STARLAB_PATH differs
+	    echo from the configure version $conf_ssp
+	endif
+
+#	Retain the current STARLAB_PATH, and check to see if the
+#	install path needs to be modified.  (If it is a subdirectory
+#	of the original STARLAB_PATH, then chances are that it also
+#	moved when Starlab was relocated.)
+
+	set tmp = `echo $conf_sip | grep $conf_ssp`
+	if ($#tmp > 0) then
+
+#	    Configured STARLAB_INSTALL_PATH was a subdirectory of STARLAB_PATH.
+#	    Correct STARLAB_INSTALL_PATH to reflect the new STARLAB_PATH.
+
+	    setenv STARLAB_INSTALL_PATH \
+		`echo $conf_sip | sed \%$conf_ssp%$STARLAB_PATH%`
+	    if ($?TERM == 1) then
+		echo Corrected STARLAB_INSTALL_PATH from $conf_sip
+		echo to $STARLAB_INSTALL_PATH
+	    endif
+
+	endif
+	unset tmp
+
+    else
+
+#	Accept the configure settings without further checking.
+
+	setenv STARLAB_PATH		"$conf_ssp"
+	setenv STARLAB_INSTALL_PATH	"$conf_sip"
+
+    endif
+
 endif
 
-setenv STARLAB_PATH		"@STARLAB_SOURCE_PATH@"
-setenv STARLAB_INSTALL_PATH	"@STARLAB_INSTALL_PATH@"
+unset conf_ssp conf_sip
+
+setenv STARLAB_PATH		$STARLAB_PATH	# in case not in the environment
 setenv STARLAB			$STARLAB_PATH
-
-if ("x$STARLAB_PATH" != "x$old_path" && $?TERM == 1) then
-    echo STARLAB_PATH changed to $STARLAB_PATH
-endif
-unset old_path
 
 if (! -e $STARLAB_PATH/VERSION) then
 
