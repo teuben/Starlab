@@ -27,7 +27,7 @@
 #include <star/dstar_to_kira.h>
 #include <star/single_star.h>
 
-#define CALCULATE_POST_COLLISION_ON_GRAPE
+//#define CALCULATE_POST_COLLISION_ON_GRAPE
 
 // Local function (incomplete).
 

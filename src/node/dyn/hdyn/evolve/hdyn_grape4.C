@@ -612,12 +612,13 @@ local int jpdma_all_leaves(hdyn *root,
     int nj = put_grape_index_to_leaf_nodes(root, cm);
     int jp = 0;
 
-    if (!cm)
+    if (!cm) {
 	for_all_leaves(hdyn,root,b)
 	    jpdma_node(b, predicted, predicted_time, jpmax, nj, jp);
-    else
+    } else {
 	for_all_daughters(hdyn,root,b)
 	    jpdma_node(b, predicted, predicted_time, jpmax, nj, jp);
+    }
 
     return nj;
 }
@@ -939,7 +940,7 @@ local bool get_neighbors_and_adjust_h2(int chip, hdyn * b)
     	// No nearest neighbor found --  enlarge the neighbour-sphere
 	// radius and try again...
 
-	b->set_grape_rnb_sq(b->get_grape_rnb_sq()*2);
+	b->set_grape_rnb_sq(b->get_grape_rnb_sq()*2);	// 2 --> 3?
 
 	return false;
     }
@@ -950,7 +951,7 @@ local bool get_neighbors_and_adjust_h2(int chip, hdyn * b)
 // set_grape4_neighbour_radius: adjust the grape4 neighbour radius
 //			       to some reasonable value.
 
-local void set_grape4_neighbour_radius(hdyn * b)
+local void set_grape4_neighbour_radius(hdyn * b, int nj_on_grape)
 
 // Called by:	grape_calculate_acc_and_jerk()
 
@@ -962,7 +963,7 @@ local void set_grape4_neighbour_radius(hdyn * b)
 	// For a single particle, adjust the nnb radius so that it will
 	// contain just 1-2 neighbours (set r = sqrt(2)*d_nn, if known).
 
-	if (b->get_nn() != NULL
+	if (b->get_nn()
 	    && b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER) {
 
 	    // Node seems to have a valid nearest neighbor pointer.
@@ -975,7 +976,7 @@ local void set_grape4_neighbour_radius(hdyn * b)
 		// Radius information included here to allow coll
 		// criterion to be applied elsewhere.
 
-		b->set_grape_rnb_sq(max(b->get_d_nn_sq(),
+		b->set_grape_rnb_sq(max(b->get_d_nn_sq(),	// 1 --> 2?
 					4*b->get_radius()*b->get_radius()));
 
 		// In this case, if the actual value set is zero,
@@ -983,12 +984,20 @@ local void set_grape4_neighbour_radius(hdyn * b)
 
 		if (b->get_grape_rnb_sq() < MINIMUM_GRAPE_RNB_PERT) {
 
-		    // (Jun says this should never happen...)
+		    // (Jun says this should never happen, and these
+		    // messages have never been seen...)
 
 		    cerr << "h2 set to zero for \n";
 		    pp3(b,cerr);
 		    PRL(b->get_d_nn_sq());
-		    b->set_grape_rnb_sq(b->get_d_min_sq());
+
+		    real r90_sq = b->get_d_min_sq()
+					/ square(b->get_d_min_fac());
+
+		    b->set_grape_rnb_sq(r90_sq);
+
+		    // Note new relation between d_min_sq and the
+		    // 90 degree turnaround radius (rvirial/N).
 		}
 
 	    } else {
@@ -1001,11 +1010,15 @@ local void set_grape4_neighbour_radius(hdyn * b)
 	    // Node does not know its nearest neighbor.
 
 	    nb_check_counter[hindex] = 0;
-	    b->set_grape_rnb_sq(pow(b->get_d_min_sq(), 1.0/3.0));
 
-	    // Note: d_min_sq^(1/3) ~ square of the average interparticle
-	    // spacing for standard N-body units -- OK for leaves and nn.
-	
+	    // Note connections between d_min, r90, and rnn.
+
+	    real r90_sq = b->get_d_min_sq() / square(b->get_d_min_fac());
+	    real rnn_sq = r90_sq * pow((real)nj_on_grape, 4.0/3);
+
+	    // NB: rnn_sq ~ square of the average interparticle spacing.
+
+	    b->set_grape_rnb_sq(rnn_sq);	// should be OK on average
 	}
 
     } else {
@@ -1056,6 +1069,7 @@ local void set_grape4_neighbour_radius(hdyn * b)
 	PRL(sqrt(b->get_grape_rnb_sq()));
 	PRL(b->get_nn());
 	PRL(b->get_d_min_sq());
+	PRL(b->get_d_min_fac());
     }
 }
 
@@ -1201,7 +1215,7 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 
 	// Set some reasonable h2 value.
 
-	set_grape4_neighbour_radius(b);
+	set_grape4_neighbour_radius(b, nj_on_grape4);
 
 	if (b->is_parent())
 	    b->set_valid_perturbers(true);
@@ -1218,7 +1232,14 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
     int nimax = h3npipe_()/2;
 #endif
 
-    real h2_critical = next_top[0]->get_d_min_sq()*8192;
+    // Square of the mean 90-degree turnaround distance:
+
+    real r90_sq = next_top[0]->get_d_min_sq()
+			    / square(next_top[0]->get_d_min_fac());
+
+#define H2_FAC 8192*2			// pretty arbitrary...
+
+    real h2_critical = H2_FAC * r90_sq;
 
     // We will stop expanding the GRAPE neighbor sphere once its size
     // exceeds this critical value.  However, it is legal to set
@@ -1228,7 +1249,7 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
     // *** Should contain a factor of ~(m_max/<m>)^2, but not crucial...
 
     // Note:  for equal-mass systems and standard units, this critical
-    //	      radius is less than the interparticle spacing for N > ~1000.
+    //	      radius is less than the interparticle spacing for N >~ 1000.
 
     real d2_max = h2_critical * 2;
 
@@ -1284,7 +1305,7 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 
 			h2_too_large = 1;	// ==> exit while loop
 
-			b->set_nn(b);
+			b->set_nn(b);		// NB no nbr <==> nn = this
 			b->set_d_nn_sq(d2_max);
 
 			// cerr << "no nb found for particle ";
@@ -1302,6 +1323,8 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 			// b->print_label(cerr);
 			// cerr << " at (" << b->get_pos() << ") with radius "
 			//      << b->get_grape_rnb_sq()<< endl;
+
+			// *** Should count retries for bookeeping... ***
 
 			force_by_grape4(time, 1, next_top+inew, nj_on_grape4);
 
@@ -1347,29 +1370,49 @@ void grape_calculate_acc_and_jerk(hdyn ** next_nodes,
 //				neighbor within sqrt(h2_crit).
 //======================================================================
 
-#define DEBUG 0
+#define DEBUG 0			// turns on a LOT of output!
 
-local void set_grape4_density_radius(hdyn * b, real h2_max)
+local inline void set_grape4_density_radius(hdyn * b, real rnn_sq)
 {
     int hindex = b->get_grape_index() - 1;
 
-    // For a single particle, adjust the radius so that it will
-    // contain just ~10 neighbours (set r = 4*d_nn, if known).
+    // For a single particle, try to adjust the radius so that
+    // it will contain a small (~10-20) number of neighbours.
+    //
+    // Note that nn = b means that no neighbors were found.
 
-    if (b->get_nn() != NULL
-	&& b->get_d_nn_sq() < 0.1* VERY_LARGE_NUMBER
+    // We will modify rnn_sq for use as the initial GRAPE radius.
+
+    if (b->get_nn() != NULL && b->get_nn() != b
+	&& b->get_d_nn_sq() < 0.1 * VERY_LARGE_NUMBER
 	&& b->get_d_nn_sq() > 0) {
 
 	// Node seems to have a valid nearest neighbor pointer.
+	// Modify the initial guess for particles with a close nn.
 
-	b->set_grape_rnb_sq(9 * b->get_d_nn_sq());
+	if (b->get_d_nn_sq() < rnn_sq)
+	    rnn_sq = sqrt(rnn_sq * b->get_d_nn_sq());	// empirical
+	else
+	    rnn_sq = b->get_d_nn_sq();
 
-    } else
+	if (DEBUG)
+	    cerr << "nn OK for " << b->format_label() << ",  ";
 
-	// Node does not know its nearest neighbor.
+    } else {
 
-	b->set_grape_rnb_sq(9 * pow(b->get_d_min_sq(), 1.0/3.0));
+	// Node does not know its nearest neighbor.  Value of d_nn_sq
+	// is where the search stopped.
 
+	rnn_sq = max(rnn_sq, b->get_d_nn_sq());
+
+	if (DEBUG)
+	    cerr << "no nn for " << b->format_label() << ",  ";
+    }
+
+#define RNN_FAC 12	// trial and error
+
+    b->set_grape_rnb_sq(RNN_FAC * rnn_sq);
+    if (DEBUG) PRL(b->get_grape_rnb_sq());
 }
 
 local bool count_neighbors_and_adjust_h2(int chip, hdyn * b)
@@ -1383,8 +1426,8 @@ local bool count_neighbors_and_adjust_h2(int chip, hdyn * b)
 		 << " (nnb = " << nnb << ", grape_rnb = "
 		 << sqrt(b->get_grape_rnb_sq()) << ")" << endl;
 
-	real fac = 2;
-	if (nnb < 4) fac = 4;
+	real fac = 4;					// (4 here was 2)
+	if (nnb < 4) fac *= 2;
 	b->set_grape_rnb_sq(fac * b->get_grape_rnb_sq());
 
 	return false;
@@ -1485,8 +1528,15 @@ void grape_calculate_densities(hdyn* b,
 
     // Set h2 values.
 
+    // Determine rnn_sq ~ square of the average interparticle spacing,
+    // for use as a scale in setting h2.  Note the connections between
+    // d_min, r90, and rnn.
+
+    real r90_sq = b->get_d_min_sq() / square(b->get_d_min_fac());
+    real rnn_sq = r90_sq * pow((real)nj_on_grape4, 4.0/3);
+
     for (int i = 0; i < n_top; i++)
-	set_grape4_density_radius(top_nodes[i], h2_crit);
+	set_grape4_density_radius(top_nodes[i], rnn_sq);
 
 #ifndef USE_HALF_CHIP
     int nimax = h3npipe_();
@@ -1494,6 +1544,7 @@ void grape_calculate_densities(hdyn* b,
     int nimax = h3npipe_()/2;
 #endif
 
+    int n_grape = 0;
     int n_retry = 0;
 
     int i = 0;
@@ -1502,7 +1553,11 @@ void grape_calculate_densities(hdyn* b,
 	int inext = i;
 	int ip = min(nimax, n_top - i);
 
+	// Compute forces and neighbors on the next block of particles,
+	// of length ip.
+
 	force_by_grape4(time, ip, top_nodes+i, nj_on_grape4);
+	n_grape++;
 
 	for (int ichip = 0; ichip < ip ; ichip ++) {
 
@@ -1541,8 +1596,10 @@ void grape_calculate_densities(hdyn* b,
 
 		} else {
 
-		    // Expand the neighbor sphere -- must recompute
-		    // the force.
+		    // Expand the neighbor sphere -- must recompute the
+		    // force.  Could probably speed this up substantially
+		    // by checking, correcting and recomputing all
+		    // remaining particles on the list.
 
 		    force_by_grape4(time, 1, top_nodes+inew, nj_on_grape4);
 		    n_retry++;
@@ -1568,7 +1625,7 @@ void grape_calculate_densities(hdyn* b,
 
     if (n_retry > 10) {
 	cerr << "grape_calculate_densities:  ";
-	PRL(n_retry);
+	PRC(n_grape); PRL(n_retry);
     }
 
     // Force cleanup later.

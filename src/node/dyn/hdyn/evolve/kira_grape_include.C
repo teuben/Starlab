@@ -136,7 +136,12 @@ void compute_densities(hdyn* b, vector& cod_pos, vector& cod_vel)
     cerr << "Computing densities using GRAPE..." << endl;
     real cpu0 = cpu_time();
 
-    grape_calculate_densities(b, 1.0);		// (densities are saved in
+    // The second argument determines the squared radius at which
+    // particles are deemed to have zero densities.  This allows
+    // discrimination against low-density particles, and also limits
+    // costly repeat GRAPE calls.
+
+    grape_calculate_densities(b, 0.1);		// (densities are saved in
 						// particle dyn stories)
 
     real cpu1 = cpu_time();
