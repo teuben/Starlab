@@ -21,6 +21,7 @@
 //
 //	worldbundle::worldbundle(tdyn *b)
 //	void worldbundle::print()
+//	void worldbundle::dump()
 //	int worldbundle::find_index(real id)
 //	int worldbundle::find_index(char *name)
 //	int worldbundle::find_index(pdyn *b)
@@ -30,6 +31,10 @@
 //	void worldbundle::attach(tdyn *bn, int verbose)
 //	void worldbundle::print_worldline(char *name, real dt)
 //
+// Worldline member function:
+//
+//	void worldline::dump(int offset)
+//
 // Segment member function:
 //
 //	void segment::print(char *label)
@@ -38,6 +43,7 @@
 //
 //	real unique_id(char *name)
 //	real unique_id(pdyn *b)
+//	void print_id(void *id, char *label)
 //	worldbundle *read_bundle(istream &s, int verbose)
 //	tdyn *find_event(tdyn *bn, real t)
 //	void print_event(tdyn *bn, real t)
@@ -133,6 +139,53 @@ real unique_id(pdyn *b)
 
     else
         return -1;
+}
+
+void print_id(void *id, char *s = NULL, int offset = 0)
+{
+    real *r = (real *)id;
+    unsigned long long *u = (unsigned long long *)id;
+
+    real rr = *r;
+    unsigned long long uu = *u;
+
+    if (offset > 0) PRI(offset);
+    if (s)
+	cerr << s << ": ";
+    else
+	cerr << "    ";
+
+    fprintf(stderr, "%.16lf = %qu = %qx\n", rr, uu, uu);
+}
+
+void worldline::dump(int offset)	// default = 0
+{
+    // Print a worldline, start to finish.
+
+    segment *s = get_first_segment();
+    int is = 0;
+    while (s) {
+	real t_start = s->get_t_start();
+	real t_end = s->get_t_end();
+	PRI(offset+4); cerr << "segment " << is << ": ";
+		PRC(t_start); PRL(t_end);
+	print_id(&id, "id", offset+8);
+	tdyn *b = s->get_first_event();
+	int ie = 0;
+	while (b) {
+	    real t = b->get_time();
+	    PRI(offset+8);
+	    cerr << "event " << ie << ": name = " << b->format_label() << ", ";
+	    PRL(t); 
+	    b = b->get_next();
+	    ie++;
+	}
+	if (ie == 1) {
+	    PRI(offset+8); cerr << "*** single event ***" << endl;
+	}
+	s = s->get_next();
+	is++;
+    }
 }
 
 void segment::print(char *label)
@@ -246,6 +299,13 @@ void worldbundle::print()
     }
 }
 
+void worldbundle::dump(int offset)	// default = 0
+{
+    for (int i = 0; i < get_nw(); i++) {
+	PRI(offset); cerr << "worldline " << i << ":" << endl;
+	get_worldline(i)->dump(offset);
+    }
+}
 //======================================================================
 
 int worldbundle::find_index(real id)
@@ -333,6 +393,7 @@ void worldbundle::attach(tdyn *bn,
     // Locate and attach all components of bn in the 4tree hierarchy.
 
     if (bn) {
+
 	for_all_nodes(tdyn, bn, b) {
 
 	    // *** Flag recomputation of acc and jerk. ***
@@ -360,6 +421,7 @@ void worldbundle::attach(tdyn *bn,
 	    // (maintaining the list ordering).
 
 	    real id = unique_id(b);
+
 	    if (id >= 0) {
 
 		real t = b->get_time();
@@ -388,11 +450,25 @@ void worldbundle::attach(tdyn *bn,
 			s = new segment(b);
 			w->add_segment(s);
 
-		    } else
+		    } else {
 
 			// Case (1): extend the current segment.
 
-			s->add_event(b);
+			s->add_event(b, true);	  // "true" ==> skip id check
+
+			// Note from Steve (8/01):  For unknown reasons, the id
+			// check in add_event may cause errors when optimization
+			// is turned on.  Problems arise in multiple systems (so
+			// we are working near the last significant digit), where
+			// the ids may return unequal even though the bits are
+			// identical.  Didn't occur in the July 29, 2001 version
+			// of the code.  Does occur in the August 2 version!
+			//
+			// Workaround for now: skip the check, which is redundant
+			// here anyway.  Longer-term: improve the handling of
+			// unique_id.
+
+		    }
 
 		    w->set_t_end(t);
 

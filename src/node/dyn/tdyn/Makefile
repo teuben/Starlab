@@ -18,7 +18,8 @@ OBJECT_FILES = tdyn_io.o tdyn_tt.o worldline.o worldline2.o
 
 LIBRARY = libtdyn.a
 
-EXECUTABLES = tdyn_io test_tdyn worldline worldlines xstarplot2 xstarplot22
+EXECUTABLES = tdyn_io test_tdyn worldline worldlines xstarplot2 xstarplot22 \
+	      dump_worldlines
 
 NON_CCC_EXECUTABLES = 
 

@@ -1807,6 +1807,14 @@ void xstarplot22(DYN* b, float scale, int k, int d, float lmax,
 
 //======================================================================
 
+local void print_worldlines(worldbundleptr wh[], int nh)
+{
+    for (int ih = 0; ih < nh; ih++) {
+	cerr << "worldbundle " << ih << ":" << endl;
+	wh[ih]->dump(4);
+    }
+}
+
 /*-----------------------------------------------------------------------------
  *  main  --  driver to use  xstarplot22()  as a tool. 
  *               The argument -a is interpreted as the axis along which to
@@ -1912,7 +1920,6 @@ main(int argc, char** argv)
     // worldbundle is ready, and the remainder can be read in
     // asynchronously.
 
-    typedef worldbundle *worldbundleptr;
     worldbundleptr wb, wh[1024];
 
     int nh = 0;
@@ -1942,6 +1949,8 @@ main(int argc, char** argv)
     cerr << "totals: " << nwtot << " worldlines, "
 	 << nstot << " segments, " << netot << " events"
 	 << endl << endl;
+
+    // print_worldlines(wh, nh);
 
     // Now display the data.
 
