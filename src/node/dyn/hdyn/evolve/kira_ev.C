@@ -62,6 +62,7 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
     real cpu0, cpu1, cpu2, cpu3, cpu4;
     int kmax = 1;
 
+#if 0
 	for (int k = 0; k < n_next; k++) {
 	    hdyn* bi = next_nodes[k];
 
@@ -96,7 +97,6 @@ int calculate_acc_and_jerk_for_list(hdyn *b,
 		cpu0 = cpu_time();
 	    }
 	}
-    }
 
     for (int k = 0; k < kmax; k++) {
 
