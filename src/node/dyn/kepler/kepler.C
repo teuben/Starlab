@@ -403,6 +403,7 @@ kepler::kepler()
     pred_rel_pos = pred_rel_vel = 0;
     mean_motion = period = periastron = separation = pred_mean_anomaly = 0;
     circular_binary_limit = 0;
+    kep_init = NULL;
 }
 
 void  new_kepler(dyn * com,	      	// com is the center-of-mass dyn
