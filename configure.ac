@@ -36,11 +36,17 @@ CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"
 #--------------------------------------------------------------------------
 # Checks for programs.
 AC_PROG_CC
+
 AC_PROG_F77
-if test "x$ac_cv_prog_f77" = "xyes"; then
+
+#if test "x$ac_cv_prog_f77" = "xyes"; then
+# Try this...
+if test "x$F77" != "x"; then
     AC_F77_WRAPPERS
 fi
-AM_CONDITIONAL(HAVE_F77, [test "x$ac_cv_prog_f77" = "xyes"])
+#AM_CONDITIONAL(HAVE_F77, [test "x$ac_cv_prog_f77" = "xyes"])
+AM_CONDITIONAL(HAVE_F77, [test "x$F77" != "x"])
+
 AC_PROG_CXX
 # disable shared libs for now -- work this out later
 AC_DISABLE_SHARED
@@ -401,7 +407,7 @@ else
     echo without sdyn					>> CONFIGURE_HOST
 fi
 echo -n "    "						>> CONFIGURE_HOST
-if test "x$ac_cv_prog_f77" = "xyes"; then
+if test "x$F77" != "x"; then
     echo with f77					>> CONFIGURE_HOST
 else
     echo without f77					>> CONFIGURE_HOST
