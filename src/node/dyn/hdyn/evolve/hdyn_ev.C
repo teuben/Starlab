@@ -142,7 +142,7 @@
 
 #include "hdyn.h"
 
-#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
+#include "kira_debug.h"	// (a handy way to turn on blocks of debugging)
 #ifndef T_DEBUG_hdyn_ev
 #   undef T_DEBUG
 #endif
@@ -169,7 +169,17 @@ static bool dbg = false;
 
 void update_binary_sister(hdyn * bi)
 {
+#ifdef KIRA_DEBUG
     hdyn *sister = bi->get_binary_sister();
+#else
+    hdyn *sister = bi->get_younger_sister();		// assume binary tree
+    if (!sister) {
+	sister = bi->get_elder_sister();
+	if (!sister)
+	    return;
+//	    err_exit("calculate_acc_and_jerk_on_low_level_node: no sister!");
+    }
+#endif
 
     sister->set_time(bi->get_time());
     sister->set_timestep(bi->get_timestep());
@@ -210,10 +220,13 @@ void update_binary_sister(hdyn * bi)
 
 void hdyn::synchronize_node()
 {
-    bool do_diag = (diag->ev && diag->check_diag(this));
+    bool do_diag = false;
 
+#ifdef KIRA_DEBUG
+    do_diag = (diag->ev && diag->check_diag(this));
     if (do_diag)
 	cerr << "Enter synchronize_node for " << format_label() << endl;
+#endif
 
     if (time == system_time) return;
 
@@ -383,7 +396,8 @@ local inline real new_timestep(vector& at3,		// 3rd order term
     real dist, dtff2, dtv2;
 
     bool timestep_check = false;
-#if 0
+
+#ifdef KIRA_DEBUG
     timestep_check = (b->get_kira_diag()->timestep_check
 			   && b->get_kira_diag()->check_diag(b));
 #endif
@@ -1599,10 +1613,12 @@ inline void accumulate_acc_and_jerk(hdyn* b,
 void hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 				       bool make_perturber_list)
 {
+#ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "    flat_calculate_acc_and_jerk for "
 	     << format_label() << endl;
     }
+#endif
 
     acc = jerk = 0;
     pot = 0;
@@ -1672,12 +1688,13 @@ void hdyn::perturber_acc_and_jerk_on_leaf(vector &a,
     // The input arguments p_d_nn_sq and p_nn may be the actual
     // d_nn_sq and nn, or copies.
 
+#ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "        perturber_acc_and_jerk_on_leaf for "
 	     << format_label() << endl;
     }
-
     dbg_message("perturber_acc_and_jerk_on_leaf", this);
+#endif
 
     a = j = 0.0;
     p = 0;
@@ -1850,14 +1867,15 @@ void hdyn::tree_walk_for_partial_acc_and_jerk_on_leaf(hdyn *b,
     // The input arguments p_d_nn_sq and p_nn may be the actual
     // d_nn_sq and nn, or copies.
 
+#ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "        tree_walk_for_partial_acc_and_jerk_on_leaf for "
 	     << format_label() << endl;
 	cerr << "        b = " << b->format_label();
 	cerr << ", mask = " << mask->format_label() << endl;
     }
-
     dbg_message("tree_walk_for_partial_acc_and_jerk_on_leaf", this, b);
+#endif
 
     if (b == mask)
 	return;
@@ -1942,6 +1960,7 @@ void hdyn::calculate_partial_acc_and_jerk_on_leaf(hdyn * top,
     // The input arguments p_d_nn_sq and p_nn may be the actual
     // d_nn_sq and nn, or copies.
 
+#ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "      calculate_partial_acc_and_jerk_on_leaf for "
 	     << format_label() << endl;
@@ -1949,17 +1968,12 @@ void hdyn::calculate_partial_acc_and_jerk_on_leaf(hdyn * top,
 	cerr << ", common = " << common->format_label();
 	cerr << ", mask = " << mask->format_label() << endl;
     }
-
     dbg_message("calculate_partial_acc_and_jerk_on_leaf", this);
     dbg_message("                 from particle", top);
+#endif
 
     a = j = 0.0;
     p = 0;
-
-    // Determine absolute position and velocity of "this":
-
-    vector d_pos = 0;
-    vector d_vel = 0;
 
     // Loop over the appropriate perturber list for external perturbations,
     // and traverse the tree below top, masked by mask, for internal
@@ -1971,6 +1985,11 @@ void hdyn::calculate_partial_acc_and_jerk_on_leaf(hdyn * top,
 				       pnode, step_node);
 
     if (top == mask) return;
+
+    // Determine absolute position and velocity of "this":
+
+    vector d_pos = 0;
+    vector d_vel = 0;
 
     hdyn *b;
     for (b = this; b != common; b = b->get_parent()) {
@@ -2016,6 +2035,7 @@ void hdyn::calculate_partial_acc_and_jerk(hdyn * top,
     // d_nn_sq and nn, or copies.  If this is a node, the nn returned
     // is the closer of its component nns.
 
+#ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "    calculate_partial_acc_and_jerk for "
 	     << format_label() << endl;
@@ -2023,8 +2043,8 @@ void hdyn::calculate_partial_acc_and_jerk(hdyn * top,
 	cerr << ", common = " << common->format_label();
 	cerr << ", mask = " << mask->format_label() << endl;
     }
-
     dbg_message("calculate_partial_acc_and_jerk", this);
+#endif
 
     // Operations of this function:
     //
@@ -2260,27 +2280,29 @@ void hdyn::create_low_level_perturber_list(hdyn* pnode)
 
 void hdyn::calculate_acc_and_jerk_on_low_level_node()
 {
+#ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "  calculate_acc_and_jerk_on_low_level_node for "
 	     << format_label() << endl;
     }
-
     dbg_message("calculate_acc_and_jerk_on_low_level_node", this);
-
-    hdyn *root = get_root();
 
     if (parent->get_oldest_daughter()->get_younger_sister()
 				     ->get_younger_sister() != NULL)
 	err_exit("calculate_acc_and_jerk_on_low_level_node: Not binary node");
 
-    hdyn *sister = get_binary_sister();
+    hdyn *sister = get_binary_sister();		// too elaborate!
+#else
+    hdyn *sister = (hdyn*)younger_sister;	// assume binary tree
+    if (!sister) {
+	sister = (hdyn*)elder_sister;
+	if (!sister)
+	    return;
+//	    err_exit("calculate_acc_and_jerk_on_low_level_node: no sister!");
+    }
+#endif
 
-    real mtot = 0;
-
-    vector apert1, jpert1;
-    vector apert2, jpert2;
-    real p_dummy;
-    hdyn *top;
+    hdyn *root = get_root();
 
     // New formulation of perturber lists introduced by Steve 8/98:
 
@@ -2298,8 +2320,9 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     hdyn* top_level = get_top_level_node();
     hdyn* pnode = find_perturber_node();
 
-    top = pnode;
+    hdyn *top = pnode;
     int np = -1;
+
     if (!pnode)
 	top = root;			// better use GRAPE if possible!
     else
@@ -2315,13 +2338,21 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	    kc->pert_without_list++;
     }
 
+    nn = NULL;
+    d_nn_sq = VERY_LARGE_NUMBER;
+    sister->set_nn(NULL);
+    sister->set_d_nn_sq(VERY_LARGE_NUMBER);
+
+    vector apert1, jpert1;
+    vector apert2, jpert2;
+    real p_dummy;
+
     if (np != 0) {
+
+	// (These functions will have no effect if np = 0.)
 
 	// Acceleration and jerk on this component due to rest of system:
  
-	nn = NULL;
-	d_nn_sq = VERY_LARGE_NUMBER;
-
 	calculate_partial_acc_and_jerk(top, top, get_parent(),
 				       apert1, jpert1, p_dummy,
 				       d_nn_sq, nn,
@@ -2330,9 +2361,6 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 				       this);			// node to charge
 
 	// Acceleration and jerk on other component due to rest of system:
-
-	sister->set_nn(NULL);
-	sister->set_d_nn_sq(VERY_LARGE_NUMBER);
 
 	sister->calculate_partial_acc_and_jerk(top, top, get_parent(),
 					       apert2, jpert2, p_dummy,
@@ -2353,27 +2381,45 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
     vector a_2b, j_2b;
     real p_2b;
-
     hdyn *p_nn_sister;
     real d_min_sister = VERY_LARGE_NUMBER;
-    calculate_partial_acc_and_jerk(get_parent(), get_parent(), this,
-				   a_2b, j_2b, p_2b,
-				   d_min_sister, p_nn_sister,
-				   !USE_POINT_MASS,
-				   NULL,			// no perturbers
-				   this);			// node to charge
+
+    if (!oldest_daughter && !sister->oldest_daughter) {
+
+	// Make a concession to efficiency in the most common case...
+	// *** May want to reconsider efficiency in other cases too. ***
+
+	a_2b = j_2b = 0;
+	p_2b = 0;
+	vector d_pos = sister->pred_pos - pred_pos;
+	vector d_vel = sister->pred_vel - pred_vel;
+	accumulate_acc_and_jerk(sister, d_pos, d_vel, eps2,
+				a_2b, j_2b, p_2b, d_min_sister);
+	p_nn_sister = sister;
+
+    } else
+
+	calculate_partial_acc_and_jerk(get_parent(), get_parent(), this,
+				       a_2b, j_2b, p_2b,
+				       d_min_sister, p_nn_sister,
+				       !USE_POINT_MASS,
+				       NULL,			// no perturbers
+				       this);			// node to charge
 
     if (np != 0) {
+
 	real m2 = sister->get_mass();
 	real pscale = m2 / (m2 + mass);
-	a_2b += pscale * (apert1 - apert2) * get_kappa();
-	j_2b += pscale * (jpert1 - jpert2);
 
 	// Note that perturbation_squared does *not* contain a slowdown factor.
 
 	perturbation_squared = square(pscale * (apert1 - apert2)) / square(a_2b);
 
+	a_2b += pscale * (apert1 - apert2) * get_kappa();
+	j_2b += pscale * (jpert1 - jpert2);
+
     } else
+
 	perturbation_squared = 0;
 
     set_acc_and_jerk_and_pot(a_2b, j_2b, p_2b);
@@ -2410,7 +2456,7 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     }
 #endif
 
-    if (d_nn_sq > d_min_sister) {
+    if (d_min_sister < d_nn_sq) {
 
 	nn = p_nn_sister;
 	d_nn_sq = d_min_sister;
@@ -2591,10 +2637,12 @@ local inline bool expand_nodes(int &n, hdyn ** list, bool debug = false)
 
 void hdyn::calculate_acc_and_jerk_on_top_level_node(bool exact)
 {
+#ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "  calculate_acc_and_jerk_on_top_level_node for "
 	     << format_label() << endl;
     }
+#endif
 
     top_level_node_prologue_for_force_calculation(exact);
 
@@ -2608,10 +2656,12 @@ void hdyn::calculate_acc_and_jerk_on_top_level_node(bool exact)
 
 void hdyn::top_level_node_prologue_for_force_calculation(bool exact)
 {
+#ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "  top_level_node_prologue_for_force_calculation for "
 	     << format_label() << endl;
     }
+#endif
 
     hdyn *root = get_root();
     d_coll_sq = VERY_LARGE_NUMBER;
@@ -2682,10 +2732,12 @@ void hdyn::top_level_node_real_force_calculation()
     // **** -- it is replaced by grape4/6_calculate_acc_and_jerk. ****
     // ***************************************************************
 
+#ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "  top_level_node_real_force_calculation for "
 	     << format_label() << endl;
     }
+#endif
 
     // Special treatment of traversal of top level only (for
     // efficiency, and for GRAPE implementation).
@@ -2716,10 +2768,12 @@ void hdyn::top_level_node_real_force_calculation()
 
 void hdyn::top_level_node_epilogue_force_calculation()
 {
+#ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "  top_level_node_epilogue_force_calculation for "
 	     << format_label() << endl;
     }
+#endif
 
 #if 0
     if (time > 13.62265) {
@@ -2959,17 +3013,28 @@ void hdyn::top_level_node_epilogue_force_calculation()
 
 void hdyn::calculate_acc_and_jerk(bool exact)
 {
+#ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "calculate_acc_and_jerk for "
 	     << format_label() << endl;
     }
-
     dbg_message("calculate_acc_and_jerk", this);
+
+    hdyn *sister = get_binary_sister();
+#else
+    hdyn *sister = (hdyn*)younger_sister;		// assume binary tree
+    if (!sister) {
+	sister = (hdyn*)elder_sister;
+	if (!sister)
+	    return;
+//	    err_exit("calculate_acc_and_jerk_on_low_level_node: no sister!");
+    }
+#endif
 
     d_coll_sq = VERY_LARGE_NUMBER;
     coll = NULL;
     if (is_low_level_node())
-	get_binary_sister()->set_d_coll_sq(VERY_LARGE_NUMBER);
+	sister->set_d_coll_sq(VERY_LARGE_NUMBER);
 
     if (is_top_level_node())
 	calculate_acc_and_jerk_on_top_level_node(exact);
@@ -3023,11 +3088,13 @@ local inline void apply_correction(hdyn * bj, hdyn * bi)
     real dum_d_sq = VERY_LARGE_NUMBER;
     hdyn *dum_nn = NULL;
 
+#ifdef KIRA_DEBUG
     if (bj->get_kira_diag()->correct) {
 	cerr << "correcting " << bi->format_label();
 	cerr << " for " << bj->format_label() << " at "
 	     << bi->get_system_time() << endl;
     }
+#endif
 
     // cerr << "before correction" << endl;
     // PRL(bi->get_acc());
@@ -3555,11 +3622,13 @@ void hdyn::integrate_node(hdyn * root,
 // to be advanced to an undesirable phase.
 
 {
+#ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {
 	cerr << "integrate_node for " << format_label()
 	     <<" at time " << time  + timestep << endl;
 	// pretty_print_node(cerr);
     }
+#endif
 
     if (kep == NULL) {
 
