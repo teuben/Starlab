@@ -1,4 +1,13 @@
 
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
 //// makepowerlaw: construct a system of test particles drawn from a
 ////               power-law mass distribution, in virial equilibrium
 ////               with the field due to that distribution.  The mass

@@ -1,4 +1,13 @@
 
+       //=======================================================//    _\|/_
+      //  __  _____           ___                    ___       //      /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+   //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
+  //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
+ //                                                       //            _\|/_
+//=======================================================//              /|\ ~
+
 //// makebinary:  Complete the binary formation process by adding binary
 ////            orbits to an existing binary tree.  It is assumed that
 ////            the binary tree structure and all masses have already
