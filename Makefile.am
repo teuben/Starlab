@@ -367,3 +367,6 @@ libs:
 	    echo Making libs in $$dir; \
 	    $(MAKE) $(AM_MAKEFLAGS) -C $$dir libs; \
 	done
+
+man:
+	@makeman

@@ -46,6 +46,9 @@ if (! -d $man) then
     mkdir $man
 endif
 
+echo ""
+echo Creating Starlab man pages.
+echo ""
 echo Starlab executable directory is $bin
 echo Starlab man page directory is $man
 
