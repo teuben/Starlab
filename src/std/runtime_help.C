@@ -78,18 +78,21 @@ void get_runtime_help(char* source_file, char* date, char *time, int level)
     } else
 	cerr << "    " << src << endl << endl;
 
-    // First, find and print out level-1 help lines.
+    // First, find and print out level-1 help lines.  Reformatting by
+    // Steve (10/04) to let help2man turn the output into man pages.
 
     char cmd[1024];
     strcpy(cmd, "grep '^////' ");
     strcat(cmd, src);
-    strcat(cmd, " | sed s%////%\"   \"%");
+    //    strcat(cmd, " | sed s%////%\"   \"%");
+    strcat(cmd, " | sed s%////\\ %% | sed s%////%%");
 
     // Assume that help lines begin with "//// " (level 1)
     // or "//++ " (level 2).
 
+//    PRL(cmd);
     system(cmd);
-    cerr<< endl;
+    cout<< endl;
 
     // Now check for level-2 help.
 
