@@ -1,0 +1,62 @@
+#!/bin/sh
+# -*-shell-script-*-
+
+# Installs GNU Autotools in the Starlab source tree.
+# Copyright (C) 2004  Ernest N. Mamikonyan
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+
+# versions of Autoconf, Automake, and Libtool, respectively
+# it's assumed that the packages will be in .tar.gz format
+ac=2.59
+am=1.8.5
+lt=1.5.6
+
+# prints the first argument to stderr and exits the second one is supplied
+error() { builtin echo "${0##*/}: $1" 1>&2; [ "$2" ] && exit $2; }
+
+
+# make sure we're at the top level of the Starlab tree
+if [ ! -d src/packages ]; then
+    error 'this script must be executed from the top-level Starlab directory' 1
+fi
+instdir="$PWD/usr"
+export PATH="$instdir/bin:$PATH"
+cd src/packages
+
+for at in autoconf-$ac automake-$am libtool-$lt; do
+    tb=$at.tar.gz
+    if ! tar -xzf $tb; then
+	if [ -f $tb ]; then
+	    error "failed to untar $at with \`tar -xzf $tb'" 2
+	else error "please put $tb in src/packages and rerun \`${0##*/}'" 1
+	fi
+    fi
+    cd $at || error "can't cd() to $at" 2
+    ./configure --prefix="$instdir" || error "./configure for $at failed" 2
+    make install || error "make install for $at failed" 2
+    make clean
+    cd ..
+done
+
+cat <<EOF
+GNU Autotools have been locally installed in $instdir. In order to use these
+versions instead of the system ones, you need to prepend $instdir/bin to PATH.
+For Csh-compatible shells, i.e., csh and tcsh, execute:
+  % setenv PATH "$instdir/bin:\$PATH"
+For Bourne-compatible shells, i.e., sh, bash, ksh, zsh, ..., run:
+  $ export PATH="$instdir/bin:\$PATH"
+EOF
