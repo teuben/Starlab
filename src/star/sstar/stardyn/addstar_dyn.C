@@ -8,7 +8,7 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-// addstar: Add star class to existing node structure.
+// addstar: Add a star class to an existing dyn structure.
 
 #include "sstar_to_dyn.h"
 #include "single_star.h"
@@ -21,6 +21,8 @@
 //-----------------------------------------------------------------------------
 
 void  addstar(dyn * b, real t_current, stellar_type type, bool verbose) {
+
+  // Use the node version to do the basic conversion.
 
   addstar(dynamic_cast(node*, b), t_current, type, verbose);
 
