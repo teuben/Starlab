@@ -45,26 +45,26 @@ int check_and_skip_input_line(istream &s, char* reference_string)
 {
 //  char dummy;
     char input_line[MAX_INPUT_LINE_LENGTH];
-    while (! get_line(s,input_line) && !s.eof())
-	{
-//	if(s.eof())
-//	    return 0;
-//	cin >> dummy;           // to get the g++ compiler to the EOF
-// cerr << "  dummy = " << dummy << endl;
-//	if(s.eof())
-//	    return 0;
-//	if (dummy == '\0')
 
+    while (! get_line(s,input_line) && !s.eof()) {
 	int shhh = 1;           // to make the SG compiler shut up
 	if (shhh)               // to make the SG compiler shut up
 	    return 0;
-	}
-    if(!matchbracket(reference_string, input_line)){
-	if(s.eof()){
+    }
+
+#if 0
+    cerr << "line = {" << input_line << "}" << endl;
+    for (int j = 0; j < strlen(input_line); j++)
+	cerr << (int)input_line[j] << endl;
+#endif
+
+    if (!matchbracket(reference_string, input_line)) {
+
+	if (s.eof()) {
 	    return 0;
-	}else{
-	    cerr << "Input line must be '"<<reference_string;
-	    cerr <<"', I got '" << input_line << "'\n";
+	} else {
+	    cerr << "Input line must be '" << reference_string;
+	    cerr << "', I got '" << input_line << "'" << endl;
 	    exit(1);
 	}
     }
@@ -77,22 +77,33 @@ int get_data_line(istream & s,char * input_line)
     return strcmp(input_line,")");
 }
 
-/* Returns 1 if either token matches line, or first two chars of token
- * matches line.  So matchbracket("(Particle", line) matches "(Particle" or "(P".
- */
-int matchbracket(const char *token, const char *line) {
-  while(*line == ' ' || *line == '\t')
-      line++;
-  if(token[0] != line[0] || token[1] != line[1])
-    return 0;
-  return (line[2] == '\0') || (0 == strcmp(token+2, line+2));
+// Returns 1 if either token matches line, or first two chars of token
+// matches line.  So matchbracket("(Particle", line) matches "(Particle"
+// or "(P".
+
+int matchbracket(const char *token, const char *line)
+{
+    // Skip whitespace (actually, now anything <= ' '):
+
+    // while(*line == ' ' || *line == '\t') line++;
+    while(*line <= ' ') line++;
+
+    if(token[0] != line[0] || token[1] != line[1])
+	return 0;
+
+    // Uncomment the next line for a stricter check: accept either "(P"
+    // or "(Particle", but not "(Part".  Maybe too strict (Steve, 8/04).
+
+    // return (line[2] == '\0') || (0 == strcmp(token+2, line+2));
+    return 1;
 }
 
 const char *getequals(const char *input_line, char *keyword)
 {
     const char *cp = input_line;
 
-    /* Grab first token from line, like sscanf %s */
+    // Grab first token from line, like sscanf %s.
+
     while(isspace(*cp)) cp++;
     int i;
     for(i = 0; isalnum(*cp) || *cp == '_'; )
