@@ -2401,9 +2401,12 @@ real double_star::zeta(star * donor,
        ma_dot = accretor->accretion_limit(md_dot, dt);
 #endif
 
-       real md_dot = min(donor->get_envelope_mass(), 
-			 cnsts.safety(minimum_mass_step));
-       //PRC(md_dot);PRC(donor_timescale);PRL(donor->get_relative_mass());
+       // Use total mass here as md_dot is only used to determine zeta
+       real md_dot = min(donor->get_total_mass(), 
+       			 cnsts.safety(minimum_mass_step));
+       //       real md_dot = min(donor->get_envelope_mass(), 
+       //			 cnsts.safety(minimum_mass_step));
+       PRC(md_dot);PRC(donor_timescale);PRL(donor->get_relative_mass());
        real dt = md_dot * donor_timescale/donor->get_relative_mass();
        real ma_dot = accretor->accretion_limit(md_dot, dt);
 
@@ -2432,10 +2435,10 @@ real double_star::zeta(star * donor,
 						      ->get_total_mass(),
 						      semi);
 
-       //PRC(magnetic_braking_aml);PRL(grav_rad_aml);
-       //PRC(dt);PRC(semi);
+       //       PRC(magnetic_braking_aml);PRL(grav_rad_aml);
+       //       PRC(dt);PRC(semi);
        a_dot = 2*dt*semi*(magnetic_braking_aml+grav_rad_aml);
-       //PRC(a_dot);
+       //       PRC(a_dot);
        new_semi += a_dot;
        //PRL(a_dot);
        
@@ -2445,20 +2448,28 @@ real double_star::zeta(star * donor,
 				new_donor_mass,
 				new_accretor_mass);
 
-       //PRC(new_semi);PRC(rl_d);PRL(rl);
+//       PRC(new_semi);PRC(rl_d);PRL(rl);
        real d_lnr = (rl_d - rl)/rl;
        real d_lnm = (new_donor_mass - donor->get_total_mass()) 
 	          /  donor->get_total_mass();
-     
-       real zeta = d_lnr/d_lnm;
+       
+       real zeta;
+       if( d_lnr<=0 || d_lnm<=0) {
+	 cerr << "WARNING: d_lnm (= " << d_lnm << ") has an illegal value"
+	      << endl;
+	 zeta = 0
+       }
+       else {
+	 zeta = d_lnr/d_lnm;
+       }
 
-       //PRC(M_old);PRL(M_new);
-       //PRC(old_donor_mass);PRL(new_donor_mass);
-       //PRC(old_accretor_mass);PRL(new_accretor_mass);
+       //       PRC(M_old);PRL(M_new);
+       //       PRC(old_donor_mass);PRL(new_donor_mass);
+       //       PRC(old_accretor_mass);PRL(new_accretor_mass);
 
-       //PRC(a_dot);PRC(dt);PRC(semi);PRL(new_semi);
-       //PRC(rl);PRC(rl_d);PRC(d_lnr);PRL(d_lnm);
-       //PRL(zeta);
+       //       PRC(a_dot);PRC(dt);PRC(semi);PRL(new_semi);
+       //       PRC(rl);PRC(rl_d);PRC(d_lnr);PRL(d_lnm);
+       //       PRL(zeta);
 
        return zeta;
      }
