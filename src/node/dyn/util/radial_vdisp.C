@@ -195,7 +195,7 @@ main(int argc, char ** argv)
 	    r0 = r1;
 	}
 
-	delete b;
+	rmtree(b);
     }
 }
 

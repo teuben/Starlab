@@ -2060,13 +2060,7 @@ main(int argc, char ** argv)
 
 	find_group_internal_structure(b);
 
-	bi = b->get_oldest_daughter();
-	while (bi) {
-	    dyn * tmp = bi->get_younger_sister();
-	    delete bi;
-	    bi = tmp;
-	}
-        delete b;
+	rmtree(b);
 
         b = get_dyn();
     }

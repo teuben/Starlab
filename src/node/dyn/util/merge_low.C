@@ -111,7 +111,7 @@ main(int argc, char ** argv)
 
         merge_low_level_nodes(b, frac, option);
 	put_dyn(b);
-	delete b;
+	rmtree(b);
     }
 }
 

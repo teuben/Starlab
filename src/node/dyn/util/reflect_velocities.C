@@ -63,7 +63,7 @@ main(int argc, char ** argv)
 
         flip_velocities(b);
 	put_dyn(b);
-	delete b;
+	rmtree(b);
     }
 }
 

@@ -593,8 +593,8 @@ main(int argc, char ** argv)
     char* param_string = "c:tdq";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
-	switch(c)
-	    {
+	switch(c) {
+
 	    case 'c': c_flag = TRUE;
 		      comment = poptarg;
 		      break;
@@ -607,11 +607,10 @@ main(int argc, char ** argv)
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
                       exit(1);
-	    }            
+	}            
 
     dyn *b;
-    while (b = get_dyn())
-	{
+    while (b = get_dyn()) {
 	if (q_flag)
 	    plot_mass_radii_in_percentages(b,4);
         else if (d_flag)
@@ -621,9 +620,9 @@ main(int argc, char ** argv)
 	else
             plot_mass_radii(b);
 
-	delete b;
-	}
+	rmtree(b);
     }
+}
 
 #endif
 

@@ -9,7 +9,7 @@
 //=======================================================//              /|\ ~
 
 //// makewrite:  Turn a text file into a snapshot.  Used in some
-////           demonstrations only.
+////             demonstrations only.
 ////
 //// Options:  -c    add a comment to the output snapshot [false]
 ////           -C    output data in 'col' format [no]

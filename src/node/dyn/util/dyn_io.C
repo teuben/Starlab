@@ -399,7 +399,7 @@ main(int argc, char** argv)
         put_dyn(b);
 	cout << "TESTING pp2()   :" << endl;
 	pp2(b);
-	delete b;
+	rmtree(b);
     }
     cerr << "Normal exit\n";
 }

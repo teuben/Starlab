@@ -264,20 +264,11 @@ main(int argc, char ** argv)
     if (n_flag == FALSE)
         nlines = BIG_NUMBER;               // default
 
-    while (b = get_dyn())
-	{
+    while (b = get_dyn()) {
 	if (c_flag) cout << "\33[H";
         starplot(b, k, lmax, nlines);
-
-	dyn* bi = b->get_oldest_daughter();
-	while (bi)
-	    {
-	    dyn * tmp = bi->get_younger_sister();
-	    delete bi;
-	    bi = tmp;
-	    }
-	delete b;
-	}
+	rmtree(b);
+    }
 }
 
 #endif

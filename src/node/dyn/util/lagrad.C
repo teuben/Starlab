@@ -271,7 +271,7 @@ main(int argc, char ** argv)
 	}
 
 	put_dyn(b);
-	delete b;
+	rmtree(b);
     }
 }
 
