@@ -117,7 +117,7 @@ setenv	STARLAB_HDYN	hdyn 		# Hermite programs
 
 # For Linux:
 
-setenv	STARLAB_OS_FLAG			"linux"
+setenv	STARLAB_OS_FLAG			"@STARLAB_OS_FLAG@"
 
 setenv	STARLAB_CCC			"@CXX@ -DGNU_CPLUSPLUS"
 setenv	STARLAB_C_COMPILE		"@CC@"
