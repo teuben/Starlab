@@ -2444,12 +2444,9 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 #ifdef T_DEBUG
 	if (IN_DEBUG_RANGE(ttmp)) {
-	    cerr << "DEBUG: evolve_system " << 4 << endl << flush;
-	}
-#endif
 
-#ifdef T_DEBUG
-	if (IN_DEBUG_RANGE(ttmp)) {
+	    cerr << "DEBUG: evolve_system " << 4 << endl << flush;
+
 	    cerr << "entering integrate_list: "; PRC(t); PRC(n_next);
 	    cerr << next_nodes[0]->format_label();
 	    if (n_next > 1) cerr << " " << next_nodes[1]->format_label();
@@ -2464,51 +2461,10 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	}
 #endif
 
+//----------------------------------------------------------------------
 
-#if 0
-	if (t > 85.30960501 && t < 85.30960504) {
-	    for (int ii = 0; ii < n_next; ii++) {
-		hdyn *bb = next_nodes[ii];
-		if (bb && node_contains(bb->get_top_level_node(), "829")) {
-		    cerr << endl << "PRE..." << endl;
-		    pp3(bb->get_top_level_node());
-		    break;
-		}
-	    }
-	}
-#endif
+#include "kira_pre_step_debug.C"	// for temporary debugging
 
-#if 0
-	if (t >= 44.1875 && t <= 44.21875) {
-
-	  int nstep = 100;
-	  if (   (t >= 44.1903765  && t <= 44.1903767)
-	      || (t >= 44.19358027 && t <= 44.1935804)
-	      || (t >= 44.19804955 && t <= 44.19805098)) nstep = 1;
-
-	    int p = cerr.precision(INT_PRECISION);
-	    cerr << endl; PRL(t);
-	    cerr.precision(p);
-
-	    if (fmod(steps, nstep) == 0) {
-	        cerr << "nodes (pre): ";
-		for (int ii = 0; ii < n_next; ii++) {
-		    if (next_nodes[ii] && next_nodes[ii]->is_valid())
-		      cerr << next_nodes[ii]->format_label() << " ";
-		}
-		cerr << endl; 	    
-		print_recalculated_energies(b);
-	    }
-
-	    for (int ii = 0; ii < n_next; ii++) {
-		if (next_nodes[ii] && next_nodes[ii]->is_valid()
-		    && next_nodes[ii]->is_top_level_node()
-		    && next_nodes[ii]->n_leaves() > 2)
-		    pp3(next_nodes[ii]);
-	    }
-
-	}
-#endif
 
 	// Take the block step.
 
@@ -2516,40 +2472,6 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	int ds = integrate_list(b, next_nodes, n_next, exact,
 				tree_changed, n_list_top_level,
 				full_dump, r_reflect);
-
-
-#if 0
-	if (t >= 44.1875 && t <= 44.21875) {
-
-	  int nstep = 100;
-	  if (   (t >= 44.1903765  && t <= 44.1903767)
-	      || (t >= 44.19358027 && t <= 44.1935804)
-	      || (t >= 44.19804955 && t <= 44.19805098)) nstep = 1;
-
-	    int p = cerr.precision(INT_PRECISION);
-	    cerr << endl; PRL(t);
-	    cerr.precision(p);
-
-	    if (fmod(steps, nstep) == 0) {
-	        cerr << "nodes (post): ";
-		for (int ii = 0; ii < n_next; ii++) {
-		    if (next_nodes[ii] && next_nodes[ii]->is_valid())
-		      cerr << next_nodes[ii]->format_label() << " ";
-		}
-		cerr << endl; 	    
-		print_recalculated_energies(b);
-	    }
-
-	    for (int ii = 0; ii < n_next; ii++) {
-		if (next_nodes[ii] && next_nodes[ii]->is_valid()
-		    && next_nodes[ii]->is_top_level_node()
-		    && next_nodes[ii]->n_leaves() > 2)
-		    pp3(next_nodes[ii]);
-	    }
-
-	}
-	if (t > 44.1935804) exit(0);
-#endif
 
 	if (n_list_top_level > 0) {
 
@@ -2560,50 +2482,10 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    steps_top_level += n_list_top_level;
 	}
 
-//     for (int ii = 0; ii < n_next; ii++) {
-// 	if (!next_nodes[ii] || !next_nodes[ii]->is_valid()) {
-// 	    cerr << "next_node[" << ii << "] = " << next_nodes[ii]
-// 		 << " is now invalid" << endl << flush;
-// 	}
-//     }
 
-#if 0
-//  	if (b->get_system_time() >= 1.46875
-//  	    && b->get_system_time() <= 1.5) {
-	    int countii = 0;
-  	    for (int ii = 0; ii < n_next; ii++) {
-  		if (next_nodes[ii] && next_nodes[ii]->is_valid()
-  		    && node_contains(next_nodes[ii]->get_top_level_node(),
-				     "100393")) {
-		    if (countii++ == 0) {
-			int p = cerr.precision(HIGH_PRECISION);
-			cerr << endl << "After step to time "
-			     << b->get_system_time() << endl;
-			cerr.precision(p);
-		    }
-		    PRL(next_nodes[ii]->format_label());
-  		    pp3(next_nodes[ii]->get_top_level_node());
-		}
-  	    }
-//  	}
-#endif
+#include "kira_post_step_debug.C"	// for temporary debugging
 
-
-#if 0
-	if (t > 85.30960501 && t < 85.30960504) {
-	    for (int ii = 0; ii < n_next; ii++) {
-		hdyn *bb = next_nodes[ii];
-		if (bb && bb->is_valid()
-		    && node_contains(bb->get_top_level_node(), "829")) {
-		    cerr << endl << "POST..." << endl;
-		    pp3(bb->get_top_level_node());
-		    break;
-		}
-	    }
-	}
-#endif
-
-
+//----------------------------------------------------------------------
 
 #if 1
 
@@ -2646,9 +2528,6 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 #endif
 
-
-
-
 #ifdef CPU_COUNTERS
 	cpu_prev = cpu;
 	kc->cpu_time_integrate += (cpu = cpu_time()) - cpu_prev;
@@ -2662,52 +2541,6 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    pp3("(21,100021)");
 	    pp3("(23,100023)");
 	}
-#endif
-
-#if 0
-	cerr << endl << "check_sync #2 at t = "
-	     << b->get_system_time() << " (";
-	xprint(b->get_system_time(), cerr, false);
-	cerr << ")" << endl;
-	int n_unp = 0;
-	for (int ii = 0; ii < n_next; ii++) {
-	    if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
-		hdyn *bb = next_nodes[ii];
-		if (bb->get_kepler()) n_unp++;
-	    }
-	}
-	PRC(n_next); PRL(n_unp);
-	for (int ii = 0; ii < min(2,n_next); ii++) {
-	    if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
-		hdyn *bb = next_nodes[ii];
-		if (ii > 0) cerr << "  ";
-		cerr << bb->format_label() << " "
-		     << bb->get_timestep() << " ";
-		xprint(bb->get_time(), cerr, false);
-	    }
-	}
-	cerr << endl;
-	    
-	for (int ii = 0; ii < n_next; ii++) {
-	    if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
-		hdyn *bb = next_nodes[ii];
-
-		if (bb->get_time() != b->get_system_time()
-		    && bb->get_kepler() == NULL) {
-		    cerr << "check_sync warning:  node "
-			 << bb->format_label() << " not synchronized" << endl
-			 << "                     system time = "
-			 << b->get_system_time() << " (";
-		    xprint(b->get_system_time(), cerr, false);
-		    cerr << ")" << endl;
-		    cerr << "                     node time   = "
-			 << bb->get_time() << " (";
-		    xprint(bb->get_time(), cerr, false);
-		    cerr << ")" << endl;
-		}
-	    }
-	}
-	cerr << "...done" << endl;
 #endif
 
 	bool force_energy_check = false;
@@ -2854,19 +2687,6 @@ local void evolve_system(hdyn * b,	       // hdyn array
 			     << "):  invalid" << endl;
 	}
 #endif
-
-
-//  	for (int i = 0; i < n_next; i++)
-//  	  if (next_nodes[i] && next_nodes[i]->is_valid()
-//  	      && next_nodes[i]->name_is("(1752,101752)")) {
-//  	    plot_stars(next_nodes[i]->get_top_level_node());
-//  	    pp3(next_nodes[i], cerr, -1);
-//  	  }
-
-
-	//-------------------------------------------------------------------
-	// (Removed numerous debugging examples to kira_debug.C -- Steve 8/98)
-	//-------------------------------------------------------------------
 
 
 	// check_slow_consistency(b);
@@ -3214,4 +3034,3 @@ main(int argc, char **argv) {
 }
 
 //#endif
-
