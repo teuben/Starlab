@@ -28,7 +28,7 @@ echo \(Sending output to install.log\)
 
 if (! -e starlab_start) then
     echo Running configure
-    configure >>& install.log
+    ./configure >>& install.log
     if ($status) then
 	@ stat++
     endif
