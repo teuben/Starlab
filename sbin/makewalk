@@ -1,31 +1,30 @@
-#!/bin/tcsh -f
-# (tcsh necessary with Redhat Linux, v. 4.x...)
+#!/bin/sh
 #
 # makewalk:  Descend into specified directories to perform the
 #	     requested make.
 #
-set full_name = $0
-set name = $full_name:t
+name=`basename $0`
 #
-foreach dirname ($argv[2*])
-    if (-d $dirname) then
-	set olddir = $cwd
-	cd $dirname
-
-	set flag = " "
-	if ($?STARLAB_MAKEFLAGS) then
-	    set flag = "$STARLAB_MAKEFLAGS"
-	endif
-	if (X$name != Xmakewalk.quiet) then
-	    echo '==>' descending to $cwd,
-	    echo '      'to execute' ' \"make $flag $1\"
-	endif
-	make $flag $1
-	cd $olddir
+pwd=`pwd`
+target="$1"
+shift
+for dirname in "$@"; do
+    if [ -d $pwd/$dirname ]; then
+	cd $pwd/$dirname
+	case "$0" in
+	  *makewalk.quiet) ;;
+	  *)
+	    echo "==> descending to $pwd/$dirname,"
+	    echo "      to execute  \"${MAKE:-make} $STARLAB_MAKEFLAGS $target\""
+	    ;;
+	esac
+	${MAKE:-make} $STARLAB_MAKEFLAGS $target
+	cd $pwd
     else
+	:
 #
 #	Silently ignore missing directories.
 #
-#	echo '==>' No directory $dirname
-    endif
-end
+#	echo '==>' No directory $pwd/$dirname
+    fi
+done

@@ -1,4 +1,4 @@
-#!/usr/local/bin/tcsh -f
+#!/bin/sh
 
 # Script to cause a remote system to retrieve the latest tar file
 # from the incoming ftp directory.  Useful to update systems after
@@ -6,15 +6,15 @@
 # Komaba, because of the different FTP structure there.  At present,
 # there is no "get_tar" script for IAS.
 
-set site = $1
-set cmd = get_tar
+site="$1"
+cmd=get_tar
 
-if (X$1 == Xkomaba || X$1 == Xtokyo) then
-    set site = kyohou.c.u-tokyo.ac.jp
-endif
+case "$1" in
+  komaba|tokyo) site=kyohou.c.u-tokyo.ac.jp ;;
+esac
 
-if ($site == kyohou.c.u-tokyo.ac.jp) then
-    set cmd = komaba_get_tar
-endif
+case "$site" in
+  kyohou.c.u-tokyo.ac.jp) cmd=komaba_get_tar ;;
+esac
 
 ssh -l starlab $site "setenv STARLAB_PATH ~starlab/$STARLAB_VERSION ; source $STARLAB_VERSION/local/starlab_setup ; cd $STARLAB_VERSION ; sbin/$cmd"

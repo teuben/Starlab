@@ -1,21 +1,19 @@
-#!/usr/local/bin/tcsh -f
+#!/bin/sh
 
-if ($#argv < 1) exit
+if [ $# = 0 ]; then
+  exit 1
+fi
 
-set tmp = $1
-set ext = $tmp:e
-
-alias CAT cat
-if (X$ext == XZ) then
-    alias CAT 'uncompress -c'
-else if (X$ext == Xgz) then
-    alias CAT 'gunzip -c'
-endif
+case "$1" in
+  *gz) CAT="gunzip -c" ;;
+  *Z)  CAT="uncompress -c" ;;
+  *)   CAT="cat" ;;
+esac
 
 # "grep -A" version is quicker, but option doesn't exist in every UNIX.
 
 #CAT $* | grep -A 1 'selected percentiles' \
-CAT $* \
+$CAT "$@" \
     | awk -f $STARLAB_PATH/sbin/lagr.awk \
     | plot_data -q -x 'log #' -y 'Lagrangian radii' -c 1 2 3 4 5 6 7 8 9 10 \
     		-C red red red red green blue \

@@ -1,5 +1,4 @@
-#!/bin/tcsh -f
-# (tcsh necessary with Redhat Linux, v. 4.x...)
+#!/bin/sh
 #
 # Starlab make helper.
 #
@@ -19,32 +18,34 @@
 # $PWD doesn't seem to do the right thing under csh and Dec UNIX
 # at Komaba.  Using tcsh instead...  Alternatively, $cwd seems OK.
 
-if ($#argv < 3) then
-    exit
-endif
+if [ $# -lt 3 ]; then
+    echo "Usage: $0 srcfilestem  outfile.o  compileroption  compiler CCargs..." >&2
+    exit 1
+fi
 
-set real_src = $1.C
+srcstem="$1"
+outfile="$2"
+huh="$3"
+shift; shift; shift
 
-set temp = (`wc $real_src`)
-if ($temp[1] == 0) then
-    /bin/rm $real_src
-else
-    set src = ...$real_src
+real_src="$srcstem.C"
+if [ -f "$real_src" -a -s "$real_src" ]; then   # if nonempty, compile it!
+    src=...$real_src
     /bin/cp $real_src $src
+    date=`date +%a_%b_%d_%Y,_%T_%Z`
 
-    set date = `date +%a_%b_%d_%Y,_%T_%Z`
-    alias comp $argv[4*]
-
-    echo $argv[4*] $src \($real_src\) -o $2 $3 -D_SRC_=\"$PWD/$real_src\" \
-					       -D_COMPILE_DATE_=\"$date\"
-    comp           $src               -o $2 $3 -D_SRC_=\"$PWD/$real_src\" \
+    echo "$* $src ($real_src) -o $outfile $huh -D_SRC_=\"$PWD/$real_src\" \
+					       -D_COMPILE_DATE_=\"$date\""
+    "$@"           $src   -o "$outfile" $huh -D_SRC_=\"$PWD/$real_src\" \
 					       -D_COMPILE_DATE_=\"$date\"
 
 #   (Doesn't seem to be easy to combine these repeated arguments
 #    into a single string...)
 
-    if ($status == 0) then
-	touch $1
-    endif
+    if [ $? = 0 ]; then
+	touch $srcstem
+    fi
     /bin/rm $src
-endif
+else
+    /bin/rm -f "$real_src"
+fi

@@ -1,18 +1,18 @@
-#!/usr/local/bin/tcsh -f
+#!/bin/sh
 
 # Make all libraries and selected (mainly) dyn exectables, for faster
 # Starlab construction.  Write output to a file (make.log) and suppress
 # some annoying extraneous messages.
 
-set log = $STARLAB_PATH/make.log
+log=$STARLAB_PATH/make.log
 
 echo Writing output to $log
 
 echo Building all libraries...
 
 cd $STARLAB_PATH
-(cd sbin; make all; cd ..)		>&! $log
-make $argv[*] libs |& grep -v 'make\['	>>& $log
+(cd sbin; make all; cd ..)		>  $log  2>&1
+make "$@" libs 2>&1 | grep -v 'make\['	>> $log  2>&1
 
 # Build specific executables:
 
@@ -51,35 +51,35 @@ echo -n "   " `pwd`...
 # Do not rebuild if the libs are not up to date -- presumably this
 # means that 'make lib' failed previously.
 
-set rebuild = 1
-foreach obj (`make list_obj`)
-    set src = {$obj:r}.C
-    if (`latest_time $obj` < `latest_time $src`) then
-	set rebuild = 0
-	break
-    endif
-end
-
-if ($rebuild == 0) then
+TMPF=/tmp/$$.make
+trap "/bin/rm -f $TMPF" 0 1 2 15
+rebuild=1
+make list_obj | awk '
+  /\.o$/ {
+    s = substr($0,0,length($0)-2);
+    print "check: " $0;
+    print $0 ": " s ".C";
+    print "\t/bin/false";
+  }' >$TMPF
+if make -f $TMPF check >/dev/null 2>&1; then
     echo "(not rebuilt)"
 else
-    set last_obj = `latest_time *.o $STARLAB_PATH/lib/*.a`
-    set exe = "`make list_exe`"
-    set first_exe = `earliest_time $exe`
-    set last_src = `latest_time kira.C`
+    last_obj=`latest_time *.o $STARLAB_PATH/lib/*.a`
+    exe="`make list_exe`"
+    first_exe=`earliest_time $exe`
+    last_src=`latest_time kira.C`
 
-    if ($last_src > $first_exe || $last_obj > $first_exe) then
-
+    if [ $last_src -gt $first_exe -o $last_obj -gt $first_exe ]; then
         rm -f $exe
-        make bin |& grep -v 'make\[' >>& $log
+        make bin 2>&1 | grep -v 'make\[' >> $log
 
-	if (`earliest_time $exe` < $last_src) then
+	if [ `earliest_time $exe` -lt $last_src ]; then
 	    echo "(failed)"
 	else
 	    echo "(built)"
-	endif
+	fi
     else
         echo "(up to date)"
-    endif
-endif
+    fi
+fi
 #-----------------------------------------------------------------------

@@ -1,7 +1,7 @@
-#!/usr/local/bin/tcsh
+#!/bin/sh
 
 # FTP directories at komaba are not universally available.  Must
 # run get_tar on alexandria -- Steve (12/98).
 
 echo Executing get_tar on alexandria...
-rsh alexandria "cd $STARLAB_PATH ; ./sbin/get_tar $argv[*]"
+rsh alexandria -n "cd $STARLAB_PATH ; ./sbin/get_tar $*"

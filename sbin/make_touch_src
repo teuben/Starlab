@@ -1,14 +1,22 @@
-#!/bin/tcsh -f
-# (tcsh necessary with Redhat Linux, v. 4.x...)
+#!/bin/sh
 #
 # Starlab make helper.
 #
 # Given a list of object files, create zero-length source files (type
 # extension given by the first argument) if none exists.
 #
-if ($#argv < 2) exit
+if [ $# -lt 1 ]; then
+  echo "Usage: $0 .suffix  file.o ...
+Given a list of object files, create zero-length source files
+(type extension given by first argument) if none exists." >&2
+  exit 1
+fi
 #
-foreach file ($argv[2*])
-    set temp = $file:r
-    if (! -e $temp$1) touch $temp$1
-end
+suf="$1"
+shift
+for file in "$@"; do
+    src=`expr match "$file" '\(.*\)\.o$'`$suf
+    if [ ! -f "$src" ]; then
+	touch "$src"
+    fi
+done

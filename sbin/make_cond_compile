@@ -1,4 +1,4 @@
-#!/bin/tcsh -f
+#!/bin/sh
 # (tcsh necessary with Redhat Linux, v. 4.x...)
 #
 # Starlab make helper.
@@ -9,21 +9,18 @@
 # NOTE: It might be best to make this a Bourne-shell script, for
 #       the sake of efficiency.
 #
-if ($#argv < 2) exit
+if [ $# -lt 2 ]; then
+    echo "Usage: $0  srcfile.C  compiler opts ..." >&2
+    exit 1
+fi
 #
-set src = $1
+src="$1"
+shift
 #
-set temp = (`wc $src`)
-if ($temp[1] == 0) then
-    touch $1
+if [ -f "$src" -a ! -s "$src" ]; then
+    touch "$src"
 else
-    set date = `date +%a_%b_%d_%Y,_%T_%Z`
-    alias comp $argv[2*]
-
-    echo $argv[2*] -c $1 -D_COMPILE_DATE_=\"$date\"
-    comp           -c $1 -D_COMPILE_DATE_=\"$date\"
-
-#   (Doesn't seem to be easy to combine these repeated arguments
-#    into a single string...)
-
-endif	
+    date=`date +%a_%b_%d_%Y,_%T_%Z`
+    echo "$* -c $src -D_COMPILE_DATE_=\"$date\""
+    "$@"  -c $src -D_COMPILE_DATE_=\"$date\"
+fi

@@ -1,5 +1,4 @@
-#!/bin/tcsh -f
-# (tcsh necessary with Redhat Linux, v. 4.x...)
+#!/bin/sh
 #
 # Starlab make helper.
 #
@@ -11,26 +10,32 @@
 #
 # Input is a list of object files.
 #
-if ($#argv < 3) exit
-if (X$2 == X) then
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 dirname libname  file.o ..." >&2
+    exit 1
+fi
+
+dir="$1"
+libname="$2"
+shift; shift
+
+if [ -z "$libname" ]; then
 #
 #   If the library is null, we still have to check for and remove
 #   zero-length files...
 #
-    foreach file ($argv[3*])
-	set temp = $file:r
-	set src = $temp.C
-	set temp = (`wc $src`)
-	if ($temp[1] == 0) then
-		/bin/rm -f $src
-	endif	
-    end
+    for f in "$@"; do
+	fC=`expr match "$f" '\(.*\)\.[a-zA-Z]*$' \| match "$f" '\(.*\)' `.C
+	if [ -f "$fc" -a ! -s "$fc" ]; then
+	    /bin/rm -f $fc
+	fi
+    done
     exit
-endif
+fi
 #
-set lib = $1/$2
+lib=$dir/$libname
 #
-if (-e $lib) then
+if [ -f "$lib" ]; then
 #
 #   Make a copy of the archive to check later if any change has
 #   actually been made to it.
@@ -39,34 +44,25 @@ if (-e $lib) then
     /bin/cp $lib.save $lib
 else
     touch $lib.save
-endif
+fi
 #
-set list = ( )
-foreach file ($argv[3*])
-    set temp = $file:r
-    set src = $temp.C
-    set obj = $temp.o # = $file (supposedly...)
-    set temp = (`wc $src`)
-    if ($temp[1] == 0) then
-	/bin/rm -f $src
-	/bin/rm -f $obj
+list=""
+for f in "$@"; do
+    fstem=`expr match "$f" '\(.*\)\.[a-zA-Z]*$' \| match "$f" '\(.*\)' `
+    if [ -f $fstem.C -a ! -s $fstem.C ]; then	# 0-length .C file
+	/bin/rm -f $fstem.C $fstem.o
     else
-	set list = ($list $obj)
-    endif	
-end
-if ($#list > 0) ar ruv $lib $list
+	list="$list $fstem.o"
+    fi
+done
+if [ -n "$list" ]; then
+    ar ruv $lib $list
+fi
 #
 # Check for changes.  Note that ar will change the date of the library even
 # if nothing is actually done.  This causes great confusion with make...
 #
-if (-e $lib && -e $lib.save) then
-    diff -bwi $lib $lib.save >&! /dev/null
-    set temp = $status
-else
-    set temp = 1
-endif
-#
-if ($temp == 0) then
+if [ -f $lib -a -f $lib.save ] && cmp $lib $lib.save >/dev/null 2>&1; then
 #
 #   No difference--move back the original, and leave .lib unchanged.
 #
@@ -75,8 +71,7 @@ else
 #
 #   Real change--run ranlib, if necessary.
 #
-    alias rantmp $STARLAB_RANLIB
-    rantmp $lib
+    $STARLAB_RANLIB $lib
     /bin/rm $lib.save
 #
 #   Update the local placeholder.
@@ -85,25 +80,21 @@ else
 #
 #   Update all dependent dynamical libraries...
 #
-    cd $1
-    set lib_list = ( )
+    cd $dir
+    lib_list=""
 #
-    if ($2 == libstd.a) then
-	set lib_list = (libnode.a libdyn.a libhdyn.a libsdyn.a \
-		     	libsdyn3.a libstar.a libhydro.a)
-    else if ($2 == libnode.a) then
-	set lib_list = (libdyn.a libhdyn.a libsdyn.a \
-			libsdyn3.a libstar.a libhydro.a)
-    else if ($2 == libdyn.a) then
-	set lib_list = (libhdyn.a libsdyn.a libsdyn3.a)
-    else if ($2 == libhdyn.a) then
-	set lib_list = (libsdyn.a libsdyn3.a)
-    endif
+    DYNDEP="libhdyn.a libsdyn.a libsdyn3.a"
+    case "$libname" in
+      libstd.a)  lib_list="libnode.a libdyn.a $DYNDEP libstar.a libhydro.a" ;;
+      libnode.a) lib_list="libdyn.a $DYNDEP libstar.a libhydro.a" ;;
+      libdyn.a)  lib_list="$DYNDEP" ;;
+      libhdyn.a) lib_list="libsdyn.a libsdyn3.a" ;;
+    esac
 #
-    foreach lib ($lib_list)
-	if (-e $lib) then
+    for lib in $lib_list; do
+	if [ -f $lib ]; then
 	   touch $lib
-	   rantmp $lib
-	endif
-    end
-endif
+	   $STARLAB_RANLIB $lib
+	fi
+    done
+fi

@@ -1,54 +1,31 @@
-# csh -f
+#! /bin/sh
 # DON'T change the "csh" above!
 
 # Set the shell in a specific set of files to /bin/tcsh or $1.
 
-set shell = "/bin/tcsh"
-if ($#argv > 0) then
-    if (-e $1) then
-	set shell = $1
-    endif
-endif
+shell=${1:-"/bin/tcsh"}
 
-foreach file (makewalk \
+for file in makewalk \
 	      makewalk.quiet \
 	      make_ar_cleanup \
 	      make_cond_build \
 	      make_cond_compile \
 	      make_list_files \
-	      make_touch_src)
-
-    set tmp = (`head -1 $file | grep $shell`)
-    if ($#tmp == 0) then
-
-	set save_dir = .save
-	if (! -d $save_dir) then
+	      make_touch_src
+do
+    if head -1 $file | grep $shell >/dev/null; then
+	:  ;# already there
+    else
+	save_dir=.save
+	if [ ! -d $save_dir ]; then
 	    echo Creating save directory $save_dir
 	    mkdir $save_dir
-	endif
+	fi
 
 	echo Modifying file $file
 
-	mv $file $save_dir
-
-	set tmp = (`tail --version | grep GNU`)
-	if ($#tmp > 0) then
-
-#	    GNU is easy...
-
-	    echo "#$shell -f"					>! $file
-	    tail +2 $save_dir/$file				>> $file
-	else
-
-#	    We have to do some work...
-
-	    set tmp = "`head -1 $save_dir/$file`"
-	    echo "#$shell -f"					>! $file
-	    grep -v "$tmp" $save_dir/$file			>> $file
-
-	endif
-
+	mv -f $file $save_dir
+	(echo "#!$shell -f"; tail +2 $save_dir/$file) > $file
 	chmod a+x $file
-
-    endif
-end
+    fi
+done
