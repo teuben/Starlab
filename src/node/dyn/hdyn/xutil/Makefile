@@ -34,7 +34,7 @@ LIBFLAGS	= -L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
 		  -lstd -llux $(STARLAB_POSIX_LIB) \
 		  $(STARLAB_X11LIB) $(STARLAB_XLIB) $(PNG_LIB_OPTION) -lm
 
-EXECUTABLES = xstarplot snap_to_image write_png
+EXECUTABLES = snap_to_image write_png xstarplot
 OBJECT_FILES = write_png.o
 
 LIBRARY = libhdyn.a
