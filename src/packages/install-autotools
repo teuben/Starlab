@@ -53,8 +53,11 @@ foreach dir ($autoconf $automake $libtool)
 	set tool = $tmp[1]
 	set version = $tmp[2]
 
+	echo version of $tool tarball is $version
+
 #	See if a more up-to-date version of the tool already exists.
 
+	set v = unknown
 	set tmp = `which $tool | grep not\ found`
 	if ($#tmp == 0) then
 
@@ -84,6 +87,7 @@ foreach dir ($autoconf $automake $libtool)
 
 	    endif
 	endif
+	echo installed version of $tool is $v\; build = $build
     endif
 
     if ($build == 0) then

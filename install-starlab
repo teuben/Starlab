@@ -7,12 +7,20 @@
 # The extra layers are necessary to ensure that the correct autotools
 # are always available when needed.
 
-# Require that STARLAB_PATH be defined.
+# We will by default install with the current directory as STARLAB_PATH.
+# If STARLAB_PATH is set on entry and is not PWD, warn the user and 
+# redefine STARLAB_PATH to PWD for installation purposes.
 
 if ($?STARLAB_PATH == 0) then
+    echo Setting STARLAB_PATH = $PWD
     setenv STARLAB_PATH $PWD
+else if ("x$STARLAB_PATH" != "x$PWD") then
+    echo Warning: STARLAB_PATH on entry \($STARLAB_PATH\) is not PWD
+    echo Resetting STARLAB_PATH to $PWD
+    setenv STARLAB_PATH $PWD
+else
+    echo Using environment STARLAB_PATH = $STARLAB_PATH
 endif
-echo STARLAB_PATH = $STARLAB_PATH
 
 set install_dir = $STARLAB_PATH/usr	# this is now the configure default
 if ($#argv > 0) set install_dir = $1
