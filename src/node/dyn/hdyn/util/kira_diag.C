@@ -62,6 +62,10 @@ kira_diag::kira_diag() {		    // (Steve's 6/00
     report_adjust_perturbed_list		= false;
 
     report_correct_perturber_list		= false;
+
+    report_close_encounters			= 0;
+
+    report_kepler_trig_error			= false;
 }
 
 bool kira_diag::check_diag(hdyn *b)

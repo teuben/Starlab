@@ -186,7 +186,8 @@ void print_close_encounter(hdyn* bi,
 
 	        // Always print unbound encounter elements.
 
-		print_encounter_elements(bi, bj, "Close encounter");
+		if (bi->get_kira_diag()->report_close_encounters >= 1)
+		    print_encounter_elements(bi, bj, "Close encounter");
 
 	    }
 	    else {
@@ -203,7 +204,8 @@ void print_close_encounter(hdyn* bi,
 
 		pcc_cntr++;
 
-		if (pcc_cntr == 1) 
+		if (pcc_cntr == 1
+		    && bi->get_kira_diag()->report_close_encounters >= 2)
 		    print_encounter_elements(bi, bj, "First bound encounter");
 	    }
 
@@ -219,8 +221,9 @@ void print_close_encounter(hdyn* bi,
     }
     else if (getsq(bi->get_log_story(), "pcc_name"))
 
-	if (cc_name == NULL
-	    || strcmp(cc_name, getsq(bi->get_log_story(), "pcc_name"))) {
+	if ((cc_name == NULL
+	    || strcmp(cc_name, getsq(bi->get_log_story(), "pcc_name")))
+	    && bi->get_kira_diag()->report_close_encounters > 0) {
 
 	    // Unlikely multiple encounter(?).  Has been known to occur
 	    // when one incoming star overtakes another.

@@ -78,6 +78,7 @@ local real cos_to_sin(real c) // Special treatment near |cos| = 1
 // Simple mechanism for handling trigonometric errors in the Kepler package:
 
 static int kepler_tolerance_level = 0;
+static bool print_trig_warning = false;
 
 // Options:
 
@@ -90,6 +91,11 @@ void set_kepler_tolerance(int i)
     if (i < 0) i = 0;
     if (i > 2) i = 2;
     kepler_tolerance_level = i;
+}
+
+void set_kepler_print_trig_warning(bool p)
+{
+    print_trig_warning = p;
 }
 
 int kepler_tolerance()
@@ -126,9 +132,11 @@ local int check_trig_limit(kepler* k, real &c, char *s)
 		c = -1;
 	    }
 	} else {
-	    int p = cerr.precision(HIGH_PRECISION);
-	    cerr << "warning: " << s << ": c = " << c << endl;
-	    cerr.precision(p);
+	    if (print_trig_warning) {
+		int p = cerr.precision(HIGH_PRECISION);
+		cerr << "warning: " << s << ": c = " << c << endl;
+		cerr.precision(p);
+	    }
 	    c = max(-1.0, min(1.0, c));
 	}
 
@@ -992,7 +1000,8 @@ void  kepler::initialize_from_pos_and_vel(bool minimal, bool verbose)
 	    // Fix by introducing circular_binary_limit, which specifies
 	    // the maximum eccentricity that should be forced to 0 here.
 
-	    if (verbose)
+	    if (verbose && (print_trig_warning
+			    || eccentricity > 0.1*circular_binary_limit))
 		cerr << "kepler: binary with ecc = " << eccentricity
 		     << " forced to be circular" << endl
 		     << "        in kepler::initialize_from_pos_and_vel"

@@ -402,7 +402,8 @@ local void delete_double(hdyn *b,		    // b is binary CM
 	    real dm_fast = sudden_mass_loss(b); 
 	    update_kepler_from_binary_evolution(b, dm_fast);
 	    update_dynamics[1] = true;
-	    PRL(update_dynamics[1]);
+	    if (REPORT_DEL_DOUBLE) 
+		PRL(update_dynamics[1]);
 	}
 
 	// Could keep the story, possibly to be added to the root or

@@ -235,6 +235,12 @@ local node * get_node_recursive(istream& s,
 
     node * elder_sister = (node *)42;	// to make some compilers happy
 
+    // Would be highly desirable to have the code ignore unexpected data
+    // when seeking e.g. a START_PARTICLE line.  Currently, the input is
+    // very intolerant of even extra whitespace in the input stream.
+    //
+    // However, the logic below makes this a little tricky... (Steve, 6/01)
+
     while (!matchbracket(END_PARTICLE, line)) {
 	if (matchbracket(START_DYNAMICS, line)) {
 	    b->scan_dyn_story(s);			// virtual
@@ -273,9 +279,9 @@ local node * get_node_recursive(istream& s,
 		sscanf(val,"%s",cptr);
 	        b->set_label(cptr);
 	    } else if (!strcmp("N",keyword)) {   // N is not read in here;
-		;                                // instead N will be computed
-	    }                                    // anew at output time.
-	    else{
+		;                                // instead N is recomputed
+	    }                                    // at output time.
+	    else {
 		cerr << line <<" unexpected\n";
 	        exit(1);
 	    }

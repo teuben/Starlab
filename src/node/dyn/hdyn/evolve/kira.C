@@ -2053,7 +2053,11 @@ main(int argc, char **argv)
 
     // b->to_com();	// don't modify input data -- use tool to do this
 
+    // Control behavior of the kepler package.
+
     set_kepler_tolerance(2);
+    set_kepler_print_trig_warning(b->get_kira_diag()
+				   ->report_kepler_trig_error);
 
     evolve_system(b, delta_t, dt_log, long_binary_out,
 		  dt_snap, dt_sstar, dt_esc, dt_reinit,
