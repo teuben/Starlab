@@ -1,0 +1,251 @@
+#! /bin/csh -f
+#
+#  dec 2003  :  modeled after NEMO's mknemo script
+#
+#  BIG BUG: 'mknemo mkplummer.c' would remove the sourcecode and put it into $NEMOBIN !!!!!
+#
+set version="MKSTARLAB Version 1.0  16-dec-03"
+if ($#argv == 0) goto usage
+
+onintr error
+
+set newbins=0
+set errs=0
+set logfile=$STARLAB/tmp/mkstarlab.log
+if (! -w $logfile) then
+  echo "MKSTARLAB> Warning: you have no write permission on $logfile; using /dev/null instead"
+  set logfile=/dev/null
+endif
+
+set lockfile=$STARLAB/tmp/mkstarlab.lock
+if ("$argv[1]" == "-r") then
+  rm -f $lockfile >& /dev/null
+  echo "MKSTARLAB> $lockfile removed beforehand"
+endif
+if (-e $lockfile) then
+  echo "MKSTARLAB> Lockfile $lockfile exists; cannot run mkstarlab:"
+  cat $lockfile
+  exit 0
+else
+  set bywhom=`whoami`@`hostname`
+  echo "`date` | $bywhom | $*" > $lockfile
+endif
+
+#if ($?CFLAGS == 0) setenv CFLAGS "-g"
+
+# set defaults which can be modified by command line options
+
+set src=$STARLAB/src
+set n=0
+set d=0
+set code=""
+set tidy=""
+set u=0
+set l=0
+set go=0
+
+# process command line options
+loop:
+ switch ($argv[1])
+  case -c:
+    shift argv
+    if ($#argv == 0) goto noargs
+    set code=$argv[1]
+    shift argv
+    breaksw
+  case -d:
+    shift argv
+    if ($#argv == 0) goto noargs
+    set d=1
+    breaksw
+  case -l:
+    shift argv
+    set l=1
+    set go=1
+    breaksw
+  case -n:
+    shift argv
+    if ($#argv == 0) goto noargs
+    set n=$argv[1]
+    shift argv
+    breaksw
+  case -s:
+    shift argv
+    if ($#argv == 0) goto noargs
+    if (! -d $argv[1]) then
+      echo "MKSTARLAB> Directory $argv[1] not found."
+      goto error
+    else
+      set src=$argv[1]
+      echo "MKSTARLAB> Resetting root for find to $src"
+    endif
+    shift argv
+    breaksw
+  case -t:
+    set tidy="make clean"
+    shift argv
+    breaksw
+  case -r:
+    shift argv
+    breaksw
+  case -u:
+    set u=1
+    set go=1
+    shift argv
+    breaksw
+  case -*:
+    echo "MKSTARLAB> Option $argv[1] not understood"
+    shift argv
+    breaksw
+  default:
+    goto process
+ endsw
+ if ($#argv == 0) then
+    if ($go) goto process
+    goto noargs
+ endif
+    
+ goto loop
+
+process:
+
+echo GO=$go
+if ($go == 0 && $#argv == 0) goto noargs
+
+if ($u) then
+  (cd $STARLAB; cvs update)
+endif
+
+if ($l) then
+  (cd $STARLAB; make libs)
+endif
+
+foreach f ($argv)
+ # strip any extensions from the arguments, we're looking to make executables
+ set ft=$f:t
+ set file=$ft:r
+ # echo FILE=$file F=$f FT=$ft
+ set err=0
+ # if a local file, use that to compile, don't search for it
+ if (-e $file.C) then
+   echo -n "MKSTARLABO> Using local ${file}.C: "
+   set l=./$file.C
+ else
+   if ("$code" == "") then
+      set ccode=$file
+   else
+      set ccode=$code
+   endif
+   foreach e (C c cc cxx f F for )
+     echo "MKSTARLAB> Searching ${ccode}.${e}: "
+     set l=(`find $src -name $ccode.$e -type f -print`)
+     if ($#l) break
+   end
+ endif
+ set mk="#"
+ set err=0
+
+ if ($n > 0) then
+    if ($n > $#l) then
+    echo Too few elements in the list for your selection
+      @ errs++
+      continue
+    else
+      set l=$l[$n]
+    endif
+ endif
+
+ if ($#l > 1) then
+   echo "Cannot handle multiple files yet:"
+   echo $l
+ else if ($#l == 0) then
+   echo " .. trying directories..."
+   set l=(`find $src -name $file -type d -print`)
+   if ($#l == 1) then
+     if (-e $l/Makefile) then
+       set mk=$ft
+       if (! -e $STARLAB/bin/$mk) set newbins=1
+       (cd $l;rm -f $mk; make $mk; set err=$status; $tidy)
+       @ errs += $status
+       if ($d) then
+	   # does not do anything for starlab, but keeping it in
+           mkpdoc $mk
+	   @ errs += $status
+       endif
+     else
+       @ errs += 1
+       echo "Cannot install $file without a Makefile"
+     endif
+   else if ($#l > 1) then
+     @ errs += 1
+     echo "Cannot handle multiple directories yet:"
+     echo $l
+   else
+     @ errs += 1
+     echo "Nothing found"
+   endif
+ else
+   echo "found one: $l"
+   set dir=$l:h
+   set t=$file:t
+##   set mk=$t:r
+#		now allowing makings from extensions (e.g. scfm.exe)
+   set mk=$f
+   if (! -e $dir/Makefile) then
+      echo "### Warning: using funny template Makefile"
+      set mf="-f $NEMO/src/nbody/trans/Makefile"
+   else 
+      set mf=""
+   endif
+   if (! -e $STARLAB/bin/$mk) set newbins=1
+   (cd $dir ; rm -r $mk; make $mf $mk; set err=$status; $tidy)
+   @ errs += $err
+   # see if new doc file needed...
+   if ($d) then
+	mkpdoc $mk
+        @ errs += $status
+   endif
+ endif
+ if ($mk != "#") then
+   if ($err == 0) then
+      echo "`date`: $mk installed $bywhom" >> $logfile
+   else
+      echo "`date`: $mk ###error### $bywhom >> $logfile
+   endif
+ endif
+end
+
+end:
+  if ($newbins == 1) then
+    echo ""; echo ""
+    echo "### Warning: Use rehash for access to the new programs"
+  else
+    echo "";
+  endif
+  rm -f $lockfile
+  exit $errs
+
+error:
+  echo "MKSTARLAB> Interrupted, or some error occured. Removing lockfile."
+  rm -f $lockfile
+  exit 1
+
+noargs:
+  rm -f $lockfile
+  echo "MKSTARLAB> Not enough arguments"
+usage:
+  echo "$version"
+  echo "Usage: $0 program-name(s)"
+  echo ""
+  echo "Attempts to find STARLAB sourcecode, install STARLAB programs "
+  echo "and update the doc file if needed (not implemented)"
+  echo "Options: "
+  echo "  -c CODE   search for <CODE>.C to set the directory for target(s)"
+  echo "  -n N      selection of N-th element from unresolved list [1]"
+  echo "  -s DIR    root directory to start search [$STARLAB]"
+  echo "  -r        remove lockfile before starting"
+  echo "  -d        also make doc file (not implemented yet)"
+  echo "  -t        cleanup after having made the binaries"
+  echo "  -u        run 'cvs update' to STARLAB before making"
+  echo "  -l        recompile the library by running 'make libs'"
+  exit 1
