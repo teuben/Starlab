@@ -32,7 +32,7 @@
 //// Usage: scale [OPTIONS] < input > output
 ////
 //// Options:    
-////		  -c    zero the center of mass position and velocity [no]
+////              -c    zero the center of mass position and velocity [no]
 ////              -d    debug mode [off]
 ////              -e    specify softening parameter [0]
 ////              -E    specify total energy [don't scale]
@@ -564,6 +564,8 @@ bool parse_scale_main(int argc, char *argv[],
 
 main(int argc, char ** argv)
 {
+    check_help();
+
     real m = 0, q = -1, e = 0, r = 0;
     real eps = 0;
 
