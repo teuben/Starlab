@@ -124,8 +124,9 @@ local inline void add_plummer(dyn * b,
     real r1 = sqrt(r2);
 
     if (!pot_only) {
-	acc -= M*dx/(r1*r2);
-	jerk -= M*(3*dx*(dx*vel)/r2 - vel);
+	real r3i = 1/(r1*r2);
+	acc -= M*dx*r3i;
+	jerk += M*(3*dx*(dx*vel)/r2 - vel)*r3i;
     }
 
     pot -= M/r1;
@@ -161,12 +162,27 @@ local inline real plummer_virial(dyn * b)
 
     real a2 = b->get_p_scale_sq();
 
+    // Don't make any assumptions about the locations of the
+    // center of mass of the center of the Plummer field...
+
+    vector com_pos, com_vel;
+    compute_com(b, com_pos, com_vel);
+    // PRL(com_pos);
+
+    vector dR = com_pos - b->get_p_center();
+    vector acc_com = -M * dR * pow(square(dR)+a2, -1.5);
+    // PRL(acc_com);
+
     real vir = 0;
     for_all_daughters(dyn, b, bb) {
-	vector dx = bb->get_pos() - bb->get_p_center();
-	real r2 = square(dx);
-	vir += bb->get_mass()*r2*pow(r2+a2, -1.5);
+	vector dr = bb->get_pos() - com_pos;
+	dR = bb->get_pos() - b->get_p_center();
+	vector acc_ext = dR * pow(square(dR)+a2, -1.5);
+	real dvir = bb->get_mass()*dr*(acc_ext - acc_com);
+	// PRL(dvir);
+	vir += dvir;
     }
+    // PRL(vir);
 
     return -M*vir;
 }
