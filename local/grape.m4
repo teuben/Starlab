@@ -6,12 +6,12 @@ dnl ***** FOR EXAMPLES, SEE grape.m4.examples IN THIS DIRECTORY *****
 
 dnl Where to find GRAPE libraries:
 
-m4_define(GRAPE_LDFLAGS_, [-L/usr2/makino/disk3src/harplibs/x86_64])
+m4_define(GRAPE_LDFLAGS_, [-L/usr2/makino/disk3src/harplibs])
 
 dnl GRAPE libraries that must be linked in:
 
 m4_define(GRAPE_LIBS_,    [-lg6lx -lg6lxsim2])
 
-dnl Define this as yes for the AMD64 boxes only, no otherwise.
+dnl For now, define this as yes for the AMD64 boxes only, no otherwise.
 
 m4_define(OLD_READ_NEIGHBOUR_LIST, [no])
