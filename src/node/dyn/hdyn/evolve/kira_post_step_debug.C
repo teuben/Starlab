@@ -2,7 +2,21 @@
 // Place temporary post-step debugging code here, to clean up kira.C.
 
 
-    // if (fmod(steps, 100) == 0) print_recalculated_energies(b);
+#if 0
+    if (   t > 81.500675 && t < 81.502364
+	|| t > 81.508965 && t < 81.510330
+	|| t > 81.535075 && t < 81.536905
+	|| t > 81.558855 && t < 81.560755
+	|| t > 81.566103 && t < 81.567278
+	|| t > 81.574715 && t < 81.576000
+	|| t > 81.588040 && t < 81.589356 )
+	print_recalculated_energies(b);
+#endif
+
+
+#if 0
+    fmod(steps, 100) == 0) print_recalculated_energies(b);
+#endif
 
 
 #if 0
