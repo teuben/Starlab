@@ -1473,10 +1473,19 @@ bool hdyn::is_unperturbed_and_approaching()
 	if (!find_perturber_node()) {
 
 	    // Possible that a newly formed center of mass node hasn't
-	    // yet taken a step, so no perturber list exists.  However,
-	    // we don't want to break up an unperturbed binary because
-	    // of this.  Set binary_type appropriately and return true
-	    // if this is already unperturbed.
+	    // yet taken a step, so no perturber list exists.  Also
+	    // possible that the perturber list has overflowed and we
+	    // simply don't have a valid list.  In the latter case it
+	    // it is likely that the perturbation is usable.  In either
+	    // case, we don't want to break up an unperturbed binary
+	    // unnecessarily.
+
+	    // Old code set binary_type appropriately and returned
+	    // true if this is already unperturbed.
+
+	    // New code (Steve, 9/03) checks the perturbation for
+	    // obvious problems, and then continues with the rest of
+	    // the function (i.e. same action for both options...).
 
 	    init_binary_type = binary_type = UNKNOWN_PERTURBERS;
 
@@ -1485,10 +1494,14 @@ bool hdyn::is_unperturbed_and_approaching()
 		// Binary is already unperturbed; call presumably came
 		// from integrate_unperturbed_motion().  Assume that some
 		// reorganization has just taken place in the multiple
-		// system of which the binary is a member, and allow the
-		// unperturbed motion to continue for now.
+		// system of which the binary is a member or that the
+		// top-level node has too many perturbers.  Check for
+		// problems and continue checking for unperturbed motion.
 
-		return true;
+		// return true;		// old
+
+		if (perturbation_squared < 0 || perturbation_squared > 1)
+		    return false;
 
 	    } else {
 
@@ -1837,9 +1850,6 @@ bool hdyn::is_unperturbed_and_approaching()
 
 	}
     }
-
-    // if (streq(format_label(), "100a"))
-    //     cerr << "100a false pert at time " << get_time() << endl;
 
     init_binary_type = binary_type = PERTURBED;
     return false;
@@ -3034,7 +3044,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 		    cerr << endl << "get_unperturbed_steps for "
 			 << format_label() << " at time " << system_time << ":"
 			 << endl;
-		    int pp = cerr.precision(20);
+		    int pp = cerr.precision(HIGH_PRECISION);
 
 		    PRI(4); PRL(system_time);
 		    PRI(4); PRL(time);
@@ -3541,7 +3551,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 #endif
 
 			if (verbose) {
-			    int p = cerr.precision(HIGH_PRECISION+5);
+			    int p = cerr.precision(HIGH_PRECISION);
 			    cerr << endl
 				 << "integrate_unperturbed_motion: "
 				 << "absorbing tidal error for "
@@ -3781,7 +3791,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 #if 1
 //		PRI(4); PRL(get_effective_block(time));
 		PRI(4); PRL(sym_angle(kep->get_mean_anomaly()));
-//		int pp = cerr.precision(20);
+//		int pp = cerr.precision(HIGH_PRECISION);
 //		PRI(4); PRL(time);
 //		PRI(4); PRL(system_time);
 //		cerr.precision(pp);
