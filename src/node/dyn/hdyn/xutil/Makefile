@@ -24,7 +24,10 @@ LIBFLAGS	= -L$(LIB) -lhdyn -l_dyn_ -ldyn -lnode \
 		  -lstd -llux $(STARLAB_POSIX_LIB) \
 		  $(STARLAB_X11LIB) $(STARLAB_XLIB) -lm
 
-EXECUTABLES = xstarplot snap_to_image
+EXECUTABLES = xstarplot snap_to_image write_png
+OBJECT_FILES = write_png.o
+
+LIBRARY = libhdyn.a
 
 #..............................................................................
 
@@ -38,6 +41,13 @@ xstarplot:	xstarplot.C gfx_util.o dyn_util.o
 		-D_SRC_=\"$(PWD)/$@.C\" \
 		-D_COMPILE_DATE_=\"`date +%a_%b_%d_%Y,_%T_%Z`\"
 	@touch xstarplot
+
+write_png:	write_png.C
+	$(STARLAB_CCC) $(CFLAGS) $(STARLAB_CCC_FLAGS) -o $(BIN)/$@ \
+		-DTOOLBOX write_png.C $(LIBFLAGS) -lpng \
+		-D_SRC_=\"$(PWD)/$@.C\" \
+		-D_COMPILE_DATE_=\"`date +%a_%b_%d_%Y,_%T_%Z`\"
+	@touch write_png
 
 #..............................................................................
 
