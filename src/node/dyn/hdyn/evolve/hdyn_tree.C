@@ -663,15 +663,22 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 	bb->set_perturbation_squared(-1);
     }
 
-    // Shrink timesteps for safety...
+    // Parent step was set equal to the minimum leaf step in function
+    // create_binary_from_toplevel_nodes().  Reduce it here to make
+    // it less than the daughter steps, but consistent with the current
+    // time, so that the parent perturber list will be computed before
+    // the internal motion is advanced.
+    //
+    // Note that this almost certainly starts the CM off with a step
+    // far shorter than necessary.  Assume that it is OK to let the
+    // timestep algorithm double the step back to the proper value
+    // over the next 10 or to time steps.
+    //
+    // An alternative is to compute the perturber lists etc. explicitly,
+    // but we can't do this here, as the GRAPE doesn't yet know about
+    // the CM.  Could do it from the top-level in kira.  (Steve, 3/03)
 
-    // halve_timestep(bi);
-    // halve_timestep(bj);
-
-    halve_timestep(bj->get_parent());	// parent step should be less than the
-					// daughter steps so that the parent
-					// perturber list is computed before
-					// the internal motion is advanced
+    halve_timestep(bj->get_parent());
 
     bi->init_pred();
     bj->init_pred();

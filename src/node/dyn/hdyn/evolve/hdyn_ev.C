@@ -2370,8 +2370,14 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
 	if (pnode)
 	    kc->pert_with_list += pnode->n_perturbers;
-	else
+	else {
 	    kc->pert_without_list++;
+
+//  	    cerr << "no perturber node for " << format_label()
+//  		 << " at time " << system_time << endl;
+//  	    pp3(get_top_level_node());
+
+	}
     }
 
     nn = NULL;

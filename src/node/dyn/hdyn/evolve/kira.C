@@ -1959,8 +1959,8 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     full_reinitialize(b, t, verbose, true);
 
-    bool tree_changed = true;	// used by fast_get_nodes_to_move;
-    				// set by integration/evolution routines
+    bool tree_changed = true;	// used by fast_get_nodes_to_move; set
+    				// by the integration/evolution routines
 
     // cerr << "check_sync #0 at t = " << b->get_system_time() << " (";
     // xprint(b->get_system_time(), cerr, false);
@@ -2438,15 +2438,26 @@ local void evolve_system(hdyn * b,	       // hdyn array
 // 	}
 //     }
 
-
+#if 0
 //  	if (b->get_system_time() >= 1.46875
 //  	    && b->get_system_time() <= 1.5) {
-//  	    for (int ii = 0; ii < n_next; ii++) {
-//  		if (next_nodes[ii] && next_nodes[ii]->is_valid()
-//  		    && node_contains(next_nodes[ii]->get_top_level_node(), "11"))
-//  		    pp3(next_nodes[ii]->get_top_level_node());
-//  	    }
+	    int countii = 0;
+  	    for (int ii = 0; ii < n_next; ii++) {
+  		if (next_nodes[ii] && next_nodes[ii]->is_valid()
+  		    && node_contains(next_nodes[ii]->get_top_level_node(),
+				     "100393")) {
+		    if (countii++ == 0) {
+			int p = cerr.precision(HIGH_PRECISION);
+			cerr << endl << "After step to time "
+			     << b->get_system_time() << endl;
+			cerr.precision(p);
+		    }
+		    PRL(next_nodes[ii]->format_label());
+  		    pp3(next_nodes[ii]->get_top_level_node());
+		}
+  	    }
 //  	}
+#endif
 
 
 #ifdef CPU_COUNTERS
