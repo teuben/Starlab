@@ -29,6 +29,7 @@
 //-----------------------------------------------------------------------------
 
 #include <vector>
+#include <algorithm>
 #include "dyn.h"
 
 #ifndef TOOLBOX
