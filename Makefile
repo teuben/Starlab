@@ -31,10 +31,10 @@ DIRS = etc src
 
 help:
 	@echo This Makefile offers the following make options:
-	@echo '  all: executes  make lib  and  make bin'
-	@echo '  lib: executes a  make lib  everywhere in src'
-	@echo '  bin: executes a  make bin  everywhere in src'
-	@echo '  alt: executes a  make all  in alt'
+	@echo '  all:  executes    make libs  and  make bins'
+	@echo '  libs: executes a  make lib  everywhere in src'
+	@echo '  bins: executes a  make bin  everywhere in src'
+	@echo '  alt:  executes a  make all  in alt'
 	@echo '  usr: executes a  make all  in usr'
 	@echo '  tar: makes tarfiles at all levels; the files will be named'
 	@echo '       yymmdd.s_tar_lab_x with yymmdd being the current year,'
@@ -78,6 +78,8 @@ libs:
 	@touch .libs
 	@echo libs done
 
+lib:	libs
+
 #..............................................................................
 
 # The .libs dependency here should force all libs to be made in their
@@ -88,6 +90,8 @@ bins:	.libs
 	@cd sbin ; ${MAKE} $(STARLAB_MAKEFLAGS) all ; cd ..
 	@cd src ; ${MAKE} $(STARLAB_MAKEFLAGS) bin ; cd ..
 	@echo bins done
+
+bin:	bins
 
 #..............................................................................
 
