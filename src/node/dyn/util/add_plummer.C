@@ -72,6 +72,7 @@ main(int argc, char *argv[])
     putvq(b->get_log_story(), "kira_plummer_center", center);
 
     cerr << "add_plummer:  M = " << mass << ", R = " << scale << endl;
+    cerr << "              center = " << center << endl;
 
     put_node(cout, *b);
 }
