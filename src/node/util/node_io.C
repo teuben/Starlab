@@ -33,8 +33,8 @@ bool node::check_and_correct_node(bool verbose)	// default = true
 
     bool ok = true;
 
-    if (oldest_daughter) {
-
+    if (oldest_daughter) {		// for node, just check that
+					// the masses are consistent
 	real m = 0;
 	bool low = false;
 
