@@ -332,7 +332,7 @@ void show_hrd_information(unsigned long instr,float r,int d, int u, dyn* b) {
 
       char *centence = new char[500];
       sprintf(centence,  
-"Hertzsprung-Russel Diagram information
+"Hertzsprung-Russel Diagram information\
   total mass       : %6.1f Mo\n\
   Stellar contents : N       mass fr.\n\
    Main sequence   : %5d   %5.3f\n\

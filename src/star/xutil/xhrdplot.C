@@ -1405,7 +1405,7 @@ local void check_for_input(unsigned long win, hdyn* b,
     c   CANCEL, keep dialog window\n\
     C   CANCEL, close dialog window\n\n\
   Other windows:\n\
-    r   replay
+    r   replay\n\
     c   continue (keep dialog window,\n\
                   ignore dialog changes)\n\
     q   quit\n\
