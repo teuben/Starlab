@@ -180,9 +180,13 @@ void xprint(xreal x,
 	    bool newline)	// default = true
 {
 #ifdef USE_XREAL
-//    s << x.get_i() << "+" << x.get_f();
+    xfrac_t f = x.get_f();
     char tmp[128];
-    sprintf(tmp, "%16.16llx", x.get_f());
+//    s << x.get_i() << "+" << f;
+    if (f == 0)
+	sprintf(tmp, "0");
+    else
+	sprintf(tmp, "%#16.16llx", f);
     s << x.get_i() << "+" << tmp;
 #else
     s << x;
