@@ -1,9 +1,4 @@
 
-#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
-#ifndef T_DEBUG_hdyn_ev
-#   undef T_DEBUG
-#endif
-
        //=======================================================//    _\|/_
       //  __  _____           ___                    ___       //      /|\ ~
      //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
@@ -146,6 +141,12 @@
 //.........................................................................
 
 #include "hdyn.h"
+
+#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
+#ifndef T_DEBUG_hdyn_ev
+#   undef T_DEBUG
+#endif
+
 #include "hdyn_inline.C"
 
 #define INITIAL_STEP_LIMIT	0.0625	// Arbitrary limit on the first step
@@ -2297,45 +2298,56 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     hdyn* top_level = get_top_level_node();
     hdyn* pnode = find_perturber_node();
 
-    if (pnode) {
-	top = pnode;
-	kc->pert_step++;
-	kc->pert_with_list += pnode->n_perturbers;
-    } else {
-	top = root;
-	kc->pert_without_list++;
+    top = pnode;
+    int np = -1;
+    if (!pnode)
+	top = root;			// better use GRAPE if possible!
+    else
+	np = pnode->n_perturbers;	// may be -1, 0, or >0, note
+
+    if (!kep) {
+
+	// Bookkeeping (if this isn't part of an unperturbed step):
+
+	if (pnode)
+	    kc->pert_with_list += pnode->n_perturbers;
+	else
+	    kc->pert_without_list++;
     }
 
-    // Acceleration and jerk on this component due to rest of system:
+    if (np != 0) {
 
-    nn = NULL;
-    d_nn_sq = VERY_LARGE_NUMBER;
+	// Acceleration and jerk on this component due to rest of system:
+ 
+	nn = NULL;
+	d_nn_sq = VERY_LARGE_NUMBER;
 
-    calculate_partial_acc_and_jerk(top, top, get_parent(),
-				   apert1, jpert1, p_dummy,
-				   d_nn_sq, nn,
-				   !USE_POINT_MASS,		// explicit loop
-				   pnode,			// with list
-				   this);			// node to charge
+	calculate_partial_acc_and_jerk(top, top, get_parent(),
+				       apert1, jpert1, p_dummy,
+				       d_nn_sq, nn,
+				       !USE_POINT_MASS,		// explicit loop
+				       pnode,			// with list
+				       this);			// node to charge
 
-    // Acceleration and jerk on other component due to rest of system:
+	// Acceleration and jerk on other component due to rest of system:
 
-    sister->set_nn(NULL);
-    sister->set_d_nn_sq(VERY_LARGE_NUMBER);
+	sister->set_nn(NULL);
+	sister->set_d_nn_sq(VERY_LARGE_NUMBER);
 
-    sister->calculate_partial_acc_and_jerk(top, top, get_parent(),
-					   apert2, jpert2, p_dummy,
-					   sister->d_nn_sq, sister->nn,
-					   !USE_POINT_MASS,	// explicit loop
-					   pnode,		// with list
-					   this);		// node to charge
+	sister->calculate_partial_acc_and_jerk(top, top, get_parent(),
+					       apert2, jpert2, p_dummy,
+					       sister->d_nn_sq, sister->nn,
+					       !USE_POINT_MASS,	// explicit loop
+					       pnode,		// with list
+					       this);		// node to charge
 
-    // Note:  The first two calls to calculate_partial_acc_and_jerk pass
-    // the d_nn_sq and nn from the hdyn, so the hdyn data are actually
-    // updated by update_nn_coll.  The third call (below) passes local
-    // variables, so it has no direct effect on d_nn_sq and nn.  (Test
-    // afterwards if d_nn_sq and nn must be updated.)  The coll data
-    // are always updated by these calls.
+	// Note:  The first two calls to calculate_partial_acc_and_jerk pass
+	// the d_nn_sq and nn from the hdyn, so the hdyn data are actually
+	// updated by update_nn_coll.  The third call (below) passes local
+	// variables, so it has no direct effect on d_nn_sq and nn.  (Test
+	// afterwards if d_nn_sq and nn must be updated.)  The coll data
+	// are always updated by these calls.
+    }
 
     // Relative acceleration and jerk due to other (sister) component:
 
@@ -2351,16 +2363,20 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 				   NULL,			// no perturbers
 				   this);			// node to charge
 
-    real m2 = sister->get_mass();
-    real pscale = m2 / (m2 + mass);
+    if (np != 0) {
+	real m2 = sister->get_mass();
+	real pscale = m2 / (m2 + mass);
+	a_2b += pscale * (apert1 - apert2) * get_kappa();
+	j_2b += pscale * (jpert1 - jpert2);
 
-    set_acc_and_jerk_and_pot(a_2b + pscale * (apert1 - apert2) * get_kappa(),
-			     j_2b + pscale * (jpert1 - jpert2), p_2b);
+	// Note that perturbation_squared does *not* contain a slowdown factor.
 
-    // Note that perturbation_squared does *not* contain a slowdown factor.
+	perturbation_squared = square(pscale * (apert1 - apert2)) / square(a_2b);
 
-    perturbation_squared = square(pscale * (apert1 - apert2)) / square(a_2b);
+    } else
+	perturbation_squared = 0;
 
+    set_acc_and_jerk_and_pot(a_2b, j_2b, p_2b);
 
 #ifdef T_DEBUG
     if (IN_DEBUG_RANGE(system_time) && T_DEBUG_LEVEL > 0 && name_is("23")) {
@@ -2370,7 +2386,6 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	PRI(4); PRL(apert2);
     }
 #endif
-
 
 #if 0
     if (is_low_level_node()) {
