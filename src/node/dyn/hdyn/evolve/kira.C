@@ -1885,11 +1885,11 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 
     //----------------------------------------------------------------------
-    // Frequencies of "other" (episodic) output.  Idea is that we will have
-    // data blocks of width dt_alt1, sampled at intervals dt_alt1, and
-    // separated by intervals dt_alt2.
+    // Frequencies of "other" (episodic) output.  Idea is that we will
+    // have data blocks of width dt_alt2, sampled at intervals dt_alt1,
+    // and separated by intervals dt_alt3.
     //
-    // Ultimately these will become command-line options (Steve, 6/02).
+    // Ultimately these should become command-line options (Steve, 6/02).
 
     real dt_alt1, dt_alt2, dt_alt3;
     real t_alt1, t_alt2;
@@ -1899,7 +1899,12 @@ local void evolve_system(hdyn * b,	       // hdyn array
     if (alt_flag) {
 	dt_alt1 = 1./32;		// hardwired options...
 	dt_alt2 = 1;
-	dt_alt3 = 3;
+	dt_alt3 = 10;
+
+	if (verbose) {
+	    cerr << endl << "additional output: ";
+	    PRC(dt_alt1); PRC(dt_alt2); PRL(dt_alt3);
+	}
     }
 
     t_alt1 = 0;
