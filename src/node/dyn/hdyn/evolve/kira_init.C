@@ -776,6 +776,7 @@ bool kira_initialize(int argc, char** argv,
     bool force_nogrape = false;
     bool force_nodens = false;
     bool force_nodma = false;
+    bool enable_smallN = false;
 
     char seedlog[SEED_STRING_LENGTH];
 
@@ -783,7 +784,7 @@ bool kira_initialize(int argc, char** argv,
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"*:012a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvVW:xX:y:z:Z:";
+"*:0123a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvVW:xX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
@@ -880,6 +881,9 @@ bool kira_initialize(int argc, char** argv,
 			break;
 	    case '2':	grape6_force_nodma();
 	    		force_nodma = true;
+			break;
+	    case '3':	enable_isolated_multiples();
+	    		enable_smallN = true;
 			break;
 	    case 'a':	eta = atof(poptarg);
 			eta_flag = true;
@@ -1493,10 +1497,24 @@ bool kira_initialize(int argc, char** argv,
         cerr << "GRAPE suppressed" << endl;
     }
 
-    if (force_nodens)
-	cerr << "density computation suppressed" << endl;
-    if (config && force_nodma)
-	cerr << "GRAPE DMA transfers suppressed" << endl;
+    if (!config)
+	cerr << "density computation suppressed (no GRAPE)" << endl;
+    else if (force_nodens)
+	cerr << "GRAPE density computation suppressed" << endl;
+    else
+	cerr << "density computation enabled" << endl;
+
+    if (config) {
+	if (force_nodma)
+	    cerr << "GRAPE DMA transfers suppressed" << endl;
+	else
+	    cerr << "GRAPE DMA transfers enabled" << endl;
+    }
+
+    if (enable_smallN)
+	cerr << "special treatment of multiples enabled" << endl;
+    else
+	cerr << "special treatment of multiples suppressed" << endl;
 
     //----------------------------------------------------------------------
 

@@ -930,6 +930,7 @@ void set_allow_unperturbed(hdyn *b, bool value = true);
 void set_allow_multiples(hdyn *b, bool value = true);
 void toggle_unperturbed(hdyn *b, int level);
 void print_unperturbed_options(hdyn *b);
+void enable_isolated_multiples(bool value = true);
 
 // ----- In kira.C: -----
 

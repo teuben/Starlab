@@ -321,7 +321,7 @@ local void modify_params(hdyn * b, char * name,
 	    } else if (s = strstr(line, "-C")) {
 
 		real tmp = atof(s+2);
-		if (tmp > 0 && tmp < 1800) {	// arbitrary upper limit...
+		if (tmp > 0 && tmp <= 1800) {	// arbitrary upper limit...
 		    cerr << "Setting grape_max_cpu = " << tmp << endl;
 		    b->get_kira_options()->grape_max_cpu = tmp;
 		}

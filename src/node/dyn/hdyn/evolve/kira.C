@@ -49,6 +49,7 @@
 ////              -0    force non-GRAPE operation, if relevant
 ////              -1    suppress density calculation [compute with GRAPE]
 ////              -2    suppress DMA GRAPE access (experimental) [use DMA]
+////              -3    enable special treatment of isolated multiples [no]
 ////              -a    specify accuracy parameter [0.1][*]
 ////              -A    enable "alternate" output [off]
 ////              -b    specify frequency of full binary output, in (integer)

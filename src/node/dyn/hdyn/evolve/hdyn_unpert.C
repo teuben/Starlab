@@ -3195,6 +3195,14 @@ local void rotate_kepler(kepler *k)
 #define ENERGY_LIMIT_2		VERY_LARGE_NUMBER
 #endif
 
+// Turn on/off the use of kira_smallN below.
+
+static bool allow_isolated_multiples = false;
+void enable_isolated_multiples(bool value)	// default = true
+{
+    allow_isolated_multiples = value;
+}
+
 int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 				       bool force_time)   // default = false
 {
@@ -4212,38 +4220,42 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		// By construction, the top-level node is sufficiently
 		// isolated that we can neglect the rest of the system.
 
-#if 1		// (Set to zero to suppress integrate_multiple.)
+		if (allow_isolated_multiples) {
 
-		cerr << endl;
-		for (int i = 0; i < 75; i++) cerr << "=";
-		cerr << endl;
+		    cerr << endl;
+		    for (int i = 0; i < 75; i++) cerr << "=";
+		    cerr << endl;
 
-		// Make sure the entire multiple tree is synchronized.
+		    // Make sure the entire multiple tree is synchronized.
 
-		kira_synchronize_tree(top, true);
+		    kira_synchronize_tree(top, true);
 
-		// Integrate the multiple motion in isolation.  On return,
-		// the tree is properly set up with unperturbed motion
-		// ready to continue.  Better return immediately, as the
-		// internal structure may have changed.
+		    // Integrate the multiple motion in isolation.  On return,
+		    // the tree is properly set up with unperturbed motion
+		    // ready to continue.  Better return immediately, as the
+		    // internal structure may have changed.
 
-		print_recalculated_energies(get_root());
-		real t_mult = integrate_multiple(top);
-		cerr << "multiple integration time = " << t_mult << endl;
-		print_recalculated_energies(get_root());
+		    print_recalculated_energies(get_root());
+		    real t_mult = integrate_multiple(top);
+		    cerr << "multiple integration time = " << t_mult << endl;
+		    print_recalculated_energies(get_root());
 
-		// Note that we currently do NOT correct the small tidal
-		// error that probably resulted from the multiple motion.
-		// Could absorb it into the top-level motion, or simply
-		// keep track of it -- NB likely to have a cumulative
-		// effect if multiple outer passes take place.
+		    // Note that we currently do NOT correct the small tidal
+		    // error that probably resulted from the multiple motion.
+		    // Could absorb it into the top-level motion, or simply
+		    // keep track of it -- NB likely to have a cumulative
+		    // effect if multiple outer passes take place.
 
-		cerr << endl;
-		for (int i = 0; i < 75; i++) cerr << "=";
-		cerr << endl;
+		    cerr << endl;
+		    for (int i = 0; i < 75; i++) cerr << "=";
+		    cerr << endl;
 
-		unpert = 2;	// will force time step list rescheduling.
-#endif
+		    unpert = 2;	// will force time step list rescheduling.
+
+		} else
+
+		    cerr << "(isolated_multiples option not selected)" << endl;
+
 	    }
 
 	    if (np > 0) delete [] pertlist;
