@@ -27,7 +27,7 @@
 #include <star/dstar_to_kira.h>
 #include <star/single_star.h>
 
-#define CALCULATE_POST_COLLISION_ON_GRAPE true
+//#define CALCULATE_POST_COLLISION_ON_GRAPE
 
 // Local function (incomplete).
 
@@ -720,7 +720,7 @@ hdyn* hdyn::merge_nodes(hdyn * bcoll)
     real epot, ekin, etot;
 #ifdef CALCULATE_POST_COLLISION_ON_GRAPE
     // replaced by GRAPE friendly function (SPZ, March 2001)
-    //calculate_internal_energies(get_root(), epot, ekin, etot); 
+    calculate_internal_energies(get_root(), epot, ekin, etot); 
 #else
     calculate_energies(get_root(), eps2, epot, ekin, etot);	//dyn function
 #endif
