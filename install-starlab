@@ -22,6 +22,8 @@ else
     echo Using environment STARLAB_PATH = $STARLAB_PATH
 endif
 
+# Note that we do *not* update the search path if STARLAB_PATH is changed.
+
 set install_dir = $STARLAB_PATH/usr	# this is now the configure default
 if ($#argv > 0) set install_dir = $1
 echo install_dir \ = $install_dir
@@ -62,7 +64,8 @@ set OK = 0
 
 if (-e configure) then
 
-    # Work around temporary Qt glitch.  May no longer be necessary...
+    # Work around temporary Qt glitch.  Should no longer be necessary,
+    # as configure checks for this and takes appropriate action...
 
     set Qt = ""
     set qt = `sbin/qt_major_version`
@@ -105,10 +108,22 @@ if (-e configure) then
     set which_kira = (`which kira | grep -v 'Command not found.'`)
     if ($#which_kira > 0) then
 	echo -n kira':  '; kira --help |& grep created
-	set OK = 1
+
+#	Really want to find kira in $install_dir/bin.  Make sure
+#	we didn't just find an older version, and explicitly say
+#	so if we have.
+
+	if (! -x $install_dir/bin/kira) then
+	    Found old kira, but no new version.
+	else
+	    set OK = 1
+	endif
     else
 	echo Couldn\'t find kira...
     endif
+
+    # Note that testsuite uses STARLAB_PATH and the current search path,
+    # so it should find the correct kira and test in the proper place.
 
     echo Running Testsuite \(`date`\; this may take a few minutes\)
     echo 								>>& $log
