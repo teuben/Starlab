@@ -22,7 +22,7 @@
 #ifndef  STARLAB_HDYN_H
 #  define  STARLAB_HDYN_H
 
-#define MAX_PERTURBERS				1024
+#define MAX_PERTURBERS				256
 #define ALLOW_LOW_LEVEL_PERTURBERS		true
 #define RESOLVE_UNPERTURBED_PERTURBERS		false
 
@@ -107,6 +107,7 @@ class  hdyn : public _dyn_ {
 	// Hardware/software configuration:
 
 	static unsigned int config;	// 0: normal, 1: GRAPE-4, 2: GRAPE-6
+	static bool restart_grape_flag;
 
 //	static acc_function_ptr kira_calculate_top_level_acc_and_jerk;
 //					// function for force computation
@@ -322,6 +323,10 @@ class  hdyn : public _dyn_ {
 
 	inline unsigned int get_config()	{return config;}
 	inline void set_config(unsigned int c)	{config = c;}
+
+	inline void set_restart_grape_flag()	{restart_grape_flag = true;}
+	inline bool get_restart_grape_flag()	{return restart_grape_flag;}
+	inline void clear_restart_grape_flag()	{restart_grape_flag = false;}
 
 // 	inline acc_function_ptr get_kira_calculate_top_level_acc_and_jerk()
 // 	    {return kira_calculate_top_level_acc_and_jerk;}
@@ -540,7 +545,7 @@ class  hdyn : public _dyn_ {
         // bool correct();		// changed to bool by Steve, 9/15/98
 
         void update(vec& bt2,	// called only from correct_and_update;
-		   vec& at3);	// member function for convenience
+		    vec& at3);	// member function for convenience
 
 	bool correct_and_update();	// combined 8/99 by Steve
 
@@ -881,8 +886,10 @@ int grape4_calculate_acc_and_jerk(hdyn **next_nodes,
 				  bool restart);
 int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 				  int n_next,
-				  xreal time,
-				  bool restart);
+				  xreal time, bool restart);
+int grape6_calculate_perturbation(hdyn *parent,
+				  vec& apert1, vec& apert2,
+				  vec& jpert1, vec& jpert2);
 
 bool grape4_calculate_densities(hdyn *root,
 				real h2_crit = 4);
@@ -998,8 +1005,7 @@ int kira_calculate_top_level_acc_and_jerk(hdyn **next_nodes,
 
 int top_level_acc_and_jerk_for_list(hdyn **next_nodes,
 				    int n_next,
-				    xreal time,
-				    bool restart_grape);
+				    xreal time);
 
 int calculate_acc_and_jerk_for_list(hdyn ** next_nodes,
 				    int n_next,
