@@ -14,6 +14,7 @@ hyper_giant::hyper_giant(main_sequence & m) : single_star(m) {
         core_mass = hyper_giant_core_mass();
         envelope_mass = m_tot - core_mass;
 
+	cout << get_total_mass() << " " << core_mass << " ";
 // (GN+SPZ May  4 1999) last update age is time of previous type change
       last_update_age = next_update_age;
 
@@ -91,13 +92,15 @@ real hyper_giant::hyper_giant_core_mass() {
 //        real m_core = 0.073*(1 + cnsts.parameters(core_overshoot))
 //	            * pow(relative_mass, 1.42);
 // (GN+SPZ May  3 1999) Yungelson core
-//  real m_core = 0.073*(1 + cnsts.parameters(core_overshoot))
-//              * pow(relative_mass, 1.42);
+// (GN Apr 14 2004) use following for smooth transition at 25 Msun
+  real m_core_GN = 0.073*(1 + cnsts.parameters(core_overshoot))
+              * pow(relative_mass, 1.42);
 
-  real m_core_TY = 0.066*pow(relative_mass, 1.54);
+  //  real m_core_TY = 0.066*pow(relative_mass, 1.54);
   real m_core_max = 20 + 0.27*relative_mass;
 
-  real m_core = Starlab::min(m_core_TY, m_core_max);
+  //  real m_core = Starlab::min(m_core_TY, m_core_max);
+  real m_core = Starlab::min(m_core_GN, m_core_max);
   if (relative_mass >= cnsts.parameters(maximum_main_sequence))
       m_core = get_total_mass();
 
@@ -116,6 +119,8 @@ real hyper_giant::hyper_giant_core_mass() {
      }
 
 void hyper_giant::create_remnant() {
+
+  cout << get_total_mass() << " ";
 
     if (core_mass>=cnsts.parameters(COcore2black_hole)) {
       star_transformation_story(Black_Hole);
