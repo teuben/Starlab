@@ -498,30 +498,44 @@ local void print_energies(dyn* b,
 	compute_energies(b, 0.0, potential_energy, kinetic_energy, e_total,
 			 true);
 
-    real total_energy = kinetic_energy + potential_energy;	// internal pot
+    real total_int_energy = kinetic_energy + potential_energy;	// internal pot
     real external_pot = get_external_pot(b);
-    e_total = total_energy + external_pot;
+    e_total = total_int_energy + external_pot;
 
-    real virial_ratio = -kinetic_energy / (potential_energy
-					     + get_external_virial(b));
+    vector com_pos, com_vel;
+    compute_com(b, com_pos, com_vel);
+    real kin_com = 0.5*b->get_mass()*square(com_vel);
 
-    kT = kinetic_energy / (1.5*b->n_daughters());
+    real kin_int = kinetic_energy - kin_com;
+    real virial_ratio = -kin_int / (potential_energy
+				        + get_external_virial(b));
+
+    kT = kin_int / (1.5*b->n_daughters());
 
     cerr << "    top-level nodes:\n";
-    cerr << "        kinetic_energy = " << kinetic_energy
-	 << "  potential_energy = " << potential_energy << endl;
-    if (external_pot != 0) {
+    cerr << "        kinetic_energy = " << kin_int
+	 << "  potential_energy = " << potential_energy;
+
+    if (external_pot == 0) {
+	cerr << endl;
+    } else {
+	cerr << " (internal)" << endl;
+
 	cerr << "        external_pot = " << external_pot << " (";
 	print_external(b->get_external_field());
 	cerr << ")" << endl;
+	cerr << "        CM kinetic energy = " << kin_com << endl;
     }
-    cerr << "        total_energy = " << e_total
+
+    cerr << "        total energy = " << e_total
 	 << "  kT = " << kT << "  virial_ratio = " << virial_ratio
 	 << endl;
 
     real ke = kinetic_energy, pe = potential_energy;
 
     // Recompute energies, resolving any top-level nodes.
+
+    e_total = total_int_energy;
 
     for_all_daughters(dyn, b, bb) {
 	if (bb->is_parent()) {
@@ -530,6 +544,7 @@ local void print_energies(dyn* b,
 	}
     }
 
+    e_total += external_pot;
     cerr << "    total energy (full system) = " << e_total
  	 << endl;
 }
