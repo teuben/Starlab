@@ -1271,7 +1271,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 
     if (!grape_is_open)
 	reattach_grape(b->get_real_system_time(),
-		       "grape_calculate_energies", b->get_kira_options());
+		       func, b->get_kira_options());
 
     real cpu0 = cpu_time();
     real d_crit = critical_sep(b);
@@ -1309,7 +1309,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 	     << "error on return from force_by_grape_on_all_xxx()"
 	     << endl;
 
-	hw_err_exit("grape_calculate_energies", 1, b);
+	hw_err_exit(func, 1, b);
     }
 
 //    cerr << "...back.  Computing energies." << endl << flush;
@@ -1622,7 +1622,7 @@ void grape_calculate_energies(hdyn *b,			// root node
 	     << "error on return from force_by_grape_on_all_leaves()"
 	     << endl;
 
-	hw_err_exit("grape_calculate_energies", 1, b);
+	hw_err_exit(func, 1, b);
     }
 
     epot = ekin = 0;
@@ -2902,8 +2902,9 @@ local INLINE void set_grape_density_radius(hdyn *b, real rnn_sq)
 
     b->set_grape_rnb_sq(rnn_sq);
     
-    // Note that rnn_sq = 0 means that the nn is too far away.
-    // Write density = 0 (compute_density will not be called).
+    // Note that rnn_sq = 0 means that the nn is too far away!
+    // Write density = 0 and flag the particle with k = 0 too
+    // (and note that compute_density will not be called later).
 
     if (rnn_sq <= 0)
 	compute_density(b, 0, NULL, 0);
@@ -2935,12 +2936,16 @@ local void check_neighbors(hdyn *b, real rnb_sq, int indent = 0)
 
 #define N_DENS	12	// density is based on the 12th nearest neighbor
 
-local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
+local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
-// Determine density from the neighbor list, or increase the radius
-// of the neighbor sphere.
+// Determine density for a single particle from the GRAPE neighbor list,
+// or modify the radius of its neighbor sphere.
 
 // Called by:	grape_calculate_densities()			// global
+
+// Return values:	 0	success, density has been set
+//			-1	neighbor list overflow, radius decreased
+//			+1	too few neighbors, radius increased
 
 {
     static char *func = "count_neighbors_and_adjust_h2";
@@ -2950,13 +2955,13 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
     bool in_debug_range = IN_DEBUG_RANGE(sys_t);
 #endif
 
-    // Get the list of neighbors from the GRAPE.
+    // First get the list of neighbors for this particle.
 
     int n_neighbors = 0;
     int status = 0;
 #ifndef NO_G6_NEIGHBOUR_LIST
     status = g6_get_neighbour_list_(&cluster_id,
-				    &pipe,
+				    &pipe,		// indicates particle
 				    &max_neighbors,
 				    &n_neighbors,
 				    neighbor_list);
@@ -2974,6 +2979,9 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
 	if (n_neighbors >= max_neighbors) {	// should be redundant...
 
+	    // Note that a return value of -1 is always accompanied by
+	    // an error message, regardless of the DEBUG settings.
+
 	    real rnb_fac = pow(10*N_DENS/(real)n_neighbors, 0.6666667);
 	    b->set_grape_rnb_sq(rnb_fac*b->get_grape_rnb_sq());
 
@@ -2985,13 +2993,16 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	    cerr << "new grape_rnb = " << sqrt(b->get_grape_rnb_sq())
 		 << endl;
 
-	    return false;
+	    return -1;
 	}
     }
 
+    // This may be redundant, as we shouldn't be here if rnb = 0.
+    // a zero value for rnb means density is already set or that an
+    // error occurred (and the density is probably 0 in that case).
+
     if (b->get_grape_rnb_sq() <= 0) {
 
-	// rnb = 0 means density is already set (probably 0).
 	// Nothing to do here, so just exit.
 
 #ifdef T_DEBUG
@@ -3000,12 +3011,15 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	}
 #endif
 
-	return true;
+	return 0;
     }
+
+    // Check that we have enough neighbors to compute the density.
 
     if (n_neighbors < N_DENS) {
 
-	// Too few neighbors.  Try again.
+	// Too few neighbors.  Increase the neighbor radius and try again.
+	// Note that there is no message in this case, unless DEBUG is set.
 
 #ifdef T_DEBUG
 	if (in_debug_range && T_DEBUG_LEVEL > 0) {
@@ -3029,11 +3043,12 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 #endif
 
 	real fac = Starlab::min(2.0, pow((N_DENS+3.0)/(1.0+n_neighbors), 1.5));
-
 	b->set_grape_rnb_sq(fac * b->get_grape_rnb_sq());
-	return false;
+
+	return 1;
     }
 
+    // Looks like we have everything we need to determine the density.
     // Make a list of nodes to send to compute_density().
 
     dyn **dynlist = new dynptr[n_neighbors];
@@ -3069,9 +3084,6 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
     compute_density(b, N_DENS, dynlist, n_neighbors);	// writes to dyn story
 
-    // Strangely, compute_density sometimes fails to write the proper
-    // info to the dyn story.  Reason and circumstances still unknown...
-
 #ifdef T_DEBUG
     if (in_debug_range && T_DEBUG_LEVEL > 0) {
 	if (find_qmatch(b->get_dyn_story(), "density_time")
@@ -3095,19 +3107,23 @@ local INLINE bool count_neighbors_and_adjust_h2(hdyn * b, int pipe)
     }
 #endif
 
+    b->set_grape_rnb_sq(0);	// don't recalculate the density
     delete [] dynlist;
-    return true;
+
+    return 0;
 }
 
 
 
-local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
+local INLINE bool old_get_densities(xreal xtime, hdyn *nodes[],
 				int ni, real h2_crit,
 				int nj_on_grape, int n_pipes)
 {
     // Compute the densities of the ni particles in nodes[].
-    // Return true iff an error occurred and densities could
-    // not be determined.
+
+    // Return true iff an neighbor-list overflow occurred and the densities
+    // could not be determined.  The calling function should then reduce
+    // all neighbor radii and retry.
 
     static char *func = "get_densities";
     bool error = false;
@@ -3123,14 +3139,14 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
     }
 #endif
 
-    // Get the forces and neighbor lists for the current group of particles.
+    // Get all forces and neighbor lists for the current group of particles.
 
-    int status = 0;
-    if (status = get_force_and_neighbors(xtime, nodes, ni,
-					 nj_on_grape, n_pipes, true)) {
+    int status = get_force_and_neighbors(xtime, nodes, ni,
+					 nj_on_grape, n_pipes, true);
+    if (status) {
 
-	// Neighbor list overflow.  Return with error = true will cause
-	// the calling function to reduce neighbor radii and retry.
+	// Neighbor list overflow.  Return with error = true to force
+	// the calling function to reduce all neighbor radii and retry.
 
         cerr << func << ": " << "error 1 getting GRAPE neighbor data: "; 
 	PRL(status);
@@ -3157,7 +3173,8 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 
     } else {
 
-	// Determine densities for the present block of particles.
+	// We have a valid GRAPE neighbor list.  Determine the densities
+	// for the present block of particles.
 
         for (int ip = 0; ip < ni; ip++) {
 
@@ -3166,17 +3183,28 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 
 	    if (bb->get_grape_rnb_sq() > 0) {	    // neighbors still needed
 
-		while (!count_neighbors_and_adjust_h2(bb, ip)) {
+		// Return values from count_neighbors_and_adjust_h2():
+		//
+		//	 0	success, density has been set
+		//	-1	neighbor list overflow, neighbor radius
+		//		has already been decreased
+		//	+1	too few neighbors, neighbor radius has
+		//		already been increased
 
-		    // (Function sets density on success.)
+		while (status = count_neighbors_and_adjust_h2(bb, ip)) {
+
+		    cerr << func << ": count_neighbors_and_adjust_h2 ";
+		    PRL(status);
+		    cerr << "particle " << bb->format_label()
+			 << " rnb_sq now " << bb->get_grape_rnb_sq() << ", ";
+		    PRL(n_retry);
 
 		    if (bb->get_grape_rnb_sq() > h2_crit) {
 
+			// Neighbor sphere is too big.  Expect status = 1.
 			// Write zero density to the dyn story.
 
-			putrq(bb->get_dyn_story(), "density_time",
-			      (real)bb->get_system_time());
-			putrq(bb->get_dyn_story(), "density", 0.0);
+			compute_density(bb, 0, NULL, 0);
 
 #ifdef T_DEBUG
 			if (in_debug_range && T_DEBUG_LEVEL > 0) {
@@ -3200,6 +3228,10 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 			// to zero.  Also, we could restart after those
 			// particles, as in grape_calculate_acc_and_jerk().
 			//					[Steve, 6/01]
+
+			// Presently, we stop after too many retries.
+			// Probably better to flag the error, set densities
+			// to zero, and jut continue with the next group.
 
 			if (++n_retry > 20) 
 			    hw_err_exit(func, 2, nodes[0]);
@@ -3231,12 +3263,191 @@ local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
 			}
 		    }
 		}
-
-		if (!error)
-		    bb->set_grape_rnb_sq(0);	// don't recalculate density
 	    }
 	}
     }
+
+#ifdef T_DEBUG
+    if (in_debug_range) {
+	cerr << "leaving " << func << "...";
+	PRL(error);
+    }
+#endif
+
+    return error;
+}
+
+local INLINE bool get_densities(xreal xtime, hdyn *nodes[],
+				int ni, real h2_crit,
+				int nj_on_grape, int n_pipes)
+{
+    // Compute the densities of the ni particles in nodes[].
+
+    // Return true iff an neighbor-list overflow occurred and the densities
+    // could not be determined.  The calling function should then reduce
+    // all neighbor radii and retry.
+
+    static char *func = "get_densities";
+    bool error = false;
+
+    if (ni <= 0) return error;			// should never happen
+
+#ifdef T_DEBUG
+    real sys_t = xtime;
+    bool in_debug_range = IN_DEBUG_RANGE(sys_t);
+    if (in_debug_range) {
+	cerr << "DEBUG: " << func << "..." << nodes[0]->format_label()
+	     << "  " << nodes[0]->get_grape_rnb_sq() << endl << flush;
+    }
+#endif
+
+    int n_force = 0;
+    bool force = true;
+
+    while (force) {
+
+	// Get all forces and neighbor lists for the current group
+	// of particles.
+
+	if (++n_force > 20) {
+
+	    // Too many retries -- possible in some unusual configurations
+	    // (e.g. two bound stars not in a binary, far from their next
+	    // nearest neighbors...).  Simply flag, set all unknown densities
+	    // to zero and continue with the next group of particles.
+
+	    cerr << endl << func << ": n_force = " << n_force
+		 << " at time " << xtime << endl;
+
+	    for (int ip = 0; ip < ni; ip++) {
+
+		hdyn *bb = nodes[ip];
+
+		if (bb->get_grape_rnb_sq() > 0) {
+
+		    cerr << "setting density = 0 for " << bb->format_label()
+			 << ", rnb = " << sqrt(bb->get_grape_rnb_sq())
+			 << ", r = " << abs(bb->get_pos());
+		    if (bb->get_nn())
+			cerr << ", nn = " << bb->get_nn()->format_label();
+		    cerr << endl;
+
+		    bb->set_grape_rnb_sq(0);
+		    compute_density(bb, 0, NULL, 0);
+		}
+	    }
+
+	    break;		// error = false, note
+	}		    
+
+#ifdef T_DEBUG
+	if (in_debug_range && T_DEBUG_LEVEL > 0
+	    && (n_force == 2 || (n_force > 4 && n_force%5 == 0)) ) {
+	    PRI(2); cerr << func << ": recomputing forces for "
+			 << nodes[0]->format_label() << " + " << ni-1
+			 << endl;
+	    cerr << "                 first rnb_sq = "
+		 << nodes[0]->get_grape_rnb_sq()
+		 << ",  n_force = " << n_force << endl;
+	}
+#endif
+
+	if (get_force_and_neighbors(xtime, nodes, ni,
+				    nj_on_grape, n_pipes, true)) {
+
+	    // Neighbor list overflow.  Return with error = true to force
+	    // the calling function to reduce all neighbor radii and retry.
+
+	    cerr << func << ": " << "error getting GRAPE neighbor data"
+		 << endl;
+
+#ifdef T_DEBUG
+	    if (in_debug_range) {
+		cerr << "DEBUG: neighbor radii:" << endl << flush;
+		for (int ip = 0; ip < ni; ip++) {
+		    hdyn *bb = nodes[ip];
+		    PRC(ip);
+		    if (bb && bb->is_valid() && bb->get_grape_rnb_sq() >= 0)
+			cerr << bb->format_label() << "  "
+			     << abs(bb->get_pos()) << "  "
+			     << sqrt(bb->get_d_nn_sq()) << "  "
+			     << sqrt(bb->get_grape_rnb_sq())
+			     << endl << flush;
+		    else
+			cerr << "NULL/invalid" << endl << flush;
+		}
+	    }
+#endif
+
+	    error = true;
+	    break;		// return, but possibly write
+				// a debugging message first.
+
+	} else {
+
+	    // We have a valid GRAPE neighbor list.  Determine the densities
+	    // for *all* particles in the present block (or modify their
+	    // neighbor radii) before recomputing forces if necessary.
+
+	    force = false;
+
+	    for (int ip = 0; ip < ni; ip++) {
+
+		hdyn *bb = nodes[ip];
+
+		if (bb->get_grape_rnb_sq() > 0) {   // neighbors still needed
+
+		    // Return values from count_neighbors_and_adjust_h2():
+		    //
+		    //	 0	success, density has been set
+		    //	-1	neighbor list overflow, neighbor radius
+		    //		has already been decreased
+		    //	+1	too few neighbors, neighbor radius has
+		    //		already been increased
+
+		    int status;
+		    if (status = count_neighbors_and_adjust_h2(bb, ip)) {
+
+#ifdef T_DEBUG
+			PR(status);
+			cerr << " for particle " << bb->format_label()
+			     << " rnb_sq now " << bb->get_grape_rnb_sq()
+			     << endl;
+#endif
+
+			if (bb->get_grape_rnb_sq() > h2_crit) {
+
+			    // Neighbor sphere is too big (expect status = 1).
+			    // Write zero density to the dyn story and stop
+			    // further density calculations.
+
+			    compute_density(bb, 0, NULL, 0);
+			    bb->set_grape_rnb_sq(0);
+
+#ifdef T_DEBUG
+			    if (in_debug_range && T_DEBUG_LEVEL > 0) {
+				PRI(2); PR(bb->get_grape_rnb_sq());
+				cerr << " too large for "
+				     << bb->format_label() << endl;
+				PRI(2); PRL(bb->get_pos());
+				check_neighbors(bb, bb->get_grape_rnb_sq(), 2);
+			    }
+#endif
+
+			} else {
+
+			    // Neighbor sphere size has changed and density
+			    // is unknown.  Flag a retry once we have finished
+			    // the rest of the list.
+
+			    force = true;
+			}
+
+		    }	// if (status)
+		}	// if (bb->get_grape_rnb_sq() > 0)
+	    }		// for (int ip = 0; ip < ni; ip++)
+	}		// if (get_force_and_neighbors()) ... else
+    }			// while (force)
 
 #ifdef T_DEBUG
     if (in_debug_range) {
