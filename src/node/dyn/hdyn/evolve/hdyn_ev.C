@@ -1323,22 +1323,23 @@ bool hdyn::correct_and_update()
     // next.
 
     if (diag->grape && old_v > 0) {
-	real new_v = abs1(new_vel);
 
 	// Numbers here are somewhat arbitrary (but see above note).
 
+	// real new_v = abs1(new_vel);
 	// if (new_v/old_v > 1000 || new_v > 1.e6) {	// too loose...
 
-	if (new_v > 1 && new_v > 10*old_v) {
+	real dv = abs1(new_vel-vel);
+	if (dv > old_v && dv > 0.5) {
 
-	    // Possible runaway -- speed has increased by a large factor.
+	    // Possible runaway -- speed has changed significantly.
 
 	    // Refine the possibilities before flagging an error.
 	    // Neutron star shouldn't show a large delta(vel), and the acc
 	    // or jerk should be good indicators of problems in any case.
 
-	    if (abs1(acc) > 100*abs1(old_acc)
-		|| abs1(jerk) > 1000*abs1(old_jerk)) {
+	    if (abs1(acc-old_acc) > abs1(old_acc)
+		|| abs1(jerk-old_jerk) > 5*abs1(old_jerk)) {
 
 		cerr << endl << "correct: possible hardware error at time "
 		     << get_system_time() << endl;
