@@ -999,15 +999,12 @@ stellar_type neutron_star::get_element_type() {
   // (SPZ+GN:  1 Aug 2000)
   // Currently not stable due to SeBa.data which would produce too much output.
   // Fix: implement next_update_age in neutron stars.C
-#if 0
+
   if (spec_type[Accreting])
     return Xray_Pulsar;
   else if (!dead_pulsar())
     return Radio_Pulsar;
   else
-    return Neutron_Star;
-#endif
-
     return Neutron_Star;
 
 }
