@@ -588,7 +588,9 @@ void update_cpu_counters(hdyn * b)
     write_counters_to_log(b);
 }
 
-void log_output(hdyn * b, real count, real steps,
+void log_output(hdyn * b,
+		real count, real steps,
+		real count_top_level, real steps_top_level,
 		kira_counters* kc_prev,
 		int long_binary_output)	// default = 2
 {
@@ -623,11 +625,28 @@ void log_output(hdyn * b, real count, real steps,
 	 << "Time = " << b->get_system_time()
 	 << "  N = "    << b->n_leaves() << " (" << n_bound << " bound)"
 	 << "  mass = " << total_mass(b) << " (" << m_bound << " bound)"
-	 << endl
-	 << "          block steps = " << count
-	 << "  total steps = " << steps
-	 << "  steps per block = " << steps/max(1.0, count)
 	 << endl;
+
+    // Resort to C to get the formatting right!
+
+//     int p = cerr.precision(2)
+//     cerr << "          block steps = " << count
+// 	 << "  total steps = " << steps
+// 	 << "  steps/block = " << steps/max(1.0, count)
+// 	 << endl
+// 	 << "          top-level:    " << count_top_level
+// 	 << "                " << steps_top_level
+// 	 << "                " << steps_top_level/max(1.0, count_top_level)
+// 	 << endl;
+//     cerr.precision(p);
+
+    fprintf(stderr, "          block steps = %8.2e", count);
+    fprintf(stderr, "  total steps = %8.2e", steps);
+    fprintf(stderr, "  steps/block = %6.1f\n", steps/max(1.0, count));
+    fprintf(stderr, "          top-level:    %8.2e", count_top_level);
+    fprintf(stderr, "                %8.2e", steps_top_level);
+    fprintf(stderr, "                %6.1f\n",
+	    			steps_top_level/max(1.0, count_top_level));
 
     if (b->get_use_sstar())
 	print_sstar_time_scales(b);

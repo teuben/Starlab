@@ -1,8 +1,10 @@
 
-#define T_DEBUG 169.5		// track progress through the main integration
-#undef  T_DEBUG  		// loop after time T_DEBUG if defined
+#include "t_debug.h"	// (a handy way to turn on blocks of debugging)
+#ifndef T_DEBUG_kira
+#   undef T_DEBUG
+#endif
 
-//#define DUMP_DATA 1		// uncomment to allow detailed TMP_DUMP output
+//#define DUMP_DATA 1	// uncomment to allow detailed TMP_DUMP output
 
        //=======================================================//    _\|/_
       //  __  _____           ___                    ___       //      /|\ ~
@@ -644,9 +646,15 @@ local hdyn* check_and_merge(hdyn* bi, int full_dump)
 local int integrate_list(hdyn * b,
 			 hdyn ** next_nodes, int n_next,
 			 bool exact, bool & tree_changed,
+			 int& n_list_top_level,
 			 int full_dump,
 			 real r_reflect)
 {
+    // Advance the list next_nodes, containing n_next hdyn pointers.
+    // Return the total number of steps taken (including retrys and
+    // reinitializations), or minus that number if a GRAPE calculation
+    // had to be repeated on the front end.
+
     static bool restart_grape = true;
     static bool reset_force_correction = true;	// no longer used
 
@@ -655,7 +663,7 @@ local int integrate_list(hdyn * b,
     int i, steps = 0;
     xreal sys_t = next_nodes[0]->get_system_time();
 
-    //    cerr << "At stars of Integrate_list: sys_t = " << sys_t << endl;
+    //    cerr << "At start of integrate_list: sys_t = " << sys_t << endl;
 
     // Code to time specific force-calculation operations:
 
@@ -709,16 +717,21 @@ local int integrate_list(hdyn * b,
 #endif
 
 #ifdef T_DEBUG
-//if (sys_t > T_DEBUG) cerr << 41 << endl << flush;
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: integrate_list " << 1 << endl << flush;
+    }
 #endif
 
-    calculate_acc_and_jerk_for_list(b, next_nodes, n_next, t_next,
-				    exact, tree_changed,
-				    reset_force_correction,  // no longer used
-				    restart_grape);
+    n_list_top_level = 
+	calculate_acc_and_jerk_for_list(b, next_nodes, n_next, t_next,
+					exact, tree_changed,
+					reset_force_correction,  // not used
+					restart_grape);
 
 #ifdef T_DEBUG
-//if (sys_t > T_DEBUG) cerr << 42 << endl << flush;
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: integrate_list " << 2 << endl << flush;
+    }
 #endif
 
 #ifdef TIME_LIST
@@ -748,13 +761,17 @@ local int integrate_list(hdyn * b,
 		               << bi->format_label() << endl;
 
 #ifdef T_DEBUG
-//if (sys_t > T_DEBUG) cerr << 43 << endl << flush;
+		if (IN_DEBUG_RANGE(sys_t)) {
+		    cerr << "DEBUG: integrate_list " << 3 << endl << flush;
+		}
 #endif
 
 		if (!bi->correct_and_update()) {
 
 #ifdef T_DEBUG
-//if (sys_t > T_DEBUG) cerr << 44 << endl << flush;
+		    if (IN_DEBUG_RANGE(sys_t)) {
+			cerr << "DEBUG: integrate_list " << 4 << endl << flush;
+		    }
 #endif
 
 		    // A problem has occurred during the step, presumably
@@ -830,8 +847,7 @@ local int integrate_list(hdyn * b,
 
 		// Note that old_acc = acc at the end of a step.
 
-
-#if 0000
+#if 0
 		if (bi->is_parent()
 		    && (bi->name_is("(5394,21337)")
 			|| bi->name_is("(21337,5394)"))) {
@@ -845,7 +861,6 @@ local int integrate_list(hdyn * b,
 		    cerr << endl;
 		}
 #endif
-
 
 	    } else {
 
@@ -919,10 +934,11 @@ local int integrate_list(hdyn * b,
 #endif
 
 #ifdef T_DEBUG
-//if (sys_t > T_DEBUG) cerr << 45 << endl << flush;
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: integrate_list " << 5 << endl << flush;
+    }
 #endif
 
-#if 111111
     if (r_reflect > 0) {
 	for (i = 0; i < n_next; i++) {
 	    hdyn *bi = next_nodes[i];
@@ -945,10 +961,11 @@ local int integrate_list(hdyn * b,
 	    }
 	}
     }
-#endif
 
 #ifdef T_DEBUG
-//if (sys_t > T_DEBUG) cerr << 46 << endl << flush;
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: integrate_list " << 6 << endl << flush;
+    }
 #endif
 
     // Complete all steps before modifying binary structure...
@@ -1040,7 +1057,9 @@ local int integrate_list(hdyn * b,
     }
 
 #ifdef T_DEBUG
-//if (sys_t > T_DEBUG) cerr << 47 << endl << flush;
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: integrate_list " << 7 << endl << flush;
+    }
 #endif
 
     // Probably makes more sense to check for encounters for all stars
@@ -1107,12 +1126,22 @@ local int integrate_list(hdyn * b,
 		kira_synchronize_tree(b);
 		steps += b->n_leaves();
 
-		cerr << "call initialize_system_phase2() "
+#if 0
+		cerr << "call initialize_system_phase2(b, 1) "
 		     << "from integrate_list [1]"
 		     << " at time " << b->get_system_time() << endl;
+		pp3("(21,100021)");
+		pp3("(23,100023)");
+#endif
 
 		initialize_system_phase2(b, 1);		// default set_dt
 		b->reconstruct_perturbed_list();
+
+#if 0
+		cerr << "after initialize_system_phase2(b, 1):" << endl;
+		pp3("(21,100021)");
+		pp3("(23,100023)");
+#endif
 
 		PRL(tree_changed);
 
@@ -1133,7 +1162,9 @@ local int integrate_list(hdyn * b,
     }
 
 #ifdef T_DEBUG
-//if (sys_t > T_DEBUG) cerr << 48 << endl << flush;
+    if (IN_DEBUG_RANGE(sys_t)) {
+	cerr << "DEBUG: integrate_list " << 8 << endl << flush;
+    }
 #endif
 
     if (reinitialize) {
@@ -1141,11 +1172,21 @@ local int integrate_list(hdyn * b,
 	kira_synchronize_tree(b);
 	steps += b->n_leaves();
 
-	cerr << "call initialize_system_phase2() from integrate_list [2]"
+#if 0
+	cerr << "call initialize_system_phase2(b, 2) from integrate_list [2]"
 	     << " at time " << b->get_system_time() << endl;
+	pp3("(21,100021)");
+	pp3("(23,100023)");
+#endif
 
 	initialize_system_phase2(b, 2, 2);	// always set dt
 	b->reconstruct_perturbed_list();
+
+#if 0
+	cerr << "after initialize_system_phase2(b, 2):" << endl;
+	pp3("(21,100021)");
+	pp3("(23,100023)");
+#endif
 
 	tree_changed = true;
 	restart_grape = true;
@@ -1612,8 +1653,8 @@ local void evolve_system(hdyn * b,	       // hdyn array
     kira_options *ko = b->get_kira_options();
     kira_diag *kd = b->get_kira_diag();
 
-    real count = 0;
-    real steps = 0;
+    real count = 0, steps = 0;
+    real count_top_level = 0, steps_top_level = 0;
     int grape_steps = 0;
     int snaps = 0;
 
@@ -1769,7 +1810,6 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	PRL(dt_esc);
 	PRL(dt_reinit);
 	PRL(dt_sstar);
-	PRL(dt_sync);
 	PRL(dt_fulldump);
 
 	PRC(t_snap); PRC(t_log); PRC(t_sync); PRC(t_esc); PRL(t_fulldump);
@@ -1794,37 +1834,6 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     while (t <= t_end) {
 
-#ifdef T_DEBUG
-if (b->get_system_time() >= T_DEBUG) {
-
-//     pp3(b);
-
-//     cerr << "00" << endl << flush;
-//     for_all_daughters(hdyn, b, bb)
-//     if (bb->is_parent()) pp3(bb);
-//     cerr << "01" << endl << flush;
-
-//     cerr << "about to make a new real array" << endl << flush;
-//     xxx = new real[MAX_PERTURBERS];
-//     PRL(xxx);
-//     delete [] xxx;
-
-     cerr << "0000" << endl << flush;
-
-    cerr << "about to make a new real array" << endl << flush;
-    xxx = new real[MAX_PERTURBERS];
-    PRL(xxx);
-    delete [] xxx;
-
-    cerr << "about to make a new hdynptr array" << endl << flush;
-    yyy = new hdynptr[MAX_PERTURBERS];
-    PRL(yyy);
-    delete [] yyy;
-
-    if (b->get_system_time() >= 170.5) exit(0);
-}
-#endif
-
 	int n_next;
 	xreal ttmp;
 
@@ -1834,20 +1843,21 @@ if (b->get_system_time() >= T_DEBUG) {
 
 
 #ifdef T_DEBUG
-if (ttmp > T_DEBUG) {
+	if (IN_DEBUG_RANGE(ttmp)) {
+	    cerr << "DEBUG: evolve_system " << 1 << endl << flush;
 
-    cerr << 1 << endl << flush;
-
-    int p = cerr.precision(HIGH_PRECISION);
-    cerr << "evolve_system: "; PRC(n_next); PRL(ttmp);
-    if (n_next < 4) {
-	PRI(15);
-	for (int ii = 0; ii < n_next; ii++)
-	    cerr << next_nodes[ii]->format_label() << " ";
-	cerr << endl << flush;
-    }
-    cerr.precision(p);
-}
+	    if (T_DEBUG_LEVEL > 0) {
+		int p = cerr.precision(HIGH_PRECISION);
+		cerr << "evolve_system: "; PRC(n_next); PRL(ttmp);
+		if (n_next < 4) {
+		    PRI(15);
+		    for (int ii = 0; ii < n_next; ii++)
+			cerr << next_nodes[ii]->format_label() << " ";
+		    cerr << endl << flush;
+		}
+		cerr.precision(p);
+	    }
+	}
 #endif
 
     bool quit_now = false;
@@ -1904,9 +1914,10 @@ if (ttmp > T_DEBUG) {
 		    long_bin = 1;
 	    }
 
-	    log_output(b, count, steps, &kc_prev, long_bin);
+	    log_output(b, count, steps, count_top_level, steps_top_level,
+		       &kc_prev, long_bin);
 
-	    // (Incorporate count and steps into kira_counters...?)
+	    // (Incorporate count, steps, etc. into kira_counters...?)
 
 	    save_snap = save_snap_at_log;
 
@@ -2129,7 +2140,9 @@ if (ttmp > T_DEBUG) {
 	// Proceed to the next step.
 
 #ifdef T_DEBUG
-if (ttmp > T_DEBUG) cerr << 2 << endl << flush;
+	if (IN_DEBUG_RANGE(ttmp)) {
+	    cerr << "DEBUG: evolve_system " << 2 << endl << flush;
+	}
 #endif
 
 	if (ttmp < t)
@@ -2147,7 +2160,9 @@ if (ttmp > T_DEBUG) cerr << 2 << endl << flush;
 	// Take a new step to time t (now system_time):
 
 #ifdef T_DEBUG
-if (ttmp > T_DEBUG) cerr << 3 << endl << flush;
+	if (IN_DEBUG_RANGE(ttmp)) {
+	    cerr << "DEBUG: evolve_system " << 3 << endl << flush;
+	}
 #endif
 
 #ifndef USE_GRAPE
@@ -2211,29 +2226,40 @@ if (ttmp > T_DEBUG) cerr << 3 << endl << flush;
 	}
 
 #ifdef T_DEBUG
-if (ttmp > T_DEBUG) {
-
-     cerr << 4 << endl << flush;
-
-//      cerr << "about to make a new real array" << endl << flush;
-//      xxx = new real[MAX_PERTURBERS];
-//      xxx[0] = 42;
-//      PRL(xxx);
-//      delete [] xxx;
-
-}
+	if (IN_DEBUG_RANGE(ttmp)) {
+	    cerr << "DEBUG: evolve_system " << 4 << endl << flush;
+	}
 #endif
 
-#if 0
-	cerr << "entering integrate_list: "; PRC(t); PRC(n_next);
-	cerr << next_nodes[0]->format_label();
-	if (n_next > 1) cerr << " " << next_nodes[1]->format_label();
-	cerr << endl;
+#ifdef T_DEBUG
+	if (IN_DEBUG_RANGE(ttmp)) {
+	    cerr << "entering integrate_list: "; PRC(t); PRC(n_next);
+	    cerr << next_nodes[0]->format_label();
+	    if (n_next > 1) cerr << " " << next_nodes[1]->format_label();
+	    cerr << endl;
+
+	    if (T_DEBUG_LEVEL > 0) {
+		cerr << endl << "before integrate_list: " << endl;
+		pp3("(15,100015)");
+		pp3("(21,100021)");
+		pp3("(23,100023)");
+	    }
+	}
 #endif
 
+	int n_list_top_level = 0;
 	int ds = integrate_list(b, next_nodes, n_next, exact,
-				tree_changed, full_dump,
-				r_reflect);
+				tree_changed, n_list_top_level,
+				full_dump, r_reflect);
+
+	if (n_list_top_level > 0) {
+
+	    // Count blocks and steps for top-level nodes only.
+	    // (For GRAPE, count actual hardware calls.)
+
+	    count_top_level += 1;
+	    steps_top_level += n_list_top_level;
+	}
 
 //     for (int ii = 0; ii < n_next; ii++) {
 // 	if (!next_nodes[ii] || !next_nodes[ii]->is_valid()) {
@@ -2243,7 +2269,13 @@ if (ttmp > T_DEBUG) {
 //     }
 
 #ifdef T_DEBUG
-if (ttmp > T_DEBUG) cerr << 49 << endl << flush;
+	if (IN_DEBUG_RANGE(ttmp) && T_DEBUG_LEVEL > 0) {
+	    cerr << "DEBUG: evolve_system " << 45 << endl << flush;
+	    cerr << "after integrate_list: " << endl;
+	    pp3("(15,100015)");
+	    pp3("(21,100021)");
+	    pp3("(23,100023)");
+	}
 #endif
 
 	bool force_energy_check = false;
@@ -2261,7 +2293,9 @@ if (ttmp > T_DEBUG) cerr << 49 << endl << flush;
 			* (floor(count / (4*kd->n_check_heartbeat)) + 1);
 
 #ifdef T_DEBUG
-if (ttmp > T_DEBUG) cerr << 5 << endl << flush;
+	if (IN_DEBUG_RANGE(ttmp)) {
+	    cerr << "DEBUG: evolve_system " << 5 << endl << flush;
+	}
 #endif
 
 	if (full_dump == 1) {
@@ -2414,7 +2448,6 @@ if (ttmp > T_DEBUG) cerr << 5 << endl << flush;
 		print_recalculated_energies(b);
 	}
 
-
 	// Integrate_list handles tree changes -- allows one per step.
 
 	// Note: if a node is destroyed as part of the step,
@@ -2431,7 +2464,9 @@ if (ttmp > T_DEBUG) cerr << 5 << endl << flush;
 	// under investigation).
 
 #ifdef T_DEBUG
-if (ttmp > T_DEBUG) cerr << 6 << endl << flush;
+	if (IN_DEBUG_RANGE(ttmp)) {
+	    cerr << "DEBUG: evolve_system " << 6 << endl << flush;
+	}
 #endif
 
 	if (fmod(b->get_system_time(), dt_sstar) == 0.0
@@ -2441,9 +2476,15 @@ if (ttmp > T_DEBUG) cerr << 6 << endl << flush;
 	   // print_recalculated_energies(b);
 
 	    bool tmp = evolve_stars(b, full_dump);
-//	    if (tmp)
-//		cerr << "tree change caused by evolve_stars at time "
-//		     << b->get_system_time() << endl << flush;
+
+#ifdef T_DEBUG
+	    if (IN_DEBUG_RANGE(ttmp)) {
+		if (tmp)
+		    cerr << "tree change caused by evolve_stars at time "
+			 << b->get_system_time() << endl << flush;
+	    }
+#endif
+
 	    tree_changed |= tmp;
 
 	    // cerr << "post SE at t = " << b->get_system_time() << endl;
@@ -2467,7 +2508,9 @@ if (ttmp > T_DEBUG) cerr << 6 << endl << flush;
 #endif
 
 #ifdef T_DEBUG
-if (ttmp > T_DEBUG) cerr << 7 << endl << flush;
+	if (IN_DEBUG_RANGE(ttmp)) {
+	    cerr << "DEBUG: evolve_system " << 7 << endl << flush;
+	}
 #endif
 
 	// Miscellaneous checks (see kira_runtime.C):
