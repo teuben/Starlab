@@ -18,7 +18,7 @@ OBJECT_FILES = _dyn_ev.o _dyn_io.o _dyn_slow.o
 
 LIBRARY = lib_dyn_.a
 
-EXECUTABLES = flat_hermite _dyn_io no_xreal
+EXECUTABLES = flat_hermite _dyn_io no_xreal set_radius
 
 NON_CCC_EXECUTABLES = 
 
