@@ -421,7 +421,8 @@ ostream & hdyn::print_dyn_story(ostream & s,
 	    // *** Hook for future treatment of lightly perturbed binaries.
 	    // *** Indicator is kep = 2; currently not used by tdyn.
 
-	    if (is_low_level_node()
+	    if (this != root			// must check this...
+		&& is_low_level_node()
 		&& get_perturbation_squared() < SMALL_TDYN_PERT_SQ)
 		put_integer(s, "  kep  =  ", 2);
 	}
