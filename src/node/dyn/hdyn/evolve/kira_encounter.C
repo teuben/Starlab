@@ -80,6 +80,8 @@ real print_encounter_elements(hdyn* bi, hdyn* bj,
 	 (find_qmatch(bj->get_log_story(), "black_hole") &&
 	  getiq(bj->get_log_story(), "black_hole")==1))
 	cerr << " [bh] ";
+
+      cerr << "\n     at distance " << k.get_periastron();
       
     }
 
@@ -111,6 +113,14 @@ void check_print_close_encounter(hdyn *bi)
 	// or the next level down (added by Steve 4/99 to prevent
 	// multiple output in bound hierarchical systems).
 
+#if 0
+	PRC(nn);PRC(bi->is_leaf());PRC(bi->get_parent()->is_top_level_node());PRC(bi->get_kepler());
+PRC(bi->get_nn());PRC(nn->is_valid());PRC(nn->is_leaf());
+PRC(bi->is_top_level_node());PRC(nn->is_top_level_node());
+PRC(nn->get_parent()->is_top_level_node());PRC(nn->get_kepler());
+PRC(bi->get_d_nn_sq());
+PRL(bi->get_stellar_encounter_criterion_sq());
+#endif
 	if (nn && bi->is_leaf()
 	    && (bi->is_top_level_node()
 		|| bi->get_parent()->is_top_level_node())
