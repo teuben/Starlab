@@ -352,8 +352,8 @@ ln -f -s starlab_start.$shell starlab_start
 # Convenient to save a record of where configure was run.
 
 AC_MSG_NOTICE([saving hostname and configure arguments in CONFIGURE_HOST])
-hostname > CONFIGURE_HOST
-echo "arguments: $all_args" >> CONFIGURE_HOST
+echo Starlab configured on `hostname` on `date`		> CONFIGURE_HOST
+echo "configure arguments: $all_args"		       >> CONFIGURE_HOST
 
 #==========================================================================
 
