@@ -310,7 +310,10 @@ main(int argc, char ** argv)
 
     mfrac = rfrac = VERY_LARGE_NUMBER;
 
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
+    static char *cvs_version = $Revision$;
+
+    while ((c = pgetopt(argc, argv, param_string,
+			"makeplummer", "1.13")) != -1)
 	switch(c) {
 
 	    case 'c': c_flag = true;
