@@ -1,0 +1,16 @@
+#!/bin/tcsh -f
+
+# Install public-domain packages distributed as is with Starlab.
+
+echo Making gifsicle
+set log = gifsicle-install.log
+
+cd gifsicle-1.40
+./configure					>! ../$log
+make clean					>> ../$log
+make						>> ../$log
+
+cd src
+mv gifdiff gifsicle gifview $STARLAB_PATH/sbin
+cd ../..
+
