@@ -19,13 +19,13 @@ CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC) $(STARLAB_HAS_GZIP)
 LIBFLAGS	= -L$(LIB) -lnode -lstd -lm
 DEPEND_LIBS	= $(LIB)/libnode.a $(LIB)/libstd.a
 
-EXECUTABLES = node_io display_subtrees rmq snapprune mk_single_node \
+EXECUTABLES = node_io display_subtrees rmq snapprune make_single_node \
 		add_daughter_node pretty_print_tree print_normal \
-		mknode mkmass mksecondary mass_dist m_bar \
+		makenode makemass makesecondary mass_dist m_bar \
 	        setmass
 OBJECT_FILES = node_io.o hydrobase_io.o starbase_io.o tree_io.o node_tt.o \
 		rmtree.o print_normal.o starbase_init.o \
-		mknode.o mkmass.o renumber.o
+		makenode.o makemass.o renumber.o
 
 LIBRARY = libnode.a
 

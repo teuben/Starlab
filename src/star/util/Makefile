@@ -25,7 +25,7 @@ DEPEND_LIBS     = $(LIB)/libsint.a \
 
 EXECUTABLES  = red_stellar_system rcore2 coagulation rearrange_mf \
 	       red_star_cluster encountervelocity imf_evolve proj_lagr \
-               lmt_to_ubvri mkdyn_from_input
+               lmt_to_ubvri makedyn_from_input
 OBJECT_FILES = proj_lagr.o kingfit.o lmt_to_ubvri.o
 
 #OBJECT_FILES = sint.o
