@@ -8,7 +8,7 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// makecube: construct a simple homogeneous cube, with
+//// makecube: construct a simple homogeneous cube, with (default)
 ////
 ////              M = 1, T/U = -1/2, E = -1/4.
 ////
@@ -16,42 +16,50 @@
 ////              -C    output data in 'col' format [no]
 ////              -i    number the particles sequentially [don't number]
 ////              -l    write cube size to dyn story [don't write]
+////              -L    specify cube size (+/-L) [1]
 ////              -n    specify number of particles [no default]
 ////              -o    echo value of random seed [don't echo]
 ////              -s    specify random seed [random from system clock]
 ////              -u    leave unscaled [scale to E=-1/4, M = 1, R = 1]
 ////
-////  If the "-u" flag is set, the particles are left unscaled,
-////  with masses 1/n and positions and velocities uniformly
-////  distributed in [-1, 1].
+////  If the "-u" flag is set, the particles are left unscaled, with
+////  masses 1/n, positions uniformly distributed in [-L, L], and
+////  velocities uniformly distributed in a range giving approximate
+////  virial equilibrium.
 
 #include "dyn.h"
 
 #ifdef TOOLBOX
 
-local void  makecube(dyn * root, int n, int u_flag)
+local void makecube(dyn *root, int n,
+		    real L = 1,
+		    int u_flag = false)
 {
-    dyn  * bi;
+    if (L <= 0) return;
 
-    root->set_mass(1);
     real pmass = 1.0 / n;
 
-    for (bi = root->get_oldest_daughter(); bi != NULL;
-         bi = bi->get_younger_sister()) {
+    // Factor scaling the velocity places the system in approximate
+    // virial equilibrium without scaling.
+
+    real vfac = 0.7/sqrt(L);
+
+    for_all_daughters(dyn, root, bi) {
 	bi->set_mass(pmass);	
-        bi->set_pos(vec(randinter(-1,1),randinter(-1,1),randinter(-1,1)));
-        bi->set_vel(vec(randinter(-1,1),randinter(-1,1),randinter(-1,1)));
+        bi->set_pos(L*vec(randinter(-1,1),randinter(-1,1),randinter(-1,1)));
+        bi->set_vel(vfac*vec(randinter(-1,1),randinter(-1,1),randinter(-1,1)));
     }
 
-//  Transform to center-of-mass coordinates, and optionally
-//  scale to standard parameters.
+    // Transform to center-of-mass coordinates, and optionally
+    // scale to standard parameters.
 
     root->to_com();
+    root->set_mass(1);
     putrq(root->get_log_story(), "initial_mass", 1.0);
 
-    if (! u_flag && n > 1) {
+    if (!u_flag && n > 1) {
 
-        real kinetic, potential;
+        real potential, kinetic;
 
 	// Note: scale_* operates on internal energies.
 
@@ -89,7 +97,7 @@ main(int argc, char ** argv) {
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:Ciln:os:u";
+    char* param_string = "c:CilL:n:os:u";
 
     while ((c = pgetopt(argc, argv, param_string)) != -1)
 	switch(c)
@@ -102,6 +110,8 @@ main(int argc, char ** argv) {
 	    case 'i': i_flag = true;
 		      break;
 	    case 'l': l_flag = true;
+		      break;
+	    case 'L': cube_size = 2*atof(poptarg);
 		      break;
 	    case 'n': n_flag = true;
 		      n = atoi(poptarg);
@@ -132,12 +142,13 @@ main(int argc, char ** argv) {
     dyn *b, *by, *bo;
     b = new dyn();
     bo = new dyn();
-    if (i_flag) 
-        bo->set_label(1);
+    if (i_flag) bo->set_label(1);
     b->set_oldest_daughter(bo);
     bo->set_parent(b);
     if (l_flag)
 	putrq(b->get_log_story(), "cube_size", cube_size);
+
+    // Create the tree.
 
     for (i = 1; i < n; i++) {
         by = new dyn();
@@ -161,7 +172,7 @@ main(int argc, char ** argv) {
     sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
-    if (n > 0) makecube(b, n, u_flag);
+    if (n > 0) makecube(b, n, cube_size/2, u_flag);
 
     put_dyn(b);
 }
