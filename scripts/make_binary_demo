@@ -1,4 +1,4 @@
-#!/bin/tcsh
+#! /bin/csh -f
 
 # Make a standard Plummer model, with 100% binaries.  Command-line
 # options are:

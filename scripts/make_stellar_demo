@@ -1,4 +1,4 @@
-#!/bin/tcsh
+#! /bin/csh -f
 
 # Make a standard King model with 25% binaries and stellar evolution.
 # Command-line options are:
