@@ -144,6 +144,7 @@ local real minimum_semi_major_axis(dyn* b1, dyn* b2)
 local bool dyn_present(dyn* bi) {
 
   bool dynamics_present = true;
+
   if(bi->get_pos()[0]==0 && bi->get_pos()[1]==0 && bi->get_pos()[2]==0 &&
      bi->get_vel()[0]==0 && bi->get_vel()[1]==0 && bi->get_vel()[2]==0)
     dynamics_present = false;
