@@ -54,10 +54,12 @@
 #include "update_node.C"	// avoid repeating local functions
 //----------------------------------------------------------------------
 
+#if 0
 local void dealloc_tree(pdyn *b,
 			bool delete_b = true)
 {
-    // This is rmtree, except that it uses our own memory management.
+    // This is rmtree, except that it uses our own memory management,
+    // if present (dealloc_pdyn).
 
     pdyn* d = b->get_oldest_daughter();
     while (d) {
@@ -67,6 +69,7 @@ local void dealloc_tree(pdyn *b,
     }
     if (delete_b) dealloc_pdyn(b);  // optionally leave node itself untouched
 }
+#endif
 
 local INLINE void clean_up_subtree(worldbundle *wb, pdyn *old, bool debug)
 {
@@ -101,10 +104,12 @@ local INLINE void clean_up_subtree(worldbundle *wb, pdyn *old, bool debug)
 	    
 	detach_node_from_general_tree(*old);
 
-	// Function dealloc_tree() actually deletes the old nodes.  
+	// Function rmtree() actually deletes the old nodes.  
 	// May not be necessary to go that far.
 
-	dealloc_tree(old);
+	rmtree(old);
+
+	// Replace by dealloc_tree() if we do our own memory management.
 
 	if (debug)
 	    cerr << "deleted " << ndel << " nodes" << endl;
@@ -425,29 +430,16 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
     static real t_int = -VERY_LARGE_NUMBER;	// time last the interpolated
 						// tree was updated
 
-    static bool pdyn_init = false;
-    if (!pdyn_init) {
-
-	// Initialize memory management.
-
-	pdyn_init = initialize_pdyn(wb->get_nw(),  // 2*wb->get_n_daughters(),
-				    NULL, NULL, false);
-
-	if (!pdyn_init) err_exit("unable to initialize pdyn array");
-    }
-
     // Use the "fast" kepler solver...
 
     if (!root) set_kepler_fast_flag();
 
     if (wb != wb_last) {
 	if (root) {
+	    rmtree(root);
 
-	    // May be faster simply to deallocate everything in a single
-	    // operation rather than traversing the tree.
-
-	    // dealloc_tree(root);
-	    dealloc_all();
+	    // Replace by dealloc_tree() or dealloc_all() if we do
+	    //our own memory management.
 
 	    root = NULL;
 	}
@@ -494,10 +486,13 @@ pdyn *create_interpolated_tree2(worldbundle *wb, real t,
 
     // Create a root node.
 
-    // if (!root) root = new pdyn(NULL, NULL, false);
-    if (!root) root = alloc_pdyn(NULL, NULL, false);
+    if (!root) root = new pdyn(NULL, NULL, false);
+
+    // Replace by alloc_pdyn() if we do our own memory management.
 
     root->set_system_time(t);
+    root->set_name("root");
+    root->set_worldline_index(wb->find_index(root));
 
     root->set_pos(0);			// unnecessary, but not wrong...
     root->set_vel(0);
@@ -604,7 +599,6 @@ main(int argc, char *argv[])
 
     pdyn *root = create_interpolated_tree2(wb, t, true);
     put_node(cout, *root, false);
-    // dealloc_tree(root);
 
 #if 0
     // Some statistics:
@@ -664,7 +658,6 @@ main(int argc, char *argv[])
     while (t < 0.85) {
 	pdyn *root = create_interpolated_tree2(wb, t);
 	put_node(cout, *root, false);
-	// dealloc_tree(root);
 	t += 0.01;
     }
 #endif
