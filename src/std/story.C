@@ -16,6 +16,8 @@
 
 #ifndef TOOLBOX
 
+#define DEBUG false
+
 // delete [] new_string lines added by Steve 8/5/97.
 
 // New code to check if story exists before using member
@@ -30,9 +32,9 @@ story::~story()
 	delete si;
 	si = sn;
     }
-    // cout << "~story for " << this << endl;
+    if (DEBUG) cerr << "~story for " << this << endl << flush;
     if (text) {
-	// cerr << "~story: deleting text " << text << endl;
+	if (DEBUG) cerr << "~story: deleting text " << text << endl << flush;
 	delete [] text;
     }
 }
@@ -118,8 +120,8 @@ void rm_daughter_story(story * s, story * d)
 	if (s->get_last_daughter_node() == d)
 	    s->set_last_daughter_node(NULL);
 
-    } else
-	{
+    } else {
+
 	ad = fd;
 	nd = ad->get_next_story_node();
 	while (nd != d)
@@ -131,7 +133,8 @@ void rm_daughter_story(story * s, story * d)
 	ad->set_next_story_node(nd);
 	if (nd == NULL)
 	    s->set_last_daughter_node(ad);
-	}
+    }
+
     delete d;    
 }
 
@@ -443,13 +446,19 @@ local void  write_sq(story * a_story_line, char * name, char * value)
     delete [] new_string;
 }
 
-/*-----------------------------------------------------------------------------
- *  write_vq  --  write a vector quantity to a line.
- *-----------------------------------------------------------------------------
- */
-local void  write_vq(story * a_story_line, char * name, vec & value,
-		     int p = STD_PRECISION)
+//-----------------------------------------------------------------------------
+//  write_vq  --  write a vector quantity to a line.
+//-----------------------------------------------------------------------------
+
+local void write_vq(story * a_story_line, char * name, vec & value,
+		    int p = STD_PRECISION)
 {
+    if (DEBUG) {
+	cerr << "in write_vq" << endl;
+	PRC(a_story_line); PRL(name);
+	PRC(value); PRL(p);
+    }
+
     if (!a_story_line || !name) return;
 
     char * new_string;
@@ -467,8 +476,27 @@ local void  write_vq(story * a_story_line, char * name, vec & value,
 
     sprintf(new_string, format, name, value[0], value[1], value[2]);
 
+    if (DEBUG) {
+	PRL(new_string);
+	PRL(1);
+	char *c = a_story_line->get_text();
+	PRL(10);
+	unsigned int ic =(unsigned int) c;
+	PRL(ic);
+	if (c) {
+	    PRL(*c);
+	    PRL(c);
+	    PRL(11);
+	    PRL(a_story_line->get_text());
+	    PRL(12);
+	    put_line_text(cerr, *a_story_line);
+	}
+	PRL(2);
+    }
     a_story_line->set_text(new_string);
+    if (DEBUG) PRL(3);
     delete [] new_string;
+    if (DEBUG) PRL(4);
 }
 
 /*-----------------------------------------------------------------------------
@@ -1185,12 +1213,10 @@ int  rmq(story *  a_story, char * name)
 
     story * story_line;
 
-    if (story_line = find_qmatch(a_story, name))
-	{
+    if (story_line = find_qmatch(a_story, name)) {
 	rm_daughter_story(a_story, story_line);
 	return 1;
-	}
-    else
+    } else
 	return 0;
 }
 
