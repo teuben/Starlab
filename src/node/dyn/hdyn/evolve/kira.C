@@ -1893,16 +1893,13 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	}
 #endif
 
-#if 0
-	if (t > 13.62265) {
-	    for (int i = 0; i < n_next; i++)
-		if (next_nodes[i] && next_nodes[i]->is_valid()
-		    && next_nodes[i]->name_is("(7,5061)")) {
-		    plot_stars(next_nodes[i]->get_top_level_node());
-		    pp3(next_nodes[i], cerr, -1);
-		}
-	}
-#endif
+
+//  	for (int i = 0; i < n_next; i++)
+//  	  if (next_nodes[i] && next_nodes[i]->is_valid()
+//  	      && next_nodes[i]->name_is("(1752,101752)")) {
+//  	    plot_stars(next_nodes[i]->get_top_level_node());
+//  	    pp3(next_nodes[i], cerr, -1);
+//  	  }
 
 
 	//-------------------------------------------------------------------

@@ -1059,6 +1059,13 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	hdyn **pl = NULL;
 	real rpfac = 0;
 
+
+//  	if (b->name_is("(1752,101752)")) {
+//  	  cerr << "grape6: " << endl;
+//  	  PRL(b->get_grape_rnb_sq());
+//  	}
+
+
 	if (b->is_parent() && b->get_valid_perturbers()) {
 
 	    if (b->get_oldest_daughter()->get_slow())
@@ -1075,6 +1082,12 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	for (int j = 0; j < n_neighbors; j++) {
 
 	    hdyn *bb = node_list[neighbor_list[j]];
+
+
+//  	    if (b->name_is("(1752,101752)")) {
+//  	      PRC(j); PRL(bb->format_label());
+//  	    }
+
 
 	    // bb is the j-th neighbor of b (list not ordered).
 
@@ -1102,6 +1115,13 @@ local INLINE bool get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 			    pl[npl] = bb;
 
 			npl++;
+
+
+//  			if (b->name_is("(1752,101752)")) {
+//  			  cerr << "is perturber #" << npl << endl;
+//  			}
+
+
 		    }
 		}
 	    }
@@ -1328,9 +1348,23 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
     n_previous_nodes = n_top;
     bool need_neighbors = false;
 
+
+
+
+    bool dbg = false;
+
+
+
+
     for (i = 0; i < n_top; i++) {
 
 	hdyn *bb = previous_nodes[i] = current_nodes[i];
+
+
+
+//	if (bb->name_is("(1752,101752)")) dbg = true;
+
+
 
 	// Set a reasonable h2 value for this node.
 
@@ -1347,6 +1381,12 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	cerr << "grape_calculate_acc_and_jerk:  ";
 	PRC(xtime); PRC(n_next); PRL(n_top);
     }
+
+
+
+    if (dbg) PRL(n_top);
+
+
 
     //------------------------------------------------------------------
 
@@ -1397,13 +1437,18 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 
 	    i += sort_nodes_and_reduce_rnb(current_nodes+i, ni);
 
-	else if (need_neighbors)
+	else if (need_neighbors) {
 
 	    // Get colls and perturber lists.
 
+	    if (dbg) {
+	      cerr << "to get_coll..." ; PRL(i);
+	      PRL(current_nodes[i]->format_label());
+	    }
+
 	    i += get_coll_and_perturbers(xtime, current_nodes+i, ni,
 					 h2_crit, nj_on_grape, n_pipes);
-	else
+	} else
 
 	    i += ni;
 
@@ -1418,12 +1463,21 @@ void grape_calculate_acc_and_jerk(hdyn **next_nodes,
 	hdyn *bb = current_nodes[i];
 
 	// Frequency of coll checks is every fourth force calculation.
-	// Frequency of perturber checks is every other force calculation.
+	// xx Frequency of perturber checks is every other force calculation.
 
 	if (bb->is_leaf())
 	    bb->set_grape_nb_count((bb->get_grape_nb_count() + 1)%4);
 	else
-	    bb->set_grape_nb_count((bb->get_grape_nb_count() + 1)%2);
+
+//	    bb->set_grape_nb_count((bb->get_grape_nb_count() + 1)%2);
+
+//	    *** If we reduce the frequency of perturber checks, then we
+//	    *** must be sure to restore the CMs on the perturber list,
+//	    *** as the correction to the CM force depends on it...
+//	    ***						(Steve, 6/01)
+
+	    bb->set_grape_nb_count(0);
+
     }
 
     if (DEBUG) {
