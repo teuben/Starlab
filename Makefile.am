@@ -311,6 +311,10 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		src/star/util/Version_2 \
 		src/star/util/Version_3 \
 		src/star/util/VminR.tab \
+		src/star/xutil/dyn_util.h \
+		src/star/xutil/hrd_util.h \
+		src/star/xutil/xhrdplot.h \
+		src/star/xutil/xstarplot.h \
 		src/std/mycat.C \
 		src/std/set_up.C \
 		src/std/setup_starlab.C \
