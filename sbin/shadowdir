@@ -1,7 +1,7 @@
 #
 # Create a directory shadowing a specified one.  Intended application is
 # to allow multiple Starlab trees to share a single source tree, for use
-# with different architectures.
+# with different architectures or compiler options.
 
 if ($#argv < 1) then
     echo Usage: shadowdir target-directory-name \[shadow-directory-name\]
