@@ -4,15 +4,15 @@
 #ifndef TOOLBOX
 #ifdef USE_XREAL
 
-inline int xadd(unsigned long long &a, unsigned long long b)
+inline int xadd(xfrac_t &a, xfrac_t b)
 {
     a += b;
     return (a < b ? 1 : 0);	// a < b ==> overflow
 }
 
-inline int xsub(unsigned long long &a, unsigned long long b)
+inline int xsub(xfrac_t &a, xfrac_t b)
 {
-    unsigned long long aa = a;
+    xfrac_t aa = a;
     a -= b;
     return (a > aa ? 1 : 0);	// a > aa ==> underflow
 }
@@ -26,7 +26,7 @@ xreal::xreal() {i = f = 0;}					// default
 //    f = x.f;
 //}
 
-xreal::xreal(long long ii, unsigned long long ff) {
+xreal::xreal(xint_t ii, xfrac_t ff) {
     i = ii;
     f = ff;
 }
@@ -70,8 +70,8 @@ xreal::xreal(real x)						// x = real
 	f = 0; f--;			// largest possible xreal
 
     } else {
-	i = (long long)ii;
-	f = (unsigned long long)(TWO64*ff);
+	i = (xint_t)ii;
+	f = (xfrac_t)(TWO64*ff);
     }
 }
 
@@ -92,14 +92,14 @@ real xreal::to_real()
 xreal xreal::operator - () {return xreal(-i-1, 0-f);}
 
 xreal xreal::operator + (const xreal y) {
-    unsigned long long sumf = f;
-    long long sumi = i + y.i + xadd(sumf, y.f);
+    xfrac_t sumf = f;
+    xint_t sumi = i + y.i + xadd(sumf, y.f);
     return xreal(sumi, sumf);
 }
 
 xreal xreal::operator - (const xreal y) {
-    unsigned long long sumf = f;
-    long long sumi = i - y.i - xsub(sumf, y.f);
+    xfrac_t sumf = f;
+    xint_t sumi = i - y.i - xsub(sumf, y.f);
     return xreal(sumi, sumf);
 }
 
@@ -159,10 +159,10 @@ bool xreal::operator >= (const xreal y) {
 real fmod2(xreal x, real y)	// limited function:  assumes y is a power
 				//		      of 2 less than 1
 {
-    xfrac fx = x.get_f();
+    xfrac_t fx = x.get_f();
     xreal xy = (xreal)y;
-    xfrac fy = xy.get_f();
-    xfrac r = fx%fy;
+    xfrac_t fy = xy.get_f();
+    xfrac_t r = fx%fy;
     return r*TWO64I;
 }
 
@@ -180,7 +180,10 @@ void xprint(xreal x,
 	    bool newline)	// default = true
 {
 #ifdef USE_XREAL
-    s << x.get_i() << "+" << x.get_f();
+//    s << x.get_i() << "+" << x.get_f();
+    char tmp[128];
+    sprintf(tmp, "%16.16llx", x.get_f());
+    s << x.get_i() << "+" << tmp;
 #else
     s << x;
 #endif
