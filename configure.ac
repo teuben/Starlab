@@ -5,6 +5,7 @@
 # in the future:
 #
 #	no_x
+#	F77
 #
 # Note that numerous autoconf cache (ac_cv_xxx) variables are also used.
 #
@@ -46,17 +47,11 @@ CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"
 #--------------------------------------------------------------------------
 # Checks for programs.
 AC_PROG_CC
-
 AC_PROG_F77
-
-#if test "x$ac_cv_prog_f77" = "xyes"; then
-# Try this...
-if test "x$F77" != "x"; then
+if test -n "$F77"; then
     AC_F77_WRAPPERS
 fi
-#AM_CONDITIONAL(HAVE_F77, [test "x$ac_cv_prog_f77" = "xyes"])
-AM_CONDITIONAL(HAVE_F77, [test "x$F77" != "x"])
-
+AM_CONDITIONAL(HAVE_F77, [test -n "$F77"])
 AC_PROG_CXX
 # disable shared libs for now -- work this out later
 AC_DISABLE_SHARED
