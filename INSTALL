@@ -1,239 +1,229 @@
+Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002 Free Software
+Foundation, Inc.
+
+   This file is free documentation; the Free Software Foundation gives
+unlimited permission to copy, distribute and modify it.
+
+Basic Installation
+==================
+
+   These are generic installation instructions.
+
+   The `configure' shell script attempts to guess correct values for
+various system-dependent variables used during compilation.  It uses
+those values to create a `Makefile' in each directory of the package.
+It may also create one or more `.h' files containing system-dependent
+definitions.  Finally, it creates a shell script `config.status' that
+you can run in the future to recreate the current configuration, and a
+file `config.log' containing compiler output (useful mainly for
+debugging `configure').
+
+   It can also use an optional file (typically called `config.cache'
+and enabled with `--cache-file=config.cache' or simply `-C') that saves
+the results of its tests to speed up reconfiguring.  (Caching is
+disabled by default to prevent problems with accidental use of stale
+cache files.)
+
+   If you need to do unusual things to compile the package, please try
+to figure out how `configure' could check whether to do them, and mail
+diffs or instructions to the address given in the `README' so they can
+be considered for the next release.  If you are using the cache, and at
+some point `config.cache' contains results you don't want to keep, you
+may remove or edit it.
+
+   The file `configure.ac' (or `configure.in') is used to create
+`configure' by a program called `autoconf'.  You only need
+`configure.ac' if you want to change it or regenerate `configure' using
+a newer version of `autoconf'.
+
+The simplest way to compile this package is:
+
+  1. `cd' to the directory containing the package's source code and type
+     `./configure' to configure the package for your system.  If you're
+     using `csh' on an old version of System V, you might need to type
+     `sh ./configure' instead to prevent `csh' from trying to execute
+     `configure' itself.
+
+     Running `configure' takes awhile.  While running, it prints some
+     messages telling which features it is checking for.
+
+  2. Type `make' to compile the package.
+
+  3. Optionally, type `make check' to run any self-tests that come with
+     the package.
+
+  4. Type `make install' to install the programs and any data files and
+     documentation.
+
+  5. You can remove the program binaries and object files from the
+     source code directory by typing `make clean'.  To also remove the
+     files that `configure' created (so you can compile the package for
+     a different kind of computer), type `make distclean'.  There is
+     also a `make maintainer-clean' target, but that is intended mainly
+     for the package's developers.  If you use it, you may have to get
+     all sorts of other programs in order to regenerate files that came
+     with the distribution.
+
+Compilers and Options
+=====================
+
+   Some systems require unusual options for compilation or linking that
+the `configure' script does not know about.  Run `./configure --help'
+for details on some of the pertinent environment variables.
+
+   You can give `configure' initial values for configuration parameters
+by setting variables in the command line or in the environment.  Here
+is an example:
+
+     ./configure CC=c89 CFLAGS=-O2 LIBS=-lposix
+
+   *Note Defining Variables::, for more details.
+
+Compiling For Multiple Architectures
+====================================
+
+   You can compile the package for more than one kind of computer at the
+same time, by placing the object files for each architecture in their
+own directory.  To do this, you must use a version of `make' that
+supports the `VPATH' variable, such as GNU `make'.  `cd' to the
+directory where you want the object files and executables to go and run
+the `configure' script.  `configure' automatically checks for the
+source code in the directory that `configure' is in and in `..'.
+
+   If you have to use a `make' that does not support the `VPATH'
+variable, you have to compile the package for one architecture at a
+time in the source code directory.  After you have installed the
+package for one architecture, use `make distclean' before reconfiguring
+for another architecture.
+
+Installation Names
+==================
+
+   By default, `make install' will install the package's files in
+`/usr/local/bin', `/usr/local/man', etc.  You can specify an
+installation prefix other than `/usr/local' by giving `configure' the
+option `--prefix=PATH'.
+
+   You can specify separate installation prefixes for
+architecture-specific files and architecture-independent files.  If you
+give `configure' the option `--exec-prefix=PATH', the package will use
+PATH as the prefix for installing programs and libraries.
+Documentation and other data files will still use the regular prefix.
+
+   In addition, if you use an unusual directory layout you can give
+options like `--bindir=PATH' to specify different values for particular
+kinds of files.  Run `configure --help' for a list of the directories
+you can set and what kinds of files go in them.
+
+   If the package supports it, you can cause programs to be installed
+with an extra prefix or suffix on their names by giving `configure' the
+option `--program-prefix=PREFIX' or `--program-suffix=SUFFIX'.
+
+Optional Features
+=================
+
+   Some packages pay attention to `--enable-FEATURE' options to
+`configure', where FEATURE indicates an optional part of the package.
+They may also pay attention to `--with-PACKAGE' options, where PACKAGE
+is something like `gnu-as' or `x' (for the X Window System).  The
+`README' should mention any `--enable-' and `--with-' options that the
+package recognizes.
+
+   For packages that use the X Window System, `configure' can usually
+find the X include and library files automatically, but if it doesn't,
+you can use the `configure' options `--x-includes=DIR' and
+`--x-libraries=DIR' to specify their locations.
+
+Specifying the System Type
+==========================
+
+   There may be some features `configure' cannot figure out
+automatically, but needs to determine by the type of machine the package
+will run on.  Usually, assuming the package is built to be run on the
+_same_ architectures, `configure' can figure that out, but if it prints
+a message saying it cannot guess the machine type, give it the
+`--build=TYPE' option.  TYPE can either be a short name for the system
+type, such as `sun4', or a canonical name which has the form:
+
+     CPU-COMPANY-SYSTEM
+
+where SYSTEM can have one of these forms:
+
+     OS KERNEL-OS
+
+   See the file `config.sub' for the possible values of each field.  If
+`config.sub' isn't included in this package, then this package doesn't
+need to know the machine type.
+
+   If you are _building_ compiler tools for cross-compiling, you should
+use the `--target=TYPE' option to select the type of system they will
+produce code for.
+
+   If you want to _use_ a cross compiler, that generates code for a
+platform different from the build platform, you should specify the
+"host" platform (i.e., that on which the generated programs will
+eventually be run) with `--host=TYPE'.
+
+Sharing Defaults
+================
+
+   If you want to set default values for `configure' scripts to share,
+you can create a site shell script called `config.site' that gives
+default values for variables like `CC', `cache_file', and `prefix'.
+`configure' looks for `PREFIX/share/config.site' if it exists, then
+`PREFIX/etc/config.site' if it exists.  Or, you can set the
+`CONFIG_SITE' environment variable to the location of the site script.
+A warning: not all `configure' scripts look for a site script.
+
+Defining Variables
+==================
+
+   Variables not defined in a site shell script can be set in the
+environment passed to `configure'.  However, some packages may run
+configure again during the build, and the customized values of these
+variables may be lost.  In order to avoid this problem, you should set
+them in the `configure' command line, using `VAR=value'.  For example:
+
+     ./configure CC=/usr/local2/bin/gcc
+
+will cause the specified gcc to be used as the C compiler (unless it is
+overridden in the site shell script).
+
+`configure' Invocation
+======================
+
+   `configure' recognizes the following options to control how it
+operates.
+
+`--help'
+`-h'
+     Print a summary of the options to `configure', and exit.
+
+`--version'
+`-V'
+     Print the version of Autoconf used to generate the `configure'
+     script, and exit.
+
+`--cache-file=FILE'
+     Enable the cache: use and save the results of the tests in FILE,
+     traditionally `config.cache'.  FILE defaults to `/dev/null' to
+     disable caching.
+
+`--config-cache'
+`-C'
+     Alias for `--cache-file=config.cache'.
+
+`--quiet'
+`--silent'
+`-q'
+     Do not print messages saying which checks are being made.  To
+     suppress all normal output, redirect it to `/dev/null' (any error
+     messages will still be shown).
+
+`--srcdir=DIR'
+     Look for the package's source code in directory DIR.  Usually
+     `configure' can determine that directory automatically.
+
+`configure' also accepts some other, not widely useful, options.  Run
+`configure --help' for more details.
 
-
---------------------------------------------------------------------------------
-
-To upgrade your existing starlab, assumed to be under CVS control, most of
-the time the following should work:
-
-	cd $STARLAB_PATH
-	cvs update -d
-	make sure
-
-sometimes you may need to run configure (of config.status) again, and 
-logout/in again (or source the correct files):
-
-	config.status			# re-create startup files (locally)
-	make diff_new			# check if those files differ from yours
-
-or if configure has changed itself:
-
-	configure
-	make diff_new
-
---------------------------------------------------------------------------------
-
-First time install of starlab 4.x 
-
-1)  First of you need to choose to take a blessed ('stable') release in the form of a
-    compressed tar file, or be on the bleeding edge, and use CVS access. So, choose:
-    
-	goto step 2a) or 2b)
-
-2a) Obtain the latest a tarball from the archive:
-
-	ncftpget http://www.manybody.org/...
-	tar zxf starlab_4.0.tar.gz
-	cd starlab_4.0
-	
-	(goto step 3a)
-
-2b) CVS access (developers have their own account, but for guest, use the password "guest", 
-        which gives you read-only access)
-
-	setenv CVSROOT :pserver:guest@akash.astro.umd.edu:/home/cvsroot
-	cvs login
-	cvs checkout starlab
-	cd starlab
-	
-	(goto step 3a or 3b)
-
-3a) New method (configure based starlab 4.x based)
-
-    The simplest way to install would be the following command (from the starlab
-    root directory):
-
-	source AAA_SOURCE_ME
-
-
-3b) A more manual way would be the following set of commands:
-
-			(optionally override compilers if you need to fool the system)
-			(not well tested yet)
-	setenv CC   `which gcc`
-	setenv CXX  `which g++`
-	setenv F77  `which g77`
-
-	configure
-	make config_new [SITE=linux]       (other optional names: .....)
-		(this is still nasty, a SITE name must be given to
-		copy Makefile.$SITE to Makefile; otherwise hdyn in this
- 		case will not be built. Check out the Makefile.* extensions
-		in 
-	source starlab_start
-	make all
-	
-
-3c) Old method (pre-configure, or starlab 3.x and below) - some comments on
-    installations of broken starlab 4.x may still apply here
-
-	mkdir local		(it may already exist though)
-
-	cp templates/Makefile.local.inc        local
-	cp templates/starlab_setup             local
-	cp templates/cshrc.starlab.YOUR_SYSTEM local/cshrc.starlab
-
-    the first two files probably don't need any local modifications,
-    but the cshrc.starlab not only should be selected from best matching
-    YOUR_SYSTEM (redhat62, linux, solaris, ...) but may still need
-    modifications for your local site.
-
-
-((PJT::OLD))
-- Make a subdirectory "starlab/version/local" and copy the files
-  contained in "starlab/version/templates", currently:
-
-	"starlab/version/templates/starlab_setup"
-	"starlab/version/templates/cshrc.starlab"
-	"starlab/version/templates/cshrc.add-on"		** seems OLD **
-	"starlab/version/templates/Makefile.local.inc"
-
-  into it.  That is, issue the command:
-
-	cd starlab ; mkdir local; cp templates/* local
-
-  These files are your local copies of the Starlab setup files that
-  will never be accidentally overwritten by untarring a new new Starlab
-  archive.  The distribution contains versions appropriate for use on
-  various common systems.  On other systems, you will probably have to
-  modify your copies of cshrc.starlab and Makefile.local.inc by
-  commenting or uncommenting some of the lines in them.  Ask a Starlab
-  expert how to do this if it isn't obvious. 
-
-  Note carefully the use of the following variables, which are
-  defined at the start of local/cshrc.starlab and determine how much
-  of the system is actually built by the "make all" command. Commenting
-  out all the lines (as provided) builds only the "minimal" package.
-
-#setenv	STARLAB_STAR	star		# Stellar evolution
-#setenv	STARLAB_HYDRO	hydro		# Hydrodynamics
-#setenv	STARLAB_KEPLER	kepler		# Kepler package (used by sdyn*)
-#setenv	STARLAB_MCD	"libs draw"	# Mcdraw graphics programs (need gfx)
-#setenv	STARLAB_GFX	gfx		# Graphics library
-#setenv	STARLAB_XUTIL	xutil		# X utilities (xstarplot uses gfx)
-#setenv	STARLAB_DYN	dyn		# Dynamics programs
-#setenv	STARLAB_HDYN	hdyn		# Hermite programs
-#setenv	STARLAB_SDYN	sdyn		# Multi-particle scattering
-#setenv	STARLAB_SDYN3	sdyn3		# Three-body scattering
-
-  To build anything more complex (e.g., the _0 version), comment the
-  appropriate lines "back in".  An automated way to modify these
-  options is to use the scripts add_options and remove_options.  Thus,
-  to add stellar evolution and basic dynamics, say:
-
-	add_options STAR DYN
-
-  (and then re-source your .cshrc file to reset your environment).
-
-  Note that these options also determine what gets placed in a tar file
-  with the "make tar_curr" command.
-
-  The use of these variables allows us to distribute subsets of the
-  Starlab without having to modify the directory or make structure of 
-  the package.
-
-3) To set up the Starlab environment, include the following lines in
-   your .cshrc file:
-
-     setenv STARLAB_PATH <starlab-directory-name>
-     source $STARLAB_PATH/local/starlab_setup
-
-  For example, if you downloaded starlab version 3.7 as a tar ball
-  
-     setenv STARLAB_PATH ~/starlab-3.7
-     source $STARLAB_PATH/local/starlab_setup
-
-  The file starlab_setup MUST be sourced from .cshrc, not .login, in order
-  for the starlab environment to be visible during the "make" process.
-
-- If your search path is set in .cshrc (before invoking starlab_setup),
-  then you need do nothing more: Starlab will set your path correctly.
-  If your path is set up in .login (or anywhere after starlab_setup
-  is used), you must add Starlab to your path afterwards as follows:
-
-	set path = ($path $STARLAB_PATH/bin $STARLAB_PATH/sbin)
-	rehash
-
-- Finally, enter the command "source .cshrc", or log out and log in
-  again, and you are ready to go!  To build Starlab, type
-
-	cd $STARLAB_PATH
-	make all
-	rehash
-
- - NOTE:  A few files are hard to maintain in an automated way:
-
-	(1) For unknown reasons, some make-related scripts in sbin
-	    fail under some Redhat Linuxes unless they explicitly use
-	    tcsh.  See sbin/README for details.
-
-	    SINCE THE CURRENT DISTRIBUTION IS MAINTAINED ON A REDHAT
-	    LINUX SYSTEM, THIS IS RELEVANT TO ALL STARLAB USERS!
-
-	    In general, the location of the shells csh are tcsh are
-	    not completely standard.  The above README file describes
-	    our way of handling this problem.
-
-	(2) The Makefile in the kira directories:
-
-		src/node/dyn/hdyn/evolve/Makefile
-		src/node/dyn/hdyn/util/Makefile
-
-	    have too many possible options and switches to set or
-	    change them from the environment, so a custom version of
-	    the file must be maintained.  Copies of these files are
-	    exported as Makefile.export when a tar backup is made, so
-	    they will not overwrite any existing (carefully
-	    constructed) Makefile when an update to Starlab is
-	    untarred.  However, this means that, when Starlab is
-	    initially installed, NO file named "Makefile" exists in
-	    .../hdyn/evolve and util.  In this case, Makefile.export
-	    must be renamed to Makefile, or numerous build problems
-	    will ensue.
-
-	(3) We have adopted the convention that backup versions of
-	    files under development should be saved with a prepended
-	    numeric string representing the date on which the version
-	    was saved, e.g. 960612_kira.C.  To avoid exporting such
-	    files, NO source (*.[hcCfF]) file beginning with a digit
-	    will be saved in the standard Starlab tarfile.
-
- - A partial list of Starlab tools may be found in "starlab/TOOLS"
-
- - For further information, see "starlab/doc/README"
-
- - For some sample programs, see "starlab/etc/demo"
-
-
-
----
-
-Here is a list of builds that seem to go ok :
-
-nemo (Peter's rh62 laptop w/ gcc 2.95.3)	Linux nemo 2.2.17-14 #1 Mon Feb 5 18:48:50 EST 2001 i686 unknown
-	gcc 2.95.3
-xxxx (Steve's rh61 laptop)
-	???
-oeroeboeroe (Simon's dec alpha, 500MHz)		OSF1 oeroeboeroe.mit.edu V4.0 878 alpha
-	egcs 2.91.66
-xxx  (Piet's rh70 laptop)			Linux piet-lp 2.2.16-22 #1 Tue Aug 22 16:49:06 EDT 2000 i686 unknow
-	2.96 20000731
-margaux (Jun's dec alpha)			OSF1 margaux V4.0 1229 alpha
-	gcc 2.7.2.1
-
-
----
-
-Still to test:
-
-merlot (Steve's dec alpha)			OSF1 merlot V4.0 564 alpha
-	2.7.2.3.f.1
