@@ -1,0 +1,162 @@
+dnl configure.in for "starlab" 
+
+AC_MSG_CHECKING([starlab])
+
+dnl Process this file with autoconf to produce a configure script.
+dnl Typicall, if this file has changed, run "make config" or
+dnl "autoconf" manually.
+
+AC_INIT(inc/kira.h)
+
+dnl 
+AC_CONFIG_HEADER(config.h)
+
+dnl Use native cc if present
+AC_MSG_CHECKING([for vendor's cc to be used instead of gcc])
+AC_CHECK_PROG(CC, cc, cc)
+
+dnl Checks for programs.
+AC_PROG_AWK
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_CPP
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+
+AC_CANONICAL_HOST
+
+dnl Checks for libraries.
+dnl Replace `main' with a function in -lX11:
+AC_CHECK_LIB(X11, main)
+
+dnl == TODO:
+dnl  need to have an option to force gnu compiler (g++/gcc/g77)
+
+dnl ---------------------------------------------------------------------
+dnl             System C compiler
+dnl checks for alternative programs
+
+AC_ARG_WITH(gcc, [--without-gcc             never use gcc], [
+	case $withval in
+	no)	CCSYS=cc
+		without_gcc=yes;;
+	yes)	CCSYS=gcc
+		without_gcc=no;;
+	*)	CCSYS=$withval
+		without_gcc=$withval;;
+	esac], [without_gcc=junk])
+
+AC_SUBST(CCSYS)
+
+dnl ---------------------------------------------------------------------
+dnl             Check for basic X windows stuff
+AC_PATH_X
+AC_PATH_XTRA
+CFLAGS="$CFLAGS $X_CFLAGS"
+XLIBS="$X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS"
+AC_SUBST(XLIBS)
+
+dnl ---------------------------------------------------------------------
+
+
+AC_MSG_CHECKING(whether we have a FORTRAN 77 compiler)
+AC_CHECK_PROGS(F77, f77 g77 xlf xlf77 fl32 fort77 fc cf77 frt f90 xlf90)
+AC_PROG_F77
+if test -n "$F77"; then
+  if test -n "$GCC"; then
+    AC_F77_LIBRARY_LDFLAGS
+    ACX_F77_FUNC_MANGLE
+    case $host_os in
+      ultrix*)
+        CC="$CC -Dmain=MAIN_"
+        ;;
+      osf*)
+        CC="$CC -Dmain=MAIN__"
+        ;;
+      sunos*)
+        CC="$CC -Dmain=MAIN_"
+        ;;
+    esac
+  fi
+else
+  F77="$CC"
+  fortran=no
+  AC_MSG_WARN(no FORTRAN compiler)
+fi
+
+
+dnl --------------------------------------------------------------------
+
+AC_MSG_CHECKING(whether we have CFITSIO)
+AC_ARG_WITH(cfitsio-prefix, 
+        [  --with-cfitsio-prefix=PFX     Prefix where CFITSIO was installed], 
+        cfitsio_config_prefix="$withval", 
+        cfitsio_config_prefix="/usr/local/")
+
+if test x$cfitsio_config_prefix != x; then
+        if test -f ${cfitsio_config_prefix}/include/fitsio.h ; then
+                CFITSIO_INCLUDE="-I$cfitsio_config_prefix/include"
+                CFITSIO_LIB="-L$cfitsio_config_prefix"
+                CFITSIO_LIB="$CFITSIO_LIB -lcfitsio"
+                CFLAGS="$CFITSIO_INCLUDE $CFLAGS"
+                LIBS="$CFITSIO_LIB $LIBS"
+                AC_DEFINE(_WITH_CFITSIO) 
+                AC_MSG_RESULT(yes)
+        else
+                AC_MSG_RESULT(no)
+                AC_MSG_WARN(could not find CFITSIO library...)
+        fi
+
+fi
+
+dnl --------------------------------------------------------------------
+
+
+AC_MSG_CHECKING(almost whether we have LAM/MPI)
+AC_MSG_RESULT(not yet)
+
+dnl --------------------------------------------------------------------
+
+AC_MSG_CHECKING(whether we have PVM_ROOT and PVM_ARCH)
+
+if test -d "$PVM_ROOT"; then
+  PVM_LIB="-L$PVM_ROOT/lib/$PVM_ARCH -lpvm3 -lgpvm3"
+  PVM_INC="-I$PVM_ROOT/include"
+  AC_MSG_RESULT(yes)
+else
+  PVM_LIB=""
+  PVM_INC=""
+  AC_MSG_RESULT(no)
+fi
+AC_SUBST(PVM_LIB)
+AC_SUBST(PVM_INC)
+
+dnl --------------------------------------------------------------------
+
+
+dnl Checks for header files.
+AC_PATH_X
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h limits.h strings.h sys/file.h sys/time.h termio.h unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_UID_T
+AC_C_INLINE
+AC_TYPE_MODE_T
+AC_TYPE_OFF_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+dnl Checks for library functions.
+AC_PROG_GCC_TRADITIONAL
+AC_FUNC_SETVBUF_REVERSED
+AC_FUNC_UTIME_NULL
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(gethostname gettimeofday select strdup strstr strtod strtol strtoul)
+
+AC_C_BIGENDIAN
+
+dnl AC_OUTPUT(Makefile cshrc.starlab)
+AC_OUTPUT(cshrc.starlab)
