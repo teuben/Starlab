@@ -124,7 +124,7 @@ local bool choose_param(hdyn* b, bool verbose,
 
 	if (x_in_snap && verbose) {
 	    if (skip_line) cerr << endl;
-	    cerr << "Command-line " << x_id << " = " << x;
+	    cerr << "command-line " << x_id << " = " << x;
 	    if (twiddles(x, getrq(b->get_log_story(), kira_x)))
 		cerr << " is identical to value";
 	    else
@@ -252,12 +252,12 @@ local real get_scaled_stripping_radius(hdyn* b,
     // the tidal field.  However, the interpretation of r depends on what
     // tidal information is available.
     //
-    // 1. If "-Q" has not been specified, r specifies the stripping radius
-    // in units of the initial "tidal" radius, if known.  Otherwise, it
-    // specifies the stripping radius in units of the virial radius.
+    // 1. If a tidal field has not been specified, r specifies the stripping
+    // radius in units of the initial "tidal" radius, if known.  Otherwise,
+    // it specifies the stripping radius in units of the virial radius.
     //
-    // 2. If "-Q" has been specified, r specifies the stripping radius
-    // in units if the jacobi radius.
+    // 2. If a tidal field has been specified, r specifies the stripping
+    // radius in units if the jacobi radius.
 
     real scaled_stripping_radius = 0;	// stripping radius for unit mass
     					// (0 ==> no stripping)
@@ -309,7 +309,7 @@ local real get_scaled_stripping_radius(hdyn* b,
 	    if (initial_r_jacobi > 0) {
 
 		if (verbose)
-		    cerr << "Command-line -G " << input_stripping_radius
+		    cerr << "command-line -G " << input_stripping_radius
 			 << " used as scaling factor for initial Jacobi radius"
 			 << endl;
 
@@ -328,14 +328,14 @@ local real get_scaled_stripping_radius(hdyn* b,
 		    input_stripping_radius *= r_jacobi_over_r_virial;
 
 		    if (verbose)
-			cerr << "Command-line -G " << input_stripping_radius
+			cerr << "command-line -G " << input_stripping_radius
 			     << " used as scaling factor for tidal radius"
 			     << endl;
 
 		} else
 
 		    if (verbose)
-			cerr << "Command-line -G " << input_stripping_radius
+			cerr << "command-line -G " << input_stripping_radius
 			     << " used as scaling factor for virial radius"
 			     << endl;
 
@@ -370,6 +370,8 @@ local void get_physical_scales(hdyn* b,
 			       int nbody)
 {
     // (Re)determine physical scales and set conversion factors.
+
+    // *****  Redundant in new version...  *****
 
     // First derive the N-body time unit.
 
@@ -420,7 +422,7 @@ local void get_physical_scales(hdyn* b,
     if (M_set) {
 	if (verbose)
 	    if (old_m_tot > 0) {
-		cerr << "Command-line -M " << m_tot;
+		cerr << "command-line -M " << m_tot;
 		if (twiddles(m_tot, old_m_tot))
 		    cerr << " is identical to value";
 		else
@@ -449,7 +451,7 @@ local void get_physical_scales(hdyn* b,
     if (R_set) {
 	if (verbose) {
 	    if (old_r_vir > 0) {
-		cerr << "Command-line -R " << r_vir;
+		cerr << "command-line -R " << r_vir;
 		if (twiddles(r_vir, old_r_vir))
 		    cerr << " is identical to value";
 		else
@@ -515,7 +517,7 @@ local void get_physical_scales(hdyn* b,
     } else if (verbose) {
 
 	if (old_t_vir > 0) {
-	    cerr << "Command-line -T " << t_vir;
+	    cerr << "command-line -T " << t_vir;
 	    if (twiddles(t_vir, old_t_vir))
 		cerr << " is identical to value";
 	    else
@@ -581,9 +583,9 @@ local void get_physical_scales(hdyn* b,
     // Apply the new scaling.
 
     b->get_starbase()
-	->set_stellar_evolution_scaling(m_tot/initial_mass,
-					r_vir/initial_r_virial,
-					t_vir/initial_t_virial);
+     ->set_stellar_evolution_scaling(m_tot/initial_mass,
+				     r_vir/initial_r_virial,
+				     t_vir/initial_t_virial);
 }
 
 local char* stredit(char* s, char c1, char c2)	// duplicate in runtime_help.C
@@ -674,41 +676,6 @@ local void check_total_mass(hdyn *b, bool reset = true)
     }
 }
 
-local void check_plummer_field(hdyn *b)
-{
-    // Check for Plummer-field data in the input snapshot, and
-    // set kira parameters accordingly.  No coordination with the
-    // command line because these parameters can *only* be set via
-    // the input snapshot.  (Steve, 7/01)
-    //
-    // Expected fields in the input file are
-    //
-    //		kira_plummer_mass = M
-    //		kira_plummer_scale = R
-    //		kira_plummer_center = x y z
-
-     if (find_qmatch(b->get_log_story(), "kira_plummer_mass")
-	 && find_qmatch(b->get_log_story(), "kira_plummer_scale")) {
-
-	 b->set_plummer();
-
-	 b->set_p_mass(getrq(b->get_log_story(), "kira_plummer_mass"));
-	 b->set_p_scale_sq(pow(getrq(b->get_log_story(),
-				     "kira_plummer_scale"), 2));
-
-	 vector center = 0;
-	 if (find_qmatch(b->get_log_story(), "kira_plummer_center"))
-	     b->set_p_center(getvq(b->get_log_story(), "kira_plummer_center"));
-     }
-}
-
-local void check_external_fields(hdyn *b)
-{
-    // Check for and set parameters for all (non-tidal) external fields.
-
-    check_plummer_field(b);
-}
-
 
 bool kira_initialize(int argc, char** argv,
 		     hdynptr& b,	// hdyn root node
@@ -722,7 +689,7 @@ bool kira_initialize(int argc, char** argv,
 		     bool& exact,	// no perturber list if true
 		     real& cpu_time_limit,
 		     bool& verbose,
-		     bool& save_last_snap,
+		     bool& save_snap_at_log,
 		     char* snap_save_file,
 		     int& n_stop)	// n to terminate simulation
 {
@@ -759,7 +726,7 @@ bool kira_initialize(int argc, char** argv,
     exact = false;
     verbose = true;
 
-    save_last_snap = false;
+    save_snap_at_log = false;
     n_stop = 10;
 
     int max_slow = 0;
@@ -787,11 +754,7 @@ bool kira_initialize(int argc, char** argv,
 
     bool B_flag = false;
     bool G_flag = false;
-    bool M_flag = false;
-    bool Q_flag = false;
-    bool R_flag = false;
     bool S_flag = false;
-    bool T_flag = false;
     bool c_flag = false;
     bool s_flag = false;
 
@@ -800,18 +763,13 @@ bool kira_initialize(int argc, char** argv,
     bool r_virial_set = false;
     real input_r_virial;
 
-    bool r_jacobi_set = false;
-    real input_r_jacobi;
-
-    int  tidal_field_type = -1;
-
     char seedlog[SEED_STRING_LENGTH];
 
     extern char *poptarg, *poparr[];	// multiple arguments are allowed
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"*:a:b.Bc:C:d:D:e:E:f:F:g:G:h:I:J:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvxX:y:z:Z:";
+"*:a:b.Bc:C:d:D:e:E:f:g:G:h:I:k:K:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvxX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
@@ -907,7 +865,7 @@ bool kira_initialize(int argc, char** argv,
 	    case 'f':	d_min = atof(poptarg);
 			d_min_flag = true;
 			break;
-	    case 'F':	tidal_field_type = atoi(poptarg);
+	    case 'F':	err_exit("kira: -F option removed: use add_tidal");
 			break;
 	    case 'g':	lag_factor = atof(poptarg);
 			lag_flag = true;
@@ -923,8 +881,7 @@ bool kira_initialize(int argc, char** argv,
 	    		if (dt_reinit < 0) dt_reinit = pow(2.0, dt_reinit);
 			reinit_flag = true;
 			break;
-	    case 'J':	r_jacobi_set = true;
-			input_r_jacobi = atof(poptarg);
+	    case 'J':	err_exit("kira: -J option removed: use add_tidal");
 			break;
 	    case 'k':	gamma = atof(poptarg);
 			gamma_flag = true;
@@ -934,8 +891,7 @@ bool kira_initialize(int argc, char** argv,
 			break;
 	    case 'L':	cpu_time_limit = atof(poptarg);
 			break;
-	    case 'M':	M_flag = true;
-			m_tot = atof(poptarg);
+	    case 'M':	err_exit("kira: -M option removed: use add_star");
 			break;
 	    case 'n':	n_stop = atoi(poptarg);
 			break;
@@ -944,18 +900,16 @@ bool kira_initialize(int argc, char** argv,
 			break;
 	    case 'o':	allow_kira_override = false;
 	    		break;
-	    case 'O':	save_last_snap = true;
+	    case 'O':	save_snap_at_log = true;
 	    		strcpy(snap_save_file, poptarg);
 	    		break;
             case 'q':	q_vir = atof(poptarg);
 			break;
-            case 'Q':	Q_flag = true;
+            case 'Q':	err_exit("kira: -Q option removed: use add_tidal");
 	       		break;
-	    case 'r':	r_virial_set = true;
-			input_r_virial = atof(poptarg);
+	    case 'r':	err_exit("kira: -r option removed: use scale");
 			break;
-	    case 'R':	R_flag = true;
-			r_vir = atof(poptarg);
+	    case 'R':	err_exit("kira: -R option removed: use add_star");
 			break;
             case 's':	s_flag = true;
 			input_seed = atoi(poptarg);
@@ -964,8 +918,7 @@ bool kira_initialize(int argc, char** argv,
 	       		break;
 	    case 't':	delta_t = atof(poptarg);
 			break;
-            case 'T':	T_flag = true;
-			t_vir = atof(poptarg);
+            case 'T':	err_exit("kira: -T option removed: use add_star");
 			break;
 	    case 'u':	toggle_unperturbed(b, 1);
 			break;
@@ -1009,13 +962,10 @@ bool kira_initialize(int argc, char** argv,
     // these are really what we want)...  Disable with "-o" on the
     // command line.
 
-    // 1. Turn on the tidal field if it was previously enabled (performed
-    //    below, in the "tidal" section).
-
-    // 2. Turn on stripping if it was previously enabled (performed
+    // 1. Turn on stripping if it was previously enabled (performed
     //    below, in the "stripping" section).
 
-    // 3. Turn on stellar/binary evolution if it was turned on in the
+    // 2. Turn on stellar/binary evolution if it was turned on in the
     //    previous run:
 
     bool need_skip = true;	// formatting!!
@@ -1032,7 +982,7 @@ bool kira_initialize(int argc, char** argv,
 			  verbose, need_skip))
 	    B_flag = true;
 
-    // 4. Turn on unperturbed binaries/multiples if they were previously
+    // 3. Turn on unperturbed binaries/multiples if they were previously
     //    enabled.
 
     if (check_kira_flag(b, "kira_allow_unperturbed")
@@ -1173,79 +1123,11 @@ bool kira_initialize(int argc, char** argv,
 
     //----------------------------------------------------------------------
 
-    // Tidal field (specify with "-F" or "-Q" on the command line).
+    // Check for external fields, including tidal fields.
+    // Note that there are NO command-line options -- fields can be
+    // specified *only* via the initial snapshot.
 
-    b->set_tidal_field(0);			// (this is the default)
-    real initial_r_jacobi = -1;
-
-    // Silently let the "-F" option set Q_flag, if necessary.
-    // Note that "-Q" is equivalent to "-F 1", but retain the "-Q"
-    // option for compatibility with older scripts and versions of
-    // kira.
-
-    if (tidal_field_type > 0 && !Q_flag) Q_flag = true;
-
-    if (check_kira_flag(b, "kira_use_tidal_field") && !Q_flag)
-	if (check_allowed(allow_kira_override,
-			  "tidal field",
-			  verbose, need_skip))
-	    Q_flag = true;
-
-    // Check G_flag here so the log messages appear in the right order...
-
-    if (check_kira_flag(b, "kira_remove_escapers") && !G_flag)
-	if (check_allowed(allow_kira_override,
-			  "escaper removal",
-			  verbose, need_skip))
-	    G_flag = true;
-
-    if (Q_flag) {
-
-	// Using a tidal field probably should imply stripping, but it
-	// doesn't have to.  Output a warning in that case.
-
-	if (verbose) {
-	    cerr << endl;
-
-	    if (!G_flag)
-		cerr << "*** Warning: tidal field used without"
-		     << " removing escapers"
-		     << endl << endl;
-	}
-
-	initial_r_jacobi = get_initial_jacobi_radius(b,
-						     initial_r_virial,
-						     verbose,
-						     r_jacobi_set,
-						     input_r_jacobi);
-
-	if (initial_r_jacobi <= 0)
-
-	    err_exit("Tidal field enabled but Jacobi radius unknown");
-
-	else
-
-	    set_tidal_params(b, verbose,
-			     initial_r_jacobi,
-			     initial_mass,
-			     tidal_field_type);
-
-    } else if (find_qmatch(b->get_log_story(), "alpha3_over_alpha1"))
-
-	cerr << endl
-	     << "Warning: anisotropic tidal data in input snapshot"
-	     << " not used" << endl;
-
-    // Save information on whether or not a tidal field is used.
-
-    putiq(b->get_log_story(), "kira_use_tidal_field", Q_flag);
-
-    //----------------------------------------------------------------------
-
-    // Check for external fields.  Note that there are NO command-line
-    // options -- specify only via the initial snapshot.
-
-    check_external_fields(b);
+    check_set_external(b, verbose);
 
     //----------------------------------------------------------------------
 
@@ -1254,9 +1136,18 @@ bool kira_initialize(int argc, char** argv,
     real scaled_stripping_radius = 0;	// stripping radius for unit mass
     					// (0 ==> no stripping)
 
+    if (check_kira_flag(b, "kira_remove_escapers") && !G_flag)
+	if (check_allowed(allow_kira_override,
+			  "escaper removal",
+			  verbose, need_skip))
+	    G_flag = true;
+
     if (G_flag) {
 
 	if (verbose) cerr << endl;
+
+	real initial_r_jacobi
+	    = get_initial_jacobi_radius(b, initial_r_virial);
 
 	real scaled_stripping_radius
 	    = get_scaled_stripping_radius(b, verbose,
@@ -1274,7 +1165,10 @@ bool kira_initialize(int argc, char** argv,
 	     << endl;
 
 	b->set_scaled_stripping_radius(scaled_stripping_radius);
-    }
+
+    } else
+
+	if (verbose) cerr << endl << "No escaper removal" << endl;
 
     // Save information on whether or not escapers are removed.
 
@@ -1290,7 +1184,8 @@ bool kira_initialize(int argc, char** argv,
     if (S_flag) {	// Note that B_flag ==> S_flag (Steve 9/19/97)
 
 	if (verbose) cerr << endl;
-	if (b->get_starbase() == NULL) err_exit("No starbase!");
+	if (b->get_starbase() == NULL)
+	    err_exit("kira: S_flag and no starbase!");
 
 	// See if any scaling information already exists.
 
@@ -1298,12 +1193,19 @@ bool kira_initialize(int argc, char** argv,
 	    = b->get_starbase()->get_stellar_evolution_scaling();
 
 	// get_stellar_evolution_scaling() will read scaling factors
-	// from the input stream if necessary and possible.  Return
-	// value is true iff all scaling factors are now known.
+	// from the input stream if possible.  Return value is true iff
+	// all scaling factors are now known.
 
 	if (scales_from_snapshot) {
 
 	    // All scales were specified in the input snapshot.
+
+#if 0
+	    // Horrible #ifdef mess here is to accommodate transition
+	    // from old to new style in handling stellar properties.
+
+	    // Old:
+
 	    // See if command-line input will override them.
 
 	    if (R_flag || M_flag || T_flag) {
@@ -1325,57 +1227,84 @@ bool kira_initialize(int argc, char** argv,
 
 	    }
 
+	} else {
+
+	    // (Re)set some or all physical scales.
+
+	    get_physical_scales(b, verbose,
+				initial_mass,
+				initial_r_virial,
+				M_flag, m_tot,
+				R_flag, r_vir,
+				T_flag, t_vir,
+				q_vir,
+				nbody);
 	}
+#else
+	    // New:
 
-	// (Re)set some or all physical scales.
+	    if (verbose) {
+		cerr << "Scale factors taken from input snapshot"
+		     << endl;
+		b->get_starbase()->print_stellar_evolution_scaling(cerr);
+	    }
 
-	if (!scales_from_snapshot) get_physical_scales(b, verbose,
-						       initial_mass,
-						       initial_r_virial,
-						       M_flag, m_tot,
-						       R_flag, r_vir,
-						       T_flag, t_vir,
-						       q_vir,
-						       nbody);
+	} else {
 
-	// Add information on the physical initial mass to the
-	// root log story.
+	    if (verbose)
+		cerr << "Stellar scaling unavailable -- "
+		     << "suppressing stellar evolution." << endl;
 
-	putrq(b->get_log_story(), "physical_initial_mass",
-	      b->get_starbase()->conv_m_dyn_to_star(initial_mass));
-
-	// Add star parts to nodes.
-
-	addstar(b,                             // Note that T_start and
-		T_start,                       // Main_Sequence are
-		Main_Sequence,                 // defaults. They are
-		true);                         // ignored if a star
-					       // story already exists.
-
-	// Command line specified sec in solar radii.  Convert it to N-body
-	// units for use by check_merge_nodes (which uses d_nn_sq).
-
-	sec = b->get_starbase()->conv_r_star_to_dyn(sec);
-	b->set_stellar_encounter_criterion_sq(pow(sec, 2));
-
-	if (verbose) {
-	    cerr << endl;
-	    cerr << "stellar_encounter_criterion = "
-		 <<  sqrt(b->get_stellar_encounter_criterion_sq()) << endl;
-	    cerr << "stellar_merger_criterion = "
-		 <<  sqrt(b->get_stellar_merger_criterion_sq()) << endl;
-	    cerr << "stellar_capture_criterion = "
-		 <<  sqrt(b->get_stellar_capture_criterion_sq()) << endl;
+	    B_flag = S_flag = false;
+	    b->set_use_sstar(S_flag);
+	    b->set_use_dstar(B_flag);
 	}
+#endif
 
-	// Print a diagnostic on tidal parameters in the disk case:
+        if (S_flag) {
 
-	if (b->get_tidal_field() == 3)
-	    test_tidal_params(b, verbose,
-			      initial_r_jacobi,
-			      initial_r_virial,
-			      initial_mass);
+	    // Add information on the physical initial mass to the
+	    // root log story.
 
+	    putrq(b->get_log_story(), "physical_initial_mass",
+		  b->get_starbase()->conv_m_dyn_to_star(initial_mass));
+
+	    // Add star parts to nodes.
+
+	    addstar(b,                         // Note that T_start and
+		    T_start,                   // Main_Sequence are
+		    Main_Sequence,             // defaults, ignored if a
+		    true);                     // star story already exists.
+
+	    // Command line specified sec in solar radii.  Convert it to
+	    // N-body units for use by check_merge_nodes (which uses d_nn_sq).
+
+	    sec = b->get_starbase()->conv_r_star_to_dyn(sec);
+	    b->set_stellar_encounter_criterion_sq(pow(sec, 2));
+
+	    if (verbose) {
+		cerr << endl;
+		cerr << "stellar_encounter_criterion = "
+		     <<  sqrt(b->get_stellar_encounter_criterion_sq()) << endl;
+		cerr << "stellar_merger_criterion = "
+		     <<  sqrt(b->get_stellar_merger_criterion_sq()) << endl;
+		cerr << "stellar_capture_criterion = "
+		     <<  sqrt(b->get_stellar_capture_criterion_sq()) << endl;
+	    }
+
+	    // Print a diagnostic on tidal parameters in the disk case:
+
+	    if (b->get_tidal_field() == 3) {
+
+		real initial_r_jacobi
+		    = get_initial_jacobi_radius(b, initial_r_virial);
+
+		test_tidal_params(b, verbose,
+				  initial_r_jacobi,
+				  initial_r_virial,
+				  initial_mass);
+	    }
+	}
     }
 
     // Save information on whether or not stellar evolution is enabled.

@@ -746,11 +746,13 @@ void mkking(dyn * b, int n, real w0, bool n_flag, bool u_flag, int test)
 
     // Write essential model information to root dyn story.
 
+    putrq(b->get_log_story(), "initial_mass", 1.0);
+
+    // putrq(b->get_log_story(), "initial_rvirial", 0.25/kin); // assumes a lot!
+							       // -- too much...
+
     putrq(b->get_log_story(), "initial_rtidal_over_rvirial",
 	  rr[nprof] / (0.25/kin));
-
-    putrq(b->get_log_story(), "initial_rvirial", 0.25/kin);
-    putrq(b->get_log_story(), "initial_mass", 1.0);
 
     // Assign positions and velocities. Note that it may actually
     // be preferable to do this in layers instead.
@@ -814,9 +816,9 @@ void mkking(dyn * b, int n, real w0, bool n_flag, bool u_flag, int test)
 	real kinetic, potential;
 
 	get_top_level_energies(b, 0.0, potential, kinetic);
-	scale_virial(b, -0.5, kinetic, potential);
+	scale_virial(b, -0.5, potential, kinetic);	// scales kinetic
 	real energy = kinetic + potential;
-	scale_energy(b, -0.25, energy);
+	scale_energy(b, -0.25, energy);			// scales energy
 
 	putrq(b->get_dyn_story(), "initial_total_energy", -0.25);
 	putrq(b->get_log_story(), "initial_rvirial", 1.0);

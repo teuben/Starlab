@@ -19,7 +19,6 @@
 ////             -T    dynamical time scaling  (system time unit, in Myr)
 ////             -t    stellar age (in millions of years) [0]
 ////
-
 //++ Notes:
 //++  Command-line arguments overrule parameters from input snapshot.
 //++
@@ -30,13 +29,14 @@
 //++  mass of the input N-body system (e.g. when modeling a large
 //++  cluster by a smaller N-body system).
 //++
-//++ Example of usage:      
-//++  mknode -n 10 | mkmass -u 100 -l 10 | addstar -T 1 
+//++  Should run makemass first to establish stellar masses.
 //++
-//++ See also:  addstar
-//++            mkmass
+//++ Example of usage:      
+//++  makenode -n 10 | makemass -u 100 -l 10 | add_star -T 1 
+//++
+//++ See also:  mkmass
 //++            mknode
-
+//++
 //// Version 1.0: Apr 1993   Piet Hut, Steve McMillan, Jun Makino
 //// Version 2.0: May 1993   Simon Portegies Zwart
 //                           spz@grape.c.u-tokyo.ac.jp

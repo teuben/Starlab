@@ -24,7 +24,7 @@ DEPEND_LIBS	= $(LIB)/libsstar.a $(LIB)/libdyn.a \
 #      and put_state(double_star*) forced in star_state...
 
 EXECUTABLES = sstar_stats
-OBJECT_FILES = sstar_to_dyn.o sstar_state.o addstar_dyn.o \
+OBJECT_FILES = sstar_to_dyn.o sstar_state.o stardyn_story.o addstar_dyn.o \
 	       sstar_stats.o proto_star_dyn.o
 
 LIBRARY = libsstar.a

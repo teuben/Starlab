@@ -16,8 +16,12 @@
 ##
 
 CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC)
-LIBFLAGS	= -L$(LIB) -ldyn -lnode -lstd -lm
+LIBFLAGS	= -L$(LIB) -ldyn -lsstar -ldyn -lnode -lstd -lm
 DEPEND_LIBS	= $(LIB)/libstd.a $(LIB)/libnode.a $(LIB)/libdyn.a
+
+# (The -lsstar here is needed to accommodate get_addstar...
+#  Note the annoying repetition of libdyn.a.  The star library is not listed
+#  in DEPEND_LIBS.)
 
 EXECUTABLES	= makecube makedisk makeplummer makepyth makesphere makewrite \
 		  addplummer makebinary split_particles makeking \

@@ -82,7 +82,11 @@ void compute_general_mass_radii(dyn * b, int nzones,
     // Otherwise, use modified center of mass, if known and up to date.
 
     vector lagr_pos, lagr_vel;
-    get_std_center(b, lagr_pos, lagr_vel);
+    int which = get_std_center(b, lagr_pos, lagr_vel);
+    if (which == 1)
+	strcpy(lagr_string, "density center");
+    else
+	strcpy(lagr_string, "modified center of mass");
 
     rm_pair_ptr rm_table = new rm_pair[n];
 

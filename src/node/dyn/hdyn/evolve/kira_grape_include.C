@@ -40,6 +40,34 @@ bool kira_use_grape()
 #endif
 }
 
+void kira_calculate_energies(dyn* b, real eps2, 
+			     real &potential, real &kinetic, real &total,
+			     bool cm)
+{
+    // Coerce hdyn::calculate_internal_energies into the same calling
+    // sequence as dyn::calculate_energies, for use by sys_stats...
+    // Discard eps2 (--> 0).
+
+    // Function calculate_internal_energies() is not a library function.
+    // It is compiled directly into kira via kira_grape_include.h,
+    // allowing selection of the GRAPE/non-GRAPE option at compile time.
+
+    calculate_internal_energies((hdyn*)b, potential, kinetic, total, cm);
+}
+
+void kira_top_level_energies(dyn *b, real eps2,
+			     real& potential_energy,
+			     real& kinetic_energy)
+{
+    // Another lookalike, this time to perform the operation of
+    // dyn::get_top_level_energies() using the GRAPE if possible.
+
+    real energy;
+    kira_calculate_energies(b, eps2,
+			    potential_energy, kinetic_energy, energy,
+			    true);
+}
+
 void calculate_internal_energies(hdyn* b,
 				 real& epot, real& ekin, real& etot,
 				 bool cm,		// default = false
@@ -55,14 +83,20 @@ void calculate_internal_energies(hdyn* b,
     //  - new code uses the hdyn version of calculate_energies() (see
     //    ../util/hdyn_tt.C), which sets the hdyn::pot member data,
     //    and also omits the tidal terms.
+    //
+    // The cm flag specifies that we should use the center-of-mass
+    // approximation, i.e. compute the top-level energies only.
+    // This is what we want for scale.  Implemented for GRAPE by
+    // Steve, 7/01.
 
 #if defined(USE_GRAPE)
 
-    if (use_grape) {
+    if (use_grape)					// tautology?
 
-	grape_calculate_energies(b, epot, ekin, etot);
+	grape_calculate_energies(b, epot, ekin, etot, cm);
 
-    } else
+    else
+
 	calculate_energies(b, b->get_eps2(), epot, ekin, etot, cm);
 
 #else

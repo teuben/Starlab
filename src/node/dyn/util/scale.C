@@ -7,42 +7,61 @@
 ////             -E    specify total energy [don't scale]
 ////             -m/M  specify total mass [don't scale]
 ////             -q/Q  specify virial ratio [don't scale]
-////             -s/S  scale to "standard units [not set]
+////             -r/R  specify virial radius [don't scale]
+////             -s/S  scale to "standard" units [not set]
 ////
 ////         NOTE that only top-level nodes are considered in scale_virial
 ////         and scale_energy.
 ////
-////         If standard units are chosen with "-S", then the center of mass
-////         of the system is also set to zero.
+////         The center of mass of the system is set to zero.
+////         Option "-s" is equivalent to "-M 1 -R 1 -Q 0.5".
 ////
-////         As of 6/99, systems with embedded tidal fields are also properly
-////         scaled (assuming they are Roche-lobe filling).
+////         As of 7/01, systems with embedded tidal or other external fields
+////         are also properly scaled (assuming that the Jacobi radius scales
+////         with the virial radius).  Note that the virial radius is defined
+////         in terms of the *internal* potential energy only.  For now, only
+////         allow the energy to be specified if there are no external
+////         (non-tidal) fields.
 
-//  Steve McMillan, April 1993
+// Steve McMillan, April 1993
+//
+// Significant changes to both command-line options and internal operation
+// by SMcM, July 2001 -- added external fields and redefined virial radius.
+
+// ***  MUST make sure that the definitions of virial radius and virial  ***
+// ***  equilibrium are consistent between scale and sys_stats.          ***
 
 #include "dyn.h"
 
 #ifndef TOOLBOX
 
-#define ALL_i ni = n->get_oldest_daughter(); ni != NULL; \
-					     ni = ni->get_younger_sister()
-#define j_ABOVE_i nj = ni->get_younger_sister(); nj != NULL; \
-					     nj = nj->get_younger_sister()
-
-void scale_mass(dyn* n, real m)
+real get_mass(dyn *b)
 {
     real mass = 0;
-    for_all_daughters(dyn, n, ni)
-	mass += ni->get_mass();
-
-    real mscale = m/mass;
-    for_all_nodes(dyn, n, nj)
-	nj->set_mass(mscale*nj->get_mass());	// no "scale_mass"!
-
-    n->set_mass(m);
+    for_all_daughters(dyn, b, bb)
+	mass += bb->get_mass();
+    return mass;
 }
 
-real get_top_level_kinetic_energy(dyn*b)	// top-level nodes only
+void scale_mass(dyn* b, real mscale)
+{
+    for_all_nodes(dyn, b, bb)
+	bb->scale_mass(mscale);
+}
+
+void scale_pos(dyn* b, real rscale)
+{
+    for_all_nodes(dyn, b, bb)
+	bb->scale_pos(rscale);
+}
+
+void scale_vel(dyn* b, real vscale)
+{
+    for_all_nodes(dyn, b, bb)
+	bb->scale_vel(vscale);
+}
+
+real get_top_level_kinetic_energy(dyn *b)	// top-level nodes only
 {
     real kinetic_energy = 0;
 
@@ -53,7 +72,7 @@ real get_top_level_kinetic_energy(dyn*b)	// top-level nodes only
     return kinetic_energy;
 }
 
-real get_kinetic_energy(dyn*b)			// all nodes
+real get_kinetic_energy(dyn *b)			// all nodes
 {
     real kinetic_energy = 0;
 
@@ -67,300 +86,359 @@ real get_kinetic_energy(dyn*b)			// all nodes
 
 // NOTE: get_top_level_energies does *not* resolve binaries.
 
-void get_top_level_energies(dyn * n, real eps2,
+void get_top_level_energies(dyn *b, real eps2,
 			    real& potential_energy,
 			    real& kinetic_energy)
 {
-//    dyn  * ni, *nj;
-// 
-//     kinetic_energy = get_top_level_kinetic_energy(n);
-// 
-//     potential_energy = 0;
-//     for (ALL_i) {
-//         real dphi = 0;
-// 	vector xi = ni->get_pos();
-// 	for (j_ABOVE_i) {
-// 	    vector xij = nj->get_pos() - xi;
-//  	    dphi += nj->get_mass()/sqrt(xij*xij + eps2);
-// 	}
-// 	potential_energy -= ni->get_mass() * dphi;
-//     }
-
     real total_energy;
-    calculate_energies(n, eps2,
+    calculate_energies(b, eps2,
 		       potential_energy, kinetic_energy, total_energy,
 		       true);		// ==> CM approximation
 }
 
-real get_tidal_energy(dyn* b, real alpha1, real alpha3)
-{
-    real tidal_energy = 0;
-
-    // Compute the tidal energy for top-level nodes only (i.e. in the
-    // center of mass approximation) in the specified tidal field.
-
-    for_all_daughters(dyn, b, bb) {
-
-	real x = bb->get_pos()[0];
-	real z = bb->get_pos()[2];
-
-	real dp = alpha1*x*x + alpha3*z*z;
-	tidal_energy += bb->get_mass() * dp;
-    }
-
-    tidal_energy *= 0.5;
-    return tidal_energy;
-}
-
-void scale_virial(dyn * n, real q, real& kinetic_energy, real potential_energy)
+void scale_virial(dyn *b, real q, real potential_energy, real& kinetic_energy)
 {
     // Set the virial ratio by scaling the velocities.
+    // Also rescale the kinetic energy.
 
-    dyn  * ni;
-
-    if (q > 0) q = -q;  // Only need specify |Q|.
+    if (q > 0) q = -q;  	// only need specify |Q|
 
     real vscale = sqrt(q*potential_energy/kinetic_energy);
-
-    for (ALL_i) ni->scale_vel(vscale);
-
+    scale_vel(b, vscale);
     kinetic_energy = q*potential_energy;
 }
 
-void scale_energy(dyn * n, real e, real& energy)
+real scale_energy(dyn * b, real e, real& energy)
 {
     // Set the energy by scaling positions and velocities, keeping
     // the virial ratio fixed.  Note that eps = 0 is implicit.
 
-    dyn  * ni;
-
-    if (energy >= 0) return;
-    if (e > 0) e = -e;  // Only need specify |E| and only E < 0 makes sense!
+    if (energy >= 0) return 1;
+    if (e > 0) e = -e;  // only need specify |E| and only E < 0 makes sense!
 
     real xscale = energy/e;
     real vscale = sqrt(1./xscale);
 
-    for (ALL_i) {
-	ni->scale_pos(xscale);
-	ni->scale_vel(vscale);
+    for_all_daughters(dyn, b, bi) {
+	bi->scale_pos(xscale);
+	bi->scale_vel(vscale);
     }
 
     energy = e;
+    return xscale;
 }
 
-#else
+void scale(dyn *b, real eps,
+	   bool e_flag, real e,
+	   bool m_flag, real m,
+	   bool q_flag, real q,
+	   bool r_flag, real r,
+	   void (*top_level_energies)(dyn*, real,    // default =
+				      real&, real&)) // get_top_level_energies()
+{
+    // Another consistency check:
 
-#define  FALSE  0
-#define  TRUE   1
-
-main(int argc, char ** argv) {
-    real m = 0, q = -1, e = 0;
-    real eps = 0;
-    int m_flag = FALSE;
-    int q_flag = FALSE;
-    int e_flag = FALSE;
-    int eps_flag = FALSE;
-    int s_flag = false;
-    dyn *root;
-
-    check_help();
-
-    extern char *poptarg;
-    int c;
-    char* param_string = "m:M:q:Q:e:E:sS";
-
-    while ((c = pgetopt(argc, argv, param_string)) != -1)
-	switch(c) {
-
-	    case 'M':
-	    case 'm': m_flag = TRUE;
-		      m = atof(poptarg);
-		      break;
-	    case 'Q':
-	    case 'q': q_flag = TRUE;
-		      q = atof(poptarg);
-		      break;
-	    case 'E': e_flag = TRUE;
-		      e = atof(poptarg);
-		      break;
-	    case 'e': eps_flag = TRUE;
-		      eps = atof(poptarg);
-		      break;
-	    case 'S':
-	    case 's': m_flag = TRUE;
-		      q_flag = TRUE;
-		      e_flag = TRUE;
-	    	      s_flag = true;
-		      m = 1;
-	    	      q = 0.5;
-		      e = -0.25;
-		      break;
-            case '?': params_to_usage(cerr, argv[0], param_string);
-	              get_help();
-                      exit(1);
-	}
-
-    if (m_flag && m <= 0) warning("Specified mass <= 0");
-    if (e_flag && e >= 0) warning("Specified energy >= 0");
-    if (q_flag && q <  0) warning("Specified virial ratio < 0");
-
-    root = get_dyn(cin);
-
-    // Trust the data in the input snapshot.
-
-    real initial_r_virial = getrq(root->get_log_story(), "initial_rvirial");
-    real initial_mass = getrq(root->get_log_story(), "initial_mass");
-
-    // Check for embedded tidal information (only from mk_aniso_king, and
-    // scaling is OK only because the cluster is Roche-lobe filling).
-
-    bool has_tidal = false;
-    real r_jacobi_over_r_virial
-	= getrq(root->get_log_story(), "initial_rtidal_over_rvirial");
-    real alpha3_over_alpha1
-	= getrq(root->get_log_story(), "alpha3_over_alpha1");
-
-    real alpha1 = 0, initial_r_jacobi = 0, alpha3 = 0;
-
-    if (r_jacobi_over_r_virial > -VERY_LARGE_NUMBER
-	&& alpha3_over_alpha1 > -VERY_LARGE_NUMBER) {
-
-	// (Saved initial_mass should be 1 in this case, set by mk_aniso_king.)
-
-	if (initial_mass < 0) {
-	    warning("scale: initial_mass not set");
-	    initial_mass = 0;
-	    for_all_daughters(dyn, root, bb)
-		initial_mass += bb->get_mass();
-	    
-	    putrq(root->get_log_story(), "initial_mass", initial_mass);
-	}
-
-	has_tidal = true;
-
-	initial_r_jacobi = r_jacobi_over_r_virial * initial_r_virial;
-
-	// Tidal parameters in consistent units:
-
-	alpha1 = -initial_mass / pow(initial_r_jacobi, 3);
-	alpha3 = alpha3_over_alpha1 * alpha1;
-
-	PRI(4);PRC(alpha1);PRL(alpha3);
-	// (Note that r_jacobi and alpha1,3 should be OK even if
-	//  r_virial will become suspect after setting com below.)
-
+    if (q_flag && find_qmatch(b->get_log_story(), "alpha3_over_alpha1")) {
+	warning("scale: can't reset virial ratio for aniso_king model");
+	q_flag = false;
     }
 
-    if (s_flag)			// should this be done routinely?
-	root->to_com();		// -- changes the kinetic energy and
-    				//    the tidal potential, if any
+    // Always transform to the center of mass frame.
 
-    if (m_flag)
-        scale_mass(root, m);
+    b->to_com();
 
-    // NOTE: Scaling the total mass changes both the total energy and
-    //	     the virial ratio.  No attempt is made to preserve either
-    //	     in cases where they are not specified on the command line.
+    // Define various relevant quantities.  Trust the data in the input
+    // snapshot, if current.
 
-    real kinetic_energy = 0, potential_energy = 0, tidal_energy = 0;
+    // Always need to know the mass.
 
-    if (q_flag || e_flag) {
+    real mass = 0;
 
-	get_top_level_energies(root, eps*eps, potential_energy, kinetic_energy);
+    if (b->get_system_time() == 0
+	&& find_qmatch(b->get_log_story(), "initial_mass"))
+	mass = getrq(b->get_log_story(), "initial_mass");
+    else
+	mass = get_mass(b);
 
-	if (has_tidal)
-	    tidal_energy = get_tidal_energy(root, alpha1, alpha3);
-	    
-	if (q_flag)
-	    scale_virial(root, q, kinetic_energy,
-			 potential_energy + tidal_energy);
 
-	// NOTE: Changing the virial ratio changes the total kinetic energy of
-	//	 the system, but preserves the potential energy and total mass.
+    // Need to know some energies if the E, Q, or R flags are set.
+    // Note that the definition of r_virial now includes *only* the
+    // internal potential energy.
 
-	real energy = kinetic_energy + potential_energy + tidal_energy;
+    real r_virial = 0, pot_int = 0, pot_ext = 0, kin = 0;
 
-	if (e_flag) {
+    if (e_flag || r_flag || q_flag) {
+	if (b->get_system_time() == 0
+	    && find_qmatch(b->get_log_story(), "initial_rvirial")) {
 
-	    real fac = e/energy;
+	    // Avoid N^2 calculation if possible.
 
-	    scale_energy(root, e, energy);
+	    r_virial = getrq(b->get_log_story(), "initial_rvirial");
+	    pot_int = -0.5*mass*mass/r_virial;
+	    kin = get_top_level_kinetic_energy(b);
 
-	    // Update all relevant quantities.
+#if 0
+	    // Check:
 
-	    kinetic_energy *= fac;
-	    potential_energy *= fac;
-	    tidal_energy *= fac;
+	    real pe, ke;
+	    top_level_energies(b, eps*eps, pe, ke);
+	    PRC(pot_int); PRL(pe);
+	    PRC(kin); PRL(ke);
+#endif
 
-	    initial_r_virial /= fac;
-	    initial_r_jacobi /= fac;
+	} else {
 
-	    // For Roche-lobe filling systems, this also rescales
-	    // alpha1 and alpha3 by fac^3:
-	    //
-	    //		Utotal	  -->  Utotal * fac
-	    //		Utotal	  =    Uc + Ut
-	    //		Uc ~ M/R	==> R	       -->  R / fac
-	    //		Ut ~ alpha*R^2	==> alpha*R^2  -->  alpha*R^2 * fac
-	    //				==> alpha      -->  alpha * fac^3
+	    // Compute the potential energy.
 
-	    alpha1 *= pow(fac, 3);
-	    alpha3 *= pow(fac, 3);
+	    top_level_energies(b, eps*eps, pot_int, kin);
+	    r_virial = -0.5*mass*mass/pot_int;
+	}
 
-	    if (alpha1 != 0) {
-		PRI(4);cerr << "scaled  "; PRC(alpha1);PRL(alpha3);
-	    }
+	// Get external potential parameters (including any tidal field)
+	// from the input data and compute the external potential energy
+	// (excluding any tidal field).
+
+	check_set_external(b);
+	pot_ext = get_external_pot(b);
+	// PRL(pot_ext);
+
+	// Variable kira_initial_jacobi_radius is set by check_set_external,
+	// but it will be rescaled, so just remove it.
+
+	rmq(b->get_log_story(), "kira_initial_jacobi_radius");
+
+	// If an external (non-tidal) field exists, we probably won't
+	// naturally want to specify the energy.  In addition, the
+	// procedure for doing this is complicated (iterative, and may
+	// not converge).  For now, at least, only allow e to be set
+	// in the case of no external fields.
+
+	if (e_flag && pot_ext != 0)
+	    err_exit("Can't set energy in case of external field.");
+    }
+
+    // First do the mass scaling, if any.  NOTE: Scaling the total mass
+    // changes both the total energy and the virial ratio.  No attempt is
+    // made to preserve either in cases where they are not specified on
+    // the command line.
+
+    if (m_flag) {
+        real mfac = m/mass;
+	// PRL(mfac);
+
+	scale_mass(b, mfac);
+
+	mass = m;
+	pot_int *= mfac*mfac;
+	pot_ext *= mfac;
+	kin *= mfac;
+
+	cerr << "scale:  "; PRL(mass);
+    }
+
+    // Simplest choice now is r_flag; e_flag is more complicated,
+    // particularly in the presence of an external field.
+
+    if (r_flag) {
+
+	// Rescale all positions to force the virial radius to the
+	// specified value.
+
+	real oldvir = pot_int + get_external_virial(b);	  // denominator of
+							  // virial ratio
+
+	real rfac =  r/r_virial;
+	// PRL(rfac);
+
+	scale_pos(b, rfac);
+
+	r_virial = r;
+	pot_int /= rfac;
+	pot_ext = get_external_pot(b);
+
+	// Rescale all velocities to preserve the virial ratio.
+	// Scaling is already OK in case of a tidal field, so
+	// get_external_virial() includes only non-tidal terms.
+
+	real vfac = sqrt((pot_int + get_external_virial(b))/oldvir);
+	// PRL(vfac);
+
+	scale_vel(b, vfac);
+	kin *= vfac*vfac;
+
+	cerr << "scale:  "; PRL(r_virial);
+
+#if 0
+	// Check:
+
+	real pe, ke;
+	top_level_energies(b, eps*eps, pe, ke);
+	real pext = get_external_pot(b);
+	real vir = get_external_virial(b);
+
+	PRC(pot_int); PRL(pe);
+	PRC(kin); PRL(ke);
+	PRL(ke/(pe+vir));
+	PRL(-0.5*mass*mass/pe);
+#endif
+    }
+
+    if (e_flag) {
+
+	// Attempt to set the energy while holding the virial ratio
+	// constant, or else set both e and q.  Assume no external
+	// fields (see above).  Procedure is OK as is in the presence
+	// of a tidal field.
+
+	if (q_flag) {
+	    scale_virial(b, q, pot_int, kin);	// scales kin
+
+	    // NOTE: Changing the virial ratio changes the total kinetic
+	    // energy of the system, but preserves the potential energy
+	    // and total mass.
+
+	    // kin = q*pot_int;
+	    q_flag = false;
+
+	    cerr << "scale:  "; PRL(q);
 	}
 
 	// NOTE: The energy scaling is done on the assumption that eps = 0,
 	//	 and preserves the value of the virial ratio in that case.
 	//	 The total mass is always left unchanged.
 
-	putrq(root->get_log_story(), "initial_total_energy", energy);
+	real ee = kin+pot_int;
+	real fac = scale_energy(b, e, ee);
+
+	// Update all relevant quantities.
+
+	kin /= fac;
+	pot_int /= fac;
+	r_virial *= fac;
+
+	// For Roche-lobe filling systems, this also rescales
+	// alpha1 and alpha3 by fac^{-3}.
+
+	cerr << "scale:  "; PRL(e);
     }
 
-    root->log_history(argc, argv);
+    if (q_flag) {
 
-    // Update any initial data found in the root log story
-    // -- probably best to do this only if system_time = 0.
+	// Scale the velocities to set q and preserve r_virial.
 
-    if (root->get_system_time() == 0) {
+	real vir = get_external_virial(b);
+	real qvir = -kin/(pot_int + vir);
+	real vfac = sqrt(q/qvir);
+	// PRC(vir); PRC(qvir); PRL(vfac);
 
-        real mass = 0;
-	if (m_flag)
-	    mass = m;
-	else
-	    for_all_daughters(dyn, root, bb)
-		mass += bb->get_mass();
+	scale_vel(b, vfac);
+	kin *= vfac*vfac;
 
-	if (m_flag && initial_mass > 0)
-	    putrq(root->get_log_story(), "initial_mass", mass);
+	cerr << "scale:  "; PRL(q);
+    }
 
-	if (kinetic_energy <= 0) {
-	    get_top_level_energies(root, eps*eps,
-				   potential_energy, kinetic_energy);
-	    if (has_tidal)
-		tidal_energy = get_tidal_energy(root, alpha1, alpha3);
+    // Update the root log story -- probably best to do this only if
+    // system_time = 0.
+
+    if (b->get_system_time() == 0) {
+	putrq(b->get_log_story(), "initial_mass", mass, HIGH_PRECISION);
+	putrq(b->get_log_story(), "initial_rvirial", r_virial);
+	putrq(b->get_dyn_story(), "initial_total_energy", kin+pot_int+pot_ext);
+    }
+}
+
+bool parse_scale_main(int argc, char *argv[],
+		      real& eps,
+		      bool& e_flag, real& e,
+		      bool& m_flag, real& m,
+		      bool& q_flag, real& q,
+		      bool& r_flag, real& r)
+{
+    // Defaults:
+
+    e_flag = false;
+    m_flag = false;
+    q_flag = false;
+    r_flag = false;
+    bool eps_flag = false;
+    bool s_flag = false;
+
+    m = 0, q = -1, e = 0, r = 0;
+    eps = 0;
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "m:M:q:Q:e:E:r:R:sS";
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1)
+	switch(c) {
+
+	    case 'E': e_flag = true;
+	    	      r_flag = false;
+		      e = atof(poptarg);
+		      break;
+	    case 'e': eps_flag = true;
+		      eps = atof(poptarg);
+		      break;
+	    case 'M':
+	    case 'm': m_flag = true;
+		      m = atof(poptarg);
+		      break;
+	    case 'Q':
+	    case 'q': q_flag = true;
+		      q = atof(poptarg);
+		      break;
+	    case 'R':
+	    case 'r': r_flag = true;
+	    	      e_flag = false;
+	    	      r = atof(poptarg);
+		      break;
+	    case 'S':
+	    case 's': s_flag = true;
+		      m_flag = true;
+		      r_flag = true;
+		      q_flag = true;
+		      m = 1;
+	    	      q = 0.5;
+		      r = 1;
+		      break;
+            case '?': params_to_usage(cerr, argv[0], param_string);
+                      return false;
 	}
 
-	real r_virial = -0.5 * mass / (potential_energy + tidal_energy);
+    if (e_flag && e >= 0) warning("scale: specified energy >= 0");
+    if (m_flag && m <= 0) warning("scale: specified mass <= 0");
+    if (q_flag && q <  0) warning("scale: specified virial ratio < 0");
+    if (r_flag && r <= 0) warning("scale: specified virial radius <= 0");
 
-	if (initial_r_virial > 0 && r_virial != initial_r_virial)
-	    putrq(root->get_log_story(), "initial_rvirial", r_virial);
+    return true;
+}
 
-	// Better rewrite the tidal ratio if we recomputed the center of mass
-	// -- even if r_jacobi is unchanged, r_virial may be different.
+#else
 
-	if (has_tidal && s_flag)
-	    putrq(root->get_log_story(), "initial_rtidal_over_rvirial",
-		  initial_r_jacobi / r_virial,
-		  10);		// (precision as in mk_aniso_king.C)
+main(int argc, char ** argv)
+{
+    real m = 0, q = -1, e = 0, r = 0;
+    real eps = 0;
 
+    bool e_flag = false;
+    bool m_flag = false;
+    bool q_flag = false;
+    bool r_flag = false;
+
+    if (!parse_scale_main(argc, argv, eps,
+			  e_flag, e, m_flag, m,
+			  q_flag, q, r_flag, r)) {
+	get_help();
+	exit(1);
     }
 
-    put_node(cout, *root);
+    dyn *b = get_dyn(cin);
+    b->log_history(argc, argv);
+
+    scale(b, eps, e_flag, e, m_flag, m, q_flag, q, r_flag, r);
+
+    put_node(cout, *b);
 }
 
 #endif
-
-// end of: scale.C

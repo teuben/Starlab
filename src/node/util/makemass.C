@@ -353,10 +353,13 @@ void main(int argc, char ** argv)
     b->log_comment(seedlog);
 
     mkmass(b, mf, m_lower, m_upper, exponent, m_total, renumber_stars);	
-    real initial_mass = getrq(b->get_dyn_story(), "initial_mass");
+    real initial_mass = getrq(b->get_log_story(), "initial_mass");
 
     if (initial_mass > -VERY_LARGE_NUMBER)
-        putrq(b->get_dyn_story(), "initial_mass", m_total);
+        putrq(b->get_log_story(), "initial_mass", b->get_mass(),
+	      HIGH_PRECISION);
+
+    // Add stellar conversion data, so add_star will work.
 
     real m_sum = b->get_mass();
     real old_mtot = b->get_starbase()->conv_m_dyn_to_star(1);

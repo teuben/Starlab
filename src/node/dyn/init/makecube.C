@@ -37,15 +37,16 @@ local void  mkcube(dyn * root, int n, int u_flag)
 //  scale to standard parameters.
 
     root->to_com();
+    putrq(root->get_log_story(), "initial_mass", 1.0);
 
     if (! u_flag && n > 1) {
 
         real kinetic, potential;
 
 	get_top_level_energies(root, 0.0, potential, kinetic);
-	scale_virial(root, -0.5, kinetic, potential);
+	scale_virial(root, -0.5, potential, kinetic);	// scales kinetic
 	real energy = kinetic + potential;
-	scale_energy(root, -0.25, energy);
+	scale_energy(root, -0.25, energy);		// scales energy
 	putrq(root->get_dyn_story(), "initial_total_energy", -0.25);
 	putrq(root->get_log_story(), "initial_rvirial", 1.0);
     }

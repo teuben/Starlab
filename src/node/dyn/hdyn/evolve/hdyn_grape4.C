@@ -175,7 +175,7 @@ static int nboards;
 //
 //	put_grape_index_to_top_level_nodes()
 // and
-//	put_grape_index_to_all_leaves_nodes()
+//	put_grape_index_to_leaf_nodes()
 
 static int grape_n_max = 0;
 static int n_previous_nodes = 0;
@@ -511,7 +511,8 @@ void check_release_grape(kira_options *ko, xreal time)
 //			      (requires GRAPE reset after use).
 //======================================================================
 
-local int put_grape_index_to_all_leaves_nodes(hdyn* b)
+local int put_grape_index_to_leaf_nodes(hdyn* b,
+					bool cm = false) // use CM approximation
 
 // Called by:	jpdma_all_leaves()
 
@@ -524,70 +525,100 @@ local int put_grape_index_to_all_leaves_nodes(hdyn* b)
 
     if (nodes == NULL)
 	initialize_node_lists();
-    
-    int index = 0;
-    for_all_leaves(hdyn, b, bb) {
 
-	nodes[index] = bb;
-	index++;
-	bb->set_grape_index(index);
+    // Operation in case cm = true is similar to that of
+    // put_grape_index_to_top_level_nodes, but details and
+    // data structures may differ, so don't reuse.
+
+    int index = 0;
+    if (!cm) {
+	for_all_leaves(hdyn, b, bb) {
+	    nodes[index] = bb;
+	    index++;
+	    bb->set_grape_index(index);
+	}
+    } else {
+	for_all_daughters(hdyn, b, bb) {
+	    nodes[index] = bb;			// replicated code...
+	    index++;
+	    bb->set_grape_index(index);
+	}
     }
     return index;
 }
 
-local int jpdma_all_leaves(hdyn *root, bool predicted, real predicted_time)
+local inline void jpdma_node(hdyn *b,
+			     bool predicted,
+			     real predicted_time,
+			     int jpmax, int nj, int& jp)
+
+// Called by: jpdma_all_leaves()
+
+{
+    int jj, jm ;
+    jj =  b->get_grape_index();
+    jm = jj-1;
+
+    // Allow the possibility of using already predicted pos and vel
+    // rather than having the GRAPE do the prediction.
+
+    if (!predicted) {
+
+	pxj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_pos);
+	pvj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_vel);
+	paj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_acc)*0.5;
+	pjj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_jerk)
+       			   * 0.1666666666666666666666666666666;
+	ptj[jm] = b->get_time();
+	pmj[jm] = b->get_mass();
+
+    } else {
+
+	pxj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_pred_pos);
+	pvj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_pred_vel);
+	ptj[jm] = predicted_time;
+	pmj[jm] = b->get_mass();
+
+    }
+    ppj[jp] = jj;
+	
+    jp++;
+    int bufid = 0;
+    if ((jp == jpmax) || (jj == nj)) {
+	int zero = 0;
+	int one = 1;
+	h3mjpdma_indirect_(&jp, ppj, pxj, pvj, paj, pjj, pmj, ptj,&one,
+			   &bufid);
+	h3mjpdma_start_(&bufid);
+	bufid++;
+	if (bufid > 5)	// this 5 should be < JPDMA_BUFFMAX...
+	    bufid = 0;
+	h3wait_();
+	h3wait_();
+	    
+	jp = 0;
+    }
+}
+
+local int jpdma_all_leaves(hdyn *root,
+			   bool predicted,
+			   real predicted_time,
+			   bool cm = false)		// use CM approximation
 
 // Called by:	grape_calculate_energies()
 
 {
     int jpmax = h3jpmax_();
-    int nj = put_grape_index_to_all_leaves_nodes(root);
+    int nj = put_grape_index_to_leaf_nodes(root, cm);
     int jp = 0;
-    for_all_leaves(hdyn,root,b) {
-	int jj, jm ;
-	jj =  b->get_grape_index();
-	jm = jj-1;
 
-	// Allow the possibility of using already predicted pos and vel
-	// rather than having the GRAPE do the prediction.
+    if (!cm)
+	for_all_leaves(hdyn,root,b)
+	    jpdma_node(b, predicted, predicted_time, jpmax, nj, jp);
+    else
+	for_all_daughters(hdyn,root,b)
+	    jpdma_node(b, predicted, predicted_time, jpmax, nj, jp);
 
-	if (!predicted) {
-
-	    pxj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_pos);
-	    pvj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_vel);
-	    paj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_acc)*0.5;
-	    pjj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_jerk)
-       			   * 0.1666666666666666666666666666666;
-	    ptj[jm] = b->get_time();
-	    pmj[jm] = b->get_mass();
-
-	} else {
-
-	    pxj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_pred_pos);
-	    pvj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_pred_vel);
-	    ptj[jm] = predicted_time;
-	    pmj[jm] = b->get_mass();
-
-	}
-	ppj[jp] = jj;
-	
-	jp ++;
-	int bufid = 0;
-	if ((jp == jpmax) || (jj == nj)) {
-	    int zero = 0;
-	    int one = 1;
-	    h3mjpdma_indirect_(&jp, ppj, pxj, pvj, paj, pjj, pmj, ptj,&one,
-			       &bufid);
-	    h3mjpdma_start_(&bufid);
-	    bufid ++;
-	    if (bufid > 5)	// this 5 should be < JPDMA_BUFFMAX...
-	        bufid = 0;
-	    h3wait_();
-	    h3wait_();
-	    
-	    jp = 0;
-	}
-    }
     return nj;
 }
 
@@ -603,7 +634,7 @@ static real   * ph2l = NULL;
 
 local void force_by_grape4_on_leaves(real time, int ni, hdyn * nodes[], int nj)
 
-// Note: All LEAVES, and all pipelines are used.
+// Note: All pipelines are used; leaves taken from nodes[].
 //
 // Called by:	force_by_grape4_on_all_leaves()
 
@@ -680,7 +711,8 @@ local void force_by_grape4_on_leaves(real time, int ni, hdyn * nodes[], int nj)
 
 static hdyn ** allnodes = NULL;
 
-local void force_by_grape4_on_all_leaves(real time, hdyn * b, int nj)
+local void force_by_grape4_on_all_leaves(real time, hdyn * b, int nj,
+					 bool cm = false)	// CM approx
 
 // Called by:	grape_calculate_energies()
 
@@ -692,15 +724,29 @@ local void force_by_grape4_on_all_leaves(real time, hdyn * b, int nj)
 
     int i = 0;
     int ip = 0;
-    for_all_leaves(hdyn,b,bb) {
-	allnodes[ip] = bb;
-	i ++;
-	ip++;
-	if (ip == npipe) {
-	    force_by_grape4_on_leaves(time, ip, allnodes, nj);
-	    ip = 0;
+
+    if (!cm) {
+	for_all_leaves(hdyn,b,bb) {
+	    allnodes[ip] = bb;
+	    i++;
+	    ip++;
+	    if (ip == npipe) {
+		force_by_grape4_on_leaves(time, ip, allnodes, nj);
+		ip = 0;
+	    }
+	}
+    } else {
+	for_all_daughters(hdyn,b,bb) {
+	    allnodes[ip] = bb;			// more replicated code...
+	    i++;
+	    ip++;
+	    if (ip == npipe) {
+		force_by_grape4_on_leaves(time, ip, allnodes, nj);
+		ip = 0;
+	    }
 	}
     }
+
     if (ip)
 	force_by_grape4_on_leaves(time, ip, allnodes, nj);
 }
@@ -716,7 +762,8 @@ local void force_by_grape4_on_all_leaves(real time, hdyn * b, int nj)
 void grape_calculate_energies(hdyn * b,
 			      real &epot,
 			      real &ekin,
-			      real &etot)
+			      real &etot,
+			      bool cm)		// default = false
 {
     if (!grape_is_open) {
 
@@ -734,21 +781,32 @@ void grape_calculate_energies(hdyn * b,
     }
 
     real time = b->get_system_time();
-    int nj =  jpdma_all_leaves(b, true, time);
+    int nj =  jpdma_all_leaves(b, true, time, cm);
 
     //                            ^^^^  use predicted pos and vel (unpert. OK)
 
-    force_by_grape4_on_all_leaves(time, b,  nj);	// does *not* change acc, jerk
+    force_by_grape4_on_all_leaves(time, b,  nj, cm);	// does *not* change
+							// acc and jerk
 
     grape_was_used_to_calculate_potential = true;	// trigger a reset
+							// next time around
 
     epot =  ekin = etot = 0;
 
-    for_all_leaves(hdyn,b,bb) {
-	real mi = bb->get_mass();
-	epot += 0.5*mi*bb->get_pot();
-	vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
-	ekin += 0.5*mi*vel*vel;
+    if (!cm) {
+	for_all_leaves(hdyn,b,bb) {
+	    real mi = bb->get_mass();
+	    epot += 0.5*mi*bb->get_pot();
+	    vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
+	    ekin += 0.5*mi*vel*vel;
+	}
+    } else {
+	for_all_daughters(hdyn,b,bb) {
+	    real mi = bb->get_mass();		// replicated code again...
+	    epot += 0.5*mi*bb->get_pot();
+	    vector vel = bb->get_vel();
+	    ekin += 0.5*mi*vel*vel;
+	}
     }
     etot = ekin + epot;
 

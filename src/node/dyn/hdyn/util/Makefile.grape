@@ -48,9 +48,6 @@ LIBRARY = libhdyn.a
 
 include $(STARLAB_PATH)/inc/Makefile.worker.inc
 
-# Note that we use quite different ways of constructing the two
-# GRAPE functions in this drectory!  To be cleaned up...
-
 sys_stats_grape.C : sys_stats.C
 	echo "#define USE_GRAPE" > sys_stats_grape.C
 	cat sys_stats.C >> kira_grape.C

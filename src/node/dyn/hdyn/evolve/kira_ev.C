@@ -242,9 +242,16 @@ void calculate_acc_and_jerk_for_list(hdyn *b,
         // Add external forces.
 
         for (int i = 0; i < n_next; i++)
-	    if (next_nodes[i]->is_top_level_node())
-	        add_external(next_nodes[i]);
-
+	    if (next_nodes[i]->is_top_level_node()) {
+		hdyn *bb = next_nodes[i];
+		real pot;
+		vector acc, jerk;
+	        get_external_acc(bb, bb->get_pred_pos(), bb->get_pred_vel(),
+				 pot, acc, jerk);
+		bb->inc_pot(pot);
+		bb->inc_acc(acc);
+		bb->inc_jerk(jerk);
+	    }
     }
 
 #ifdef TIME_INTERNAL

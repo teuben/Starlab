@@ -23,7 +23,7 @@ EXECUTABLES =  gethist pgetopt randinter runtime_help precision \
 	       story test_vector
 OBJECT_FILES = randinter.o pgetopt.o gethist.o precision.o story.o \
 		util_math.o util_io.o error.o time.o par_to_use.o \
-		runtime_help.o xreal.o
+		printbits.o runtime_help.o xreal.o
 LIBRARY = libstd.a
 
 EXTRA_CLEAN = $(LIB)/$(LIBRARY)

@@ -99,10 +99,11 @@ void main(int argc, char ** argv) {
 
     mkblack_hole(b, id, m_bh);
 
-    real initial_mass = getrq(b->get_dyn_story(), "initial_mass");
+    real initial_mass = getrq(b->get_log_story(), "initial_mass");
 
     if (initial_mass > -VERY_LARGE_NUMBER)
-        putrq(b->get_dyn_story(), "initial_mass", b->get_mass());
+        putrq(b->get_log_story(), "initial_mass", b->get_mass(),
+	      HIGH_PRECISION);
 
     real m_sum = b->get_mass();
     real old_mtot = b->get_starbase()->conv_m_dyn_to_star(1);

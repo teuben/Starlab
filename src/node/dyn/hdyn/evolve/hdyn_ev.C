@@ -3422,8 +3422,15 @@ void hdyn::integrate_node(hdyn * root,
 	calculate_acc_and_jerk(true);
 	set_valid_perturbers(false);
 
-	if (tidal_type && is_top_level_node())
-	    add_external(this);
+	if (tidal_type && is_top_level_node()) {
+	    real dpot;
+	    vector dacc, djerk;
+	    get_external_acc(this, pred_pos, pred_vel,
+			     dpot, dacc, djerk);
+	    inc_pot(dpot);
+	    inc_acc(dacc);
+	    inc_jerk(djerk);
+	}
 
 	correct_and_update();			// note: no retry on error
 	// update();

@@ -656,7 +656,8 @@ local inline bool use_cm_approx(hdyn *bb)
 }
 
 local int send_all_leaves_to_grape(hdyn *b,		// root node
-				   real& e_unpert)	// unperturbed energy
+				   real& e_unpert,	// unperturbed energy
+				   bool cm = false)	// use CM approx
 
 // Send predicted positions (velocities, etc. are not needed to
 // compute the potentials) of all leaves to GRAPE j-particle memory.
@@ -673,45 +674,62 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
     int nj = 0;
     e_unpert = 0;
 
-    for_all_leaves(hdyn, b, bb) {
+    if (!cm) {
+	for_all_leaves(hdyn, b, bb) {
 
-	// In center of mass approximation, replace bb by its parent.
-	// The order of traversal of the tree means that this should
-	// occur at the elder component of a binary, and will skip the
-	// other component.  The while loop should also take care of
-	// unperturbed multiples!  For efficiency, keep and return a
-	// running sum of all internal energies excluded.
+	    // In center of mass approximation, replace bb by its parent.
+	    // The order of traversal of the tree means that this should
+	    // occur at the elder component of a binary, and will skip the
+	    // other component.  The while loop should also take care of
+	    // unperturbed multiples!  For efficiency, keep and return a
+	    // running sum of all internal energies excluded.
 
-	bool reset_bb = false;
+	    bool reset_bb = false;
 
-	while (use_cm_approx(bb)) {
-	    hdyn *sis = bb->get_younger_sister();
-	    hdyn *par = bb->get_parent();
-	    real reduced_mass = bb->get_mass()*sis->get_mass()/par->get_mass();
-	    e_unpert += reduced_mass * bb->get_kepler()->get_energy();
-	    bb = par;
-	    reset_bb = true;
-	}
+	    while (use_cm_approx(bb)) {
+		hdyn *sis = bb->get_younger_sister();
+		hdyn *par = bb->get_parent();
+		real reduced_mass = bb->get_mass() * sis->get_mass()
+						   / par->get_mass();
+		e_unpert += reduced_mass * bb->get_kepler()->get_energy();
+		bb = par;
+		reset_bb = true;
+	    }
 
-	// Must be careful to avoid an infinite loop (because of the
-	// logic used by for_all_leaves():
+	    // Must be careful to avoid an infinite loop (because of the
+	    // logic used by for_all_leaves():
 
-	if (reset_bb) {
-//	    PRL(e_unpert);
-//	    PRL(bb->format_label());
-	    bb = bb->get_oldest_daughter()->get_younger_sister()->next_node(b);
-//	    PRL(bb);
-	    if (!bb) break;
-//	    PRL(bb->format_label());
-	}
+	    if (reset_bb) {
+//		PRL(e_unpert);
+//		PRL(bb->format_label());
+		bb = bb->get_oldest_daughter()->get_younger_sister()
+					      ->next_node(b);
+//		PRL(bb);
+		if (!bb) break;
+//		PRL(bb->format_label());
+	    }
 
-	// For now, let GRAPE index = address.
+	    // For now, let GRAPE index = address.
 
-	bb->set_grape_index(nj++);
+	    bb->set_grape_index(nj++);
 	
-	// Copy the leaf to the GRAPE with index = address.
+	    // Copy the leaf to the GRAPE with index = address.
 
-	send_j_node_to_grape(bb, true);	// "true" ==> send predicted pos
+	    send_j_node_to_grape(bb, true);	// "true" ==> send predicted pos
+	}
+
+    } else {
+
+	for_all_daughters(hdyn, b, bb) {
+
+	    // For now, let GRAPE index = address.
+
+	    bb->set_grape_index(nj++);
+	
+	    // Copy the node to the GRAPE with index = address.
+
+	    send_j_node_to_grape(bb, true);	// "true" ==> send predicted pos
+	}
     }
 
     if (DEBUG) {
@@ -723,7 +741,8 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 }
 
 local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
-					int nj)
+					int nj,
+					bool cm = false)	// CM approx
 
 // Compute the forces on all particles due to all other particles.
 // Only interested in determining the potential energies.
@@ -744,15 +763,28 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
     bool status = false;
 
     int ip = 0;
-    for_all_leaves(hdyn, b, bb) {
-	ilist[ip++] = bb;
-	if (ip == n_pipes) {
-	    status |= force_by_grape(b->get_system_time(),
-				     ilist, ip, nj, n_pipes,
-				     true);	// "true" ==> compute pot only
-	    ip = 0;
+    if (!cm) {
+	for_all_leaves(hdyn, b, bb) {
+	    ilist[ip++] = bb;
+	    if (ip == n_pipes) {
+		status |= force_by_grape(b->get_system_time(),
+					 ilist, ip, nj, n_pipes,
+					 true);	// "true" ==> compute pot only
+		ip = 0;
+	    }
+	}
+    } else {
+	for_all_daughters(hdyn, b, bb) {
+	    ilist[ip++] = bb;			// replicated code...
+	    if (ip == n_pipes) {
+		status |= force_by_grape(b->get_system_time(),
+					 ilist, ip, nj, n_pipes,
+					 true);	// "true" ==> compute pot only
+		ip = 0;
+	    }
 	}
     }
+
     if (ip)
 	status |= force_by_grape(b->get_system_time(),
 				 ilist, ip, nj, n_pipes,
@@ -776,10 +808,11 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 //  *****************************
 //  *****************************
 
-void grape_calculate_energies(hdyn *b,				// root node
+void grape_calculate_energies(hdyn *b,			// root node
 			      real &epot,
 			      real &ekin,
-			      real &etot)
+			      real &etot,
+			      bool cm)			// default = false
 {
     if (DEBUG) {
 	cerr << endl << "grape_calculate_energies..."
@@ -791,9 +824,9 @@ void grape_calculate_energies(hdyn *b,				// root node
 		       "grape_calculate_energies", b->get_kira_options());
 
     real e_unpert;
-    int nj =  send_all_leaves_to_grape(b, e_unpert);
+    int nj =  send_all_leaves_to_grape(b, e_unpert, cm);
 
-    if (force_by_grape_on_all_leaves(b,  nj)) {
+    if (force_by_grape_on_all_leaves(b, nj, cm)) {
 
 	cerr << "grape_calculate_energies: "
 	     << "error on return from force_by_grape_on_all_leaves()"
@@ -803,28 +836,39 @@ void grape_calculate_energies(hdyn *b,				// root node
     }
 
     grape_was_used_to_calculate_potential = true;	// trigger a reset
+							// next time around
 
     epot = ekin = etot = 0;
 
-    for_all_leaves(hdyn, b, bb) {
+    if (!cm) {
+	for_all_leaves(hdyn, b, bb) {
 
-	// Logic here follows that in send_all_leaves_to_grape().
+	    // Logic here follows that in send_all_leaves_to_grape().
 
-	bool reset_bb = false;
+	    bool reset_bb = false;
 
-	while (use_cm_approx(bb)) {
-	    bb = bb->get_parent();
-	    reset_bb = true;
+	    while (use_cm_approx(bb)) {
+		bb = bb->get_parent();
+		reset_bb = true;
+	    }
+	    if (reset_bb) {
+		bb = bb->get_oldest_daughter()->get_younger_sister()
+					      ->next_node(b);
+		if (!bb) break;
+	    }
+
+	    real mi = bb->get_mass();
+	    epot += 0.5*mi*bb->get_pot();
+	    vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
+	    ekin += 0.5*mi*vel*vel;
 	}
-	if (reset_bb) {
-	    bb = bb->get_oldest_daughter()->get_younger_sister()->next_node(b);
-	    if (!bb) break;
+    } else {
+	for_all_daughters(hdyn, b, bb) {
+	    real mi = bb->get_mass();
+	    epot += 0.5*mi*bb->get_pot();
+	    vector vel = bb->get_vel();
+	    ekin += 0.5*mi*vel*vel;
 	}
-
-	real mi = bb->get_mass();
-	epot += 0.5*mi*bb->get_pot();
-	vector vel = hdyn_something_relative_to_root(bb, &hdyn::get_vel);
-	ekin += 0.5*mi*vel*vel;
     }
     etot = ekin + epot + e_unpert;
 

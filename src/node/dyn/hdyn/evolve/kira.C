@@ -23,7 +23,7 @@
 //// the command line, of course.)  Some options typically having to do
 //// with initial setup may be overridden by data from the input
 //// snapshot (if present), as noted below.  Kira may also turn *on*
-//// some options (the B, G, Q, S, and u settings) if they were turned
+//// some options (the B, G, S, and u settings) if they were turned
 //// on in the previous run, but are not specified on the current
 //// command line.  To prevent this, use the "-o" switch.
 ////
@@ -43,36 +43,22 @@
 ////              -e    specify softening length [0][*]
 ////              -E    use exact calculation [false]
 ////              -f    specify close-encounter distance [1 --> 1/N][*]
-////              -F    specify tidal field type (0 = none, 1 = point-mass,
-////                                              2 = isothermal, 3 = disk,
-////                                              4 = custom)
-////                                  [0 if -Q not set; 1 otherwise][*]
 ////              -g    specify hysteresis factor [2.5][*]
 ////              -G    specify initial stripping radius [none][*]
 ////              -h    specify stellar-evolution time step [0.015625 = 1/64][*]
 ////              -I    specify (re)initialization timescale [1][*]
-////              -J    specify Jacobi radius [none][*]
 ////              -k    specify perturbation factor [1.e-7][*]
 ////              -K    specify log2(maximum slowdown factor) (integer): [0][*]
 ////              -L    specify CPU time limit, in seconds [none]
-////              -M    specify initial total mass, in solar masses
-////                                  [none; take from input snap if present]
 ////              -n    stop at specified number of particles [10]
 ////              -N    specify frequency of CPU check output [50000]
-////              -o    prevent kira from overriding some settings (BGQSu)
+////              -o    prevent kira from overriding some settings (BGSu)
 ////                        based on input snapshot data [allow]
 ////              -O    save (and overwrite) extra snapshot at each output [no]
 ////              -q    specify initial virial ratio [0.5]
-////              -Q    use tidal field [none][*]
-////              -r    specify initial virial radius in code units
-////                                  [1; take from input snap if present]
-////              -R    specify initial virial radius, in pc
-////                                  [none; take from input snap if present]
 ////              -s    specify random seed [take from system clock]
 ////              -S    turn on stellar evolution [off][*]
 ////              -t    specify time span of calculation [10]
-////              -T    specify initial virial time scale, in Myr
-////                                  [none; take from input snap if present]
 ////              -u    toggle unperturbed multiple motion [disabled][*]
 ////              -U    toggle all unperturbed motion [enabled][*]
 ////              -v    toggle "verbose" mode [on]
@@ -89,6 +75,7 @@
 
 // Level-2 help:
 
+//++
 //++ Some run-time parameters:
 //++
 //++ The initial virial radius is read from the input snapshot.  If no
@@ -129,7 +116,28 @@
 //++ mass, in solar units.  The "-R" option specifies the value of
 //++ the virial radius, in parsecs.  The "-T" option specifies the
 //++ (Heggie & Mathieu) system time unit, in Myr.
-//
+//++
+//++ NOTE from Steve (7/01): the following options have been retired:
+//++
+//++      -F    specify tidal field type (0 = none, 1 = point-mass,
+//++                                      2 = isothermal, 3 = disk,
+//++                                      4 = custom)
+//++                          [0 if -Q not set; 1 otherwise][*]
+//++
+//++      -J    specify Jacobi radius [none][*]
+//++
+//++      -Q    use tidal field [none][*]
+//++
+//++      -M    specify initial total mass, in solar masses
+//++                          [none; take from input snap if present]
+//++      -R    specify initial virial radius, in pc
+//++                          [none; take from input snap if present]
+//++      -T    specify initial virial time scale, in Myr
+//++                          [none; take from input snap if present]
+//++
+//++      -r    specify initial virial radius in code units
+//++                          [1; take from input snap if present]
+
 //      J. Makino, S. McMillan          12/92
 //      S. McMillan, P. Hut              9/94
 //	J. Makino, S. McMillan          12/95
@@ -140,6 +148,7 @@
 //	S. McMillan, S. Portegies Zwart	 7/98
 //	S. McMillan			 8/98
 //	S. Portegies Zwart	        12/00
+//	S. McMillan			 7/01
 //
 // NOTE:  ALL direct references to USE_GRAPE are confined to
 //	  this file (referenced externally via the functions below).
@@ -720,8 +729,18 @@ local int integrate_list(hdyn * b,
 		    bi->calculate_acc_and_jerk(true);
 		    bi->set_valid_perturbers(false);
 
-		    if (bi->is_top_level_node() && b->get_external_field() > 0)
-			add_external(bi);
+		    if (bi->is_top_level_node()
+			&& b->get_external_field() > 0) {
+			real pot;
+			vector acc, jerk;
+			get_external_acc(bi,
+					 bi->get_pred_pos(),
+					 bi->get_pred_vel(),
+					 pot, acc, jerk);
+			bi->inc_pot(pot);
+			bi->inc_acc(acc);
+			bi->inc_jerk(jerk);
+		    }
 
 		    if (!bi->correct_and_update()) {
 			cerr << endl << "failed to correct error for "
@@ -1378,8 +1397,8 @@ local void print_energy_from_pot(hdyn* b)
 
     int p = cerr.precision(INT_PRECISION);
     PRC(top_pot), PRC(int_pot), PRL(kin);
-    PRL(de_external_pot(b));
-    cerr << "energy_from_pot = " << kin+top_pot+int_pot+0.5*de_external_pot(b)
+    PRL(get_external_pot(b));
+    cerr << "energy_from_pot = " << kin+top_pot+int_pot+0.5*get_external_pot(b)
 	 << endl;
     cerr.precision(p);
 }
@@ -1400,10 +1419,13 @@ local void evolve_system(hdyn * b,	       // hdyn array
 			 bool exact,	       // exact force calculation
 			 real cpu_time_limit,
 			 bool verbose,
-			 bool save_last_snap,  // save snap at log output
+			 bool save_snap_at_log, // save snap at log output
 			 char* snap_save_file, // filename to save in
 			 int n_stop )	       // when to stop
 {
+    // Modified order in which output/snapshots/reinitialization/etc. are
+    // performed -- Steve, 7/01
+
     // Initialization:
 
     clean_up_files();
@@ -1445,9 +1467,18 @@ local void evolve_system(hdyn * b,	       // hdyn array
     real n_dump = 1.0;				// up to at least 50 seems OK!
 
     bool first_full_dump = false;
+
     if (dt_snap < 0) {
+
+	// Turn on full_dump mode, at frequency -dt_snap.
+	// Turn off regular snapshot output.
+
 	n_dump = -dt_snap;
 	dt_snap = VERY_LARGE_NUMBER;
+
+	// first_full_dump added by SPZ Jan 2000 to assure initial dump 
+	// of snapshot to start worldbundle.
+
 	first_full_dump = full_dump = true;
 	PRL(n_dump);
     }
@@ -1505,12 +1536,15 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
     real t_end = tt + delta_t;		// final time, at end of integration
     real t_log = tt;			// time of next log output
-//    if (t > 0) t_log += dt_log;
+    // if (t > 0) t_log += dt_log;
     real t_snap = tt + dt_snap;		// time of next snapshot output
     real t_sync = tt + dt_sync;		// time of next system synchronization
-    real t_esc = tt + dt_esc;		// time of next escaper check
-					// Note: do NOT apply immediate check
-    real t_reinit = tt + dt_reinit;	// time of next reinitialization
+
+    // Changes by Steve (7/01):
+
+    real t_esc = tt; // + dt_esc;	// time of next escaper check
+					// 	note: apply IMMEDIATE check
+    real t_reinit = tt; // + dt_reinit;	// time of next reinitialization
 
     if (verbose) {
 	cerr << endl;
@@ -1533,16 +1567,14 @@ local void evolve_system(hdyn * b,	       // hdyn array
     ofstream tmp_dump("TMP_DUMP");
 #endif
 
-    // Initialize the system.
+    // Initialize the system.  This is somewhat redundant, as immediate
+    // reinitialization is scheduled within the while loop.  However,
+    // we need to know the time steps for fast_get_nodes_to_move().
 
     full_reinitialize(b, t, verbose);
 
-    bool tree_changed = true;	// Used by fast_get_nodes_to_move.
-    				// Set by integration/evolution routines.
-
-    // Note: the system can be reinitialized in several places, resulting
-    // in considerable duplication of effort and inefficiency.  It remains
-    // to be seen whether this produces any noticeable effect on run time.
+    bool tree_changed = true;	// used by fast_get_nodes_to_move;
+    				// set by integration/evolution routines
 
     while (t <= t_end) {
 
@@ -1551,60 +1583,21 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	// Create the new time step list.
 
-	// get_nodes_to_move(b, next_nodes, n_next, ttmp);
 	fast_get_nodes_to_move(b, next_nodes, n_next, ttmp, tree_changed);
 
-	//------------------------------------------------------------
-	// Full dumps should precede and follow major changes when the
-	// system is properly synchronized.  Tests below should be
-	// somewhat redundant.
+	// New order of actions (Steve, 7/01):
+	//
+	//	1. log output
+	//	2. check STOP
+	//	3. snapshot/full dump output
+	//	4. remove escapers
+	//	5. reinitialize
+	//
+	// These differ significantly from the previous version...
 
-//	bool full_dump_now = (full_dump
-//			      && (t == 0 || t >= t_reinit
-//				  	 || t>= t_esc || t >= t_sync));
+	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-	// No full output at every t_sync.
-	// stellar evolution forces t_sync to be 1/64!
-
-	// May need to be modified, as masses can change and
-	// display software may not know that...
-
-	bool full_dump_now = (full_dump
-			      && (t == 0 || t >= t_reinit
-				  	 || t>= t_esc || t >= t_end));
-
-	// This dump ends the current worldbundle, so don't do it
-	// at time t = 0.
-
-	if (full_dump_now && t > 0)
-	    put_node(cout, *b,
-		     false,		// don't print xreal
-		     1);		// short output (uses STARLAB_PRECISION)
-
-	// first_full_dump Added by [SPZ Jan 2000] to assure initial dump 
-	// of snapshot to start worldbundle.
-
-	if (first_full_dump) {
-	  full_dump_now = true;
-	  first_full_dump = false;
-	}
-
-	//------------------------------------------------------------
-
-	if (ttmp > t_reinit) {
-
-	    // Time to reinitialize the system.
-
-	    // *** REQUIRE dt_reinit >= dt_sync. ***
-
-	    full_reinitialize(b, t, verbose);
-	    tree_changed = true;
-
-	    fast_get_nodes_to_move(b, next_nodes, n_next, ttmp, tree_changed);
-	    update_step(ttmp, t_reinit, dt_reinit);
-	}
-
-	bool last_snap = false;
+	bool save_snap = false;
 
 	if (ttmp > t_log) {
 
@@ -1612,7 +1605,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	    // System should be synchronized here, but it is not essential.
 	    // However, energy errors may not be reliable, and the system
-	    // may not be restartable (if save_last_snap is set).
+	    // may not be restartable (if save_snap_at_log is set).
 
 	    real cpu0 = cpu_time();
 
@@ -1631,15 +1624,132 @@ local void evolve_system(hdyn * b,	       // hdyn array
 
 	    // (Incorporate count and steps into kira_counters...?)
 
-	    last_snap = save_last_snap;
+	    save_snap = save_snap_at_log;
 
 	    cerr << endl << "Total CPU time for log output = "
 		 << cpu_time() - cpu0 << endl;
 
 	    cerr << endl; flush(cerr);
 	    update_step(ttmp, t_log, dt_log);
-
 	}
+
+	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	if (ttmp > t_sync) {
+
+	    // System is synchronized.
+	    // Check to see if we should stop the run.
+
+	    if (check_file("STOP")) {
+
+		t_end = ttmp - 1;	// Forces optional snap output 
+					// and end of run in snap_output.
+
+		cerr << endl << "***** Calculation STOPped by user at time "
+		     << t << " *****" << endl << endl;
+	    }
+
+	    tree_changed |= check_sync(b);
+	    update_step(ttmp, t_sync, dt_sync);
+	}
+
+	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	// Output a snapshot to cout at the scheduled time, or at end of run.
+	// NOTE: This is the *only* place where output to cout can occur.
+
+	// Not essential to have dt_snap >= dt_reinit, but should have this
+	// if we want full restart capability.
+
+	bool reg_snap = (ttmp > t_snap
+			 || (dt_snap < VERY_LARGE_NUMBER && ttmp > t_end)
+			 || (fmod(steps, 1000) == 0 && check_file("DUMP")));
+
+	if (reg_snap || save_snap) {
+
+	    // PRC(ttmp), PRC(t_snap), PRL(dt_snap);
+
+	    snap_output(b, steps, snaps,
+			reg_snap, save_snap, snap_save_file,
+			t, ttmp, t_end, t_snap, dt_snap, verbose);
+
+	    if (reg_snap)
+		update_step(ttmp, t_snap, dt_snap);
+	}
+
+	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	// Full dumps should precede and follow major changes when the
+	// system is properly synchronized.
+
+	// bool full_dump_now = (full_dump
+	//		      && (t == 0 || t >= t_reinit
+	//			  	 || t>= t_esc || t >= t_sync));
+
+	// No full output at every t_sync.
+	// Stellar evolution forces t_sync to be 1/64!
+
+	bool full_dump_now = (full_dump
+			      && (t >= t_reinit || t >= t_esc || t >= t_end));
+
+	// Note that t = t_reinit = t_esc now at restart, so the second
+	// clause of the if is true initially.
+
+	// This dump ends the current worldbundle, so don't do it initially.
+
+	if (full_dump_now && !first_full_dump) {
+
+	    // If we want the last full dump (t_end) to be a complete
+	    // snapshot, so we can restart from the end of the
+	    // worldbundle file, this is the place to do it...
+	    //
+	    // To be implemented and tested (Steve, 7/01)...
+
+	    put_node(cout, *b,
+		     false,		// don't print xreal
+		     1);		// short output (uses STARLAB_PRECISION)
+
+	    cerr << "Full dump (tdyn format) at time " << t << endl;
+	}
+
+	first_full_dump = false;
+
+#if 0
+	real tcheck1 = 17.0;
+	real tcheck2 = 17.5;
+	real tcheck3 = 18.0;
+	real tcheck4 = 19.0;
+	if (   t <= tcheck1 && ttmp > tcheck1
+	    || t <= tcheck2 && ttmp > tcheck2
+	    || t <= tcheck3 && ttmp > tcheck3
+	    || t <= tcheck4 && ttmp > tcheck4 ) {
+
+	    char name[10];
+	    sprintf(name, "TMP_%.1f", (real)t);
+	    ofstream f(name);
+	    if (f) {
+
+		// put_node(f, *b);
+		pp3(b, f);
+		cerr << "wrote TMP file " << name << endl;
+
+		f.close();
+	    }
+	}
+#endif
+
+	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	if (ttmp > t_end) return;		// return ==> stop
+
+	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	bool reinit = (ttmp > t_reinit);
+	if (reinit) update_step(ttmp, t_reinit, dt_reinit);
+
+	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	bool esc = false;
 
 	if (ttmp > t_esc) {
 
@@ -1664,99 +1774,44 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    }
 
 	    if (n_new != n_prev) {
-
-		// Should be somewhat redundant, but...
-
-		full_reinitialize(b, t, verbose);
-		tree_changed = true;
-		fast_get_nodes_to_move(b, next_nodes, n_next, ttmp,
-				       tree_changed);
-
-		// log_output(b, steps);
-
-		cerr << endl; flush(cerr);
+		reinit = true;
+		esc = true;
 	    }
 
 	    update_step(ttmp, t_esc, dt_esc);
 	}
 
-	if (ttmp > t_sync) {
+	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-	    // System is synchronized.
-	    // Check to see if we should stop the run.
+	if (reinit) {
 
-	    if (check_file("STOP")) {
+	    // Reinitialize the system.
 
-		t_end = ttmp - 1;	// Forces optional snap output 
-					// and end of run in snap_output.
+	    // *** REQUIRE dt_reinit >= dt_sync. ***
 
-		cerr << "\n***** Calculation STOPped by user *****\n\n";
-	    }
+	    full_reinitialize(b, t, verbose);
+	    tree_changed = true;
 
-	    tree_changed |= check_sync(b);
-	    update_step(ttmp, t_sync, dt_sync);
+	    fast_get_nodes_to_move(b, next_nodes, n_next, ttmp, tree_changed);
+
+	    if (esc) cerr << endl << flush;
 	}
 
-	// Output a snapshot to cout at the scheduled time, or at end of run.
-	// NOTE: This is the *only* place where output to cout can occur.
+	// NOTE:  If dt_log and dt_reinit are properly chosen, escapers will
+	// always be checked and the system will always be reinitialized
+	// immediately after a snapshot or full dump, so continuation should
+	// be the same as a restart from that snapshot.
 
-	// Not essential to have dt_snap >= dt_reinit, but should have this
-	// if we want full restart capability.
+	//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-	bool reg_snap = (ttmp > t_snap
-			 || (dt_snap < VERY_LARGE_NUMBER && ttmp > t_end)
-			 || (fmod(steps, 1000) == 0 && check_file("DUMP")));
+	// Second full_dump output marks the start of a new worldbundle.
 
-	if (reg_snap || last_snap) {
-
-	    // log_output(b, steps);
-
-
-	    // PRC(ttmp), PRC(t_snap), PRL(dt_snap);
-
-	    snap_output(b, steps, snaps,
-			reg_snap, last_snap, snap_save_file,
-			t, ttmp, t_end, t_snap, dt_snap, verbose);
-
-	    if (reg_snap)
-		update_step(ttmp, t_snap, dt_snap);
+	if (full_dump_now) {
+	    put_node(cout, *b, false, 1);
+	    cerr << endl << "Full dump (tdyn format) at time " << t << endl;
 	}
 
-
-#if 0
-	real tcheck1 = 17.0;
-	real tcheck2 = 17.5;
-	real tcheck3 = 18.0;
-	real tcheck4 = 19.0;
-	if (   t <= tcheck1 && ttmp > tcheck1
-	    || t <= tcheck2 && ttmp > tcheck2
-	    || t <= tcheck3 && ttmp > tcheck3
-	    || t <= tcheck4 && ttmp > tcheck4 ) {
-
-	    char name[10];
-	    sprintf(name, "TMP_%.1f", (real)t);
-	    ofstream f(name);
-	    if (f) {
-
-		pp3(b, f);
-//		put_node(f, *b);
-		cerr << "wrote TMP file " << name << endl;
-
-		f.close();
-	    }
-	}
-#endif
-
-
-	if (ttmp > t_end) return;
-
-	//------------------------------------------------------
-	// Complete the full_dump output, marking the start of
-	// a new worldbundle.
-
-	if (full_dump_now) put_node(cout, *b, false, 1);
-
-	//------------------------------------------------------
+	//-----------------------------------------------------------------
 
 	// Proceed to the next step.
 
@@ -1971,7 +2026,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 		     << "***** CPU time limit of " << cpu_time_limit
 		     << " seconds exceeded"
 		     << endl;
-		return;
+		return;				// pretty harsh...
 	    }
 
 	    real new_dt_log = 0;
@@ -1998,7 +2053,7 @@ local void evolve_system(hdyn * b,	       // hdyn array
 	    }
 
 	    if (new_snap_save_file[0] != '\0') {
-		save_last_snap = true;
+		save_snap_at_log = true;
 		snap_save_file = new_snap_save_file;
 	    } else
 		delete [] new_snap_save_file;
@@ -2037,7 +2092,7 @@ main(int argc, char **argv)
     bool exact;			// force calculation using perturber list
     bool verbose;		// Toggle "verbose" mode
 
-    bool save_last_snap = false;
+    bool save_snap_at_log = false;
     char snap_save_file[256];
     int  n_stop;		// n to terminate simulation
 
@@ -2046,7 +2101,7 @@ main(int argc, char **argv)
 			 dt_snap, dt_sstar,
 			 dt_esc, dt_reinit,
 			 exact, cpu_time_limit, verbose,
-			 save_last_snap, snap_save_file, n_stop))
+			 save_snap_at_log, snap_save_file, n_stop))
 	get_help();
 
     // b->to_com();	// don't modify input data -- use tool to do this
@@ -2060,7 +2115,7 @@ main(int argc, char **argv)
     evolve_system(b, delta_t, dt_log, long_binary_out,
 		  dt_snap, dt_sstar, dt_esc, dt_reinit,
 		  exact, cpu_time_limit,
-		  verbose, save_last_snap, snap_save_file, n_stop);
+		  verbose, save_snap_at_log, snap_save_file, n_stop);
 
 
     //--------------------------------------------------------------------

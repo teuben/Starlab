@@ -15,7 +15,6 @@
 //	void print_dstar_params
 //	bool print_dstar_stats
 //	void get_energies_with_external
-//	void refine_cluster_mass
 //	void print_statistics
 //	void update_cpu_counters
 //	void log_output
@@ -525,215 +524,6 @@ bool print_dstar_stats(dyn* b, bool mass_function,    // b is binary
     return false;
 }
 
-void get_energies_with_external(dyn* b, real eps2, 
-				real &potential, real &kinetic, real &total,
-				bool cm)
-{
-    // Coerce calculate_energies_with_external into the same calling
-    // sequence as dyn::calculate_energies, for use by sys_stats...
-    // Discard eps2 (--> 0).
-
-    calculate_energies_with_external((hdyn*)b, kinetic, potential, total, cm);
-}
-
-#define G_TOL 1.e-6
-
-local real solve3(real a, real b, real c)
-{
-    // Iteratively solve
-    //
-    //		a z^3 + b z + c  =  0
-    //
-    // where we know a > 0, b > 0, c < 0.
-
-    // Proceed by Newton-Raphson iteration.  Since a > 0, b > 0, so
-    // there are are no turning points to complicate the logic.
-
-    real z = 2*max(pow(abs(c/a), 1.0/3), sqrt(abs(b/a)));
-    real g = c + z * (b + a*z*z);
-    real gpr = b + 3*a*z*z;		// always > 0
-
-    while (abs(g) > G_TOL) {
-	z = z - g/gpr;
-	g = c + z * (b + a*z*z);
-	gpr = b + 3*a*z*z;
-    }
-
-    return z;
-}
-
-#define M_TOL 1.e-4
-#define M_ITER_MAX 20
-
-void refine_cluster_mass(hdyn *b)
-{
-    if (b->get_tidal_field() == 0) return;
-
-    // Self-consistently determine the total mass within the outermost
-    // closed zero-velocity surface.  Use a point-mass approximation for
-    // the cluster potential and iterate until the actual mass within
-    // the surface agrees with the mass used to generate the surface.
-    // The total potential is
-    //
-    //		phi  =  -GM/r + (alpha1 x^2 + alpha3 z^2) / 2
-    //
-    // where we measure everything relative to the standard center (which
-    // is the density center, if known, and the modified center of mass
-    // otherwise).  The Jacobi radius for this field is
-    //
-    //		r_J  =  (-GM/alpha1)^{1/3}
-    //
-    // and the potential of the last closed surface is
-    //
-    //		phi_J  =  1.5 alpha1 r_J^2.
-
-    vector center, vcenter;
-    int which = get_std_center(b, center, vcenter);
-
-    // which = 1 for density center, 2 for mcom.
-
-    // Note from Steve (7/01):  The "center" should really be the
-    // center of mass of particles within the Jacobi surface,
-    // determined self-consistently.
-    //
-    // To do...  (See also check_and_remove_escapers().)
-
-    real M_inside = total_mass(b), M = -1;
-    real r_J, r_x2, r_y2, r_z2, r_max_inside;
-    int  N_inside, iter = 0;
-
-    real M_J, M_x, M_y, M_z;
-    int  N_J, N_x, N_y, N_z;
-
-    cerr << endl << "  refine_cluster_mass: getting M by iteration"
-	 << "; total system mass = " << M_inside
-	 << endl;
-
-    while (iter++ < M_ITER_MAX
-	   && M_inside > 0
-	   && abs(M_inside/M - 1) > M_TOL) {
-
-	M = M_inside;
-	M_inside = 0;
-	M_J = M_x = M_y = M_z = 0;
-	N_J = N_x = N_y = N_z = 0;
-
-	r_J = pow(-M/b->get_alpha1(), 0.3333333);
-
-	real phi_J = 1.5 * b->get_alpha1() * r_J * r_J;
-	real r_max = 0;
-
-	r_x2 = square(r_J);		// zero-velocity surface crosses x-axis
-	r_y2 = square(-M/phi_J);	// zero-velocity surface crosses y-axis
-
-	// zero-velocity surface crosses z-axis where
-	//
-	//	-GM/z + 0.5 alpha3 z^2  =  phi_J
-	// so
-	//	0.5 alpha3 z^3 -phi_J z -GM  =  0
-
-	r_z2 = square(solve3(0.5*b->get_alpha3(), -phi_J, -M));
-
-	N_inside = 0;
-	r_max_inside = 0;
-
-	for_all_daughters(hdyn, b, bb) {
-
-	    vector dx = bb->get_pos() - center;
-
-	    real x = dx[0];
-	    real y = dx[1];
-	    real z = dx[2];
-	    real r = abs(dx);
-
-	    if (r < r_J) {
-
-		N_J++;
-		M_J += bb->get_mass();
-
-		if (r == 0 
-		    || -M/r + 0.5 * (b->get_alpha1()*x*x + b->get_alpha3()*z*z)
-			    < phi_J) {
-		    N_inside++;
-		    M_inside += bb->get_mass();
-		    r_max_inside = max(r, r_max_inside);
-		}
-
-	    }
-	    r_max = max(r, r_max);
-
-	    // Count projected masses and numbers.
-
-	    real xy = x*x + y*y;
-	    real xz = x*x + z*z;
-	    real yz = y*y + z*z;
-
-	    if (xy < r_x2) {		// z projection
-		M_x += bb->get_mass();
-		N_x++;
-	    }
-	    if (xz < r_x2) {		// y projection
-		M_x += bb->get_mass();
-		N_x++;
-	    }
-
-	    if (yz < r_y2) {		// x projection
-		M_y += bb->get_mass();
-		N_y++;
-	    }
-	    if (xy < r_y2) {		// z projection
-		M_y += bb->get_mass();
-		N_y++;
-	    }
-
-	    if (yz < r_z2) {		// x projection
-		M_z += bb->get_mass();
-		N_z++;
-	    }
-	    if (xz < r_z2) {		// y projection
-		M_z += bb->get_mass();
-		N_z++;
-	    }
-	}
-
-	M_x /= 2;
-	N_x /= 2;
-	M_y /= 2;
-	N_y /= 2;
-	M_z /= 2;
-	N_z /= 2;
-
-#if 0
-	fprintf(stderr, "    %2d  ", iter);
-	PRC(M); PRC(r_J); PRL(r_max);
-	PRI(8); PRC(N_inside); PRC(M_inside); PRL(r_max_inside);
-#endif
-
-    }
-
-    if (iter >= M_ITER_MAX)
-	cerr << "    (too many iterations)" << endl;
-
-    cerr << "  within last zero-velocity surface:"
-	 << "  M = " << M_inside << "  N = " << N_inside
-	 << endl
-	 << "                                    "
-	 << "  r_J = " << r_J << "  r_max = " << r_max_inside
-	 << endl
-	 << "  within r_J:                       "
-	 << "  M = " << M_J << "  N = " << N_J
-	 << endl
-	 << "  within r_J (projected):           "
-	 << "  M = " << M_x << "  N = " << N_x
-	 << endl
-	 << "  within r_y (projected):           "
-	 << "  M = " << M_y << "  N = " << N_y << "  r_y = " << sqrt(r_y2)
-	 << endl
-	 << "  within r_z (projected):           "
-	 << "  M = " << M_z << "  N = " << N_z << "  r_z = " << sqrt(r_z2)
-	 << endl;
-}
-
 void print_statistics(hdyn* b,
 		      int long_binary_output)		// default = 2
 {
@@ -749,7 +539,7 @@ void print_statistics(hdyn* b,
 	      false,			// don't print time
 	      false,			// don't compute energy
 	      false,			// don't allow n^2 ops
-	      get_energies_with_external, // energy calculation function
+	      kira_calculate_energies,	// energy calculation function
 	      print_dstar_params,	// allow access to dstar_to_kira
 	      print_dstar_stats);	// from dyn sys_stats function
 
@@ -837,6 +627,17 @@ void log_output(hdyn * b, real count, real steps,
 
     int p = cerr.precision(INT_PRECISION);
     print_recalculated_energies(b, true, true);
+
+    // Extra output on external fields:
+
+    unsigned int ext = b->get_external_field();
+    if (ext) {
+	cerr << "          external potential = " << get_external_pot(b)
+	     << " (";
+	print_external(ext);
+	cerr << ")" << endl;
+    }
+
     cerr.precision(p);
 
     // Note: on return from print_recalculated_energies, hdyn::pot is
@@ -849,12 +650,6 @@ void log_output(hdyn * b, real count, real steps,
     }
 
     print_statistics(b, long_binary_output);
-
-    refine_cluster_mass(b);		// won't be called from sys_stats;
-					// make the output appear in the
-					// same place as in the standalone
-					// version
-
     cerr << flush;
 }
 

@@ -19,8 +19,8 @@ CFLAGS		= $(STARLAB_CCC_FLAGS) -I$(INC_STAR) -I$(INC)
 LIBFLAGS	= -L$(LIB) -lsstar -lhdyn -ldyn -lnode -lstd -lm
 DEPEND_LIBS	= $(LIB)/libsstar.a $(LIB)/libnode.a $(LIB)/libstd.a 
 
-EXECUTABLES = addstar
-OBJECT_FILES = addstar.o
+EXECUTABLES = add_star
+OBJECT_FILES = add_star.o
 
 LIBRARY = libsstar.a
 LIB_DEP = .$(LIBRARY)

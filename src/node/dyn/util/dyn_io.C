@@ -26,6 +26,19 @@ xreal dyn::system_time          = 0.0;
 real dyn::real_system_time      = 0.0;
 bool dyn::use_sstar	        = false;
 
+unsigned int  dyn::external_field	= 0;
+
+int  dyn::tidal_type	= 0;
+real dyn::omega	= 0;
+real dyn::omega_sq	= 0;
+real dyn::alpha1	= 0;
+real dyn::alpha3	= 0;
+vector dyn::tidal_center = vector(0,0,0);
+
+real dyn::p_mass = 0;
+real dyn::p_scale_sq = 0;
+vector dyn::p_center = vector(0,0,0);
+
 static bool read_xreal = false;
 
 istream & dyn::scan_dyn_story(istream& s)
@@ -61,6 +74,7 @@ istream & dyn::scan_dyn_story(istream& s)
 	    if (!last_real) read_xreal = false;
 
 	    if (read_xreal) {
+
 		//cerr << "dyn::scan_dyn_story: input "
 		//     << "time data type is xreal"
 		//     << endl; 
@@ -70,9 +84,11 @@ istream & dyn::scan_dyn_story(istream& s)
 		set_system_time(get_xreal_from_input_line(input_line));
 
 	    } else {
-		cerr << "dyn::scan_dyn_story: input "
-		     << "time data type is real"
-		     << endl; 
+
+		//cerr << "dyn::scan_dyn_story: input "
+		//     << "time data type is real"
+		//     << endl; 
+
 		real_system_time = system_time = strtod(val, NULL);
 	    }
 	} else {

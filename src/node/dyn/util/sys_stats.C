@@ -50,7 +50,11 @@
 ////                   radius) [yes]
 ////             -o    pipe system to cout [no]
 ////
-//// Note: dyn sys_stats does *not* take tidal fields into account.
+////         If GRAPE is available, the hdyn version of this will compute the energies even if
+////         the "-n" flag is set false.
+
+// ***  MUST make sure that the definitions of virial radius and virial  ***
+// ***  equilibrium are consistent between scale and sys_stats.          ***
 
 //   Note:  Because of the reference to libstar.a in sys_stats, the
 //          only global function in this file is sys_stats itself.
@@ -72,8 +76,8 @@ local bool check_for_doubling(dyn* b)
 }
 
 local real print_relaxation_time(dyn* b,
-				 real& kinetic_energy,
 				 real& potential_energy,
+				 real& kinetic_energy,
 				 void (*compute_energies)(dyn*, real,
 							  real&, real&, real&,
 							  bool))
@@ -88,7 +92,9 @@ local real print_relaxation_time(dyn* b,
 	total_mass += bj->get_mass();
 
     real e_total;
-    compute_energies(b, 0.0, kinetic_energy, potential_energy, e_total, true);
+    compute_energies(b, 0.0, potential_energy, kinetic_energy, e_total, true);
+
+    // Potential energy here is internal potential energy.
 
     r_virial = -0.5 * total_mass * total_mass / potential_energy;
 
@@ -97,8 +103,8 @@ local real print_relaxation_time(dyn* b,
     t_relax = 9.62e-2 * sqrt(r_virial * r_virial * r_virial / total_mass)
               * N / log10(0.4 * N);
 
-    PRI(4); cerr << "r_virial = " << r_virial << endl;
-    PRI(4); cerr << "t_relax = "  << t_relax  << endl;
+    PRI(4); PRL(r_virial);
+    PRI(4); PRL(t_relax);
 
     return r_virial;
 }
@@ -477,8 +483,8 @@ local real top_level_kinetic_energy(dyn* b)
 }
 
 local void print_energies(dyn* b,
-			  real& kinetic_energy,		// top-level
 			  real& potential_energy,	// top-level
+			  real& kinetic_energy,		// top-level
 			  real& kT,
 			  void (*compute_energies)(dyn*, real,
 						   real&, real&, real&,
@@ -489,18 +495,27 @@ local void print_energies(dyn* b,
     real e_total;
 
     if (kinetic_energy == 0)
-	compute_energies(b, 0.0, kinetic_energy, potential_energy, e_total,
+	compute_energies(b, 0.0, potential_energy, kinetic_energy, e_total,
 			 true);
 
-    real total_energy = kinetic_energy + potential_energy;
-    e_total = total_energy;
-    real virial_ratio = -kinetic_energy / potential_energy;
-    kT = -total_energy / (1.5*b->n_daughters());
+    real total_energy = kinetic_energy + potential_energy;	// internal pot
+    real external_pot = get_external_pot(b);
+    e_total = total_energy + external_pot;
+
+    real virial_ratio = -kinetic_energy / (potential_energy
+					     + get_external_virial(b));
+
+    kT = kinetic_energy / (1.5*b->n_daughters());
 
     cerr << "    top-level nodes:\n";
     cerr << "        kinetic_energy = " << kinetic_energy
 	 << "  potential_energy = " << potential_energy << endl;
-    cerr << "        total_energy = " << total_energy
+    if (external_pot != 0) {
+	cerr << "        external_pot = " << external_pot << " (";
+	print_external(b->get_external_field());
+	cerr << ")" << endl;
+    }
+    cerr << "        total_energy = " << e_total
 	 << "  kT = " << kT << "  virial_ratio = " << virial_ratio
 	 << endl;
 
@@ -1330,21 +1345,6 @@ bool parse_sys_stats_main(int argc, char *argv[],
     return true;
 }
 
-void check_addstar(dyn* b)
-{
-    if(find_qmatch(b->get_oldest_daughter()
-		    ->get_starbase()->get_star_story(), "Type")) {
-
-	real T_start = 0;
-
-	addstar(b,                            // Note that T_start and
-		T_start,                      // Main_Sequence are
-		Main_Sequence,                // defaults. They are
-		true);                        // ignored if a star
-	b->set_use_sstar(true);               // is there.
-    }
-}
-
 void sys_stats(dyn* b,
 	       real energy_cutoff,			// default = 1
 	       bool verbose,				// default = true
@@ -1398,8 +1398,10 @@ void sys_stats(dyn* b,
 
     real r_virial = -1;
     if (compute_energy)				// Need virial radius for tR
-	r_virial  = print_relaxation_time(b, kinetic_energy, potential_energy,
+	r_virial  = print_relaxation_time(b, potential_energy, kinetic_energy,
 					  compute_energies);
+
+    // NB:  If set, potential energy here is internal potential energy.
 
     if (r_virial == -1) {
         if (find_qmatch(b->get_dyn_story(), "energy_time")
@@ -1426,12 +1428,15 @@ void sys_stats(dyn* b,
 
     real kT = 0;
 
-    if (compute_energy)					// Recompute energies
-        print_energies(b, kinetic_energy, potential_energy, kT,
+    if (compute_energy)					// recompute energies
+
+        print_energies(b, potential_energy, kinetic_energy, kT,
 		       compute_energies);
-    else if (b->get_oldest_daughter()) {
+
+    else if (b->get_oldest_daughter())
+
 	kT = top_level_kinetic_energy(b) / (1.5*b->n_daughters());
-    }
+
     PRI(4); PRL(kT);
 
     vector center = com_pos;
@@ -1632,7 +1637,7 @@ void sys_stats(dyn* b,
 	    for_all_daughters(dyn, b, bb)
 		found |= bb->nn_stats(energy_cutoff, kT,   // Dummy function for
 				      center, verbose,     // dyn; get NN binary
-				      long_binary_output, // info for hdyn
+				      long_binary_output,  // info for hdyn
 				      which++);
 	    if (!found)
 		cerr << "    (none)\n";
@@ -1640,6 +1645,10 @@ void sys_stats(dyn* b,
     }
 
     cerr.precision(p);
+
+    // Finally, refine estimates of the cluster mass (moved here from hdyn...)
+
+    refine_cluster_mass(b);
 }
 
 #else
@@ -1668,11 +1677,11 @@ main(int argc, char **argv)
     dyn *b;
     int i = 0;
 
-    while (b = get_dyn(cin)) {
-
-        // NOTE:  get_xxx() reads NaN as legal garbage...
+    while (b = get_dyn(cin)) { // NB:  get_xxx() reads NaN as legal garbage...
 
 	check_addstar(b);
+	check_set_external(b, true);	// true ==> verbose output
+	cerr << endl;
 
 	if (i++ > 0) cerr << endl;
 	sys_stats(b, 0.5, verbose, binaries, long_binary_output,
@@ -1684,3 +1693,4 @@ main(int argc, char **argv)
 }
 
 #endif
+

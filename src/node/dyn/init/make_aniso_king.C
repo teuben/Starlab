@@ -125,8 +125,8 @@ local void mk_aniso_king(dyn * b, int n, real w0, real alpha1, real alpha3,
     // Initialize the N-body system.
 
     sprintf(tmp_string,
-    "         Anisotropic King model, w0 = %.2f, alpha1 = %f, alpha3 = %f",
-	      w0, alpha1, alpha3);
+    "       Anisotropic King model, w0 = %.2f, alpha1 = %f, alpha3 = %f",
+	    w0, alpha1, alpha3);
     b->log_comment(tmp_string);
 
     // Assign positions and velocities.
@@ -154,12 +154,13 @@ local void mk_aniso_king(dyn * b, int n, real w0, real alpha1, real alpha3,
     b->to_com();	
 
     kinetic = get_kinetic_energy(b);
-    tidal_energy = get_tidal_energy(b, alpha1, alpha3);
+    tidal_energy = get_tidal_pot(b);
 
-    // Definition of r_virial assumes GM = 1 and *includes* the
+    // Definition of r_virial assumes GM = 1 and *does not include* the
     // tidal potential.
 
-    real r_virial = -0.5/(potential + tidal_energy);
+    // real r_virial = -0.5/(potential + tidal_energy);
+    real r_virial = -0.5/potential;
 
     // Fake "Jacobi radius" is used to transmit tidal (alpha1) information
     // to kira -- r_jacobi actually is the Jacobi radius only for a 1/r
@@ -172,37 +173,36 @@ local void mk_aniso_king(dyn * b, int n, real w0, real alpha1, real alpha3,
 
     if (!u_flag && n > 1) {
 
-	// Scaling is OK *only* because cluster is Roche-lobe filling.
+	// Scaling is OK because cluster is Roche-lobe filling.
+	// Function scale_virial adjusts kinetic.
 
-	scale_virial(b, -0.5, kinetic, potential+tidal_energy);
-
-	// (Tidal correction is typically small.)
+	scale_virial(b, -0.5, potential, kinetic);  // potential + tidal_energy
 
 	real energy = kinetic + potential + tidal_energy;
-	real fac = -0.25/energy;
 
-	// Scale_energy uses the specified energy to rescale velocities.
-	// It knows nothing about tidal fields.
+	// Scale_energy uses the specified energy to rescale velocities,
+	// adjusts energy accordingly, and returns the factor by which
+	// the positions were scaled.
 
-	scale_energy(b, -0.25, energy);
+	real fac = scale_energy(b, -0.25, energy);
 
 	// Note: when recomputing energies for test purposes, we must
 	// remember to rescale alpha1,3 to preserve Roche-lobe filling.
 
-	alpha1 *= pow(fac,3);
-	alpha3 *= pow(fac,3);
+	alpha1 /= pow(fac,3);
+	alpha3 /= pow(fac,3);
 
 	sprintf(tmp_string,
-		"         Rescaled alpha1 = %f, alpha3 = %f", alpha1, alpha3);
+		"       Rescaled alpha1 = %f, alpha3 = %f", alpha1, alpha3);
 	b->log_comment(tmp_string);
 
 	// Recompute other quantities mainly for completeness.
 
-	r_virial /= fac;		// should be 1
-	kinetic *= fac;			// should be 0.25
-	potential *= fac;		// should be -0.5
-	tidal_energy *= fac;
-	r_jacobi /= fac;
+	r_virial *= fac;		// should be 1
+	kinetic /= fac;			// should be 0.25
+	potential /= fac;		// should be -0.5
+	tidal_energy /= fac;
+	r_jacobi *= fac;
 
 	// Story output mimics mkking where possible.
 
@@ -282,7 +282,7 @@ main(int argc, char ** argv)
     bool w_flag = false;
     bool u_flag = false;
 
-    int tidal_type = 0;
+    int tidal_type = 1;
     bool F_flag = false;
 
     int test = 0;
@@ -464,6 +464,7 @@ main(int argc, char ** argv)
 
     mk_aniso_king(b, n, w0, alpha1, alpha3, u_flag, test, actual_seed);
 
+    b->set_tidal_field(alpha1, alpha3);
     putiq(b->get_log_story(), "kira_tidal_field_type", tidal_type);
 
     if(tidal_type == 4) {

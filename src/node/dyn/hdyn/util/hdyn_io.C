@@ -21,19 +21,6 @@ kira_counters *hdyn::kc		= NULL;
 kira_options *hdyn::options	= NULL;    
 kira_diag *hdyn::diag		= NULL;    
 
-unsigned int  hdyn::external_field	= 0;
-
-int  hdyn::tidal_type	= 0;
-real hdyn::omega	= 0;
-real hdyn::omega_sq	= 0;
-real hdyn::alpha1	= 0;
-real hdyn::alpha3	= 0;
-vector hdyn::tidal_center = vector(0,0,0);
-
-real hdyn::p_mass = 0;
-real hdyn::p_scale_sq = 0;
-vector hdyn::p_center = vector(0,0,0);
-
 bool hdyn::use_dstar	= false;
 
 real hdyn::stellar_encounter_criterion_sq = 1;
@@ -127,16 +114,22 @@ istream & hdyn::scan_dyn_story(istream & s)
 	    if (!last_real) read_xreal = false;
 
 	    if (read_xreal) {
+
 		//cerr << "hdyn::scan_dyn_story: input "
 		//     << "time data type is xreal"
 		//     << endl; 
+
 		set_system_time(get_xreal_from_input_line(input_line));
+
 	    } else {
-		cerr << "hdyn::scan_dyn_story: input "
-		     << "time data type is real"
-		     << endl; 
+
+		if (sizeof(xreal) != sizeof(real))	// crude test...
+		    cerr << "hdyn::scan_dyn_story: input "
+			 << "time data type is real"
+			 << endl; 
 
 		real_system_time = system_time = strtod(val, NULL);
+
 	    }
 	    // PRC(system_time); xprint(system_time);
 
@@ -148,9 +141,8 @@ istream & hdyn::scan_dyn_story(istream & s)
 
 		if (read_xreal)
 		    time = get_xreal_from_input_line(input_line);
-		else {
+		else
 		    time = strtod(val, NULL);
-		}
 
 	    } else if (!strcmp("dt", keyword))
 		timestep = strtod(val, NULL);
@@ -277,6 +269,8 @@ ostream & hdyn::print_dyn_story(ostream & s,
     // 		1:	short output using current time, pos, ...
     //		2:	short output using current time, predicted pos, ...
     //		3:	as for 2, but mark as defunct
+    //		4:	new -- to allow restart; combines hdyn and tdyn...
+    //			    -- to come (Steve, 7/01)
     //
     // Short output is:  time, mass, pos, vel.
     //

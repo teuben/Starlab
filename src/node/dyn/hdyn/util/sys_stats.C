@@ -8,6 +8,10 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\
 
+// The help information below is copied directly from the dyn version.
+// The only difference between this program and the dyn version is that
+// possible GRAPE and dstar extensions are used here.
+
 //// sys_stats:  Print out various diagnostic statistics on the input
 ////             system.  These include:
 ////
@@ -50,11 +54,6 @@
 ////                   operations (e.g. computation of energy, core radius,
 ////                   density, bound pairs) [yes]
 ////             -o    pipe system to cout [no]
-////
-//// Notes:  The hdyn sys_stats *does* take tidal fields into account.
-////
-////         If GRAPE is available, we will compute the energies even if
-////         the "-n" flag is set false.
 
 #include "hdyn.h"
 
@@ -63,70 +62,6 @@
 #include "../evolve/kira_grape_include.C"	// GRAPE-specific functions:
 						// Invoke by setting USE_GRAPE
 						// at compilation time.
-
-local void check_set_tidal(hdyn *b)
-{
-    b->set_tidal_field(0);
-
-    bool verbose = false;			// turn on debugging here
-    if (verbose) cerr << endl;
-
-    real initial_mass = get_initial_mass(b, verbose);
-    real initial_r_virial = get_initial_virial_radius(b, verbose);
-    real initial_r_jacobi = get_initial_jacobi_radius(b, initial_r_virial,
-						      verbose);
-    if (initial_r_jacobi > 0) {
-	int tidal_field_type = 0;
-	set_tidal_params(b, verbose,
-			 initial_r_jacobi,
-			 initial_mass,
-			 tidal_field_type);
-    }
-
-    if (verbose) cerr << endl;
-}
-
-local void sys_stats(hdyn* b,
-		     real energy_cutoff,
-		     bool verbose,
-		     bool binaries,
-		     bool long_binary_output,
-		     int  which_lagr,
-		     bool print_time,
-		     bool compute_energy,
-		     bool allow_n_sq_ops)
-{
-    // Make densities using GRAPE (if available).
-
-    vector cod_pos, cod_vel;
-    //compute_densities(b, cod_pos, cod_vel);
-
-    // Suppress densities for now, and write density time to prevent
-    // sys_stats from doing the calculation.
-
-    putrq(b->get_dyn_story(), "density_time", b->get_real_system_time());
-    for_all_nodes(hdyn, b, bb)
-      putrq(bb->get_dyn_story(), "density_time", b->get_real_system_time());
-
-    // Invoke the dyn version with appropriate hdyn extensions, as in kira.
-
-    sys_stats(b, energy_cutoff,
-	      verbose,
-	      binaries,
-	      long_binary_output,
-	      which_lagr,
-	      print_time,
-	      compute_energy,
-	      allow_n_sq_ops,
-	      get_energies_with_external, // uses calculate_internal_energies
-					  // from kira_grape_include.C
-	      print_dstar_params,
-	      print_dstar_stats);
-
-    // Then perform hdyn-specific operations.
-
-    refine_cluster_mass(b);
-}
 
 // Main code follows dyn/util/sys_stats.C version.
 
@@ -162,20 +97,35 @@ main(int argc, char **argv)
 
     while (b = get_hdyn(cin)) {
 
-	// Set up tidal and stellar structures.
-
-	check_set_tidal(b);
-
 	check_addstar(b);
+	check_set_external(b, true);	// true ==> verbose output
+	cerr << endl;
+
 	if (B_flag || check_kira_flag(b, "kira_evolve_binaries"))
 	    b->set_use_dstar(true);
 
 	if (i++ > 0) cerr << endl;
 
-	sys_stats(b, 0.5, verbose, binaries, long_binary_output,
-		  which_lagr, true, calc_e, n_sq);
+	// Simply invoke the dyn function with appropriate hdyn
+	// extensions, as in kira_log.C.
 
-	if (out) put_node(cout, *b);
+	sys_stats(b,
+		  0.5,			// energy cutoff
+		  verbose,
+		  binaries,
+		  long_binary_output,
+		  which_lagr,
+		  true,			// print_time
+		  calc_e,
+		  n_sq,
+		  kira_calculate_energies,
+		  print_dstar_params,
+		  print_dstar_stats);
+
+	if (out) {
+	    b->log_history(argc, argv);
+	    put_node(cout, *b);
+	}
 
 	rmtree(b);	// causes core dump if B_flag is enabled...
     }

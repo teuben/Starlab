@@ -8,53 +8,135 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\
 
-// tidal_init.C:  initialization of tidal parameters.
+// dyn_story.C:  initialization of system parameters from input snapshots.
 //
 // Externally visible functions:
 //
-//	real get_initial_mass
-//	real get_initial_virial_radius
-//	real get_initial_jacobi_radius
-//	void set_tidal_params
+//	real get_initial_mass		// functions get_initial_mass and
+//	real get_initial_virial_radius	// get_initial_virial radius are
+//					// essentially identical
+//
+//	real get_initial_jacobi_radius	// similar to the above in general
+//					// approach, but more complex logic
+//
+//	void set_tidal_params		// set tidal parameters from the
+//					// input story
+//	void test_tidal_params		// check consistency of disk fields
+//
+//	void check_set_tidal		// check and set tidal parameters
+//	void check_set_plummer		// check and set Plummer parameters
+//
+//	void check_set_external		// check and set all external fields
 
-#include "hdyn.h"
+#include "dyn.h"
 
-real get_initial_mass(hdyn* b,
-		      bool verbose)	// default = false
+// Require that all systems have known initial mass and initial virial
+// radius.  These may be set by the make_* functions or by the function
+// scale.  In general, kira or other applications should *not* compute
+// these quantities -- better to determine them in advance.
+
+// get_initial_mass:  Read the initial_mass variable from the log story.
+//		      If not specified, use the input value, if any.
+//		      Otherwise, use a default.
+//
+//		      Write the new variable to the log story in the latter
+//		      two cases.
+
+static bool mass_msg = true;
+
+real get_initial_mass(dyn* b,
+		      bool verbose,			// default = false
+		      bool mass_set,			// default = false
+		      real input_mass)			// default = 0
 {
     real initial_mass = getrq(b->get_log_story(), "initial_mass");
 
     if (initial_mass > 0) {
 
-	// The input snapshot has the information needed.
+	// The input snapshot has the information needed.  Snapshot
+	// data OVERRIDES any input value.
 
-	if (verbose)
-	    cerr << "Read initial_mass = " << initial_mass
+	if (verbose && mass_msg)
+	    cerr << "read initial_mass = " << initial_mass
 		 << " from input snapshot" << endl;
 
     } else {
 
-	// Note: presently no option to set initial_mass from the command line.
+	// See if input_mass exists, or use a default.
 
-	if (b->get_system_time() <= 0)
+	if (mass_set) {
 
-	    initial_mass = total_mass(b);
+	    if (verbose && mass_msg) {
 
-	else {
+		cerr << "setting initial mass = " << input_mass << endl;
 
-	    initial_mass = 1;
-	    if (verbose)
-		cerr << "initial_mass not known; adopting default = "
-		     << initial_mass << endl;
+		if (b->get_system_time() > 0)
+		    cerr << endl
+			 << "warning: setting initial mass with time > 0"
+			 << endl;
+	    }
+
+	    initial_mass = input_mass;
+
+	} else {
+
+	    if (b->get_system_time() <= 0)
+
+		// Simply compute the mass if t <= 0.
+
+		initial_mass = total_mass(b);
+
+	    else {
+
+		// Two options here:
+		//
+		//	1. Return a negative number, requiring the user
+		//	   to provide the necessary data.
+		//
+		//	2. Adopt a default mass of 1, printing a message
+		//	   so the user can use "make..." or "scale" to do
+		//	   this properly.
+		//
+		// Choose (1) for now.
+
+#if 1
+		initial_mass = -1;
+
+		if (verbose && mass_msg)
+		    cerr << "get_initial_mass:  initial_mass unknown -- "
+			 << "set with scale" << endl;
+#else
+		initial_mass = 1;
+
+		if (verbose && mass_msg)
+		    cerr << "adopting default initial_mass = "
+			 << initial_mass << endl;
+#endif
+	    }
 	}
 
-	putrq(b->get_log_story(), "initial_mass", initial_mass);
+	// Write the initial mass to the log story.
+
+	if (initial_mass > 0)
+	    putrq(b->get_log_story(), "initial_mass", initial_mass,
+		  HIGH_PRECISION);
     }
 
+    mass_msg = false;
     return initial_mass;
 }
 
-real get_initial_virial_radius(hdyn* b,
+// get_initial_virial_radius:  Read the initial_virial_radius variable from
+//			       the log story.
+//			       If not specified, use the input value, if any.
+//		      	       Otherwise, use a default.
+//
+//		      	       Write the new variable to the log story in the
+//			       latter two cases.
+
+static bool rvir_msg = true;
+
+real get_initial_virial_radius(dyn* b,
 			       bool verbose,		// default = false
 			       bool r_virial_set,	// default = false
 			       real input_r_virial)	// default = 0
@@ -64,26 +146,25 @@ real get_initial_virial_radius(hdyn* b,
     if (r_virial > 0) {
 
 	// The input snapshot has the information needed.  Snapshot
-	// data OVERRIDES any command-line entry.
+	// data OVERRIDES any input value.
 
-	if (verbose)
-	    cerr << "Read initial r_virial = " << r_virial
+	if (verbose && rvir_msg)
+	    cerr << "read initial r_virial = " << r_virial
 		 << " from input snapshot" << endl;
 
     } else {
 
-	// See if r_virial was set from the command-line, or use default.
+	// See if input_r_virial exists, or use a default.
 
 	if (r_virial_set) {
 
-	    if (verbose) {
+	    if (verbose && rvir_msg) {
 
-		cerr << "Setting initial r_virial = " << r_virial
-		     << " from command-line input" << endl;
+		cerr << "setting initial r_virial = " << input_r_virial << endl;
 
 		if (b->get_system_time() > 0)
 		    cerr << endl
-			 << "Warning: setting initial r_virial with time > 0"
+			 << "warning: setting initial r_virial with time > 0"
 			 << endl;
 	    }
 
@@ -91,39 +172,55 @@ real get_initial_virial_radius(hdyn* b,
 
 	} else {
 
-	    // r_virial is not set in the snapshot or command line.
-	    // Assume r_virial = 1.  Probably better to compute
-	    // r_virial directly in this case.  However, the "mk..."
-	    // functions and "scale" already set this quantity, so there
-	    // seems to be no strong reason to add an extra energy
-	    // computation to the code...(?)
+	    // Two options here:
+	    //
+	    //	1. Return a negative number, requiring the user
+	    //	   to provide the necessary data.
+	    //
+	    //	2. Adopt a default radius of 1, printing a message
+	    //	   so the user can use "make..." or "scale" to do
+	    //	   this properly.
+	    //
+	    // Choose (1) for now.
 
+#if 1
+	    r_virial = -1;
+
+	    if (verbose && rvir_msg)
+		cerr << "get_initial_virial_radius:  "
+		     << "initial_rvirial unknown -- set with scale" << endl;
+#else
 	    r_virial = 1;
 
-#if 0
-	    // Alternative: get r_virial from input data.
-
-	    real kinetic, potential;
-	    get_top_level_energies(b, 0.0, potential, kinetic);
-
-	    r_virial = -0.5 * pow(total_mass(b), 2) / potential_energy;
-#endif
-
-	    if (verbose)
-		cerr << "Adopting default initial r_virial = "
+	    if (verbose && rvir_msg)
+		cerr << "adopting default initial_rvirial = "
 		     << r_virial << endl;
+#endif
 	}
 
-	// Write the virial radius to the log story if t <= 0.
+	// Write the virial radius to the log story.
 
-	if (b->get_system_time() <= 0)
+	if (r_virial > 0)
 	    putrq(b->get_log_story(), "initial_rvirial", r_virial);
     }
 
+    rvir_msg = false;
     return r_virial;
 }
 
-real get_initial_jacobi_radius(hdyn* b,
+// get_initial_jacobi_radius:  Read the initial_jacobi_radius variable from
+//			       the log story.
+//			       If not specified, use the input value, if any,
+//			       modified in various ways.  There is no default.
+//
+//			       For use by kira, if specified, the variable
+//			       kira_initial_jacobi_radius takes precedence
+//			       over all other possibilities.
+//
+//		      	       Write the new variable to the log story if
+//			       a value can be determined.
+
+real get_initial_jacobi_radius(dyn* b,
 			       real r_virial,
 			       bool verbose,		// default = false
 			       bool r_jacobi_set,	// default = false
@@ -132,15 +229,18 @@ real get_initial_jacobi_radius(hdyn* b,
     real initial_r_jacobi = -1;
 
     // Determine the initial Jacobi radius of the system.  This radius
-    // may be specified on the command line, or it may be derived from
-    // the information in the input snapshot.  Unlike r_virial, the
-    // command-line takes precedence over initial data found in the
-    // input snapshot, although it is superceded by any "kira" data
-    // found in that file.  Scaling is such that, if a non-kira
+    // may be input as an argument, or it may be derived from the
+    // information in the input snapshot.  Unlike r_virial, the input
+    // value takes precedence over initial data found in the input
+    // snapshot, although it is superceded by any "kira" data found
+    // in that file.  The convention is such that, if a non-kira
     // version of initial_r_jacobi is found in the input snapshot, the
-    // command-line value will scale that number.  A kira version is
-    // used as is.  Otherwise, the command-line value scales the virial
-    // radius (hence the two tests of r_jacobi_set below).
+    // input value will *scale* that number.  A kira version is used
+    // as is.  Otherwise, the input value scales the virial radius
+    // (hence the two tests of r_jacobi_set below).
+    //
+    // (Messy logic actually makes it possible to control the
+    //  Jacobi radius in a fairly natural way...)
 
     // See if a kira_initial_jacobi_radius exists in the input file.
     // If it does, it TAKES PRECEDENCE over any other setting.
@@ -155,34 +255,32 @@ real get_initial_jacobi_radius(hdyn* b,
 	    initial_r_jacobi = kira_initial_jacobi_radius;
 
 	    if (verbose) {
-		cerr << "Using initial Jacobi radius ";
+		cerr << "using initial Jacobi radius ";
 		PRL(kira_initial_jacobi_radius);
 		cerr << "    from input snapshot" << endl;
 
 		if (r_jacobi_set)
-		    cerr << "Ignoring \"-J " << input_r_jacobi
-			 << "\" found on command line"
-			 << endl;
+		    cerr << "ignoring input value " << input_r_jacobi << endl;
 	    }
 
 	} else {
 
 	    if (verbose)
-		cerr << "Warning: error reading "
+		cerr << "warning: error reading "
 		     << "kira_initial_jacobi_radius "
 		     << "from input snapshot"
 		     << endl;
 	    else
 		err_exit(
-	     "Error reading kira_initial_jacobi_radius from input snapshot");
+	        "Error reading kira_initial_jacobi_radius from input snapshot");
 
 	}
     }
 
     if (initial_r_jacobi < 0) {
 
-	// See if we can determine the system's initial Jacobi radius from
-	// the input snapshot.
+	// No kira Jacobi radius known.  See if we can determine the
+	// system's initial Jacobi radius from the input snapshot.
 
 	if (find_qmatch(b->get_log_story(), "initial_rtidal_over_rvirial")) {
 
@@ -190,6 +288,7 @@ real get_initial_jacobi_radius(hdyn* b,
 	    // likely the initial model is a King profile and this is the
 	    // King radius (misnamed for historical reasons -- it may or
 	    // may not have anything to do with a tidal cutoff).
+	    // Alternatively, the ratio may have been set by add_tidal.
 
 	    real r_jacobi_over_r_virial = getrq(b->get_log_story(),
 						"initial_rtidal_over_rvirial");
@@ -199,7 +298,7 @@ real get_initial_jacobi_radius(hdyn* b,
 		initial_r_jacobi = r_jacobi_over_r_virial * r_virial;
 
 		if (verbose) {
-		    cerr << "Got r_jacobi_over_r_virial = "
+		    cerr << "got r_jacobi_over_r_virial = "
 			 << r_jacobi_over_r_virial
 			 << " from input snapshot"
 			 << endl
@@ -210,7 +309,7 @@ real get_initial_jacobi_radius(hdyn* b,
 	    } else {
 
 		if (verbose)
-		    cerr << "Warning: error reading "
+		    cerr << "warning: error reading "
 			 << "initial_rtidal_over_rvirial from input snapshot"
 			 << endl;
 		else
@@ -219,32 +318,34 @@ real get_initial_jacobi_radius(hdyn* b,
 	    }
 	}
 
-	// See if there was any information on the command line, and resolve
-	// conflicts.
+	// See if there was any input value, and resolve any conflicts.
 
 	if (r_jacobi_set) {
 
-	    // A "-J" entry was specified on the command line.
+	    // An input value was specified.
 
 	    if (initial_r_jacobi > 0) {
 
 		// The Jacobi radius has been specified both in the input file
-		// and on the command line.  If the model is an anisotropic
+		// and as an input argument.  If the model is an anisotropic
 		// King model, we must use the snapshot data and ignore the
-		// command line.  Otherwise, use the command line as a scaling
-		// for the "known" value.
+		// argument.  Otherwise, use the input argument to scale the
+		// "known" value.
+
+		// The variable alpha3_over_alpha1 is set *only* by
+		// make_aniso_king.
 
 		if (find_qmatch(b->get_log_story(), "alpha3_over_alpha1")) {
 
 		    if (verbose)
-			cerr << "Ignoring command-line Jacobi radius (-J "
+			cerr << "ignoring input Jacobi radius ("
 			     << input_r_jacobi << ") for anisotropic King model"
 			     << endl;
 
 		} else {
 
 		    if (verbose)
-			cerr << "Command-line Jacobi radius (-J "
+			cerr << "input Jacobi radius ("
 			     << input_r_jacobi << ") scales initial value "
 			     << initial_r_jacobi
 			     << endl
@@ -257,10 +358,10 @@ real get_initial_jacobi_radius(hdyn* b,
 
 	    } else {
 
-		// Use the command-line data to scale the virial radius.
+		// Use the input data to scale the virial radius.
 
 		if (verbose)
-		    cerr << "Command-line Jacobi radius (-J "
+		    cerr << "input Jacobi radius ("
 			 << input_r_jacobi << ") scales initial virial radius "
 			 << r_virial << endl;
 
@@ -269,7 +370,7 @@ real get_initial_jacobi_radius(hdyn* b,
 	    }
 	}
 
-	// Save the Jacobi radius for restart.
+	// Save the kira Jacobi radius for restart.
 
 	if (initial_r_jacobi > 0)
 	    putrq(b->get_log_story(), "kira_initial_jacobi_radius",
@@ -314,7 +415,7 @@ static char* tidal_type[5] = {"none",
 
 local void tidal_msg(int i, real alpha3_over_alpha1)
 {
-    cerr << "Forcing tidal_field_type = " << i
+    cerr << "forcing tidal_field_type = " << i
 	 << " for anisotropic King model "
 	 << endl
 	 << "    with alpha3_over_alpha1 = "
@@ -322,7 +423,7 @@ local void tidal_msg(int i, real alpha3_over_alpha1)
 	 << endl;
 }
 
-void set_tidal_params(hdyn* b,
+void set_tidal_params(dyn* b,
 		      bool verbose,
 		      real initial_r_jacobi,
 		      real initial_mass,
@@ -331,8 +432,8 @@ void set_tidal_params(hdyn* b,
     // Set the tidal parameters for the system.
     //
     // Procedure:
-    //
-    //		default tidal_field_type is 1 (point-mass)
+    //		kira_tidal_field_type = 0 suppresses tidal fields
+    //		if no type can be determined, suppress tidal field
     //		initial_mass and initial_r_jacobi set the value of alpha1
     //		tidal_field_type then sets the value of alpha3
     //
@@ -341,10 +442,26 @@ void set_tidal_params(hdyn* b,
     // which alpha1 and alpha3 are actually determined directly by
     // the local Oort constants.  The resultant field may thus *not*
     // be consistent with the choice of radius used later in
-    // establishing physical scales.
-
-    // Tidal field type or anisotropic King model initial info in
-    // input snapshot overrides command-line version, if any.
+    // establishing physical scales -- see test_tidal_params().
+    //
+    // Tidal field type (kira_tidal_field_type) or anisotropic King model
+    // initial info (alpha3_over_alpha1) in the input snapshot OVERRIDE
+    // the input data, if any.
+    //
+    // Thus, to decipher the tidal parameters, we need one of:
+    //
+    //		kira_tidal_field_type  ==> sets tidal_field_type directly and
+    //					   hence a standard alpha3_over_alpha1
+    //	or	alpha3_over_alpha1     ==> allows inference of tidal_field_type
+    //
+    // Then the tidal parameters are set from the mass and Jacobi radius.
+    // To determine the Jacobi radius, we need:
+    //
+    //		kira_initial_jacobi_radius
+    //	or	initial_r_virial  and  initial_rtidal_over_rvirial
+    //
+    // These come from make_*, make_king, make_aniso_king, add_tidal,
+    // and scale.
 
     int kira_tidal_field_type = -1;
 
@@ -353,17 +470,20 @@ void set_tidal_params(hdyn* b,
 	kira_tidal_field_type
 	    = getiq(b->get_log_story(), "kira_tidal_field_type");
 
-	if (kira_tidal_field_type > 0) {
+	if (kira_tidal_field_type == 0)
+
+	    return;					// take no action
+
+	else if (kira_tidal_field_type > 0) {
 
 	    if (verbose) {
-		cerr << "Using tidal_field_type = " << kira_tidal_field_type
+		cerr << "using tidal_field_type = " << kira_tidal_field_type
 		     << " (" << tidal_type[kira_tidal_field_type]
 		     << ") from input snapshot" << endl;
 
 		if (tidal_field_type > 0)
-		    cerr << "Ignoring \"-F " << tidal_field_type
-			 << "\" found on command line"
-			 << endl;
+		    cerr << "ignoring input tidal_field_type"
+			 << tidal_field_type << endl;
 	    }
 
 	    tidal_field_type = kira_tidal_field_type;
@@ -371,7 +491,7 @@ void set_tidal_params(hdyn* b,
 	} else {
 
 	    if (verbose)
-		cerr << "Warning: error reading "
+		cerr << "warning: error reading "
 		     << "kira_tidal_field_type "
 		     << "from input snapshot"
 		     << endl;
@@ -393,7 +513,7 @@ void set_tidal_params(hdyn* b,
 
 	    // See if the input ratio matches any of the standard types.
 	    // If it does, use that type; if not, flag a warning and use
-	    // the command-line type or the default.
+	    // the input type or the default.
 
 	    if (matches(alpha3_over_alpha1, -1.0/3)) {
 		if (tidal_field_type != 1) {
@@ -414,7 +534,7 @@ void set_tidal_params(hdyn* b,
 			tidal_msg(tidal_field_type, alpha3_over_alpha1);
 		}
 	    } else {
-		cerr << "Warning: snapshot alpha3_over_alpha1 = "
+		cerr << "warning: snapshot alpha3_over_alpha1 = "
 		     << alpha3_over_alpha1
 		     << " does not match any standard value"
 		     << endl;
@@ -423,7 +543,7 @@ void set_tidal_params(hdyn* b,
 	} else {
 
 	    if (verbose)
-		cerr << "Warning: error reading "
+		cerr << "warning: error reading "
 		     << "alpha3_over_alpha1 "
 		     << "from input snapshot"
 		     << endl;
@@ -435,27 +555,34 @@ void set_tidal_params(hdyn* b,
 	err_exit("Unknown tidal field type");
 
     if (verbose) {
-	cerr << "Using ";
 
-	if (tidal_field_type <= 1) {
+	if (tidal_field_type <= 0)
 
-	    cerr << tidal_type[1] << " ";
-	    if (tidal_field_type <= 0) cerr << "(default) ";
+	    cerr << "Unable to determine tidal field type." << endl;
 
-	} else
-	    cerr << tidal_type[tidal_field_type] << " ";
+	else {
 
-        cerr << "tidal field; "
-	     << "initial Jacobi radius = " << initial_r_jacobi
-	     << endl;
+	    cerr << "using ";
+
+	    if (tidal_field_type <= 1) {
+
+		cerr << tidal_type[1] << " ";
+		if (tidal_field_type <= 0) cerr << "(default) ";
+
+	    } else
+		cerr << tidal_type[tidal_field_type] << " ";
+
+	    cerr << "tidal field; "
+		 << "initial Jacobi radius = " << initial_r_jacobi
+		 << endl;
+	}
     }
-
-    if (tidal_field_type <= 0) tidal_field_type = 1;
 
     // Set up the dynamical tidal parameters.
 
-    real alpha1 = -initial_mass / pow(initial_r_jacobi, 3.0);	// (definition)
-    real alpha3, omega;
+    real alpha1, alpha3, omega;
+    if (tidal_field_type > 0)
+	alpha1 = -initial_mass / pow(initial_r_jacobi, 3.0);	// (definition)
 
     // Note that we don't use alpha3_over_alpha1, even if it is stored
     // in the snapshot.  We use the "standard" ratios, or rederive the
@@ -525,7 +652,7 @@ void set_tidal_params(hdyn* b,
 	else
 	    err_exit("rho_G not specified");
 
-	cerr << "Create custom tidal field from " << endl;
+	cerr << "create custom tidal field from " << endl;
 	PRI(4);PRC(Oort_A);PRC(Oort_B);PRL(rho_G);
 
 	if (Oort_A != 0 && Oort_B != 0 && rho_G != 0) {
@@ -543,13 +670,15 @@ void set_tidal_params(hdyn* b,
 	  err_exit("Insufficient information to reconstruct tidal field");
     }
 
-    if (verbose) {
+    if (verbose && tidal_field_type > 0) {
 	PRI(4); PRC(alpha1); PRC(alpha3); PRL(omega);
     }
 
-    b->set_tidal_field(tidal_field_type);
-    b->set_omega(omega);
-    b->set_alpha(alpha1, alpha3);
+    if (tidal_field_type > 0) {
+	b->set_tidal_field(tidal_field_type);
+	b->set_omega(omega);
+	b->set_alpha(alpha1, alpha3);
+    }
 
     // Save the field type information in the root log story, if necessary.
 
@@ -559,13 +688,13 @@ void set_tidal_params(hdyn* b,
 
 }
 
-void test_tidal_params(hdyn* b,
+void test_tidal_params(dyn* b,
 		       bool verbose,
 		       real initial_r_jacobi,
 		       real initial_r_virial,
 		       real initial_mass)
 {
-    cerr << endl << "Comparing initial parameters for disk tidal field:"
+    cerr << endl << "comparing initial parameters for disk tidal field:"
 	 << endl;
 
     fprintf(stderr, "    model r_virial = %.3f, r_jacobi = %.3f",
@@ -587,4 +716,68 @@ void test_tidal_params(hdyn* b,
     fprintf(stderr, "    real  r_virial = %.3f, r_jacobi = %.3f",
 	    initial_r_virial, initial_r_jacobi);
     fprintf(stderr, ", ratio = %.3f\n", initial_r_jacobi/initial_r_virial);
+}
+
+int check_set_tidal(dyn *b,
+		    bool verbose)		// default = false
+{
+    int tidal_field_type = 0;
+    b->set_tidal_field(tidal_field_type);
+
+    real initial_mass = get_initial_mass(b, verbose);
+    real initial_r_virial = get_initial_virial_radius(b, verbose);
+    real initial_r_jacobi = get_initial_jacobi_radius(b, initial_r_virial,
+						      verbose);
+    if (initial_r_jacobi > 0)
+	set_tidal_params(b, verbose,
+			 initial_r_jacobi,
+			 initial_mass,
+			 tidal_field_type);
+
+    return tidal_field_type;
+}
+
+void check_set_plummer(dyn *b,
+		       bool verbose)		// default = false
+{
+    // Check for Plummer-field data in the input snapshot, and
+    // set kira parameters accordingly.  No coordination with the
+    // command line because these parameters can *only* be set via
+    // the input snapshot.  (Steve, 7/01)
+    //
+    // Expected fields in the input file are
+    //
+    //		kira_plummer_mass	=  M
+    //		kira_plummer_scale	=  R
+    //		kira_plummer_center	=  x y z
+
+     if (find_qmatch(b->get_log_story(), "kira_plummer_mass")
+	 && find_qmatch(b->get_log_story(), "kira_plummer_scale")) {
+
+	 b->set_plummer();
+
+	 b->set_p_mass(getrq(b->get_log_story(), "kira_plummer_mass"));
+	 b->set_p_scale_sq(pow(getrq(b->get_log_story(),
+				     "kira_plummer_scale"), 2));
+
+	 vector center = 0;
+	 if (find_qmatch(b->get_log_story(), "kira_plummer_center"))
+	     b->set_p_center(getvq(b->get_log_story(), "kira_plummer_center"));
+
+	 if (verbose) {
+	     real M = b->get_p_mass();
+	     real R = sqrt(b->get_p_scale_sq());
+	     vector center = b->get_p_center();
+	     cerr << "check_set_plummer:  "; PRC(M); PRC(R); PRL(center);
+	 }
+     }
+}
+
+void check_set_external(dyn *b,
+			bool verbose)		// default = false
+{
+    // Check for and set parameters for all external fields.
+
+    check_set_tidal(b, verbose);
+    check_set_plummer(b, verbose);
 }
