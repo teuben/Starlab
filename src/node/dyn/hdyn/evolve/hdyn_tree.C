@@ -754,7 +754,11 @@ void split_top_level_node(hdyn * bi,
 	    if (bi->get_kira_diag()->tree_level > 1) {
 		cerr << endl;
 		pp3(bi, cerr);
-		put_node(cerr, *bi, bi->get_kira_options()->print_xreal);
+
+		// Excessive output?
+
+		if (bi->get_kira_diag()->tree_level > 2)
+		    put_node(cerr, *bi, bi->get_kira_options()->print_xreal);
 	    }
 	} else {
 	    cerr << endl << "                      ";
