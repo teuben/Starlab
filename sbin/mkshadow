@@ -65,7 +65,7 @@ set dirs  = (`find . -type d -print | egrep -v '/CVS$|/local$|/config$'`)
 set files = ( \
   `find include src -name '*.[hcCfF]' -print -o -name '*.[ly][ly]' -print` \
   `find doc etc sbin scripts src/packages -name CVS -prune -o -type f -print` \
-  `/bin/ls -d [A-Z]* *.ac install* *.{m4,in} | egrep -v 'Makefile|CVS'` \
+  `/bin/ls -d [A-Z]* *.ac install* *.{m4,in} | egrep -v 'Makefile|CVS|HOST'` \
   `find . -name Makefile.am -print` `/bin/ls include/stamp-h.in` \
 )
 
