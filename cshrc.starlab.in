@@ -9,9 +9,9 @@
 #...........................................................................
 
 #
-#  find all STARLAB environment variables, and unset them
+#  find all STARLAB environment variables, and unset them (except STARLAB_PATH :-)
 #
-set all=(`printenv | grep ^STARLAB_ | grep -v STARLAB_PATH| awk -F= '{print $1}'`)
+set all=(`printenv | grep ^STARLAB_ | grep -v STARLAB_PATH | awk -F= '{print $1}'`)
 unsetenv $all
 
 #
