@@ -3636,34 +3636,56 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			    // since top-level nodes precede low-level ones.
 			    // However, the corrective action must be taken
 			    // in the calling function in any case.
+			    //
+			    // Note from Steve (2/04): Remarkably, it is
+			    // possible for the nearest neighbor of the
+			    // parent node to change when the node is
+			    // synchronized!  This makes it hard to infer
+			    // in the calling function whether pnn is out
+			    // of order on the scheduling list.  Rather than
+			    // trying to guess the outcome from the data
+			    // available on return, might be better to use
+			    // the story mechanism to set a flag, although
+			    // it seems that the problem can only occur in
+			    // situations where par would itself trigger the
+			    // rescheduling in any case.
 
-			    bool pr = false;
-			    if (verbose && par->time < system_time) {
-				cerr << "    synchronizing parent "
-				     << par->format_label()
-				     << ":  time step "
-				     << par->get_timestep();
-				pr = true;
-			    }
-			    par->synchronize_node();
-			    if (pr) {
-				cerr << " --> " << par->get_timestep()
-				     << endl;
+			    bool resched = false;
+
+			    if (par->time < system_time) {
+				if (verbose) {
+				    cerr << "    synchronizing parent "
+					 << par->format_label()
+					 << ":  time step "
+					 << par->get_timestep();
+				}
+
+				par->synchronize_node();
+				resched = true;
+
+				if (verbose)
+				    cerr << " --> " << par->get_timestep()
+					 << endl;
 			    }
 
-			    pr = false;
-			    if (verbose && pnn->time < system_time) {
-				cerr << "    synchronizing pnn "
-				     << pnn->format_label()
-				     << ":  time step "
-				     << pnn->get_timestep();
-				pr = true;
+			    if (pnn->time < system_time) {
+				if (verbose) {
+				    cerr << "    synchronizing pnn "
+					 << pnn->format_label()
+					 << ":  time step "
+					 << pnn->get_timestep();
+				}
+				
+				pnn->synchronize_node();
+				resched = true;
+
+				if (verbose)
+				    cerr << " --> " << par->get_timestep()
+					 << endl;
 			    }
-			    pnn->synchronize_node();
-			    if (pr) {
-				cerr << " --> " << par->get_timestep()
-				     << endl;
-			    }
+
+			    // if (resched) putiq(root->get_dyn_story(),
+			    //		       "resched", 1);
 
 			    // Note that we should really repeat the entire
 			    // previous calculation, since all quantities will

@@ -1,6 +1,32 @@
 
 // Place temporary post-step debugging code here, to clean up kira.C.
 
+#if 0
+if (t > 255.29) {
+    for (int ii = 0; ii < n_next; ii++) {
+	if (next_nodes[ii] && next_nodes[ii]->is_valid())
+	    cerr << next_nodes[ii]->format_label() << " ";
+    }
+    cerr << endl;
+    int p = cerr.precision(20);
+    PRL(t);
+    hdyn *bbb = (hdyn*)node_with_name("(68,629)", b);
+    if (bbb) cerr << "(68,629) t = " << bbb->get_time()
+		  << " dt = " << bbb->get_timestep()<< endl;
+    bbb = (hdyn*)node_with_name("674", b);
+    if (bbb) cerr << "674 t = " << bbb->get_time()
+		  << " dt = " << bbb->get_timestep()<< endl;
+    for (int ii = 0; ii < n_next; ii++) {
+	hdyn *n = next_nodes[ii];
+	if (n && n->is_valid() && n->name_is("(68,629)")) {
+	    PRC(n->format_label());
+	    PRL(n->get_next_time());
+	    pp3(n);
+	}
+    }
+    cerr.precision(p);
+}
+#endif
 
 #if 0
     if (t > 82.16960 && t < 82.1696256 && fmod(steps, 1) == 0) {
