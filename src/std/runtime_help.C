@@ -73,7 +73,7 @@ void get_runtime_help(char* source_file, char* compile_date, int level)
     cerr << "    source file ";
     if (!exists) {
 	cerr << "unavailable" << endl;
-	return;
+	exit(0);
     } else
 	cerr << "    " << src << endl << endl;
 
