@@ -1343,7 +1343,12 @@ bool hdyn::correct_and_update()
 
 		cerr << endl << "correct: possible hardware error at time "
 		     << get_system_time() << endl;
+
+		// Nasty -- need a cleaner way of implementing GRAPE calls...
+
+#if defined(STARLAB_HAS_GRAPE4)
 		PRL(get_grape_chip(this));
+#endif
 
 #if 0
 		cerr << endl << "pp3 with old pos and vel:" << endl;
