@@ -9,9 +9,7 @@
 ////                   [in units of the virial radius].
 ////             -S    Random seed.
 ////             -s    Initial stellar type [default is main_sequence].
-////             -T    Dynamical time scaling
-////                   [in units of the NBODY time].
-////             -t    end time of the stellar evolution [in Million year].
+////             -T or -t end time of the stellar evolution [in Million year].
 ////
 //// Latest version (SPZ:1.0) February 1993.
 
@@ -94,7 +92,6 @@ int main(int argc, char ** argv)
     bool  c_flag = FALSE;
     bool  M_flag = FALSE;
     bool  n_flag = FALSE;
-    bool  T_flag = FALSE;
     bool  R_flag = FALSE;
     real  m_tot = 10;
     real  r_hm = 100;
@@ -126,8 +123,7 @@ int main(int argc, char ** argv)
                       break;
             case 'R': r_hm = atof(poptarg);
                       break;
-            case 'T': t_hc = atof(poptarg);
-                      break;
+            case 'T':                      
             case 't': t_end = atof(poptarg);
                       break;
             case 'S': S_flag = TRUE;

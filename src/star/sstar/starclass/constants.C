@@ -217,6 +217,8 @@ real stellar_evolution_constants::parameters(stellar_mass_limits pm) {
         case COcore2black_hole:                  return 5; // was 10
                                                       // (SPZ+GN: 27 Jul 2000)
              break;                                
+        case core2blackhole_mass_fraction:       return 0.65;  
+             break;                                
 	case super_giant2neutron_star:           return 8;
              break;                                
         case super_giant2black_hole:             return 25; // was 40

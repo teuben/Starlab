@@ -1,5 +1,3 @@
-
-
 //
 // black_hole.C
 //
@@ -21,7 +19,8 @@ black_hole::black_hole(hyper_giant & w) : single_star(w) {
       suddenly_lost_mass = 0;
       real m_tot = get_total_mass();
 
-      core_mass = black_hole_mass();
+      core_mass = black_hole_mass(
+                  cnsts.parameters(core2blackhole_mass_fraction)*core_mass);
       envelope_mass = m_tot - core_mass;
 
 // (GN+SPZ May  4 1999) last update age is time of previous type change
@@ -56,7 +55,9 @@ black_hole::black_hole(super_giant & g) : single_star(g) {
 
       suddenly_lost_mass = 0;
       real m_tot = get_total_mass();
-      core_mass = black_hole_mass();
+      core_mass = black_hole_mass(
+                  cnsts.parameters(core2blackhole_mass_fraction)*core_mass);
+      //      core_mass = black_hole_mass();
       envelope_mass = m_tot - core_mass;
 
 // (GN+SPZ May  4 1999) last update age is time of previous type change
@@ -125,10 +126,20 @@ black_hole::black_hole(helium_giant & h) : single_star(h) {
 
       delete &h;
 
+      // SPZ&GN 17 April 2003
+      // Quite a bit of fiddeling to get the black hole mass right.
+      core_radius = effective_radius;
+
       suddenly_lost_mass = 0;
       real m_tot = get_total_mass();
-      core_mass = black_hole_mass();
+      real COcore_mass = core_mass;
+      core_mass = m_tot;
+      core_mass = black_hole_mass(COcore_mass);
       envelope_mass = m_tot - core_mass;
+
+	//      real m_tot = get_total_mass();
+	//      core_mass = black_hole_mass();
+	//      envelope_mass = m_tot - core_mass;
 
 // (GN+SPZ May  4 1999) last update age is time of previous type change
       last_update_age = next_update_age;
@@ -287,7 +298,53 @@ real black_hole::aic_binding_energy() {
       return GM2_RC2*core_mass/(4.25e-6*cnsts.parameters(solar_mass));
    }
 
-real black_hole::black_hole_mass() {
+// SPZ&GN 17April 2003
+// Black hole mass determination based on
+// CO core mass plus 
+// part of the Helium envelope and part of the Hydrogen envelope
+// The latter two depend on the supernova explosion energy and the
+// binding energy of both envelopes.
+// Based on: Fryer & Kalogera, 2001ApJ...554..548F
+real black_hole::black_hole_mass(const real COcore_mass) {
+
+  real initial_bh_mass = 1.000*COcore_mass;
+  real helium_envelope = core_mass-initial_bh_mass;
+  real hydrogen_envelope = get_total_mass() - core_mass; 
+  
+  //  PRC(COcore_mass);PRC(initial_bh_mass);PRC(helium_envelope);
+  //  PRL(hydrogen_envelope);
+
+  real E_supernova = 1.0E51;  // [erg]
+  real Lambda = 0.4;
+
+  real GM2_R = cnsts.physics(G)*pow(cnsts.parameters(Msun), 2)
+             / cnsts.parameters(Rsun);
+  real Ebinding_helium = GM2_R*helium_envelope*initial_bh_mass
+                       / (Lambda*core_radius);
+  real Ebinding_hydrogen = GM2_R*hydrogen_envelope*core_mass
+                         / (Lambda*effective_radius);
+
+  real fallback_helium = helium_envelope *
+    Starlab::min(1., Starlab::max(0., (1-E_supernova/Ebinding_helium)));
+  
+  real fallback_hydrogen = 0;
+  if(fallback_helium > 0) {
+    fallback_hydrogen = hydrogen_envelope;
+  }
+  else {
+    
+    fallback_hydrogen = hydrogen_envelope *
+      Starlab::min(1., 
+      Starlab::max(0., 
+		  (1-(E_supernova-Ebinding_helium)/Ebinding_hydrogen)));
+  }
+
+  real final_bh_mass = initial_bh_mass + fallback_helium + fallback_hydrogen;
+
+  PRC(E_supernova); PRC(Ebinding_helium); PRL(Ebinding_hydrogen);
+  PRC(fallback_helium); PRC(fallback_hydrogen); PRL(final_bh_mass);
+
+  return final_bh_mass;
 
   // Relation used if helium2black_hole=15 and
   //                  super_giant2black_hole=40
@@ -299,9 +356,11 @@ real black_hole::black_hole_mass() {
 
 //  real m = 0.5 * get_total_mass();
 
+//+++++++++++++++++++++
+
     //approximation to Fryer & Kalogera 2001
     real m = get_total_mass();
-    if(m<40) {
+    if(get_relative_mass() < 40) {
 	m = Starlab::min(m, core_mass);
     }
 

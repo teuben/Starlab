@@ -29,6 +29,43 @@
 
 #ifdef TOOLBOX
 
+#define EPSILON 1.e-10
+
+local void evolve_star_until_next_time(node* bi, const real out_time) {
+
+          real current_time = ((star*)bi->get_starbase())->get_current_time();
+          real time_step    =  bi->get_starbase()->get_evolve_timestep();
+
+          while (out_time>current_time+time_step) {
+             bi->get_starbase()->evolve_element(current_time+time_step);
+             bi->get_starbase()->evolve_element(
+                 Starlab::min(current_time+time_step+EPSILON, out_time));
+             current_time = ((star*)bi->get_starbase())->get_current_time();
+             time_step    =  bi->get_starbase()->get_evolve_timestep();
+
+	     star_state ss(dynamic_cast(star*, bi->get_starbase()));
+	     put_state(ss, cerr);
+
+	     // print_star(bi->get_starbase(), cerr);
+
+	     int p = cerr.precision(HIGH_PRECISION);
+	     bi->get_starbase()->dump(cerr, false);
+	     cerr.precision(p);
+          }
+         bi->get_starbase()->evolve_element(out_time);
+
+         print_star(bi->get_starbase(), cerr);
+
+/*
+cerr<< "ov: " << bi->get_starbase()->get_element_type() 
+        << " " <<bi->get_starbase()->get_total_mass() << " t= "
+        << ((star*)bi->get_starbase())->get_current_time() << " "
+        << ((star*)bi->get_starbase())->get_current_time()
+           +bi->get_starbase()->get_evolve_timestep() << " -> "
+        << out_time << endl;
+*/
+}
+
 node* get_complete_star(const real mass, const real time) {
 
       int number = 1;
@@ -44,10 +81,10 @@ node* get_complete_star(const real mass, const real time) {
       real p_rot=0, b_fld=0; 
 
       node* bi = n->get_oldest_daughter();
-        single_star* element = 
-		new_single_star(type, id, time, start_time, relative_mass, 
-				total_mass, core_mass, co_core, 
-				p_rot, b_fld, bi);
+      single_star* element = 
+	new_single_star(type, id, time, start_time, relative_mass, 
+			total_mass, core_mass, co_core, 
+			p_rot, b_fld, bi);
 
       bi->get_starbase()->evolve_element(time);
       return bi;
@@ -56,27 +93,22 @@ node* get_complete_star(const real mass, const real time) {
 real get_stellar_radius(const real mass, const real time, stellar_type& type) {
 
       int number = 1;
-      node *n = mknode(number);
+      node *root = mknode(number);
+      root->get_starbase()->set_stellar_evolution_scaling(mass, 1., 1.);
+      node *the_star = root->get_oldest_daughter();
 
-      type = Main_Sequence;
-      int id = 0;
       real start_time = 0;
-      real relative_mass, total_mass;
-      relative_mass = total_mass = mass;
-      real core_mass=0.01;
-      real co_core = 0;
-      real p_rot=0, b_fld=0; 
+      type = Main_Sequence;
+      addstar(root, start_time, type);
 
-      node* bi = n->get_oldest_daughter();
-        single_star* element =
-                new_single_star(type, id, time, start_time, relative_mass,
-				total_mass, core_mass, co_core,
-				p_rot, b_fld, bi);
+      node* bi = root->get_oldest_daughter();
+      evolve_star_until_next_time(bi, time);
+      //      bi->get_starbase()->evolve_element(time);
 
-      bi->get_starbase()->evolve_element(time);
       type = bi->get_starbase()->get_element_type();
+      bi->get_starbase()->dump(cerr, false);
       return bi->get_starbase()->get_effective_radius();
-   }
+}
 
 real obtain_maximum_radius(const real mass, 
 		           real& time, stellar_type& type) {
@@ -90,14 +122,14 @@ real obtain_maximum_radius(const real mass,
       int id = 0;
       real relative_mass, total_mass;
       relative_mass = total_mass = mass;
-      real core_mass=min(0.01, total_mass);
+      real core_mass=Starlab::min(0.01, total_mass);
       real co_core = 0;
       real p_rot=0, b_fld=0;
 
       node* bi = n->get_oldest_daughter();
         single_star* element =
                 new_single_star(type, id, time, time, relative_mass,
-				total_mass, core_mass, co_core
+				total_mass, core_mass, co_core,
 				p_rot, b_fld, bi);
 
       real radius=0;
@@ -106,10 +138,11 @@ real obtain_maximum_radius(const real mass,
       real time_max=0;
       stellar_type current_type;
       do {
-         dt = max(cnsts.safety(minimum_timestep),
+         dt = Starlab::max(cnsts.safety(minimum_timestep),
                   bi->get_starbase()->get_evolve_timestep());
          time += dt;
-         bi->get_starbase()->evolve_element(time);
+	 evolve_star_until_next_time(bi, time);
+	 //         bi->get_starbase()->evolve_element(time);
          radius = bi->get_starbase()->get_effective_radius();
          current_type = bi->get_starbase()->get_element_type();
          
@@ -121,7 +154,9 @@ real obtain_maximum_radius(const real mass,
       } 
       while (current_type!=Black_Hole   &&
              current_type!=Neutron_Star &&
-             current_type!=White_Dwarf  &&
+             current_type!=Carbon_Dwarf &&
+	     current_type!=Helium_Dwarf &&
+	     current_type!=Oxygen_Dwarf &&
              current_type!=Brown_Dwarf  &&
              current_type!=Disintegrated);
          
@@ -131,7 +166,7 @@ real obtain_maximum_radius(const real mass,
 
 bool close_enough(const real a, const real b) {
 
-      if (abs((a-b)/b)<=0.0001)
+      if (abs((a-b)/b)<=0.00001)
          return false;
       return true;
    }
@@ -186,8 +221,8 @@ main(int argc, char ** argv) {
 
     int  c;
     real mass = 10;
-    real time = 10;
-    real radius = 250;
+    real time = -1;
+    real radius = -1;
 
     char  *comment;
     extern char *poptarg;
@@ -210,21 +245,32 @@ main(int argc, char ** argv) {
 	    	      exit(1);
             }
 
-      node* str = get_complete_star(mass, time);
-      stellar_type type = NAS;
+    stellar_type type = NAS;
+    if(time>0) {
+      //      node* str = get_complete_star(mass, time);
+
       real rad = get_stellar_radius(mass, time, type);
 
+      cerr << "Stellar radius at time: " << endl;
       cout << rad 
            <<" = get_stellar_radius(mass=" <<mass<<", time=" 
-           <<time<<", type="<<type<<")"<<endl;
+           <<time<<", type="<<type_string(type)<<")"<<endl;
 
-      rad = obtain_maximum_radius(mass, time, type);
+      }
+    else if(radius<0) {
+
+      real  rad = obtain_maximum_radius(mass, time, type);
+      cerr << "Maximum radius: " << endl;
       cout << rad << " = obtain_maximum_radius(mass=" <<mass<<", time=" 
-                  <<time<<", type="<<type<<")"<<endl;
+                  <<time<<", type="<<type_string(type)<<")"<<endl;
 
+    }
+    else {
+      cerr << "Time at radius: " << endl;
       time = obtain_time_at_radius(mass, radius, type);
       cout << time  << " = obtain_time_at_radius(mass=" <<mass<<", radius="  
-                    <<radius<<", type="<<type<<")"<<endl;
+                    <<radius<<", type="<<type_string(type)<<")"<<endl;
     }
+}
 
 #endif

@@ -26,7 +26,7 @@
 
 #ifndef TOOLBOX
 
-#define UNPERTURBED_DIAG false
+#define UNPERTURBED_DIAG true
 #define PRECISION 12
 
 local void restore_pos_and_vel(kepler& inner, kepler& outer, real time,

@@ -522,7 +522,7 @@ real helium_star::final_CO_core_mass(const real initial_mass) {
   else if(initial_mass <= 0.8) 
     final_coremass_fraction = 1;
   else if(initial_mass >= cnsts.parameters(helium2neutron_star)) 
-    final_coremass_fraction = 0.65;
+    final_coremass_fraction = cnsts.parameters(core2blackhole_mass_fraction);
   else 
     final_coremass_fraction = 1 - 0.32 * (initial_mass - 0.8);
 

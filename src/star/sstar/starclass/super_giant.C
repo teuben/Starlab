@@ -5,6 +5,8 @@
 #include "super_giant.h"
 #include "horizontal_branch.h"
 
+#define LIMIT_MASSIVE_STAR_SUPER_GIANT_RADII true
+
 // ANSI C++ first creates the base class before the dreived classes are
 // created.
 
@@ -66,11 +68,23 @@ void super_giant::instantaneous_element() {
   radius = (0.25*pow(luminosity, 0.4)
 	 + 0.8*pow(luminosity, 0.67))/pow(relative_mass, 0.27);
 
-  if(second_dredge_up_time<=0) 
+  // (GN Oct 25 2000) high mass stars never become very big due to
+  // mass loss (after Schaller et al 1992)
+  if(LIMIT_MASSIVE_STAR_SUPER_GIANT_RADII) {
+    if (relative_mass > cnsts.parameters(super_giant2neutron_star))
+      radius = Starlab::min(radius , 1000.);
+  }
+
+  if(second_dredge_up_time<=0) {
+    cerr << "WARNING:  super_giant::instantanious_element()" << endl;
+    PRL(second_dredge_up_time);
+    cerr << "Should have been set properly in super_giant constructor"<<endl;
+    cerr << "solution: set parameter again, and continue" << endl;
     second_dredge_up_time = last_update_age 
                           + (next_update_age-last_update_age) 
                           * Starlab::min(1., relative_mass
 			  / cnsts.parameters(super_giant2neutron_star));
+  }
 
 }
 
@@ -99,6 +113,13 @@ void super_giant::evolve_element(const real end_time) {
          radius = (0.25*pow(luminosity, 0.4)
                 + 0.8*pow(luminosity, 0.67))/pow(relative_mass, 0.27);
 
+	 // (GN Oct 25 2000) high mass stars never become very big due to
+	 // mass loss (after Schaller et al 1992)
+	 if(LIMIT_MASSIVE_STAR_SUPER_GIANT_RADII) {
+	   if (relative_mass > cnsts.parameters(super_giant2neutron_star))
+	     radius = Starlab::min(radius , 1000.);
+	 }
+
 	 real m_tot = get_total_mass();
 
 	 real new_mcore;
@@ -126,6 +147,15 @@ void super_giant::evolve_element(const real end_time) {
 
 	   }
 	   else {
+
+	     // (GN Mar 10 2003) test: make sure COcore_mass has grown
+             // to  core_mass at second_dredge_up
+	     // Schould we think this over again (SPZ&GN 17April 2003)
+             if (previous.relative_age <= second_dredge_up_time) {
+
+               COcore_mass = core_mass;
+	     }
+
 	     if (luminosity < 15725.) {                     // Mc < 0.73
 	       new_mcore = sqrt(luminosity/47488. + 0.1804)+0.015;
 	     }
@@ -141,30 +171,6 @@ void super_giant::evolve_element(const real end_time) {
 	 // core_mass = min(m_tot-cnsts.safety(minimum_mass_step), new_mcore);
 	 core_mass = Starlab::min(m_tot, new_mcore);
 	 envelope_mass = m_tot - core_mass;
-
-#if 0 // (SPZ+GN: 27 Jul 2000)
-	 // core mass for high mass stars
-	 if (relative_mass > cnsts.parameters(super_giant2neutron_star)) { 
- 	   real X = cnsts.parameters(hydrogen_fraction);
-	   new_mcore = core_mass 
-                     + l_g*6*t_gs*(pow(tau,1./6.)-pow(tau_prev,1./6.))
-	             / (X*cnsts.parameters(energy_to_mass_in_internal_units));
-	 }
-	 else {  // Groenewegen & de Jong 1993, A&A 267,410 
-	   if (luminosity < 15725.) {                     // Mc < 0.73
-	     new_mcore = sqrt(luminosity/47488. + 0.1804)+0.015;
-	   }
-	   else {
-	     // See single_star::final_core_mass()
-	     new_mcore = luminosity/(46818*pow(relative_mass, 0.25)) + 0.46;
-	   }
-	 }
-
-	 new_mcore = Starlab::max(new_mcore, core_mass);
-	 
-	 core_mass = Starlab::min(m_tot-cnsts.safety(minimum_mass_step), new_mcore);
-	 envelope_mass = m_tot - core_mass;
-#endif
 
       }
       else {
@@ -189,7 +195,8 @@ real super_giant::initial_CO_core_mass(const real initial_mass) {
   if(initial_mass <= 0.8) 
     final_coremass_fraction = 1;
   else if(initial_mass >= cnsts.parameters(helium2neutron_star)) 
-    final_coremass_fraction = 0.65;
+    final_coremass_fraction = cnsts.parameters(core2blackhole_mass_fraction);
+
   else 
     final_coremass_fraction = 1 - 0.32 * (initial_mass - 0.8);
 
@@ -289,7 +296,8 @@ void super_giant::create_remnant() {
      else
        dump("binev.data", false);
 
-     real COcore_mass = 0.65 * core_mass;
+     real COcore_mass = 
+          cnsts.parameters(core2blackhole_mass_fraction)*core_mass;
      stellar_type type;
      if (relative_mass >= cnsts.parameters(maximum_main_sequence) &&
 	 relative_mass < 300)
