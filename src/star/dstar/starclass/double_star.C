@@ -332,6 +332,7 @@ void double_star::dump(ostream & s, bool brief) {
 	  << stp->get_element_type() << " "
 	  << m1 << " "
 	  << stp->get_effective_radius() << " "
+	  << log10(stp->temperature()) << " "
 	  << stp->get_core_mass() << "    "
 	  //      << stp->get_effective_radius()/primary_roche_lobe  << "    "
 
@@ -339,6 +340,7 @@ void double_star::dump(ostream & s, bool brief) {
 	  << sts->get_element_type() << " "
 	  << m2 << " "
 	  << sts->get_effective_radius() << " "
+	  << log10(sts->temperature()) << " "
 	  << sts->get_core_mass() 
 	  //      << sts->get_effective_radius()/secondary_roche_lobe
 	  << endl;
@@ -1709,7 +1711,7 @@ void double_star::double_spiral_in() {
 	      cerr << "WARNING: in double_star::double_spiral_in()" << endl;
 	      cerr << "         Fraction of mass lost (" << mass_loss_fr 
 	           << ") greater then limit (" << mlf_limit << ")" << endl;
-	      dump(cerr, false);
+	    dump(cerr, false);
 	  }
 
 	  // Only envelope mass may be removed to prevent
@@ -2227,7 +2229,7 @@ void double_star::angular_momentum_envelope_ejection(star* larger,
 	  if (larger->get_core_radius()>=rl_l 	||
 	      smaller->get_radius()>=rl_s) 	{
 
-	    PRC(smaller->get_radius());PRC(rl_s);PRL(a_f);
+	    //	    PRC(smaller->get_radius());PRC(rl_s);PRL(a_f);
 
 	    cerr << "Merger double_star::angular_momentum_envelope_ejection(star* larger, star* smaller)" << endl;
 	    dump(cerr, false);

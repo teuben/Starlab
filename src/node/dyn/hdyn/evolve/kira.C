@@ -2824,7 +2824,13 @@ local void recompute_perturber_lists(hdyn *b, bool verbose = false)
 #include <unistd.h>				// for termination below...
 #include <signal.h>
 
-main(int argc, char **argv)
+main(int argc, char **argv) {
+
+  hdyn *b = NULL;
+  kira (arc, argv, b);
+}
+
+  kira(int argc, char **argv) {
 {
     check_help();
 

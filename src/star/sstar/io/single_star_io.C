@@ -219,10 +219,23 @@ void single_star::star_transformation_story(stellar_type new_type)
 	 << " Myr (old mass = " << get_total_mass() << ")" << endl;
 
     if(is_binary_component()) {
+#if 0 // This should be fixed some time SPZ:26/02/03
+      if(get_binary()->obtain_binary_type() == Merged) {
+	cerr << "binary is merged." << endl;
+      }
+      else if(get_binary()->obtain_binary_type() == Disrupted) {
+	cerr << "binary is disrupted, other component: " << endl
+	     << type_string(get_companion()->get_element_type()) << endl;
+      }
+      else {
 	cerr << "binary companion: " 
 	     << type_string(get_companion()->get_element_type()) << endl;
-	cerr << "parent: " << get_node()->get_parent()->format_label() 
-	     << endl;
+      }
+#endif
+      cerr << "binary companion: " 
+	   << type_string(get_companion()->get_element_type()) << endl;
+      cerr << "parent: " << get_node()->get_parent()->format_label() 
+	   << endl;
     }
 }
 

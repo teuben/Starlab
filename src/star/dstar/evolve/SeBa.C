@@ -63,7 +63,7 @@
 ////             -Q   maximum mass ratio [1]
 ////             -q   minimum mass ratio [<-m option/selected primary mass>]
 ////             -w   exponent for a power-law distribution  
-////             -P/p eccentricity option: 0) constant mass ratio
+////             -P/p mass ratio option: 0) constant mass ratio
 ////                                       1) Flat_q
 ////                                       2) Power Law 
 ////                                       3) Hogeveen (1992)

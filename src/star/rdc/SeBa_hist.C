@@ -152,13 +152,15 @@ real SeBa_hist::set_stellar_radius(bool primary = true) {
 bool SeBa_hist::read_SeBa_hist(istream& s) {
     
     int tpe_1, tpe_2;
+    real lT_prim, lT_sec;
+    real mc_prim, mc_sec;
 
     s >> number >> time 
       >> semi >> ecc 
 //      >> tpe_1 >> m_prim >> r_prim
 //      >> tpe_2 >> m_sec >> r_sec;
-      >> label_prim >> tpe_1 >> m_prim >> r_prim
-      >> label_sec >> tpe_2 >> m_sec >> r_sec;
+      >> label_prim >> tpe_1 >> m_prim >> r_prim >> lT_prim >> mc_prim
+      >> label_sec >> tpe_2 >> m_sec >> r_sec >> lT_sec >> mc_sec;
 
     if(s.eof()) return false;
 
