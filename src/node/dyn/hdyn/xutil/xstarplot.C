@@ -1,13 +1,14 @@
 
 //// xstarplot:  Plot an N-body system in an X environment.
 ////
-////             This is the "hdyn" (kira output) version of xstarplot.  It contains
-////             all of the "dyn" xstarplot functionality (and will work with standard
-////             dyn data files), but includes additional functions specific to the
-////             hdyn class.
+////             This is the "hdyn" (kira output) version of xstarplot.
+////             It contains all of the "dyn" xstarplot functionality
+////             (and will work with standard dyn data files), but
+////             includes additional functions specific to the hdyn class.
 ////
 //// Options:    -a    specify viewing axis [1/2/3 = x/y/z]
 ////             -b    allow backward steps [no]
+////             -C    center each frame on the standard system center [no]
 ////             -d    dimensionality of plot [2]
 ////             -D    delay time between frames, in ms [16]
 ////             -e    color by energy [no]
@@ -1702,6 +1703,8 @@ main(int argc, char** argv)
     bool  o_flag = FALSE;	// if TRUE, output stdin to stdout
     bool  r_flag = TRUE;        // if TRUE, the background is black
     bool  t_flag = FALSE;	// if TRUE, show tree structure
+    bool std_center = false;	// if true, always place the standard
+				// center at the origin of coordinates
 
     bool verbose = false;
 
@@ -1717,7 +1720,7 @@ main(int argc, char** argv)
     check_help();
 
     extern char *poptarg;
-    char* params = "a:bd:D:efl:L:mop:P:rs:tuv";
+    char* params = "a:bCd:D:efl:L:mop:P:rs:tuv";
     int   c;
 
     while ((c = pgetopt(argc, argv, params)) != -1)
@@ -1726,6 +1729,8 @@ main(int argc, char** argv)
 	    case 'a': k = atoi(poptarg);	// projection axis [z]
 		      break;
 	    case 'b': max_snap = MAX_SNAP;	// allow backward steps [no]
+		      break;
+	    case 'C': std_center = true;
 		      break;
 	    case 'd': d = atoi(poptarg);	// number of dimensions [2]
 		      break;
@@ -1811,11 +1816,21 @@ main(int argc, char** argv)
 		    story *s = bbb->get_dyn_story();
 		    putrq(s, "time", bbb->get_system_time());
 
+		    bbb->set_root(bbb);
+
+		    // Optionally center the plot (on the standard center).
+
+		    if (std_center) {
+			vec cpos, cvel;
+			get_std_center(bbb, cpos, cvel);
+			bbb->inc_pos(-cpos);
+			bbb->inc_vel(-cvel);
+		    }
+
 		    // Rest of xstarplot doesn't take root pos into account.
 		    // Offset the system to the root pos here.
 
-		    for_all_daughters(hdyn, bbb, b4)
-			b4->inc_pos(bbb->get_pos());
+		    bbb->offset_com();
 
 		    // Place the new snapshot on the list.
 
