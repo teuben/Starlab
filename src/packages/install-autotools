@@ -1,0 +1,14 @@
+#!/bin/tcsh -f
+
+set prefix = $STARLAB_PATH/usr
+
+# Build the autotools (isn't standardization wonderful?):
+
+foreach tool (autoconf automake libtool)
+    tar xzf $tool*.tar.gz
+    cd $tool*[0-9]
+    ./configure --prefix=$prefix
+    make
+    make install
+    cd ..
+end
