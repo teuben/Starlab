@@ -2,7 +2,7 @@
 //// snap_to_image:  Construct images (in Sun rasterfile format) of
 ////                 a series of snapshots.
 ////
-//// Options:   -1           combine all frames in a single image  [no]
+//// Options:   -1           combine all frames in a single image  [yes]
 ////            -c           compress the image file(s) using gzip [no]
 ////            -C colormap  specify a colormap file name [no]
 ////            -f filename  specify root name of image files [snap, - = stdout]
@@ -360,7 +360,7 @@ main(int argc, char** argv)
     char colormap[64];
     bool colormap_set = false;
 
-    bool combine = false;
+    bool combine = true;
 
     bool compress = false;
     bool grid = true;
