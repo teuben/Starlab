@@ -23,15 +23,12 @@
 //	bool hdyn::is_weakly_perturbed
 //	bool hdyn::is_stable
 //
-// To do:  Should keep track of tidal errors associated with the
-//	   termination of unperturbed motion.
-//
-//	   Mixing of many types of motion is too complex.  Especially
+// To do:  Mixing of many types of motion is too complex.  Especially
 //	   problematic is the identification of pericenter reflection by
 //	   checking for recession, which can fail in a variety of ways
 //	   in marginal cases.
 //
-//	   Also, picking up unperturbed motion near pericenter bases the
+//	   Also, picking up unperturbed motion near pericenter biases the
 //	   unperturbed timestep on an extremely short step, and can lead
 //	   to scheduling problems.
 
@@ -1807,6 +1804,102 @@ void hdyn::startup_unperturbed_motion()
 	delete [] cpt_list;
     }
 
+#if 0
+
+    // Keep track of critical orbital data for unperturbed systems
+    // in relatively wide triple orbits.		(Steve, 8/03)
+
+    // *** NO LONGER NEEDED, but retain the code for now as an example.
+    // *** See integrate_unperturbed_motion for an explanation of how
+    // *** the tidal error arises and how to correct it in place.
+
+    // *** NOTE that, if used, this approach would require writing the
+    // *** extra data to the output file to avoid restart problems.
+
+    if (fully_unperturbed) {
+
+	hdyn *par = get_parent(), *pnn = par->get_nn();
+
+	if (pnn) {
+
+	    vec ppos = hdyn_something_relative_to_root(par,
+						       &hdyn::get_pred_pos);
+	    vec pvel = hdyn_something_relative_to_root(par,
+						       &hdyn::get_pred_vel);
+	    vec npos = hdyn_something_relative_to_root(pnn,
+						       &hdyn::get_pred_pos);
+	    vec nvel = hdyn_something_relative_to_root(pnn,
+						       &hdyn::get_pred_vel);
+
+	    real m12 = par->get_mass();
+	    real m3 = pnn->get_mass();
+	    real m123 = m12 + m3;
+	    real mu = m12 * m3 / m123;
+	    real R = abs(npos - ppos);
+	    real Vsq = square(nvel - pvel);
+
+	    real E = mu*(0.5*Vsq - m123/R);
+
+	    if (E < 0) {
+
+		// Need kT for comparison.  Anticipate doing this rarely, so
+		// compute it the hard way.  (Could save kT in the story...)
+
+		int ntop = 0;
+		real kin = 0;
+		for_all_daughters(hdyn, get_root(), bb) {
+		    ntop++;
+		    kin += bb->get_mass()*square(bb->get_pred_vel());
+		}
+		real kT = 2*kin/(3*ntop);
+
+		if (E < -0.1*kT) {		// conservative -- may improve
+
+		    // Save orbital data.
+
+		    kep_config *k = kep->get_kep_init();
+		    if (k) delete k;
+		    k = new kep_config;
+		    k->time = system_time;
+		    k->nn = (void*)pnn;
+		    k->energy = E;
+
+		    vec pos1 = hdyn_something_relative_to_root(this,
+						       &hdyn::get_pos);
+		    hdyn *sis = get_younger_sister();
+		    vec pos2 = hdyn_something_relative_to_root(sis,
+						       &hdyn::get_pos);
+		    real r13 = abs(npos - pos1);
+		    real r23 = abs(npos - pos2);
+		    real m1 = get_mass();
+		    real m2 = sis->get_mass();
+
+		    // Save the tidal potential energy as the energy error.
+
+		    k->de = -m3 * (m1/r13 + m2/r23 - m12/R);
+
+		    kep->set_kep_init(k);
+
+		    if (diag->report_start_unperturbed) {
+			int p = cerr.precision(HIGH_PRECISION);
+			cerr << endl
+			     << "startup_unperturbed_motion: "
+			     << "saving neighbor data for "
+			     << parent->format_label()
+			     << endl
+			     << "    at time " << system_time
+			     << ",  outer ";
+			cerr.precision(p);
+			real r12 = abs(get_pos()-sis->get_pos());
+			PRC(E/kT); PRL(k->de);
+			PRI(4); PRC(r12); PRL(R);
+		    }
+		}
+	    }
+	}
+    }
+#endif
+
     // cerr << "Leaving startup_unperturbed_motion: "; PRL(fully_unperturbed);
 
     // On normal exit, a kepler structure exists, timestep is the last
@@ -2863,10 +2956,6 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
     //	     end of its timestep may result in its being resolved at
     //	     an undesirable part of its orbit, causing large errors.
 
-
-    if (!kep) return 0;
-
-
     if (diag->unpert_function_id) {
 	cerr << endl << ">> integrate_unperturbed_motion for "
 	     << format_label() << " at time " << system_time << endl;
@@ -2958,7 +3047,7 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
     // Possible alternatives are to allow the tidal error and either
     // simply keep a running total of such errors, or to absorb the
     // error into the motion (e.g. by correcting the outer orbit in
-    // some way) -- neither is currently implemented.
+    // some way) -- neither is currently implemented (but see below).
 
     bool save_unpert = fully_unperturbed;
     fully_unperturbed = false;
@@ -3056,23 +3145,64 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	// PRL(verbose);
 
 #if 1
-	// The following workaround is a fix for unperturbed systems that
-	// find themselves in relatively wide triple orbits.  The problem
-	// is that, since the orientation of an unperturbed binary remains
-	// fixed, there is a change in the tidal potential on the binary
-	// when it becomes perturbed near the pericenter of the outer orbit,
-	// relative to the potential when unoerturbed motion started.
-	// This is a systematic effect, and can lead to a signigicant net
-	// error if the outer orbit survives for many periods.  (Steve, 8/03)
+	// The following lengthy workarounds are fixes for unperturbed
+	// systems that find themselves in relatively wide triple orbits.
+	//						    (Steve, 8/03)
+	//
+	// The problem is that, since the orientation of an unperturbed
+	// binary remains fixed and its interaction with its neighbors is
+	// computed in the center-of-mass approximation, a tidal energy
+	// error accumulates during the unperturbed motion.
+	//
+	// The computation of the energy always resolves the binary into
+	// its (static) components while it is unperturbed.  This has the
+	// conveniant effect of ensuring that the computed energy remains
+	// continuous as unperturbed motion starts.  However, since the
+	// outer orbit is computed in the center-of-mass approximation,
+	// while the energy is "exact" (the binary is frozen, but resolved),
+	// the computed orbit differs from the true one due to the neglect
+	// of the next (quadrupole) moment of the acceleration.  Integrated
+	// around the outer  orbit, this error is responsible for a tidal
+	// (quadrupole) error in the potential.
+	//
+	// This is a small but systematic effect, and can lead to a
+	// significant net error if the outer orbit survives for many
+	// periods.
+	//
+	// Rather than attempting to include the quadrupole (and higher?)
+	// terms in the relative motion of the binary CM and its neighbors,
+	// for now at least we choose to correct the tidal error each time
+	// the unperturbed segment ends.
 	//
 	// Fix 1: randomize the orientation of any unperturbed binary
-	//	  satisfying the criteria, as below.
-	// Fix 2: (better) reorient the binary to absorb the tidal error,
-	//	  if possible -- to come...
+	//	  satisfying the criteria -- effective at eliminating the
+	//	  systematic growth in the error, but overkill.
+	// Fix 2: (better) absorb the tidal error directly into the CM and
+	//	  nn relative motion.
+	//
+	// Is there a corresponding effect if the binary stays unperturbed
+	// during the entire outer orbit?  No, since the tidal error in that
+	// case will be strictly periodic.  The problem arises because the
+	// partially unperturbed orbit is handled in two distinctly different
+	// ways.
 
 	hdyn *par = get_parent(), *pnn = par->get_nn();
 
-	if (pnn && binary_type != NOT_APPROACHING) {
+	// Last clause of the following if() is a bit restrictive, but very
+	// likely to be true, and for now we don't want to deal with all the
+	// possible special configurations that might conceivably turn up if
+	// we exclude it.
+	//						     (Steve, 8/03)
+
+	if (pnn
+	    && binary_type != NOT_APPROACHING
+	    && par->get_parent() == pnn->get_parent()) {
+
+	    // Note that the code here is very similar to that used
+	    // in startup_unperturbed_motion().
+
+	    // Relative to root is too general if par and pnn have the
+	    // same parent, but keep as is...
 
 	    vec ppos = hdyn_something_relative_to_root(par,
 						       &hdyn::get_pred_pos);
@@ -3083,17 +3213,20 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    vec nvel = hdyn_something_relative_to_root(pnn,
 						       &hdyn::get_pred_vel);
 
-	    real m = par->get_mass() + pnn->get_mass();
-	    real mu = par->get_mass() * pnn->get_mass() / m;
-	    real r = abs(npos - ppos);
-	    real vsq = square(nvel - pvel);
+	    real m12 = par->get_mass();
+	    real m3 = pnn->get_mass();
+	    real m123 = m12 + m3;
+	    real mu123 = m12 * m3 / m123;
+	    real R = abs(npos - ppos);
+	    real Vsq = square(nvel - pvel);
 
-	    real E = mu*(0.5*vsq - m/r);
+	    real E = mu123*(0.5*Vsq - m123/R);
 
 	    if (E < 0) {
 
-		// Need kT for comparison.  Only going to do this rarely, so
-		// just do it the hard way.  (Could save kT in the story...)
+		// We need kT for comparison.  This should be a relatively
+		// rare calculation, so just do it the hard way.  (Could
+		// perhaps save kT in the root dyn story...?)
 
 		int ntop = 0;
 		real kin = 0;
@@ -3103,32 +3236,165 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		}
 		real kT = 2*kin/(3*ntop);
 
-		if (E < -0.1*kT) {	// conservative -- will improve
+		if (E < -0.1*kT) {		// same 0.1 as in startup_...
 
-		    // ***** Randomize the binary orientation. *****
+		    bool randomize = false;	// try Fix 2 first
 
-		    rotate_kepler(kep);
-		    update_dyn_from_kepler();
+		    if (!randomize) {
 
-		    if (verbose) {
-			int p = cerr.precision(HIGH_PRECISION);
-			cerr << endl
-			     << "integrate_unperturbed_motion: "
-			     << "applied random rotation to "
-			     << parent->format_label()
-			     << endl
-			     << "    at time " << system_time << ",  outer ";
-			cerr.precision(p);
-			PRL(E/kT);
+			// Fix 2: Compute the tidal error and absorb it.
+			//
+			// Note:  Numerical experiments indicate that the
+			// 	      change in the total energy is indeed well
+			//	      described by de_tidal computed below.
+
+			vec pos1 = ppos + get_pos();
+			hdyn *sis = get_younger_sister();
+			vec pos2 = ppos + sis->get_pos();
+			real r13 = abs(npos - pos1);
+			real r23 = abs(npos - pos2);
+			real m1 = get_mass();
+			real m2 = sis->get_mass();
+
+			// Tidal error:
+
+			real de_tidal = -m3 * (m1/r13 + m2/r23 - m12/R);
+
+			if (verbose) {
+			    int p = cerr.precision(HIGH_PRECISION);
+			    cerr << endl
+				 << "integrate_unperturbed_motion: "
+				 << "absorbing tidal error for "
+				 << parent->format_label()
+				 << endl
+				 << "    at time " << system_time
+				 << ",  ";
+			    cerr.precision(p);
+			    PRC(E/kT); PRL(de_tidal);
+#if 0
+			    // Aside: Quadrupole approximation -m3*dphi seems to
+			    // be a good approximation to the exact de_tidal:
+
+			    real r12 = abs(get_pos()-sis->get_pos());
+			    real dph = m1/r13 + m2/r23 - m12/R;
+
+			    real costh = (pos2-pos1)*(npos-ppos)
+						/(R*r12);
+			    real mu12 = m1*m2/m12;
+			    real dphi = 0.5*mu12*r12*r12*(3*costh*costh-1)
+				    			 /pow(R,3);
+
+			    PRI(4); PRC(m1); PRC(m2); PRC(m3); PRL(m12);
+			    PRI(4); PRC(r12); PRC(r13); PRL(r23);
+			    PRI(4); PRC(R); PRL(m1/r13 + m2/r23 - m12/R);
+			    PRI(4); PRL(pos1);
+			    PRI(4); PRL(pos2);
+			    PRI(4); PRL(ppos);
+			    PRI(4); PRL(npos);
+			    PRI(4); PRL(pos2-pos1);
+			    PRI(4); PRL(npos-ppos);
+			    PRI(4); PRL((pos2-pos1)*(npos-ppos));
+			    PRI(4); PRC(mu12); PRL(costh);
+			    PRI(4); PRC(r12/R); PRL(r12*r12/pow(R,3));
+			    PRI(4); PRC(dphi), PRL(-m3*dphi/de_tidal);
+#endif
+			}
+
+			if (abs(de_tidal) > 0.25*mu123*Vsq) {
+
+			    // Error de_tidal is suspiciously large.  Could
+			    // correct exactly by rotating the binary, but
+			    // for now just resort to randomizing it.
+
+			    if (verbose)
+				cerr << "    de_tidal too large: "
+				     << "randomizing binary orientation"
+				     << endl;
+
+			    randomize = true;
+
+			} else {
+
+			    // Absorb the error.  Too complicated to adjust
+			    // velocities in non-synchronous nodes, so start by 
+			    // advancing par and pnn to the current time, if
+			    // necessary.  (Do this before terminating the
+			    // unperturbed motion, for consistency.)
+
+			    par->synchronize_node();
+			    pnn->synchronize_node();
+
+			    // PRI(4); PRL(par->get_timestep());
+			    // PRI(4); PRL(pnn->get_timestep());
+
+			    // Note that we should really repeat the entire
+			    // previous calculation, since all quantities will
+			    // change slightly once we move from predicted to
+			    // corrected quantities.  Ignore this detail and
+			    // use the computed de_tidal, but recompute the
+			    // velocities, Vsq, etc.
+
+			    pvel = hdyn_something_relative_to_root(par,
+							      &hdyn::get_vel);
+			    nvel = hdyn_something_relative_to_root(pnn,
+							      &hdyn::get_vel);
+			    vec Vcm = (m12*pvel + m3*nvel) / m123;
+			    vec V = nvel - pvel;
+			    Vsq = square(V);
+
+			    // Adjust velocities and correct jerks for the
+			    // mutual interaction between par and pnn.  Want
+			    // to change the relative velocity of par and pnn
+			    // to increase 0.5*mu123*Vsq by -de_tidal, without
+			    // changing their center-of-mass velocity.
+
+			    real Vfac = sqrt(1 - de_tidal/(0.5*mu123*Vsq));
+			    real facp = -Vfac*m3/m123;
+			    real facn = Vfac*m12/m123;
+
+			    if (verbose) {
+				PRI(4); PRC(Vfac); PRC(facp); PRL(facn);
+			    }
+
+			    vec dpvel = Vcm + facp*V - pvel;
+			    vec dnvel = Vcm + facn*V - nvel;
+
+			    par->inc_vel(dpvel);
+			    pnn->inc_vel(dnvel);
+
+			    // *Neglect* jerk corrections for now...
+
+			}
+		    }
+
+		    if (randomize) {		// value may have changed
+
+			// Fix 1: Randomize the binary orientation.
+
+			rotate_kepler(kep);
+			update_dyn_from_kepler();
+
+			if (verbose) {
+			    int p = cerr.precision(HIGH_PRECISION);
+			    cerr << endl
+				 << "integrate_unperturbed_motion: "
+				 << "applied random rotation to "
+				 << parent->format_label()
+				 << endl
+				 << "    at time " << system_time
+				 << ",  outer ";
+			    cerr.precision(p);
+			    PRL(E/kT);
+			}
 		    }
 		}
 	    }
 	}
 #endif
 
-	// Start by correcting any perturber lists containing the CM.
-	// (This would be repaired anyway at the next perturbee CM step,
-	// but that may be too late...)
+	// Correct any perturber lists containing the CM.  (This would be
+	// repaired anyway at the next perturbee CM step, but that may be
+	// too late...)
 
 	// PRL(save_unpert);
 	// PRL(binary_type);
@@ -3355,7 +3621,8 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		while (timestep > target_timestep) timestep /= 2;
 
 		if (diag->report_continue_unperturbed)
-		    cerr << "\nintegrate_unperturbed_motion: timestep for "
+		    cerr << endl
+			 << "integrate_unperturbed_motion: timestep for "
 		         << format_label() << " reduced to " << timestep
 			 << endl << "                              "
 			 << "on restart at time " << time
@@ -3366,6 +3633,14 @@ bool hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    }
 	}
     }
+
+#if 0
+    if (binary_type != NOT_APPROACHING) {
+	PRC(timestep);
+	PRL(get_binary_sister()->timestep);
+	PRL(get_parent()->timestep);
+    }
+#endif
 
     return unpert;
 }
