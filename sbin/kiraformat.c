@@ -304,7 +304,7 @@ for easy indexing.\n",
 		vputfull( &s_tmpv );
 	    } else {
 		at += fprintf(stdout, "tmpv=\n");
-		copybytes(4*8, stdin, stdout);
+		copybytes(8*8, stdin, stdout);
 	    }
 	    continue;
 
