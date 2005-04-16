@@ -155,31 +155,48 @@ AM_CONDITIONAL(USE_SDYN, [test "x$sdyn" = "xyes"])
 AC_ARG_WITH(grape,
     AS_HELP_STRING([--with-grape], use the GRAPE [[[default=yes]]]),
     [grape="$withval"])
+
+# Possible values of grape are "", "no", and "yes".
+
 if test -z "$grape" -o "x$grape" = "xyes"; then
+
     if test -f local/grape.sh; then
         . local/grape.sh
+	grape=yes
     elif test "x$grape" = "xyes"; then
         AC_MSG_ERROR([GRAPE was selected but configuration is missing.
 Please put relevant information in `local/grape.sh'
 as shown in `local/grape.sh.examples'.])
+	grape=no
     else
+	grape=no
+    fi
+
+#   Possible values of grape now are "no" and "yes".
+
+    if test "x$grape" = "xno"; then
         GRAPE_LDFLAGS_=
 	GRAPE_LIBS_=
 	OLD_READ_NEIGHBOUR_LIST=
     fi
+
     AC_SUBST(GRAPE_LDFLAGS, "$GRAPE_LDFLAGS_")
     AC_SUBST(GRAPE_LIBS, "$GRAPE_LIBS_")
     OLDFLAGS="$LDFLAGS"
     LDFLAGS="$LDFLAGS $GRAPE_LDFLAGS_"
 
-#   Check all named libraries for g6_open().
+#   Check all named libraries for g6_open() (GRAPE-6).
+
+    grape6=no
 
     for gl in $GRAPE_LIBS_; do
         AC_CHECK_LIB(${gl/-l/}, g6_open_, grape6=yes, grape6=no)
 	if test "x$grape6" = "xyes"; then break; fi
     done
 
-#   Check hardcoded library for h3open().
+#   Check hardcoded library for h3open() (GRAPE-4) if no GRAPE-6.
+
+    grape4=no
 
     if test "x$grape6" = "xno"; then
         AC_CHECK_LIB(g4x, h3open_, grape4=yes, grape4=no)
@@ -193,6 +210,7 @@ as shown in `local/grape.sh.examples'.])
             AC_MSG_ERROR([GRAPE was selected but a test program failed to compile.
 Please make sure correct paths are specified in `local/grape.sh'.
 See `config.log' for more details.])
+	    grape=no
         fi
     else
         AC_DEFINE(SHARE_GRAPE, 1, [Define to 1 if you want to release the GRAPE hardware periodically.])
@@ -200,6 +218,7 @@ See `config.log' for more details.])
     fi
     LDFLAGS="$OLDFLAGS"
 fi
+
 AM_CONDITIONAL(HAVE_GRAPE, [test "x$grape" = "xyes"])
 if test x"$OLD_READ_NEIGHBOUR_LIST" = "xyes"; then
     AC_DEFINE(G6_OLD_READ_NEIGHBOUR_LIST, 1, [Define to 1 to use the old (PIO) neighbor list interface.])
