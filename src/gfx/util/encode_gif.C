@@ -133,11 +133,12 @@ void encode_gif(FILE *fout, UBYTE *pixels, int depth, int siz)
     }
 
 /* ******************************************************
- * If there is no more thread to follow, we create a new node.  If the
- * current node is terminating, it will become a SEARCH node.  If it is
- * a SEARCH node, and if we still have room, it will be converted to a
- * LOOKUP node.
+ * If there is nothing to follow, we create a new node.  If the
+ * current node is terminating, it will become a SEARCH node.
+ * If it is a SEARCH node, and if we still have room, it will
+ * be converted to a LOOKUP node.
 */
+
   newNode = ++topNode;
   switch (curNode->typ ) {
    case LOOKUP:
