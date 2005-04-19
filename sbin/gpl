@@ -3,6 +3,8 @@
 # Mimic minimal plot_data-ish functionality using gnuplot.
 #
 # Options:	-c i j k ...	columns to plot (x y y...) [1 2]
+#		-f		linear fit to first plot [no]
+#		-F x1 x2	x limits to fit [plot limits]
 #		-h header	specify an overall header [none]
 #		-k		suppress "column x" key [no]
 #		-l x1 x2 y1 y2	specify plot limits [automatic]
@@ -25,6 +27,8 @@ if ($#argv > 0 && x$1 == x--help) then
     echo 'gpl:       minimal subset of gnuplot commands, with data from stdin'
     echo ""
     echo 'Options:   -c i j k...     columns to plot (x y1 y2...)       [1 2]'
+    echo '           -f              linear fit to first plot            [no]'
+    echo '           -F x1 x2        x limits to fit            [plot limits]'
     echo '           -h header       specify an overall header         [none]'
     echo '           -k              suppress key giving column info     [no]'
     echo '           -l x1 x2 y1 y2  specify plot limits          [automatic]'
@@ -66,6 +70,11 @@ set Ylabel = ()
 set xlims = ""
 set ylims = ""
 
+set geom = "400x400+0+0"
+
+set fit = 0
+set xflims = ""
+
 @ i = 0
 while ($i < $#argv)
     @ i++
@@ -84,9 +93,12 @@ while ($i < $#argv)
 		@ i = $j
 	    endif
 	end
+    else if (x$arg == x-g) then
+	@ i++
+	set geom = "$argv[$i]"
     else if (x$arg == x-h) then
 	@ i++
-	set title = "$argv[$i]"
+	set title = "$title$argv[$i]"
     else if (x$arg == x-k) then
 	set nokey = 1
     else if (x$arg == x-l) then
@@ -127,6 +139,12 @@ while ($i < $#argv)
 		@ i = $j
 	    endif
 	end
+    else if (x$arg == x-f) then
+	@ fit = 1 - $fit
+    else if (x$arg == x-F) then
+	@ i++ ; set x1 = $argv[$i]
+	@ i++ ; set x2 = $argv[$i]
+	set xflims = "[$x1 : $x2]"
     endif
 end
 
@@ -162,7 +180,7 @@ if ($#col > 1) then
     echo set tmargin 2					>! $infile
     echo set bmargin 4					>> $infile
     echo set lmargin 14					>> $infile
-    echo set rmargin 8					>> $infile
+    echo set rmargin 9					>> $infile
 
     if ($nokey == 1) then
 	echo set nokey					>> $infile
@@ -189,6 +207,14 @@ if ($#col > 1) then
 	set lines = "points"
     endif
 
+    set x = $col[1]
+
+    if ($fit == 1) then
+	echo "f(x) = a*x+b"				>> $infile
+	echo "fit $xflims f(x) '$datafile' "\\		>> $infile
+ 	echo using {$x}:$col[2] via a,b			>> $infile
+    endif
+
     echo plot "$xlims" "$ylims" \\			>> $infile
 
     set x = $col[1]
@@ -208,13 +234,18 @@ if ($#col > 1) then
 	if ($i < $#col) then
 	    echo ", \"					>> $infile
 	else
-	    echo ""					>> $infile
+	    if ($fit == 0) then
+		echo ""					>> $infile
+	    else
+		echo ", f(x) with lines"		>> $infile
+	    endif
 	endif
     end
 
 #   cat $infile
 
-    gnuplot -persist $infile		# X11 output stays visible
+    setenv FIT_LOG /tmp/gpl$$.fit
+    gnuplot -geometry $geom -persist $infile	# X11 output stays visible
 
 endif
 
