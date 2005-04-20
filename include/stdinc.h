@@ -320,6 +320,10 @@ inline real	square(real x)			{return x*x;}
    typedef real xreal;
 #endif
 
+#ifndef HAVE_STPCPY
+  char *stpcpy(char *restrict, const char *restrict);
+#endif
+
 // Intended for xreal, but referenced in the real version too.
 
 void xprint(xreal x,
