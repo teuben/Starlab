@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <stdlib.h>
 #ifdef INTERNAL_OUT
 #   undef INTERNAL_OUT
 #   define  INTERNAL_OUT 1
@@ -347,7 +348,8 @@ h3calc_lasthalf_old(ni,acc,jerk,pot)
     if (debug_level) fprintf(stderr,"lasthalf ni=%d\n",*ni);
     for (i=0; i< *ni; i++){
 	double sqrt();
-	register double dx[3], dv[3], dr2, drdv, dr2i, dr3i;
+	double dx[3], dv[3];
+	register double dr2, drdv, dr2i, dr3i;
 	for(k=0;k<3 ; k++){
 	    acc[i][k] = 0.0;
 	    jerk[i][k] = 0.0;
