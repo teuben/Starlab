@@ -77,6 +77,7 @@ local void dissociate_binary(hdyn* bi)
     // to be reinitialized.
 
     delete bi->get_kepler();
+    bi->get_parent()->add_to_perturbed_list(10);
 
     bi->set_kepler(NULL);
     bi->get_binary_sister()->set_kepler(NULL);
@@ -84,13 +85,14 @@ local void dissociate_binary(hdyn* bi)
     bi->set_unperturbed_timestep(-VERY_LARGE_NUMBER);
     bi->get_binary_sister()->set_unperturbed_timestep(-VERY_LARGE_NUMBER);
 
-//    if (bi->get_kira_diag()->report_binary_mass_loss) {
+    if (bi->get_kira_diag()->report_binary_mass_loss
+	|| bi->get_kira_diag()->report_end_unperturbed) {
         int p = cerr.precision(HIGH_PRECISION);
-	cerr << endl << "dissociate_binary: deleted kepler for "
+	cerr << "dissociate_binary: deleted kepler for "
 	     << bi->format_label() << ":" << endl;
 	PRI(4); PRC(bi->get_time()); PRL(bi->get_system_time());
         cerr.precision(p);
-//    }
+    }
 
     if (has_dstar(bi)) {
 	bool update_dynamics[2] = {false, false};
@@ -109,11 +111,18 @@ local void dissociate_binary(hdyn* bi)
 
 real cpu;
 
-local void print_start_evolution(char* s, real t)
+local void print_start_evolution(char* s, hdyn *b)
 {
+    real t = b->get_system_time();
+    starbase *sb = b->get_starbase();
+    if (!sb) {
+	for_all_leaves(hdyn, b, bb)
+	    if (sb = bb->get_starbase()) break;
+    }
     cerr << "\n===============\n"
-	 << s << " evolution start at time " << t
-	 << endl;
+	 << s << " evolution start at time " << t;
+    if (sb) cerr << " [" << sb->conv_t_dyn_to_star(t) << " Myr]";
+    cerr << endl;
     cpu = cpu_time();
 }
 
@@ -139,7 +148,7 @@ bool evolve_stars(hdyn* b,
     if (b->get_use_sstar()) {
 	
 	if (b->get_kira_diag()->report_stellar_evolution)
-	    print_start_evolution("Stellar", b->get_system_time());
+	    print_start_evolution("Stellar", b);
 
 	correct_dynamics |= stellar_evolution(b);
 
@@ -152,7 +161,7 @@ bool evolve_stars(hdyn* b,
     if (b->get_use_dstar()) {
 
 	if (b->get_kira_diag()->report_stellar_evolution)
-	    print_start_evolution("Binary", b->get_system_time());
+	    print_start_evolution("Binary", b);
 
 	correct_dynamics |= binary_evolution(b, full_dump);
 
@@ -375,7 +384,7 @@ bool evolve_stars(hdyn* b,
 
 		    if (dm_fast != 0) {
 			if (b->get_kira_diag()->report_stellar_evolution) {
-			    cerr << "evolve_stars: SN in binary: ";
+			    cerr << endl << "evolve_stars: SN in binary: ";
 			    PRL(dm_fast);
 			}
 
@@ -408,9 +417,17 @@ bool evolve_stars(hdyn* b,
 		    // no binary evolution, although it is possible
 		    // that the dstar has already been deleted...
 
+		    // Currently we don't attempt to adjust the binary
+		    // parameters.  Instead, we dissociate the binary
+		    // (delete the kepler, basically) and flag it.
+		    // For more graceful handling of evolution in
+		    // binaries, better to use the "-D" option to turn
+		    // on binary (dstar) evolution.
+
 		    if (b->get_kira_diag()->report_stellar_evolution)
-			cerr << "evolve_stars: SN in non-dstar binary "
-			     << bi->format_label() << endl;
+			cerr << endl << "evolve_stars: evolution in"
+			     << " non-dstar binary " << bi->format_label()
+			     << endl;
 
 		    dissociate_binary(bi);
 
