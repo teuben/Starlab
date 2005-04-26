@@ -665,9 +665,11 @@ local void check_flag_black_holes(hdyn *b)
 
 
 
-// Local explicit declaration of a function carried by kira::main().
+// Local explicit declarations:
 
-void kira_system_id(int argc, char** argv);
+void kira_system_id(int argc, char** argv);	// in kira.C
+void set_n_threads(int n);			// in kira_ev.C
+int  get_n_threads();				// in kira_ev.C
 
 bool kira_initialize(int argc, char** argv,
 		     hdynptr& b,	// hdyn root node
@@ -777,6 +779,8 @@ bool kira_initialize(int argc, char** argv,
     bool force_nodens = false;
     bool use_dma = false;
     bool enable_smallN = false;
+
+    int n_threads = 0;
 
     char seedlog[SEED_STRING_LENGTH];
 
@@ -1038,7 +1042,8 @@ bool kira_initialize(int argc, char** argv,
 	       		break;
 	    case 't':	delta_t = atof(poptarg);
 			break;
-            case 'T':	err_exit("kira: -T option removed: use add_star");
+            case 'T':	n_threads = atoi(poptarg);
+			set_n_threads(n_threads);
 			break;
 	    case 'u':	toggle_unperturbed(b, 1);
 			break;
@@ -1515,6 +1520,12 @@ bool kira_initialize(int argc, char** argv,
 	cerr << "special treatment of multiples enabled" << endl;
     else
 	cerr << "special treatment of multiples suppressed" << endl;
+
+    n_threads = get_n_threads();
+    if (n_threads <= 0)
+	cerr << "no threads enabled" << endl;
+    else
+	cerr << "threads enabled: ", PRL(n_threads);
 
     //----------------------------------------------------------------------
 

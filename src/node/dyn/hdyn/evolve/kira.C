@@ -93,6 +93,7 @@
 ////              -s    specify random seed [take from system clock]
 ////              -S    turn on stellar evolution [off][*]
 ////              -t    specify time span of calculation [10]
+////              -T    enable experimental threading and specify n_threads [0]
 ////              -u    toggle unperturbed multiple motion [disabled][*]
 ////              -U    toggle all unperturbed motion [enabled][*]
 ////              -v    toggle "verbose" mode [on]
