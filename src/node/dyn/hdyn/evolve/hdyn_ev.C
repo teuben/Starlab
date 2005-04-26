@@ -1938,6 +1938,10 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
     // which simply return the vector without prediction, but simpler just
     // to  access bi->pred_pos and bi->pred_vel directly.   Steve (1/05)
 
+
+    // *** The following loop is a candidate for threading. ***
+
+
     for_all_daughters(hdyn, b, bi) {
 
 	n_top++;
@@ -1954,8 +1958,8 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 				    d_pos, d_vel,
 				    eps2, acc, jerk, pot, distance_squared);
 
-	    // Note from Steve (1/05)L:  Must be careful in this loop to
-	    // avoid extra function calls or memory accesses that may
+	    // Note from Steve (1/05)L:  Must be very careful in this loop
+	    // to avoid extra function calls or memory accesses that may
 	    // cause cache misses.  Best to confine calculations to data
 	    // close to the basic dynamical quantities, and to inline any
 	    // functions used.  Specifically, the use of black hole tidal
@@ -1995,15 +1999,8 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 		&& is_perturber(this, bi->mass,			// (inlined)
 				distance_squared,
 				perturbation_radius_factor)) {
-		if (n_perturbers < MAX_PERTURBERS) {
+		if (n_perturbers < MAX_PERTURBERS)
 		    perturber_list[n_perturbers] = bi;
-#if 0
-		    cerr << "added " << bi->format_label();
-		    cerr << " to perturber list of "
-			 << format_label()
-			 << endl;
-#endif
-		}
 		n_perturbers++;
 	    }
 	}
