@@ -118,28 +118,33 @@ bool stellar_evolution(dyn *b)
     // radius to each black hole.  The value returned by get_radius() will
     // always be positive, but member functions that "need to know" can
     // test the value directly and take appropriate action.
-    
+
+    // cerr << "in stellar_evolution() at time " << b->get_system_time()
+    //	 << endl << flush;
+
     for_all_leaves(dyn, b, bi) {
 	if (! bi->is_low_level_node()
 	    || !((star*)(bi->get_starbase()))->is_binary_component()) {
 
 	  starbase *sb = bi->get_starbase();
-
 	  if (DEBUG) ((star*)sb)->dump(cerr);
 
-//	  cerr << "Time = " << bi->get_system_time() << " "
-//	       << bi->format_label() << endl;
-//	  PRC(get_total_mass(bi) - bi->get_mass());
+	  // cerr << bi->format_label() << ": ";
+	  // PRL(get_total_mass(bi) - bi->get_mass());
 
 	  real old_dyn_mass = bi->get_mass();
 	  evolve_the_stars(bi, stellar_evolution_time);
 //	  sb->evolve_element(stellar_evolution_time);
 
+	  // cerr << "after evolve_the_stars()" << endl << flush;
+
+	  sb = bi->get_starbase();		// may have changed
+
 	  real new_dyn_mass_from_star = get_total_mass(bi);
-	  real new_radius =  b->get_starbase()->
-	      conv_r_star_to_dyn(sb->get_effective_radius());
+	  real new_radius = sb->conv_r_star_to_dyn(sb->get_effective_radius());
+
 	  if (old_dyn_mass <= 0 || new_dyn_mass_from_star <= 0) {
-	      PRC(old_dyn_mass);PRC(new_dyn_mass_from_star);PRL(new_radius);
+	      PRC(old_dyn_mass); PRC(new_dyn_mass_from_star); PRL(new_radius);
 	      ((star*)sb)->dump(cerr);
 	  }
 
@@ -147,10 +152,6 @@ bool stellar_evolution(dyn *b)
 
 	  if (sb->get_element_type() == Black_Hole) new_radius *= -1;
 	  bi->set_radius(new_radius);
-
-//	  cerr << bi->get_system_time() << " "
-//	       << bi->format_label() << endl;
-//	  PRC(get_total_mass(bi) - bi->get_mass());
 
 	  if (DEBUG) ((star*)sb)->dump(cerr);
  
@@ -162,6 +163,7 @@ bool stellar_evolution(dyn *b)
 //	  if (abs(new_dyn_mass_from_star-old_dyn_mass)/old_dyn_mass
 //		>=MASS_UPDATE_LIMIT)
 //	      update_all_masses = true;
+
       }
     }
 
