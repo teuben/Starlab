@@ -966,6 +966,10 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 	    if (print) {
 		if (count++ == 0) cerr << endl;
 		cerr << "read runtime diag option " << line << endl;
+	    } else if (strstr(line, "=")) {
+		if (count++ == 0) cerr << endl;
+		cerr << "ignored unknown diag option \"" << line << "\""
+		     << endl;
 	    }
 	}
 
