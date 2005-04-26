@@ -40,7 +40,7 @@ void compute_com(dyn *b, vec& com_pos, vec& com_vel)
 		 b->get_system_time(), TTOL)) {
 	com_pos = getvq(b->get_dyn_story(), "com_pos");
 	com_vel = getvq(b->get_dyn_story(), "com_vel");
-	cerr << "    using saved CM quantities" << endl;
+	cerr << "    compute_com: using saved CM quantities" << endl;
 	return;
     }
 

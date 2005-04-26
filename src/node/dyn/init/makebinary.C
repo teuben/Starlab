@@ -463,17 +463,18 @@ int main(int argc, char ** argv)
 	    upper *= scale;
 	}
 	else
-	    cerr << "makebinary: Using unscaled angular-momentum limits.\n";
+	    cerr << "makebinary: using unscaled angular-momentum limits.\n";
     }
     else if (function_select == 2) {
 	if (b->get_starbase()->conv_r_star_to_dyn(1)>0) {
 	  //	    lower = b->get_starbase()->conv_r_star_to_dyn(lower);
 	  //	    upper = b->get_starbase()->conv_r_star_to_dyn(upper);
-	  cerr << "makebinary: Do not transform upper limit to dynamical units"
-	       << endl;
+	    cerr << "makebinary: using unscaled semi-major axis limits"
+		 << endl;
 	}
 	else
-	    cerr << "makebinary: Using unscaled semi-major axis limits.\n";
+	    cerr << "makebinary: using unscaled semi-major axis limits"
+		 << endl;
     }
     else if (function_select == 3) {
 	if (find_qmatch(b->get_dyn_story(), energy_string)) {
