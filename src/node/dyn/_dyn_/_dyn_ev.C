@@ -187,6 +187,12 @@ bool _dyn_::flat_correct()
 
 //#define FIFTH_ORDER_PRED		// doesn't work yet...
 
+// *******************************************************************
+// ***  This function is a candidate for threading if b = root,    ***
+// ***  but the top-level recursion may need to be unwound first.  ***
+// ***                                         Steve, 4/05         ***
+// *******************************************************************
+
 void predict_loworder_all(_dyn_ * b,
 			  xreal t)
 {
