@@ -1,0 +1,45 @@
+#!/bin/tcsh -f
+
+if ($#argv < 1) exit
+set infile = $1
+
+# Parse the file name and determine the release number.
+# Acceptable extensions are .tar, .tar.gz, and .tgz
+
+foreach ext ("" ".tar" ".tar.gz" ".tgz")
+    set distfile = $infile$ext
+    if (-e $distfile) break
+end
+
+# Check for compression.
+
+echo cleaning CVS directories from $distfile
+set gzip = (`file $distfile | grep -i gzip`)
+set z = ""
+if ($#gzip > 0) set z = "-z"
+
+# Extract the source directory name directly from the archive.
+# (Don't try to infer it from the distribution name.)
+
+set srcdir = `tar -t $z -f $distfile | head -n 1 | awk -F '/' '{print $1;}'`
+
+# Extract the archive.
+
+set tmpdir = /tmp/$$
+mkdir $tmpdir
+tar -C $tmpdir -x $z -f $distfile	# should create $tmpdir/$srcdir
+
+echo -n "top-level directory: "; ls -d $tmpdir/$srcdir
+
+# Remove all CVS directories.
+
+rm -rf `find $tmpdir -name CVS`
+
+# Remake the tar file.
+
+mv $distfile $distfile.old
+tar -C $tmpdir -c $z -f $distfile $srcdir
+
+# Delete the temporary directory tree.
+
+rm -rf $tmpdir
