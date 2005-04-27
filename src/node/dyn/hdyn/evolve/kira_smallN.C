@@ -627,6 +627,11 @@ local inline bool terminate_binary(hdyn*& bi)
     dphi_tidal -= od->get_pot();
     PRL(dphi_tidal);
 
+    // Clear flags.
+
+    od->set_pot(0);
+    yd->set_pot(0);
+
     // Absorb dphi_total into the binary energy -- it represents the
     // omitted effect of the tidal field.  For now, simply rescale
     // the velocity.  We will investigate later how best to correct
