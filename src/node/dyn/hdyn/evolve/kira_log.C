@@ -616,12 +616,10 @@ local void get_n_and_m_bound(hdyn* b, vec& cod_vel, int& nb, real& mb)
 
 
 
-real get_thread_cpu();
-
 void update_cpu_counters(hdyn * b)
 {
     real last_cpu = b->get_kira_counters()->cpu_time;
-    real cpu = cpu_time() + get_thread_cpu();
+    real cpu = cpu_time() + b->get_thread_cpu();
     b->get_kira_counters()->cpu_time = cpu;
     b->get_kira_counters()->total_cpu_time += (cpu - last_cpu);
     write_counters_to_log(b);
