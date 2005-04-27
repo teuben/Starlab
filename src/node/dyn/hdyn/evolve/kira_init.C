@@ -15,6 +15,7 @@
 //
 //	bool kira_initialize
 
+#include "hdyn.h"
 #include "star/dstar_to_kira.h"
 #include "kira_defaults.h"
 
@@ -668,8 +669,6 @@ local void check_flag_black_holes(hdyn *b)
 // Local explicit declarations:
 
 void kira_system_id(int argc, char** argv);	// in kira.C
-void set_n_threads(int n);			// in kira_ev.C
-int  get_n_threads();				// in kira_ev.C
 
 bool kira_initialize(int argc, char** argv,
 		     hdynptr& b,	// hdyn root node
@@ -1043,7 +1042,7 @@ bool kira_initialize(int argc, char** argv,
 	    case 't':	delta_t = atof(poptarg);
 			break;
             case 'T':	n_threads = atoi(poptarg);
-			set_n_threads(n_threads);
+			b->set_n_threads(n_threads);
 			break;
 	    case 'u':	toggle_unperturbed(b, 1);
 			break;
@@ -1521,7 +1520,7 @@ bool kira_initialize(int argc, char** argv,
     else
 	cerr << "special treatment of multiples suppressed" << endl;
 
-    n_threads = get_n_threads();
+    n_threads = b->get_n_threads();
     if (n_threads <= 0)
 	cerr << "no threads enabled" << endl;
     else

@@ -44,4 +44,8 @@ if HAVE_GRAPE
   AM_LDFLAGS = $(GRAPE_LDFLAGS)
 endif
 
+#if HAVE_LIBPTHREAD
+#  kira_LDADD += -lpthread
+#endif
+
 kira_LDADD += ../stubs/libstubs.la

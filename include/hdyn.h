@@ -112,6 +112,11 @@ class  hdyn : public _dyn_ {
 //	static acc_function_ptr kira_calculate_top_level_acc_and_jerk;
 //					// function for force computation
 
+	// Thread support.
+
+	static int n_threads;		// number of active threads
+	static real thread_cpu;		// associated CPU time
+
 	// ---------------------------------------------------------------
 
 	// Run-time integration flag.  Used in correct_acc_and_jerk to
@@ -334,6 +339,13 @@ class  hdyn : public _dyn_ {
 // 	inline void
 // 	       set_kira_calculate_top_level_acc_and_jerk(acc_function_ptr f)
 // 		    {kira_calculate_top_level_acc_and_jerk = f;}
+
+	// Thread support:
+
+	void set_n_threads(int n=0)	{n_threads = n;}
+	int  get_n_threads()		{return n_threads;}
+	void set_thread_cpu(real t=0)	{thread_cpu = t;}
+	real get_thread_cpu()		{return thread_cpu;}
 
         // ----------------- Other member data accessors ------------------
 

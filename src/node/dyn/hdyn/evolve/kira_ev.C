@@ -115,20 +115,163 @@ int kira_calculate_top_level_acc_and_jerk(hdyn **next_nodes,
 						  time, restart_grape);
 }
 
-int top_level_acc_and_jerk_for_list(hdyn **next_nodes,
-				    int n_next,
-				    xreal time)
+
+
+// ************************************************************************
+// ***  This function is a candidate for threading if n_next is large.  ***
+// ***  Hmmm.  Simultaneous force calculations here may cause cache     ***
+// ***  problems in top_level_node_real_force_calculation.              ***
+// ***  Better to thread there? -- Probably too low-level??             ***
+// ***                                                    Steve, 4/05   ***
+// ************************************************************************
+
+local inline int std_top_level_acc_and_jerk_for_list(hdyn **next_nodes,
+						     int n_next,
+						     xreal time)  // not used
 {
     int n_top = 0;
 
     for (int i = 0; i < n_next; i++) {
 	hdyn *bi = next_nodes[i];
 	if (bi->is_top_level_node())
-	    n_top = bi->top_level_node_real_force_calculation(); // in hdyn_ev.C
+	    n_top += bi->top_level_node_real_force_calculation(); // hdyn_ev.C
     }
 
     return n_top;
 }
+
+#ifndef HAVE_LIBPTHREAD
+
+int top_level_acc_and_jerk_for_list(hdyn **next_nodes,
+				    int n_next,
+				    xreal time)  	// not used
+{
+    return std_top_level_acc_and_jerk_for_list(next_nodes, n_next, time);
+}
+
+
+#else
+
+// Threaded code:
+
+#include <pthread.h>
+
+typedef struct {hdyn **node_list;
+		int n_list;
+	        int thread;} arg_list;
+typedef struct {int n_top;
+		real cpu;} thread_stats;
+static thread_stats *all_stats = NULL;
+
+void *thread_top_level_acc_and_jerk_for_list(void *arg)
+{
+    arg_list *a	= (arg_list*)arg;
+    hdyn *b = a->node_list[0];
+    int n_threads = b->get_n_threads();
+
+    int n_top = 0;
+    real cpu = cpu_time();
+
+    int t = a->thread;
+    for (int i = t; i < a->n_list; i += abs(n_threads)) {
+	hdyn *bi = a->node_list[i];
+	if (bi->is_top_level_node()) {
+	    if (n_threads > 0)
+		n_top += bi->top_level_node_real_force_calculation();
+	    else
+		n_top += 1;
+	}
+    }
+
+    all_stats[t].n_top = n_top;
+    all_stats[t].cpu = cpu_time() - cpu;	// CPU time for this thread
+
+    if (t == 0)
+	return (void*)1;
+    else
+	pthread_exit((void*)1);			// anything non-NULL will do
+}
+
+int top_level_acc_and_jerk_for_list(hdyn **next_nodes,
+				    int n_next,
+				    xreal time)			  // not used
+{
+    if (n_next <= 0)
+
+	return 0;
+
+    else if (n_next <= 1 || next_nodes[0]->get_n_threads() == 0)
+
+	return std_top_level_acc_and_jerk_for_list(next_nodes,
+						   n_next, time);
+
+    else {
+
+	hdyn *b = next_nodes[0];
+	int n_threads = b->get_n_threads();
+
+	// Use threads to parallelize the calculation.
+
+	if (!all_stats) {
+	    all_stats = new thread_stats[abs(n_threads)];
+	    if (!all_stats) err_exit("Can't create all_stats for threads.");
+	}
+
+	pthread_t threads[abs(n_threads)];
+	arg_list a[abs(n_threads)];
+
+	// Start up abs(n_threads)-1 threads.  Main program will be 0.
+
+	for (int t = 1; t < abs(n_threads); t++) {
+
+	    // Place argument in arg_list for transmittal to the thread.
+
+	    a[t].node_list = next_nodes;
+	    a[t].n_list = n_next;
+	    a[t].thread = t;
+
+	    int return_code
+		= pthread_create(threads+t, NULL,
+				 thread_top_level_acc_and_jerk_for_list,
+				 (void *)(a+t));
+	    if (return_code) {
+		PRL(return_code);
+		err_exit("thread creation error");
+	    }
+	}
+
+	int n_top = 0;
+
+	// We are thread 0.  This is ugly...
+
+	a[0].node_list = next_nodes;
+	a[0].n_list = n_next;
+	a[0].thread = 0;
+	void *stat = thread_top_level_acc_and_jerk_for_list((void*)a);
+	if (stat)
+	    n_top += all_stats[0].n_top;
+
+	// Wait for the threads to finish and combine the results.
+
+	for (int t = 1; t < abs(n_threads); t++) {
+	    void *stat;
+	    int rc = pthread_join(threads[t], &stat);
+
+	    if (stat) {
+		n_top += all_stats[t].n_top;
+		b->set_thread_cpu(b->get_thread_cpu() + all_stats[t].cpu);
+	    }
+	}
+
+	if (n_threads > 0)
+	    return n_top;
+	else
+	    return std_top_level_acc_and_jerk_for_list(next_nodes,
+						       n_next, time);
+    }
+}
+
+#endif
 
 
 
