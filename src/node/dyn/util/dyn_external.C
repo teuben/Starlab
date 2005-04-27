@@ -100,7 +100,8 @@ local inline void add_tidal(dyn *b,
     pot += 0.5*(a1*x*x + a3*z*z);
 }
 
-local inline real tidal_pot(dyn *b)
+local inline real tidal_pot(dyn *b,
+			    void (*pot_func)(dyn *, real) = NULL)
 {
     // Determine the tidal component of the potential energy
     // of root node b.
@@ -120,11 +121,12 @@ local inline real tidal_pot(dyn *b)
     for_all_daughters(dyn, b, bb) {
 	real x = bb->get_pos()[0] - cen[0];
 	real z = bb->get_pos()[2] - cen[0];
-	real dp = a1*x*x + a3*z*z;
+	real dp = 0.5*(a1*x*x + a3*z*z);
 	dpot += bb->get_mass() * dp;
+	if (pot_func) pot_func(bb, dp);
     }
 
-    return 0.5*dpot;
+    return dpot;
 }
 
 //-------------------------------------------------------------------------
@@ -297,6 +299,8 @@ local inline real plummer_pot(dyn *b,
 {
     // Determine the Plummer-field component of the potential energy
     // of root node b.
+
+    // Add potential terms to top-level nodes only.
 
     real M = b->get_p_mass();
     if (M == 0) return 0;
@@ -644,6 +648,8 @@ local inline real power_law_pot(dyn *b,
     // Determine the power-law-field component of the potential energy
     // of root node b.
 
+    // Add potential terms to top-level nodes only.
+
     real A = b->get_pl_coeff();
     if (A == 0) return 0;
 
@@ -852,7 +858,7 @@ real get_external_pot(dyn *b,
 
 	// Loop through the known external fields.
 
-	if (GETBIT(ext, 0)) dpot += tidal_pot(b);
+	if (GETBIT(ext, 0)) dpot += tidal_pot(b, pot_func);
 	if (GETBIT(ext, 1)) dpot += plummer_pot(b, pot_func);
 	if (GETBIT(ext, 2)) dpot += power_law_pot(b, pot_func);
 	// if (GETBIT(ext, 3)) dpot += other_pot(b, pot_func);
