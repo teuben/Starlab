@@ -261,6 +261,7 @@ main(int argc, char ** argv)
     
     dyn *b, *by, *bo;
     b = new dyn();				// root node
+    b->set_root(b);
 
     if (C_flag) b->set_col_output(true);
 

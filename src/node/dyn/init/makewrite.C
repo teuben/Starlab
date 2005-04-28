@@ -74,6 +74,8 @@ main(int argc, char ** argv)
 
     dyn *b, *by, *bo;
     b = new dyn();
+    b->set_root(b);
+
     bo = new dyn();
     b->set_oldest_daughter(bo);
     bo->set_parent(b);

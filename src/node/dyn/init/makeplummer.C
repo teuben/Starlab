@@ -352,6 +352,7 @@ main(int argc, char ** argv)
     
     dyn *b, *by, *bo;
     b = new dyn();
+    b->set_root();
 
     if (C_flag) b->set_col_output(true);
 

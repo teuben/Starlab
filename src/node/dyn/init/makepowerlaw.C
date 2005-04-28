@@ -295,6 +295,7 @@ int main(int argc, char ** argv) {
     dyn *b, *by, *bo;
 
     b = new dyn();
+    b->set_root(b);
     if (i_flag) b->set_label("root");
 
     if (C_flag) b->set_col_output(true);

@@ -149,6 +149,8 @@ main(int argc, char ** argv) {
 
     dyn *b, *by, *bo;
     b = new dyn();
+    b->set_root(b);
+
     bo = new dyn();
     if (i_flag) bo->set_label(1);
     b->set_oldest_daughter(bo);

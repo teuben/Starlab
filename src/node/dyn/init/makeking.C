@@ -943,6 +943,7 @@ main(int argc, char ** argv)
 	    err_exit("makeking: n > 0 required");
 
 	b = new dyn();
+	b->set_root(b);
 	dyn *by, *bo;
 
 	bo = new dyn();

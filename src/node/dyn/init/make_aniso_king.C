@@ -439,8 +439,9 @@ main(int argc, char ** argv)
     else {
 
 	b = new dyn();
-	dyn *by, *bo;
+	b->set_root(b);
 
+	dyn *by, *bo;
 	bo = new dyn();
 	if (i_flag)
 	    bo->set_label(1);
