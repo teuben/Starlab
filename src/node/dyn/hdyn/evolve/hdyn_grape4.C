@@ -595,8 +595,10 @@ local inline void jpdma_node(hdyn *b,
 
     } else {
 
-	pxj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_pred_pos);
-	pvj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_pred_vel);
+	// Changed pred to nopred... (Steve, 4/05)
+
+	pxj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_nopred_pos);
+	pvj[jm] = hdyn_something_relative_to_root(b, &hdyn::get_nopred_vel);
 	ptj[jm] = predicted_time;
 	pmj[jm] = b->get_mass();
 
@@ -694,8 +696,11 @@ local void force_by_grape4_on_leaves(real time, int ni, hdyn * nodes[], int nj)
 	b = nodes[i];
 	
 	j = i;
-	pxl[j] = hdyn_something_relative_to_root(b, &hdyn::get_pred_pos);
-	pvl[j] = hdyn_something_relative_to_root(b, &hdyn::get_pred_vel);
+
+	// Changed pred to nopred here... (Steve, 4/05).
+
+	pxl[j] = hdyn_something_relative_to_root(b, &hdyn::get_nopred_pos);
+	pvl[j] = hdyn_something_relative_to_root(b, &hdyn::get_nopred_vel);
 	ph2l[j] = 0;
 	if (dbg_mode) {
 	    cerr << "force on  particle "; b->print_label(cerr);

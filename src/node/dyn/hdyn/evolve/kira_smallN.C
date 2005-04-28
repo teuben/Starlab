@@ -1571,7 +1571,8 @@ real smallN_evolve(hdyn *b,
 
 	    dt = acc_and_jerk_and_get_dt(b);
 
-	    cerr << endl << "new structure: "; pp(b); cerr << ",  ";
+	    cerr << endl << "new structure: "; pp(b);
+	    cerr << ",  ";
 	    PRL(dt);
 
 	    set_all_timesteps(b, dt);

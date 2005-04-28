@@ -3541,14 +3541,16 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    // Relative to root is too general if par and pnn have the
 	    // same parent, but keep as is...
 
+	    // Changed pred to nopred here... (Steve, 4/05)
+
 	    vec ppos = hdyn_something_relative_to_root(par,
-						       &hdyn::get_pred_pos);
+						       &hdyn::get_nopred_pos);
 	    vec pvel = hdyn_something_relative_to_root(par,
-						       &hdyn::get_pred_vel);
+						       &hdyn::get_nopred_vel);
 	    vec npos = hdyn_something_relative_to_root(pnn,
-						       &hdyn::get_pred_pos);
+						       &hdyn::get_nopred_pos);
 	    vec nvel = hdyn_something_relative_to_root(pnn,
-						       &hdyn::get_pred_vel);
+						       &hdyn::get_nopred_vel);
 
 	    real m12 = par->get_mass();
 	    real m3 = pnn->get_mass();

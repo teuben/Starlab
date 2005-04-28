@@ -2519,7 +2519,9 @@ void hdyn::calculate_partial_acc_and_jerk(hdyn * top,
 
 void hdyn::check_add_perturber(hdyn* p, vec& this_pos)
 {
-    vec ppos = hdyn_something_relative_to_root(p, &hdyn::get_pred_pos);
+    // Changed pred to nopred... (Steve, 4/05)
+
+    vec ppos = hdyn_something_relative_to_root(p, &hdyn::get_nopred_pos);
 
      bool print = false;
 
@@ -2604,8 +2606,10 @@ void hdyn::create_low_level_perturber_list(hdyn* pnode)
     perturbation_radius_factor
 	= define_perturbation_radius_factor(this, gamma23);
 
+    // Changed pred to nopred... (Steve 4/05).
+
     vec this_pos = hdyn_something_relative_to_root(this,
-						   &hdyn::get_pred_pos);
+						   &hdyn::get_nopred_pos);
     // First add sisters, aunts, etc. up to pnode...
 
     hdyn* p = this;
