@@ -649,15 +649,19 @@ int integrate_list(hdyn * b,
 
 		    if (bi->is_top_level_node()
 			&& b->get_external_field() > 0) {
-			vec acc, jerk;
-			real pot;
+
+			vec acc = bi->get_acc(), jerk = bi->get_jerk();
+			real pot = bi->get_pot();
+
+			// (Really only need acc to be correctly set...)
+
 			get_external_acc(bi,
-					 bi->get_pred_pos(),
-					 bi->get_pred_vel(),
+					 bi->get_nopred_pos(),
+					 bi->get_nopred_vel(),
 					 pot, acc, jerk);
-			bi->inc_pot(pot);
-			bi->inc_acc(acc);
-			bi->inc_jerk(jerk);
+			bi->set_pot(pot);
+			bi->set_acc(acc);
+			bi->set_jerk(jerk);
 		    }
 
 		    if (!bi->correct_and_update()) {

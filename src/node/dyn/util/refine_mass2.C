@@ -23,16 +23,16 @@
 
 local inline vec ext_acc(dyn *b, vec pos)
 {
-    vec v = 0, acc, j;
-    real p;
+    vec v = 0, acc = 0, j = 0;
+    real p = 0;
     get_external_acc(b, pos, v, p, acc, j);		// (discard p and j)
     return acc;
 }
 
 local inline real ext_pot(dyn *b, vec pos)
 {
-    vec v = 0, a, j;
-    real pot;
+    vec v = 0, a = 0, j = 0;
+    real pot = 0;
     get_external_acc(b, pos, v, pot, a, j, true);	// (discard a and j)
     return pot;
 }

@@ -56,6 +56,8 @@
 // Tidal field (quadrupole):
 //-------------------------------------------------------------------------
 
+#define USE_CORIOLIS		// comment out to suppres the Coriolis terms
+
 local inline void add_tidal(dyn *b,
 			    vec pos,
 			    vec vel,
@@ -80,16 +82,24 @@ local inline void add_tidal(dyn *b,
     if (!pot_only) {
 
 	vec da_tidal_centrifugal = -vec(a1*dx[0], 0.0, a3*dx[2]);
-	vec da_coriolis = 2 * b->get_omega()
-	    		       * vec(vel[1], -vel[0], 0.0);
+	vec da_coriolis = 0;
+#ifdef USE_CORIOLIS
+	da_coriolis = 2 * b->get_omega() * vec(vel[1], -vel[0], 0.0);
+#endif
 
 	// Must update acc BEFORE computing dj for velocity-dependent forces!
 
 	acc += da_tidal_centrifugal + da_coriolis;
 
 	vec dj_tidal_centrifugal = -vec(a1*vel[0], 0.0, a3*vel[2]);
-	vec dj_coriolis = 2 * b->get_omega()
-      			       * vec(acc[1], -acc[0], 0.0);
+	vec dj_coriolis = 0;
+#ifdef USE_CORIOLIS
+
+	// Note that the acc here *must* be the total acc, not just
+	// the tidal component.
+
+	dj_coriolis = 2 * b->get_omega() * vec(acc[1], -acc[0], 0.0);
+#endif
 
 	jerk += dj_tidal_centrifugal + dj_coriolis;
     }
@@ -777,12 +787,13 @@ void get_external_acc(dyn *b,
 {
     // Compute the external components of the acceleration, jerk,
     // and pot of top-level node b, using the pos and vel provided,
-    // assumed relative to b.  The node pointer b is used only as a
+    // assumed relative to b.  Add the external quantities to the acc,
+    // jerk, and pot provided.  The node pointer b is used only as a
     // convenient means of passing static global dyn data.  We *assume*
     // that the root node for the system is correctly set.
 
-    pot = 0;
-    if (!pot_only) acc = jerk = 0;
+    // *** Note that this version no longer returns just the tidal terms
+    // *** in acc, jerk, and pot, but rather updates them.  (Steve, 4/05)
 
     unsigned int ext = b->get_external_field();
 
@@ -822,8 +833,8 @@ real vcirc(dyn *b, vec r)
     // as a convenient means of passing static dyn class data.  We *assume*
     // that the root node for the system is correctly set.
 
-    vec acc, jerk;
-    real pot;
+    vec acc = 0, jerk = 0;
+    real pot = 0;
 
     get_external_acc(b, r, vec(0), pot, acc, jerk);
 

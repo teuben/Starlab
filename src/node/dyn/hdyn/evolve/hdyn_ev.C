@@ -607,6 +607,22 @@ local inline real new_timestep(hdyn *b,			// this node
 	    // Note that overflow may conceivably occur here or below,
 	    // as the higher derivatives may become very large...
 
+#if 0
+	    // Handy to be able to check details (e.g. in case of
+	    // inconsistencies in external fields).
+
+	    cerr << endl;
+	    PRL(b->format_label());
+	    PRL(acc);
+	    PRL(jerk);
+	    PRL(bt2);
+	    PRL(at3);
+	    PRC(abs(acc)); PRL(abs(jerk));
+	    PRC(a2); PRL(j2);
+	    PRC(abs(bt2)); PRL(abs(at3));
+	    PRC(k2); PRL(l2);
+#endif
+
 	} else {
 
 	    // Break the calculation up into pieces, for debugging purposes.
@@ -734,7 +750,8 @@ local inline real new_timestep(hdyn *b,			// this node
     }
 
 
-    // EXPERIMENTAL:  Reduce the time step of a strongly perturbed binary component.
+    // EXPERIMENTAL: Reduce the time step of a strongly perturbed binary
+    //		     component.
     // Exponent in the pow() comes from a simple comparison of time scales...
 
     if (b->is_low_level_node() && b->get_perturbation_squared() > 1)
@@ -863,8 +880,17 @@ void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
 
 #if 0
     if (time > 0) {
+
+	// Handy to be able to check details (e.g. in case of
+	// inconsistencies in external fields).
+
 	cerr << endl;
+	PRC(time); PRL(format_label());
 	PRI(4); PRC(index); PRL(dt);
+	PRI(4); PRL(pred_pos);
+	PRI(4); PRL(pos);
+	PRI(4); PRL(pred_vel);
+	PRI(4); PRL(vel);
 	PRI(4); PRL(old_acc);
 	PRI(4); PRL(acc);
 	PRI(4); PRL(old_jerk);
@@ -873,6 +899,12 @@ void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
 	PRI(4); PRL(2*bt2/(dt*dt));
 	PRI(4); PRL((jerk-old_jerk)/dt);
 	PRI(4); PRL(6*at3/(dt*dt*dt));
+	PRI(4); PRL(-3 * (old_acc - acc));
+	PRI(4); PRL(-dt * (2 * old_jerk + jerk));
+	PRI(4); PRL(bt2);
+	PRI(4); PRL(2 * (old_acc - acc));
+	PRI(4); PRL(dt * (old_jerk + jerk));
+	PRI(4); PRL(at3);
     }
 #endif
 
@@ -4303,15 +4335,9 @@ void hdyn::integrate_node(bool exact,			// default = true
 	calculate_acc_and_jerk(exact);
 	if (exact) set_valid_perturbers(false);
 
-	if (tidal_type && is_top_level_node()) {
-	    real dpot;
-	    vec dacc, djerk;
+	if (tidal_type && is_top_level_node())
 	    get_external_acc(this, pred_pos, pred_vel,
-			     dpot, dacc, djerk);
-	    inc_pot(dpot);
-	    inc_acc(dacc);
-	    inc_jerk(djerk);
-	}
+			     pot, acc, jerk);
 
 	correct_and_update();		// sets time, timestep,...
 	// update();			// note: no retry on error

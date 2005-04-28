@@ -531,15 +531,18 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 
 	    for (int i = 0; i < n_top; i++) {
 
-		hdyn *bb = next_nodes[i];
+		hdyn *bi = next_nodes[i];
 
-		real pot;
-		vec acc, jerk;
-		get_external_acc(bb, bb->get_pred_pos(), bb->get_pred_vel(),
+		real pot = bi->get_pot();
+		vec acc = bi->get_acc(), jerk = bi->get_jerk();
+
+		// (Really only need acc to be correctly set...)
+
+		get_external_acc(bi, bi->get_nopred_pos(), bi->get_nopred_vel(),
 				 pot, acc, jerk);
-		bb->inc_pot(pot);
-		bb->inc_acc(acc);
-		bb->inc_jerk(jerk);
+		bi->set_pot(pot);
+		bi->set_acc(acc);
+		bi->set_jerk(jerk);
 	    }
 	}
     }
@@ -753,13 +756,16 @@ void kira_synchronize_tree(hdyn *b,
 
 	    for (int i = 0; i < n_next; i++) {
 		hdyn *bi = next_nodes[i];
-		real pot;
-		vec acc, jerk;
+		real pot = bi->get_pot();
+		vec acc = bi->get_acc(), jerk = bi->get_jerk();
+
+		// (Really only need acc to be correctly set...)
+
 		get_external_acc(bi, bi->get_pred_pos(), bi->get_pred_vel(),
 				 pot, acc, jerk);
-		bi->inc_pot(pot);
-		bi->inc_acc(acc);
-		bi->inc_jerk(jerk);
+		bi->set_pot(pot);
+		bi->set_acc(acc);
+		bi->set_jerk(jerk);
 	    }
 	}
 
