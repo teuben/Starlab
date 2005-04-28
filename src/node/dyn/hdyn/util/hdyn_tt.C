@@ -387,8 +387,8 @@ void check_consistency_of_nodes(hdyn * node)
 	if (node->get_oldest_daughter() != NULL) {
 	  check_consistency_of_node(node, &hdyn::get_pos, "pos");
 	  check_consistency_of_node(node, &hdyn::get_vel, "vel");
-	  check_consistency_of_node(node, &hdyn::get_pred_pos, "ppos");
-	  check_consistency_of_node(node, &hdyn::get_pred_vel, "pvel");
+	  check_consistency_of_node(node, &hdyn::get_nopred_pos, "ppos");
+	  check_consistency_of_node(node, &hdyn::get_nopred_vel, "pvel");
 	  check_consistency_of_node(node, &hdyn::get_acc, "acc");
 	  check_consistency_of_node(node, &hdyn::get_jerk, "jerk");
 	  check_consistency_of_node(node, &hdyn::get_old_acc, "old_acc");
