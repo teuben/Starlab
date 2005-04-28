@@ -28,7 +28,8 @@
 
 node * mknode_mass(int n, real m)
 {
-    node *root = mknode(n);	// Note that sequential labels are always set.
+    node *root = mknode(n);	// note that sequential labels are always set.
+    root->set_root(root);
 
     root->set_mass(m);
     for_all_daughters(node, root, b) b->set_mass(m/n);

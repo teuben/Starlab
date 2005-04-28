@@ -168,7 +168,7 @@ class node
 	    if (this == root) root = NULL;
 	}
 
-	inline bool is_valid()
+	inline bool is_valid() const
 	    {return (node_flag == __VALID_NODE__);}
 	inline void set_invalid()
 	    {node_flag = __INVALID_NODE__;}
@@ -215,6 +215,7 @@ class node
 	// note that some functions (e.g. node::scan_log_story)
 	// simply set the story, and don't bother deleting
 	// the old one, which is normally made with new_dyn()
+
 	void  set_log_story(story * s) {
 	    if (log_story != NULL) delete log_story;
 	    log_story = s;
@@ -228,28 +229,23 @@ class node
 	void  inc_mass(const real d_mass)          {mass += d_mass;}
 	void  scale_mass(const real scale_factor)  {mass *= scale_factor;}
 
-	int  get_index()                    {return index;}
-	char * get_name()                   {return name;}
+	int  get_index()		     const {return index;}
+	char * get_name()		     const {return name;}
 
-	inline real  get_mass()             {return mass;}
+	inline real  get_mass()		     const {return mass;}
 
-	inline node * get_parent()          {return parent;}
-	inline node * get_oldest_daughter() {return oldest_daughter;}
-	inline node * get_younger_sister()  {return younger_sister;}
-	inline node * get_elder_sister()    {return elder_sister;}
-
-	void set_root(node * b)		    {root = b;}
-	node * get_root();
+	inline node * get_parent()	     const {return parent;}
+	inline node * get_oldest_daughter()  const {return oldest_daughter;}
+	inline node * get_younger_sister()   const {return younger_sister;}
+	inline node * get_elder_sister()     const {return elder_sister;}
 
 	// Potential time sink: define here and make inline!
 
-	// node * get_top_level_node();
+	inline node* get_top_level_node() const {
 
-	inline node* get_top_level_node() {
+	    if (parent == NULL) return NULL;	// root node
 
-	    if (parent == NULL) return NULL;	// Root node
-
-	    node* n = this;
+	    node* n = const_cast<node*>(this);
 	    node* g = parent->get_parent();
 
 	    while (g) {
@@ -259,18 +255,48 @@ class node
 	    return n;
 	}
 
+	// Set or find the root node pointer.
+
+	inline void set_root(node * b = NULL) {
+	    if (b)
+		root = b;
+	    else {
+		if (parent == NULL)
+		    root = this;
+		else
+		    root = get_top_level_node()->get_parent();
+	    }
+	}
+
+	// As of 4/05, get_root() *never* sets the root node pointer.
+	// We assume that set_root() has always been called first.
+	// All functions that create or read data from a file should
+	// call set_root() once the system has been created.  If for
+	// some reason root is not set, this function reverts to the
+	// original (slow) option of searching for the root node.
+
+	inline node* get_root() const
+	{
+	    if (root) return root;
+
+	    if (parent == NULL)
+		return const_cast<node*>(this);
+	    else
+		return get_top_level_node()->get_parent();
+	}
+
 	node * get_binary_sister();
 
-	void  set_hydrobase(hydrobase * hb) {hbase = hb;}
-	void  set_starbase(starbase * sb)  {sbase = sb;}
+	void set_hydrobase(hydrobase * hb) {hbase = hb;}
+	void set_starbase(starbase * sb)   {sbase = sb;}
 
-	hydrobase * get_hydrobase()         {return hbase;}
-	starbase * get_starbase()           {return sbase;}
+	hydrobase * get_hydrobase()	const {return hbase;}
+	starbase  * get_starbase()	const {return sbase;}
 
-	story * get_log_story()             {return log_story;}
-	story * get_dyn_story() const       {return dyn_story;}
-	story * get_hydro_story()           {return hbase->get_hydro_story();}
-	story * get_star_story()            {return sbase->get_star_story();}
+	story * get_log_story()		const {return log_story;}
+	story * get_dyn_story()		const {return dyn_story;}
+	story * get_hydro_story()	const {return hbase->get_hydro_story();}
+	story * get_star_story()	const {return sbase->get_star_story();}
 
 	virtual void null_pointers();
 	virtual void print_static(ostream &s = cerr);
@@ -290,48 +316,49 @@ class node
 					 bool print_xreal = true,
 					 int short_output = 0);
 
-	inline bool is_isolated()
+	inline bool is_isolated() const
 	    {return (parent == NULL && oldest_daughter==NULL);}
-        inline bool is_root()
+        inline bool is_root() const
 	    {return (parent == NULL);}
-	inline bool is_leaf()
+	inline bool is_leaf() const
 	    {return (parent != NULL && oldest_daughter==NULL);}
 
-	inline bool is_top_level_node()	    {if (!root) get_root();
-					     if (parent != root) return false;
-					     return true;
-					    }
-	inline bool is_top_level_leaf()	    {if (!root) get_root();
-					     if (parent != root) return false;
-					     return (oldest_daughter == NULL);
-					    }
-	inline bool is_low_level_node()	    {if (!root) get_root();
-					     if (parent == root) return false;
-					     return true;
-					    }
-	inline bool is_low_level_leaf()	    {if (!root) get_root();
-					     if (parent == root) return false;
-					     return (oldest_daughter == NULL);
-					    }
+	inline bool is_top_level_node() const {
+	    return (parent == get_root());
+	}
 
-	inline bool is_parent()
+	inline bool is_top_level_leaf() const {
+	    if (parent != get_root()) return false;
+	    return (oldest_daughter == NULL);
+	}
+
+	inline bool is_low_level_node() const {
+	    return (parent != get_root());
+	}
+
+	inline bool is_low_level_leaf() const {
+	    if (parent == get_root()) return false;
+	    return (oldest_daughter == NULL);
+	}
+
+	inline bool is_parent() const
 	    {return oldest_daughter != NULL;}
 
-        bool is_grandparent();
+        bool is_grandparent() const;
 
         node* next_node(node*);
         node* orig_next_node(node*);
 
-        bool name_is(char*);
-	char* format_label();
+        bool name_is(char*) const;
+	char* format_label() const;
 
-	void print_label(ostream&);
-	void pretty_print_node(ostream& s = cerr);
+	void print_label(ostream&) const;
+	void pretty_print_node(ostream& s = cerr) const;
 	void pretty_print_tree(ostream& s = cerr, int level = 0);
 
 	void interpret_line(char*, char*);
-	int  n_leaves();
-	int  n_daughters();
+	int  n_leaves() const;
+	int  n_daughters() const;
 
 	// SeBa counter access functions.
         //seba_counters* get_seba_counters() {
@@ -392,8 +419,8 @@ bool node_contains(node * b, char* s);
 bool clump_contains(node * b, int i);
 bool clump_contains(node * b, char *s);
 
-void pp(node *, ostream & s = cerr);
-void pp2(node *, ostream & s = cerr, int level = 0);
+void pp(const node *, ostream & s = cerr);
+void pp2(const node *, ostream & s = cerr, int level = 0);
 
 #define  for_all_daughters(dyntype, mother, daughter_name)                    \
          for (dyntype* daughter_name = mother->get_oldest_daughter();         \
@@ -453,4 +480,3 @@ void construct_node_name(node* b);
 //  |  the end of:  |         /|\         |  inc/node.h
 //  +---------------+                     +------------------------------//
 //========================= STARLAB =====================================\\ ~
-

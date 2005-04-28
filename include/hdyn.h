@@ -226,88 +226,88 @@ class  hdyn : public _dyn_ {
 
 	// Options, counters, and diagnostics:
 
-        inline kira_counters *get_kira_counters()  {return kc;}
+        inline kira_counters *get_kira_counters()  const {return kc;}
         void set_kira_counters(kira_counters *k){kc = k;}
 
-        inline kira_options *get_kira_options()	{return options;}
+        inline kira_options *get_kira_options()	const {return options;}
         void set_kira_options(kira_options *o)	{options = o;}
 
-        inline kira_diag *get_kira_diag()	{return diag;}
+        inline kira_diag *get_kira_diag()	const {return diag;}
         void set_kira_diag(kira_diag *d)	{diag = d;}
 
 	// Binary evolution:
 
-	inline bool get_use_dstar()		{return use_dstar;}
+	inline bool get_use_dstar()		const {return use_dstar;}
 	void set_use_dstar(bool u)		{use_dstar = u;}
 
 	// Stellar encounters and mergers:
 
-        real get_stellar_encounter_criterion_sq()
+        real get_stellar_encounter_criterion_sq() const
 		{return stellar_encounter_criterion_sq;} 
         void set_stellar_encounter_criterion_sq(real d_sq)
 		{stellar_encounter_criterion_sq = d_sq;}
-        inline real get_stellar_capture_criterion_sq()
+        inline real get_stellar_capture_criterion_sq() const
 		{return stellar_capture_criterion_sq;} 
         void set_stellar_capture_criterion_sq(real d_sq)
 		{stellar_capture_criterion_sq = d_sq;}
 
-        inline real get_stellar_merger_criterion_sq()
+        inline real get_stellar_merger_criterion_sq() const
 		{return stellar_merger_criterion_sq;} 
         void set_stellar_merger_criterion_sq(real d_sq)
 		{stellar_merger_criterion_sq = d_sq;}
 
 	// Perturbed top-level binaries:
 
-	inline int get_n_perturbed() {return n_perturbed;};
+	inline int get_n_perturbed() const {return n_perturbed;};
 	inline hdyn** get_perturbed_list() {return perturbed_list;};
 
 	// Run-time integration parameters:
 
 	void set_eta(real e)			{eta = e;}
-	inline real get_eta()			{return eta;}
+	inline real get_eta()		const	{return eta;}
 
 	void set_eps(real e)			{eps = e;
 					         eps2 = e*e;}
-	real get_eps()				{return eps;}
-	inline real get_eps2()			{return eps2;}
+	real get_eps()			const 	{return eps;}
+	inline real get_eps2()		const	{return eps2;}
 
         void set_d_min_fac(real d)		{d_min_fac = d;}
-        inline real get_d_min_fac()		{return d_min_fac;}
+        inline real get_d_min_fac()	const	{return d_min_fac;}
 
         void set_d_min_sq(real d)		{d_min_sq = d;}
-        inline real get_d_min_sq()		{return d_min_sq;}
+        inline real get_d_min_sq()	const	{return d_min_sq;}
 
 	void set_lag_factor(real f)		{lag_factor = f;}
-	inline real get_lag_factor()		{return lag_factor;}
+	inline real get_lag_factor()	const	{return lag_factor;}
 
         void set_mbar(real m)			{mbar = m;}
-        inline real get_mbar()			{return mbar;}
+        inline real get_mbar()		const	{return mbar;}
 
         void set_gamma2(real g2)		{gamma2 = g2;
 					         gamma23 = pow(g2, -1.0/3.0);}
-        inline real get_gamma2()		{return gamma2;}
-        inline real get_gamma23()		{return gamma23;}
+        inline real get_gamma2()	const	{return gamma2;}
+        inline real get_gamma23()	const	{return gamma23;}
 
         void set_initial_step_limit(real s)	{initial_step_limit = s;}
-        inline real get_initial_step_limit()	{return initial_step_limit;}
+        inline real get_initial_step_limit() const {return initial_step_limit;}
 
         void set_step_limit(real s)		{step_limit = s;}
-        inline real get_step_limit()		{return step_limit;}
+        inline real get_step_limit()	const	{return step_limit;}
 
         void set_unpert_step_limit(real s)	{unpert_step_limit = s;}
-        inline real get_unpert_step_limit()	{return unpert_step_limit;}
+        inline real get_unpert_step_limit() const {return unpert_step_limit;}
 
 	// Escaper removal:
 
 	void set_scaled_stripping_radius(real r)
 	    {scaled_stripping_radius = r;}
-	inline real get_scaled_stripping_radius()
+	inline real get_scaled_stripping_radius() const
 	    {return scaled_stripping_radius;}
 
 	// Slow binary motion:
 
 	void set_max_slow_factor(int f = 1)	{max_slow_factor = f;}
-	inline int get_max_slow_factor()	{return max_slow_factor;}
+	inline int get_max_slow_factor() const	{return max_slow_factor;}
 
 	void set_max_slow_perturbation(real p) {
 	    max_slow_perturbation = p;
@@ -317,20 +317,20 @@ class  hdyn : public _dyn_ {
 	    max_slow_perturbation_sq = p;
 	    max_slow_perturbation = sqrt(p);
 	}
-	inline real get_max_slow_perturbation() {
+	inline real get_max_slow_perturbation() const {
 	    return max_slow_perturbation;
 	}
-	inline real get_max_slow_perturbation_sq() {
+	inline real get_max_slow_perturbation_sq() const {
 	    return max_slow_perturbation_sq;
 	}
 
 	// Hardware/software configuration:
 
-	inline unsigned int get_config()	{return config;}
+	inline unsigned int get_config() const	{return config;}
 	inline void set_config(unsigned int c)	{config = c;}
 
 	inline void set_restart_grape_flag()	{restart_grape_flag = true;}
-	inline bool get_restart_grape_flag()	{return restart_grape_flag;}
+	inline bool get_restart_grape_flag() const {return restart_grape_flag;}
 	inline void clear_restart_grape_flag()	{restart_grape_flag = false;}
 
 // 	inline acc_function_ptr get_kira_calculate_top_level_acc_and_jerk()
@@ -343,9 +343,9 @@ class  hdyn : public _dyn_ {
 	// Thread support:
 
 	void set_n_threads(int n=0)	{n_threads = n;}
-	int  get_n_threads()		{return n_threads;}
+	int  get_n_threads()	const	{return n_threads;}
 	void set_thread_cpu(real t=0)	{thread_cpu = t;}
-	real get_thread_cpu()		{return thread_cpu;}
+	real get_thread_cpu()	const	{return thread_cpu;}
 
         // ----------------- Other member data accessors ------------------
 
@@ -357,13 +357,16 @@ class  hdyn : public _dyn_ {
 
         // Unperturbed kepler motion:
 
-        inline real get_perturbation_squared()	{return perturbation_squared;}
+        inline real get_perturbation_squared()	const
+						{return perturbation_squared;}
         void set_perturbation_squared(real p)	{perturbation_squared = p;}
 
-        inline bool get_fully_unperturbed()	{return fully_unperturbed;}
+        inline bool get_fully_unperturbed()	const
+						{return fully_unperturbed;}
         void set_fully_unperturbed(bool f)	{fully_unperturbed = f;}
 	
-        inline real get_unperturbed_timestep()   {return unperturbed_timestep;}
+        inline real get_unperturbed_timestep()  const
+						{return unperturbed_timestep;}
 
 	void set_unperturbed_timestep(real step) {unperturbed_timestep
 							     = step;}
@@ -384,9 +387,9 @@ class  hdyn : public _dyn_ {
 		     << format_label() << endl;
 	    n_perturbers_low = n;
 	}
-        inline int get_n_perturbers()		{return n_perturbers;};
-        inline int get_n_perturbers_low()	{return n_perturbers_low;};
-        inline hdyn ** get_perturber_list()	{return perturber_list;}
+        inline int get_n_perturbers()	const	   {return n_perturbers;};
+        inline int get_n_perturbers_low() const	   {return n_perturbers_low;};
+        inline hdyn ** get_perturber_list() const  {return perturber_list;}
 
         void remove_perturber_list()		{n_perturbers
 						     = n_perturbers_low = 0;
@@ -408,50 +411,51 @@ class  hdyn : public _dyn_ {
 	    valid_perturbers = valid_perturbers_low = false;
 	}
 
-        inline bool  get_valid_perturbers()       {return valid_perturbers;}
-        inline bool  get_valid_perturbers_low()   {return valid_perturbers_low;}
+        inline bool  get_valid_perturbers() const {return valid_perturbers;}
+        inline bool  get_valid_perturbers_low() const
+						  {return valid_perturbers_low;}
         void  set_valid_perturbers(const bool vp) {valid_perturbers = vp;}
         void  set_valid_perturbers_low(const bool vp) {valid_perturbers_low
 							   = vp;}
 
-        inline real get_perturbation_radius_factor()
+        inline real get_perturbation_radius_factor() const
 		{return perturbation_radius_factor;}
-        void set_perturbation_radius_factor(real f) 
+        void set_perturbation_radius_factor(real f)
 		{perturbation_radius_factor = f;}
 
-	inline bool passed_apo()		{return (posvel < 0
+	inline bool passed_apo()	const	{return (posvel < 0
 							 && prev_posvel >= 0);}
 
-	inline real get_posvel()		{return posvel;}
+	inline real get_posvel()	const	{return posvel;}
 
 	// NOTE: This may run into problems with nearly circular,
 	//       lightly perturbed orbits...
 
         // Neighbor information:
 
-	inline hdyn * get_nn()			{return nn;}
+	inline hdyn * get_nn()		const	{return nn;}
 	void set_nn(hdyn * new_nn)		{nn = new_nn;}
-	inline real get_d_nn_sq()		{return d_nn_sq;}
+	inline real get_d_nn_sq()	const	{return d_nn_sq;}
 	void set_d_nn_sq(real d)		{d_nn_sq = d;}
   
-        inline hdyn * get_coll()		{return coll;}
+        inline hdyn * get_coll()	const	{return coll;}
         void  set_coll(hdyn * new_coll)		{coll = new_coll;}
-        inline real get_d_coll_sq()		{return d_coll_sq;}
+        inline real get_d_coll_sq()	const	{return d_coll_sq;}
         void  set_d_coll_sq(real d)		{d_coll_sq = d;}
 
         // Variables for GRAPE-4/6
 
-        inline int get_grape_index()		{return grape_index;}
+        inline int get_grape_index()	const	{return grape_index;}
         void set_grape_index(int hindex)	{grape_index = hindex;}
-        inline real get_grape_rnb_sq()		{return grape_rnb_sq;}
+        inline real get_grape_rnb_sq()	const	{return grape_rnb_sq;}
         void set_grape_rnb_sq(real rnb_sq)	{grape_rnb_sq = rnb_sq;}
-        inline int get_grape_nb_count()		{return grape_nb_count;}
+        inline int get_grape_nb_count()	const	{return grape_nb_count;}
         void set_grape_nb_count(int n)		{grape_nb_count = n;}
 
-	bool has_grape()			{return (config > 0);}
-	bool has_grape4()			{return (config > 0
+	bool has_grape()		const	{return (config > 0);}
+	bool has_grape4()		const	{return (config > 0
 							 && config%2 != 0);}
-	bool has_grape6()			{return (config > 0
+	bool has_grape6()		const	{return (config > 0
 							 && config%2 == 0);}
 
 	// Experimental:
@@ -461,35 +465,35 @@ class  hdyn : public _dyn_ {
 	inline real *get_acc_addr()		{return &acc[0];}
 	inline real *get_jerk_addr()		{return &jerk[0];}
 	inline real *get_old_acc_addr()		{return &old_acc[0];}
-	inline real *get_old_jerk_addr()	{return &old_jerk[0];}
+	inline real *get_old_jerk_addr() 	{return &old_jerk[0];}
 	inline real *get_k18_addr()		{return &k_over_18[0];}
 
 	// Bookkeeping:
 
 	inline void inc_steps(int i = 1)	{steps += i;}
 	inline void inc_steps(real i)		{steps += i;}
-	inline real get_steps()			{return steps;}
+	inline real get_steps()		const	{return steps;}
 	inline void inc_direct_force(int i = 1)	{direct_force += i;}
 	inline void inc_direct_force(real i)	{direct_force += i;}
-	inline real get_direct_force()		{return direct_force;}
+	inline real get_direct_force()	const	{return direct_force;}
 	inline void inc_indirect_force(int i = 1) {indirect_force += i;}
 	inline void inc_indirect_force(real i)	{indirect_force += i;}
-	inline real get_indirect_force()	{return indirect_force;}
+	inline real get_indirect_force() const	{return indirect_force;}
 
 	// Convenient restatements of inherited functions:
 
-        inline hdyn * get_parent()
+        inline hdyn * get_parent() const
 		{return (hdyn*) node::get_parent();}
-        inline hdyn * get_oldest_daughter()
+        inline hdyn * get_oldest_daughter() const
 		{return (hdyn*)node::get_oldest_daughter();}
-        inline hdyn * get_younger_sister()
+        inline hdyn * get_younger_sister() const
 		{return (hdyn*) node::get_younger_sister();}
-        inline hdyn * get_elder_sister()
+        inline hdyn * get_elder_sister() const
 		{return (hdyn*) node::get_elder_sister();}
 
-        inline hdyn * get_root()
+        inline hdyn * get_root() const
 		{return (hdyn*) node::get_root();}
-        inline hdyn * get_top_level_node()
+        inline hdyn * get_top_level_node() const
 		{return (hdyn*) node::get_top_level_node();}
         inline hdyn * get_binary_sister()
 		{return (hdyn*) node::get_binary_sister();}
@@ -505,7 +509,7 @@ class  hdyn : public _dyn_ {
 					 bool print_xreal = true,
 					 int short_output = 0);
 	
-        inline real get_true_timestep() {
+        inline real get_true_timestep() const {
             if (kep)
                 return unperturbed_timestep;
             else
@@ -514,7 +518,7 @@ class  hdyn : public _dyn_ {
 
 	// Potentially slow function -- avoid where possible!
 
-        inline xreal get_next_time() {
+        inline xreal get_next_time() const {
             if (kep)
                 return get_time() + (xreal)unperturbed_timestep;
             else
@@ -791,8 +795,8 @@ void print_coll(hdyn* b, int level = 0, ostream& s = cerr);
 // The second definition below, of hdyn_MF_ptr, should probably be local to
 // the file hdyn_tt.C  -- we should look at this later.
 
-typedef vec (hdyn::*hdyn_VMF_ptr)(void);   // vec member function pointer
-typedef void (hdyn::*hdyn_MF_ptr)(const vec &);   // member function pointer
+typedef vec (hdyn::*hdyn_VMF_ptr)(void) const;	// vec member function pointer
+typedef void (hdyn::*hdyn_MF_ptr)(const vec &);	// member function pointer
 
 //  NOTE:  all the "hdyn" declarations below should be changed to "node"
 //	   here (just as was done with get_node()).

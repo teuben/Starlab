@@ -122,8 +122,8 @@ class  _dyn_ : public dyn
 	// The "get_time" accessors should be OK given the above "set"
 	// functions.
 
-	inline real get_timestep()	  {return timestep;}
-	inline xreal get_time()           {return time;}
+	inline real get_timestep()	const	{return timestep;}
+	inline xreal get_time()		const	{return time;}
 
 	void  clear_interaction()         {acc = jerk = 0;
 					   pot = 0;}
@@ -136,8 +136,8 @@ class  _dyn_ : public dyn
 					   return pred_pos;}
 	inline vec  get_pred_vel()     {predict_loworder(get_system_time());
 					   return pred_vel;}
-	inline vec  get_nopred_pos()   {return pred_pos;}
-	inline vec  get_nopred_vel()   {return pred_vel;}
+	inline vec  get_nopred_pos()	const	{return pred_pos;}
+	inline vec  get_nopred_vel()	const	{return pred_vel;}
 
 	inline void set_pred_pos(vec p)	  {pred_pos = p;}
 	inline void set_pred_vel(vec v)	  {pred_vel = v;}
@@ -147,7 +147,7 @@ class  _dyn_ : public dyn
 	inline xreal get_t_pred()         {return t_pred;}
 	inline void  set_t_pred(xreal t)  {t_pred = t;}
 	
-	real  get_pot()                   {return pot;}
+	real  get_pot()		const	  {return pot;}
 	void  set_pot(const real p)	  {pot = p;}
 	void  clear_pot()                 {pot = 0;}
 	void  inc_pot(const real& d_pot)  {pot += d_pot;}
@@ -169,12 +169,12 @@ class  _dyn_ : public dyn
 	inline void inc_old_acc(const vec& d_acc)     {old_acc += d_acc; }
 	inline void inc_old_jerk(const vec& d_jerk)   {old_jerk += d_jerk; }
 
-	inline vec get_jerk()			{return jerk;}
-	inline vec get_old_acc()		{return old_acc;}
-	inline vec get_old_jerk()       	{return old_jerk;}
-	inline vec get_k_over_18()		{return k_over_18;}
+	inline vec get_jerk()		const	{return jerk;}
+	inline vec get_old_acc()	const	{return old_acc;}
+	inline vec get_old_jerk()       const	{return old_jerk;}
+	inline vec get_k_over_18()	const	{return k_over_18;}
 
-	inline real get_radius()		{return abs(radius);}
+	inline real get_radius()	const	{return abs(radius);}
 	void set_radius(real r)			{radius = r;}
 
 	// Slow-binary manipulation functions defined in _dyn_slow.C:
@@ -183,27 +183,27 @@ class  _dyn_ : public dyn
 	void delete_slow();
 	void extend_slow(int k);
 
-	slow_binary* get_slow()			{return slow;}
-	slow_perturbed* get_sp()		{return sp;}
+	slow_binary* get_slow()		const	{return slow;}
+	slow_perturbed* get_sp()	const	{return sp;}
 
-	inline int get_kappa()			{if (slow)
+	inline int get_kappa()		const	{if (slow)
 						     return slow->get_kappa();
 						 else
 						     return 1;
 					        }
 
-	inline _dyn_ * get_parent()
+	inline _dyn_ * get_parent() const
 	    {return (_dyn_*) node::get_parent();}
-	inline _dyn_ * get_oldest_daughter()
+	inline _dyn_ * get_oldest_daughter() const
 	    {return (_dyn_*)node::get_oldest_daughter();}
-	inline _dyn_ * get_younger_sister()
+	inline _dyn_ * get_younger_sister() const
 	    {return (_dyn_*) node::get_younger_sister();}
-	inline _dyn_ * get_elder_sister()
+	inline _dyn_ * get_elder_sister() const
 	    {return (_dyn_*) node::get_elder_sister();}
 
-        inline _dyn_ * get_root()
+        inline _dyn_ * get_root() const
             {return (_dyn_*) node::get_root();}
-        inline _dyn_ * get_top_level_node()
+        inline _dyn_ * get_top_level_node() const
             {return (_dyn_*) node::get_top_level_node();}
         inline _dyn_ * get_binary_sister()
             {return (_dyn_*) node::get_binary_sister();}
@@ -326,7 +326,8 @@ class  _dyn_ : public dyn
 
 	// Potentially slow function -- avoid wherever possible!
 
-        inline xreal get_next_time() {return get_time() + (xreal)timestep;}
+        inline xreal get_next_time() const {return get_time()
+						 + (xreal)timestep;}
 
 	// Flat-specific member functions defined in _dyn_/evolve/_dyn_ev.C:
 	

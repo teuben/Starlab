@@ -166,18 +166,18 @@ class  dyn : public node
 	    rmkepler();
 	}
 
-	inline xreal get_system_time()		{return system_time;}
-	inline real get_real_system_time()	{return real_system_time;}
+	inline xreal get_system_time()	const	{return system_time;}
+	inline real get_real_system_time() const {return real_system_time;}
 	void set_system_time(xreal t)		{system_time = t;
 					         real_system_time = t;}
 
 	void set_ignore_internal(bool i = true)	{ignore_internal = i;}
-	bool get_ignore_internal()		{return ignore_internal;}
+	bool get_ignore_internal()	const	{return ignore_internal;}
 
 	//-----------------------------------------------------------------
 	// External field:
   
-	inline unsigned int get_external_field()       {return external_field;}
+	inline unsigned int get_external_field() const {return external_field;}
 	inline void set_external_field(unsigned int e) {external_field = e;}
 
 	// Tidal field (external field #1, bit 0):
@@ -187,20 +187,20 @@ class  dyn : public node
 						     SETBIT(external_field, 0);
 					         else
 					     	     CLRBIT(external_field, 0);}
-	inline int get_tidal_field()		{return tidal_type;}
+	inline int get_tidal_field()	const	{return tidal_type;}
 	inline void unset_tidal_field(int t)	{set_tidal_field(0);}
 
         void set_omega(real o)			{omega = o;
 						 omega_sq = o*o;}
-        inline real get_omega()			{return omega;}
-        inline real get_omega_sq()		{return omega_sq;}
+        inline real get_omega()		const	{return omega;}
+        inline real get_omega_sq()	const	{return omega_sq;}
 
 	void set_alpha(real a1, real a3)	{alpha1 = a1;
 						 alpha3 = a3;}
-	inline real get_alpha1()		{return alpha1;}
-	inline real get_alpha3()		{return alpha3;}
+	inline real get_alpha1()	const	{return alpha1;}
+	inline real get_alpha3()	const	{return alpha3;}
 	inline void set_tidal_center(vec c)	{tidal_center = c;}
-	inline vec get_tidal_center()	{return tidal_center;}
+	inline vec get_tidal_center()	const	{return tidal_center;}
 
 	void set_tidal_field(real alpha1, real alpha3,
 			     int type = 0, real omega = 0, vec c = 0.0) {
@@ -212,17 +212,17 @@ class  dyn : public node
 	// Plummer field (external field #2, bit 1):
 
 	inline void set_plummer()		{SETBIT(external_field, 1);}
-	inline bool get_plummer()		{return (GETBIT(external_field,
+	inline bool get_plummer()	const	{return (GETBIT(external_field,
 								1) > 0);}
 	inline void unset_plummer()		{CLRBIT(external_field, 1);}
 
-	inline real get_p_mass()		{return p_mass;}
+	inline real get_p_mass()	const	{return p_mass;}
 	inline void set_p_mass(real m)		{p_mass = m;}
-	inline real get_p_scale_sq()		{return p_scale_sq;}
+	inline real get_p_scale_sq()	const	{return p_scale_sq;}
 	inline void set_p_scale_sq(real r2)	{p_scale_sq = r2;}
 	inline void set_p_center(vec c) 	{p_center = c;}
-	inline vec  get_p_center()		{return p_center;}
-	inline bool get_p_friction()		{return p_friction;}
+	inline vec  get_p_center()	const	{return p_center;}
+	inline bool get_p_friction()	const	{return p_friction;}
 	inline void set_p_friction(bool f)	{p_friction = f;}
 
 	inline void set_plummer(real m, real r2,
@@ -237,18 +237,18 @@ class  dyn : public node
 	// Power-law field (external field #3, bit 2):
 
 	inline void set_pl()			{SETBIT(external_field, 2);}
-	inline bool get_pl()			{return (GETBIT(external_field,
+	inline bool get_pl()		const	{return (GETBIT(external_field,
 								2) > 0);}
 	inline void unset_pl()			{CLRBIT(external_field, 2);}
 
-	inline real get_pl_coeff()		{return pl_coeff;}
+	inline real get_pl_coeff()	const	{return pl_coeff;}
 	inline void set_pl_coeff(real c)	{pl_coeff = c;}
-	inline real get_pl_scale()		{return pl_scale;}
+	inline real get_pl_scale()	const	{return pl_scale;}
 	inline void set_pl_scale(real r)	{pl_scale = r;}
-	inline real get_pl_exponent()		{return pl_exponent;}
+	inline real get_pl_exponent()	const	{return pl_exponent;}
 	inline void set_pl_exponent(real e)	{pl_exponent = e;}
 	inline void set_pl_center(vec c) 	{pl_center = c;}
-	inline vec get_pl_center()		{return pl_center;}
+	inline vec get_pl_center()	const	{return pl_center;}
 
 	inline void set_pl(real A, real a,
 			   real e, vec c = 0.0) {	  // all in one
@@ -284,29 +284,29 @@ class  dyn : public node
 	inline void  scale_vel(const real scale_factor)  {vel *= scale_factor;}
 	inline void  scale_acc(const real scale_factor)  {acc *= scale_factor;}
 
-	inline vec  get_pos()                  {return pos;}
-	inline vec  get_vel()                  {return vel;}
-	inline vec  get_acc()                  {return acc;}
+	inline vec  get_pos()		const	{return pos;}
+	inline vec  get_vel()		const	{return vel;}
+	inline vec  get_acc()		const	{return acc;}
 
-	inline dyn * get_parent()
+	inline dyn * get_parent() const
 	    {return (dyn*) node::get_parent();}
-	inline dyn * get_oldest_daughter()
+	inline dyn * get_oldest_daughter() const
 	    {return (dyn*)node::get_oldest_daughter();}
-	inline dyn * get_younger_sister()
+	inline dyn * get_younger_sister() const
 	    {return (dyn*) node::get_younger_sister();}
-	inline dyn * get_elder_sister()
+	inline dyn * get_elder_sister() const
 	    {return (dyn*) node::get_elder_sister();}
 
-        inline dyn * get_root()
+        inline dyn * get_root() const
             {return (dyn*) node::get_root();}
-        inline dyn * get_top_level_node()
-            {return (dyn*) node::get_top_level_node();}
+        inline dyn * get_top_level_node() const
+            {return static_cast<dyn*>(node::get_top_level_node());}
         inline dyn * get_binary_sister()
             {return (dyn*) node::get_binary_sister();}
 
 	void  calculate_acceleration(dyn *, real);
 
-	inline kepler * get_kepler()		    {return kep;}
+	inline kepler * get_kepler()	const	    {return kep;}
 	void  set_kepler(kepler * new_kep)	    {kep = new_kep;}
 
 	virtual void null_pointers();
@@ -348,8 +348,8 @@ typedef dyn * dynptr;  // to enable dynamic array declarations such as
                        // (note that the following expression is illegal:
                        //    dyn** dyn_ptr_array = new (dyn *)[n];)
 
-typedef vec (dyn::*dyn_VMF_ptr)(void);     // vec member function pointer
-typedef void (dyn::*dyn_MF_ptr)(const vec &);     // member function pointer
+typedef vec (dyn::*dyn_VMF_ptr)(void) const;	// vec member function pointer
+typedef void (dyn::*dyn_MF_ptr)(const vec &);	// member function pointer
 
 inline  node * new_dyn(hbpfp the_hbpfp,
 		       sbpfp the_sbpfp,

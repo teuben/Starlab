@@ -25,7 +25,7 @@ void node::null_pointers()
     sbase = NULL;
 }
 
-int node::n_daughters()
+int node::n_daughters() const
 {
     if(oldest_daughter == NULL){
 	return 0;
@@ -39,7 +39,7 @@ int node::n_daughters()
     }
 }
 
-int node::n_leaves()
+int node::n_leaves() const
 {
     if(oldest_daughter == NULL){
 	return 1;
@@ -53,16 +53,13 @@ int node::n_leaves()
     }
 }
 
-bool node::is_grandparent()
-    {
-    bool gp_flag = FALSE;
-    
-    for_all_daughters(node, this, n)
-	if (n->is_parent())
-	    gp_flag = TRUE;
+bool node::is_grandparent() const
+{
+    for_all_daughters(node, const_cast<node*>(this), n)
+	if (n->is_parent()) return true;
 
-    return gp_flag;
-    }
+    return false;
+}
 
 // The following four functions are now inlined and defined in node.h
 // (and use the new root member data) -- Steve 9/19/98
@@ -97,19 +94,19 @@ bool node::is_grandparent()
 //     return TRUE;
 // }
 
-node* node::get_root()
-{
-    if (root) return root;
-
-    // If root not already set, set it now for future use.
-
-    if (parent == NULL)
-	root = this;
-    else
-	root = get_top_level_node()->get_parent();
-
-    return root;
-}
+//node* node::get_root()
+//{
+//    if (root) return root;
+//
+//    // If root not already set, set it now for future use.
+//
+//    if (parent == NULL)
+//	root = this;
+//    else
+//	root = get_top_level_node()->get_parent();
+//
+//    return root;
+//}
 
 node* node::get_binary_sister()
 {
@@ -166,6 +163,7 @@ node * mk_flat_tree(int n, npfp new_node_type, hbpfp a_hbpfp, sbpfp a_sbpfp,
     node * root, * by, * bo;
 
     root = (* new_node_type)(a_hbpfp, a_sbpfp, use_stories);
+    root->set_root(root);
     bo = (* new_node_type)(a_hbpfp, a_sbpfp, use_stories);
     root->set_oldest_daughter(bo);
     bo->set_parent(root);

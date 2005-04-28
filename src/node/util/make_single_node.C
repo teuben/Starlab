@@ -68,6 +68,7 @@ main(int argc, char ** argv)
     node * root;
 
     root = new node();
+    root->set_root(root);
     root->set_mass(m);
 
     if (c_flag == TRUE)

@@ -138,7 +138,7 @@ static char format_string[BUF_SIZE];
 //
 // Better to use print_label() instead in those circumstances.
 
-char* node::format_label()
+char* node::format_label() const
 {
     if (is_valid()) {
 
@@ -197,17 +197,17 @@ bool clump_contains(node * b, char *s)		// overloaded
     return node_contains(b->get_top_level_node(), s);
 }
 
-bool node::name_is(char* s)
+bool node::name_is(char* s) const
 {
     return streq(format_label(), s);
 }
 
-void node::print_label(ostream & s)
+void node::print_label(ostream & s) const
 {
     s << format_label();
 }
 
-void node::pretty_print_node(ostream & s)		// default = cerr
+void node::pretty_print_node(ostream & s) const		// default = cerr
 {
     print_label(s);					// no trailing endl
 }
@@ -228,7 +228,7 @@ void node::pretty_print_tree(ostream & s,		// default = cerr
 	    d->pretty_print_tree(s, level + 1);
 }
 
-void pp(node *b, ostream & s)
+void pp(const node *b, ostream & s)
 {
     s << "(";
     b->pretty_print_node(s);
@@ -237,7 +237,7 @@ void pp(node *b, ostream & s)
     s << ")";
 }
 
-void pp2(node *b, ostream & s,  int level)
+void pp2(const node *b, ostream & s,  int level)
 {
     for (int i = 0; i<level*2; i++) {s << " ";}
     b->pretty_print_node(s);
