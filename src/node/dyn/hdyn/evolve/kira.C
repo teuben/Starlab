@@ -896,8 +896,8 @@ local void evolve_system(hdyn * b,		// hdyn array
 
 	    if (check_file("STOP")) {
 
-		t_end = ttmp - (xreal)1;	// Forces optional snap output 
-					// and end of run in snap_output.
+		t_end = ttmp - (xreal)1;    // Forces optional snap output 
+					    // and end of run in snap_output.
 
 		cerr << endl << "***** Calculation STOPped by user at time "
 		     << t << " *****" << endl << endl;
@@ -920,9 +920,17 @@ local void evolve_system(hdyn * b,		// hdyn array
 	// Not essential to have dt_snap >= dt_reinit, but should have this
 	// if we want full restart capability.
 
-	bool reg_snap = (ttmp > t_snap
+	// Added special case delta_t = 0 to force snap output.
+
+	bool reg_snap = (ttmp > t_snap || delta_t == 0
 			 || (dt_snap < VERY_LARGE_NUMBER && ttmp > t_end)
 			 || (fmod(steps, 1000) == 0 && check_file("DUMP")));
+
+	PRL(ttmp);
+	PRL(t_snap);
+	PRL(t_end);
+	PRL(dt_snap);
+	PRL(reg_snap);
 
 	if (reg_snap || save_snap) {
 
