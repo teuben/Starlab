@@ -105,7 +105,7 @@ local void makemass(dyn* b, mass_function mf,
 
     if(m_lower>=m_upper)
 	sprintf(tmp_string,
-		"         %s mass function, total mass = %8.2f",
+		"       %s mass function, total mass = %8.2f",
 		type_string(mf), m_sum);
 //		type_string(Equal_Mass), m_sum);
     else
@@ -121,8 +121,8 @@ local void makemass(dyn* b, mass_function mf,
 int main(int argc, char ** argv)
 {
     bool C_flag = false;
-    bool F_flag   = false;                        // Input mf via string
-    mass_function mf = mf_Power_Law;             // Default = Power-law
+    bool F_flag   = false;                      // Input mf via string
+    mass_function mf = mf_Power_Law;            // Default = Power-law
     char *mfc = new char[64];
     real m_lower  = 1, m_upper = 1;		// Default = equal masses
     bool x_flag   = false;
