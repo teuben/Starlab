@@ -926,12 +926,6 @@ local void evolve_system(hdyn * b,		// hdyn array
 			 || (dt_snap < VERY_LARGE_NUMBER && ttmp > t_end)
 			 || (fmod(steps, 1000) == 0 && check_file("DUMP")));
 
-	PRL(ttmp);
-	PRL(t_snap);
-	PRL(t_end);
-	PRL(dt_snap);
-	PRL(reg_snap);
-
 	if (reg_snap || save_snap) {
 
 	    // PRC(ttmp), PRC(t_snap), PRL(dt_snap);
