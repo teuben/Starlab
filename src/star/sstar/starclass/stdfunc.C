@@ -435,6 +435,60 @@ real random_paczynski_velocity(const real v_disp) {
 
      return velocity*v_disp;
    }
+
+
+real arzoumanian_distribution() {
+
+  real v1 = 90;
+  real v2 = 500;
+  real w = 0.4;
+
+  real f = 4*pi*pow(v, 2.)* (
+           w/pow(2*pi*v1*v1, 3./2.) / exp(v*v/(2*v1*v1))
+         +
+          (1-w)/pow(2*pi*v2*v2, 3./2.) / exp(v*v/(2*v2*v2)));
+
+  return f;
+}
+
+real random_arzoumanian_velocity() {
+ 
+  real p, pfv, v;
+  do {
+    v = randinter(0., 2000.);
+    pfv = randinter(0., 1);
+    p = arzoumanian_distribution();
+  }
+  while(p<pfv);
+
+  return v;
+}
+
+
+real random_arzoumanian_velocity() {
+//	3 dimensional velocity distribution used by 
+//      Arzoumanian, chenroff, Cordes 2002, ApJ, 568, 289
+//	Two Gaussian distributions with 
+//      dispersion velocities of 90km/s and 500km/s
+//      and weight of 40% and 80%, respectively.
+	
+  real center, dispersion;
+
+      if(randinter(0., 1.) < 0.4) {
+	// low velocity bump
+	center = 90; // km/s
+	dispersion = 90; // km/s
+      }
+      else {
+	// low velocity bump
+	center = 500; // km/s
+	dispersion = 500; // km/s
+      }
+
+      real v_kick = gauss(center, dispersion);
+
+      return v_kick;
+}
  
 real cross_section(const real m_prim, const real m_sec,
                    const real r_min,  const real v_rel) {
