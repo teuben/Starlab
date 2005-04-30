@@ -209,7 +209,6 @@ static kira_counters kc_prev;
 local void full_reinitialize(hdyn* b, xreal t, bool verbose,
 			     bool init = false)
 {
-    cerr << endl << "reinitializing system at time " << t << endl;
     real cpu_0 = cpu_time();
 
     b->set_system_time(t);
@@ -228,6 +227,10 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
 	mass += bb->get_mass();
 	pot += bb->get_mass()*bb->get_pot();		// total potential
     }
+
+    if (n <= 1) return;		// sometimes handy to follow just 1 particle
+
+    cerr << endl << "reinitializing system at time " << t << endl;
 
     // Only want the internal potential, which is counted twice in pot.
 
