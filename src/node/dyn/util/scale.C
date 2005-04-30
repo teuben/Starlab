@@ -39,7 +39,7 @@
 ////              -m/M  specify total mass [don't scale]
 ////              -q/Q  specify virial ratio [don't scale]
 ////              -r/R  specify virial radius [don't scale]
-////              -s/S  scale to "standard" units [not set]
+////              -s/S  scale to "standard" units (-m 1 -r 1 -q 0.5) [not set]
 ////
 //// Written by Steve McMillan.
 ////
