@@ -439,6 +439,7 @@ real random_paczynski_velocity(const real v_disp) {
 
 real arzoumanian_distribution() {
 
+    real v = 0;			// ADDED BY STEVE TO MAKE THIS COMPILE!!
   real v1 = 90;
   real v2 = 500;
   real w = 0.4;
@@ -465,7 +466,8 @@ real random_arzoumanian_velocity() {
 }
 
 
-real random_arzoumanian_velocity() {
+real random_arzoumanian_velocity2() {  // 2 ADDED BY STEVE TO REMOVE DUPLICATION
+
 //	3 dimensional velocity distribution used by 
 //      Arzoumanian, chenroff, Cordes 2002, ApJ, 568, 289
 //	Two Gaussian distributions with 
