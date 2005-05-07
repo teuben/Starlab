@@ -81,6 +81,7 @@ local void makemass(dyn* b, mass_function mf,
     int n=0;
     for_all_daughters(dyn, b, bi) {
 	m = get_random_stellar_mass(m_lower, m_upper, mf, exponent);
+	PRL(m);
 	n++;
 	bi->set_mass(m);
 	m_sum += bi->get_mass();
@@ -121,15 +122,15 @@ local void makemass(dyn* b, mass_function mf,
 int main(int argc, char ** argv)
 {
     bool C_flag = false;
-    bool F_flag   = false;                      // Input mf via string
-    mass_function mf = mf_Power_Law;            // Default = Power-law
+    bool F_flag   = false;                      // input mf via string
+    mass_function mf = mf_Power_Law;            // default = Power-law
     char *mfc = new char[64];
-    real m_lower  = 1, m_upper = 1;		// Default = equal masses
+    real m_lower  = 1, m_upper = 1;		// default = equal masses
     bool x_flag   = false;
     real exponent = -2.35;			// Salpeter mass function
-                                                // If no exponent is given
+                                                // if no exponent is given
                                                 // Miller & Scalo is used
-    real m_total = -1;				// Don't rescale
+    real m_total = -1;				// don't rescale
 
     bool renumber_stars = false;                // renumber stellar index
                                                 // from high to low mass
@@ -152,7 +153,7 @@ int main(int argc, char ** argv)
 	    case 'C': C_flag = true;
 		      break;
 	    case 'F': F_flag = true;
-		      mfc = poptarg;
+		      strncpy(mfc, poptarg, 63);
 	              break;
 	    case 'f': mf = (mass_function)atoi(poptarg);
 	              break;
@@ -192,7 +193,7 @@ int main(int argc, char ** argv)
 
     if (F_flag)
       mf = extract_mass_function_type_string(mfc);
-    delete mfc;
+    delete [] mfc;
 
     dyn *b;
     b = get_dyn();
@@ -204,6 +205,7 @@ int main(int argc, char ** argv)
     sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
+    PRC(m_lower); PRL(m_upper);
     makemass(b, mf, m_lower, m_upper, exponent, m_total, renumber_stars);	
     real initial_mass = getrq(b->get_log_story(), "initial_mass");
 

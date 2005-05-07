@@ -49,16 +49,26 @@
 // Need to re-merge node and dyn versions!!  Steve, 7/04
 
 #include "node.h"
+#include "util_math.h"
 
 #define  MAXIMUM_ZAMS_MASS 100
 #define  SEED_STRING_LENGTH  256
 static char  tmp_string[SEED_STRING_LENGTH];
 
+#define TOL 1.e-4
+
 #ifndef TOOLBOX
 
+// Note from Steve (5/2005: These sampling methods do very poorly when m_lower
+// and m_upper are similar, as the target interval is very small.  This can
+// happen by accident, e.g. if a MF is specified but no range is given, which
+// defaults to [1,1] and an infinite loop.
 
 //see: Eggleton, Fitchet & Tout 1989, ApJ 347, 998
 local real mf_Miller_Scalo(real m_lower, real m_upper) {
+
+    if (twiddles(m_lower, m_upper, TOL))
+	return 0.5*(m_lower+m_upper);		// Steve, 5/05
 
     real m, rnd;
     do {
@@ -66,7 +76,7 @@ local real mf_Miller_Scalo(real m_lower, real m_upper) {
 	m = 0.19*rnd
 	    / (pow(1-rnd, 0.75) + 0.032*pow(1-rnd, 0.25));
     }
-    while(m_lower>m || m>m_upper);
+    while (m < m_lower || m > m_upper);
     return m;
 }
 
@@ -78,6 +88,9 @@ local real tapered_power_law(real m,
 			     const real x2 = 2.4, 
 			     const real mbreak = 0.25) {
 
+    if (twiddles(m_lower, m_upper, TOL))
+	return 0.5*(m_lower+m_upper);		// Steve, 5/05
+
     real m, rnd;
     do {
 	rnd = randinter(0,1);
@@ -86,7 +99,7 @@ local real tapered_power_law(real m,
 	real X = 1-rnd;
 	m = 0.15 * (1 /(pow(X, 0.75) + 0.04*pow(X, 0.25)) - pow(X, 2)/1.04);
     }
-    while(m_lower>m || m>m_upper);
+    while (m < m_lower || m > m_upper);
     return m;
 }
 #endif
@@ -98,6 +111,9 @@ local real tapered_power_law(real m,
 			     const real x1 = -1.35, 
 			     const real x2 = 2.4, 
 			     const real mbreak = 0.25) {
+
+    if (twiddles(m_lower, m_upper, TOL))
+	return 0.5*(m_lower+m_upper);		// Steve, 5/05
 
   real x = randinter(1, 91.43);
   real ms = 0;
@@ -125,6 +141,9 @@ local real tapered_power_law(real m,
 
 local real mf_GdeMarchi(real m_lower, real m_upper) {
 
+    if (twiddles(m_lower, m_upper, TOL))
+	return 0.5*(m_lower+m_upper);		// Steve, 5/05
+
     real m, X;
     do {
 	X = randinter(0,1);
@@ -135,7 +154,7 @@ local real mf_GdeMarchi(real m_lower, real m_upper) {
 	// most satisfactory
 	m = 0.15 * (1 /(pow(X, 0.75) + 0.03*pow(X, 0.25)) - pow(X, 8)/1.03);
     }
-    while(m_lower>m || m>m_upper);
+    while (m < m_lower || m > m_upper);
     return m;
 
 #if 0
@@ -172,17 +191,24 @@ local real mf_GdeMarchi(real m_lower, real m_upper) {
 // Stars: Formation, dynamics and Evolutionary Tracks, KAP: ASSL
 // Series vol. 223,  165
 local real mf_Scalo(real m_lower, real m_upper) {
+
+    if (twiddles(m_lower, m_upper, TOL))
+	return 0.5*(m_lower+m_upper);		// Steve, 5/05
+
     real m, rnd;
     do {
 	rnd = randinter(0,1);
 	m = 0.3*rnd
 	    / pow(1-rnd, 0.55);
     }
-    while(m_lower>m || m>m_upper);
+    while (m < m_lower || m > m_upper);
     return m;
 }
 
 local real Kroupa_Tout_Gilmore(real m_lower, real m_upper) {
+
+    if (twiddles(m_lower, m_upper, TOL))
+	return 0.5*(m_lower+m_upper);		// Steve, 5/05
 
     real m, rnd;
     do {
@@ -192,7 +218,7 @@ local real Kroupa_Tout_Gilmore(real m_lower, real m_upper) {
 	//real X = 1-rnd;
 	//m = 0.15 * (1 /(pow(X, 0.75) + 0.04*pow(X, 0.25)) - pow(X, 2)/1.04);
     }
-    while(m_lower>m || m>m_upper);
+    while (m < m_lower || m > m_upper);
     return m;
 }
 
@@ -432,7 +458,7 @@ int main(int argc, char ** argv)
 	switch(c) {
 
 	    case 'F': F_flag = true;
-		      mfc = poptarg;
+		      strncpy(mfc, poptarg, 63);
 	              break;
 	    case 'f': mf = (mass_function)atoi(poptarg);
 	              break;
@@ -472,7 +498,7 @@ int main(int argc, char ** argv)
 
     if (F_flag)
       mf = extract_mass_function_type_string(mfc);
-    delete mfc;
+    delete [] mfc;
 
     node *b;
     b = get_node();
