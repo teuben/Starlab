@@ -179,8 +179,8 @@ if ($#col > 1) then
 
     echo set tmargin 2					>! $infile
     echo set bmargin 4					>> $infile
-    echo set lmargin 14					>> $infile
-    echo set rmargin 9					>> $infile
+    echo set lmargin 16					>> $infile
+    echo set rmargin 7					>> $infile
 
     if ($nokey == 1) then
 	echo set nokey					>> $infile
