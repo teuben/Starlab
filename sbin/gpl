@@ -5,6 +5,8 @@
 # Options:	-c i j k ...	columns to plot (x y y...) [1 2]
 #		-f		linear fit to first plot [no]
 #		-F x1 x2	x limits to fit [plot limits]
+#		-g <geometry>	specify X-window geometry [xdefault]
+#		-G		toggle PNG graphics output [off]
 #		-h header	specify an overall header [none]
 #		-k		suppress "column x" key [no]
 #		-l x1 x2 y1 y2	specify plot limits [automatic]
@@ -16,7 +18,7 @@
 #		-y		specify y-label [none]
 #		-Y a b ...	specify plot labels ["column j", ...]
 #
-# Postscript output, if any, is sent to stdout.
+# PNG/Postscript output, if any, is sent to stdout.
 
 
 #set echo
@@ -29,6 +31,8 @@ if ($#argv > 0 && x$1 == x--help) then
     echo 'Options:   -c i j k...     columns to plot (x y1 y2...)       [1 2]'
     echo '           -f              linear fit to first plot            [no]'
     echo '           -F x1 x2        x limits to fit            [plot limits]'
+    echo '           -g <geometry>   specify X-window geometry     [xdefault]'
+    echo '           -G              toggle PNG graphics output         [off]'
     echo '           -h header       specify an overall header         [none]'
     echo '           -k              suppress key giving column info     [no]'
     echo '           -l x1 x2 y1 y2  specify plot limits          [automatic]'
@@ -61,6 +65,7 @@ cat >! $datafile
 set col = (1 2)
 @ l = 1
 set nokey = 0
+set png = 0
 set post = 0
 set script = ""
 set xlabel = ""
@@ -96,6 +101,8 @@ while ($i < $#argv)
     else if (x$arg == x-g) then
 	@ i++
 	set geom = "$argv[$i]"
+    else if (x$arg == x-G) then
+	@ png = 1 - $png
     else if (x$arg == x-h) then
 	@ i++
 	set title = "$title$argv[$i]"
@@ -188,6 +195,8 @@ if ($#col > 1) then
 
     if ($post == 1) then
 	echo set term post color 18			>> $infile
+    else if ($png == 1) then
+	echo set term png				>> $infile
     endif
 #   echo show term					>> $infile
 
