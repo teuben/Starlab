@@ -81,7 +81,6 @@ local void makemass(dyn* b, mass_function mf,
     int n=0;
     for_all_daughters(dyn, b, bi) {
 	m = get_random_stellar_mass(m_lower, m_upper, mf, exponent);
-	PRL(m);
 	n++;
 	bi->set_mass(m);
 	m_sum += bi->get_mass();
