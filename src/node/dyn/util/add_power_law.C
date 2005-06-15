@@ -71,7 +71,7 @@ void add_power_law(dyn *b,
 {
     // Add power-law parameters for an external field.
 
-    char id[9];
+    char id[10];
     int ind;
 
     if (exponent == 0) {
