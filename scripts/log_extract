@@ -130,7 +130,8 @@ BEGIN {
 	echo "${sc}done$nc\nmass: ${sf[0]}, distance: ${sf[1]}, time: ${sf[2]}"
     else
 	echo "${ec}failed$nc"
-	error "can't find scale factors in input" 2
+	warn "can't find scale factors in input"
+	sf=(1 1 1)
     fi
 fi
 
