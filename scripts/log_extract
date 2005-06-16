@@ -50,6 +50,8 @@ Usage: ${0##*/} [OPTIONS] [LOG FILE] ...
 Extracts various data from Starlab log files.
 Defaults are shown in parentheses.
 
+  -a	center of density position, X-Y projection
+  -b	center of density galacto-centric distance
   -c	center of mass position, X-Y projection (default)
   -d	center of mass galacto-centric distance
   -h	display this help message and exit
@@ -82,8 +84,10 @@ to_clobber() {
 
 shopt -s expand_aliases nullglob xpg_echo
 
-while getopts :cdhmno:qS:V option; do
+while getopts :abcdhmno:qS:V option; do
     case $option in
+	a) action=cod_position;;
+	b) action=cod_distance;;
 	c) action=com_position;;
 	d) action=com_distance;;
 	h) usage 0;;
@@ -93,7 +97,7 @@ while getopts :cdhmno:qS:V option; do
 	q) quiet=true;;
 	S) sf=($OPTARG);;
 	V) echo $'\
-log_extract version 0.3, Copyright © 2005  Ernest N. Mamikonyan.
+log_extract version 0.4, Copyright © 2005  Ernest N. Mamikonyan.
 log_extract comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it
 under certain conditions; see the source for details.
@@ -138,6 +142,22 @@ fi
 [[ "$output" == /dev/stdout ]] || to_clobber "$output" || exit
 
 case $action in
+    cod_distance)
+	echo -n computing the galacto-centric distance as a function of time...
+	awk "
+/density_center = / {
+  print ${sf[2]}*i++, sqrt(\$3^2+\$4^2+\$5^2)*${sf[1]}
+}" "$@" > "$output"
+	echo done
+	;;
+    cod_position)
+	echo -n computing the center of density position in the X-Y plane...
+	awk "
+/density_center = / {
+  print \$3*${sf[1]}, \$4*${sf[1]}
+}" "$@" > "$output"
+	echo done
+	;;
     com_distance)
 	echo -n computing the galacto-centric distance as a function of time...
 	awk "
