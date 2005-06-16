@@ -93,7 +93,7 @@ while getopts :cdhmno:qS:V option; do
 	q) quiet=true;;
 	S) sf=($OPTARG);;
 	V) echo $'\
-log_extract version 0.2, Copyright © 2005  Ernest N. Mamikonyan.
+log_extract version 0.3, Copyright © 2005  Ernest N. Mamikonyan.
 log_extract comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it
 under certain conditions; see the source for details.
