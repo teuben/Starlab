@@ -47,11 +47,21 @@ CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"
 #--------------------------------------------------------------------------
 # Checks for programs.
 AC_PROG_CC
-AC_PROG_F77
-if test -n "$F77"; then
-    AC_F77_WRAPPERS
+
+AC_ARG_WITH(f77,
+    AS_HELP_STRING([--with-f77], use the F77 [[[default=yes]]]),
+    [f77="$withval"])
+# Possible values of f77 are "", "no", and "yes".
+if test -z "$f77" -o "x$f77" = "xyes"; then
+    AC_PROG_F77
+    if test -n "$F77"; then
+        AC_F77_WRAPPERS
+    elif test "x$f77" = "xyes"; then
+        AC_MSG_ERROR([FORTRAN77 was selected but not found on the system.])
+    fi
 fi
 AM_CONDITIONAL(HAVE_F77, [test -n "$F77"])
+
 AC_PROG_CXX
 # disable shared libs for now -- work this out later
 AC_DISABLE_SHARED
