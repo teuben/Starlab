@@ -2963,8 +2963,34 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	grape6_calculate_perturbation(get_parent(),
 				      apert1, apert2, jpert1, jpert2);
 
-	// PRL(apert1);
-	// PRL(apert2);
+	// Check: do the O(N) calculation on the front-end too...
+
+	vec apert1_test, jpert1_test;
+	vec apert2_test, jpert2_test;
+	real d_nn_sq_dummy;
+	hdyn *nn_dummy;
+
+	// Calls just repeat the previous code.
+
+	calculate_partial_acc_and_jerk(root, root, get_parent(),
+				       apert1_test, jpert1_test, p_dummy,
+				       d_nn_sq_dummy, nn_dummy,
+				       USE_POINT_MASS,	    // explicit loop
+				       NULL,		    // no list
+				       this);		    // node to charge
+
+	// Acceleration and jerk on other component due to rest of system:
+
+	sister
+	    ->calculate_partial_acc_and_jerk(root, root, get_parent(),
+					     apert2_test, jpert2_test, p_dummy,
+					     d_nn_sq_dummy, nn_dummy,
+					     USE_POINT_MASS,  // explicit loop
+					     NULL,	       // no list
+					     this);	       // node to charge
+
+	PRC(apert1); PRL(apert1_test);
+	PRC(apert2); PRL(apert2_test);
     }
 
     // Relative acceleration and jerk due to other (sister) component:
