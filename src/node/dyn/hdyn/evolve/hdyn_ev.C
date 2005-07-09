@@ -132,6 +132,7 @@
 // but we can't afford to compute perturbation due to the entire system
 // on low-level binaries.  Fix by reusing invalid top-level perturber
 // list for low-level binaries (flag: valid_perturbers_low).
+// Better (3/05): use GRAPE to compute perturbation, if possible.
 
 // #define ALLOW_LOW_LEVEL_PERTURBERS		true	// now defined
 							// in hdyn.h
@@ -2870,9 +2871,9 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
     // Handle (and flag) problematical cases when they occur.
 
-    if (top == root		// O(N) calculation
-	|| partial_only		// incomplete list
-	|| np > 200) {		// long list
+    if (top == root				// O(N) calculation
+	|| partial_only				// incomplete list
+	|| np > MAX_PERTURBERS - 10) {		// long list
 
 #if 0
 	cerr << endl << "***** perturbers: ";
@@ -2887,7 +2888,7 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	// if no GRAPE is available.  However, if we have a GRAPE,
 	// then we should compute the perturbation due to the other
 	// components of the clump (top = top_level), then use GRAPE
-	// for the rest of the system (new function, 3/05).
+	// for the rest of the system (new function, Steve 3/05).
 
 	if (top == root) full_pert = true;
 	if (has_grape6()) {
@@ -2922,12 +2923,138 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     vec apert2, jpert2;
     real p_dummy;
 
-    if (np != 0) {
+    if (grape_pert) {
 
-	// (These functions will have no effect if np = 0.)
+	// Calculate perturbations to this and sister simultaneously on GRAPE.
+	// Don't update nn, etc and use point-mass approximation for all forces.
+        // (Assume for now that the sister or a component will be the nn/coll.)
+	// Probably should expand this function to get nn and coll properly...
+       
+	grape6_calculate_perturbation(get_parent(),
+				      apert1, apert2, jpert1, jpert2);
 
-	// Acceleration and jerk on this component due to rest of system:
- 
+#if 1
+
+	if (get_parent() != top_level) {
+
+	    cerr << "Computed perturbation on " << get_parent()->format_label()
+		 << " using GRAPE; np = " << np << endl << flush;
+
+	  // Check: do the O(N) calculation on the front-end too...
+
+	  vec apert1_test, jpert1_test;
+	  vec apert2_test, jpert2_test;
+	  real d_nn_sq_dummy;
+	  hdyn *nn_dummy;
+
+	  calculate_partial_acc_and_jerk(root, root, top_level,
+					 apert1_test, jpert1_test, p_dummy,
+					 d_nn_sq_dummy, nn_dummy,
+					 USE_POINT_MASS,    // explicit loop
+					 NULL,		    // no list
+					 this);		    // node to charge
+
+	  sister
+	    ->calculate_partial_acc_and_jerk(root, root, top_level,
+					     apert2_test, jpert2_test, p_dummy,
+					     d_nn_sq_dummy, nn_dummy,
+					     USE_POINT_MASS,// explicit loop
+					     NULL,	    // no list
+					     this);	    // node to charge
+
+	  cerr << "test 1:" << endl;
+	  vec da1 = apert1_test - apert1;
+	  PRC(apert1); PRL(da1/abs(apert1));
+	  vec da2 = apert2_test - apert2;
+	  PRC(apert2); PRL(da2/abs(apert2));
+	  PRL(apert2 - apert1);
+	  PRL(apert2_test - apert1_test);
+	}
+
+#endif
+
+	// The above calculation *excludes* the perturbation due to
+	// other components of the top-level node.  Include them here,
+	// if necessary.
+
+	// (Note also that we don't resolve neighboring binaries.)
+
+	if (get_parent() != top_level) {
+
+	    cerr << "Adding perturbation due to sisters" << endl << flush;
+
+	    vec apert1_local, jpert1_local;
+	    vec apert2_local, jpert2_local;
+	    real d_nn_sq_dummy;
+	    hdyn *nn_dummy;
+
+	    // (The following calls just repeat earlier code.)
+
+	    calculate_partial_acc_and_jerk(top_level, top_level, get_parent(),
+					   apert1_local, jpert1_local, p_dummy,
+					   d_nn_sq_dummy, nn_dummy,
+					   !USE_POINT_MASS,
+					   NULL,
+					   this);
+	    apert1 += apert1_local;
+	    jpert1 += jpert1_local;
+
+	    sister
+		->calculate_partial_acc_and_jerk(top_level, top_level,
+						     get_parent(),
+						 apert2_local, jpert2_local,
+						     p_dummy,
+						 d_nn_sq_dummy, nn_dummy,
+						 !USE_POINT_MASS,
+						 NULL,
+						 this);
+	    apert2 += apert2_local;
+	    jpert2 += jpert2_local;
+
+#if 1
+	    // Alternate test: replacing top_level in the previous check
+	    // by get_parent() should also include the perturbation due
+	    // to the clump.
+
+	    vec apert1_test, jpert1_test;
+	    vec apert2_test, jpert2_test;
+
+	    calculate_partial_acc_and_jerk(root, root, get_parent(),
+					   apert1_test, jpert1_test,
+					       p_dummy,
+					   d_nn_sq_dummy, nn_dummy,
+					   USE_POINT_MASS,    // explicit loop
+					   NULL,	      // no list
+					   this);	      // node to charge
+
+	    sister
+	      ->calculate_partial_acc_and_jerk(root, root, get_parent(),
+					       apert2_test, jpert2_test,
+					           p_dummy,
+					       d_nn_sq_dummy, nn_dummy,
+					       USE_POINT_MASS,// explicit loop
+					       NULL,	      // no list
+					       this);	      // node to charge
+
+	    cerr << "test 2:" << endl;
+	    vec da1 = apert1_test - apert1;
+	    PRC(apert1); PRL(da1/abs(apert1));
+	    vec da2 = apert2_test - apert2;
+	    PRC(apert2); PRL(da2/abs(apert2));
+	    PRL(apert2 - apert1);
+	    PRL(apert2_test - apert1_test);
+#endif
+
+	}
+
+    } else if (np != 0) {
+
+	// (The following functions will have no effect if np = 0.)
+
+	// Compute acceleration and jerk on this component due to the rest
+        // of system, using the perturber list in pnode and including the
+        // effect of the clump under the top-level node.
+
 	calculate_partial_acc_and_jerk(top, top, get_parent(),
 				       apert1, jpert1, p_dummy,
 				       d_nn_sq, nn,
@@ -2951,47 +3078,10 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	// variables, so it has no direct effect on d_nn_sq and nn.  (Test
 	// afterwards if d_nn_sq and nn must be updated.)  The coll data
 	// are always updated by these calls.
-    }
 
-    if (grape_pert) {
-
-	// Calculate perturbations to this and sister simultaneously on GRAPE.
-	// Don't update nn, etc and use point-mass approximation for all forces.
-
-	// cerr << "Computing perturbation using GRAPE" << endl << flush;
-       
-	grape6_calculate_perturbation(get_parent(),
-				      apert1, apert2, jpert1, jpert2);
-
-	// Check: do the O(N) calculation on the front-end too...
-
-	vec apert1_test, jpert1_test;
-	vec apert2_test, jpert2_test;
-	real d_nn_sq_dummy;
-	hdyn *nn_dummy;
-
-	// Calls just repeat the previous code.
-
-	calculate_partial_acc_and_jerk(root, root, get_parent(),
-				       apert1_test, jpert1_test, p_dummy,
-				       d_nn_sq_dummy, nn_dummy,
-				       USE_POINT_MASS,	    // explicit loop
-				       NULL,		    // no list
-				       this);		    // node to charge
-
-	// Acceleration and jerk on other component due to rest of system:
-
-	sister
-	    ->calculate_partial_acc_and_jerk(root, root, get_parent(),
-					     apert2_test, jpert2_test, p_dummy,
-					     d_nn_sq_dummy, nn_dummy,
-					     USE_POINT_MASS,  // explicit loop
-					     NULL,	       // no list
-					     this);	       // node to charge
-
-	PRC(apert1); PRL(apert1_test);
-	PRC(apert2); PRL(apert2_test);
-    }
+	// cerr << "Computed perturbation on " << get_parent()->format_label()
+	//      << " using front end; np = " << np << endl << flush;
+     }
 
     // Relative acceleration and jerk due to other (sister) component:
 
