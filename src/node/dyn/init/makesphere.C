@@ -44,11 +44,13 @@ void makesphere(dyn *root, int n,
 		real R,				// default = 1
 		int u_flag)			// default = false
 {
-    real radius, costheta, sintheta, phi;
     real pmass = 1.0 / n;
 
     // Factor scaling the velocity places the system in approximate
-    // virial equilibrium without scaling.
+    // virial equilibrium without scaling.  Old version used an
+    // anisotropic velocity distribution, which is not what we want.
+    // New version is isotropic, although still monoenergetic.
+    //						      (Steve, 7/05)
 
     real vfac = 0.77/sqrt(R);
 
@@ -56,7 +58,31 @@ void makesphere(dyn *root, int n,
 
 	bi->set_mass(pmass);
 
-	radius = R*pow(randinter(0, 1), 1.0/3.0);
+	real radius = R*pow(randinter(0, 1), 1.0/3.0);
+	real costheta = randinter(-1.0, 1.0);
+	real sintheta = 1 - costheta*costheta;
+	if (sintheta > 0)
+	    sintheta = sqrt(sintheta);
+	else
+	    sintheta = 0;
+	real phi = randinter(0.0, TWO_PI);
+
+        bi->set_pos(vec(radius * sintheta * cos(phi),
+			radius * sintheta * sin(phi),
+			radius * costheta));
+
+#if 0
+
+	// Old anisotropic velocity distribution:
+
+	bi->set_vel(vfac*vec(randinter(-1,1),
+			     randinter(-1,1),
+			     randinter(-1,1)));
+
+#else
+
+	// New isotropic distribution:
+
 	costheta = randinter(-1.0, 1.0);
 	sintheta = 1 - costheta*costheta;
 	if (sintheta > 0)
@@ -65,10 +91,12 @@ void makesphere(dyn *root, int n,
 	    sintheta = 0;
 	phi = randinter(0.0, TWO_PI);
 
-        bi->set_pos(vec(radius * sintheta * cos(phi),
-			radius * sintheta * sin(phi),
-			radius * costheta));
-        bi->set_vel(vfac*vec(randinter(-1,1),randinter(-1,1),randinter(-1,1)));
+        bi->set_vel(vec(vfac * sintheta * cos(phi),
+			vfac * sintheta * sin(phi),
+			vfac * costheta));
+
+#endif
+
     }
 
     // Transform to center-of-mass coordinates and optionally

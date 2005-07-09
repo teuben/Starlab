@@ -49,6 +49,8 @@ local void makecube(dyn *root, int n,
     // Factor scaling the velocity places the system in approximate
     // virial equilibrium without scaling.
 
+    // Not clear what the proper velocity distribution should be...
+
     real vfac = 0.7/sqrt(L);
 
     for_all_daughters(dyn, root, bi) {
