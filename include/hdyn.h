@@ -659,12 +659,12 @@ class  hdyn : public _dyn_ {
         // sint set_unperturbed_timestep(bool check_phase);
         // unsigned long set_unperturbed_timestep(bool check_phase);
 
-        real get_unperturbed_steps(bool to_apo = true,
-				   bool predict = false);
-        // int get_unperturbed_steps(bool to_apo = true,
-	//			     bool predict = false);
-        // unsigned long get_unperturbed_steps(bool to_apo = true,
-	//				       bool predict = false);
+        real get_max_unperturbed_steps(bool to_apo = true,
+				       bool predict = false);
+        // int get_max_unperturbed_steps(bool to_apo = true,
+	//			         bool predict = false);
+        // unsigned long get_max_unperturbed_steps(bool to_apo = true,
+	//				           bool predict = false);
 
 	void recompute_unperturbed_step();
 	void recompute_unperturbed_steps();
