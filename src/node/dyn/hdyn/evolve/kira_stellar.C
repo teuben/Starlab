@@ -343,7 +343,7 @@ bool evolve_stars(hdyn* b,
 			// unperturbed timestep (must extend at least as
 			// far as system_time and preferably past apocenter).
 
-			real usteps = bi->get_unperturbed_steps();
+			real usteps = bi->get_max_unperturbed_steps();
 
 #if 0
 			cerr << "in evolve_stars for "
