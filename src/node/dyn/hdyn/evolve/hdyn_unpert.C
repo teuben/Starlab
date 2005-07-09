@@ -19,7 +19,7 @@
 //	void hdyn::startup_unperturbed_motion
 //	int  hdyn::integrate_unperturbed_motion
 //	real hdyn::set_unperturbed_timestep
-//	real hdyn::get_unperturbed_steps
+//	real hdyn::get_max_unperturbed_steps
 //	bool hdyn::is_weakly_perturbed
 //	bool hdyn::is_stable
 //
@@ -1296,15 +1296,15 @@ bool hdyn::is_unperturbed_and_approaching()
 // perturbation, not on the number of perturbers on the perturber list.
 // Note also that the validity of the perturber list is checked in the
 // binary case, but not (yet) for multiples.
-
-// Use of perturbation_squared is OK because the system must also be
-// outside its semi-major axis to be accepted for merger.  If we relax this
-// requirement, we should also normalize the perturbation to its value at
-// a separation equal to the semi-major axis.
-
+//
+// Use of perturbation_squared is no longer OK because the system may
+// not necessarily be outside its semi-major axis to be accepted for
+// merger.  We always normalize the perturbation to its value at
+// apocenter in assessing suitability for complete unperturbed orbits.
+//
 // By construction when this function is called, 'this' is already a
 // low-level node, so its binary properties are well defined.
-
+//
 // **** Note from Steve, 7/99: this function is called at *every* perturbed
 // **** step, which seems excessive -- really only need to check immediately
 // **** after apocenter.  However, unperturbed periastron passages require
@@ -1333,6 +1333,10 @@ bool hdyn::is_unperturbed_and_approaching()
     //			UNPERTURBED_MULTIPLE_COMPONENT
     //
     //			STABLE_OUTER		// for multiples
+    //
+    // PERICENTER_REFLECTION may be promoted to FULL_MERGER in
+    // function set_unperturbed_timestep().  This possibility causes
+    // some redundancy in the tests applied, but keep for now.
 
     if (is_multiple(this)) {
 
@@ -1438,8 +1442,6 @@ bool hdyn::is_unperturbed_and_approaching()
 	bool approaching = (posvel < 0);	// posvel is recomputed at the
 						// end of every perturbed step
 
-	// PRL(approaching);
-
 	if (!approaching && !get_kepler() && !slow) {
 
 	    // Accept nearly circular perturbed binaries even if they are
@@ -1461,6 +1463,8 @@ bool hdyn::is_unperturbed_and_approaching()
 
 	    approaching = (posvel*posvel < 1.e-6 * square(pos)*square(vel));
 	}
+
+	// PRL(approaching);
 
 	if (!approaching) {
 
@@ -1563,8 +1567,7 @@ bool hdyn::is_unperturbed_and_approaching()
 	    //     cerr << "100a true peri refl..." << endl;
 
 #if 0
-	    cerr << "partial merger" << endl << flush;
-	    PRC(perturbation_squared);
+	    cerr << "partial merger:  "; PRL(perturbation_squared);
 	    PRC(gamma2); PRL(options->partial_merge_factor);
 	    PRL(gamma2 * options->partial_merge_factor);
 #endif
@@ -1574,36 +1577,44 @@ bool hdyn::is_unperturbed_and_approaching()
 
 	} else {
 
+	    // Use of perturbation_squared is OK if the binary is
+	    // outside semi for full merger.  However, if we allow the
+	    // possibility of considering any binary for full merger,
+	    // the perturbation near pericenter is not appropriate.
+	    // In that case, we should scale the perturbation to a
+	    // standard separation equal to the semi-major-axis.
+	    //						(Steve, 7/05)
+
 	    real pert_fac = 1;
 
-	    if (!kep) {
+	    if (kep) {
 
-		// Use of perturbation_squared is OK here because we must be
-		// outside semi for full merger (implemented on next page)...
-	        // Alternatively, we could normalize the perturbation to
-		// separation equal to semi.
+		// In this case we are considering continuation of an
+		// existing unperturbed orbit, so we are near
+		// apocenter and the perturbation should be OK.  Just
+		// in case, check that we are outside the semi-major
+		// axis, and correct if we are not.
 
-		// *********************************************************
-		// *********************************************************
-		// ****                                                 ****
-	        // ****  Probably OK to allow binaries to be merged at  ****
-	        // ****  any orbital phase (time step will be chosen    ****
-	        // ****  to end near apastron in any case).  To allow   ****
-		// ****  this, scale up the perturbation here and       ****
-		// ****  suppress or modify the definition of           ****
-		// ****  KEP_OUTSIDE_SEMI below.  Not done yet...       ****
-		// ****                                                 ****
-		// *********************************************************
-		// *********************************************************
+	        // Maybe better just to apply the apocenter
+	        // correction in all cases...
 
-		// Basic perturbation/binary check:
+		// if (!KEP_OUTSIDE_SEMI(*kep))
+		    pert_fac = pow(kep->get_apastron()
+				    / kep->get_separation(), 6);
+
+	    } else {
+
+		// Basic perturbation/binary check for new unperturbed
+		// motion.
 
 		real crit_pert2 = options->full_merge_tolerance;
+
 		bool low_pert = (perturbation_squared < crit_pert2)
 				 && is_low_level_leaf()
 				 && younger_sister->is_low_level_leaf();
 
 #if 0
+		cerr << "checking perturbation for full merger..." << endl;
 		PRC(kep); PRL(get_parent()->format_label());
 		PRC(perturbation_squared); PRC(crit_pert2);
 		PRL(low_pert);
@@ -1692,13 +1703,20 @@ bool hdyn::is_unperturbed_and_approaching()
 
 			if (kepl.get_energy() < 0.0) {
 
-			    if (KEP_OUTSIDE_SEMI(kepl)) {  // necessary if we
-							   // use the current
-							   // perturbation...
+		      	    // Consider full merger if we are outside
+			    // the semi-major axis or if the scaled
+			    // perturbation is still small.
 
-				// Include assumption that the parent timestep
-				// will increase by at least a factor of two
-				// once unperturbed motion starts (see note
+			    if (KEP_OUTSIDE_SEMI(kepl)
+				|| perturbation_squared
+    				    * pow(kepl.get_semi_major_axis()
+					   / kepl.get_separation(), 6)
+    				   < crit_pert2) {
+
+				// Include an assumption that the
+				// parent timestep will increase by at
+				// least a factor of two once
+				// unperturbed motion starts (see note
 				// below).
 
 				real dtp = get_parent()->get_next_time()
@@ -1785,13 +1803,15 @@ bool hdyn::is_unperturbed_and_approaching()
 		}
 	    }
 
+	    // PRC(binary_type); PRL(pert_fac);
+
 	    if (kep || binary_type == FULL_MERGER) {
 
 	        // Note relaxed criterion for continuing unperturbed
 	        // binary (but *not* multiple) motion.
 
-	        real crit_pert2 = options->full_merge_tolerance
-		    			 * options->relax_factor;
+		real crit_pert2 = options->full_merge_tolerance;
+		if (kep) crit_pert2 *= options->relax_factor;
 
 		bool low_pert = (pert_fac*perturbation_squared < crit_pert2);
 		bool close = is_close_pair();
@@ -1840,7 +1860,7 @@ bool hdyn::is_unperturbed_and_approaching()
 				     << " because of binary perturber ";
 				cerr.precision(prec);
 				hdyn *pp = p;
-				if (p->is _low_level_node())
+				if (p->is_low_level_node())
 				    pp = p->get_parent();
 				cerr << pp->format_label()
 				     << endl;
@@ -1862,7 +1882,6 @@ bool hdyn::is_unperturbed_and_approaching()
 
 		}
 	    }
-
 	}
     }
 
@@ -1872,8 +1891,10 @@ bool hdyn::is_unperturbed_and_approaching()
 
 
 
-// startup_unperturbed_motion: only invoked if is_unperturbed_and_approaching
-//			       returns true...
+// startup_unperturbed_motion: Initialize kepler structure and set the
+//                             unperturbed timestep.  Only invoked if
+//                             is_unperturbed_and_approaching()
+//                             returns true.
 
 void hdyn::startup_unperturbed_motion()
 {
@@ -1941,6 +1962,9 @@ void hdyn::startup_unperturbed_motion()
     // ****  be considered for promotion to full merger, even if it is  ****
     // ****  picked up inside the binary semi-major axis (the flag      ****
     // ****  controls that test).                                       ****
+    // ****                                                             ****
+    // ****  Note that we must be careful to limit the timestep, else   ****
+    // ****  eccentric wide binaries may become unperturbed...          ***
     // ****                                                             ****
     // *********************************************************************
     // *********************************************************************
@@ -2192,13 +2216,13 @@ void hdyn::startup_unperturbed_motion()
 
 
 
-real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
+real hdyn::set_unperturbed_timestep(bool restrict_phase)	// no default
 
-// Use of the argument check_phase:
+// Use of the argument restrict_phase:
 //
-// Argument check_phase = true indicates that we should check that the
-// system is outside its semi-major axis (using KEP_OUTSIDE_SEMI)
-// before applying full merging.
+// Argument restrict_phase = true indicates that the system should be
+// outside its semi-major axis (using KEP_OUTSIDE_SEMI) before
+// we apply full merging.
 //
 // This function is presently called only from
 //
@@ -2216,19 +2240,16 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 // name as the (real-argument) member function that actually sets
 // the variable unperturbed_timestep for the hdyn class (oops!)...
 //
-// Argument check_phase is set true when this function is called from
-// startup_unperturbed_motion().  It is set to !force_time when the
-// call comes from integrate_unperturbed_motion().  The default value
-// for force_time is false (kira call uses this default).  It is
-// generally undesirable to set force_time to be true; however, it may
-// be set true by a call from integrate_node() if its arguments
+// Argument restrict_phase is set false when this function is called
+// from startup_unperturbed_motion().  (It used to be set true until
+// 3/05.)  It is set to !force_time when the call comes from
+// integrate_unperturbed_motion().  The default value for force_time
+// is false (the kira call uses this default).  It is generally
+// undesirable to set force_time to be true; however, it may be set
+// true by a call from integrate_node() if its arguments
 // integrate_unperturbed_motion and force_unperturbed_time are both
-// true (default: true, false).  Integrate_node() seems only to be
-// called from synchronize_node(), with values false and true.
-//
-// *** Thus, it appears that check_phase is *always* true when this
-// *** function is called!  We thus promote pericenter reflection to
-// *** full merger only when the orbit is "near" apocenter.  Hmmm...
+// true (default: true, false).  Integrate_node() is called only from
+// synchronize_node(), with values false and true.
 
 {
     // Determine and set the unperturbed timestep.  Zero return value
@@ -2258,11 +2279,6 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 	     << format_label() << endl;
     }
 
-    if (!check_phase) {
-        // cerr << "set_unpert_timestep called with no test phase\n";
-        // PRL(kep->get_energy());
-    }
-
     hdyn * sister = get_binary_sister();
     real steps = 0;
 
@@ -2271,7 +2287,7 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
     if (is_multiple(this)) {
 
 	// No default -- unperturbed motion does not occur if the
-	// criteria in get_unperturbed_steps() are not met.
+	// criteria in get_max_unperturbed_steps() are not met.
 
     } else {
 
@@ -2309,6 +2325,9 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 	    if (slow) steps -= 1;
 
 	}
+
+	// PRL(steps);
+
     }
 
     if (kep->get_energy() < 0) {
@@ -2338,97 +2357,134 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 
 	    binary_type = STABLE_OUTER;
 
-	} else if (!check_phase
-		   || KEP_OUTSIDE_SEMI(*kep)	     // also picks up multiple
-		   || (get_parent()->kep != NULL)) {
+	} else {
 
-	    // Full merger criteria:
-	    //     (1) not checking phase (discouraged), or
-	    //     (2) system is outside its semi-major axis, or
-	    //     (3) parent is already unperturbed.
+	    // Check to see if a full merger is possible.  If we are
+	    // outside the semi-major axis or this is the inner binary
+	    // of a system where the outer binary is unperturbed, we
+	    // automatically consider full merging.  If we are inside
+	    // the semi-major axis and restrict_phase = false, we must
+	    // first make sure that the perturbation at apocenter will
+	    // still be acceptably small.
 
-	    // At this point, we would normally promote the binary to fully
-	    // unperturbed motion.  However, if slow motion is in progress,
-	    // don't allow that, but schedule the slow motion for termination
-	    // (to catch the promotion next time around).
+	    bool outside_semi = KEP_OUTSIDE_SEMI(*kep);	// also picks up
+							// a multiple
 
-	    if (slow) {
+	    bool check_merger = outside_semi || (get_parent()->kep != NULL);
 
-		if (!slow->get_stop()) {
-		    cerr << "set_unperturbed_timestep (#1): "
-			 << "scheduling end of slow motion"
-			 << endl
-			 << "                               for "
-			 << format_label()
-			 << " at time " << get_system_time() << endl;
-		    slow->set_stop();
-		}
+	    if (!check_merger && !restrict_phase && !outside_semi)
 
-		// See note on the use of the parent time step in function
-		// is_unperturbed_and_approaching().
+		// This check repeats some of the checks in
+		// is_unperturbed_and_approaching().  Use the
+		// unrelaxed criterion for promotion of close
+		// pericenter reflection to full merger.
 
-	    } else {
+		if (perturbation_squared
+		     * pow(kep->get_apastron() / kep->get_separation(), 6)
+		    < options->full_merge_tolerance) check_merger = true;
 
-		// The criteria in get_unperturbed_steps() will return zero
-		// if it is not possible to fit an integral number of orbits
-		// or an advance to apastron into the time allowed by the
-		// parent step.  If usteps <= 0, this must mean that the timing
-		// of the parent step is the problem.  In that case, we fall
-		// back to pericenter reflection.  However, if that occurs
-		// near apocenter (as it will if the orbit had previously been
-		// advanced to apastron), we convert it to a complete orbit.
+	    if (check_merger) {
 
-		// If usteps > 0, for a true binary, we "overshoot" slightly,
-		// ending at the next perturbed step past apocenter.  For a
-		// multiple, we don't proceed to apocenter.  Instead, we
-		// require an integral number of orbits ending just before
-		// (i.e. at separation outside) a complete period multiple.
+	        // At this point, we would normally promote the binary
+	        // to fully unperturbed motion.  However, if slow
+	        // motion is in progress, don't allow that, but
+	        // schedule the slow motion for termination (to catch
+	        // the promotion next time around).  Also, we must
+	        // impose a limit on the unperturbed step, to catch
+	        // eccentric wide binaries.
 
-		// Note that this is one of only two places in kira where
-		// get_unperturbed_steps() is called.  (The other is in
-		// util/hdyn_kepler.C.)
+	        if (slow) {
 
-		real usteps = get_unperturbed_steps(!is_multiple(this));
-
-		// Unperturbed timestep will be set equal to timestep * usteps
-		// unless pericenter reflection is promoted to full merger.
-
-		// PRL(usteps);
-
-		if (usteps <= 0) {
-
-		    if (diag->report_zero_unpert_steps) {
-
-			cerr << endl << "    set_unperturbed_timestep: "
-			     << "zero step for unperturbed binary\n";
-
-			int p = cerr.precision(HIGH_PRECISION);
-			PRI(4); PRL(time);
-			cerr << "    parent: " << get_parent()->format_label()
-			     << endl;
-			PRI(4); PRL((get_parent()->get_next_time()));
-			PRI(4); PRL(kep->get_period());
-			PRI(4); PRL(usteps);
-			cerr.precision(p);
+		    if (!slow->get_stop()) {
+		        cerr << "set_unperturbed_timestep (#1): "
+			     << "scheduling end of slow motion"
+			     << endl
+			     << "                               for "
+			     << format_label()
+			     << " at time " << get_system_time() << endl;
+			slow->set_stop();
 		    }
 
-		    // Note that steps and binary_type are left unchanged.
+		    // See note on the use of the parent time step in function
+		    // is_unperturbed_and_approaching().
 
 		} else {
 
-		    steps = usteps;
-		    binary_type = FULL_MERGER;	// may be changed from
-		    				// CONTINUE_UNPERTURBED
-		    fully_unperturbed = true;
+		    real usteps = get_max_unperturbed_steps(!is_multiple(this));
 
+		    // Unperturbed timestep will be set equal to
+		    // timestep * usteps if usteps > 0, unless
+		    // pericenter reflection is promoted to full
+		    // merger below.
+
+		    // Note that this is one of only two places in
+		    // kira where get_max_unperturbed_steps() is
+		    // called.  (The other is in kira_stellar.C.)
+
+		    // PRL(usteps);
+
+		    // The criteria in get_max_unperturbed_steps()
+		    // will return zero if it is not possible to fit
+		    // an integral number of orbits or an advance to
+		    // apastron into the time allowed by the parent
+		    // step and the system unperturbed time step
+		    // limit.  If usteps <= 0, this may mean that the
+		    // timing of the parent step is the problem, or
+		    // the binary period is too long.  In that case,
+		    // we fall back to pericenter reflection.
+		    // However, if that occurs near apocenter (as it
+		    // will if the orbit had previously been advanced
+		    // to apastron), we convert it to a complete orbit
+		    // (below).
+
+		    // If usteps > 0, for a true binary, we
+		    // "overshoot" slightly, ending at the next
+		    // perturbed step past apocenter.  For a multiple,
+		    // we don't proceed to apocenter.  Instead, we
+		    // require an integral number of orbits ending
+		    // just before (i.e. at separation outside) a
+		    // complete period multiple.
+
+		    if (usteps <= 0) {
+
+			if (diag->report_zero_unpert_steps) {
+
+			    cerr << endl << "    set_unperturbed_timestep: "
+				 << "zero step for unperturbed binary\n";
+
+			    int p = cerr.precision(HIGH_PRECISION);
+			    PRI(4); PRL(time);
+			    cerr << "    parent: "
+				 << get_parent()->format_label()
+				 << endl;
+			    PRI(4); PRL((get_parent()->get_next_time()));
+			    PRI(4); PRL(kep->get_period());
+			    PRI(4); PRL(usteps);
+			    cerr.precision(p);
+			}
+
+			// Note that steps and binary_type are left unchanged.
+
+		    } else {
+
+			// Promote the binary.
+
+		        steps = usteps;
+			binary_type = FULL_MERGER;	// may be changed from
+							// CONTINUE_UNPERTURBED
+							// or PERICENTER_REFL...
+			fully_unperturbed = true;
+
+		    }
 		}
 	    }
 	}
 
 #if 0
 
-	real predicted_mean_anomaly = kep->get_mean_anomaly()
-	  + steps * timestep * kep->get_mean_motion();
+	real predicted_mean_anomaly
+	  = kep->get_mean_anomaly()
+		 + steps * timestep * kep->get_mean_motion();
 	predicted_mean_anomaly = sym_angle(predicted_mean_anomaly);
 	PRI(4); PRL(predicted_mean_anomaly);
 
@@ -2450,7 +2506,7 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 	// Special case occurs if the reflection is occurring near apocenter.
 	// In this case, promote the step to a full merger for a single orbit.
 
-	// Hmmm... Not altogether clear why we consider this separately here...
+	// Not altogether clear why we consider this separately here...
 	//							(Steve, 8/99)
 
 	if (binary_type == PERICENTER_REFLECTION && KEP_OUTSIDE_SEMI(*kep)) {
@@ -2482,12 +2538,19 @@ real hdyn::set_unperturbed_timestep(bool check_phase)	// no default
 		// is_unperturbed_and_approaching().
 
 	    } else {
-		steps = ceil(kep->get_period()/timestep);
-		binary_type = FULL_MERGER;
-		fully_unperturbed = true;
+
+		// Impose a time step limit.
+
+		if (kep->get_period() <= unpert_step_limit) {
+		    steps = ceil(kep->get_period()/timestep);
+		    binary_type = FULL_MERGER;
+		    fully_unperturbed = true;
+		}
 	    }
 	}
     }
+
+    // PRL(steps);
 
     // Redundant comment: for slow binary motion, timestep is temporarily
     // dtau, so multiply unperturbed_timestep by kappa here (value is
@@ -2647,9 +2710,9 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
     return t_last;
 }
 
-real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
-						//   -- set false for multiple
-				 bool predict)	// default false; *never* used
+real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
+						   //  -- set false for multiple
+				     bool predict) // default false; *not* used
 
 // Additional (first) argument to_apo added by Steve 8/5/98.
 //
@@ -2658,14 +2721,13 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 // small as a few milliseconds (see Portegies Zwart 1998), so
 // return type was changed to real.
 //
-// int hdyn::get_unperturbed_steps(bool predict, bool to_apo)
-// real hdyn::get_unperturbed_steps(bool predict, bool to_apo)
-// unsigned long hdyn::get_unperturbed_steps(bool predict, bool to_apo)
+// int hdyn::get_max_unperturbed_steps(bool predict, bool to_apo)
+// real hdyn::get_max_unperturbed_steps(bool predict, bool to_apo)
+// unsigned long hdyn::get_max_unperturbed_steps(bool predict, bool to_apo)
 //
 // This function is called only from
 //
 //	set_unperturbed_timestep()		(this file)
-//	reinitialize_kepler_from_hdyn()		(hdyn_kepler.C)
 //	evolve_stars()				(kira_stellar.C)
 //
 // It is sometimes more convenient to bypass the normal checks applied
@@ -2673,20 +2735,21 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 // configuration.
 
 {
-    // Return the number of current time steps to advance
-    // unperturbed binary motion up to (but not too far past)
+    char *func = "get_max_unperturbed_steps";
+
+    // Return the maximum number of current time steps we can take to
+    // advance unperturbed binary motion up to (but not too far past)
     // the next CM time step.
 
-    // If to_apo is true (default), the step will continue on
-    // to the next apocenter (before the CM step).
+    // If to_apo is true (default), the step will continue on to the
+    // next apocenter (before the CM step).
 
-    // First check if parent is younger binary sister, in which
-    // case its time step may not be "definitive."
+    // First check if parent is younger binary sister, in which case
+    // its time step may not be "definitive."
 
-    // Note from Steve, 7/17/97:  For unknown reasons, this
-    // function fails to compile properly under g++ version
-    // cygnus-2.7-96q4 on Dec UNIX V4.0B, at optimization
-    // levels higher than 0...
+    // Note from Steve, 7/97: For unknown reasons, this function fails
+    // to compile properly under g++ version cygnus-2.7-96q4 on Dec
+    // UNIX V4.0B, at optimization levels higher than 0...
 
     // *** NOTE: Do not assume approaching components, or ***
     // ***	 time = system_time or parent time...	  ***
@@ -2694,9 +2757,8 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
     if (!kep) return 0;
 
-
-//    cerr << "in get_unperturbed_steps for " << format_label()
-//	 << " at " << time << "/" << system_time << endl;
+//    cerr << "in " << func << " for " << format_label()
+//	   << " at " << time << "/" << system_time << endl;
 
     hdyn * p = get_parent();
     if (p->is_low_level_node() && p->get_elder_sister() != NULL)
@@ -2710,8 +2772,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
     if (pdt > unpert_step_limit) {
 	if (diag->report_continue_unperturbed)
-	    cerr << "get_unperturbed_steps: unperturbed step for "
-		 << format_label()
+	  cerr << func << ": unperturbed step for " << format_label()
 		 << " limited by unpert_step_limit" << endl;
 	pdt = unpert_step_limit;
     }
@@ -2722,32 +2783,39 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
     if (pdt < system_time - time) {
 	if (diag->report_continue_unperturbed)
-	    cerr << "get_unperturbed_steps: unpert step for "
-		 << format_label()
+	  cerr << func << ": unpert step for " << format_label()
 		 << " increased to reach system_time" << endl;
 	pdt = system_time - time;
     }
 	
     if (pdt < 0) {
-	cerr << endl << "get_unperturbed_steps: ";
+	cerr << endl << func << ": ";
 	PRC(p->get_next_time()); PRL(time);
 	pp3(p);
 	cerr << "*no* corrective action taken\n";
 	return 0;
     }
 
+    // Allow some overshoot past the end of the parent step.
+
     real pdt2 = pdt + dt_overshoot(this);
+
+    // PRC(pdt); PRL(pdt2);
 
     // Special treatment of multiple motion, since the cost of not
     // starting unperturbed motion is so high...
 
     if (USE_DT_PERTURBERS && is_multiple(this)) {
 
-	// Include perturber crossing time in pdt...
+	// Include perturber crossing time in pdt2...
 
 	real pert_dt = dt_perturbers(this);
-	if (pert_dt > 0) pdt2 = Starlab::max(pdt2, 0.25*pert_dt);	// conservative
+	if (pert_dt > 0)
+	    pdt2 = Starlab::max(pdt2, 0.25*pert_dt);	// conservative
     }
+
+    if (pdt2 > unpert_step_limit) pdt2 = unpert_step_limit;
+
 
     // Goal: to advance the binary by as great a time as possible,
     //	     subject to the constraints that (a) we do not wish to
@@ -2761,7 +2829,8 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
     //	     some semblance of block scheduling.
     //
     //	     **** We do, however, wish to end up after the parent
-    //	     **** step, and not just before it (Steve, 9/99).
+    //	     **** step, and not just before it (Steve, 9/99), hence
+    //	     **** the overshoot in pdt2.
     //
     //  (1)  If to_apo is false (e.g. for unperturbed multiples, to
     //       minimize the tidal error), then we simply want to
@@ -2795,16 +2864,20 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
     // Determine the integral number of orbits to take.
 
-    // (Recall that floor rounds down to the next integer, so orb
-    //  orbital periods end *before* pdt.)
-
+    // Recall that floor rounds down to the next integer, so orb
+    // orbital periods calculated with floor end *before* pdt.
+    //
     // real orb = floor(pdt / kep->get_period());
+
     real orb = ceil(pdt / kep->get_period());
 
-    // (Recall that floor rounds down to the next integer, so orb
-    //  orbital periods end *after* pdt.)
+    // Recall that ceil rounds up to the next integer, so orb orbital
+    // periods calculated with ceil end *after* pdt.  The idea is that
+    // it is OK to overshoot the parent step slightly.  However, we
+    // must check that we don't exceed unpert_step_limit, which is
+    // possible if the period is very long.
 
-    if (orb <= 0) {
+    if (orb <= 0) {		// can't happen if we use ceil.
 
 	// See if we can take an orbital step in less than half the
 	// next parent step or the perturber crossing time (pdt2).
@@ -2816,6 +2889,13 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	// we conservatively take a step of only one period, regardless
 	// of how many periods would actually fit into pdt2.
     }
+
+    if (orb*kep->get_period() > unpert_step_limit)
+      orb = floor(unpert_step_limit / kep->get_period());
+
+    // PRL(orb);
+
+    // Note that orb may = 0...
 
     // Get the normalized mean anomaly.  If this function is invoked as part
     // of a normal step, we should have kepler time = time = system_time, so
@@ -2858,10 +2938,11 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	if (mean_anomaly > 0.9*M_PI
 	    && kep->get_period() < pdt2) apo_time += kep->get_period();
 
-	pert_steps = ceil( (Starlab::max(0.0, orb - 1) * kep->get_period() + apo_time)
-		     						/ timestep
-		     + 1);	// extra "1" to try to overcome
-				// possible problems with roundoff
+	pert_steps = ceil( (Starlab::max(0.0, orb - 1)
+			     * kep->get_period() + apo_time) / timestep
+
+			     + 1);	// extra "1" to try to overcome
+					// possible problems with roundoff
 
 	// Use of ceil here ensures that the unperturbed step ends just after
 	// the apocenter immediately preceding the last allowed full orbit.
@@ -2886,8 +2967,7 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 
     if (time + pert_steps*timestep < system_time) {
 	if (diag->report_continue_unperturbed)
-	    cerr << "get_unperturbed_steps: unpert step for "
-		 << format_label()
+	  cerr << func << ": unpert step for " << format_label()
 		 << " increased to reach system_time" << endl;
 	pert_steps += ceil(kep->get_period() / timestep);
     }
@@ -2916,8 +2996,8 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	if (end_mean_anomaly >= M_PI) end_mean_anomaly -= 2*M_PI;
 
 	if (false && mcount <= 0)
-	    cerr << "get_unperturbed_steps: mcount = 0 for "
-		 << format_label() << " at time " << time << endl;
+	  cerr << func << ": mcount = 0 for " << format_label()
+	       << " at time " << time << endl;
     }
 
     //-----------------------------------------------------------------
@@ -3068,9 +3148,8 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 		if (debug_flag) {
 //		if (system_time > 0.112) {
 
-		    cerr << endl << "get_unperturbed_steps for "
-			 << format_label() << " at time " << system_time << ":"
-			 << endl;
+		    cerr << endl << func << " for " << format_label()
+			 << " at time " << system_time << ":" << endl;
 		    int pp = cerr.precision(HIGH_PRECISION);
 
 		    PRI(4); PRL(system_time);
@@ -3123,7 +3202,12 @@ real hdyn::get_unperturbed_steps(bool to_apo,	// default true (for binary)
 	}
     }
 
-    return pert_steps;		// unit = current unperturbed timestep
+    // One final time step check.
+
+    if (pert_steps*timestep > unpert_step_limit)
+	return 0;
+    else
+	return pert_steps;		// unit = current unperturbed timestep
 }
 
 void hdyn::recompute_unperturbed_step()
@@ -3140,17 +3224,22 @@ void hdyn::recompute_unperturbed_step()
     // to apastron, as is desirable (and assumed?) elsewhere in kira.
     // Recompute the step, using the standard criteria.  (SLWM, 4/02)
 
-    // int usteps = get_unperturbed_steps(true);
-    // unsigned long usteps = get_unperturbed_steps(true);
-    real usteps = get_unperturbed_steps(true);
+    // int usteps = get_max_unperturbed_steps(true);
+    // unsigned long usteps = get_max_unperturbed_steps(true);
+
+    real usteps = get_max_unperturbed_steps(true);
 
     if (usteps > 0) {
+
 	unperturbed_timestep = timestep*usteps;
 	get_binary_sister()->unperturbed_timestep
 	    = unperturbed_timestep;
+
     } else {
+
 	// Just live with this, and assume that it will be handled
 	// properly once the step is over...
+
     }
 }
 
@@ -3418,6 +3507,9 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		 << "    perturbation = " << sqrt(perturbation_squared)
 		 << "  (" << bt[init_binary_type] << ")"
 		 << endl;
+
+	    // PRL(get_kepler()->get_separation());
+	    // PRL(get_kepler()->get_semi_major_axis());
 
 	    if (diag->unpert_report_level > 0) {
 
