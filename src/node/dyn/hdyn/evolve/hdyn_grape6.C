@@ -1931,6 +1931,8 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 
 
 
+static bool print_overflow_message = true;
+
 local INLINE int get_force_and_neighbors(xreal xtime,
 					 hdyn *nodes[], int ni,
 					 int nj_on_grape, int n_pipes,
@@ -2027,32 +2029,49 @@ local INLINE int get_force_and_neighbors(xreal xtime,
 
 	    // An error has occurred.  Flag it and take appropriate action...
 
-	    cerr << endl << func << ":  error getting GRAPE neighbor data"
-		 << endl;
-	    PRI(strlen(func)+3);
-	    cerr << "at time " << (real)xtime << ", "; PRL(status);
-	    PRC(ni); PRC(nj_on_grape); PRL(n_pipes);
-#if 0
-	    for (int i = 0; i < ni; i++) {
-		cerr << i << " " << nodes[i] << " "; PRL(nodes[i]->is_valid());
-		if (nodes[i]->is_valid())
-		    cerr << "    " << nodes[i]->format_label() << " "
-			<< nodes[i]->get_pos() << endl
-			<< "    " << nodes[i]->get_valid_perturbers() << " "
-			<< nodes[i]->get_grape_rnb_sq() << endl << flush;
-	    }
-#endif
-	    
 	    if (status > 0) {
 
 		// Hardware perturber lists on the GRAPE have overflowed.
 		// Calling function must reduce neighbor radii and repeat
 		// this group of particles.
 
+		// Don't need to routinely print this out, as we now
+	        // compute perturbations using GRAPE if the list is
+		// incomplete.
+
+	        if (print_overflow_message) {
+	            cerr << endl
+			 << func << ":  overflow getting GRAPE neighbor data"
+			 << endl;
+		    PRI(strlen(func)+3);
+		    int p = cerr.precision(INT_PRECISION);
+		    cerr << "at time " << (real)xtime << ", "; PRL(status);
+		    cerr.precision(p);
+		    PRC(ni); PRC(nj_on_grape); PRL(n_pipes);
+		}
+
 		error = 1;
 
 	    } else {
 
+	        cerr << endl << func << ":  error getting GRAPE neighbor data"
+		     << endl;
+		PRI(strlen(func)+3);
+		cerr << "at time " << (real)xtime << ", "; PRL(status);
+		PRC(ni); PRC(nj_on_grape); PRL(n_pipes);
+
+#if 0
+		for (int i = 0; i < ni; i++) {
+		  cerr << i << " " << nodes[i] << " ";
+		  PRL(nodes[i]->is_valid());
+		  if (nodes[i]->is_valid())
+		      cerr << "    " << nodes[i]->format_label() << " "
+			   << nodes[i]->get_pos() << endl
+			   << "    " << nodes[i]->get_valid_perturbers() << " "
+			   << nodes[i]->get_grape_rnb_sq() << endl << flush;
+		}
+#endif
+	    
 		// An internal error has occurred -- do a hard
 		// reset, repeat the force calculation and reread
 		// the neighbor lists.
@@ -2126,22 +2145,28 @@ local INLINE int sort_nodes_and_reduce_rnb(hdynptr ilist[], int ni)
 {
     static char *func = "sort_nodes_and_reduce_rnb";
 
-    cerr << "In " << func << "() after neighbor-list overflow at time "
-	 << ilist[0]->get_system_time() << endl;
+    if (print_overflow_message) {
+        cerr << "in " << func << "()";
+	//	cerr << " after neighbor-list overflow at time "
+	//	     << ilist[0]->get_system_time();
+	cerr << endl;
+    }
 
-    int inext = ni;
+    int jnext = ni;
 
     // First move all the rnb>0 nodes to the end of the list.
     // The rnb>0 nodes will start at inext.
 
-    int imax = ni;
+    // (Use index j here to avoid confusion with the global i in the log file.)
+
+    int jmax = ni;
     real rnb_max = 0;
-    for (int i = ni-1; i >= 0; i--) {
-	if (ilist[i]->get_grape_rnb_sq() > 0) {
-	    if (i < --inext) swap(ilist, i, inext);
-	    if (ilist[inext]->get_grape_rnb_sq() > rnb_max) {
-		imax = inext;
-		rnb_max = ilist[inext]->get_grape_rnb_sq();
+    for (int j = ni-1; j >= 0; j--) {
+	if (ilist[j]->get_grape_rnb_sq() > 0) {
+	    if (j < --jnext) swap(ilist, j, jnext);
+	    if (ilist[jnext]->get_grape_rnb_sq() > rnb_max) {
+		jmax = jnext;
+		rnb_max = ilist[jnext]->get_grape_rnb_sq();
 	    }
 	}	    
     }
@@ -2149,22 +2174,29 @@ local INLINE int sort_nodes_and_reduce_rnb(hdynptr ilist[], int ni)
     // ...then place the CM node with the biggest neighbor radius (a
     // guess at the node that caused the overflow) at inext...
 
-    PRC(inext); PRL(imax);
-    if (imax != inext) swap(ilist, inext, imax);
+    // if (print_overflow_message) {
+    //     PRC(jnext); PRL(jmax);
+    // }
+
+    if (jmax != jnext) swap(ilist, jnext, jmax);
 
     // ...then adjust the neighbor radii of the others (starting at inext),
     // reducing radii for all leaves but only the *first* CM node found
-    // (in location inext, by construction).
+    // (in location jnext, by construction).
 
-    for (int i = inext; i < ni; i++) {
-	if (ilist[i]->is_leaf() || i == inext) {
-	    ilist[i]->set_grape_rnb_sq(0.5*ilist[i]->get_grape_rnb_sq());
-	    PRC(i); PRL(ilist[i]->get_grape_rnb_sq());
+    for (int j = jnext; j < ni; j++) {
+	if (ilist[j]->is_leaf() || j == jnext) {
+	    ilist[j]->set_grape_rnb_sq(0.5*ilist[j]->get_grape_rnb_sq());
+	    if (print_overflow_message) {
+	      PRC(j); PRC(ilist[j]->format_label());
+	      cerr << "grape_rnb_sq() = " << ilist[j]->get_grape_rnb_sq()
+		   << endl;
+	    }
 	}
     }
 
-//    PRC(ni); PRL(inext);
-    return inext;
+    // PRC(ni); PRL(jnext);
+    return jnext;
 }
 
 
@@ -2475,7 +2507,8 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 				    }
 
 				    if (compress_count%10 == 0) {
-				        cerr << endl << func << ": compressing"
+				        cerr << endl << func
+					     << "(): compressing"
 					     << " perturber list for "
 					     << b->format_label() << endl;
 					int p = cerr.precision(HIGH_PRECISION);
@@ -3112,6 +3145,11 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 
     bool need_neighbors = false;
 
+    static unsigned long counter = 0;
+    bool pom = true;		    // true ==> always output
+    pom = (counter++ % 5 == 0); 
+    print_overflow_message = pom;   // limit output in get_force_and_neighbors()
+
     i = 0;
     while (i < n_top) {
 
@@ -3150,7 +3188,9 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 					   nj_on_grape, n_pipes,
 					   need_neighbors)) {
 
-	  cerr << "after get_force_and_neighbors 2:  "; PRL(stat);
+	    // if (print_overflow_message) {
+	    //     cerr << "after get_force_and_neighbors 2:  "; PRL(stat);
+	    // }
 
 #ifdef T_DEBUG
 	    if (in_debug_range) {
@@ -3162,6 +3202,7 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 
 		// Severe hardware error -- quit.
 
+		cerr << "after get_force_and_neighbors 2:  "; PRL(stat);
 		hw_err_exit(func, 1, current_nodes[0]);
 	    }
 
@@ -3170,7 +3211,13 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 	    // for which colls are actually needed.  Forces and nns are
 	    // OK at this point, but neighbor lists are not.
 
-	    cerr << func << ": HW nbr overflow, "; PRC(i); PRL(xtime);
+	    // Even though perturbations will be computed on GRAPE for
+	    // CMs with incoplete lists, we still iterate to get a legal
+	    // list for computation of colls.  (Steve, 7/05)
+
+	    // if (print_overflow_message) {
+	    //     cerr << func << ": HW nbr overflow, "; PRC(i); PRL(xtime);
+	    // }
 
 #ifdef T_DEBUG
 	    if (in_debug_range) {
@@ -3179,6 +3226,10 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 #endif
 
 	    i += sort_nodes_and_reduce_rnb(current_nodes+i, ni);
+
+	    if (print_overflow_message)
+	      cerr << "(i = " << i << "; limiting further output)" << endl;
+	    print_overflow_message = false;	// avoid repetition
 
 #ifdef T_DEBUG
 	    if (in_debug_range) {
@@ -3196,6 +3247,7 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 	    }
 #endif
 
+	    print_overflow_message = pom;
 	    i += get_coll_and_perturbers(xtime, current_nodes+i, ni,
 					 h2_crit, nj_on_grape, n_pipes);
 
@@ -3205,9 +3257,11 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 	    }
 #endif
 
-	} else
+	} else {
 
+	    print_overflow_message = pom;
 	    i += ni;
+	}
 
 #ifdef T_DEBUG
 	if (in_debug_range) {
@@ -3216,6 +3270,8 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 #endif
 
     }
+
+    print_overflow_message = true;
 
     //------------------------------------------------------------------
 
@@ -3294,7 +3350,9 @@ int grape6_calculate_perturbation(hdyn *parent,
 				  vec& apert1, vec& apert2,
 				  vec& jpert1, vec& jpert2)
 {
-    // Calculate the perturbation on the components of the parent node.
+    // Calculate the perturbation on the components of the parent node
+    // due to all other top-level nodes in the system.  (Steve, 4/05)
+
     // Return 0 iff no problems occur.
 
     static char *func = "grape6_calculate_perturbation";
@@ -3320,7 +3378,7 @@ int grape6_calculate_perturbation(hdyn *parent,
 
     // PRC(nj); PRL(n_pipes);
 
-    // Structure closely follows force_by_grape, but specific to a binary.
+    // Structure closely follows force_by_grape, but is specific to a binary.
 
     if (!iindex) create_i_arrays(n_pipes, parent->get_eps2());
 
@@ -3335,9 +3393,10 @@ int grape6_calculate_perturbation(hdyn *parent,
     int itop = parent->get_top_level_node()->get_grape_index();
 
     int ni = 0;
-    for_all_daughters(hdyn, parent, bi) {
+    for_all_daughters(hdyn, parent, bi) {	// only 2 daughters expected
 
-	iindex[ni] = itop;
+        iindex[ni] = itop;			// exclude top-level node
+
 	// PRL(bi->format_label());
 
 	// Assume that acc and jerk are usable in this case (perturbed
@@ -3400,6 +3459,8 @@ int grape6_calculate_perturbation(hdyn *parent,
 
     if (init_jp_dma) g6_flush_jp_buffer_(&cluster_id);
 
+    // Compute the acc and jerk on the component.
+
     g6calc_firsthalf_(&cluster_id, &nj, &ni, iindex,
 		      ipos, ivel, iacc, ijerk, ipot,
 		      &eps2, ih2);
@@ -3412,12 +3473,12 @@ int grape6_calculate_perturbation(hdyn *parent,
 	cerr << func << ": "; PRC(xtime); PRL(error);
     }
 
-    apert1 = iacc[0];
+    apert1 = iacc[0];		// return values are specific to 2 daughters
     apert2 = iacc[1];
     jpert1 = ijerk[0];
     jpert2 = ijerk[1];
 
-    return error;	// don't iterate for now...
+    return error;		// don't iterate for now...
 }
 
 
