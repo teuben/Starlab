@@ -23,10 +23,18 @@
 ////           -n nmax      specify maximum number of images to produce   [Inf]
 ////           -N nbody     color using a (small-N) colormap               [no]
 ////           -o filename  same as -f (more standard name)
-////           -O option    specify how to choose the plot origin           [0]
+////           -O option    specify how to choose the plot center           [0]
 ////                            0:  as is (don't adjust)
 ////                            1:  initial center of mass
 ////                            2:  modified center of mass of each frame
+////                            [x,y,z]:  specify coordinates (single argument)
+////                                - "(" can also be "[" or "{", but note
+////                                  that all must be escaped or quoted,
+////                                  since they have special meaning to
+////                                  the shell
+////                                - separate components by commas or
+////                                  spaces (again quoted or escaped, so
+////                                  the vector is a single argument)
 ////           -p psize     specify (maximum) star radius/scale, in pixels
 ////                        (psize < 0 ==> lower limit on pixel size = 0,
 ////                        otherwise, limit = 1)
@@ -425,6 +433,27 @@ local void write_image_file(unsigned char *a, int nx, int ny,
 
 #define FILE_NAME_LEN	128
 
+#include <ctype.h>
+
+local void get_offset(char *str, vec& offset)
+{
+    int len = strlen(str)+1;
+    char *copy = new char[len];
+    strncpy(copy, str, len);
+
+    // Convert the string into suitable form.
+
+    for (int i = 0; i < len-1; i++) {
+	int c = copy[i];
+	if (isdigit(c) || c == 'e' || c == 'E'
+	    || c == '-' || c == '+' || c == '.')
+	    ;
+	else
+	    copy[i] = ' ';
+    }
+    sscanf(copy, "%lf %lf %lf", &offset[0], &offset[1], &offset[2]);
+}
+
 main(int argc, char** argv)
 {
     char output_file_id[FILE_NAME_LEN];
@@ -479,6 +508,8 @@ main(int argc, char** argv)
 
     int loop = 10;
 
+    vec xoffset, voffset;	// origin = 1 or 3
+
     check_help();
 
     extern char *poptarg, *poparr[];
@@ -529,7 +560,12 @@ main(int argc, char** argv)
 	    case 'N':	ncolor = atoi(poptarg);
 			index_all = -1;
 	    		break;
-	    case 'O':	origin = atoi(poptarg);
+	    case 'O':	if (poptarg[0] == '[' || poptarg[0] == '('
+			    || poptarg[0] == '{') {
+			    get_offset(poptarg, xoffset);
+			    origin = 3;
+			} else
+			    origin = atoi(poptarg);
 	    		break;
 	    case 'p':   psize = atoi(poptarg);
 	    		if (psize < 0) {
@@ -734,8 +770,6 @@ main(int argc, char** argv)
     // PRC(xleft); PRC(xright); PRL(lx);
     // PRC(ybot); PRC(ytop); PRL(ly);
 
-    vec xoffset, voffset;				// origin = 1 only
-
     // Loop over input snapshots.
 
     hdyn* b;
@@ -820,7 +854,7 @@ main(int argc, char** argv)
 			for_all_daughters(hdyn, b, bb) {
 
 			    vec pos = b->get_pos() + bb->get_pos();
-			    if (origin == 1) pos -= xoffset;
+			    if (origin == 1 || origin == 3) pos -= xoffset;
 			    real x = pos[iax];
 			    real y = pos[jax];
 
@@ -937,7 +971,7 @@ main(int argc, char** argv)
 			p = p->get_parent();
 		    }
 
-		    if (origin == 1) pos -= xoffset;
+		    if (origin == 1 || origin == 3) pos -= xoffset;
 
 		    x = pos[iax];
 		    y = pos[jax];
