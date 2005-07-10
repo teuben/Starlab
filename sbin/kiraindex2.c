@@ -20,7 +20,7 @@
 Scan an ASCII or binary kira file and emit an index listing\n\
 time and starting and ending byte offsets for each full snapshot.\n\
 Optionally start listing at the specified time and continue for\n\
-the specieied number of snapshots\n"
+the specified number of snapshots\n"
 
 struct shortform {
     char nfields;
@@ -91,8 +91,6 @@ main(int argc, char *argv[])
 				break;
 		case 't':	time = atof(argv[++i]);
 				time_set = 1;
-				nsnap = 1;
-				nsnap_set = 1;
 				break;
 	    }
     }
