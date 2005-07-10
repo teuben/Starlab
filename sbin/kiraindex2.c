@@ -10,9 +10,10 @@
  */
 
 /*
- * Would be nice to have
- *     (1) an option to print directly, not just index
- *     (2) an option to buffer if last snap is desired.
+ * Would be nice to have options to
+ *     (1) print the snapshot as it is read, not just the indices
+ *     (2) buffer if last snap is desired -- better, use file only
+ *         and seek to starting index when needed.
  */
 
 #define USAGE \
