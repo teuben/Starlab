@@ -6,7 +6,21 @@
  * Reformat kira output: convert (ascii or binary) to
  * (binary or prettily-indented ascii).
  * Written Stuart Levy, July 2001.
+ * Copied and modified by Steve McMillan, July 2005.
  */
+
+/*
+ * Would be nice to have
+ *     (1) an option to print directly, not just index
+ *     (2) an option to buffer if last snap is desired.
+ */
+
+#define USAGE \
+"Usage: %s -f file -n snapshots [all] -t time [0]\n\
+Scan an ASCII or binary kira file and emit an index listing\n\
+time and starting and ending byte offsets for each full snapshot.\n\
+Optionally start listing at the specified time and continue for\n\
+the specieied number of snapshots\n"
 
 struct shortform {
     char nfields;
@@ -31,6 +45,12 @@ void skipbytes(int count, FILE *inf) {
     ;
 }
 
+void err_exit(char *prog)
+{
+    fprintf(stderr, USAGE, prog);
+    exit(1);
+}
+
 main(int argc, char *argv[])
 {
     char line[512];
@@ -39,28 +59,43 @@ main(int argc, char *argv[])
     int postprefix = 0;
     char *prog = argv[0];
 
-    if((argc <= 1 && isatty(0))
-       || (argc > 1 && argv[1][0] == '-' && argv[1][1] != 'a')) {
+    double time = 0;
+    int time_set = 0, nsnap, nsnap_set = 0, count = 0;
 
-	fprintf(stderr, "Usage: %s [file.kira] > indexfile\n\
-Scans an ASCII or binary kira file and emits an index listing\n\
-time, and starting and ending byte offsets for its synchronizing snapshot.\n",
-			argv[0]);
+    if (argc <= 1) {
 
-	exit(1);
+	if (isatty(0)) err_exit(argv[0]);
+
+    } else {
+
+	int i;
+	for (i = 1; i < argc; i++)
+	    if (argv[i][0] == '-') 
+		switch (argv[i][1]) {
+
+		case 'f':	if (freopen(argv[++i], "r", stdin) == NULL) {
+				    fprintf(stderr,
+					    "%s: %s: cannot open input: ",
+					    prog, argv[i]);
+				    perror("");
+				    err_exit(argv[0]);
+				}
+				/* printf("# %s\n", argv[i]); */
+				break;
+
+		case '-':
+		case 'h':	err_exit(argv[0]);
+
+		case 'n':	nsnap = atoi(argv[++i]);
+				nsnap_set = 1;
+				break;
+		case 't':	time = atof(argv[++i]);
+				time_set = 1;
+				nsnap = 1;
+				nsnap_set = 1;
+				break;
+	    }
     }
-
-    if(argc > 1 && 0 != strcmp(argv[1], "-")) {
-	if(freopen(argv[1], "r", stdin) == NULL) {
-	    fprintf(stderr, "%s: %s: cannot open input: ", prog, argv[1]);
-	    perror("");
-	    fprintf(stderr, "Run %s with no arguments for help.\n", prog);
-	    exit(1);
-	}
-    }
-
-    if(argc > 1)
-	printf("# %s\n", argv[1]);	/* used by kiraformat */
 
     at = 0LL;
     while(fgets(line, sizeof(line), stdin) != NULL) {
@@ -77,9 +112,15 @@ time, and starting and ending byte offsets for its synchronizing snapshot.\n",
 	    nesting--;
 	    if(nesting < 0) nesting = 0;
 	    if(nesting == 0 && start >= 0) {
-	    	printf("%lg %lld %lld\n", systime, start, at);
+
+		if (!time_set || systime >= time) {
+		    printf("%lg %lld %lld\n", systime, start, at);
+		    count++;
+		}
+		if (nsnap_set && count >= nsnap) return 0;
+
 		start = -1;
-		systime = 0;
+		systime = -1;
 	    }
 
 	} else if(!memcmp(s, "(P", 2)) {
