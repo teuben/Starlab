@@ -1,0 +1,90 @@
+#!/bin/tcsh -f
+
+# Replacement for extract_snap using only the indexing features of
+# kiraindex.  This version involves reading the file twice -- once to
+# index, then to extract, but even so is likely to be *much* faster
+# than reading every snapshot.  Could probably modify kiraindex2 to
+# buffer and avoid the second read, but too complicated for now.
+#
+# Usage: extract_snap2 -f filename -n nsnaps -t tsnap
+#
+# If no file is specified, must exit, as we need two passes through the data.
+# If nsnaps is unspecified, extract just one (different from kiraindex2).
+# If tsnap is unspecified, extract the last snapshot in the file.
+
+# Establish defaults and parse the argument list.
+
+set file = ""
+set nsnaps = 1
+set tsnap = 0
+set last = 1
+
+@ i = 0
+while ($i < $#argv)
+    @ i++
+    if ("x$argv[$i]" == "x-f") then
+	@ i++
+	if ($i <= $#argv) then
+	    set file = $argv[$i]
+	else
+	    echo Insufficient arguments after \"-f\"
+	endif
+    else if ("x$argv[$i]" == "x-n") then
+	@ i++
+	if ($i <= $#argv) then
+	    set nsnaps = $argv[$i]
+	else
+	    echo Insufficient arguments after \"-n\"
+	endif
+    else if ("x$argv[$i]" == "x-t") then
+	@ i++
+	if ($i <= $#argv) then
+	    set tsnap = $argv[$i]
+	    set last = 0
+	else
+	    echo Insufficient arguments after \"-t\"
+	endif
+    else if ("x$argv[$i]" == "x--help") then
+        echo Usage: extract_snap2 -f filename -n nsnaps -t tsnap
+    else
+        if ("x$file" == "x") set file = $argv[$i]
+    endif
+end
+
+if ("x$file" == "x") then
+    echo Must specify filename -- can\'t use stdin yet...
+    exit
+endif
+
+# Construct the argument list.
+
+set t = ""
+set n = ""
+if ($last == 0) then
+    set t = "-t $tsnap"
+    set n = "-n $nsnaps"
+endif
+
+# For now, no particular advantage to using a file stream in kiraindex2,
+# so always pipe the data into the program.  (May change...)
+
+# echo executing cat $file \| kiraindex2 $n $t
+set index_list = (`cat $file | kiraindex2 $n $t`)
+
+# Determine indices to use in the second pass.
+
+set n = $#index_list
+@ n1 = $n - 1
+if ($last == 1) then
+    set low = $index_list[$n1]
+    set high = $index_list[$n]
+else
+    set low = $index_list[2]
+    set high = $index_list[$n]
+endif
+
+#echo low = $low, high = $high
+
+# Extract the data, send to stdout.
+
+getbytes $file $low $high
