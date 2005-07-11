@@ -27,7 +27,7 @@
 ////                            0:  as is (don't adjust)
 ////                            1:  initial center of mass
 ////                            2:  modified center of mass of each frame
-////                            [x,y,z]:  specify coordinates (single argument)
+////                            (x,y,z):  specify coordinates (single argument)
 ////                                - "(" can also be "[" or "{", but note
 ////                                  that all must be escaped or quoted,
 ////                                  since they have special meaning to
@@ -35,6 +35,8 @@
 ////                                - separate components by commas or
 ////                                  spaces (again quoted or escaped, so
 ////                                  the vector is a single argument)
+////                                - the "{" version specifies an incremental
+////                                  offest between successive frames.
 ////           -p psize     specify (maximum) star radius/scale, in pixels
 ////                        (psize < 0 ==> lower limit on pixel size = 0,
 ////                        otherwise, limit = 1)
@@ -508,7 +510,7 @@ main(int argc, char** argv)
 
     int loop = 10;
 
-    vec xoffset, voffset;	// origin = 1 or 3
+    vec xoffset, voffset, dxoffset;	// origin = 1, 3, or 4
 
     check_help();
 
@@ -562,8 +564,12 @@ main(int argc, char** argv)
 	    		break;
 	    case 'O':	if (poptarg[0] == '[' || poptarg[0] == '('
 			    || poptarg[0] == '{') {
-			    get_offset(poptarg, xoffset);
-			    origin = 3;
+			    get_offset(poptarg, dxoffset);
+			    if (poptarg[0] != '{') {
+				xoffset = dxoffset;
+				origin = 3;
+			    } else
+				origin = 4;
 			} else
 			    origin = atoi(poptarg);
 	    		break;
@@ -618,6 +624,8 @@ main(int argc, char** argv)
 			return false;
 	}
     }
+
+    PRC(origin); PRL(xoffset); PRL(dxoffset);
 
     if (!psize_set) {
 	if (combine && !radius) {
@@ -793,6 +801,11 @@ main(int argc, char** argv)
 
 	    // Make this snapshot into an image.
 
+	    if (origin == 4) {
+	        xoffset += dxoffset;
+		PRL(xoffset);
+	    }
+
 	    if (count1 == 0) {
 
 		// This is the first frame to be converted into an image.
@@ -854,7 +867,7 @@ main(int argc, char** argv)
 			for_all_daughters(hdyn, b, bb) {
 
 			    vec pos = b->get_pos() + bb->get_pos();
-			    if (origin == 1 || origin == 3) pos -= xoffset;
+			    if (origin == 1 || origin >= 3) pos -= xoffset;
 			    real x = pos[iax];
 			    real y = pos[jax];
 
@@ -971,7 +984,7 @@ main(int argc, char** argv)
 			p = p->get_parent();
 		    }
 
-		    if (origin == 1 || origin == 3) pos -= xoffset;
+		    if (origin == 1 || origin >= 3) pos -= xoffset;
 
 		    x = pos[iax];
 		    y = pos[jax];
