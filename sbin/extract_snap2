@@ -6,17 +6,21 @@
 # than reading every snapshot.  Could probably modify kiraindex2 to
 # buffer and avoid the second read, but too complicated for now.
 #
-# Usage: extract_snap2 -f filename -n nsnaps -t tsnap
+# Usage: extract_snap2 -f filename -n nsnaps -s nskip -t tsnap
 #
 # If no file is specified, must exit, as we need two passes through the data.
-# If nsnaps is unspecified, extract just one (different from kiraindex2).
+# If nsnaps is unspecified, extract just one (NB different from kiraindex2).
+# Is nskip is unspecified, set nskip = 0.
 # If tsnap is unspecified, extract the last snapshot in the file.
+# If tsnap = all, extract all times, subject to nskip.
 
 # Establish defaults and parse the argument list.
 
 set file = ""
 set nsnaps = 1
+set nskip = 0
 set tsnap = 0
+set tsnap_set = 0
 set last = 1
 
 @ i = 0
@@ -36,10 +40,18 @@ while ($i < $#argv)
 	else
 	    echo Insufficient arguments after \"-n\"
 	endif
+    else if ("x$argv[$i]" == "x-s") then
+	@ i++
+	if ($i <= $#argv) then
+	    set nskip = $argv[$i]
+	else
+	    echo Insufficient arguments after \"-n\"
+	endif
     else if ("x$argv[$i]" == "x-t") then
 	@ i++
 	if ($i <= $#argv) then
 	    set tsnap = $argv[$i]
+	    set tsnap_set = 1
 	    set last = 0
 	else
 	    echo Insufficient arguments after \"-t\"
@@ -52,11 +64,25 @@ while ($i < $#argv)
 end
 
 if ("x$file" == "x") then
-    echo Must specify filename -- can\'t use stdin yet...
+    echo Must specify filename -- can\'t use stdin \(yet\)...
     exit
 endif
 
-# Construct the argument list.
+# Special cases:
+
+if ($nskip > 0) then
+    set nsnaps = `echo $nskip $nsnaps | awk '{print $1*$2;}'`
+    if ("x$tsnap_set" == "x0") set tsnap = all
+endif
+
+if ("x$tsnap" == "xall") then
+    set tsnap = 0
+    set nsnaps = 100000000
+    set last = 0
+    set tsnap_set = 1
+endif
+
+# Construct the argument list for kiraformat2.
 
 set t = ""
 set n = ""
@@ -65,26 +91,63 @@ if ($last == 0) then
     set n = "-n $nsnaps"
 endif
 
-# For now, no particular advantage to using a file stream in kiraindex2,
-# so always pipe the data into the program.  (May change...)
+# No particular advantage to using a file stream in kiraindex2,
+# but use a file rather than a pipe nonetheless.  (May change...)
 
-# echo executing cat $file \| kiraindex2 $n $t
-set index_list = (`cat $file | kiraindex2 $n $t`)
+errecho executing kiraindex2 $file $n $t
+set index_list = (`kiraindex2 $file $n $t`)
 
-# Determine indices to use in the second pass.
+#errecho $index_list
+errecho length of index_list = $#index_list
+
+# Determine indices to use in the second pass.  Format of the data
+# stored in index_list is
+#
+#	t1 start1 end1 t2 start2 end2 t3 start3 end3 ...
+#
+# Select all or some of this, depending on last and nskip.
 
 set n = $#index_list
 @ n1 = $n - 1
+
+set ranges = ""
+
 if ($last == 1) then
+
     set low = $index_list[$n1]
     set high = $index_list[$n]
+    set ranges = "$low $high"
+
 else
-    set low = $index_list[2]
-    set high = $index_list[$n]
+
+#   Records to use depend on nskip (note potential problems with
+#   very long lists...).
+
+    if ($nskip <= 0) then
+	set low = $index_list[2]
+	set high = $index_list[$n]
+	set ranges = "$low $high"
+    else
+	@ i = 2
+	@ i3 = `echo $nskip 3 | awk '{print ($1+1)*$2;}'`
+	while ($i <= $n - 1)
+	    @ i1 = $i + 1
+	    set ranges = "$ranges $index_list[$i] $index_list[$i1]"
+	    # errecho i = $i, ranges = $ranges
+	    @ i += $i3
+	end
+    endif
+
 endif
 
-#echo low = $low, high = $high
+if ("x$ranges" == "x") then
+    errecho No records found
+    exit
+endif
 
-# Extract the data, send to stdout.
+# Extract the data, send the results to stdout.
+# Note that getbytes now requires a file, not a pipe.
 
-getbytes $file $low $high
+set range2 = `echo $#ranges | awk '{print $1/2;}'`
+errecho executing getbytes with $range2 ranges
+getbytes $file $ranges

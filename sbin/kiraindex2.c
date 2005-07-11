@@ -61,7 +61,7 @@ main(int argc, char *argv[])
     char *prog = argv[0];
 
     double time = 0;
-    int time_set = 0, nsnap, nsnap_set = 0, count = 0;
+    int time_set = 0, nsnap = 1, nsnap_set = 0, count = 0;
 
     if (argc <= 1) {
 
@@ -93,8 +93,27 @@ main(int argc, char *argv[])
 		case 't':	time = atof(argv[++i]);
 				time_set = 1;
 				break;
-	    }
+
+		} else {
+
+		    // Interpret an unknown argument as a file name.
+
+		    if (freopen(argv[i], "r", stdin) == NULL) {
+			fprintf(stderr,
+				"%s: %s: cannot open input: ",
+				prog, argv[i]);
+			perror("");
+			err_exit(argv[0]);
+		    }
+		}
     }
+
+/*
+    fprintf(stderr, "time_set = %d, nsnap_set = %d\n", time_set, nsnap_set);
+    fprintf(stderr, "nsnap = %d, time = %f\n", nsnap, time);
+*/
+    
+    if (nsnap <= 0) return 1;
 
     at = 0LL;
     while(fgets(line, sizeof(line), stdin) != NULL) {
@@ -112,14 +131,14 @@ main(int argc, char *argv[])
 	    if(nesting < 0) nesting = 0;
 	    if(nesting == 0 && start >= 0) {
 
-		if (!time_set || systime >= time) {
+	        if (!time_set || systime >= time) {
 		    printf("%lg %lld %lld\n", systime, start, at);
 		    count++;
 		}
 		if (nsnap_set && count >= nsnap) return 0;
 
 		start = -1;
-		systime = -1;
+		systime = 0;
 	    }
 
 	} else if(!memcmp(s, "(P", 2)) {

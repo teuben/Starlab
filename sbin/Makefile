@@ -1,6 +1,6 @@
 LDFLAGS = -lm
-EXECUTABLES =	check_dep earliest_time ints \
-		kiraformat kiraindex kiraindex2 getbytes \
+EXECUTABLES =	check_dep earliest_time errecho getbytes ints \
+		kiraformat kiraindex kiraindex2 \
 		largest_int latest_time mytime readlink sqrt strip_starlab_path
 
 # strings trn
