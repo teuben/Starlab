@@ -24,7 +24,7 @@ bin_PROGRAMS = compute_com compute_mcom compute_density compute_max_cod \
     to_com jiggle lagradplotsmooth get_std_center add_plummer add_power_law \
     add_tidal set_ignore_internal add_daughter_node getsnap print_time \
     radial_density radial_numdensity radial_vdisp radial_profile makemass \
-    makesecondary merge_snaps print_radii hop
+    makesecondary merge_snaps print_radii hop test_util
 
 # this is for stpcpy(3) on the Pentium machines in Tokyo
 libdyn_1_la_CPPFLAGS = -D_GNU_SOURCE
@@ -82,6 +82,7 @@ makesecondary_CPPFLAGS = -DTOOLBOX
 merge_snaps_CPPFLAGS = -DTOOLBOX
 print_radii_CPPFLAGS = -DTOOLBOX
 hop_CPPFLAGS = -DTOOLBOX
+test_util_CPPFLAGS = -DTOOLBOX
 
 compute_com_LDADD = ../libdyn.la
 compute_mcom_LDADD = ../libdyn.la
@@ -129,6 +130,7 @@ makesecondary_LDADD = ../libdyn.la
 merge_snaps_LDADD = ../libdyn.la
 print_radii_LDADD = ../libdyn.la
 hop_LDADD = ../libdyn.la
+test_util_LDADD = ../libdyn.la
 
 compute_com_SOURCES = compute_com.C
 compute_mcom_SOURCES = compute_mcom.C
@@ -176,6 +178,7 @@ makesecondary_SOURCES = makesecondary.C
 merge_snaps_SOURCES = merge_snaps.C
 print_radii_SOURCES = print_radii.C
 hop_SOURCES = hop.C
+test_util_SOURCES = test_util.C
 
 BUILT_SOURCES = dyn_parser.h 
 AM_YFLAGS = -d

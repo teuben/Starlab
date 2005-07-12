@@ -215,8 +215,7 @@ local inline bool get_rhalf(dyn *b)
 	// Suppressed temporarily -- reference to lagrad stuff somehow
 	// forces a libsstar dependency...
 
-	rhalf = print_lagrangian_radii(root, 2, false, 0,
-				       true);		    // noprint
+	rhalf = compute_lagrangian_radii(root, 2, false, 0);    // don't print
 
 	if (rhalf > 0) {
 	    putrq(s, "kira_rhalf", rhalf);

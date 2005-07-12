@@ -454,18 +454,34 @@ void compute_mass_radii(dyn*);
 void compute_mass_radii_percentiles(dyn*);
 void compute_mass_radii_quartiles(dyn*);
 
-void set_lagr_cutoff_mass(dyn *b, real frac);
+void set_lagr_cutoff_mass(dyn *b, real frac_low, real frac_high = 1.0);
+void reset_lagr_cutoff_mass(dyn *b, real frac_low, real frac_high = 1.0);
 real get_lagr_cutoff_mass();
+real get_lagr_cutoff_mass_low();
+real get_lagr_cutoff_mass_high();
 real print_lagrangian_radii(dyn* b,
 			    int which_lagr = 2,
 			    bool verbose = true,
 			    int which_star = 0,
-			    bool noprint = false);
+			    bool print = true);
+real compute_lagrangian_radii(dyn* b,
+			      int which_lagr = 2,
+			      bool verbose = true,
+			      int which_star = 0);
+real compute_lagrangian_radii(dyn* b,
+			      real *arr, int narr,
+			      bool verbose = true,
+			      int which_star = 0);
+real compute_lagrangian_radii(dyn* b,
+			      real r,
+			      bool verbose = true,
+			      int which_star = 0);
 
 typedef bool boolfn(dyn*);
 bool compute_general_mass_radii(dyn*, int,
 				bool nonlin = false,
-				boolfn *bf = NULL);
+				boolfn *bf = NULL,
+				bool verbose = true);
 
 // From sys_stats.C:
 

@@ -35,10 +35,20 @@
 //   version 2:  Dec 1992   Piet Hut  --  adapted to the new C++-based starlab
 //   version 3:  Jul 1996   Steve McMillan & Jun Makino
 //.............................................................................
+//
 //   non-local functions: 
+//
 //      compute_general_mass_radii
 //      compute_mass_radii_quartiles
 //      compute_mass_radii_percentiles
+//      void reset_lagr_cutoff_mass
+//      void set_lagr_cutoff_mass
+//      real get_lagr_cutoff_mass
+//	real get_lagr_cutoff_mass_lowa
+//	real get_lagr_cutoff_mass_high
+//	real print_lagrangian_radii
+//	real compute_lagrangian_radii (x3 overloaded)
+
 //-----------------------------------------------------------------------------
 
 #include "dyn.h"
@@ -73,16 +83,29 @@ local int compare_radii(const void * pi, const void * pj)  // increasing radius
 static real nonlin_masses[9] = {0.005, 0.01, 0.02, 0.05, 0.1,
 				0.25, 0.5, 0.75, 0.9};
 
-bool compute_general_mass_radii(dyn * b, int nzones,
-				bool nonlin,
-				boolfn bf)
+// Kludgy workaround to expand functionality while preserving existing
+// calling sequences...
+
+static real *lagr_array = NULL;
+static int n_lagr = 0;
+
+bool compute_general_mass_radii(dyn * b,
+				int nzones,
+				bool nonlin,		// default = true
+				boolfn bf,		// default = NULL
+				bool verbose)		// default = true
 {
-    if (nzones < 2) return false;
+    static char *func = "compute_general_mass_radii";
+
     if (nonlin && nzones != 10) return false;		// special case
 
     // Note: nzones specifies the number of radial zones to consider.
     //	     However, we only store radii corresponding to the nzones-1 
-    //	     interior zone boundaries.
+    //	     interior zone boundaries.  Note that nzones < 2 now means
+    //       that the zones are specified in the array lagr_array, and
+    //       the results should be returned that way.
+
+    if (nzones < 2 && (lagr_array == NULL || n_lagr <= 0)) return false;
 
     char lagr_string[64] = "geometric center";
 
@@ -95,8 +118,9 @@ bool compute_general_mass_radii(dyn * b, int nzones,
     }
 
     if (n <= 0) {				// possible in restricted cases
-	cerr << endl
-	     << "    compute_general_mass_radii: no stars in this category\n";
+	if (verbose)
+	    cerr << endl << "    " << func
+		 << ": no stars in this category\n";
 	return false;
     }
 
@@ -113,9 +137,9 @@ bool compute_general_mass_radii(dyn * b, int nzones,
     rm_pair_ptr rm_table = new rm_pair[n];
 
     if (rm_table == NULL) {
-	cerr << endl
-	     << "    compute_general_mass_radii: "
-	     << "not enough memory left for rm_table\n";
+	if (verbose)
+	    cerr << endl << "    " << func
+	    		 << ": not enough memory left for rm_table\n";
 	return false;
     }
 
@@ -145,28 +169,31 @@ bool compute_general_mass_radii(dyn * b, int nzones,
 
     // cerr << "    determining Lagrangian radii 1" << endl << flush;
 
-    real* mass_percent = new real[nzones-1];
+    int nmass = nzones - 1;
+    if (nzones < 2) nmass = n_lagr;
+    real* mass_percent = new real[nmass];
     if (mass_percent == NULL) {
-	cerr << endl
-	     << "    compute_general_mass_radii: "
-	     << "not enough memory left for mass_percent\n";
+	if (verbose)
+	    cerr << endl << "    " << func
+		 	 << ": not enough memory left for mass_percent\n";
 	delete [] rm_table;
 	return false;
     }
 
-    int k;
-    for (k = 0; k < nzones-1; k++) {
-        if (!nonlin) 
+    for (int k = 0; k < nmass; k++) {
+	if (nzones < 2)
+	    mass_percent[k] = lagr_array[k] * total_mass;
+        else if (!nonlin) 
 	    mass_percent[k] = ((k + 1) / (real)nzones) * total_mass;
-	else
+	else if (nzones > 1)
 	    mass_percent[k] = nonlin_masses[k] * total_mass;
     }
 
-    real *rlagr = new real[nzones-1];
+    real *rlagr = new real[nmass];
     if (rlagr == NULL) {
-	cerr << endl
-	     << "    compute_general_mass_radii: "
-	     << "not enough memory left for r_lagr\n";
+	if (verbose)
+	    cerr << endl << "    " << func
+			 << ": not enough memory left for r_lagr\n";
 	delete [] rm_table;
 	delete [] mass_percent;
 	return false;
@@ -176,7 +203,7 @@ bool compute_general_mass_radii(dyn * b, int nzones,
 
     // cerr << "    determining Lagrangian radii 2" << endl << flush;
 
-    for (k = 0; k < nzones-1; k++) {
+    for (int k = 0; k < nmass; k++) {
 
         while (cumulative_mass < mass_percent[k])
 	    cumulative_mass += rm_table[i++].mass;
@@ -198,8 +225,16 @@ bool compute_general_mass_radii(dyn * b, int nzones,
     putvq(b->get_dyn_story(), "lagr_pos", lagr_pos);
     putvq(b->get_dyn_story(), "lagr_vel", lagr_vel);
     putsq(b->get_dyn_story(), "pos_type", lagr_string);
-    putiq(b->get_dyn_story(), "n_lagr", nzones-1);
-    putra(b->get_dyn_story(), "r_lagr", rlagr, nzones-1);
+    putiq(b->get_dyn_story(), "n_lagr", nmass);
+    if (nzones < 2)
+	putra(b->get_dyn_story(), "m_lagr", lagr_array, nmass);
+    else
+	rmq(b->get_dyn_story(), "m_lagr");
+    putra(b->get_dyn_story(), "r_lagr", rlagr, nmass);
+
+    if (nzones < 2)
+	for (int k = 0; k < nmass; k++)
+	    lagr_array[k] = rlagr[k];
 
     delete [] mass_percent;
     delete [] rm_table;
@@ -210,12 +245,12 @@ bool compute_general_mass_radii(dyn * b, int nzones,
 
 // Convenient synonyms:
 
-void  compute_mass_radii_quartiles(dyn * b)
+void compute_mass_radii_quartiles(dyn * b)
 {
     compute_general_mass_radii(b, 4);
 }
 
-void  compute_mass_radii_percentiles(dyn * b)
+void compute_mass_radii_percentiles(dyn * b)
 {
     compute_general_mass_radii(b, 10);
 }
@@ -247,46 +282,102 @@ local bool double_fn(dyn * b)
 #include <vector>
 #include <algorithm>
 
-static real cutoff_mass = 0;
+static real cutoff_mass_low = 0;
+static real cutoff_mass_high = VERY_LARGE_NUMBER;
+static vector<real> m;
 
-void set_lagr_cutoff_mass(dyn *b, real f)
+void reset_lagr_cutoff_mass(dyn *b,
+			    real f_low,
+			    real f_high)	// default = 1
 {
-    // Determine a cutoff for the "most massive" single stars, as follows.
+    // Determine cutoff masses for "massive" single stars, as follows.
     // Start with the f-th percentile mass, then move up the list toward
     // the more massive end until an increase in mass occurs, and use
     // that new mass.  This will choose a mass very close to the f-th
     // percentile in case of a continuous mass function, and should pick
-    // out the next group up if have discrete mass groups.
+    // out the next group up if we have discrete mass groups.
 
-    vector<real> *m = new vector<real>;
+    // Use the existing mass vector m -- do not recreate and resort.
+    // Up to the user to ensure that m is correct, by calling
+    // set_lagr_cutoff_mass() before reset_lagr_cutoff_mass().
+
+    // Lower limit:
+
+    int nf = (int)(f_low*m.size()) - 1, i = nf;
+    if (nf < 0)
+	cutoff_mass_low = 0;
+    else {
+	while (i < m.size() && m[i] == m[nf]) i++;
+	if (i < m.size())
+	    cutoff_mass_low = m[i];
+	else
+	    cutoff_mass_low = VERY_LARGE_NUMBER;
+    }
+
+    // Upper limit (same procedure, for now):
+
+    nf = (int)(f_high*m.size()) - 1, i = nf;
+    if (nf < 0)
+	cutoff_mass_high = 0;
+    else {
+	while (i < m.size() && m[i] == m[nf]) i++;
+	if (i < m.size())
+	    cutoff_mass_high = m[i];
+	else
+	    cutoff_mass_high = VERY_LARGE_NUMBER;
+    }
+
+    // PRC(cutoff_mass_low); PRL(cutoff_mass_high);
+}
+
+void set_lagr_cutoff_mass(dyn *b,
+			  real f_low,
+			  real f_high)		// default = 1
+{
+    
+    // Determine cutoff masses for "massive" single stars, using
+    // reset_lagr_cutoff_mass(), but create and sort the mass array
+    // first.
+
+    // Function originally dealt only with a lower limit.  Retain the name
+    // for compatibility.
+
+    m.clear();
     for_all_daughters (dyn, b, bb)
-	if (bb->is_leaf()) m->push_back(bb->get_mass());
+	if (bb->is_leaf()) m.push_back(bb->get_mass());
+    sort(m.begin(), m.end());
 
-    sort(m->begin(), m->end());
-
-    int nf = (int)(f*m->size()) - 1, i = nf;
-    while (i < m->size() && (*m)[i] == (*m)[nf]) i++;
-    if (i < m->size())
-	cutoff_mass = (*m)[i];
-    else
-	cutoff_mass = VERY_LARGE_NUMBER;
+    reset_lagr_cutoff_mass(b, f_low, f_high);
 }
 
 real get_lagr_cutoff_mass()
 {
-    return cutoff_mass;
+    return cutoff_mass_low;
+}
+
+real get_lagr_cutoff_mass_low()
+{
+    return cutoff_mass_low;
+}
+
+real get_lagr_cutoff_mass_high()
+{
+    return cutoff_mass_high;
 }
 
 local bool massive_fn(dyn * b)
 {
-    return (b->get_mass() >= cutoff_mass);
+    return (b->get_mass() >= cutoff_mass_low
+	    && b->get_mass() <= cutoff_mass_high);
 }
+
+
 
 real print_lagrangian_radii(dyn* b,
 			    int which_lagr,	// default = 2 (nonlinear)
 			    bool verbose,	// default = true
 			    int which_star,	// default = 0 (all stars)
-			    bool noprint)	// default = false (print!)
+			    bool print)		// default = true
 {
     bool nonlin = false;
 
@@ -312,15 +403,15 @@ real print_lagrangian_radii(dyn* b,
     bool status = false;
 
     if (which_star == 0)
-	status = compute_general_mass_radii(b, nl, nonlin);
+	status = compute_general_mass_radii(b, nl, nonlin, NULL, verbose);
     else if (which_star == 1)
-	status = compute_general_mass_radii(b, nl, nonlin, binary_fn);
+	status = compute_general_mass_radii(b, nl, nonlin, binary_fn, verbose);
     else if (which_star == 2)
-	status = compute_general_mass_radii(b, nl, nonlin, single_fn);
+	status = compute_general_mass_radii(b, nl, nonlin, single_fn, verbose);
     else if (which_star == 3)
-	status = compute_general_mass_radii(b, nl, nonlin, double_fn);
+	status = compute_general_mass_radii(b, nl, nonlin, double_fn, verbose);
     else if (which_star == 4)
-	status = compute_general_mass_radii(b, nl, nonlin, massive_fn);
+	status = compute_general_mass_radii(b, nl, nonlin, massive_fn, verbose);
 
     if (status && find_qmatch(b->get_dyn_story(), "n_lagr")
 	&& getrq(b->get_dyn_story(), "lagr_time") == b->get_system_time()) {
@@ -330,7 +421,7 @@ real print_lagrangian_radii(dyn* b,
 
 	vec lagr_pos = getvq(b->get_dyn_story(), "lagr_pos");
 
-	if (verbose && !noprint) {
+	if (verbose && print) {
 	    cerr << endl << "  Lagrangian radii relative to ("
 		 << lagr_pos << "):" << endl;
 	    if (find_qmatch(b->get_dyn_story(), "pos_type"))
@@ -351,23 +442,88 @@ real print_lagrangian_radii(dyn* b,
 	getra(b->get_dyn_story(), "r_lagr", r_lagr, n_lagr);
 
 	for (int k = 0; k < n_lagr; k += 5) {
-	    if (!noprint) {
+	    if (print) {
 		if (k > 0) {
 		    cerr << endl;
 		    for (int kk = 0; kk < indent; kk++) cerr << " ";
 		}
 		for (int i = k; i < k+5 && i < n_lagr; i++)
 		    cerr << " " << r_lagr[i];
+		cerr << endl << flush;
 	    }
-	    cerr << endl << flush;
 	}
 
 	rhalf = r_lagr[ihalf];
 	delete [] r_lagr;
+
+    } else {
+
+	rmq(b->get_dyn_story(), "n_lagr");
+	rhalf = -1;
+
     }
 
     return rhalf;
 }
+
+real compute_lagrangian_radii(dyn* b,
+			      int which_lagr,	// default = 2 (nonlinear)
+			      bool verbose,	// default = true
+			      int which_star)	// default = 0 (all stars)
+{
+    return print_lagrangian_radii(b, which_lagr, verbose, which_star,
+				  false);	// don't print
+}
+
+real compute_lagrangian_radii(dyn* b,
+			      real *arr, int narr,
+			      bool verbose,	// default = true
+			      int which_star)	// default = 0 (all stars)
+{
+    if (arr == NULL || narr <= 0) return -1;
+
+    // Work with copies...
+
+    if (lagr_array == NULL) lagr_array = new real[narr];
+    for (int k = 0; k < narr; k++) lagr_array[k] = arr[k];
+    n_lagr = narr;
+
+    bool status = false;
+    if (which_star == 0)
+	status = compute_general_mass_radii(b, 0, false, NULL, verbose);
+    else if (which_star == 1)
+	status = compute_general_mass_radii(b, 0, false, binary_fn, verbose);
+    else if (which_star == 2)
+	status = compute_general_mass_radii(b, 0, false, single_fn, verbose);
+    else if (which_star == 3)
+	status = compute_general_mass_radii(b, 0, false, double_fn, verbose);
+    else if (which_star == 4)
+	status = compute_general_mass_radii(b, 0, false, massive_fn, verbose);
+
+
+    real rret = -1;
+    if (status) {
+	for (int k = 0; k < narr; k++) arr[k] = lagr_array[k];
+	rret = arr[0];
+    }
+
+    // Clean up.
+
+    if (lagr_array) delete [] lagr_array;
+    lagr_array = NULL;
+    n_lagr = 0;
+
+    return rret;
+}
+
+real compute_lagrangian_radii(dyn* b,
+			      real r,
+			      bool verbose,	// default = true
+			      int which_star)	// default = 0 (all stars)
+{
+    return compute_lagrangian_radii(b, &r, 1, verbose, which_star);
+}
+
 
 #else
 
