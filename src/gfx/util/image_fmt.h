@@ -27,14 +27,6 @@ void write_sun_header(int m, int n, FILE *out_file,
 void write_sun_header(int m, int n, FILE *out_file,
 		      char* colormap_file = NULL);
 
-void write_gif_header(int m, int n, FILE *out_file,
-		      unsigned char *red,
-		      unsigned char *green,
-		      unsigned char *blue);
-
-void write_gif_header(int m, int n, FILE *out_file,
-		      char* colormap_file = NULL);
-
 void encode_gif(FILE *dst, unsigned char *pixels, int depth, int siz);
 
 int write_sun(FILE *dst, int cols, int rows,
@@ -49,13 +41,15 @@ int write_sun(FILE *dst, int cols, int rows,
 
 int write_gif(FILE *dst, int cols, int rows,
 	      unsigned char *pixels,
-	      char *colormap_file = NULL);
+	      char *colormap_file,
+	      char *comment = NULL);
 
 int write_gif(FILE *dst, int cols, int rows,
 	      unsigned char *pixels,
-	      unsigned char *red = NULL,
-	      unsigned char *green = NULL,
-	      unsigned char *blue = NULL);
+	      unsigned char *red,
+	      unsigned char *green,
+	      unsigned char *blue,
+	      char *comment = NULL);
 
 int write_png(FILE *dst, int cols, int rows,
 	      unsigned char *pixels,

@@ -7,6 +7,7 @@
 ////               the image to other formats.
 ////
 ////  Options:     -c         expect char input
+////               -C         attach a comment to a GIF file               [no]
 ////               -f         expect float input                      [default]
 ////               -g         same as -F 1
 ////               -i         expect int input
@@ -20,7 +21,8 @@
 #include "image_fmt.h"
 
 #define USAGE \
-"Usage: make_image [-c] [-f] [-i] [-F fmt] [-m color-map] [-s sizex [sizey]]"
+"Usage: make_image [-c] [-C comment] [-f] [-i] [-F fmt] [-g] [-p] \n\
+       [-m color-map] [-s sizex [sizey]]"
 
 #define BUFSIZE 8192
 
@@ -40,11 +42,15 @@ main(int argc, char** argv)
     char *fmt = gif;
     bool nset = false;
 
+    char *comment = NULL;
+
     /* Parse the argument list. */
 
     for (i = 0; i < argc; i++)
 	if (argv[i][0] == '-') {
 	    switch (argv[i][1]) {
+		case 'C':	comment = argv[++i];
+ 				break;
 		case 'c':	which = 0;
 				break;
 		case 'f':	which = 2;
@@ -116,7 +122,7 @@ main(int argc, char** argv)
 	write_sun(stdout, m, n, data, colormap);
 
     else if (streq(fmt, "gif"))
-	write_gif(stdout, m, n, data, colormap);
+	write_gif(stdout, m, n, data, colormap, comment);
 
     else if (streq(fmt, "png")) {
 
@@ -124,7 +130,7 @@ main(int argc, char** argv)
 	write_png(stdout, m, n, data, colormap);
 #else
 	cerr << "No PNG support; switching to GIF" << endl;
-	write_gif(stdout, m, n, data, colormap);
+	write_gif(stdout, m, n, data, colormap, comment);
 #endif
     }
 }
