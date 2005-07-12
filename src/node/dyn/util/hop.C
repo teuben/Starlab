@@ -21,9 +21,11 @@
 //   Adopted to starlab:
 //   Version 1.1:       Simon Portegies Zwart,          Haarlem March 2005, 
 
-#include "hop.h"
+#ifndef TOOLBOX
 
-//#ifndef TOOLBOX
+#else
+
+#include "hop.h"
 
 dyn* hop::densest_nth_nn(dyn *b) {
 
@@ -123,8 +125,6 @@ void hop::find_primary_cluster(dyn *b) {
 
 }
 
-//#else 
-
 int main(int argc, char ** argv)
 {
   //    check_help();
@@ -178,5 +178,5 @@ int main(int argc, char ** argv)
     }
 }
 
-//#endif
+#endif
 /* end of: hop.C */
