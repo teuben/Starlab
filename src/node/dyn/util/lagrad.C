@@ -18,7 +18,7 @@
 //// Usage: lagrad [OPTIONS] < input > output
 ////
 //// Options:     
-////		  -c    add a comment to the output snapshot [false]
+////	          -c    add a comment to the output snapshot [false]
 ////              -n    specify number of Lagrangian zones (linear in mass) [4]
 ////              -s    use "special" nonlinear binning:
 ////                        0.005, 0.01, 0.02, 0.05,
