@@ -1,13 +1,17 @@
 
-#include "stdinc.h"
+#include <stdio.h>	// note no Starlab headers!
+#include <iostream>
 #include "image_fmt.h"
 
 #define BUFLEN 1000
 
-local void write_gif_header(FILE *dst, int cols, int rows, int depth,
-			    unsigned char *red,
-			    unsigned char *green,
-			    unsigned char *blue)
+// See http://www.w3.org/Graphics/GIF/spec-gif89a.txt for details
+// on the GIF format and data block structure.
+
+static void write_gif_header(FILE *dst, int cols, int rows, int depth,
+			     unsigned char *red,
+			     unsigned char *green,
+			     unsigned char *blue)
 {
     char *pos, *buffer;
     int i;
@@ -59,13 +63,13 @@ local void write_gif_header(FILE *dst, int cols, int rows, int depth,
 }
 
 #define BUFSIZE 80
-#define INDENT 4
+#define INDENT 9	// ties in with "Command: " line from snap_to_image
 
-void write_gif_comment(FILE *dst, char *comment)
+void write_gif_comment(FILE *dst, const char *comment)
 {
     // Add an optional text comment.  Comments can be up to 255
-    // characters long, but limit ours to blocks of length 80
-    // for readability.  Indent extra lines by 4 chars, and also
+    // characters long, but limit ours to blocks of length BUFSIZE
+    // for readability.  Indent extra lines by INDENT chars, and also
     // take a new line and reset the indentation if a '\n' is
     // encountered.
 
@@ -135,7 +139,7 @@ int write_gif(FILE *dst, int cols, int rows,
 	      unsigned char *red,
 	      unsigned char *green,
 	      unsigned char *blue,
-	      char *comment)			// default = NULL
+	      const char *comment)			// default = NULL
 {
     int depth = 8;
     write_gif_header(dst, cols, rows, depth, red, green, blue);
@@ -150,7 +154,7 @@ int write_gif(FILE *dst, int cols, int rows,
 int write_gif(FILE *dst, int cols, int rows,
 	      unsigned char *pixels,
 	      char *colormap_file,
-	      char *comment)			// default = NULL
+	      const char *comment)			// default = NULL
 {
     unsigned char red[256], green[256], blue[256];
     get_colormap(red, green, blue, colormap_file);

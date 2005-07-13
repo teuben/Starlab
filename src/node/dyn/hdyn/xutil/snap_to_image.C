@@ -9,8 +9,8 @@
 ////           -d           delete frames once the animation is made       [no]
 ////           -f filename  specify root name of image files   ["-" --> stdout]
 ////           -F format    specify image file format
-////                            (0 = PNG, 1 = SUN, 2 = GIF)                 [0]
-////           -g           write GIF files -- same as "-F 2"              [no]
+////                            (0 = PNG, 1 = SUN, 2 = GIF)                 [2]
+////           -g           write GIF files -- same as "-F 2"             [yes]
 ////           -G           toggle forcing particles to grid (nicer single
 ////                            frames, but jerkier movies)              [true]
 ////           -H           toggle Herzsprung-Russel diagram or positional
@@ -59,6 +59,11 @@
 ////                            of HRD (-H only)                           [-3]
 ////           -Y           specify maximum (log luminosity/Lsun) limit
 ////                            of HRD (-H only)                            [3]
+////
+//// In the case of GIF output, the command line responsible for creation of
+//// the image is encoded in the text segmant of the output file.  Note that
+//// the default output format has been changed to GIF now that the LZW patent
+//// issues seem to have gone away.
 ////
 //// Notes: 1. If animations are specified, an MNG or animated GIF file will
 ////           be created.  The individual frames will be retained unless
@@ -363,8 +368,11 @@ local void write_image_file(unsigned char *a, int nx, int ny,
 			    bool colormap_set, char *colormap,
 			    unsigned char *red,
 			    unsigned char *green,
-			    unsigned char *blue)
+			    unsigned char *blue,
+			    const char *comment = NULL)
 {
+    char *func = "write_image_file";
+
     // Note that write_xxx will write the image left to right,
     // top to bottom.
 
@@ -382,13 +390,13 @@ local void write_image_file(unsigned char *a, int nx, int ny,
     if (output_file_name) {
 	dst = fopen(output_file_name, "w");
 	if (!dst) {
-	    cerr << "Can't open file " << output_file_name
+	    cerr << func << " can't open file " << output_file_name
 		 << "; using stdout" << endl;
 	    dst = stdout;
 	    output_file_name = NULL;
 	}
     }
-    
+
     if (colormap_set) {
 
 	if (format == 0)
@@ -396,7 +404,7 @@ local void write_image_file(unsigned char *a, int nx, int ny,
 	else if (format == 1)
 	    write_sun(dst, nx, ny, a, colormap);
 	else if (format == 2)
-	    write_gif(dst, nx, ny, a, colormap);
+	    write_gif(dst, nx, ny, a, colormap, comment);
 
     } else {
 
@@ -405,7 +413,7 @@ local void write_image_file(unsigned char *a, int nx, int ny,
 	else if (format == 1)
 	    write_sun(dst, nx, ny, a, red, green, blue);
 	else if (format == 2)
-	    write_gif(dst, nx, ny, a, red, green, blue);
+	    write_gif(dst, nx, ny, a, red, green, blue, comment);
 
     }
 
@@ -437,6 +445,8 @@ local void write_image_file(unsigned char *a, int nx, int ny,
 
 #include <ctype.h>
 
+#define NARGS 8
+
 local void get_offset(char *str, vec& offset)
 {
     int len = strlen(str)+1;
@@ -456,6 +466,90 @@ local void get_offset(char *str, vec& offset)
     sscanf(copy, "%lf %lf %lf", &offset[0], &offset[1], &offset[2]);
 }
 
+#include <string>
+#include <sstream>
+
+local string identify_run(int argc, char *argv[])
+{
+    ostringstream s;
+
+    // Identify the Starlab version.
+
+    s << "Image created by Starlab version " << VERSION;
+
+    // Attempt to identify the user and host.
+
+    s << ", run by ";
+    if (getenv("LOGNAME"))
+	s << getenv("LOGNAME");
+    else
+	s << "(unknown)";
+
+    s << " on host ";
+    if (getenv("HOST"))
+	s << getenv("HOST");
+    else if (getenv("HOSTNAME"))
+	s << getenv("HOSTNAME");
+    else
+	s << "(unknown)";
+
+    s << endl;
+
+    if (getenv("HOSTTYPE"))
+	s << "    (host type " << getenv("HOSTTYPE") <<")";
+
+    // Also log the time and date.
+
+    const time_t tt = time(NULL);
+    s << " on  " << ctime(&tt);
+
+    s << "Command: " << argv[0];
+    for (int i = 1; i < argc; i++)
+	s << " " << argv[i];
+
+    return s.str();		// no newline at end
+}
+
+local string identify_frame(hdyn *b, int count)
+{
+    ostringstream s;
+
+    // Identify the frame.
+
+    s << "Frame " << count << endl;
+
+    if (b == NULL)
+
+	s << "No snapshot information";
+
+    else {
+
+	s << "History:" << endl;
+
+	// Add history from the root log story.
+
+	story *log = b->get_log_story();
+	for (story * d = log->get_first_daughter_node(); d != NULL;
+	     d = d->get_next_story_node())
+	    if (!d->get_chapter_flag()) {
+		char *t = d->get_text();
+		if (t) {
+		    char *sub = strstr(t, "Starlab");
+		    if (sub) {
+			char *plus = strstr(t, "+");
+			if (!plus || plus > sub) {	// omit merger info
+			    if (strstr(sub, "(user") && strstr(sub, ":"))
+				s << t << endl;
+			}
+		    }
+		}
+	    }
+	s << "time = " << b->get_system_time() << "  N = " << b->n_leaves();
+    }
+
+    return s.str();		// no newline at end
+}
+
 main(int argc, char** argv)
 {
     char output_file_id[FILE_NAME_LEN];
@@ -465,7 +559,7 @@ main(int argc, char** argv)
 
     bool combine = true;
     bool compress = false;
-    int format = 0;
+    int format = 2;
 
     int nx = NX, ny = NY;
 
@@ -625,6 +719,7 @@ main(int argc, char** argv)
 	}
     }
 
+
     PRC(origin); PRL(xoffset); PRL(dxoffset);
 
     if (!psize_set) {
@@ -636,6 +731,8 @@ main(int argc, char** argv)
 	    minpixel = 1;
 	}
     }
+
+    string run_id_string = identify_run(argc, argv);
 
 #ifndef HAVE_LIBPNG
     if (format == 0) {
@@ -735,9 +832,11 @@ main(int argc, char** argv)
 	for (int j = 0; j < ny; j++)
 	    for (int i = 0; i < nx; i++)
 		*(a+j*nx+i) = (i%256);
+	string image_comment = run_id_string+"\nTest image";
 	write_image_file(a, nx, ny, NULL,		// NULL ==> stdout
 			 0, format, false, NULL,
-			 red, green, blue);
+			 red, green, blue,
+			 image_comment.c_str());
 	exit(0);
     }
 
@@ -781,7 +880,11 @@ main(int argc, char** argv)
     // Loop over input snapshots.
 
     hdyn* b;
+    string frame_id_string;
+
     while (b = get_hdyn()) {
+
+	frame_id_string = identify_frame(b, count);
 
 	if (origin == 2) {
 
@@ -1105,9 +1208,11 @@ main(int argc, char** argv)
 		    }
 		}
 
+		string image_comment = run_id_string + "\n" + frame_id_string;
 		write_image_file(a, nx, ny, output_file_name,
 				 compress, format,
-				 colormap_set, colormap, red, green, blue);
+				 colormap_set, colormap, red, green, blue,
+				 image_comment.c_str());
 	    }
 	}
 
@@ -1127,9 +1232,17 @@ main(int argc, char** argv)
 
 	// Write the output file.
 
+	char temp[10];
+	sprintf(temp, "%d", count);
+	string image_comment = run_id_string
+				+ "\nCombined frame of " + temp + " snapshots";
+	if (frame_id_string.size() > 0)
+	    image_comment += "\n" + frame_id_string;
+
 	write_image_file(a, nx, ny, output_file_name,
 			 compress, format,
-			 colormap_set, colormap, red, green, blue);
+			 colormap_set, colormap, red, green, blue,
+			 image_comment.c_str());
 
     } else {
 

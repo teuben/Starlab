@@ -42,14 +42,14 @@ int write_sun(FILE *dst, int cols, int rows,
 int write_gif(FILE *dst, int cols, int rows,
 	      unsigned char *pixels,
 	      char *colormap_file,
-	      char *comment = NULL);
+	      const char *comment = NULL);
 
 int write_gif(FILE *dst, int cols, int rows,
 	      unsigned char *pixels,
 	      unsigned char *red,
 	      unsigned char *green,
 	      unsigned char *blue,
-	      char *comment = NULL);
+	      const char *comment = NULL);
 
 int write_png(FILE *dst, int cols, int rows,
 	      unsigned char *pixels,
