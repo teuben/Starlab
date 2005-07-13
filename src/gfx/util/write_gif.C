@@ -1,12 +1,14 @@
 
-#include <stdio.h>	// note no Starlab headers!
-#include <iostream>
+#include <stdinc.h>
 #include "image_fmt.h"
 
-#define BUFLEN 1000
+// We include the Starlab header stdinc.h only to get iostream and
+// configuration information.
 
 // See http://www.w3.org/Graphics/GIF/spec-gif89a.txt for details
 // on the GIF format and data block structure.
+
+#define BUFLEN 1000
 
 static void write_gif_header(FILE *dst, int cols, int rows, int depth,
 			     unsigned char *red,

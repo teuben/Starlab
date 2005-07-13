@@ -1,6 +1,9 @@
 
-#include "stdinc.h"
+#include <stdinc.h>
 #include "image_fmt.h"
+
+// We include the Starlab header stdinc.h only to get iostream and
+// configuration information.
 
 #ifdef HAVE_LIBPNG
 
@@ -9,12 +12,15 @@
 // *** Requires the png and zlib libraries. ***
 // *** Does not need any Starlab libraries. ***
 
+// See http://www.libpng.org/pub/png/libpng-1.2.5-manual.html for
+// details on the PNG format and data block structure.
+
 #include "png.h"
 
-local void convert_palette_colors(png_color palette[], int n,
-				  unsigned char *red,
-				  unsigned char *green,
-				  unsigned char *blue)
+static void convert_palette_colors(png_color palette[], int n,
+				   unsigned char *red,
+				   unsigned char *green,
+				   unsigned char *blue)
 {
     for (int i = 0; i < n; i++) {
 	palette[i].red = red[i];
@@ -24,7 +30,7 @@ local void convert_palette_colors(png_color palette[], int n,
 //    printf("Using %d-color palette.\n", n);
 }
 
-local void set_palette_grey(png_color palette[], int n)
+static void set_palette_grey(png_color palette[], int n)
 {
     for (int i = 0; i < n; i++)
 	palette[i].red = palette[i].green = palette[i].blue = i;
@@ -43,9 +49,10 @@ local void set_palette_grey(png_color palette[], int n)
 int write_png(FILE *dst,
 	      int width, int height,
 	      unsigned char *image,	      
-	      unsigned char *red,	// defaults = NULL
+	      unsigned char *red,
 	      unsigned char *green,
-	      unsigned char *blue)
+	      unsigned char *blue,
+	      const char *comment)			// default = NULL)
 {
     int depth = 8;
 
@@ -129,6 +136,17 @@ int write_png(FILE *dst,
 
    png_write_image(png_ptr, row_pointers);
 
+    // Add an optional comment.
+
+    if (comment) {
+	png_text text;
+	text.compression = PNG_TEXT_COMPRESSION_zTXt;
+	text.key = "Comment";
+	text.text = (char*)comment;
+	text.text_length = 0;
+	png_set_text(png_ptr, info_ptr, &text, 1);
+    }
+
    /* Finish writing the rest of the file. */
 
    png_write_end(png_ptr, info_ptr);
@@ -145,29 +163,30 @@ int write_png(FILE *dst,
 int write_png(FILE *dst,
 	      int width, int height,
 	      unsigned char *image,	      
-	      unsigned char *red,	// defaults = NULL
+	      unsigned char *red,
 	      unsigned char *green,
-	      unsigned char *blue)
+	      unsigned char *blue,
+	      const char *comment)			// default = NULL
 {
     cerr << "write_png: no PNG support available; switching to GIF" << endl;
-    return write_gif(dst, width, height, image, red, green, blue);
+    return write_gif(dst, width, height, image, red, green, blue, comment);
 }
 #endif
 
 int write_png(FILE *dst, int cols, int rows,
 	      unsigned char *pixels,
-	      char *colormap_file)
+	      char *colormap_file,
+	      const char *comment)			// default = NULL
 {
     /* Color map. */
 
     unsigned char red[256], green[256], blue[256];
-
     get_colormap(red, green, blue, colormap_file);
 
 #ifdef HAVE_LIBPNG
-    return write_png(dst, cols, rows, pixels, red, green, blue);
+    return write_png(dst, cols, rows, pixels, red, green, blue, comment);
 #else
     cerr << "write_png: no PNG support available; switching to GIF" << endl;
-    return write_gif(dst, cols, rows, pixels, red, green, blue);
+    return write_gif(dst, cols, rows, pixels, red, green, blue, comment);
 #endif
 }

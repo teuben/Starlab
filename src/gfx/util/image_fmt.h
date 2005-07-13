@@ -53,10 +53,12 @@ int write_gif(FILE *dst, int cols, int rows,
 
 int write_png(FILE *dst, int cols, int rows,
 	      unsigned char *pixels,
-	      char *colormap_file = NULL);
+	      char *colormap_file,
+	      const char *comment = NULL);
 
 int write_png(FILE *dst, int cols, int rows,
 	      unsigned char *pixels,
-	      unsigned char *red = NULL,
-	      unsigned char *green = NULL,
-	      unsigned char *blue = NULL);
+	      unsigned char *red,
+	      unsigned char *green,
+	      unsigned char *blue,
+	      const char *comment = NULL);

@@ -400,7 +400,7 @@ local void write_image_file(unsigned char *a, int nx, int ny,
     if (colormap_set) {
 
 	if (format == 0)
-	    write_png(dst, nx, ny, a, colormap);
+	    write_png(dst, nx, ny, a, colormap, comment);
 	else if (format == 1)
 	    write_sun(dst, nx, ny, a, colormap);
 	else if (format == 2)
@@ -409,7 +409,7 @@ local void write_image_file(unsigned char *a, int nx, int ny,
     } else {
 
 	if (format == 0)
-	    write_png(dst, nx, ny, a, red, green, blue);
+	    write_png(dst, nx, ny, a, red, green, blue, comment);
 	else if (format == 1)
 	    write_sun(dst, nx, ny, a, red, green, blue);
 	else if (format == 2)
