@@ -15,7 +15,7 @@ local void write_gif_header(FILE *dst, int cols, int rows, int depth,
     buffer = (char *)malloc((BUFLEN+1)*sizeof(char))+1;
     pos = buffer;
 
-    /* Header. */
+    // Header.
 
     *pos++ = 'G';
     *pos++ = 'I';
@@ -24,7 +24,7 @@ local void write_gif_header(FILE *dst, int cols, int rows, int depth,
     *pos++ = '9';
     *pos++ = 'a';
     
-    /* Logical screen descriptor. */
+    // Logical screen descriptor.
 
     *pos++ = 0xff & cols;
     *pos++ = (0xff00 & cols)/0x100;
@@ -34,7 +34,7 @@ local void write_gif_header(FILE *dst, int cols, int rows, int depth,
     *pos++ = 0xff;
     *pos++ = 0x00;
 
-    /* Color map. */
+    // Color map.
 
     for(i=0;i<256;i++) {
 	*pos++ = 0xff & red[i];
@@ -42,7 +42,7 @@ local void write_gif_header(FILE *dst, int cols, int rows, int depth,
 	*pos++ = 0xff & blue[i];
     }
 
-    /* Image descriptor. */
+    // Image descriptor.
 
     *pos++ = 0x2c;
     *pos++ = 0x00;
@@ -58,17 +58,66 @@ local void write_gif_header(FILE *dst, int cols, int rows, int depth,
     fwrite(buffer, pos-buffer, 1, dst);
 }
 
+#define BUFSIZE 80
+#define INDENT 4
+
 void write_gif_comment(FILE *dst, char *comment)
 {
-    /* Add an optional text comment. */
+    // Add an optional text comment.  Comments can be up to 255
+    // characters long, but limit ours to blocks of length 80
+    // for readability.  Indent extra lines by 4 chars, and also
+    // take a new line and reset the indentation if a '\n' is
+    // encountered.
 
-    fputc(0x21, dst);
-    fputc(0xfe, dst);
     int comment_size = strlen(comment);
-    PRL(comment_size);
-    fputc(comment_size, dst);
-    fputs(comment, dst);
-    fputc(0x00, dst);
+    // PRL(comment_size);
+    // PRL(comment);
+
+    char buffer[BUFSIZE+1];
+    int i = 0, indent = 0;
+    while (i < comment_size) {
+
+	// Get the next piece of the comment, starting at location i.
+
+	int n = comment_size - i;			// chars remaining
+	if (n > BUFSIZE-indent) n = BUFSIZE-indent;	// chars that will fit
+
+	// Look for a newline in the buffered portion.
+
+	bool newline = false;
+	for (int k = 0; k < n; k++)
+	    if (comment[i+k] == '\n') {
+		n = k;
+		newline = true;
+		break;
+	    }
+
+	// Next piece will consist of n chars plus possible indentation.
+
+	for (int k = 0; k < indent; k++) buffer[k] = ' ';
+	if (indent > 0) buffer[0] = '+';
+	strncpy(buffer+indent, comment+i, n);
+	buffer[n+indent] = '\0';
+
+	// PRC(n); PRL(buffer);
+
+	// Write a new text block.
+
+	fputc(0x21, dst);
+	fputc(0xfe, dst);
+	fputc(n+indent, dst);
+	fputs(buffer, dst);
+	fputc(0x00, dst);
+
+	i += n;
+	if (newline) {
+	    i++;
+	    indent = 0;
+	} else
+	    indent = INDENT;
+
+	// PRC(i); PRL(indent);
+    }
 }
 
 void write_gif_end_image(FILE *dst)
@@ -78,7 +127,7 @@ void write_gif_end_image(FILE *dst)
 
 void write_gif_footer(FILE *dst)
 {
-    fputc(0x3b, dst);	/* end of gif file */
+    fputc(0x3b, dst);	// end of gif file
 }
 
 int write_gif(FILE *dst, int cols, int rows,
