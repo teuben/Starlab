@@ -537,7 +537,10 @@ local string identify_frame(hdyn *b, int count)
 		    char *sub = strstr(t, "Starlab");
 		    if (sub) {
 			char *plus = strstr(t, "+");
-			if (!plus || plus > sub) {	// omit merger info
+
+			// Omit merger info for all but the first frame.
+
+			if (count == 0 || !plus || plus > sub) {
 			    if (strstr(sub, "(user") && strstr(sub, ":"))
 				s << t << endl;
 			}
@@ -884,7 +887,8 @@ main(int argc, char** argv)
 
     while (b = get_hdyn()) {
 
-	frame_id_string = identify_frame(b, count);
+	if (!combine || count == 0)
+	    frame_id_string = identify_frame(b, count);
 
 	if (origin == 2) {
 
