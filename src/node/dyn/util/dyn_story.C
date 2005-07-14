@@ -190,8 +190,10 @@ real get_initial_virial_radius(dyn* b,
 	    r_virial = -1;
 
 	    if (verbose && rvir_msg)
-		cerr << "get_initial_virial_radius:  "
-		     << "initial_rvirial unknown (set with scale)" << endl;
+		cerr << "warning: get_initial_virial_radius: "
+		     << "initial virial radius cannot be determined" << endl
+		     << "         (set before use by running scale with no"
+		     << " parameters)" << endl;
 #else
 	    r_virial = 1;
 
@@ -738,6 +740,11 @@ int check_set_tidal(dyn *b,
 			 initial_r_jacobi,
 			 initial_mass,
 			 tidal_field_type);
+    else if (verbose) {
+	cerr << "warning: check_set_tidal: jacobi radius < 0;"
+	     << " suppressing tidal field" << endl;
+	tidal_field_type = 0;
+    }
 
     return tidal_field_type;
 }

@@ -616,6 +616,20 @@ local char* stredit(char* s, char c1, char c2)	// duplicate in runtime_help.C
     return s1;
 }
 
+local real compute_virial_radius(hdyn *b)
+{
+    cerr << "computing energies..." << endl;
+    real pot, kin, tot;
+    kira_calculate_energies(b, 0, pot, kin, tot, true);
+    real mass = get_mass(b);
+    real r_virial = -0.5*mass*mass/pot;
+
+    putrq(b->get_log_story(), "initial_rvirial", r_virial);
+    cerr << "calculated virial radius and updated log story" << endl;
+
+    return r_virial;
+}
+
 #define MASS_TOL 1.e-12
 
 local void check_total_mass(hdyn *b, bool reset = true)
@@ -1265,14 +1279,32 @@ bool kira_initialize(int argc, char** argv,
 
     real initial_mass = get_initial_mass(b, verbose);
 
+    // (Function doesn't modify its arguments.)
+
     real initial_r_virial = get_initial_virial_radius(b, verbose,
 						      r_virial_set,
 						      input_r_virial);
+    PRL(initial_r_virial);
 
     // NOTE: important that initial_r_virial be set, as several other
     // startup functions depend on it.  Reinstated the '-r' option, in
-    // case no previous function has determined the virial radius.
+    // case no previous function has determined the virial radius, but
+    // preferable to use scale with no arguments.
     //						(Steve, 10/01)
+
+    // Best to calculate initial_r_virial from the energy if it isn't
+    // known at this point.
+
+    if (initial_r_virial < 0 && b->get_system_time() == 0) {
+
+	// Silently check and set GRAPE options (will do it for real below).
+
+	unsigned int config = kira_config(b);
+	if (config && force_nogrape) kira_config(b, 0);
+
+	initial_r_virial = compute_virial_radius(b);
+	PRL(initial_r_virial);
+    }
 
     //----------------------------------------------------------------------
 
@@ -1309,10 +1341,11 @@ bool kira_initialize(int argc, char** argv,
 
     if (G_flag) {
 
-	if (verbose) cerr << endl;
+	// (Functions don't modify their arguments.)
 
 	real initial_r_jacobi
 	    = get_initial_jacobi_radius(b, initial_r_virial);
+	PRL(initial_r_jacobi);
 
 	real scaled_stripping_radius
 	    = get_scaled_stripping_radius(b, verbose,
@@ -1321,8 +1354,11 @@ bool kira_initialize(int argc, char** argv,
 					  initial_r_virial,
 					  initial_mass);
 
+	// Scaled stripping radius will be negative if the Jacobi radius
+	// is, which will happen if r_virial < 0.
+
 	if (scaled_stripping_radius <= 0)
-	    err_exit("Unable to determine stripping radius");
+	    err_exit("unable to determine stripping radius");
 
 	PRL(scaled_stripping_radius);
 	cerr << "current stripping radius = "
@@ -1394,7 +1430,8 @@ bool kira_initialize(int argc, char** argv,
 
 	} else {
 
-	    // (Re)set some or all physical scales.
+	    // (Re)set some or all physical scales (none of the
+	    // parameters are changed by this function).
 
 	    get_physical_scales(b, verbose,
 				initial_mass,
@@ -1461,8 +1498,11 @@ bool kira_initialize(int argc, char** argv,
 
 	    if (b->get_tidal_field() == 3) {
 
+		// (Function doesn't modify its arguments.)
+
 		real initial_r_jacobi
 		    = get_initial_jacobi_radius(b, initial_r_virial);
+		PRL(initial_r_jacobi);
 
 		test_tidal_params(b, verbose,
 				  initial_r_jacobi,

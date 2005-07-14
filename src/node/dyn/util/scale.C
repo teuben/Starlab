@@ -41,6 +41,17 @@
 ////              -r/R  specify virial radius [don't scale]
 ////              -s/S  scale to "standard" units (-m 1 -r 1 -q 0.5) [not set]
 ////
+//// Scale writes the following quantities to the root log story if
+//// system_time = 0:
+////
+////      initial_mass
+////      initial_total_energy
+////      initial_rvirial
+////      total_energy
+////
+//// If no arguments are provided and system_time = 0, scale will compute
+//// whatever quantities are needed to set these values.
+////
 //// Written by Steve McMillan.
 ////
 //// Report bugs by starlab@sns.ias.edu.
@@ -184,6 +195,8 @@ void scale(dyn *b, real eps,
 	q_flag = false;
     }
 
+    bool no_flags = !(c_flag || e_flag || m_flag || q_flag || r_flag);
+
     // Check for physical parameters.
 
     real phys_mass, phys_length, phys_time;
@@ -196,7 +209,6 @@ void scale(dyn *b, real eps,
 
 	// Flag a non-standard choice of units if physical units have
 	// been specified (see note in --help text).
-
 
 	if ((m_flag && !twiddles(m, 1))
 	     || (r_flag && !twiddles(r, 1))
@@ -247,7 +259,7 @@ void scale(dyn *b, real eps,
 
     real r_virial = 0, pot_int = 0, pot_ext = 0, kin = 0;
 
-    if (e_flag || r_flag || q_flag) {
+    if (no_flags || e_flag || r_flag || q_flag) {
 	if ((real)b->get_system_time() == 0
 	    && find_qmatch(b->get_log_story(), "initial_rvirial")) {
 

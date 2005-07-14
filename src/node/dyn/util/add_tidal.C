@@ -14,7 +14,7 @@
 //// Usage: add_tidal [OPTIONS] < input > output
 ////
 //// Options:      
-////		   -c    add comment [none]
+////               -c    add comment [none]
 ////               -F    specify tidal_field_type [1]
 ////               -J    specify Jacobi radius scaling factor [no default]
 ////

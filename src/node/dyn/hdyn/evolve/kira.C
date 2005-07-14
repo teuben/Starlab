@@ -122,8 +122,8 @@
 //++
 //++ The initial virial radius is read from the input snapshot.  If no
 //++ initial virial radius is found there, the value specified by the
-//++ "-V" command-line option is used.  If no "-V' option is set, a
-//++ default value of 1 is assumed.
+//++ "-r" command-line option is used.  If no "-r" option is set, the
+//++ value is computed fom the energy.
 //++
 //++ The initial mass is read from the input snapshot.  If no initial
 //++ mass is found there, the mass is computed if t = 0; otherwise, a

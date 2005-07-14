@@ -94,8 +94,9 @@ void kira_top_level_energies(dyn *b, real eps2,
 {
     // Another lookalike, this time to perform the operation of
     // dyn::get_top_level_energies() using the GRAPE if possible.
-    // Used only in the standalone tool hdyn/util/scale.C as an argument
-    // to the dyn function scale.
+    // Used only in kira_init.C if the virial radius has to be
+    // recomputed, and in the standalone tool hdyn/util/scale.C
+    // as an argument to the dyn function scale.
 
     real energy;
     kira_calculate_energies(b, eps2,
