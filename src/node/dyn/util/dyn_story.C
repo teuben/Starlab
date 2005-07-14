@@ -484,7 +484,7 @@ void set_tidal_params(dyn* b,
 	else if (kira_tidal_field_type > 0) {
 
 	    if (verbose) {
-		cerr << "using tidal_field_type = " << kira_tidal_field_type
+		cerr << "tidal_field_type = " << kira_tidal_field_type
 		     << " (" << tidal_type[kira_tidal_field_type]
 		     << ") from input snapshot" << endl;
 
@@ -740,9 +740,10 @@ int check_set_tidal(dyn *b,
 			 initial_r_jacobi,
 			 initial_mass,
 			 tidal_field_type);
-    else if (verbose) {
-	cerr << "warning: check_set_tidal: jacobi radius < 0;"
-	     << " suppressing tidal field" << endl;
+    else if (tidal_field_type > 0) {
+	if (verbose)
+	    cerr << "warning: check_set_tidal: jacobi radius < 0;"
+		 << " suppressing tidal field" << endl;
 	tidal_field_type = 0;
     }
 

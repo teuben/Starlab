@@ -618,14 +618,15 @@ local char* stredit(char* s, char c1, char c2)	// duplicate in runtime_help.C
 
 local real compute_virial_radius(hdyn *b)
 {
-    cerr << "computing energies..." << endl;
+    cerr << "calculating the virial radius and updating the log story" << endl;
+
     real pot, kin, tot;
     kira_calculate_energies(b, 0, pot, kin, tot, true);
     real mass = get_mass(b);
     real r_virial = -0.5*mass*mass/pot;
+    PRL(r_virial);
 
     putrq(b->get_log_story(), "initial_rvirial", r_virial);
-    cerr << "calculated virial radius and updated log story" << endl;
 
     return r_virial;
 }
@@ -1303,7 +1304,6 @@ bool kira_initialize(int argc, char** argv,
 	if (config && force_nogrape) kira_config(b, 0);
 
 	initial_r_virial = compute_virial_radius(b);
-	PRL(initial_r_virial);
     }
 
     //----------------------------------------------------------------------
