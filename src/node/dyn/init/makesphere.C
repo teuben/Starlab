@@ -29,6 +29,8 @@
 ////              -R    specify sphere radius [1]
 ////              -s    specify random seed [random from system clock]
 ////              -u    leave unscaled [scale to E=-1/4, M = 1, R = 1]
+////              -U    leave unscaled and don't place in center of mass
+////                    frame [scale and center]
 ////
 //// Written by Steve McMillan.
 ////
@@ -42,7 +44,7 @@
 
 void makesphere(dyn *root, int n,
 		real R,				// default = 1
-		int u_flag)			// default = false
+		int u_flag)			// default = 0
 {
     real pmass = 1.0 / n;
 
@@ -102,11 +104,14 @@ void makesphere(dyn *root, int n,
     // Transform to center-of-mass coordinates and optionally
     // scale to standard parameters.
 
-    root->to_com();
+    if (u_flag == 2)
+        root->reset_com();
+    else
+        root->to_com();
     root->set_mass(1);
     putrq(root->get_log_story(), "initial_mass", 1.0);
 
-    if (!u_flag && n > 1) {
+    if (u_flag == 0 && n > 1) {
 
         real potential, kinetic;
 
@@ -137,7 +142,7 @@ main(int argc, char ** argv) {
     int  l_flag = FALSE;
     int  o_flag = FALSE;
     int  s_flag = FALSE;
-    int  u_flag = FALSE;
+    int  u_flag = 0;
 
     char  *comment;
     char  seedlog[SEED_STRING_LENGTH];
@@ -148,7 +153,7 @@ main(int argc, char ** argv) {
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:Ciln:oR:s:u";
+    char* param_string = "c:Ciln:oR:s:uU";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
@@ -171,7 +176,9 @@ main(int argc, char ** argv) {
 	    case 's': s_flag = true;
 		      input_seed = atoi(poptarg);
 		      break;
-	    case 'u': u_flag = true;
+	    case 'u': u_flag = 1;
+		      break;
+	    case 'U': u_flag = 2;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
