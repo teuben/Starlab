@@ -9,7 +9,15 @@
 set force_build = 0
 
 set flag = "default"
-if ($#argv > 0) set flag = $1
+if ($#argv > 0) then
+
+    if ("x$1" == "x-h" || "x$1" == "x--h" || "x$1" == "x--help") then
+	echo Usage: install-autotools \[install-dir\] \[force-build\]
+	exit
+    endif
+
+    set flag = $1
+endif
 
 if ($#argv > 1) set force_build = 1
 
@@ -123,6 +131,8 @@ if ($build == 0) then
 
   end
 endif
+
+# Now see if all the tools should be built.
 
 if ($build == 1) then
 
