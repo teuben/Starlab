@@ -3,8 +3,15 @@
 # Set the prefix, or use a default (option x or default).  Note that
 # STARLAB_PATH must be set for the default option to work.
 
+# Handy to keep this flag in case we want to force the build.
+# A second argument also forces a build.
+
+set force_build = 0
+
 set flag = "default"
 if ($#argv > 0) set flag = $1
+
+if ($#argv > 1) set force_build = 1
 
 if (x$flag == xx || x$flag == xdefault) then
     if ($?STARLAB_PATH == 0) then
@@ -42,13 +49,22 @@ if ($#autoconf == 0 || $#automake == 0 || $#libtool == 0) then
     exit
 endif
 
-foreach dir ($autoconf $automake $libtool)
+# Start by checking whether we should actually build the package.  Compare
+# its version with the version number of any installed version of the tool.
+# Previous version only built packages for which the installed version is
+# older.  New version (7/05) builds all packages if any needs to be built
+# to ensure a cosistent set of tools.
+
+set build = $force_build
+
+if ($build == 0) then
+
+  foreach dir ($autoconf $automake $libtool)
 
 #   Start by checking whether we should actually build the package.  Compare
 #   its version with the version number of any installed version of the tool.
 
-    rehash
-    set build = 1
+    set buildtool = 1
 
 #   Determine the tool name and version from dir.  We assume that the format
 #   here will continue to be standard terminology -- NEED TO MONITOR THIS.
@@ -88,19 +104,31 @@ foreach dir ($autoconf $automake $libtool)
 
 #	    	(Don't split this command -- some shells don't like it...)
 
-		set build = \
+		set buildtool = \
 		    `echo $version | awk -v v=$v '{print ($1 > v ? 1 : 0);}'`
 
 	    endif
 	endif
-	echo installed version of $tool is $v\; build = $build
+
+	echo installed version of $tool is $v\; buildtool = $buildtool
+
     endif
 
-    if ($build == 0) then
+    if ($buildtool != 0) then
 
-	echo suppressing build for $dir -- already exists
+	set build = 1
+	break
 
-    else
+    endif
+
+  end
+endif
+
+if ($build == 1) then
+
+    echo Installing all autotools
+
+    foreach dir ($autoconf $automake $libtool)
 
 	echo unpacking $dir
 	gunzip -c $dir.tar.gz | tar xf -
@@ -121,4 +149,4 @@ foreach dir ($autoconf $automake $libtool)
 
     endif
 
-end
+endif
