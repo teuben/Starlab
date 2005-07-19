@@ -4,16 +4,7 @@
 #include "win.h"
 #include <string.h>
 
-#include <termio.h>		/* Going to use getchar with timeout */
-
-/*
- * (Use termio rather than termios here, because the HP can't
- *  get/set termios structures.)
- *
- * Note that some systems use sys/termio.h...
- */
-
-#include <fcntl.h>
+#include <termios.h>
 
 #define	MYCMASK 0377
 #define BACKSPACE 8
@@ -158,8 +149,8 @@ set_timeout()
     /* Identify the terminal stream and get its current configuration. */
 
     if ( (fd = open("/dev/tty", O_RDONLY)) < 0 ) exit(1);
-    ioctl(fd, TCGETA, &ios0);
-    ioctl(fd, TCGETA, &ios1);
+    tcgetattr(fd, &ios0);
+    tcgetattr(fd, &ios1);
 
     /* Turn off ICANON mode and inhibit ECHO (set bits 1 and 3 = 0). */
 
@@ -170,7 +161,7 @@ set_timeout()
     ios1.c_cc[VMIN] = 0;
     ios1.c_cc[VTIME] = 1;
 
-    ioctl(fd, TCSETA, &ios1);
+    tcsetattr(fd, TCSANOW, &ios1);
 
     idlestrngcnt = 0;
     idlestrng[0] = '\0';
@@ -182,7 +173,7 @@ char *strng;
 
     /* Restore original terminal settings. */
 
-    ioctl(fd, TCSETA, &ios0);
+    tcsetattr(fd, TCSANOW, &ios0);
 
     close(fd);
 
