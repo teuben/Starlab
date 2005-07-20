@@ -19,7 +19,7 @@
 # subdirectory structure will be preserved on installation.
 
 nobase_pkginclude_HEADERS = bound3.h chydro.h config.h \
-    c_stdinc.h diag.h _dyn_.h dyn.h \
+    c_stdinc.h _dyn_.h dyn.h \
     dyn_kepler.h grape4.h grape6.h hdyn.h \
     hdyn_kepler.h hydrobase.h hydro.h kepler.h \
     kira.h node.h pdyn.h pp3_widget.h \
@@ -42,7 +42,7 @@ nobase_pkginclude_HEADERS = bound3.h chydro.h config.h \
     star/star_support.h star/stdfunc.h \
     star/stellar_type.h star/sub_giant.h \
     star/super_giant.h star/thorne_zytkow.h \
-    star/white_dwarf.h static_star.h stdinc.h \
+    star/white_dwarf.h star/static_star.h stdinc.h \
     story.h tdyn.h util_io.h util_math.h \
     worldline.h xreal.h hop.h
 

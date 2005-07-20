@@ -8,16 +8,13 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-/*
- *  chydro.h: derived class for hydro systems, with core/envelope structure
- *.............................................................................
- *    version 1:  Jan 1993   Piet Hut
- *    version 2:
- *.............................................................................
- *     This file includes:
- *  1) definition of class chydro
- *.............................................................................
- */
+/// @file chydro.h  Derived class for hydro systems, with core and envelope.
+//
+//  version 1:  Jan 1993   Piet Hut
+//  version 2:
+//
+//  This file includes:
+//  1) definition of class chydro
 
 #ifndef  STARLAB_CHYDRO_H
 #  define  STARLAB_CHYDRO_H
@@ -27,10 +24,8 @@
 #include  "hydrobase.h"
 #include  "hydro.h"
 
-/*-----------------------------------------------------------------------------
- *  chydro  --  the standard class for hydrodynamics, with core and envelope
- *-----------------------------------------------------------------------------
- */
+/// \a chydro:  The standard class for hydrodynamics, with core and envelope.
+
 class  chydro : public hydro
     {
     protected:

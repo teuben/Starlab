@@ -8,16 +8,14 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-/*
- *  hydro.h: base class for hydro systems, on the same level as dyn
- *.............................................................................
- *    version 1:  Jan 1993   Piet Hut
- *    version 2:
- *.............................................................................
- *     This file includes:
- *  1) definition of class hydro
- *.............................................................................
- */
+
+/// @file hydro.h  Base class for hydro systems, on the same level as dyn.
+//
+//  version 1:  Jan 1993   Piet Hut
+//  version 2:
+//
+//  This file includes:
+//  1) definition of class hydro
 
 #ifndef  STARLAB_HYDRO_H
 #  define  STARLAB_HYDRO_H
@@ -30,31 +28,28 @@
                          // node.h contains  hydrobase.h  and this would
                          // lead to a vicious circle
 
-/*-----------------------------------------------------------------------------
- *  hydro  --  the simplest class for hydrodynamics
- *-----------------------------------------------------------------------------
- */
+/// \a hydro:  The simplest class for hydrodynamics.
+
 class  hydro : public hydrobase
     {
     protected:
 
 	real  effective_radius;
 
-	real  m_conv_hydro_to_dyn;   // mass conversion factor
-	real  r_conv_hydro_to_dyn;   // length conversion factor
-	real  t_conv_hydro_to_dyn;   // time conversion factor
+	real  m_conv_hydro_to_dyn;   ///< Mass conversion factor.
+	real  r_conv_hydro_to_dyn;   ///< Length conversion factor.
+	real  t_conv_hydro_to_dyn;   ///< Time conversion factor.
 
     public:
 
-	hydro(real r = 0, real mf = 1, real rf = 1, real tf = 1)
-	    {
+	hydro(real r = 0, real mf = 1, real rf = 1, real tf = 1) {
 	    effective_radius = r;
 	    m_conv_hydro_to_dyn = mf;
 	    r_conv_hydro_to_dyn = rf;
 	    t_conv_hydro_to_dyn = tf;
-	    }
+	}
 
-//      to convert an internal hydro mass variable m_hydro into the units used
+//      To convert an internal hydro mass variable m_hydro into the units used
 //	by the dyn part, you can use:
 //
 //          a_dyn_particle->set_mass( m_hydro * get_m_conv_hydro_to_dyn() );

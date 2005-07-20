@@ -8,16 +8,13 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-/*
- *  util_math.h: ....
- *.............................................................................
- *    version 1:  Dec 1992   Piet Hut, Steve McMillan, Jun Makino
- *    version 2:
- *.............................................................................
- *     This file includes:
- *  1) ....
- *.............................................................................
- */
+/// @file util_math.h  Extra math functions.
+//
+//  version 1:  Dec 1992   Piet Hut, Steve McMillan, Jun Makino
+//  version 2:
+//
+//  This file includes:
+//  1) ....
 
 #ifndef  STARLAB_UTIL_MATH_H
 #  define  STARLAB_UTIL_MATH_H

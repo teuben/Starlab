@@ -8,18 +8,60 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//  stdinc.h: standard include file
-//.............................................................................
-//    version 1:  Dec 1992   Piet Hut, Steve McMillan, Jun Makino
-//    version 2:
-//.............................................................................
+/// @file stdinc.h  Standard Starlab include file
+
+//----------------------------------------------------------------------
+
+// Include Doxygen introductory documentation here.
+
+/** \mainpage Starlab Classes and Library Functions
+
+\section overview Overview
+
+This is the (automaticaly generated) top-level page documenting
+Starlab's internal structure.  It contains detailed listings of the
+header files, major classes, and global functions found in the
+package.  These pages are still under construction.  If there are
+specific features you'd like to see covered in more detail, please
+contact us at the address below.  (Note that "set" and "get" accessor
+functions for member data are usually obvious, and are generally not
+documented.) The goals of these pages are
+
+<ul>
+<li>to provide the application programmer with enough information to
+write standalone programs using the Starlab libraries, and
+<li>to document the internals well enough for programmers to
+contribute new functions to the Starlab source tree.
+
+\section structure Structure
+
+The above links provide access to
+<ul>
+<li>Starlab namespace entries
+<li>Starlab classes
+<li>Starlab global functions
+<li>Starlab header files
+</ul>
+Most of the listings are self-evident.  To see listings of global
+functions, go to File Members and then select Functions.  For a list
+of functions by file, select File List.
+
+\section comments Comments
+
+Send comments and suggestions to <a
+href=mailto:steve@physics.drexel.edu>steve@physics.drexel.edu</a><br><br>
+*/
+
+//----------------------------------------------------------------------
+
+//  version 1:  Dec 1992   Piet Hut, Steve McMillan, Jun Makino
+//
 //     This file includes:
 //  1) new naming conventions to add to or replace existing names in C
 //  2) a string manipulation macro
 //  3) mathematical constants
 //  4) functions  abs()  min(,)  max(,)
 //  5) macros to cast angular arguments in standard form
-//.............................................................................
 
 #ifndef  STARLAB_STDINC_H
 #  define  STARLAB_STDINC_H
@@ -45,7 +87,7 @@
 // Heck, for gcc3 this should do .... forget about the rest for now.
 #include <iostream>
 
-// Probably don't need include <cstdio> here??
+// May not need include <cstdio> here??
 #include <cstdio>
 
 #if 0
@@ -72,7 +114,8 @@
 #endif
 #endif
 
-//  so we get the good old standard cerr, cout, cin, ....
+// So we get the good old standard cerr, cout, cin, ....
+
 using namespace std;
 
 //=============================================================================

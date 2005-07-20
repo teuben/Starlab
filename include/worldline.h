@@ -8,14 +8,13 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//  world.h:  Classes and definitions for 4-D trees.
-//.............................................................................
-//    version 1:  Oct 2000   Steve McMillan
-//    version 2:
-//.............................................................................
-//     This file includes:
+/// @file worldline.h   Classes and definitions for 4-D trees.
+//
+//  version 1:  Oct 2000   Steve McMillan
+//  version 2:
+//
+//  This file includes:
 //  1) definition of classes segment, worldline, and worldbundle
-//.............................................................................
 
 #ifndef  STARLAB_WORLD_H
 #  define  STARLAB_WORLD_H
@@ -47,16 +46,18 @@ unique_id_t unique_id(node *b);
 // There is presently considerable redundancy in the data stored.
 // We will refine the data structures as the package evolves...
 
+///\a segment: A series of events (tdyns) along a particle trajectory.
+
 class segment {
 
     private:
 
-	unique_id_t id;			// global identifier
-	tdyn *first_event;		// first event on the list
-	tdyn *last_event;		// last event on the list
-	real t_start;			// start time of this segment
-	real t_end;			// end time of this segment
-	segment *next;			// pointer to the next segment
+	unique_id_t id;			///< global identifier
+	tdyn *first_event;		///< first event on the list
+	tdyn *last_event;		///< last event on the list
+	real t_start;			///< start time of this segment
+	real t_end;			///< end time of this segment
+	segment *next;			///< pointer to the next segment
 
     public:
 
@@ -100,27 +101,35 @@ class segment {
 	void print(char *label = NULL);
 };
 
+/// \a worldline: Indexed pointer to the start of a linked list of segments.
+
+/// A worldline is an indexed pointer to the start of a linked list of
+/// worldline segments.  Each segment consists of a series of events
+/// (tdyns) along a particle trajectory.  Tree changes result in new
+/// worldline segments for all particles involved.  The full worldline
+/// is the entirety of all such segments.
+
 class worldline {
 
     private:
 
-	unique_id_t id;			// global identifier
-	segment *first_segment;		// first segment
-	segment *last_segment;		// last segment
-	real t_start;			// start time
-	real t_end;			// end time
+	unique_id_t id;			///< global identifier
+	segment *first_segment;		///< first segment
+	segment *last_segment;		///< last segment
+	real t_start;			///< start time
+	real t_end;			///< end time
 
-	int start_esc_flag;		// initial escaper flag; set by kira
-	int end_esc_flag;		// final escaper flag; set by kira
-	real t_esc;			// time when flag changed (to come)
+	int start_esc_flag;		///< initial escaper flag; set by kira
+	int end_esc_flag;		///< final escaper flag; set by kira
+	real t_esc;			///< time when flag changed (to come)
 
 	// Management of tree traversal:
 
-	real t_curr;			// current time
-	tdyn *current_event;		// current event
-	segment *current_segment;	// current segment
+	real t_curr;			///< current time
+	tdyn *current_event;		///< current event
+	segment *current_segment;	///< current segment
 
-	pdyn *tree_node;		// pointer to the corresponding node
+	pdyn *tree_node;		///< pointer to the corresponding node
 					// in the interpolated tree at time t
 
     public:
@@ -249,20 +258,20 @@ class worldline {
 
 typedef worldline *worldlineptr;	// convenient...
 
-// A worldbundle is a group of worldlines, including structures for
-// data management purposes.
+/// \a worldbundle:  A group of worldlines representing an entire N-body system.
+// Also includes structures for data management purposes.
 
 class worldbundle {
 
     private:
 
-	worldlineptr *bundle;		// array of worldline pointers
-	int	     nw;		// length of the array
-	int	     nw_max;		// maximum length of the array
-	real	     t_min;		// minimum time
-	real	     t_max;		// maximum time
-	real	     t_int;		// time of most recent interpolation
-	pdyn	     *root;		// root node of interpolated tree
+	worldlineptr *bundle;		///< array of worldline pointers
+	int	     nw;		///< length of the array
+	int	     nw_max;		///< maximum length of the array
+	real	     t_min;		///< minimum time
+	real	     t_max;		///< maximum time
+	real	     t_int;		///< time of most recent interpolation
+	pdyn	     *root;		///< root node of interpolated tree
 
     public:
 
@@ -311,51 +320,113 @@ typedef worldbundle *worldbundleptr;
 
 // Globally visible functions:
 
+/// Print unique ID corresponding to id.
+
 void print_id(void *id, char *label = NULL);
 
+/// Read a bundle of worldlines describing an N-body system for a time interval.
+
 worldbundle *read_bundle(istream &s, int verbose = 0);
+
+/// Read worldbundles describing an N-body system over an extended time.
+
 void read_bundles(istream &s, worldbundleptr wh[], int& nh,
 		  int verbose = 0);
 
+/// Count the number of segments in a worldbundle.
+
 int count_segments(worldbundle *wb);
+
+/// Count the number of events in a worldbundle.
+
 int count_events(worldbundle *wb);
 
+/// Find time t along the segment of worldline w starting at base node bn.
+
 tdyn *find_event(worldline *w, tdyn *bn, real t);
+
+/// Print info on the portion of the worldline starting at bn that spans time t.
+
 void print_event(worldline *w, tdyn *bn, real t);
 
 // Old:
+
+/// Return the interpolated position at time t in the segment starting at p.
 
 vec interpolate_pos(tdyn *p, real t, tdyn *bn = NULL);
 
 // New:
 
+/// Return the interpolated position at time t in the segment starting at p.
+
 void interpolate_pos(tdyn *p, real t, vec& pos, bool inc, tdyn *bn);
+
+/// Set pos to the interpolated value.
 
 void set_interpolated_pos(tdyn *p, real t, vec& pos,
 			  tdyn *bn = NULL);
+/// Set curr->pos to the interpolated value.
+
 void set_interpolated_pos(tdyn *p, real t, pdyn *curr,
 			  tdyn *bn = NULL);
-void ind_interpolated_pos(tdyn *p, real t, vec& pos,
+
+/// Increment pos by the interpolated value.
+
+void inc_interpolated_pos(tdyn *p, real t, vec& pos,
 			  tdyn *bn = NULL);
+
+/// Return the interpolated velocity at time t in the segment starting at p.
 
 vec interpolate_vel(tdyn *p, real t, tdyn *bn = NULL);
 
+/// Return the physical mass scale.
+
 real mass_scale_factor();
+
+/// Create an interpolated tree at time t and return a pointer to the root node.
+
 pdyn *create_interpolated_tree(worldbundle *wb, real t, bool vel = false);
+
+/// Create an interpolated tree at time t and return a pointer to the root node.
+
 pdyn *create_interpolated_tree2(worldbundle *wb, real t, bool vel = false);
+
+/// Force memory allocation for each bundle by creating an interpolated tree.
+
 void preload_pdyn(worldbundleptr wh[], int nh,
 		  bool verbose = false, bool vel = false);
 
+/// Set all root nodes to use the specified center for center tracking.
+
 char *set_center(worldbundleptr wh[], int nh, int center_number,
 		 bool verbose = false);
+
+/// Identify which type of center we are using for center tracking.
+
 int get_n_center();
+
+/// Return the center we are currently using for center tracking (1 or 2).
+
 int get_center();
+
+/// Current possibilities are (1) "standard-center" and (2) "bound-center".
+
 char *get_center_id(int center_number = -1);
 
+/// Position of the current center.
+
 vec get_center_pos();
+
+/// Velocity of the current center.
+
 vec get_center_vel();
 
+/// Is p a member of the specified worldbundle?
+
 bool is_member(worldbundle *wb, pdyn *p);
+
+/// Nuber of particles in the clump containing id.
+
 int id_n_clump(unique_id_t id);
 
 #endif

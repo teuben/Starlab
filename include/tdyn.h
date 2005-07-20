@@ -8,24 +8,21 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//  tdyn.h:  Derived class for nbody systems using 4-D trees.
-//.............................................................................
-//    version 1:  Sep 2000   Steve McMillan
-//    version 2:
-//.............................................................................
-//     This file includes:
+/// @file tdyn.h  Derived class for nbody systems using 4-D trees.
+//
+//  version 1:  Sep 2000   Steve McMillan
+//  version 2:
+//
+//  This file includes:
 //  1) definition of class tdyn
-//.............................................................................
 
 #ifndef  STARLAB_TDYN_H
 #  define  STARLAB_TDYN_H
 
 #include "pdyn.h"
 
-//-----------------------------------------------------------------------------
-//  tdyn   --  a derived class of dynamical particles, with enough
-//             information to reconstruct the N-body system.
-//-----------------------------------------------------------------------------
+/// \a tdyn:  A derived class of dynamical particles.  Contains enough
+///           information to reconstruct the N-body system.
 
 class  tdyn : public _pdyn_	// base class is _pdyn_, not pdyn, note...
 {
@@ -36,10 +33,10 @@ class  tdyn : public _pdyn_	// base class is _pdyn_, not pdyn, note...
 
 	// Locators in the 4D hierarchy:
 
-	tdyn *prev;		// previous instance of this node
-	tdyn *next;		// next instance of this node
+	tdyn *prev;		///< Previous instance of this node.
+	tdyn *next;		///< Next instance of this node.
 
-	bool defunct;
+	bool defunct;		///< Node has been terminated.
 
     public:
 
@@ -82,10 +79,18 @@ class  tdyn : public _pdyn_	// base class is _pdyn_, not pdyn, note...
 	inline tdyn * get_elder_sister()
 	    {return (tdyn*) node::get_elder_sister();}
 
+	/// Set or find the root node pointer.
+
         inline tdyn * get_root()
             {return (tdyn*) node::get_root();}
+
+	/// Return the top-level node of this node.
+
         inline tdyn * get_top_level_node()
             {return (tdyn*) node::get_top_level_node();}
+
+	/// Find the binary sister of this node.
+
         inline tdyn * get_binary_sister()
             {return (tdyn*) node::get_binary_sister();}
 

@@ -1,5 +1,5 @@
 /*
- * static_star.h: derived class for evolution of sero radius stars 
+ * static_star.h: derived class for evolution of zero radius stars 
  *                which lose mass proportional to wind_constant.
  *                This definition is used for the ski-jump problem.
  *

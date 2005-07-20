@@ -8,16 +8,13 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-/*
- *  starbase.h: underlying class for star systems, on the same level as node
- *.............................................................................
- *    version 1:  Apr 1993   Piet Hut & Steve McMillan
- *    version 2:
- *.............................................................................
- *     This file includes:
- *  1) definition of class starbase
- *.............................................................................
- */
+/// @file starbase.h  Underlying class for star systems, on same level as node.
+//
+//  version 1:  Apr 1993   Piet Hut & Steve McMillan
+//  version 2:
+//
+//  This file includes:
+//  1) definition of class starbase
 
 #ifndef  STARLAB_STARBASE_H
 #  define  STARLAB_STARBASE_H
@@ -39,25 +36,23 @@
 class node;		// not included but defined as being some class
 class star;
 
-/*-----------------------------------------------------------------------------
- *  starbase  --  the underlying class for stars
- *-----------------------------------------------------------------------------
- */
+/// \a starbase:  The underlying class for stars.
+
 class  starbase
-    {
+{
     protected:
 
         node  * the_node;
 	story * star_story;
 
         						
-        static real  m_conv_star_to_dyn;   // mass conversion factor
-        static real  r_conv_star_to_dyn;   // length conversion factor
-        static real  t_conv_star_to_dyn;   // time conversion factor
+        static real  m_conv_star_to_dyn;   ///< Mass conversion factor.
+        static real  r_conv_star_to_dyn;   ///< Length conversion factor.
+        static real  t_conv_star_to_dyn;   ///< Time conversion factor.
 
-        static bool  use_hdyn;
+        static bool  use_hdyn;		   ///< Using hdyn (kira) data.
 
-        //static seba_counters* sbc;
+        // static seba_counters* sbc;
 
     public:
 
@@ -109,8 +104,7 @@ class  starbase
         virtual real get_eccentricity();
         virtual void set_eccentricity(real);
 
-//
-//              Scaling:
+//	Scaling:
 
         void set_stellar_evolution_scaling(real, real, real);
         bool get_stellar_evolution_scaling();
@@ -119,12 +113,12 @@ class  starbase
         real conv_m_star_to_dyn(real);
         real conv_r_star_to_dyn(real);
         real conv_t_star_to_dyn(real);
-//
+
         real conv_m_dyn_to_star(real);
         real conv_r_dyn_to_star(real);
         real conv_t_dyn_to_star(real);
-//
-    };
+
+};
 
 typedef  starbase *(*sbpfp)();
 

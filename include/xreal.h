@@ -1,15 +1,20 @@
 #ifndef  STARLAB_XREAL_H
 #  define  STARLAB_XREAL_H
 
-// xreal:  Extended-precision "real" class (SLWM, 5/00).
-//
-//	   Currently implemented in fixed precision as
-//
-//		x  =  i  +  2^{-64} f,
-//
-//	   where the "integer" i is a long long (range 2^63 - 1 to -2^63), and
-//	   the "fraction" f is an unsigned long long (range 0 to 2^64 - 1),
-//	   giving roughly 20 digits before and after the decimal point.
+/// @file xreal.h  Definitions relating to the extended-precision xreal class.
+
+/// \a xreal:  Extended-precision "real" class.
+//						(SLWM, 5/00).
+
+///  Currently implemented in fixed precision as
+/// <pre>
+///		x  =  i  +  2^{-64} f,</pre>
+/// where the "integer" i is a long long (range 2^63 - 1 to -2^63), and
+/// the "fraction" f is an unsigned long long (range 0 to 2^64 - 1),
+/// giving roughly 20 digits before and after the decimal point.
+/// <p>
+/// Note that long long may not be universally acceptable.
+/// Could rewrite to use standard long ints if necessary.
 //
 //	   Permitted/defined operations:
 //
@@ -26,8 +31,6 @@
 //		logical ==, !=, <, <=, >, >=
 //		<<, >>
 //
-// **** Note that long long may not be universally acceptable...  ****
-// ****  -- could rewrite to use standard long ints if necessary. ****
 
 //#define TWO64	(pow(2.0, 64))	// too inefficient!
 
@@ -43,18 +46,18 @@ typedef unsigned long long	xfrac_t;
 class xreal {
 
     private:
-	xint_t i;					// x = i + f/TWO64
-	xfrac_t f;
+	xint_t i;					///< x = i + f/TWO64
+	xfrac_t f;					///< x = i + f/TWO64
 
     public:
 
 	// Constructors:
 
-	xreal();					// default
-//	xreal(xreal y);					// x = y
+	xreal();					///< default
+//	xreal(xreal y);					///< x = y
 	xreal(xint_t ii, xfrac_t ff);
-	xreal(int ii);					// x = int
-	xreal(real x);					// x = real
+	xreal(int ii);					///< x = int
+	xreal(real x);					///< x = real
 
 	// Accessors:
 
@@ -64,11 +67,11 @@ class xreal {
 
 	// Conversions:
 
-	int to_int() {return i;}			// always round down!
-	real to_real();
+	int to_int() {return i;}			///< Always round down!
+	real to_real();					///< Convert to real.
 
 	void print(ostream& s = cerr,
-		   bool newline = false);		// xprint(x) is better
+		   bool newline = false);		///< xprint(x) is better
 
 	xreal::operator int() {return to_int();}
 	xreal::operator real() {return to_real();}

@@ -9,19 +9,17 @@
 //=======================================================//              /|\ ~
 									     */
 
-/*
- *  c_stdinc.h: C version of the standard include file
- *.............................................................................
- *    version 1:  Sep 1995   Steve McMillan
- *    version 2:
- *.............................................................................
- *     This file includes:
+/** \brief @file c_stdinc.h  C version of the standard include file */
+
+/*  version 1:  Sep 1995   Steve McMillan
+ *  version 2:
+ *
+ *  This file includes:
  *  1) new naming conventions to add to or replace existing names in C
  *  2) a string manipulation macro
  *  3) mathematical constants
  *  4) functions  abs()  min(,)  max(,)
  *  5) macros to cast angular arguments in standard form
- *.............................................................................
  */
 
 #ifndef  STARLAB_STDINC_H

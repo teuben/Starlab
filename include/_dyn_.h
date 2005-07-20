@@ -8,15 +8,14 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//  _dyn_.h:  Derived class for nbody systems using a Hermite integrator
-//	      Base class for hdyn, sdyn3, and sdyn.
-//.............................................................................
-//    version 1:  Aug 1998   Steve McMillan, Simon Portegies Zwart
-//    version 2:
-//.............................................................................
-//     This file includes:
+/// @file _dyn_.h  Derived class for nbody systems using a Hermite integrator.
+//		   Base class for hdyn, sdyn3, and sdyn.
+//
+//  version 1:  Aug 1998   Steve McMillan, Simon Portegies Zwart
+//  version 2:
+//
+//  This file includes:
 //  1) definition of class _dyn_
-//.............................................................................
 
 #ifndef  STARLAB__DYN__H
 #  define  STARLAB__DYN__H
@@ -24,25 +23,23 @@
 #include "dyn.h"
 #include "slow_binary.h"
 
-//-----------------------------------------------------------------------------
-//  _dyn_  --  a derived class of dynamical particles, with enough
-//             information to integrate the equations of motion using
-//             a 4th-order Hermite integrator.
-//-----------------------------------------------------------------------------
+/// \a _dyn_:  A derived class of dynamical particles, with enough
+///             information to integrate the equations of motion using
+///             a 4th-order Hermite integrator.
 
 class  _dyn_ : public dyn
 {
     protected:
 
-	xreal time;
-	real  timestep;
+	xreal time;		///< Individual particle time.
+	real  timestep;		///< Individual particle time step.
 
-	real pot;		// potential
-	vec jerk;		// (d/dt) acc
-	vec old_acc;
-	vec old_jerk;
+	real pot;		///< Potential.
+	vec jerk;		///< Jerk = (d/dt) acc.
+	vec old_acc;		///< Acc at start of step, for use in Hermite.
+	vec old_jerk;		///< Jerk at start of step, for use in Hermite.
 
-	vec k_over_18;		// for 5th-order prediction (GRAPE-6)
+	vec k_over_18;		///< For 5th-order prediction (GRAPE-6).
 
 	// Relocated radius to try to reduce cache misses in
 	// critical functions.  Would like to make it private to force
@@ -54,19 +51,19 @@ class  _dyn_ : public dyn
 	// usable (e.g. not negative) in the accessor function.
 	//						(Steve, 1/05)
 
-	real radius;		// effective (or actual) radius of a node.
-	vec pred_pos;		// current predicted pos
-	vec pred_vel;		// current predicted vel
-	xreal t_pred;		// time corresponding to pred_pos and pred_vel
+	real radius;		///< Effective (or actual) radius of a node.
+	vec pred_pos;		///< Current predicted pos.
+	vec pred_vel;		///< Current predicted vel.
+	xreal t_pred;		///< Time of pred_pos and pred_vel.
 
-	slow_binary * slow;	// indicator of "slow" binary motion
+	slow_binary * slow;	///< Indicator of "slow" binary motion.
 				// -- affects all time, prediction, and
 				//    correction functions
 				// -- actually used in kira, but all relevant
 				//    member functions are defined here...
 
-	// Pointer to linked list of slow binary CMs perturbed by this
-	// node (also used in kira only):
+	/// Pointer to linked list of slow binary CMs perturbed by this node.
+	//  (Also used in kira only).
 
 	slow_perturbed * sp;
 
@@ -109,6 +106,8 @@ class  _dyn_ : public dyn
 
 	}
 
+	/// Set time step and any associated slow step.
+
 	void set_timestep(real dt) {		// dt is always timestep
 	    timestep = dt;
 	    if (slow) slow->set_dtau(dt/slow->get_kappa());
@@ -125,6 +124,8 @@ class  _dyn_ : public dyn
 	inline real get_timestep()	const	{return timestep;}
 	inline xreal get_time()		const	{return time;}
 
+	/// Clear acc, jerk, and pot prior to force calculation.
+
 	void  clear_interaction()         {acc = jerk = 0;
 					   pot = 0;}
 
@@ -132,11 +133,22 @@ class  _dyn_ : public dyn
 				       const vec& j, real p)
 	   {acc = a; jerk = j; pot = p;}
 
+	/// Do prediction to system_time and return pred_pos.
+
 	inline vec  get_pred_pos()     {predict_loworder(get_system_time());
 					   return pred_pos;}
+
+	/// Do prediction to system_time and return pred_vel.
+
 	inline vec  get_pred_vel()     {predict_loworder(get_system_time());
 					   return pred_vel;}
+
+	/// Return pred_pos without prediction.
+
 	inline vec  get_nopred_pos()	const	{return pred_pos;}
+
+	/// Return pred_vel without prediction.
+
 	inline vec  get_nopred_vel()	const	{return pred_vel;}
 
 	inline void set_pred_pos(vec p)	  {pred_pos = p;}
@@ -179,9 +191,9 @@ class  _dyn_ : public dyn
 
 	// Slow-binary manipulation functions defined in _dyn_slow.C:
 
-	void create_slow(int k = 1);
-	void delete_slow();
-	void extend_slow(int k);
+	void create_slow(int k = 1);	///< Initialize slow binary motion.
+	void delete_slow();		///< Terminate slow binary structures.
+	void extend_slow(int k);	///< Check/extend slow binary motion.
 
 	slow_binary* get_slow()		const	{return slow;}
 	slow_perturbed* get_sp()	const	{return sp;}
@@ -201,10 +213,18 @@ class  _dyn_ : public dyn
 	inline _dyn_ * get_elder_sister() const
 	    {return (_dyn_*) node::get_elder_sister();}
 
+	/// Set or find the root node pointer.
+
         inline _dyn_ * get_root() const
             {return (_dyn_*) node::get_root();}
+
+	/// Return the top-level node of this node.
+
         inline _dyn_ * get_top_level_node() const
             {return (_dyn_*) node::get_top_level_node();}
+
+	/// Find the binary sister of this node.
+
         inline _dyn_ * get_binary_sister()
             {return (_dyn_*) node::get_binary_sister();}
 

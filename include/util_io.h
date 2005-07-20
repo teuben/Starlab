@@ -1,6 +1,5 @@
-//
-// util_io.h
-//
+
+/// @file util_io.h  Dyn I/O functions.
 
 #define MAX_INPUT_LINE_LENGTH 255
 

@@ -8,16 +8,13 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-/*
- *  hydrobase.h: underlying class for hydro systems, on the same level as node
- *.............................................................................
- *    version 1:  Jan 1993   Piet Hut
- *    version 2:
- *.............................................................................
- *     This file includes:
- *  1) definition of class hydrobase
- *.............................................................................
- */
+/// @file hydrobase.h  Underlying class for hydro systems, on same level as node.
+//
+//  version 1:  Jan 1993   Piet Hut
+//  version 2:
+//
+//  This file includes:
+//  1) definition of class hydrobase
 
 #ifndef  STARLAB_HYDROBASE_H
 #  define  STARLAB_HYDROBASE_H
@@ -25,12 +22,10 @@
 #include  "starlab_vector.h"
 #include  "story.h"
 
-/*-----------------------------------------------------------------------------
- *  hydrobase  --  the underlying class for hydros
- *-----------------------------------------------------------------------------
- */
+/// \a hydrobase: The underlying class for all hydrodynamical systems.
+
 class  hydrobase
-    {
+{
     protected:
 
 	story * hydro_story;
@@ -47,7 +42,7 @@ class  hydrobase
 
 	virtual ostream & print_hydro_story(ostream&);
 	virtual istream & scan_hydro_story(istream&);
-	};
+};
 
 typedef  hydrobase *(*hbpfp)();
 

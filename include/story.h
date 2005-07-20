@@ -1,6 +1,8 @@
 #ifndef  STARLAB_STORY_H
 #  define  STARLAB_STORY_H
 
+/// @file story.h Story class definitions.
+
 #include  "starlab_vector.h"
 
 //----------------------------------------------------------------------
@@ -65,6 +67,7 @@
 #define chapter_begin_char  '('
 #define chapter_end_char    ')'
 
+/// \a story: A tree-structured list of character strings.
 class story
     {
     private:
@@ -78,6 +81,11 @@ class story
 
     public:
 
+	/// Default is a bare story holding a single text line.
+
+	/// A general story consists of a linked list of chapters,
+	/// each containing a list of text lines.
+
 	story(int flag = 0)  // default: a bare story, to hold a text line only
 	    {
 	    next_story_node = first_daughter_node = last_daughter_node = NULL;
@@ -87,15 +95,40 @@ class story
 
 	~story();
 
+	/// Next line in the story, possibly in a new chapter.
+
 	story * get_next_story_node()  {return next_story_node;}
+
+	/// First line in this chapter.
+
 	story * get_first_daughter_node()  {return first_daughter_node;}
+
+	/// Last line in this chapter.
+
 	story * get_last_daughter_node()  {return last_daughter_node;}
+
+	/// Contents of the text line in this story node.
+
 	char * get_text()  {return text;}
+
+	/// Is this a chapter (1) or a text line(0)?
+
 	int  get_chapter_flag()   {return chapter_flag;}
 
+	/// Add to a story.
+
 	void set_next_story_node(story * s)  {next_story_node = s;}
+
+	/// Set first text line.
+
 	void set_first_daughter_node(story * s)  {first_daughter_node = s;}
+
+	/// Add/set last text line.
+
 	void set_last_daughter_node(story * s)  {last_daughter_node = s;}
+
+	/// Add text to a story node.
+
         void set_text(char * a_string)
 	    {
 	    if(text != NULL)

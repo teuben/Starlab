@@ -8,14 +8,13 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//  grape4.h: C interface definition for GRAPE-4 (HARP-3)
-//.............................................................................
-//    version 1:  Feb 1995   Piet Hut, Steve McMillan, Jun Makino
-//    version 2:  August 1996 Jun Makino
-//.............................................................................
-//     This file includes:
+/// @file grape4.h  C/C++ interface definition for GRAPE-4 (HARP-3).
+//
+//  version 1:  Feb 1995   Piet Hut, Steve McMillan, Jun Makino
+//  version 2:  August 1996 Jun Makino
+//
+//  This file includes:
 //  1) definition of C interface to GRAPE-4
-//.............................................................................
 
 #ifndef  STARLAB_HARP3_H
 #  define  STARLAB_HARP3_H

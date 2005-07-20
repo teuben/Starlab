@@ -1,22 +1,24 @@
 
-// slow_binary.h:  class to handle slowdown of lightly perturbed binaries
-//		   (based on "slow-KS" treatment of Mikkola & Aarseth).
+/// @file slow_binary.h  Slowdown of lightly perturbed binaries.
+//			 (Based on "slow-KS" treatment of Mikkola & Aarseth.)
+
+/// \a slow_binary:  Class handling slowdown of lightly perturbed binaries.
 
 class slow_binary {
 
     private:
 
-	int  kappa;		// slowdown factor (power of 2)
-	xreal t_init;		// time when this kappa value began
-	xreal t_apo;		// time of last "apocenter" (convenience)
-	real tau;		// slow time
-	real tau_pred;		// slow t_pred
-	real dtau;		// slow timestep: true timestep = dtau*kappa
-	vec acc_p;		// perturbation to CM acceleration
-	vec jerk_p;		// perturbation to CM jerk
-	vec old_acc_p;	// previous acc_p
-	vec old_jerk_p;	// previous jerk_p
-	bool stop;		// flag to force stop next time around
+	int  kappa;		///< Slowdown factor (power of 2).
+	xreal t_init;		///< Time when this kappa value began.
+	xreal t_apo;		///< Time of last "apocenter" (convenience).
+	real tau;		///< Slow time.
+	real tau_pred;		///< Slow t_pred.
+	real dtau;		///< Slow timestep: true timestep = dtau*kappa.
+	vec acc_p;		///< Perturbation to CM acceleration.
+	vec jerk_p;		///< Perturbation to CM jerk.
+	vec old_acc_p;		///< Previous acc_p.
+	vec old_jerk_p;		///< Previous jerk_p.
+	bool stop;		///< Flag to force stop next time around.
 
     public:
 
@@ -27,12 +29,16 @@ class slow_binary {
 	    stop = false;
 	}
 
+	// Convert slow time to real time.
+
 	xreal tau_to_time(real tt = 0) {
 	    if (tt == 0)
 		return t_init + kappa * tau;
 	    else
 		return t_init + kappa * tt;
 	}
+
+	/// Convert time to slow time.
 
 	real time_to_tau(xreal t)	{return ((real)(t - t_init)) / kappa;}
 
@@ -58,10 +64,10 @@ class slow_binary {
 	void set_dtau(real dt)		{dtau = dt;}
 	real get_dtau()			{return dtau;}
 
-	void set_acc_p(vec a)	{acc_p = a;}
-	vec get_acc_p()		{return acc_p;}
+	void set_acc_p(vec a)		{acc_p = a;}
+	vec get_acc_p()			{return acc_p;}
 
-	void set_jerk_p(vec j)	{jerk_p = j;}
+	void set_jerk_p(vec j)		{jerk_p = j;}
 	vec get_jerk_p()		{return jerk_p;}
 
 	void set_old_acc_p(vec a)	{old_acc_p = a;}
@@ -82,17 +88,19 @@ class slow_binary {
 
 class _dyn_;			// to permit the_node pointer below...
 
+/// \a slow_perturbed:  Class handling for slow binaries perturbed by this node.
+
 class slow_perturbed {
 
     private:
 
-	_dyn_ *the_node;	// CM node (hdyn, really) of a slow binary
-	int kappa;		// expected slowdown factor
-	vec acc_p;		// perturbation to CM acceleration
-	vec jerk_p;		// perturbation to CM jerk
-	vec old_acc_p;	// previous acc_p
-	vec old_jerk_p;	// previous jerk_p
-	slow_perturbed *sp;	// linked list pointer
+	_dyn_ *the_node;	///< CM node (hdyn, really) of a slow binary
+	int kappa;		///< expected slowdown factor
+	vec acc_p;		///< perturbation to CM acceleration
+	vec jerk_p;		///< perturbation to CM jerk
+	vec old_acc_p;		///< previous acc_p
+	vec old_jerk_p;		///< previous jerk_p
+	slow_perturbed *sp;	///< linked list pointer
 
     public:
 
@@ -104,7 +112,7 @@ class slow_perturbed {
 	}
 
 	~slow_perturbed() {
-	    if (sp) delete sp;			// recursive
+	    if (sp) delete sp;		// recursive
 	}
 
 	void set_node(_dyn_ *n)		{the_node = n;}
@@ -113,10 +121,10 @@ class slow_perturbed {
 	void set_kappa(int k)		{kappa = k;}
 	int  get_kappa()		{return kappa;}
 
-	void set_acc_p(vec a)	{acc_p = a;}
-	vec get_acc_p()		{return acc_p;}
+	void set_acc_p(vec a)		{acc_p = a;}
+	vec get_acc_p()			{return acc_p;}
 
-	void set_jerk_p(vec j)	{jerk_p = j;}
+	void set_jerk_p(vec j)		{jerk_p = j;}
 	vec get_jerk_p()		{return jerk_p;}
 
 	void set_old_acc_p(vec a)	{old_acc_p = a;}
@@ -131,6 +139,6 @@ class slow_perturbed {
 	    if (sp) sp->store_old_force();	// recursive!
 	}
 
-	void set_next(slow_perturbed *s)  {sp = s;}
-	slow_perturbed *get_next()	{return sp;}
+	void set_next(slow_perturbed *s)	{sp = s;}
+	slow_perturbed *get_next()		{return sp;}
 };

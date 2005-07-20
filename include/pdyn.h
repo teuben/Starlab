@@ -8,39 +8,36 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//  pdyn.h: Definitions of derived classes _pdyn_ and pdyn, including basic
-//	     physical stellar data, for use in applications involving
-//           N-body systems using 4-D trees.
+/// @file pdyn.h  Derived classes _pdyn_ and pdyn.
+//                Includes basic physical stellar data, for use in
+//		  applications involving N-body systems using 4-D trees.
 //
-//.............................................................................
-//    version 1:  May 2001   Steve McMillan
-//    version 2:
-//.............................................................................
-//     This file includes:
-//  1) definition of class _pdyn_ (physical dyn, pre-tdyn, partiview-dyn?)
-//  2) definition of class pdyn (pdyn with extra kepler data)
-//.............................................................................
+//
+// version 1:  May 2001   Steve McMillan
+// version 2:
+//
+// This file includes:
+// 1) definition of class _pdyn_ (physical dyn, pre-tdyn, partiview-dyn?)
+// 2) definition of class pdyn (pdyn with extra kepler data)
 
 #ifndef  STARLAB_PDYN_H
 #  define  STARLAB_PDYN_H
 
 #include "dyn.h"
 
-//-----------------------------------------------------------------------------
-//  _pdyn_  --  a derived class of dynamical particles, with additional
-//              information on stellar properties.  Serves as a place-
-//	        holder for the stellar data used in tdyn applications.
-//-----------------------------------------------------------------------------
+/// \a _pdyn_:  A derived class of dynamical particles, with additional
+///             information on stellar properties.  Serves as a place-holder
+///		for the stellar data used in tdyn applications.
 
 class  _pdyn_ : public dyn
 {
     protected:
 
-	int worldline_index;
+	int worldline_index;	///< Unique global index of this particle.
 
 	// Stellar stuff:
 
-	int stellar_type;	// (see inc/star/star_support.h for details)
+	int stellar_type;	///< See inc/star/star_support.h for details.
 	real temperature;
 	real luminosity;
 
@@ -79,10 +76,18 @@ class  _pdyn_ : public dyn
 	inline _pdyn_ * get_elder_sister()
 	    {return (_pdyn_*) node::get_elder_sister();}
 
+	/// Set or find the root node pointer.
+
         inline _pdyn_ * get_root()
             {return (_pdyn_*) node::get_root();}
+
+	/// Return the top-level node of this node.
+
         inline _pdyn_ * get_top_level_node()
             {return (_pdyn_*) node::get_top_level_node();}
+
+	/// Find the binary sister of this node.
+
         inline _pdyn_ * get_binary_sister()
             {return (_pdyn_*) node::get_binary_sister();}
 
@@ -107,9 +112,9 @@ inline  _pdyn_ * get_pdyn_(istream & s = cin,
 
 #define  put_pdyn_  put_node
 
-// Definition of the pdyn class = _pdyn_ with an extra kepler pointer.
-
 class tdyn;
+
+/// \a pdyn:  pdyn class = _pdyn_ with an extra kepler pointer.
 
 class  pdyn : public _pdyn_
 {

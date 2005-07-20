@@ -1,31 +1,37 @@
 #ifndef     STARLAB_HOP_H
 #   define  STARLAB_HOP_H
 
+/// @file hop.h  Data and classes for the HOP algorithm.
+
 #include "dyn.h"
 #include "vector"
 
 real d_nn_sq, d_nn_sq2, d_nn_sq3;
 static dyn *nn2, *nn3;
 
+/// \a nearest_neighbor:  Combine a neighbor pointer and a distance.
+
 class nearest_neighbor {
 public:
-  dyn* nn;
-  real d_nn_sq;
+  dyn* nn;		///< nearest neighbor pointer
+  real d_nn_sq;		///< distance to nearest neighbor
   nearest_neighbor() {
     nn = NULL;
     d_nn_sq = VERY_LARGE_NUMBER;
   }
 };
 
+/// \a cluster:  List of neighbors (linked by nearest_neighbor pointers).
+
 class cluster {
  protected:
 
-  dyn *h;
+  dyn *h;		///< First node on the list.
 
-  int nstar;
-  real mass;
-  vec pos;
-  vec vel;
+  int nstar;		///< Number of stars in the list.
+  real mass;		///< Total mass of stars on the list.
+  vec pos;		///< Position of h.
+  vec vel;		///< Velocity of h.
 
  public:
 
@@ -64,12 +70,13 @@ class cluster {
 
 };
 
+/// \a hop:  List of all clusters partitioning the system.
 
 class hop {
  protected:
 
-  int nn_search;
-  vector<cluster> cl;
+  int nn_search;	///< Search option.
+  vector<cluster> cl;	///< List of clusters.
  public:
 
   hop() {}
