@@ -156,7 +156,8 @@ if ($build == 1) then
 	    chdir ..
 
 	endif
-
-    endif
+       
+        rehash
+    end
 
 endif
