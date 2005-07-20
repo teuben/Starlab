@@ -2,7 +2,7 @@
 // SPZDCH19_star.C
 //
 
-#include "static_star.h"
+#include "star/static_star.h"
 
 void static_star::instantaneous_element() {
 
