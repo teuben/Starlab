@@ -8,7 +8,7 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-/// @file grape6.h  C++/C interface definitions for using GRAPE-6.
+/// @file grape6.h  C/C++ interface definitions for using GRAPE-6.
 //
 //  version 1:  July 2000	Steve McMillan, Jun Makino
 
