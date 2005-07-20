@@ -328,7 +328,9 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 
 SUBDIRS = sbin src include
 
-all-recursive: libs
+all-recursive: libs doc
+
+install-recursive: all-recursive install-doc
 
 # The following is a list of directories containing Makefiles with a
 # "libs" target.  The purpose of libs is to ensure that all libraries
@@ -369,3 +371,10 @@ libs:
 
 man:
 	@makeman
+
+install-doc:
+	cp -r doc/{html,latex} $(prefix)/share/starlab
+
+.PHONY: doc
+doc:
+	doxygen || mkdir doc/{html,latex}
