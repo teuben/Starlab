@@ -328,7 +328,7 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 
 SUBDIRS = sbin src include
 
-all-recursive: libs doc
+all-recursive: libs
 
 install-recursive: all-recursive install-doc
 
@@ -372,7 +372,8 @@ libs:
 man:
 	@makeman
 
-install-doc:
+install-doc: doc
+	mkdir -p $(prefix)/share/starlab
 	cp -r doc/{html,latex} $(prefix)/share/starlab
 
 .PHONY: doc
