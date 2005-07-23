@@ -340,8 +340,8 @@ void hdyn::remove_from_perturbed_list(int id) // default = 0
 
     if (i < 0 || i >= n_perturbed || perturbed_list[i] != this) {
 
-	cerr << "***** warning: remove_from_perturbed_list: node "
-	     << this << " " << format_label() << " not on list"
+	cerr << "***** warning: remove_from_perturbed_list(" << id
+	     << "): node " << this << " " << format_label() << " not on list"
 	     << endl;
 
 	check_perturbed_list();
