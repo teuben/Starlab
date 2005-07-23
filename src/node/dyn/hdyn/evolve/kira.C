@@ -189,6 +189,11 @@
 
 #include "hdyn.h"
 
+#ifdef USEMPI
+#    include <mpi.h>
+#    include "kira_mpi.h"
+#endif
+
 #ifndef TOOLBOX
 
 #include "star/dstar_to_kira.h"
@@ -271,6 +276,11 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
     // (normally, would expect the components to lag the system time).
 
     if (init) b->recompute_unperturbed_steps();
+
+//#ifdef USEMPI
+    recompute_MPI_id_array(b);
+    if (!check_MPI_id_array(b)) exit(1);
+//#endif
 
     if (verbose) {
 	cerr << "CPU time for reinitialization = "
@@ -703,6 +713,10 @@ local void evolve_system(hdyn * b,		// hdyn array
 
     real t_fulldump = tt;
 
+    // Testing the MPI indexing...
+
+    real t_MPI_check = tt + 0.25 * randinter(0, dt_log);
+
     //----------------------------------------------------------------------
     // Frequencies of "other" (episodic) output.  Idea is that we will
     // have data blocks of width dt_alt2, sampled at intervals dt_alt1,
@@ -850,6 +864,13 @@ local void evolve_system(hdyn * b,		// hdyn array
 
 	    log_output(b, count, steps, count_top_level, steps_top_level,
 		       &kc_prev, long_bin);
+
+//#ifdef USEMPI
+	    if (!check_MPI_id_array(b)) {
+		recompute_MPI_id_array(b);
+		if (!check_MPI_id_array(b)) exit(1);
+	    }
+//#endif
 
 	    // (Incorporate count, steps, etc. into kira_counters...?)
 
@@ -1232,6 +1253,21 @@ local void evolve_system(hdyn * b,		// hdyn array
 	int ds = integrate_list(b, next_nodes, n_next, exact,
 				tree_changed, n_list_top_level,
 				full_dump, r_reflect);
+
+//#ifdef USEMPI
+	if (tree_changed) recompute_MPI_id_array(b);	// *way* overkill:
+							// should just remove
+							// the old nodes and
+							// add the new...
+
+	// Testing...
+
+	if (t >= t_MPI_check) {
+	    if (!check_MPI_id_array(b)) exit(1);
+	    t_MPI_check += 0.25 * randinter(0, dt_log);
+	}
+
+//#endif
 
 
 	if (n_list_top_level > 0) {
@@ -1766,6 +1802,11 @@ void kira_finalize(hdyn *b)
 
     cerr << "cleanup complete" << endl << flush;
 
+#ifdef USEMPI
+    cerr << "Now finalizing mpi:" << endl << flush;
+    MPI_Finalize();
+#endif
+
 }
 
 #else
@@ -1825,6 +1866,11 @@ void kira_system_id(int argc, char** argv)
     }
     cerr << endl;
 
+#ifndef USEMPI
+
+    // wwvv For now, don't try to find out the location of kira
+    // when using mpi.
+
     if (   (argv[0][0] == '.' && argv[0][1] == '/')	// easier to list
 	|| (argv[0][0] == '~' && argv[0][1] == '/')	// excluded strings...
 	||  argv[0][0] == '/') {
@@ -1851,11 +1897,24 @@ void kira_system_id(int argc, char** argv)
 
     }
 
+#endif
+
     cerr << "current directory = " << getenv("PWD") << endl;
     cerr << endl;
 }
 
+#ifdef USEMPI
+void signalhandler(int s)
+{
+    abort();
+}
+#endif
+
 main(int argc, char **argv) {
+
+#ifdef USEMPI
+    signal(11, signalhandler);
+#endif
 
     check_help();
 
@@ -1886,6 +1945,24 @@ main(int argc, char **argv) {
     int  n_stop;		// n to terminate simulation
 
     bool alt_flag;
+
+#ifdef USEMPI
+
+    struct rlimit rlim;
+    if (getrlimit(RLIMIT_CORE,&rlim)<0)
+      perror("getrlimit: ");
+    rlim.rlim_cur = rlim.rlim_max;
+    if (setrlimit(RLIMIT_CORE,&rlim)<0) 
+      perror("setrlimit ");
+    cerr << "core limits" << rlim.rlim_max <<" "<< rlim.rlim_cur << endl;
+
+    MPI_Init(&argc,&argv);
+    mpi_communicator = MPI_COMM_WORLD;
+    MPI_Comm_size(mpi_communicator,&mpi_nprocs);
+    cerr << "Number of mpi processes: "<<mpi_nprocs<<endl;
+    MPI_Comm_rank(mpi_communicator,&mpi_myrank);
+
+#endif
 
     if (!kira_initialize(argc, argv,
 			 b, delta_t, dt_log, long_binary_out,

@@ -149,6 +149,11 @@
 
 #include "hdyn.h"
 
+#ifdef USEMPI
+#    include <mpi.h>
+#    include "kira_mpi.h"
+#endif
+
 #include "kira_debug.h"	// (a handy way to turn on blocks of debugging)
 #ifndef T_DEBUG_hdyn_ev
 #   undef T_DEBUG
@@ -1942,6 +1947,11 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
     coll = NULL;
     d_coll_sq = VERY_LARGE_NUMBER;
 
+#ifdef USEMPI
+    nn_id = 0;		// wwvv added
+    coll_id = 0;	// wwvv added
+#endif
+
     real distance_squared;
 
     // ***********************************************************************
@@ -1951,6 +1961,14 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
     // ***********************************************************************
 
     int n_top = 0;
+
+#ifdef USEMPI
+
+    // wwvv: another counter. Could have used n_top for the same purpose,
+    // but want to avoid double uses of the same variable. 
+    // doaughter_id is exclusively for identifying the daughter
+
+#endif
 
     // Note special care in interpreting radius.  This code is duplicated
     // in function get_sum_of_radii (kira_encounter.C).
@@ -1972,13 +1990,35 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
     // to  access bi->pred_pos and bi->pred_vel directly.   Steve (1/05)
 
 
-    // *** The following loop is a candidate for threading. ***
+    // *** The following loop is a candidate for threading (Steve, 5/05). ***
 
+#ifdef USEMPI
+
+    // wwvv mpidoit is for determining if the calculation has to be skipped 
+    // (another process will take care of this calculation) or not
+    // wwvv could have used daughter_counter or n_top for the same
+    // purpose, but again, I want to avoid double uses of the same variable
+
+    int mpidoit;
+    mpidoit = mpi_myrank;
+
+    // wwvv
+    // in the MPI case, we calculate the acc and jerk only for a part of 
+    // the daughters in each process. Later on, we add things up..
+
+#endif
 
     for_all_daughters(hdyn, b, bi) {
 
 	n_top++;
 
+#ifdef USEMPI
+
+	// Check if we have to calculate for this daughter...
+
+	if (mpidoit-- != 0) continue;
+	mpidoit = mpi_nprocs-1;
+#endif
 	if (bi != this) {
 
 	    // Determine the sum of the radii for use in finding the
@@ -1991,7 +2031,7 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 				    d_pos, d_vel,
 				    eps2, acc, jerk, pot, distance_squared);
 
-	    // Note from Steve (1/05)L:  Must be very careful in this loop
+	    // Note from Steve (1/05):  Must be very careful in this loop
 	    // to avoid extra function calls or memory accesses that may
 	    // cause cache misses.  Best to confine calculations to data
 	    // close to the basic dynamical quantities, and to inline any
@@ -2018,9 +2058,31 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 	    // The nn and coll passed to update_nn_coll here are the actual
 	    // pointers, so this update changes the data in b.  
 
+	    // wwvv This is a problem for the MPI version.
+	    // How to notify other processes of these changes?
+	    //
+	    // It would be nice if the following code could be placed
+	    // after the call to _kira_calculate_top_level_acc_and_jerk
+	    // in kira_ev.C:363
+	    //
+	    // something like:
+	    // void update_nn_col_and_perturbers(hdyn*bb,b){
+	    //   
+	    // }
+	    // for (i=0; i<n_top; i++){
+	    //   update_nn_coll_and_perturbers(next_nodes[i],b)
+	    // }
+
+#ifdef USEMPI
+	    update_nn_coll(this, 1,		// (1 = ID)	// (inlined)
+			   distance_squared, bi, d_nn_sq, nn,
+			   sum_of_radii, d_coll_sq, coll,
+			   nn_id, coll_id);  //  wwvv added this line
+#else
 	    update_nn_coll(this, 1,		// (1 = ID)	// (inlined)
 			   distance_squared, bi, d_nn_sq, nn,
 			   sum_of_radii, d_coll_sq, coll);
+#endif
 
 	    // Note: we do *not* take the slowdown factor into account
 	    //	     when computing the perturber list.
@@ -2032,8 +2094,21 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 		&& is_perturber(this, bi->mass,			// (inlined)
 				distance_squared,
 				perturbation_radius_factor)) {
-		if (n_perturbers < MAX_PERTURBERS)
+		if (n_perturbers < MAX_PERTURBERS) {
+
+#ifdef USEMPI
+		    cout << ":"<<mpi_myrank<<": TD:"<<__FILE__<<":"
+			 <<__LINE__<<" perturber modified"<<endl;
+#endif
+
 		    perturber_list[n_perturbers] = bi;
+#if 0
+		    cerr << "added " << bi->format_label();
+		    cerr << " to perturber list of "
+			 << format_label()
+			 << endl;
+#endif
+		}
 		n_perturbers++;
 	    }
 	}
@@ -2192,9 +2267,18 @@ void hdyn::perturber_acc_and_jerk_on_leaf(vec &a,
 	// actually changes the coll data.
 
 	real sum_of_radii = get_sum_of_radii(this, bb);
+
+#ifdef USEMPI
+	update_nn_coll(this, 2,					// (inlined)
+		       d2_bb, bb, p_d_nn_sq, p_nn,
+		       sum_of_radii, d_coll_sq, coll,
+		       nn_id, coll_id); // wwvv added
+#else
 	update_nn_coll(this, 2,					// (inlined)
 		       d2_bb, bb, p_d_nn_sq, p_nn,
 		       sum_of_radii, d_coll_sq, coll);
+#endif
+
     }
 
     step_node->inc_indirect_force(np);				// bookkeeping
@@ -2278,9 +2362,17 @@ void hdyn::tree_walk_for_partial_acc_and_jerk_on_leaf(hdyn *b,
 	    // actually changes the coll data.
 
 	    real sum_of_radii = get_sum_of_radii(this, b);
+
+#ifdef USEMPI
+	    update_nn_coll(this, 3,
+			   d2, b, p_d_nn_sq, p_nn,
+			   sum_of_radii, d_coll_sq, coll,
+		           nn_id, coll_id); // wwvv added
+#else
 	    update_nn_coll(this, 3,
 			   d2, b, p_d_nn_sq, p_nn,
 			   sum_of_radii, d_coll_sq, coll);
+#endif
 
 	} else {
 

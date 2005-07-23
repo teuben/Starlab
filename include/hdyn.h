@@ -163,6 +163,14 @@ class  hdyn : public _dyn_ {
                                 // measured by  distance - r1 - r2 )
         real d_coll_sq;		// distance squared to this neighbor
   
+#ifdef USEMPI
+	int nn_id, coll_id, node_id;				// wwvv added
+#endif
+
+	// Redundant: same use as node_id (I think) -- Steve, 7/05.
+
+	int MPI_id;
+  
         // Variables for GRAPE-4/6:
 
         int grape_index;	// address of this particle in GRAPE memory
@@ -208,6 +216,8 @@ class  hdyn : public _dyn_ {
 
             coll = NULL;
 	    d_coll_sq = 0;
+
+	    MPI_id = -1;
 
 	    grape_index = 0;
 	    grape_rnb_sq = 0;
@@ -442,6 +452,20 @@ class  hdyn : public _dyn_ {
         void  set_coll(hdyn * new_coll)		{coll = new_coll;}
         inline real get_d_coll_sq()	const	{return d_coll_sq;}
         void  set_d_coll_sq(real d)		{d_coll_sq = d;}
+
+#ifdef USEMPI
+	inline int get_nn_id()			{return nn_id;}		// wwvv
+	inline int get_coll_id()		{return coll_id;}	// wwvv
+	inline int get_node_id()		{return node_id;}	// wwvv
+	inline void set_nn_id(int id)		{nn_id = id;}		// wwvv
+	inline void set_coll_id(int id)		{coll_id = id;} 	// wwvv
+	inline void set_node_id(int id)		{node_id = id;}		// wwvv
+#endif
+
+	// Same redundancy (Steve, 7/05):
+
+	inline int get_MPI_id()			{return MPI_id;}
+	inline void set_MPI_id(int id)		{MPI_id = id;}
 
         // Variables for GRAPE-4/6
 
@@ -1177,6 +1201,18 @@ real smallN_evolve(hdyn *b,
 		   real dt_snap = 0);
 
 real integrate_multiple(hdyn *b);
+
+// ----- In kira_id_manager.C
+
+//#ifdef USEMPI
+
+bool check_MPI_id_array(hdyn *b);
+int add_to_MPI_id_array(hdyn *b, bool check = false);
+bool remove_from_MPI_id_array(hdyn *b, bool check = false);
+void recompute_MPI_id_array(hdyn *b);
+hdynptr get_MPI_hdynptr(int id);
+
+//#endif
 
 // ----- Handy clean-up functions (in files of ~same name): -----
 

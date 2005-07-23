@@ -30,6 +30,12 @@
 #include "hdyn.h"
 #include "kira_timing.h"
 
+#ifdef USEMPI
+#    include <mpi.h>
+#    include "kira_mpi.h"
+#    include "hdyn_inline.C"
+#endif
+
 #include "kira_debug.h"	// (a handy way to turn on blocks of debugging)
 #ifndef T_DEBUG_kira_ev
 #   undef T_DEBUG
@@ -75,6 +81,278 @@
 //
 //-------------------------------------------------------------------------
 
+
+#ifdef USEMPI
+
+int mpi_communicator;
+int mpi_myrank;
+int mpi_nprocs;
+
+typedef struct { real val; int id; } real_int_type;
+
+void hpsortreal_int(int n,  real_int_type ra[], int ia[])
+{
+	int  i,ir,j,l;
+	real_int_type rra;
+	int iia;
+
+	ra--;  /* this is a numerical recipes function, */
+	ia--;  /* so indexing starts with 1 (sic!)      */
+
+	if (n < 2) return;
+	l=(n >> 1)+1;
+	ir=n;
+	for (;;) {
+		if (l > 1) {
+			rra=ra[--l];
+			iia = ia[l];
+		} else {
+			rra=ra[ir];
+			iia=ia[ir];
+			ra[ir]=ra[1];
+			ia[ir]=ia[1];
+			if (--ir == 1) {
+				ra[1]=rra;
+				ia[1]=iia;
+				break;
+			}
+		}
+		i=l;
+		j=l+l;
+		while (j <= ir) {
+			if (j < ir && ra[j].id < ra[j+1].id) j++;
+			if (rra.id < ra[j].id) {
+				ra[i]=ra[j];
+				ia[i]=ia[j];
+				i=j;
+				j <<= 1;
+			} else j=ir+1;
+		}
+		ra[i]=rra;
+		ia[i]=iia;
+	}
+}
+
+void mpi_sum_list(hdyn * next_nodes[], int n_next, 
+                                   MPI_Comm mpi_communicator)
+{
+  // First a test if all n_next's are equal
+  int n_max, n_min;
+  MPI_Allreduce(&n_next,&n_max,1,MPI_INT,MPI_MAX,mpi_communicator);
+  MPI_Allreduce(&n_next,&n_min,1,MPI_INT,MPI_MIN,mpi_communicator);
+  if (n_max != n_min)
+  {
+    cout << ":"<<mpi_myrank<<": Catastrophic error in "<<
+      __FILE__<<":"<<__LINE__<<" n_next's are not equal"
+      ", my n_next is:"<<n_next<<endl;
+    MPI_Finalize();
+    exit(1);
+  }
+  {
+    // s/rbuf for sending/receiving acc, jerk and pot
+    real *sbuf = new real[7*n_next];
+    real *rbuf = new real[7*n_next];
+    int k=0;
+    vec a;
+    for (int i=0; i<n_next; i++)
+      {
+        if (next_nodes[i]){
+  	  a = next_nodes[i] -> get_acc();
+	  sbuf[k++] = a[0];
+	  sbuf[k++] = a[1];
+	  sbuf[k++] = a[2];
+	  a = next_nodes[i] -> get_jerk();
+	  sbuf[k++] = a[0];
+	  sbuf[k++] = a[1];
+	  sbuf[k++] = a[2];
+	  sbuf[k++] = next_nodes[i] -> get_pot();
+        }
+        else
+        {
+ 	  cerr << __FILE__ << ":"<< __LINE__ << 
+		 ": NULL next_node " << i << endl;
+        }
+      }
+    int mpi_real = MPI_DOUBLE;
+    if (sizeof(real) != sizeof(double) )
+         mpi_real = MPI_FLOAT;
+    // add valuse of acc, jerk and pot in sbuf giving rbuf
+    cout << ":"<<mpi_myrank<<": TD: allreducing n_next: "<<n_next<<endl;
+    MPI_Allreduce(&sbuf[0],&rbuf[0],n_next*7,mpi_real,MPI_SUM,
+            mpi_communicator);  
+    cout << ":"<<mpi_myrank<<": TD: allreduced n_next: "<<n_next<<endl;
+    // copy summed acc, jerk and pot values to the nodes
+    k=0;
+    for (int i=0; i<n_next; i++)
+    {
+      if (next_nodes[i]){
+        next_nodes[i] -> set_acc_and_jerk_and_pot(
+ 	  vec(rbuf[k  ],rbuf[k+1],rbuf[k+2]),
+	  vec(rbuf[k+3],rbuf[k+4],rbuf[k+5]),
+	     rbuf[k+6]);
+      }
+      k += 7;
+    }
+    delete [] sbuf;
+    delete [] rbuf;
+  }
+   // handling of nn and coll
+   // 
+   // Every process has it's own notion of who are the nn's and
+   // the coll's. For each element of next_nodes we will
+   // determine what is the minimum d_nn_sq and what is the
+   // id of the nn.
+   // 
+   // MPI_All_reduce can be used for that purpose when the
+   // datatype MPI_DOUBLE_INT is used. It consists of a double,
+   // followed by an int. The allreduce finds the minimum of the doubles
+   // and returns the double and the corrsponding int. 
+   // For the double we use d_nn_sq, for the int we use nn_id.
+   //
+   // The same story for coll.  
+   //
+   // Eventually, the reduce for acc, jerk, pot and nn,coll can be done
+   // in one call. TODO
+  {
+    // sbuf for sending nn and coll stuff,
+    // rbuf for receiving
+    real_int_type *sbuf = new real_int_type[2*n_next];
+    real_int_type *rbuf = new real_int_type[2*n_next];
+
+    for (int i=0; i<n_next; i++)
+    {
+      if (next_nodes[i]){
+	sbuf[i+i].val = next_nodes[i] -> get_d_nn_sq();
+	sbuf[i+i].id = next_nodes[i] -> get_nn_id();
+	sbuf[i+i+1].val = next_nodes[i] -> get_d_coll_sq();
+	sbuf[i+i+1].id = next_nodes[i] -> get_coll_id();
+      }
+      else
+      {
+	cout << ":" << mpi_myrank << ":" << __FILE__ << ":"<< __LINE__ << 
+	       ": NULL next_node " << i << endl;
+      }
+    }
+    for (int k=0; k<2*n_next; k+=2)
+    {
+	cout << ":" << mpi_myrank << ": TD:" << k << 
+	  " val: " << sbuf[k  ].val << " id: " << sbuf[k  ].id << 
+	  " val: " << sbuf[k+1].val <<  " id: " <<sbuf[k+1].id << endl;
+    }
+
+    int mpi_real_int = MPI_DOUBLE_INT;
+    if (sizeof(real) != sizeof(double) )
+         mpi_real_int = MPI_FLOAT_INT;
+
+    // find minimum of distances, giving rbuf
+    cout << ":"<<mpi_myrank<<": TD: allreducing coll nn n_next: "
+               <<n_next<<endl; 
+    MPI_Allreduce(&sbuf[0],&rbuf[0],n_next*2,mpi_real_int,MPI_MINLOC,
+            mpi_communicator);  
+    cout << ":"<<mpi_myrank<<": TD: ready allreducing coll nn n_next: "
+               <<n_next<<endl; 
+    //
+    // Now, in rbuf[i].id we find the nn_id (i even)
+    // and                            coll_id (i odd)
+    //
+    // Find now the addresses of the corresponding nodes and 
+    // put these in the nn and coll fields of the next_nodes array
+    //
+
+    //
+    // We loop over the whole universe, looking if the id
+    // (i.e. the number of the daughter visited)
+    // is in rbuf. For efficiency, it is best to sort rbuf
+    // using the id field as key. 
+    // We have to remember if it is a nn or a coll and
+    // we have to keep track of original place in the
+    // next_nodes array. 
+    // We define an array, dimension 2*n_next which contains the
+    // indexes into the next_nodes array:
+    // 0 0 1 1 2 2 3 3 .....
+    // Multiply this by 2 and add 1 for the odd places:
+    // 0 1 2 3 4 5 6 7 .....
+    //
+    int * indices = new int[2*n_next];
+    for (int i=0; i<2*n_next; i++)
+    {
+      indices[i] = i;
+    }
+    for (int k=0; k<2*n_next; k++)
+    {
+	printf(":%d: TD:k%d: rbuf val %f id %d index %d\n",mpi_myrank,k,rbuf[k].val,
+	    rbuf[k].id,indices[k]);
+    }
+
+    printf(":%d: TD: calling hpsort\n",mpi_myrank);
+    hpsortreal_int(n_next*2, &rbuf[0], &indices[0]);
+    printf(":%d: TD: called hpsort\n",mpi_myrank);
+    for (int k=0; k<2*n_next; k++)
+    {
+	printf(":%d: TD:k%d: rbuf sort val %f id %d index %d\n",mpi_myrank,k,rbuf[k].val,
+	    rbuf[k].id,indices[k]);
+    }
+    int k=0;
+    int l;
+    int id = rbuf[k].id;
+    int counter = 0;
+
+    printf(":%d: TD: entering for_all_daughters loop\n",mpi_myrank);
+    for_all_daughters(hdyn,next_nodes[0]->get_root(),bi)
+    {
+      int daughter_id = bi->get_node_id();
+      // Just to test if numbering of the universe did not change
+      if (daughter_id != counter)
+      {
+        cout << ":"<<mpi_myrank<<": Catastrophic error in "<<
+          __FILE__<<":"<<__LINE__<<" daughter_id: "<<daughter_id<<
+	  " counter: "<<counter<<endl;
+	cout << ":"<<mpi_myrank<<" these should be equal"<<endl;
+        MPI_Finalize();
+        exit(1);
+      }
+      counter++;
+      // printf (":%d: TD: examining id:%d daughter_id:%d \n",mpi_myrank,id,daughter_id);
+      if (id != daughter_id) continue;
+      // found an entry in rbuf with an id equal to the id
+      // of the current daughter
+      // Now, determine if this is a nn or a coll id, and act as appropriate
+
+      while (id == daughter_id)
+      {
+	l = indices[k]/2;
+	if (indices[k] & 1) // odd, so coll
+	{
+	  cout << ":"<<mpi_myrank<<": TD: setting coll "<<l<<" "<<rbuf[k].val<<endl;
+	  next_nodes[l] -> set_coll(bi);
+	  next_nodes[l] -> set_d_coll_sq(rbuf[k].val);
+	}
+	else // even, so nn
+	{
+	  cout << ":"<<mpi_myrank<<": TD: setting nn "<<l<<" "<<rbuf[k].val<<endl;
+	  next_nodes[l] -> set_nn(bi);
+	  next_nodes[l] -> set_d_nn_sq(rbuf[k].val);
+	  // TODO:    also set_d_nn_sq(rbuf[k].val); ??
+	}
+	// TODO : take in consideration the possibility of next_node[l]
+	// == NULL?
+	k++;
+	if (k >= 2*n_next)
+	  break;
+	id = rbuf[k].id;
+      }
+      if (k >= 2*n_next)
+	break;
+    }
+    delete []sbuf;
+    delete []rbuf;
+    delete []indices;
+  }
+}
+// USEMPI
+
+#endif
+
 
 local inline int _kira_calculate_top_level_acc_and_jerk(hdyn **next_nodes,
 							int n_next,
@@ -442,10 +720,58 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 // 				       n_top, time,
 // 				       restart_grape);
 
+#ifdef USEMPI
+	  // fill in node_id in all nodes. We need it later
+	  int node_id = 0;
+          for_all_daughters(hdyn,next_nodes[0]->get_root(),bi)
+          {
+            bi->set_node_id(node_id);
+	    node_id++;
+          }
+#endif
 
 	    n_force = _kira_calculate_top_level_acc_and_jerk(next_nodes,
 							     n_top, time,
 							     restart_grape);
+
+#ifdef USEMPI
+
+	  // In the MPI case, next_nodes contain the values of acc, jerk and
+	  // pot calculated using only a part of the universe b.
+	  // mpi_sum_list knows how to add them up and give each process the
+	  // same values.
+
+            cout << ":" << mpi_myrank <<":"
+		 << " TD: calling mpi_sum_list n_top:"<< n_top 
+	         << " n_force:" << n_force << endl;
+
+            mpi_sum_list(next_nodes, n_top, mpi_communicator);
+
+	    // wwvv this is the place where the rest of the calculations
+	    // are to be done: the calculations that were skipped in the
+	    // for_all_daughters loop in hdyn_ev.C
+	    // Does not work. A rethinking of the way the calculations
+	    // are to be done is necessary.
+	    //
+	    // It would be nice, if the code leading to the for_all_daughters
+	    // loop in hdyn_ev.C could be separated: one call that only 
+	    // involves the calculations of the 'next_nodes' array, and
+	    // thereafter a call that updates the universe.
+	    //
+	    // In the current code, in hdyn_ev.C, after the calculations on
+	    // one element of 'next_nodes', the rest of the universe is updated,
+	    // which is not efficient in the parallel version, maybe even
+	    // not doable. In the parallel version, the sideeffects of the
+	    // calculations on the 'next_nodes' should be taken care off
+	    // after the MPI_Allreduce (... sum ...) of the 'next_nodes'.
+	    //
+#if 0
+	    _kira_calculate_top_level_acc_and_jerk(next_nodes,
+							     n_top, time,
+							     restart_grape);
+#endif
+
+#endif
 
 	    // Note that we now clear restart_grape explicitly here.
 

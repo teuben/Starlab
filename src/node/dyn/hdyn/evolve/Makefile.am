@@ -24,7 +24,8 @@ libhdyn_2_la_SOURCES = hdyn_unpert.C hdyn_ev.C hdyn_tree.C hdyn_merge.C \
     kira_runtime.C perturbed_list.C correct_perturbers.C kira_check.C \
     kira_counters.C kira_energy.C kira_escape.C kira_ev.C kira_log.C \
     kira_stellar.C kira_approx.C kira_encounter.C kira_top_level.C kira_int.C \
-    kira_density.C hdyn_grape4.C hdyn_grape6.C kira.C kira_smallN.C
+    kira_density.C hdyn_grape4.C hdyn_grape6.C kira.C kira_smallN.C \
+    kira_MPI_id_manager.C
 
 # hdyn_ev_lo_CXXFLAGS = -O0
 
