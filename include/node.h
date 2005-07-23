@@ -673,6 +673,10 @@ void renumber(node* b, int istart, bool mass_order, bool name_nodes = false,
 	      bool single_number = false);
 void construct_node_name(node* b);
 
+void makemass(node* b, mass_function mf,
+	      real m_lower, real m_upper,
+	      real exponent, real total_mass, bool renumber_stars);
+
 #endif
 
 //=======================================================================//

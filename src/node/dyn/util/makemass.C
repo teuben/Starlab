@@ -9,7 +9,8 @@
 //=======================================================//              /|\ ~
 
 //// Add a mass spectrum to an input snapshot.  Existing node masses
-//// are overwritten.  Dyn version is copied from the node version.
+//// are overwritten.  Dyn version is the same as the node version,
+//// except that it allows an extra '-C' flag to change output format.
 ////
 //// Usage: makemass [OPTIONS] < input > output
 ////
@@ -40,83 +41,11 @@
 //		Steve McMillan, July 1996
 //		Simon Portegies Zwart, Tokyo, December 1997
 
-// need to repair bugs, see PJT comments
+#include "dyn.h"					    // <-- dyn change
 
-// Need to re-merge node and dyn versions!!  Steve, 7/04
-
-#include "dyn.h"
-
-#define  MAXIMUM_ZAMS_MASS 100
-#define  SEED_STRING_LENGTH  256
-static char  tmp_string[SEED_STRING_LENGTH];
-
-typedef  struct
-{
-    dyn* str;
-    real  mass;
-} nm_pair, *nm_pair_ptr;
-
-// Probably would be much better if these functions were contained in the
-// node version and made global.  (Steve, 6/03)
-
-//-----------------------------------------------------------------------------
-//  compare_mass  --  compare the masses of two particles
-//-----------------------------------------------------------------------------
-
-local int compare_mass(const void * pi, const void * pj)
-{
-    if (((nm_pair_ptr) pi)->mass < ((nm_pair_ptr) pj)->mass)
-        return(1);
-    else if (((nm_pair_ptr)pi)->mass > ((nm_pair_ptr)pj)->mass)
-        return(-1);
-    else
-        return(0);
-}
-
-local void makemass(dyn* b, mass_function mf,
-		    real m_lower, real m_upper,
-		    real exponent, real total_mass, bool renumber_stars) {
-
-    real m, m_sum = 0;
-    int n=0;
-    for_all_daughters(dyn, b, bi) {
-	m = get_random_stellar_mass(m_lower, m_upper, mf, exponent);
-	n++;
-	bi->set_mass(m);
-	m_sum += bi->get_mass();
-    }
-
-    b->set_mass(m_sum);
-
-    // Renumber the stars in order of mass.
-    // Highest mass gets smallest number (strange choise, but).
-    if (renumber_stars) {
-      int istart = 1;
-      bool M_flag = true;
-      renumber(b, istart, M_flag);
-    }
-
-    if (total_mass > 0) {
-	real m_factor = total_mass/m_sum;
-	for_all_daughters(dyn, b, bi)
-	    bi->set_mass(m_factor*bi->get_mass());
-	b->set_mass(total_mass);
-    }
-
-    if(m_lower>=m_upper)
-	sprintf(tmp_string,
-		"       %s mass function, total mass = %8.2f",
-		type_string(mf), m_sum);
-//		type_string(Equal_Mass), m_sum);
-    else
-	sprintf(tmp_string,
-		"       %s mass function, total mass = %8.2f Solar",
-		type_string(mf), m_sum);
-    b->log_comment(tmp_string);
-    cerr << "mass function is " << type_string(mf) << ", ";
-    PRC(m_lower); PRL(m_upper);
-
-}
+// Is there a better way to reproduce the effect of the node version
+// with a single extra command-line argument?  Duplicating the entire
+// help section and main function seems like overkill... (Steve, 7/05)
 
 int main(int argc, char ** argv)
 {
@@ -143,13 +72,13 @@ int main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "CE:e:iF:f:L:l:M:m:s:U:u:X:x:";
+    char* param_string = "CE:e:iF:f:L:l:M:m:s:U:u:X:x:";    // <-- dyn change
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
-	    case 'C': C_flag = true;
+	    case 'C': C_flag = true;		    	    // <-- dyn change
 		      break;
 	    case 'F': F_flag = true;
 		      strncpy(mfc, poptarg, 63);
@@ -194,8 +123,8 @@ int main(int argc, char ** argv)
       mf = extract_mass_function_type_string(mfc);
     delete [] mfc;
 
-    dyn *b;
-    b = get_dyn();
+    dyn *b;						    // <-- dyn change
+    b = get_dyn();					    // <-- dyn change
 
     b->log_history(argc, argv);
 
@@ -224,7 +153,9 @@ int main(int argc, char ** argv)
 							 old_t_vir);
     }
 
-    if (C_flag) b->set_col_output(true);
-    put_dyn(b);
+    if (C_flag) b->set_col_output(true);		    // <-- dyn change
+    put_dyn(b);						    // <-- dyn change
+
     rmtree(b);
+    return 0;
 }

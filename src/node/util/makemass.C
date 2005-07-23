@@ -14,39 +14,37 @@
 //// If only one mass limit is set, the other is automatically forced
 //// to the same value.
 ////
-//// Usage: mass_dist [OPTIONS]
+//// Usage: makemass [OPTIONS] < input > output
 ////
 //// Options:
 ////         -e/E/x/X  exponent [-2.35 (Salpeter)]
-////          -F/f      mass function option:
-////                       (1) Power-law [default]
-////                       (2) Miller & Scalo
-////                       (3) Scalo
-////                       (4) Kroupa
-////                       (5) GdeMarchi
-////                    Option -F requires one of the following strings:
-////                    (Power_Law, Miller_Scalo, Scalo, Kroupa, GdeMarchi).
-////                    Option -f requires the appropriate integer.
-////          -i        (re)number stellar index from highest to lowest mass.
-////          -l/L      lower mass limit [1]
-////          -m/M      scale to specified total mass [don't scale]
-////          -u/U      upper mass limit [1]
-////          -s        random seed
+////         -F/f      mass function option:
+////                        1) Power-law [default]
+////                        2) Miller & Scalo
+////                        3) Scalo
+////                        4) Kroupa
+////                        5) GdeMarchi
+////                        6) TwoComponent (uses -h, -l and -u)
+////                   option -F requires one of the following strings:
+////                        Power_Law, Miller_Scalo, Scalo, Kroupa,
+////                        GdeMarchi, TwoComponent
+////                   option -f requires the appropriate integer.
+////         -h/H      fraction of stars in high-mass group (TwoComponent) [0]
+////         -i        (re)number stellar index from highest to lowest mass.
+////         -l/L      lower mass limit [1]
+////         -m/M      scale to specified total mass [don't scale]
+////         -u/U      upper mass limit [1]
+////         -s        random seed
 ////
 //// Written by Steve McMillan and Simon Portegies Zwart.
 ////
 //// Report bugs to starlab@sns.ias.edu.
 
-
-//++ Note: The conversion factor for scaling between dynamical and stellar masss
-//++       is properly set in the output snapshot.
+//++ Note: The conversion factor for scaling between dynamical and stellar
+//++       mass is properly set in the output snapshot.
 
 //		Steve McMillan, July 1996
 //		Simon Portegies Zwart, Tokyo, December 1997
-
-// need to repair bugs, see PJT comments
-
-// Need to re-merge node and dyn versions!!  Steve, 7/04
 
 #include "node.h"
 #include "util_math.h"
@@ -64,7 +62,8 @@ static char  tmp_string[SEED_STRING_LENGTH];
 // happen by accident, e.g. if a MF is specified but no range is given, which
 // defaults to [1,1] and an infinite loop.
 
-//see: Eggleton, Fitchet & Tout 1989, ApJ 347, 998
+// See Eggleton, Fitchet & Tout 1989, ApJ 347, 998.
+
 local real mf_Miller_Scalo(real m_lower, real m_upper) {
 
     if (twiddles(m_lower, m_upper, TOL))
@@ -81,8 +80,10 @@ local real mf_Miller_Scalo(real m_lower, real m_upper) {
 }
 
 #if 0
-//Tapered power-law (from Guido de Marchi private communication April. 2002)
-//dN/dLogm= m^(-1.35)*(1-exp(-m/0.25)^2.4)
+
+// Tapered power-law (from Guido de Marchi private communication April. 2002)
+// dN/dLogm= m^(-1.35)*(1-exp(-m/0.25)^2.4)
+
 local real tapered_power_law(real m, 
 			     const real x1 = -1.35, 
 			     const real x2 = 2.4, 
@@ -105,8 +106,10 @@ local real tapered_power_law(real m,
 #endif
 
 #if 0
-//Tapered power-law (from Guido de Marchi private communication April. 2002)
-//dN/dLogm= m^(-1.35)*(1-exp(-m/0.25)^2.4)
+
+// Tapered power-law (from Guido de Marchi private communication April. 2002)
+// dN/dLogm= m^(-1.35)*(1-exp(-m/0.25)^2.4)
+
 local real tapered_power_law(real m, 
 			     const real x1 = -1.35, 
 			     const real x2 = 2.4, 
@@ -186,10 +189,11 @@ local real mf_GdeMarchi(real m_lower, real m_upper) {
 
 }
 
-// see: de la Fuente Marcos, Aarseth, Kiseleva, Eggleton
+// See de la Fuente Marcos, Aarseth, Kiseleva, Eggleton
 // 1997, in Docobo, Elipe, McAlister (eds.), Visual Double
 // Stars: Formation, dynamics and Evolutionary Tracks, KAP: ASSL
-// Series vol. 223,  165
+// Series vol. 223,  165.
+
 local real mf_Scalo(real m_lower, real m_upper) {
 
     if (twiddles(m_lower, m_upper, TOL))
@@ -222,6 +226,55 @@ local real Kroupa_Tout_Gilmore(real m_lower, real m_upper) {
     return m;
 }
 
+static int ntot = 0, nheavy = 0;
+
+local real mf_TwoComponent(real m_lower, real m_upper, real heavyfrac)
+{
+    // Random choice between low and high mass, except that we do't
+    // let the actual fraction deviate too far from the target.
+
+    if (randinter(0,1) < heavyfrac) {
+	ntot++;
+	nheavy++;
+	if (nheavy > (int)(heavyfrac*ntot) + 2) {
+	    nheavy--;
+	    return m_lower;
+	} else
+	    return m_upper;
+    } else {
+	ntot++;
+	if (nheavy < (int)(heavyfrac*ntot) - 2) {
+	    nheavy++;
+	    return m_upper;
+	} else
+	    return m_lower;
+    }
+}
+
+
+//----------------------------------------------------------------------
+// Global functions.
+//----------------------------------------------------------------------
+
+real general_power_law(real lowerl, real upperl, real exponent) {
+
+    real x, norm;
+
+    // Normalizing factor.
+
+    if (exponent == -1)
+	norm = log(upperl/lowerl);
+    else
+	norm = pow(upperl/lowerl, 1+exponent) - 1;
+
+    if (exponent == -1)
+	x = lowerl*exp(norm*randinter(0,1));
+    else
+	x = lowerl*pow(norm*randinter(0,1) + 1, 1/(1+exponent));
+
+    return x;
+}
+
 real get_random_stellar_mass(real m_lower, real m_upper,
 			     mass_function mf, real exponent) {
 
@@ -250,6 +303,10 @@ real get_random_stellar_mass(real m_lower, real m_upper,
 	      break;
        case GdeMarchi:
 	  m = mf_GdeMarchi(m_lower, m_upper);
+	      break;
+       case TwoComponent:
+	  m = mf_TwoComponent(m_lower, m_upper, exponent);    // use exponent to
+							      // store heavyfrac
 	      break;
        default:
           cerr << "WARNING: \n"
@@ -284,6 +341,9 @@ char* type_string(mass_function mf) {
        case GdeMarchi:
             sprintf(mf_name, "GdeMarchi");
 	    break;
+	    case TwoComponent:
+            sprintf(mf_name, "TwoComponent");
+	    break;
        default:
             sprintf(mf_name, "Unknown");
 	    break;
@@ -307,6 +367,8 @@ mass_function extract_mass_function_type_string(char* type_string) {
         type = Kroupa;
      else if (!strcmp(type_string, "GdeMarchi"))
         type = GdeMarchi;
+     else if (!strcmp(type_string, "TwoComponent"))
+        type = TwoComponent;
      else if (!strcmp(type_string, "Unknown"))
         type = Unknown_MF;
      else {
@@ -315,37 +377,18 @@ mass_function extract_mass_function_type_string(char* type_string) {
      }
 
      return type;
-   }
+ }
 
-real general_power_law(real lowerl, real upperl, real exponent) {
-
-    real x, norm;
-
-    // Normalizing factor.
-    if (exponent == -1)
-	norm = log(upperl/lowerl);
-    else
-	norm = pow(upperl/lowerl, 1+exponent) - 1;
-
-    if (exponent == -1)
-	x = lowerl*exp(norm*randinter(0,1));
-    else
-	x = lowerl*pow(norm*randinter(0,1) + 1, 1/(1+exponent));
-
-    return x;
-}
-
-#else
+
+//-----------------------------------------------------------------------------
+//  compare_mass  --  compare the masses of two particles
+//-----------------------------------------------------------------------------
 
 typedef  struct
 {
     node* str;
     real  mass;
 } nm_pair, *nm_pair_ptr;
-
-//-----------------------------------------------------------------------------
-//  compare_mass  --  compare the masses of two particles
-//-----------------------------------------------------------------------------
 
 local int compare_mass(const void * pi, const void * pj)
 {
@@ -357,12 +400,14 @@ local int compare_mass(const void * pi, const void * pj)
         return(0);
 }
 
-local void makemass(node* b, mass_function mf,
-		  real m_lower, real m_upper,
-		  real exponent, real total_mass, bool renumber_stars) {
+void makemass(node* b, mass_function mf,
+	      real m_lower, real m_upper,
+	      real exponent, real total_mass, bool renumber_stars)
+{
+    if (mf == TwoComponent) ntot = nheavy = 0;
 
     real m, m_sum = 0;
-    int n=0;
+    int n = 0;
     for_all_daughters(node, b, bi) {
 	m = get_random_stellar_mass(m_lower, m_upper, mf, exponent);
 	n++;
@@ -374,6 +419,7 @@ local void makemass(node* b, mass_function mf,
 
     // Renumber the stars in order of mass.
     // Highest mass gets smallest number (strange choise, but).
+
     if (renumber_stars) {
       int istart = 1;
       bool M_flag = true;
@@ -427,17 +473,22 @@ local void makemass(node* b, mass_function mf,
 
 }
 
+#else
+
 int main(int argc, char ** argv)
 {
-    bool F_flag   = false;                      // Input mf via string
-    mass_function mf = mf_Power_Law;            // Default = Power-law
+    bool F_flag   = false;                      // input mf via string
+    mass_function mf = mf_Power_Law;            // default = Power-law
     char *mfc = new char[64];
-    real m_lower  = 1, m_upper = 1;		// Default = equal masses
+    real m_lower  = 1, m_upper = 1;		// default = equal masses
     bool x_flag   = false;
-    real exponent = -2.35;			// Salpeter mass function
-                                                // If no exponent is given
+    real exponent = -2.35;			// Salpeter mass function;
+                                                // if no exponent is given
                                                 // Miller & Scalo is used
-    real m_total = -1;				// Don't rescale
+    real hfrac = 0;
+    bool hfrac_set = false;
+
+    real m_total = -1;				// don't rescale
 
     bool renumber_stars = false;                // renumber stellar index
                                                 // from high to low mass
@@ -451,7 +502,7 @@ int main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "E:e:iF:f:L:l:M:m:s:U:u:X:x:";
+    char* param_string = "E:e:iF:f:h:L:l:M:m:s:U:u:X:x:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
@@ -469,6 +520,10 @@ int main(int argc, char ** argv)
 	    case 'X':
 	    case 'x': x_flag = true;
 	              exponent = atof(poptarg);
+		      break;
+	    case 'H':
+	    case 'h': hfrac = atof(poptarg);
+		      hfrac_set = true;
 		      break;
 	    case 'L':
 	    case 'l': m_lower = atof(poptarg);
@@ -500,6 +555,12 @@ int main(int argc, char ** argv)
       mf = extract_mass_function_type_string(mfc);
     delete [] mfc;
 
+    if (mf == TwoComponent) {
+	if (!hfrac_set)
+	    warning("makemass: heavy fraction not set; default = 0");
+	exponent = hfrac;	// avoid redefining/overloading functions.
+    }
+
     node *b;
     b = get_node();
 
@@ -510,7 +571,7 @@ int main(int argc, char ** argv)
     sprintf(seedlog, "       random number generator seed = %d",actual_seed);
     b->log_comment(seedlog);
 
-    makemass(b, mf, m_lower, m_upper, exponent, m_total, renumber_stars);	
+    makemass(b, mf, m_lower, m_upper, exponent, m_total, renumber_stars);
     real initial_mass = getrq(b->get_log_story(), "initial_mass");
 
     if (initial_mass > -VERY_LARGE_NUMBER)
@@ -528,8 +589,10 @@ int main(int argc, char ** argv)
 							 old_r_vir,
 							 old_t_vir);
     }
+
     put_node(b);
     rmtree(b);
+
     return 0;
 }
 #endif
