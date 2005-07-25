@@ -1266,8 +1266,17 @@ main(int argc, char** argv)
 	    } else {
 		strcpy(ext1, ".gif");
 		strcpy(ext2, ".gif");
+
+//		Should be OK, but seems to fail on MacOS (Steve, 7/05).
+//
+//		sprintf(command,
+//		    "xargs gifsicle `/bin/ls %s %s.*%s` --loopcount=%d -o %s%s",
+//		    rev, output_file_id, ext1, loop, output_file_id, ext2);
+
+//		Works on linux and MacOS.
+
 		sprintf(command,
-		    "xargs gifsicle `/bin/ls %s %s.*%s` --loopcount=%d -o %s%s",
+		    "/bin/ls %s %s.*%s | xargs gifsicle --loopcount=%d -o %s%s",
 		    rev, output_file_id, ext1, loop, output_file_id, ext2);
 	    }
 
