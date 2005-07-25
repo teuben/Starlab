@@ -1,12 +1,14 @@
 
-//// setradius:  set radiuses of specified particle(s) in input snapshot
+//// set_radius:  set radii of specified particle(s) in input snapshot
 ////           to specified values.
 ////
-//// Usage:  setradius -l l1 -m radius1 -l l2 -m radius2 ...
-////    or:  setradius -A radius
+//// Usage:  set_radius -l l1 -m radius1 -l l2 -m radius2 ...
+////    or:  set_radius -A radius
+////    or:  set_radius -M
 ////
 //// Options:    -A    set selected radius for all stars
 ////             -l    specify label of next particle to modify [no default]
+////             -M    set radii for all stars using R = M^0.8
 ////             -m    specify new radius for particle [no default]
 
 // Simon Portegies Zwart, MIT Oct 2000
@@ -59,6 +61,22 @@ local void set_radius(_dyn_* b, real radius)
 
 }
 
+local void set_radius_by_mass(_dyn_* b)
+{
+
+    real msf, lsf, tsf;
+    get_physical_scales(b, msf, lsf, tsf);
+
+    for_all_leaves(_dyn_, b, bi) {
+      if (bi == NULL)
+	cerr << "Warning: no particle found.\n";
+      else
+	// set the radius in units of the cluster virial radius
+	bi->set_radius(pow(bi->get_mass()*msf,0.8)*6.96e8/3.086e16/lsf);
+    }
+
+}
+
 int main(int argc, char ** argv)
 {
     char label[64];
@@ -83,6 +101,9 @@ int main(int argc, char ** argv)
 			  break;
 
 		case 'l': strcpy(label, argv[++i]);
+			  break;
+
+		case 'M': set_radius_by_mass(b);
 			  break;
 
 		case 'm': set_radius_by_label(b, label, (real)atof(argv[++i]));

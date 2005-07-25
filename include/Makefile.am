@@ -45,8 +45,3 @@ nobase_pkginclude_HEADERS = bound3.h chydro.h config.h \
     star/white_dwarf.h star/static_star.h stdinc.h \
     story.h tdyn.h util_io.h util_math.h \
     worldline.h xreal.h hop.h
-
-clean:
-distclean:
-maintainer-clean:
-	@echo Nothing to clean
