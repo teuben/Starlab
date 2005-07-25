@@ -72,7 +72,7 @@ local void set_radius_by_mass(_dyn_* b)
 	cerr << "Warning: no particle found.\n";
       else
 	// set the radius in units of the cluster virial radius
-	bi->set_radius(pow(bi->get_mass()*msf,0.8)*6.96e8/3.086e16/lsf);
+	bi->set_radius(pow(bi->get_mass(),0.8)*6.96e8/3.086e16);
     }
 
 }
