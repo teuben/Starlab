@@ -16,7 +16,7 @@
 //// Usage: merge_snaps [OPTIONS] < input > output
 ////
 //// Options:
-//// None.
+////            -n      don't renumber the particles [do renumber]
 ////
 //// Written by Steve McMillan.
 ////
@@ -28,8 +28,28 @@
 
 main(int argc, char ** argv)
 {
+    bool renumber = true;
     check_help();
-    pgetopt(argc, argv, "", "$Revision$", _SRC_);
+
+    extern char *poptarg;
+    extern char *poparr[];
+    int c;
+    char* param_string = "n";
+
+    // Parse the argument list:
+
+    while ((c = pgetopt(argc, argv, param_string,
+		    "$Revision$", _SRC_)) != -1) {
+	switch (c) {
+	    case 'n':	renumber = false;
+			break;
+
+	    default:
+	    case '?':	params_to_usage(cerr, argv[0], param_string);
+			get_help();
+			return false;
+	}
+    }
 
     dyn *b, *root = new dyn;
     if (!root) err_exit("merge_snaps: can't create root node.");
@@ -81,13 +101,13 @@ main(int argc, char ** argv)
     }
 
     // Recompute the total mass and force the center of mass to 0.
-    // Better renumber too.
+    // Better renumber too, unless specifically suppressed..
 
     real mass = 0;
     int index = 0;
     for_all_daughters(dyn, root, bb) {
 	mass += bb->get_mass();
-	bb->set_index(++index);
+	if (renumber) bb->set_index(++index);
     }
     root->set_mass(mass);
 
