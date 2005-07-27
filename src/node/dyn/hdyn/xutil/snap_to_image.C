@@ -968,7 +968,7 @@ main(int argc, char** argv)
 			// Try to center the first frame.
 
 			real x1, x2, y1, y2;
-			x1 = y2 = VERY_LARGE_NUMBER;
+			x1 = y1 = VERY_LARGE_NUMBER;
 			x2 = y2 = -VERY_LARGE_NUMBER;
 
 			for_all_daughters(hdyn, b, bb) {
