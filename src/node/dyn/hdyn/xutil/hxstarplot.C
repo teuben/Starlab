@@ -72,8 +72,11 @@
 // These shouldn't really be global, but keep them this way for now...
 
 unsigned long  win, dia, instr, colwin;
-unsigned long c_energy[10], c_index[N_COLORS+1];
+unsigned long c_energy[10], c_index[N_COLORS+1], c_mass[N_COLORS+1];
 int      init_status = 0;
+
+static bool color_by_mass = false;
+static real log_m_min = 0, log_m_max = 0;
 
 // The plotting box is determined completely by origin and lmax3d.
 // Its projection onto the viewing plane is xmin, xmax, ymin, ymax
@@ -236,7 +239,7 @@ local void draw_links_2d(hdyn* b, float r, float s)
 	}
 	lux_draw_linef(win, r, s, rr, ss);
     }
-}					   
+}
 
 local void draw_links_3d(hdyn* b, float r, float s)
 {
@@ -253,17 +256,23 @@ local void draw_links_3d(hdyn* b, float r, float s)
 	project3d(X, Y, Z, rr, ss, costheta, sintheta, cosphi, sinphi);
 	lux_draw_linef(win, r, s, rr, ss);
     }
-}					   
+}
 
 local int clean_index(hdyn* b)
 {
     int clean_name = 0;
 
-    if (b->get_index() > 0) 
-	clean_name = b->get_index();
-    else if (b->get_name()) {
-	int i = 0;
-	if (sscanf(b->get_name(), "%d", &i)) clean_name = i;
+    if (color_by_mass) {
+	int i = (int) (N_COLORS * (log10(b->get_mass()) - log_m_min)
+		       		/ (log_m_max - log_m_min));
+	clean_name = i;
+    } else {
+	if (b->get_index() > 0) 
+	    clean_name = b->get_index();
+	else if (b->get_name()) {
+	    int i = 0;
+	    if (sscanf(b->get_name(), "%d", &i)) clean_name = i;
+	}
     }
 
     return clean_name;
@@ -293,12 +302,24 @@ local void plot_star(hdyn *bi, float r, float s,
 
 	} else if (clean_index(bi) > 0) {
 
-	    // Wrap the color map.
+	    if (color_by_mass) {
 
-	    int ii = clean_index(bi);
-	    while (ii > N_COLORS) ii -= N_COLORS;
+		// Truncate the color map.
 
-	    lux_set_color(win,c_index[ii]);
+		int ii = clean_index(bi);
+		if (ii < 0) ii = 0;
+		if (ii >= N_COLORS) ii = N_COLORS - 1;
+		PRC(ii); PRL(c_mass[ii]);
+		lux_set_color(win,c_mass[ii]);
+
+	    } else {
+
+		// Wrap the color map.
+
+		int ii = clean_index(bi);
+		while (ii > N_COLORS) ii -= N_COLORS;
+		lux_set_color(win,c_index[ii]);
+	    }
 	}
     }
 
@@ -830,11 +851,15 @@ local void show_static_rotation(hdyn* b, bool f_flag)
 			    compute_energies(b, bi, c);
 			    lux_set_color(win,c_energy[c]);
 			} else if (clean_index(bi)>0) {
-			    if (clean_index(bi) <= N_COLORS)
-				lux_set_color(win,
-					      c_index[clean_index(bi)]);
-			    else
-				lux_set_color(win,c_index[1]);
+			    int ci = clean_index(bi);
+			    if (color_by_mass)
+				lux_set_color(win, c_mass[ci]);
+			    else {
+				if (clean_index(bi) <= N_COLORS)
+				    lux_set_color(win, c_index[ci]);
+				else
+				    lux_set_color(win,c_index[1]);
+			    }
 			}
 
 			if (track) 
@@ -1467,7 +1492,7 @@ void xstarplot(hdyn* b, float scale, int k, int d, float lmax,
 
 	if (init_status == 0) initialize_graphics(r_factor, r_flag,
 						  win, instr, colwin,
-						  c_index, c_energy,
+						  c_index, c_energy, c_mass,
 						  win_size, xorigin, yorigin);
 	lux_clear_window(win);
 	lux_update_fg(win);
@@ -1723,7 +1748,7 @@ main(int argc, char** argv)
     check_help();
 
     extern char *poptarg;
-    char* params = "a:bCd:D:efl:L:mop:P:rs:tuv";
+    char* params = "a:bCd:D:efl:L:mMop:P:rs:tuv";
     int   c;
 
     while ((c = pgetopt(argc, argv, params,
@@ -1748,6 +1773,8 @@ main(int argc, char** argv)
 	    case 'l': lmax = atof(poptarg);	// axes +/- lmax [use data]
 		      break;
 	    case 'm': multiples = 1 - multiples;
+	    	      break;
+	    case 'M': color_by_mass = !color_by_mass;
 	    	      break;
 	    case 'o': o_flag = TRUE;		// output stdin to stdout [no]
 		      break;
@@ -1781,6 +1808,8 @@ main(int argc, char** argv)
     int step_mode = 0;
     int snap_display = -1;	// Index of frame currently being displayed.
     int isnap = 0;
+
+    bool initial_input = true;
 
     bool eod = false;
 
@@ -1835,6 +1864,22 @@ main(int argc, char** argv)
 		    // Offset the system to the root pos here.
 
 		    bbb->offset_com();
+
+		    if (initial_input) {
+			initial_input = false;
+			if (color_by_mass) {
+
+			    // Set up mass scalings based on the initial snapshot.
+
+			    log_m_min = VERY_LARGE_NUMBER;
+			    log_m_max = -VERY_LARGE_NUMBER;
+			    for_all_leaves(hdyn, bbb, b4) {
+				real logm = log10(b4->get_mass());
+				if (logm < log_m_min) log_m_min = logm;
+				if (logm > log_m_max) log_m_max = logm;
+			    }
+			}
+		    }
 
 		    // Place the new snapshot on the list.
 

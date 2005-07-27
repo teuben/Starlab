@@ -13,6 +13,7 @@ void initialize_graphics(float r_factor,	     // (input) scale factor
 			 unsigned long& colwin,	     // ID of color window
 			 unsigned long* c_index,     // color by index
 			 unsigned long* c_energy,    // color by energy
+			 unsigned long* c_mass,      // color by mass
 			 int& win_size,		     // width of plot window
 			 int& xorigin, int& yorigin) // origin for dialog box
 {
@@ -141,7 +142,7 @@ void initialize_graphics(float r_factor,	     // (input) scale factor
     colwin = lux_openwin(xorigin, yorigin, xsize, ysize);
     lux_set_window_name(colwin, "Color Scheme");
 
-    init_colors(win, c_energy, c_index, b_flag);
+    init_colors(win, c_energy, c_index, c_mass, b_flag);
 
     lux_set_noupdate(win);
     lux_set_bgcolor(win,c_energy[background_color]);
@@ -512,7 +513,8 @@ void show_color_scheme(unsigned long co, unsigned long *c_e, unsigned long *c_i,
     }
 }
 
-void init_colors(unsigned long win, unsigned long *ce, unsigned long *ci,
+void init_colors(unsigned long win,
+		 unsigned long *ce, unsigned long *ci, unsigned long *cm,
 		 bool b_flag)
 {
     // Note earlier definitions:
@@ -587,6 +589,24 @@ void init_colors(unsigned long win, unsigned long *ce, unsigned long *ci,
     
     }
 
+    // Color by mass (only one scheme):
+    
+    cm[1]  = lux_lookup_color(win, M_COLOR1);
+    cm[3]  = lux_lookup_color(win, M_COLOR3);
+    cm[4]  = lux_lookup_color(win, M_COLOR4);
+    cm[5]  = lux_lookup_color(win, M_COLOR5);
+    cm[6]  = lux_lookup_color(win, M_COLOR6);
+    cm[7]  = lux_lookup_color(win, M_COLOR7);
+    cm[8]  = lux_lookup_color(win, M_COLOR8);
+    cm[9]  = lux_lookup_color(win, M_COLOR9);
+    cm[10] = lux_lookup_color(win, M_COLORa);
+    cm[11] = lux_lookup_color(win, M_COLORb);
+    cm[12] = lux_lookup_color(win, M_COLORc);
+    cm[13] = lux_lookup_color(win, M_COLORd);
+    cm[14] = lux_lookup_color(win, M_COLORe);
+    cm[15] = lux_lookup_color(win, M_COLORf);
+    cm[16] = lux_lookup_color(win, M_COLORg);
+    
     // Problems --> foreground color.
 
     for (int ke = bound_single; ke <= unbound_binary; ke++)

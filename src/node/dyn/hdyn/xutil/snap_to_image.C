@@ -1201,13 +1201,13 @@ main(int argc, char** argv)
 
 		    if (output_file_name) {
 			if (format == 0)
-			    sprintf(output_file_name, "%s.%3.3d.png",
+			    sprintf(output_file_name, "%s.%4.4d.png",
 				    output_file_id, count1);
 			else if (format == 1)
-			    sprintf(output_file_name, "%s.%3.3d.sun",
+			    sprintf(output_file_name, "%s.%4.4d.sun",
 				    output_file_id, count1);
 			else if (format == 2)
-			    sprintf(output_file_name, "%s.%3.3d.gif",
+			    sprintf(output_file_name, "%s.%4.4d.gif",
 				    output_file_id, count1);
 		    }
 		}

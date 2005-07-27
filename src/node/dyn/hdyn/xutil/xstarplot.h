@@ -155,6 +155,23 @@ extern "C" int lux_get_display_height();
 #define RV_COLORf "beige"
 #define RV_COLORg "plum"
 
+#define M_COLOR1 "dark red"
+#define M_COLOR2 "red"
+#define M_COLOR3 "orange red"
+#define M_COLOR4 "orange"
+#define M_COLOR5 "orange3"
+#define M_COLOR6 "gold"
+#define M_COLOR7 "yellow"
+#define M_COLOR8 "light yellow"
+#define M_COLOR9 "green yellow"
+#define M_COLORa "light sea green"
+#define M_COLORb "medium blue"
+#define M_COLORc "light blue"
+#define M_COLORd "PaleVioletRed2"
+#define M_COLORe "PaleVioletRed4"
+#define M_COLORf "violet"
+#define M_COLORg "white"
+
 #define TAB "               "
 
 //#define FAC3D		2.13
@@ -177,7 +194,7 @@ enum   {ok=1, ok_keep, cancel};
 
 void initialize_graphics(float, bool,
 			 unsigned long&, unsigned long&, unsigned long&,
-			 unsigned long*, unsigned long*,
+			 unsigned long*, unsigned long*, unsigned long*,
 			 int&, int&, int&);
 void project3d(float, float, float, float&, float&,
 	       float, float, float, float,
@@ -199,7 +216,9 @@ local void format_and_show_instructions(unsigned long, float,
 					char*, int, int);
 void show_color_scheme(unsigned long, unsigned long*, unsigned long*,
 		       float, char, bool, int);
-void init_colors(unsigned long, unsigned long*, unsigned long*, bool);
+void init_colors(unsigned long,
+		 unsigned long*, unsigned long*, unsigned long*,
+		 bool);
 void set_limits(float*, float, int, float&, float&, int, float&, float&);
 float interp_to_x(float, float, float, float, float);
 float interp_to_y(float, float, float, float, float);
