@@ -263,8 +263,8 @@ local int clean_index(hdyn* b)
     int clean_name = 0;
 
     if (color_by_mass) {
-	int i = (int) (N_COLORS * (log10(b->get_mass()) - log_m_min)
-		       		/ (log_m_max - log_m_min));
+	int i = 1 + (int) (0.9999* N_COLORS * (log10(b->get_mass()) - log_m_min)
+			  		    / (log_m_max - log_m_min));
 	clean_name = i;
     } else {
 	if (b->get_index() > 0) 
@@ -308,8 +308,8 @@ local void plot_star(hdyn *bi, float r, float s,
 
 		int ii = clean_index(bi);
 		if (ii < 0) ii = 0;
-		if (ii >= N_COLORS) ii = N_COLORS - 1;
-		PRC(ii); PRL(c_mass[ii]);
+		if (ii > N_COLORS) ii = N_COLORS;
+		PRC(ii); PRC(bi->get_mass()); PRL(c_mass[ii]);
 		lux_set_color(win,c_mass[ii]);
 
 	    } else {
@@ -1869,7 +1869,7 @@ main(int argc, char** argv)
 			initial_input = false;
 			if (color_by_mass) {
 
-			    // Set up mass scalings based on the initial snapshot.
+			    // Set up mass scalings from the initial snapshot.
 
 			    log_m_min = VERY_LARGE_NUMBER;
 			    log_m_max = -VERY_LARGE_NUMBER;

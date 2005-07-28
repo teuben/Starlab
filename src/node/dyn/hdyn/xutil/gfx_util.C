@@ -592,6 +592,7 @@ void init_colors(unsigned long win,
     // Color by mass (only one scheme):
     
     cm[1]  = lux_lookup_color(win, M_COLOR1);
+    cm[2]  = lux_lookup_color(win, M_COLOR2);
     cm[3]  = lux_lookup_color(win, M_COLOR3);
     cm[4]  = lux_lookup_color(win, M_COLOR4);
     cm[5]  = lux_lookup_color(win, M_COLOR5);
