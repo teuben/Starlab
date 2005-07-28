@@ -25,7 +25,7 @@
 //// Written by the Starlab development group.
 ////
 //// Report bugs to starlab@sns.ias.edu.
-.
+
 //   Code moved here from kira_init.C
 
 #ifdef TOOLBOX
