@@ -16,13 +16,17 @@
 //// Options:      
 ////               -c    add comment [none]
 ////               -F    specify tidal_field_type [1]
+////                         1) point mass
+////                         2) isothermal halo
+////                         3) disk (solar neighborhood)
 ////               -J    specify Jacobi radius scaling factor [no default]
+////                     (scales Jacobi radius if set, otherwise virial radius)
 ////
 //// Written by the Starlab development group.
 ////
 //// Report bugs to starlab@sns.ias.edu.
-
-//		 Code moved here from kira_init.C
+.
+//   Code moved here from kira_init.C
 
 #ifdef TOOLBOX
 
