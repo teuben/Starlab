@@ -16,8 +16,13 @@
 ////             -f    solid-color stars [true]
 ////             -l/L  specify limits [take from initial data]
 ////             -m    highlight multiple systems [no]
+////             -M    color stars (linearly) by mass [no]
 ////             -o    pipe cin to cout [no]
 ////             -p    point scale mode [0]
+////                       0: no scaling
+////                       1: scale by sqrt(mass)
+////                       2: scale by radius
+////                       3: scale by sqrt(radius)
 ////             -P    specify point size (relative to axis/30) [1, min = 0.5]
 ////             -r    "reverse video" (black background) [true]
 ////             -s    window size, relative to "standard" 400 pixels [1]
@@ -76,7 +81,7 @@ unsigned long c_energy[10], c_index[N_COLORS+1], c_mass[N_COLORS+1];
 int      init_status = 0;
 
 static bool color_by_mass = false;
-static real log_m_min = 0, log_m_max = 0;
+static real m_min = 0, m_max = 0;
 
 // The plotting box is determined completely by origin and lmax3d.
 // Its projection onto the viewing plane is xmin, xmax, ymin, ymax
@@ -263,8 +268,8 @@ local int clean_index(hdyn* b)
     int clean_name = 0;
 
     if (color_by_mass) {
-	int i = 1 + (int) (0.9999* N_COLORS * (log10(b->get_mass()) - log_m_min)
-			  		    / (log_m_max - log_m_min));
+	int i = 1 + (int) (0.9999* N_COLORS * (b->get_mass() - m_min)
+			  		    / (m_max - m_min));
 	clean_name = i;
     } else {
 	if (b->get_index() > 0) 
@@ -1871,12 +1876,12 @@ main(int argc, char** argv)
 
 			    // Set up mass scalings from the initial snapshot.
 
-			    log_m_min = VERY_LARGE_NUMBER;
-			    log_m_max = -VERY_LARGE_NUMBER;
+			    m_min = VERY_LARGE_NUMBER;
+			    m_max = -VERY_LARGE_NUMBER;
 			    for_all_leaves(hdyn, bbb, b4) {
-				real logm = log10(b4->get_mass());
-				if (logm < log_m_min) log_m_min = logm;
-				if (logm > log_m_max) log_m_max = logm;
+				real m = b4->get_mass();
+				if (m < m_min) m_min = m;
+				if (m > m_max) m_max = m;
 			    }
 			}
 		    }

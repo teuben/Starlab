@@ -142,7 +142,7 @@ class node
 	    node_set_sbase(the_sbpfp);
 	}
 
-	/// Delete the star story.
+	/// Delete the node's stories.
 
 	inline void rmstory() {
 	    if (log_story) {
