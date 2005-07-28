@@ -14,22 +14,26 @@
 ////
 //// Usage: makemass [OPTIONS] < input > output
 ////
-//// Options:   
-////           -C        force output data to be in 'col' format [no]
-////           -e/E/x/X  exponent [-2.35 (Salpeter)]
-////           -F/f      mass function option: 1) Power-law [default]
-////                                           2) Miller & Scalo
-////                                           3) Scalo
-////                                           4) Kroupa
-////                                           5) GdeMarchi
-////                     Option -F requires one of the following strings:
-////                     (Power_Law, Miller_Scalo, Scalo, Kroupa, GdeMarchi).
-////                     Option -f requires the appropriate integer.
-////           -i        (re)number stellar index from highest to lowest mass.
-////           -l/L      lower mass limit [1]
-////           -m/M      scale to specified total mass [don't scale]
-////           -u/U      upper mass limit [1]
-////           -s        random seed
+//// Options:
+////         -C        output in 'col' format [no]
+////         -e/E/x/X  exponent [-2.35 (Salpeter)]
+////         -F/f      mass function option:
+////                        1) Power-law [default]
+////                        2) Miller & Scalo
+////                        3) Scalo
+////                        4) Kroupa
+////                        5) GdeMarchi
+////                        6) TwoComponent (uses -h, -l and -u)
+////                   option -F requires one of the following strings:
+////                        Power_Law, Miller_Scalo, Scalo, Kroupa,
+////                        GdeMarchi, TwoComponent
+////                   option -f requires the appropriate integer.
+////         -h/H      fraction of stars in high-mass group (TwoComponent) [0]
+////         -i        (re)number stellar index from highest to lowest mass.
+////         -l/L      lower mass limit [1]
+////         -m/M      scale to specified total mass [don't scale]
+////         -u/U      upper mass limit [1]
+////         -s        random seed
 ////
 //// Written by Steve McMillan and Simon Portegies Zwart.
 ////
@@ -49,7 +53,8 @@
 
 int main(int argc, char ** argv)
 {
-    bool C_flag = false;
+    bool C_flag = false;    			// <-- dyn change
+
     bool F_flag   = false;                      // input mf via string
     mass_function mf = mf_Power_Law;            // default = Power-law
     char *mfc = new char[64];
@@ -58,6 +63,9 @@ int main(int argc, char ** argv)
     real exponent = -2.35;			// Salpeter mass function
                                                 // if no exponent is given
                                                 // Miller & Scalo is used
+    real hfrac = 0;
+    bool hfrac_set = false;
+
     real m_total = -1;				// don't rescale
 
     bool renumber_stars = false;                // renumber stellar index
@@ -72,7 +80,7 @@ int main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "CE:e:iF:f:L:l:M:m:s:U:u:X:x:";    // <-- dyn change
+    char* param_string = "CE:e:iF:f:L:h:l:M:m:s:U:u:X:x:";  // <-- dyn change
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
@@ -92,6 +100,10 @@ int main(int argc, char ** argv)
 	    case 'X':
 	    case 'x': x_flag = true;
 	              exponent = atof(poptarg);
+		      break;
+	    case 'H':
+	    case 'h': hfrac = atof(poptarg);
+		      hfrac_set = true;
 		      break;
 	    case 'L':
 	    case 'l': m_lower = atof(poptarg);
@@ -122,6 +134,12 @@ int main(int argc, char ** argv)
     if (F_flag)
       mf = extract_mass_function_type_string(mfc);
     delete [] mfc;
+
+    if (mf == TwoComponent) {
+	if (!hfrac_set)
+	    warning("makemass: heavy fraction not set; default = 0");
+	exponent = hfrac;	// avoid redefining/overloading functions.
+    }
 
     dyn *b;						    // <-- dyn change
     b = get_dyn();					    // <-- dyn change
