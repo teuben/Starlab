@@ -8,7 +8,26 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-// flat_hermite.C: hermite scheme with simple (flat-tree) _dyn_ structure
+//// Hermite N-body integrator with simple (flat-tree) _dyn_ structure.
+//// Read from standard input, evolve the system for the specified, and
+//// optionally write the results to standard output.
+////
+//// Usage: flat_hermite [OPTIONS] < input > output
+////
+//// Options:
+////
+////        -a    set accuracy parameter [0.1]
+////        -c    add a comment to the output snapshot [none]
+////        -d    specify log output interval [1]
+////        -D    specify snap output interval [at end]
+////        -e    set softening parameter [0.05]
+////        -v    echo input arguments [don't echo]
+////        -t    specify time span of the integration [10]
+////
+//// Written by Jun Makino and Steve McMillan.
+////
+//// Report bugs to starlab@sns.ias.edu.
+
 //
 // J. Makino    92-12-04:  Seems to work... Energy conservation looks good.
 // S. McMillan  93-04-02:  Cleaned up and modified command-line interface.
@@ -128,8 +147,7 @@ local void evolve_system(_dyn_ * b,	// root node
 			 real eta,	// accuracy parameter 
 			 real dtout,	// output time interval
 			 real dt_snap,	// snapshot output interval
-			 real eps,	// softening length             
-			 real snap_cube_size)
+			 real eps)	// softening length             
 {
     real t = b->get_time();	// current time
     real t_end = t + delta_t;	// final time, at the end of the integration
@@ -164,8 +182,6 @@ local void evolve_system(_dyn_ * b,	// root node
 	}
 
 	// Output a snapshot to cout at the scheduled time, or at end of run.
-	// Use snap_cube_size to force all particles in the cube to have C.M.
-	// at rest at the origin.
 
 	if (ttmp > t_snap || ttmp > t_end) {
 	    put_node(b);
@@ -194,21 +210,19 @@ main(int argc, char **argv)
     _dyn_ *b;			// root node
 
     real delta_t = 10;		// time span of the integration
-    real dtout = .25;		// output interval--make a power of 0.5
+    real dtout = 1;		// output interval--make a power of 0.5 if < 1
     real dt_snap;		// snap output interval
     real eps = 0.05;		// softening length               
     real eta = 0.05;		// time step parameter
 
     char *comment;		// comment string
 
-    real snap_cube_size = VERY_LARGE_NUMBER;
-
     bool a_flag = FALSE;
     bool c_flag = FALSE;
     bool d_flag = FALSE;
     bool D_flag = FALSE;
     bool e_flag = FALSE;
-    bool q_flag = FALSE;
+    bool v_flag = FALSE;
     bool t_flag = FALSE;
 
     check_help();
@@ -227,8 +241,6 @@ main(int argc, char **argv)
 	    case 'c':	c_flag = TRUE;
 			comment = poptarg;
 			break;
-	    case 'C':	snap_cube_size = atof(poptarg);
-			break;
 	    case 'd':	d_flag = TRUE;
 	    		dtout = atof(poptarg);
 			break;
@@ -238,7 +250,7 @@ main(int argc, char **argv)
 	    case 'e':	e_flag = TRUE;
 			eps = atof(poptarg);
 			break;
-	    case 'q':	q_flag = TRUE;
+	    case 'v':	v_flag = TRUE;
 			break;
 	    case 't':	t_flag = TRUE;
 			delta_t = atof(poptarg);
@@ -248,7 +260,7 @@ main(int argc, char **argv)
 			exit(1);
 	}
 
-    if (!q_flag) {
+    if (v_flag) {
 
 	// Check input arguments and echo defaults.
 
@@ -270,5 +282,5 @@ main(int argc, char **argv)
 	b->log_comment(comment);
     b->log_history(argc, argv);
 
-    evolve_system(b, delta_t, eta, dtout, dt_snap, eps, snap_cube_size);
+    evolve_system(b, delta_t, eta, dtout, dt_snap, eps);
 }
