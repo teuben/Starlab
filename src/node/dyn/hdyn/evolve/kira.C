@@ -1262,10 +1262,10 @@ local void evolve_system(hdyn * b,		// hdyn array
 
 	// Testing...
 
-	if (t >= t_MPI_check) {
-	    if (!check_MPI_id_array(b)) exit(1);
-	    t_MPI_check += 0.25 * randinter(0, dt_log);
-	}
+//	if (t >= t_MPI_check) {
+//	    if (!check_MPI_id_array(b)) exit(1);
+//	    t_MPI_check += 0.25 * randinter(0, dt_log);
+//	}
 
 //#endif
 

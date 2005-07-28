@@ -931,13 +931,21 @@ void split_top_level_node(hdyn * bi,
 	hdyn *pnode = bi->get_oldest_daughter()->find_perturber_node();
 	if (pnode && pnode->is_valid()) {
 	    cerr << "pnode = " << pnode->format_label();
-	    if (pnode->get_valid_perturbers())
+	    if (pnode->get_valid_perturbers()) {
+
+		// Test here for pert2 > 0.  It shouldn't be negative, and
+		// shouldn't be a problem even if it is, but this has been
+		// found to put at least one compiler (gcc 3.4.2) on at
+		// least one OS (RedHat Fedora core 3) into an infinite
+		// loop!
+
+		real pert2 = bi->get_oldest_daughter()
+			       ->get_perturbation_squared();
+		if (pert2 > 0) pert2 = sqrt(pert2);
+
 	        cerr << ", " << pnode->get_n_perturbers()
-		     << " perturber(s) ("
-		     << sqrt(bi->get_oldest_daughter()
-			     ->get_perturbation_squared())
-		     << ")";
-	    else
+		     << " perturber(s) (" << pert2 << ")";
+	    } else
 	        cerr << ", perturbers unknown";
 	} else
 	    cerr << "pnode invalid";

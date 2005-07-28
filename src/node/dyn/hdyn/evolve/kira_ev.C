@@ -1012,9 +1012,11 @@ void kira_synchronize_tree(hdyn *b,
 
 	xreal sys_t = b->get_system_time();
 
+#if 0
 	cerr << endl
 	     << "synchronizing tree using GRAPE at time " << sys_t
 	     << endl << flush;
+#endif
 
 	// Note: no need to set time steps here, and in fact GRAPE will
 	// complain if j-particle times and timesteps are not consistent.
@@ -1153,9 +1155,11 @@ void kira_synchronize_tree(hdyn *b,
 
     } else {
 
+#if 0
 	cerr << endl
 	     << "synchronizing tree without GRAPE at time "
 	     << b->get_system_time() << endl;
+#endif
 
 	synchronize_tree(b);
     }

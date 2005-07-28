@@ -188,6 +188,7 @@ class  _dyn_ : public dyn
 
 	inline real get_radius()	const	{return abs(radius);}
 	void set_radius(real r)			{radius = r;}
+//	void scale_radius(real fac)		{***************************<--
 
 	// Slow-binary manipulation functions defined in _dyn_slow.C:
 

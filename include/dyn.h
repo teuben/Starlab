@@ -371,6 +371,10 @@ class  dyn : public node
 	virtual real get_radius();
 	virtual void set_radius(real) {};
 
+	// Scale story R_eff if it exists; in _dyn_ scales radius too.
+
+//	virtual void scale_radius(real fac);
+
         bool get_use_sstar()			{return use_sstar;}
 	void set_use_sstar(bool u)		{use_sstar = u;}
 

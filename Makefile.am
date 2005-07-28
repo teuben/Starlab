@@ -330,7 +330,7 @@ SUBDIRS = sbin src include
 
 all-recursive: libs
 
-install-recursive: all-recursive install-doc
+install-recursive: all-recursive # install-doc
 
 # The following is a list of directories containing Makefiles with a
 # "libs" target.  The purpose of libs is to ensure that all libraries
