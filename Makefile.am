@@ -66,6 +66,7 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		sbin/length \
 		sbin/lengthof \
 		sbin/list_tools \
+		sbin/log_extract \
 		sbin/loop \
 		sbin/make_ar_cleanup \
 		sbin/make_cond_build \
@@ -322,6 +323,10 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		src/std/test.C \
 		src/std/xtest.C \
 		TOOLS
+
+# so that log_extract is installed with the rest of the executables
+
+bin_SCRIPTS = sbin/log_extract
 
 # Add sbin to SUBDIRS to ensure that utilities are built first.
 # Add include to SUBDIRS to ensure that make install goes there.

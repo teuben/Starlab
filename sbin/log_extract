@@ -2,7 +2,7 @@
 # -*-shell-script-*-
 
 # Extracts various data from Starlab log files.
-# Copyright (C) 2005  Ernest N. Mamikonyan
+# Copyright (C) 2005 Ernest N. Mamikonyan
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -51,6 +51,8 @@ Usage: ${0##*/} [OPTIONS] [LOG FILE] ...
 Extracts various data from Starlab log files.
 Defaults are shown in parentheses.
 
+  -A	modified center of mass position, X-Y projection
+  -B	modified center of mass galacto-centric distance
   -a	center of density position, X-Y projection
   -b	center of density galacto-centric distance
   -c	center of mass position, X-Y projection (default)
@@ -61,8 +63,9 @@ Defaults are shown in parentheses.
   -m	mass (in stars) bound to the cluster
   -n	number of stars bound to the cluster
   -o F	output to file F ($output)
+  -r	cluster half-mass radius
   -q	suppress all diagnostic output
-  -S SF assume the scale factors SF given in the order: mass, distance, time
+  -S SF assume the scale factors SF given in the order: mass, length, time
 	i.e., -S '91902.6 0.039 0.000377257' (search input)
   -V	display version information and exit
 " >&2
@@ -89,8 +92,10 @@ to_clobber() {
 
 shopt -s expand_aliases nullglob xpg_echo
 
-while getopts :abcdD:fhmno:qS:V option; do
+while getopts :AaBbcD:dfhmno:qrS:V option; do
     case $option in
+	A) action=mcom_position;;
+	B) action=mcom_distance;;
 	a) action=cod_position;;
 	b) action=cod_distance;;
 	c) action=com_position;;
@@ -102,9 +107,10 @@ while getopts :abcdD:fhmno:qS:V option; do
 	n) action=star_number;;
 	o) output="$OPTARG";;
 	q) quiet=true;;
+	r) action=rhalf;;
 	S) sf=($OPTARG);;
 	V) echo $'\
-log_extract version 0.5, Copyright © 2005  Ernest N. Mamikonyan.
+log_extract version 0.6, Copyright © 2005 Ernest N. Mamikonyan.
 log_extract comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it
 under certain conditions; see the source for details.
@@ -122,12 +128,12 @@ shift $((OPTIND-1))
 $quiet && echo() { :; } || echo() { builtin echo "$@" >&2; }
 
 
-# scale factors in this order: mass, distance, time
-# e.g., mass: ${sf[0]}, distance: ${sf[1]}, time: ${sf[2]}
+# scale factors in this order: mass, length, time
+# e.g., mass: ${sf[0]}, length: ${sf[1]}, time: ${sf[2]}
 if [[ "$sf" ]]; then
     echo "\
 accepted the following scale factors,
-mass: ${sf[0]}, distance: ${sf[1]}, time: ${sf[2]}"
+mass: ${sf[0]}, length: ${sf[1]}, time: ${sf[2]}"
 elif [[ "$dyn" ]]; then
     echo -n "searching for scale factors in $fc$dyn$nc..."
     sf=($(awk '
@@ -151,7 +157,7 @@ BEGIN {
 fi
 
 if [[ "$sf" ]]; then
-    echo "${sc}done$nc\nmass: ${sf[0]}, distance: ${sf[1]}, time: ${sf[2]}"
+    echo "${sc}done$nc\nmass: ${sf[0]}, length: ${sf[1]}, time: ${sf[2]}"
 else
     echo "${ec}failed$nc"
     warn "can't find scale factors - continuing"
@@ -164,7 +170,7 @@ fi
 
 case $action in
     cod_distance)
-	echo -n computing the galacto-centric distance as a function of time...
+	echo -n computing the center of density galacto-centric distance...
 	awk "
 /density_center = / {
   print ${sf[2]}*i++, sqrt(\$3^2+\$4^2+\$5^2)*${sf[1]}
@@ -172,7 +178,7 @@ case $action in
 	echo done
 	;;
     cod_position)
-	echo -n computing the center of density position in the X-Y plane...
+	echo -n computing the center of density position \(X-Y plane\)...
 	awk "
 /density_center = / {
   print \$3*${sf[1]}, \$4*${sf[1]}
@@ -180,7 +186,7 @@ case $action in
 	echo done
 	;;
     com_distance)
-	echo -n computing the galacto-centric distance as a function of time...
+	echo -n computing the center of mass galacto-centric distance...
 	awk "
 /center of mass position = / {
   print ${sf[2]}*i++, sqrt(\$6^2+\$7^2+\$8^2)*${sf[1]}
@@ -188,7 +194,7 @@ case $action in
 	echo done
 	;;
     com_position)
-	echo -n computing the center of mass position in the X-Y plane...
+	echo -n computing the center of mass position \(X-Y plane\)...
 	awk "
 /center of mass position = / {
   print \$6*${sf[1]}, \$7*${sf[1]}
@@ -196,15 +202,39 @@ case $action in
 	echo done
 	;;
     mass)
-	echo -n computing the mass of the cluster as a function of time...
+	echo -n computing the bound mass...
 	awk "
 /^Time = / {
   print \$3*${sf[2]}, substr(\$12,2)*${sf[0]}
 }" "$@" > "$output"
 	echo done
 	;;
+    mcom_distance)
+	echo -n computing the modified center of mass galacto-centric distance...
+	awk "
+/Lagrangian radii relative to / {
+  print ${sf[2]}*i++, sqrt(substr(\$5,2)^2+\$6^2+\$7^2)*${sf[1]}
+}" "$@" > "$output"
+	echo done
+	;;
+    mcom_position)
+	echo -n computing the modified center of mass position \(X-Y plane\)...
+	awk "
+/Lagrangian radii relative to / {
+  print substr(\$5,2)*${sf[1]}, \$6*${sf[1]}
+}" "$@" > "$output"
+	echo done
+	;;
+    rhalf)
+	echo -n computing the half-mass radius...
+	awk "
+/rhalf = / {
+  print ${sf[2]}*i++, \$3*${sf[1]}
+}" "$@" > "$output"
+	echo done
+	;;
     star_number)
-	echo -n computing the number of bound stars as a function of time...
+	echo -n computing the number of bound stars...
 	awk "
 /^Time = / {
   print \$3*${sf[2]}, substr(\$7,2)
