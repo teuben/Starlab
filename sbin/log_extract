@@ -75,7 +75,7 @@ Defaults are shown in parentheses.
 
 to_clobber() {
     [[ -e "$1" ]] || return 0
-    if $force; then warn "$fc$1$nc exists - overwriting..."; return 0
+    if $force; then warn "$fc$1$nc exists - ${wc}overwriting$nc..."; return 0
     else
         read -n1 -p"$(builtin echo -n $fc$1$nc exists - overwrite\?) " </dev/tty
         if [[ "$REPLY" != [Yy] ]]; then
@@ -178,7 +178,7 @@ case $action in
 	echo done
 	;;
     cod_position)
-	echo -n computing the center of density position \(X-Y plane\)...
+	echo -n extracting the center of density position \(X-Y plane\)...
 	awk "
 /density_center = / {
   print \$3*${sf[1]}, \$4*${sf[1]}
@@ -194,7 +194,7 @@ case $action in
 	echo done
 	;;
     com_position)
-	echo -n computing the center of mass position \(X-Y plane\)...
+	echo -n extracting the center of mass position \(X-Y plane\)...
 	awk "
 /center of mass position = / {
   print \$6*${sf[1]}, \$7*${sf[1]}
@@ -218,7 +218,7 @@ case $action in
 	echo done
 	;;
     mcom_position)
-	echo -n computing the modified center of mass position \(X-Y plane\)...
+	echo -n extracting the modified center of mass position \(X-Y plane\)...
 	awk "
 /Lagrangian radii relative to / {
   print substr(\$5,2)*${sf[1]}, \$6*${sf[1]}
@@ -226,7 +226,7 @@ case $action in
 	echo done
 	;;
     rhalf)
-	echo -n computing the half-mass radius...
+	echo -n extracting the half-mass radius...
 	awk "
 /rhalf = / {
   print ${sf[2]}*i++, \$3*${sf[1]}
@@ -234,7 +234,7 @@ case $action in
 	echo done
 	;;
     star_number)
-	echo -n computing the number of bound stars...
+	echo -n extracting the number of bound stars...
 	awk "
 /^Time = / {
   print \$3*${sf[2]}, substr(\$7,2)
