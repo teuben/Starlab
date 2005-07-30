@@ -42,6 +42,46 @@ void _dyn_::null_pointers()
     dyn::null_pointers();
 }
 
+real _dyn_::get_radius(bool check_story)	// default = false
+{
+    if (oldest_daughter) return get_clump_radius();
+    if (check_story) {
+	real rad = getrq(dyn_story, "R_eff");
+	if (radius > 0 && rad != radius)
+	    putrq(dyn_story, "R_eff", rad);
+    }
+
+    return abs(radius);
+}
+
+void _dyn_::set_radius(real rad,
+		     bool check_story)		// default = false
+{
+    radius = rad;
+    if (check_story && !oldest_daughter)
+	putrq(dyn_story, "R_eff", rad);
+}
+
+void _dyn_::scale_radius(real rfac)
+{
+    if (!oldest_daughter) {
+	radius *= rfac;
+	real rad = getrq(dyn_story, "R_eff");
+	if (rad > 0)
+	    putrq(dyn_story, "R_eff", rad*rfac);
+    }
+}
+
+void _dyn_::update_radius()
+{
+    if (!oldest_daughter && dyn_story) {
+	real rad = getrq(dyn_story, "R_eff");
+	if (rad > 0) radius = rad;
+    }
+}
+
+
+
 // *** NOTE: check_and_correct_node() is inherited from the dyn class. ***
 
 istream & _dyn_::scan_dyn_story(istream & s)

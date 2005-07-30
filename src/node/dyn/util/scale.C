@@ -52,6 +52,8 @@
 //// If no arguments are provided and system_time = 0, scale will compute
 //// whatever quantities are needed to set these values.
 ////
+//// If a leaf dyn story contains R_eff, it is scaled to follow r_virial.
+////
 //// Written by Steve McMillan.
 ////
 //// Report bugs by starlab@sns.ias.edu.
@@ -89,9 +91,19 @@ void scale_pos(dyn* b, real rscale,
 {
     PRL(rscale);
     PRL(com_pos);
-    for_all_daughters(dyn, b, bb)		// N.B. all daughters
+    for_all_daughters(dyn, b, bb) {		// N.B. all daughters
 	bb->set_pos(com_pos
 		     + rscale*(bb->get_pos()-com_pos));
+	if (bb->is_leaf()) {
+	    story *s = bb->get_dyn_story();
+	    if (s) {
+		real rad = getrq(s, "R_eff");
+		if (rad > 0)
+		    putrq(s, "R_eff", rad*rscale);
+
+	    }
+	}
+    }
 }
 
 void scale_vel(dyn* b, real vscale,

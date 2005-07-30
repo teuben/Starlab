@@ -186,9 +186,18 @@ class  _dyn_ : public dyn
 	inline vec get_old_jerk()       const	{return old_jerk;}
 	inline vec get_k_over_18()	const	{return k_over_18;}
 
-	inline real get_radius()	const	{return abs(radius);}
-	void set_radius(real r)			{radius = r;}
-//	void scale_radius(real fac)		{***************************<--
+        /// Return radius member data (NB difference from dyn version).
+
+	virtual real get_radius(bool check_story = false);
+
+        /// Set radius member data and optionally R_eff in story
+
+	virtual void set_radius(real r, bool check_story = false);
+
+        /// Scale radius member data and R_eff in leaf dyn story, if present.
+
+	virtual void scale_radius(real rfac);
+	void update_radius();
 
 	// Slow-binary manipulation functions defined in _dyn_slow.C:
 

@@ -79,6 +79,11 @@ main(int argc, char ** argv)
     scale(b, eps, c_flag, e_flag, e, m_flag, m, q_flag, q, r_flag, r,
 	  debug, kira_top_level_energies);
 
+    // Dyn function scale will update R_eff if it finds any, but doesn't
+    // know about the radius member datum.  Update here (top-level only).
+
+    for_all_daughters(hdyn, b, bb) bb->update_radius();
+
     put_node(b);
 }
 

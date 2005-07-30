@@ -360,20 +360,39 @@ class  dyn : public node
 
 	void offset_com();
 
-	/// Place the root node at the center of mass, keeping the absolute
-	/// pos and vel of all top-level nodes unchanged.
+	/// Place the root node at the center of mass, keeping the
+	/// absolute pos and vel of all top-level nodes unchanged.
 
 	void reset_com();
         int flatten_node();	///< Remove all binary substructure.
 
-	// Declaration of member function defined in dyn_tt.C
+	// Declaration of member function defined in dyn_tt.C.
+	// There is no radius member datum in the dyn class, and 
+	// get_radius will return 0 unless an R_eff entry is found
+	// in the particle's dyn story.  For efficiency, the story
+	// is only checked if explicitly requested.
 
-	virtual real get_radius();
-	virtual void set_radius(real) {};
+        /// Optionally get R_eff from story; otherwise, (dyn version) return 0.
+
+	virtual real get_radius(bool check_story = false);
+
+        /// Optionally set R_eff in story; otherwise, (dyn version) do nothing.
+
+	virtual void set_radius(real r, bool check_story = false);
+
+        /// Scale R_eff in leaf dyn story, if present.
+
+	virtual void scale_radius(real rfac);
+
+	// Clump radius is just half the maximum diameter of a clump,
+	// and has nothing directly to do with stellar radii in the
+	// dyn case.
+
+	real get_clump_radius();
 
 	// Scale story R_eff if it exists; in _dyn_ scales radius too.
 
-//	virtual void scale_radius(real fac);
+	// virtual void scale_radius(real fac);
 
         bool get_use_sstar()			{return use_sstar;}
 	void set_use_sstar(bool u)		{use_sstar = u;}

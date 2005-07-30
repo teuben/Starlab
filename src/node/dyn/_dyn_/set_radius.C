@@ -1,6 +1,7 @@
 
 //// set_radius:  set radii of specified particle(s) in input snapshot
-////           to specified values.
+////              to specified values.  Function sets both member data
+////              and R_eff in the dyn story
 ////
 //// Usage:  set_radius -l l1 -m radius1 -l l2 -m radius2 ...
 ////    or:  set_radius -A radius
@@ -12,12 +13,14 @@
 ////             -m    specify new radius for particle [no default]
 
 // Simon Portegies Zwart, MIT Oct 2000
+// Ernest Mamikonyan, Drexel, Jul 2005
 
 #include "_dyn_.h"
 
 #ifdef TOOLBOX
 
 // leaf_with_label: Return a pointer to the leaf with the specified name.
+//                  Function is very similar to node::node_with_name()...
 
 local _dyn_* leaf_with_label(_dyn_* b, char* label)
 {
@@ -37,14 +40,14 @@ local _dyn_* leaf_with_label(_dyn_* b, char* label)
 
 local void set_radius_by_label(_dyn_* b, char* label, real radius)
 {
-    // Locate the particle to be split.
+    // Locate the particle to set.
 
     _dyn_* bi = leaf_with_label(b, label);
 
     if (bi == NULL)
 	cerr << "Warning: particle \"" << label << "\" not found.\n";
     else
-	bi->set_radius(radius);
+	bi->set_radius(radius, true);	// set radius and R_eff
 
 }
 
@@ -56,7 +59,7 @@ local void set_radius(_dyn_* b, real radius)
       if (bi == NULL)
 	cerr << "Warning: no particle found.\n";
       else
-	bi->set_radius(radius);
+	bi->set_radius(radius, true);	// set radius and R_eff
     }
 
 }
@@ -71,8 +74,10 @@ local void set_radius_by_mass(_dyn_* b)
       if (bi == NULL)
 	cerr << "Warning: no particle found.\n";
       else
-	// set the radius in units of the cluster virial radius
-	bi->set_radius(pow(bi->get_mass(),0.8)*6.96e8/3.086e16);
+
+	// Set the radius in units of the cluster virial radius
+
+	bi->set_radius(pow(bi->get_mass(),0.8)*6.96e8/3.086e16, true);
     }
 
 }
