@@ -75,6 +75,7 @@ AC_PROG_INSTALL
 # Checks for header files.
 AC_LANG_PUSH(C)
 AC_PATH_XTRA
+AC_SYS_LARGEFILE
 AC_HEADER_STDBOOL
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -378,6 +379,7 @@ AM_CONDITIONAL(HAVE_LIBQT, [test "x$good_qt" = "xyes"])
 
 #--------------------------------------------------------------------------
 # Checks for library functions.
+AC_FUNC_MMAP
 AC_REPLACE_FUNCS(stpcpy)
 
 #--------------------------------------------------------------------------
