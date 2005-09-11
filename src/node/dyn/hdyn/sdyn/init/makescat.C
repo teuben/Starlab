@@ -1,5 +1,5 @@
 
-//// mkscat:  write a general scattering configuration to cout.
+//// makescat: write a general scattering configuration to cout.
 ////
 ////          Starting from the top-level (scattering) orbit, whose
 ////          components are referred to as the projectile (p) and the
