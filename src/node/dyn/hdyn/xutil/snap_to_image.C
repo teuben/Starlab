@@ -1079,7 +1079,7 @@ main(int argc, char** argv)
 		initialize_arrays(a, zarray, rarray, nx*ny);
 
 	    hdyn *root = b->get_root();
-	    for_all_daughters(hdyn, b, bb) {
+	    for_all_leaves(hdyn, b, bb) {
 
 		real x, y, z;
 		if(!HRD) {
