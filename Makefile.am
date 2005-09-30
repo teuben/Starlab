@@ -55,8 +55,10 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		sbin/gpl \
 		sbin/hide \
 		sbin/index \
+		sbin/errecho.c \
 		sbin/ints.c \
 		sbin/kiraformat.c \
+		sbin/kiraformat2.c \
 		sbin/kiraindex.c \
 		sbin/kn \
 		sbin/komaba_get_tar \
@@ -213,6 +215,8 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		src/node/dyn/hdyn/sdyn3/evolve/template.C \
 		src/node/dyn/hdyn/sdyn3/evolve/test_2.C \
 		src/node/dyn/hdyn/sdyn3/evolve/test3.C \
+		src/node/dyn/hdyn/sdyn3/evolve/dyn_util.h \
+		src/node/dyn/hdyn/sdyn3/evolve/xstarplot.h \
 		src/node/dyn/hdyn/util/hdyn_sync.C \
 		src/node/dyn/hdyn/util/kira_debug.h \
 		src/node/dyn/hdyn/util/runf.C \
