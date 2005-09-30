@@ -58,8 +58,8 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		sbin/errecho.c \
 		sbin/ints.c \
 		sbin/kiraformat.c \
-		sbin/kiraformat2.c \
 		sbin/kiraindex.c \
+		sbin/kiraindex2.c \
 		sbin/kn \
 		sbin/komaba_get_tar \
 		sbin/largest_int.c \
