@@ -10,23 +10,20 @@
 
 //// Renumber stars in a specific order
 ////
-//// Usage: reunmber [OPTIONS]
+//// Usage: renumber [OPTIONS]
 ////
 //// Options:
 ////            -c c      add a comment to the output snapshot [false]
 ////            -I/i      start numbering number               [1]
-////            -M        Renumber the stars in order of mass
+////            -M        renumber the stars in order of mass
 ////                      (highest mass=I/lowest mass=i)       [false]
-////            -N        Name the stars                       [false]
-////            -S/s      Single fixed number for all stars    [false]
-////                      Except if a star was already numbered
+////            -N        name the stars                       [false]
+////            -S/s      single fixed number for all stars    [false]
+////                      except if a star was already numbered
 ////
 //// Written by Piet Hut and Simon Portegies Zwart.
 ////
 //// Report bugs to starlab@sns.ias.edu.
-
-
-//// Options:
 
 //   version 1:  Jan 1993   Piet Hut
 //	 	 Feb 2001   Simon Portegies Zwart

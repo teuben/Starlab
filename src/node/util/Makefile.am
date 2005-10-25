@@ -19,7 +19,8 @@
 noinst_LTLIBRARIES = libnode-1.la
 bin_PROGRAMS = node_io display_subtrees rmq snapprune make_single_node \
     add_daughter_node pretty_print_tree print_normal makenode makemass \
-    makesecondary mass_dist m_bar renumber setmass std_rename_nodes add_index
+    makesecondary mass_dist m_bar renumber setmass std_rename_nodes \
+    add_index add_unique_index 
 
 libnode_1_la_SOURCES = node_io.C hydrobase_io.C starbase_io.C tree_io.C \
     node_tt.C rmtree.C print_normal.C starbase_init.C makenode.C makemass.C \
@@ -41,6 +42,7 @@ m_bar_CPPFLAGS = -DTOOLBOX
 renumber_CPPFLAGS = -DTOOLBOX
 setmass_CPPFLAGS = -DTOOLBOX
 std_rename_nodes_CPPFLAGS = -DTOOLBOX
+add_unique_index_CPPFLAGS = -DTOOLBOX
 
 node_io_LDADD = ../libnode.la
 display_subtrees_LDADD = ../libnode.la
@@ -58,6 +60,7 @@ m_bar_LDADD = ../libnode.la
 renumber_LDADD = ../libnode.la
 setmass_LDADD = ../libnode.la
 std_rename_nodes_LDADD = ../libnode.la
+add_unique_index_LDADD = ../libnode.la
 
 node_io_SOURCES = node_io.C
 display_subtrees_SOURCES = display_subtrees.C
@@ -75,3 +78,4 @@ m_bar_SOURCES = m_bar.C
 renumber_SOURCES = renumber.C
 setmass_SOURCES = setmass.C
 std_rename_nodes_SOURCES = std_rename_nodes.C
+add_unique_index_SOURCES = add_unique_index.C
