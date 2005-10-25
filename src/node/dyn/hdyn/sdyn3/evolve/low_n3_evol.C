@@ -258,6 +258,11 @@ local bool unperturbed_step(sdyn3* b,		// n-body system pointer
 			    real& true_dt,	// new timestep
 			    int&  collision_flag)
 {
+
+
+//    return false;
+
+
     // Check for and implement unperturbed motion.
 
     // Only take an unperturbed step if the unperturbed criterion is met
