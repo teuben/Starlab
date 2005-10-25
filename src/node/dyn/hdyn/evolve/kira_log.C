@@ -585,11 +585,24 @@ void print_statistics(hdyn* b,
 #endif
 }
 
+// Must set cod_pot before using these functions if the tidal
+// potential is desired.  See log_output() below.
+
+static real cod_pot = 0;
+local void set_cod_pot(hdyn *b, vec cod_pos)
+{
+    cod_pot = 0;
+    if (b->get_external_field()) {
+	vec tmp;
+	get_external_acc(b, cod_pos, tmp, cod_pot, tmp, tmp, true);
+    }
+}
+
 local int n_bound(hdyn* b, vec& cod_vel)
 {
     int nb = 0;
     for_all_daughters(hdyn, b, bb)
-	if (0.5*square(bb->get_vel()-cod_vel) + bb->get_pot() < 0)
+	if (0.5*square(bb->get_vel()-cod_vel) + bb->get_pot() - cod_pot < 0)
 	    nb += bb->n_leaves();
     return nb;
 }
@@ -598,17 +611,18 @@ local real m_bound(hdyn* b, vec& cod_vel)
 {
     real mb = 0;
     for_all_daughters(hdyn, b, bb)
-	if (0.5*square(bb->get_vel()-cod_vel) + bb->get_pot() < 0)
+	if (0.5*square(bb->get_vel()-cod_vel) + bb->get_pot() - cod_pot < 0)
 	    mb += bb->get_mass();
     return mb;
 }
 
-local void get_n_and_m_bound(hdyn* b, vec& cod_vel, int& nb, real& mb)
+local void get_n_and_m_bound(hdyn* b, vec& cod_vel,
+			     int& nb, real& mb)
 {
     nb = 0;
     mb = 0;
     for_all_daughters(hdyn, b, bb)
-	if (0.5*square(bb->get_vel()-cod_vel) + bb->get_pot() < 0) {
+	if (0.5*square(bb->get_vel()-cod_vel) + bb->get_pot() - cod_pot < 0) {
 	    nb += bb->n_leaves();
 	    mb += bb->get_mass();
     }
@@ -674,6 +688,7 @@ void log_output(hdyn * b,
 
     int n_bound;
     real m_bound;
+    set_cod_pot(b, cod_pos);
     get_n_and_m_bound(b, cod_vel, n_bound, m_bound);
 
     cerr << endl;
