@@ -56,6 +56,7 @@ EXTRA_DIST =	doc/Primer.tex doc/README doc/Testing.txt sbin/preconf \
 		sbin/hide \
 		sbin/index \
 		sbin/errecho.c \
+		sbin/getbytes.c \
 		sbin/ints.c \
 		sbin/kiraformat.c \
 		sbin/kiraindex.c \
