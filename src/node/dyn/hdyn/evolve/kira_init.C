@@ -1296,7 +1296,7 @@ bool kira_initialize(int argc, char** argv,
     // Best to calculate initial_r_virial from the energy if it isn't
     // known at this point.
 
-    if (initial_r_virial < 0 && b->get_system_time() == 0) {
+    if (initial_r_virial < 0 && b->get_system_time() == 0.0) {
 
 	// Silently check and set GRAPE options (will do it for real below).
 

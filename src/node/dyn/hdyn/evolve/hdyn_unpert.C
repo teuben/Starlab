@@ -4234,8 +4234,8 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	// Use the values in float.h instead.  (Steve, 12/04)
 
 	if (	// binary_type != NOT_APPROACHING &&
-	     0.001*keplstep < DBL_EPSILON*time
-	     || 0.01*peristep < DBL_EPSILON*time
+	     0.001*keplstep < DBL_EPSILON*(real)time
+	     || 0.01*peristep < DBL_EPSILON*(real)time
 	    ) {
 
 	    int prec = cerr.precision(HIGH_PRECISION);

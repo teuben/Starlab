@@ -1190,7 +1190,7 @@ local void sys_stats(hdyn *b)
 
 	cerr << endl << "Time = " << b->get_time();
 	if (smallN_time_scale > 0)
-	    cerr << " = " << b->get_time()/smallN_time_scale << " smallN units";
+	    cerr << " = " << (real)b->get_time()/smallN_time_scale << " smallN units";
 
 	cerr << endl;
 	pp(b); cerr << endl;
