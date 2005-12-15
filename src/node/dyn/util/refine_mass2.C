@@ -40,7 +40,8 @@ local inline real ext_pot(dyn *b, vec pos)
 // Handy, for now...
 
 static vec ext_center, Rhat, acc_CM;	// ext_center is the absolute position
-					// of the external center
+					// of the external center, for use by
+					// the "solve" functions below.
 							
 static real R;
 
@@ -113,7 +114,7 @@ local void get_rL(dyn *b,		// root node
 		  real& r_L1,
 		  real& r_L2)
 {
-    // Find the inner Lagrangian point in the external field.
+    // Find the inner Lagrangian point in the total external field.
     // Construction of the external field functions is such that
     // it is just as easy to work directly with 3-D vectors...
 
@@ -127,7 +128,15 @@ local void get_rL(dyn *b,		// root node
     R = abs(center - ext_center);
     Rhat = (center - ext_center)/(R*M);	// factor of M avoids passing M to g
 
-    r_L1 = solve(g1, b, sqrt(b->get_external_scale_sq()), R);
+    real scale
+	= sqrt(b->get_external_scale_sq());  // starting point for L1 search
+
+    // Scale is based on the first external field found.  Only used to
+    // set an overall scale for use in solve(g1), so probably no need
+    // to check for multiple internal fields.  The accelerations used
+    // in solve(g?) include all fields.
+
+    r_L1 = solve(g1, b, scale, R);
     r_L2 = solve(g2, b, R, 10*R);
 }
 
@@ -147,22 +156,13 @@ local int bitcount(unsigned int i)
 void refine_cluster_mass2(dyn *b,		// root node
 			  int verbose)		// default = 0
 {
-    unsigned int ext = b->get_external_field();
-
-    if (!ext || b->get_tidal_field()) return;
-
     // Self-consistently determine the total mass within the outermost
     // closed zero-velocity surface under the specified external field(s).
     // Use a point-mass approximation for the cluster potential and iterate
     // until the actual mass within the surface agrees with the mass used
     // to generate the surface.
     //
-    // Experimental code, implemented by Steve, 8/01.
-    // Note: most likely to be called from refine_cluster_mass().
-
-    // Method only works for a single external, velocity-independent field...
-
-    if (bitcount(ext) != 1) return;
+    // This code is most likely to be called from refine_cluster_mass().
 
     // Quit if internal forces are to be neglected.
 
@@ -176,6 +176,55 @@ void refine_cluster_mass2(dyn *b,		// root node
 		== b->get_system_time())
 	return;
 
+    unsigned int ext = b->get_external_field();
+    if (!ext || b->get_tidal_field()) return;
+
+    // Method assumes that the external field can be characterized as
+    // depending on distance from a single point -- i.e. that it has a
+    // single center -- and that it is independent of velocity.  OK to
+    // have multiple external fields (e.g. central mass + power law),
+    // so long as they have a common center.
+
+    int bits_set = bitcount(ext);
+    vec external_center = 0;
+
+    if (bits_set != 1) {
+
+	if (bits_set < 1)
+	    
+	    return;
+
+	else {
+
+	    // We have multiple external fields.  Check for common center.
+
+	    cerr << "  refine_cluster_mass2: "; PRC(ext); PRL(bits_set);
+
+	    int bit = 0, cbit = -1;
+	    for (unsigned int i = ext; i != 0; i >>= 1, bit++) {
+		if (i & 01) {
+		    if (cbit < 0) {
+			cbit = bit;
+			external_center = b->get_external_center(cbit);
+		    } else {
+			if (!twiddles(square(b->get_external_center(bit)
+					      - external_center),
+				      0)) {
+			    cerr << "  refine_cluster_mass2: center " << bit
+				 << " inconsistent with center " << cbit
+			         << endl;
+			    return;
+			}
+		    }
+		}
+	    }
+	    cerr << "  common center = " << external_center << endl;
+	}
+
+    } else
+
+	external_center = b->get_external_center();
+
     // Function may be called repeatedly for a series of systems.
     // Make sure the root node is correctly set for this one.
 
@@ -186,14 +235,14 @@ void refine_cluster_mass2(dyn *b,		// root node
     // redetermined self-consistently, along with the mass.
 
     vec center, vcenter;
-    get_std_center(b, center, vcenter);			// std_center quantities
-							// include the root node
+    get_std_center(b, center, vcenter);		// std_center quantities
+						// include the root node
 
     // Choose the initial mass to include only the volume between the
     // standard center and the center of the external potential.
 
     real M_inside = 0;
-    R = abs(center - b->get_external_center());		// global R
+    R = abs(center - external_center);			// global R
 
     center  -= bpos;					// remove the root from
     vcenter -= bvel;					// "center" quantities
@@ -202,9 +251,9 @@ void refine_cluster_mass2(dyn *b,		// root node
 	if (abs(bb->get_pos() - center) <= R)
 	    M_inside += bb->get_mass();
 
-    // Hmmm.  Note that the starting quantities for the loop are not
-    // determined in the same way as those calculated within the loop.
-    // -- Possible room for inconsistency?
+    // The starting quantities for the loop are not determined in the
+    // same way as those calculated within the loop -- possible room
+    // for inconsistency?
 
     real M = -1;					// (to start the loop)
     int N_inside;
@@ -246,8 +295,8 @@ void refine_cluster_mass2(dyn *b,		// root node
 	cen = vcen = 0;
 
 	// Determine the Lagrangian points of the (point-mass) cluster
-	// in the external field, then count stars within the limiting
-	// equipotential.
+	// in the *total* external field, then count stars within the
+	// limiting equipotential.
 
 	real r_L1, r_L2;
 	get_rL(b, M, center, r_L1, r_L2);		// NB relative center
@@ -257,7 +306,7 @@ void refine_cluster_mass2(dyn *b,		// root node
 	    PRC(R); PRC(r_L1); PRC(r_L2);
 	}
 
-	// Limiting potential (ext pot takes absolute position):
+	// Limiting potential (ext_pot takes absolute position):
 
 	real phi_L1 = ext_pot(b, ext_center + r_L1*Rhat - bpos) - M/(R-r_L1);
 	real phi_L2 = ext_pot(b, ext_center + r_L2*Rhat - bpos) - M/(r_L2-R);
@@ -360,7 +409,7 @@ void refine_cluster_mass2(dyn *b,		// root node
 
     set_friction_mass(M_inside);
     set_friction_vel(bc_vel);
-    set_friction_acc(b, abs(bc_pos - b->get_external_center()));
+    set_friction_acc(b, abs(bc_pos - external_center));
 
     // Repeat the inner loop above and flag stars as escapers or not.
 

@@ -275,11 +275,11 @@ class  dyn : public node
 
 	/// Generic accessor for (single) external field (see dyn_external.C):
 
-	real get_external_scale_sq();
+	real get_external_scale_sq(int bit = -1);
 
 	/// Generic accessor for (single) external field (see dyn_external.C):
 
-	vec get_external_center();
+	vec get_external_center(int bit = -1);
 
 	//-----------------------------------------------------------------
 
@@ -287,13 +287,13 @@ class  dyn : public node
         void  set_vel(const vec& new_vel)      {vel = new_vel;}
         void  set_acc(const vec& new_acc)      {acc = new_acc;}
 
-	void  clear_pos()                         {pos = 0.0;}	///< Set pos = 0
-	void  clear_vel()                         {vel = 0.0;}	///< Set vel = 0
-	void  clear_acc()                         {acc = 0.0;}	///< Set acc = 0
+	void  clear_pos()		       {pos = 0.0;}    ///< Set pos = 0
+	void  clear_vel()                      {vel = 0.0;}    ///< Set vel = 0
+	void  clear_acc()                      {acc = 0.0;}    ///< Set acc = 0
 
-	inline void  inc_pos(const vec& d_pos) {pos += d_pos;}	///< pos += del
-	inline void  inc_vel(const vec& d_vel) {vel += d_vel;}	///< vel += del
-	inline void  inc_acc(const vec& d_acc) {acc += d_acc;}	///< acc += del
+	inline void  inc_pos(const vec& d_pos) {pos += d_pos;} ///< pos += del
+	inline void  inc_vel(const vec& d_vel) {vel += d_vel;} ///< vel += del
+	inline void  inc_acc(const vec& d_acc) {acc += d_acc;} ///< acc += del
 
 	/// Scale pos by the specified factor.
 

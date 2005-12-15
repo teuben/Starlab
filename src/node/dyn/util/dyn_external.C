@@ -506,6 +506,10 @@ static vec Afric = 0;				// frictional acceleration
 void set_friction_acc(dyn *b,			// root node
 		      real r)			// distance from pl_center
 {
+    // NOTE that Dynamical friction is computed using only the "pl"
+    // density (even though the cluster mass may be defined using
+    // multiple external fields).
+
     if (beta > 0) {
 
 	real A = b->get_pl_coeff();
@@ -742,36 +746,38 @@ local inline real power_law_virial(dyn *b)
 
 // Member functions:
 
-real dyn::get_external_scale_sq()
+real dyn::get_external_scale_sq(int bit)	// default = -1
 {
     // Just enumerate the possiblilties...
 
-    if (!get_external_field())
-	return 0;
-    else if (get_tidal_field())
-	return 0;
-    else if (get_plummer())
-	return p_scale_sq;
-    else if (get_pl())
-	return pow(pl_scale, 2);
-    else
-	return 0;
+    // In the case of multiple external fields, just return the first
+    // scale found if bit < 0 (default); if bit >= 0, return that
+    // scale, if it is defined.
+
+    if (!get_external_field()) return 0;
+
+    if (get_tidal_field() && (bit < 0 || bit == 0)) return 0;
+    if (get_plummer() && (bit < 0 || bit == 1))     return p_scale_sq;
+    if (get_pl() && (bit < 0 || bit == 2))          return pow(pl_scale,2);
+
+    return 0;
 }
 
-vec dyn::get_external_center()
+vec dyn::get_external_center(int bit)		// default = -1
 {
     // Just enumerate the possiblilties...
 
-    if (!get_external_field())
-	return 0;
-    else if (get_tidal_field())
-	return tidal_center;
-    else if (get_plummer())
-	return p_center;
-    else if (get_pl())
-	return pl_center;
-    else
-	return 0;
+    // In the case of multiple external fields, just return the first
+    // scale found if bit < 0 (default); if bit >= 0, return that
+    // scale, if it is defined.
+
+    if (!get_external_field()) return 0;
+
+    if (get_tidal_field() && (bit < 0 || bit == 0)) return tidal_center;
+    if (get_plummer() && (bit < 0 || bit == 1))     return p_center;
+    if (get_pl() && (bit < 0 || bit == 2))          return pl_center;
+
+    return 0;
 }
 
 // Other functions:
