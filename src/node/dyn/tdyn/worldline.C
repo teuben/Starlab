@@ -1284,7 +1284,8 @@ vec interpolate_pos(tdyn *p, real t,
 
 	    real dti = 1/dt;
 
-	    if (streq(p->get_name(), "root")) {		// infrequent...
+	    char *name = p->get_name();
+	    if (name && streq(name, "root")) {		// infrequent...
 
 		// Use linear interpolation for the cluster center.
 		// Discard vel information to make pos continuous.

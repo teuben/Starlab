@@ -1,5 +1,5 @@
 
-//// xstarplot2:  plot an N-body system in an X environment.
+//// xstarplot22: plot an N-body system in an X environment.
 ////              This version uses the NEW interpolation routines.
 ////
 //// Options:    -a    specify viewing axis [1/2/3 = x/y/z]
@@ -25,7 +25,7 @@
 ////
 ////
 //// Note:  There appears to be a problem with the X interface on some
-////        systems that causes xstarplot to crash if too many run-time
+////        systems that causes xstarplot* to crash if too many run-time
 ////        user commands are received in a short space of time (e.g.
 ////        try holding down the ">" key in 3D mode).  Presently, the
 ////        only fix is to avoid excessive keystrokes in the graphics
