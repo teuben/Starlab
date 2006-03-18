@@ -12,11 +12,13 @@
 //// are overwritten.
 ////
 //// If only one mass limit is set, the other is automatically forced
-//// to the same value.
+//// to the same value.  In the TwoComponent case, the lower and upper
+//// limits specify the two component masses.
 ////
 //// Usage: makemass [OPTIONS] < input > output
 ////
 //// Options:
+////         -C        output in 'col' format (dyn version only) [no]
 ////         -e/E/x/X  exponent [-2.35 (Salpeter)]
 ////         -F/f      mass function option:
 ////                        1) Power-law [default]
@@ -46,8 +48,15 @@
 //		Steve McMillan, July 1996
 //		Simon Portegies Zwart, Tokyo, December 1997
 
-#include "node.h"
-#include "util_math.h"
+// Allow double use -- dyn tool will have TOOLBOX and DYN set and will
+// include this file.  The only real difference is the "-C" option.
+
+#ifndef DYN
+#   include "node.h"
+#   include "util_math.h"
+#else
+#   include "dyn.h"
+#endif
 
 #define  MAXIMUM_ZAMS_MASS 100
 #define  SEED_STRING_LENGTH  256
@@ -470,13 +479,16 @@ void makemass(node* b, mass_function mf,
     b->log_comment(tmp_string);
     cerr << "mass function is " << type_string(mf) << ", ";
     PRC(m_lower); PRL(m_upper);
-
 }
 
 #else
 
 int main(int argc, char ** argv)
 {
+#ifdef DYN
+    bool C_flag = false;
+#endif
+
     bool F_flag   = false;                      // input mf via string
     mass_function mf = mf_Power_Law;            // default = Power-law
     char *mfc = new char[64];
@@ -502,12 +514,21 @@ int main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
+
+#ifndef DYN
     char* param_string = "E:e:iF:f:h:L:l:M:m:s:U:u:X:x:";
+#else
+    char* param_string = "CE:e:iF:f:h:L:l:M:m:s:U:u:X:x:";
+#endif
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
 	switch(c) {
 
+#ifdef DYN
+	    case 'C': C_flag = true;
+		      break;
+#endif
 	    case 'F': F_flag = true;
 		      strncpy(mfc, poptarg, 63);
 	              break;
@@ -561,8 +582,13 @@ int main(int argc, char ** argv)
 	exponent = hfrac;	// avoid redefining/overloading functions.
     }
 
+#ifndef DYN
     node *b;
     b = get_node();
+#else
+    dyn *b;
+    b = get_dyn();
+#endif
 
     b->log_history(argc, argv);
 
@@ -590,9 +616,15 @@ int main(int argc, char ** argv)
 							 old_t_vir);
     }
 
+#ifndef DYN
     put_node(b);
-    rmtree(b);
+#else
+    b->set_col_output(false);
+    if (C_flag) b->set_col_output(true);
+    put_dyn(b);
+#endif
 
+    rmtree(b);
     return 0;
 }
 #endif
