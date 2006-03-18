@@ -158,7 +158,7 @@ local void print_parameters_for_massive_black_holes(dyn *b,
 						    bool verbose)
 {
     int n_bh = 0;
-    for_all_daughters(dyn, b, bi) {
+    for_all_leaves(dyn, b, bi) {
 	if (find_qmatch(bi->get_log_story(), "black_hole")) {
 
 	    if (n_bh++ == 0 && verbose)
@@ -166,10 +166,22 @@ local void print_parameters_for_massive_black_holes(dyn *b,
 		     << "  Orbital parameters for massive black holes:"
 		     << endl;
 
-	    bool long_binary_output = true;	
-	    print_binary_from_dyn_pair(b, bi,
-				       kT, center, verbose,
-				       long_binary_output);
+	    // Original printed out binary parameters for bi relative to b,
+	    // which is usually root.  Now print basic info for top-level
+	    // hole, and binary info if really a binary...  (Steve, 3/06)
+
+	    if (bi->is_top_level_node()) {
+		cerr << "    (single) " << bi->format_label()
+		     << ":  m = " << bi->get_mass();
+		cerr << ",  |r-CM| = " << abs(bi->get_pos() - b->get_pos());
+		cerr << "  |v-CM| = " << abs(bi->get_vel() - b->get_vel())
+		     << endl;
+	    } else {
+		bool long_binary_output = true;	
+		print_binary_from_dyn_pair(bi,bi->get_binary_sister(),
+					   kT, center, verbose,
+					   long_binary_output);
+	    }
 	}
     }
 
