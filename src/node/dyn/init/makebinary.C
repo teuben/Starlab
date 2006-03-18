@@ -15,7 +15,7 @@
 ////
 //// If possible, use the system parameters to scale the binary parameters.
 //// If the total system energy is already known (saved in the snapshot
-//// dyn story), then energies are in units of kT.  Otherwise, energies
+//// log or dyn story), then energies are in units of kT.  Otherwise, energies
 //// are in absolute units.
 ////
 //// Usage:  makebinary [OPTIONS]
@@ -440,22 +440,26 @@ int main(int argc, char ** argv)
 	    actual_seed);
     b->log_comment(seedlog);
 
-    // Look in the dyn story to see if a total system energy is known.
-    // If it is, scale lower and upper accordingly.
-
-    // Thus, in case function_select = 3, if the energy is known,
+    // In case function_select = 3, if the energy is known, then
     // lower and upper are specified in "kT" units.  If the energy
     // is not known, lower and upper are absolute limits on the
     // binary kinetic energy.
 
-    char* energy_string = "initial_total_energy";
+    // Look in the log or dyn story to see if a total system energy
+    // is known.  If it is, scale lower and upper accordingly.
 
-    // Scale input to N-body units where appropirate
+    char* log_energy_string = "initial_total_energy";
+    char* dyn_energy_string = "total_energy";
+
+    // Scale input to N-body units where appropriate.
     // Possible options are:
     //   1: Angular momentum   [cgs]
     //   2: Semi-major axis    [Rsun]
     //   3: Binding energy     [N-body]
+
+    PRL(function_select);
     if (function_select == 1) {
+
 	if (b->get_starbase()->get_stellar_evolution_scaling()) {
 	    real scale = sqrt(b->get_starbase()->conv_m_star_to_dyn(1)
 			      * b->get_starbase()->conv_r_star_to_dyn(1));
@@ -464,8 +468,9 @@ int main(int argc, char ** argv)
 	}
 	else
 	    cerr << "makebinary: using unscaled angular-momentum limits.\n";
-    }
-    else if (function_select == 2) {
+
+    } else if (function_select == 2) {
+
 	if (b->get_starbase()->conv_r_star_to_dyn(1)>0) {
 	  //	    lower = b->get_starbase()->conv_r_star_to_dyn(lower);
 	  //	    upper = b->get_starbase()->conv_r_star_to_dyn(upper);
@@ -475,9 +480,11 @@ int main(int argc, char ** argv)
 	else
 	    cerr << "makebinary: using unscaled semi-major axis limits"
 		 << endl;
-    }
-    else if (function_select == 3) {
-	if (find_qmatch(b->get_dyn_story(), energy_string)) {
+
+    } else if (function_select == 3) {
+
+	if (find_qmatch(b->get_dyn_story(), dyn_energy_string)
+	    || find_qmatch(b->get_log_story(), log_energy_string)) {
 
 	    // Use energy_string as an indicator that some energies
 	    // are known, but don't use its value as an estimator
@@ -502,6 +509,7 @@ int main(int argc, char ** argv)
 
 	} else
 	    cerr << "makebinary: Using unscaled energy limits.\n";
+
     }
 
     makebinary(b, lower, upper, function_select, option, emax);
