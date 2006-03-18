@@ -8,22 +8,24 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// Replace the star closest to com by a black hole.
+//// Replace the specified star, or the star closest to the system center
+//// of mass, by a black hole.  Only top-level nodes are considered.
 ////                
-//// Usage:  makeblack_hole [OPTIONS]
+//// Usage:  makeblack_hole [OPTIONS] < input > output
 ////
 //// Options:
 ////      -c    add comment to snapshot
-////      -M    select black hole mass; if <1 mass is read as a fraction
-////      -r    select black hole position
-////      -v    select black hole velocity [relative to circular speed]
-////      -i    select black hole identity
+////      -M    specify black hole mass; if < 0 specify -fraction of total
+////      -r    specify black hole position
+////      -v    specify black hole velocity [relative to circular speed]
+////      -i    specify black hole index (integer)
 ////
 //// Written by Simon Portegies Zwart.
 ////
 //// Report bugs to starlab@sns.ias.edu.
 
 //                 Simon Portegies Zwart, MIT November 2000
+//                Steve McMillan, March 2006
 
 #include "dyn.h"
 
@@ -39,44 +41,50 @@ local void makeblack_hole(dyn* b, int id, real m_bh,
 
     real r_min = VERY_LARGE_NUMBER;
     dyn *bh = NULL;
-    if(id<0) {
-      for_all_daughters(dyn, b, bi) {
-	if(abs(bi->get_pos()) < r_min) {
-	  r_min = abs(bi->get_pos());
-	  bh = bi;
+
+    if (id > 0) {
+	for_all_daughters(dyn, b, bi) {
+	    if(bi->get_index() == id) {
+		bh = bi;
+		break;
+	    }
 	}
-      }
-    }
-    else {
-      for_all_daughters(dyn, b, bi) {
-	if(bi->get_index() == id) {
-	  bh = bi;
-	  break;
+	if (!bh) {
+	    cerr << "Couldn't find index " << id
+		 << "; using central particle." << endl;
+	    id = -1;
 	}
-      }
     }
 
+    if (id < 0) {
+	for_all_daughters(dyn, b, bi) {
+	    if(abs(bi->get_pos()) < r_min) {
+		r_min = abs(bi->get_pos());
+		bh = bi;
+	    }
+	}
+    }
+
+    if (!bh) err_exit("makeblack_hole: no replacement candidate found");
+    cerr << "Replacing particle " << bh->format_label()
+	 << " by a black hole" << endl;
+
     PRL(m_bh);
-    if(m_bh<=1) {
+    if(m_bh <= 1) {
 	cerr << "fractional bh mass" << endl;
-	m_bh *= b->get_mass()-bh->get_mass();
+	m_bh *= -(b->get_mass() - bh->get_mass());
 	PRL(m_bh);
     }
 
-    real prev_mass; 
-    if(bh) {
-        prev_mass = bh->get_mass();
-	bh->set_mass(m_bh);
-	  cerr << "Set Black hole position and velocity" << endl;
-	  if(r_flag) 
-	    bh->set_pos(r_bh);
-	  if(v_flag) 
-	    bh->set_vel(v_bh);
-	  else
-	    bh->set_vel(bh->get_vel() * sqrt(prev_mass/m_bh));
-    }
-    else 
-	err_exit("makeblack_hole: selected star not found");
+    real prev_mass = bh->get_mass();
+    bh->set_mass(m_bh);
+    cerr << "Setting black hole position and velocity" << endl;
+    if(r_flag) 
+	bh->set_pos(r_bh);
+    if(v_flag) 
+	bh->set_vel(v_bh);
+    else
+	bh->set_vel(bh->get_vel() * sqrt(prev_mass/m_bh));
 
     putiq(bh->get_log_story(), "black_hole", 1);
 
@@ -119,7 +127,7 @@ int main(int argc, char ** argv) {
     char  *comment;
 
     real m_bh = 0;
-    int id = -1;    // most central particle is selected
+    int id = -1;		// default: most central particle is selected
     bool r_flag = false;
     vec r_bh = 0;
     bool v_flag = false;
@@ -139,8 +147,8 @@ int main(int argc, char ** argv) {
 	    case 'c':	c_flag = TRUE;
 	    		comment = poptarg;
 	    		break;
-	    case 'M': m_bh = atof(poptarg);
-		      break;
+	    case 'M': 	m_bh = atof(poptarg);
+		      	break;
 	    case 'r':	r_bh = vec(atof(poparr[0]),
 				   atof(poparr[1]),
 				   atof(poparr[2]));
@@ -151,17 +159,17 @@ int main(int argc, char ** argv) {
 				   atof(poparr[2]));
 	                v_flag = true;
 	    		break;
-	    case 'i': id = atoi(poptarg);
-		      break;
-            case '?': params_to_usage(cerr, argv[0], param_string);
-		      exit(1);
+	    case 'i': 	id = atoi(poptarg);
+		      	break;
+            case '?': 	params_to_usage(cerr, argv[0], param_string);
+		      	exit(1);
 	}
 
     dyn* b;
     while (b = get_dyn()) {
 
       if (c_flag == TRUE)
-	b->log_comment(comment);
+	  b->log_comment(comment);
       b->log_history(argc, argv);
 
       // Check if we have to reinterpret r and v in light of possible
@@ -170,12 +178,12 @@ int main(int argc, char ** argv) {
       //    real mass, length, time;
       //    bool phys = get_physical_scales(b, mass, length, time);
 
-      if (id>b->n_leaves())
-	err_exit("selected id exceeds particle number");
+//      if (id>b->n_leaves())
+//	err_exit("selected id exceeds particle number");
 
       if(v_flag) {
-	real v_disp = sqrt(2.);
-	v_bh = v_bh * v_disp * sqrt(vcirc2(b, abs(r_bh)));
+	  real v_disp = sqrt(2.);
+	  v_bh = v_bh * v_disp * sqrt(vcirc2(b, abs(r_bh)));
       }
 
       makeblack_hole(b, id, m_bh, r_flag, r_bh, v_flag, v_bh);
@@ -183,17 +191,17 @@ int main(int argc, char ** argv) {
       real initial_mass = getrq(b->get_log_story(), "initial_mass");
 
       if (initial_mass > -VERY_LARGE_NUMBER)
-        putrq(b->get_log_story(), "initial_mass", b->get_mass(),
-	      HIGH_PRECISION);
+	  putrq(b->get_log_story(), "initial_mass", b->get_mass(),
+		HIGH_PRECISION);
 
       real m_sum = b->get_mass();
       real old_mtot = b->get_starbase()->conv_m_dyn_to_star(1);
       if(old_mtot!=m_sum) {
-	real old_r_vir= b->get_starbase()->conv_r_star_to_dyn(1);
-	real old_t_vir= b->get_starbase()->conv_t_star_to_dyn(1);
-	b->get_starbase()->set_stellar_evolution_scaling(m_sum,
-							 old_r_vir,
-							 old_t_vir);
+	  real old_r_vir= b->get_starbase()->conv_r_star_to_dyn(1);
+	  real old_t_vir= b->get_starbase()->conv_t_star_to_dyn(1);
+	  b->get_starbase()->set_stellar_evolution_scaling(m_sum,
+							   old_r_vir,
+							   old_t_vir);
       }
 
       put_dyn(b);
