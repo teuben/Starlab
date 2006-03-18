@@ -362,7 +362,7 @@ local void makesecondary(NODE* b, real binary_fraction,
 
     // Recompute the total system mass.
 
-    real m_tot = get_mass(b);
+    real m_tot = total_mass(b);
     b->set_mass(m_tot);	
     real old_mtot = b->get_starbase()->conv_m_dyn_to_star(1);
 
