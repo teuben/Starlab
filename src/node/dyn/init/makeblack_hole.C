@@ -66,19 +66,23 @@ local void makeblack_hole(dyn* b, int id, real m_bh,
     }
 
     if (!bh) err_exit("makeblack_hole: no replacement candidate found");
-    cerr << "Replacing particle " << bh->format_label()
-	 << " by a black hole" << endl;
+    cerr << "makeblack_hole: replacing particle " << bh->format_label()
+	 << " (mass = " << bh->get_mass() << ")" << endl;
 
     PRL(m_bh);
     if(m_bh <= 1) {
-	cerr << "fractional bh mass" << endl;
+	cerr << "makeblack_hole: fractional black hole mass" << endl;
 	m_bh *= -(b->get_mass() - bh->get_mass());
 	PRL(m_bh);
     }
 
+    cerr << "makeblack_hole: black hole mass = " << m_bh << endl;
+    cerr << "makeblack_hole: black hole pos = " << r_bh << endl;
+    cerr << "makeblack_hole: black hole vel = " << v_bh << endl;
+
     real prev_mass = bh->get_mass();
     bh->set_mass(m_bh);
-    cerr << "Setting black hole position and velocity" << endl;
+
     if(r_flag) 
 	bh->set_pos(r_bh);
     if(v_flag) 
@@ -98,7 +102,6 @@ local void makeblack_hole(dyn* b, int id, real m_bh,
     sprintf(tmp_string,
 	    "         black hole added, total mass = %8.2f", m_sum); 
     b->log_comment(tmp_string);
-    cerr << "Black hole mass is " << m_bh << endl;
 }
 
 local inline real mass(dyn *b, real r) 
