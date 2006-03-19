@@ -89,8 +89,8 @@ void scale_mass(dyn* b, real mscale)
 void scale_pos(dyn* b, real rscale,
 	       vec com_pos)			// default = 0
 {
-    PRL(rscale);
-    PRL(com_pos);
+    cerr << "scale: "; PRL(rscale);
+    cerr << "scale: "; PRL(com_pos);
     for_all_daughters(dyn, b, bb) {		// N.B. all daughters
 	bb->set_pos(com_pos
 		     + rscale*(bb->get_pos()-com_pos));
@@ -226,7 +226,7 @@ void scale(dyn *b, real eps,
 	     || (r_flag && !twiddles(r, 1))
 	     || (q_flag && !twiddles(q, 0.5))
 	     || (e_flag && !twiddles(abs(e), 0.25)))
-	    cerr << "scale:  non-standard choice of units for system"
+	    cerr << "scale: non-standard choice of units for system"
 		 << " with physical data" << endl;
     }
 
@@ -235,7 +235,7 @@ void scale(dyn *b, real eps,
     // daughters.
 
     if (c_flag) {
-	cerr << "scale:  transforming to com frame" << endl;
+	cerr << "scale: transforming to com frame" << endl;
 	b->to_com();
     } else
 	b->reset_com();		// root node absorbs any numerical errors
@@ -339,7 +339,7 @@ void scale(dyn *b, real eps,
     real com_kin = 0.5*mass*square(com_vel);	// ideally, should be zero
 
 //    if (debug) {
-	cerr << "scale:  internal "; PRC(com_vel); PRL(com_kin);
+	cerr << "scale: internal "; PRC(com_vel); PRL(com_kin);
 //    }
 
     // First do the mass scaling, if any.  NOTE: Scaling the total mass
@@ -361,7 +361,7 @@ void scale(dyn *b, real eps,
 	kin *= mfac;
 	com_kin *= mfac;
 
-	cerr << "scale:  "; PRL(mass);
+	cerr << "scale: "; PRL(mass);
 	if (debug) {
 	    cerr << "debug: "; PRL(com_kin);
 	}
@@ -395,7 +395,7 @@ void scale(dyn *b, real eps,
 	    cerr << "debug: "; PRL(pot_ext);
 	}
 
-	cerr << "scale:  "; PRL(r_virial);
+	cerr << "scale: "; PRL(r_virial);
 
 	// Rescale all internal velocities to preserve the virial
 	// ratio.  Scaling is already OK in case of a tidal field,
@@ -450,7 +450,7 @@ void scale(dyn *b, real eps,
 
 	    q_flag = false;
 
-	    cerr << "scale:  "; PRL(q);
+	    cerr << "scale: "; PRL(q);
 	}
 
 	// NOTE: The energy scaling is done on the assumption that eps = 0,
@@ -470,7 +470,7 @@ void scale(dyn *b, real eps,
 	// For Roche-lobe filling systems, this also rescales
 	// alpha1 and alpha3 by fac^{-3}.
 
-	cerr << "scale:  "; PRL(e);
+	cerr << "scale: "; PRL(e);
     }
 
     if (q_flag) {
@@ -478,19 +478,19 @@ void scale(dyn *b, real eps,
 	// Scale the velocities to set q and preserve r_virial.
 
 	real vir = get_external_virial(b);
-	PRL(vir);
+	cerr << "scale: "; PRL(vir);
 
 	real denominator = vir;
 	if (!b->get_ignore_internal()) denominator += pot_int;
 
 	real qvir = -(kin - com_kin) / denominator;
 	real vfac = sqrt(q/qvir);
-	PRL(vfac);
+	cerr << "scale: "; PRL(vfac);
 
 	scale_vel(b, vfac, com_vel);
 	kin = com_kin + vfac*vfac*(kin - com_kin);
 
-	cerr << "scale:  "; PRL(q);
+	cerr << "scale: "; PRL(q);
 	if (debug) {
 	    cerr << "debug: "; PRL((kin-com_kin)/denominator);
 	}
