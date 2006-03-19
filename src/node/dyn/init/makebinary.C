@@ -457,7 +457,7 @@ int main(int argc, char ** argv)
     //   2: Semi-major axis    [Rsun]
     //   3: Binding energy     [N-body]
 
-    PRL(function_select);
+    cerr << "makebinary: "; PRL(function_select);
     if (function_select == 1) {
 
 	if (b->get_starbase()->get_stellar_evolution_scaling()) {

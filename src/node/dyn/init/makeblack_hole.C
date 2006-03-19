@@ -69,7 +69,6 @@ local void makeblack_hole(dyn* b, int id, real m_bh,
     cerr << "makeblack_hole: replacing particle " << bh->format_label()
 	 << " (mass = " << bh->get_mass() << ")" << endl;
 
-    PRL(m_bh);
     if(m_bh <= 1) {
 	cerr << "makeblack_hole: fractional black hole mass" << endl;
 	m_bh *= -(b->get_mass() - bh->get_mass());
