@@ -15,10 +15,11 @@
 ////
 //// Options:
 ////      -c    add comment to snapshot
+////      -i    specify black hole index (integer)
 ////      -M    specify black hole mass; if < 0 specify -fraction of total
 ////      -r    specify black hole position
+////      -s    skip specified mass as black hole candidate
 ////      -v    specify black hole velocity [relative to circular speed]
-////      -i    specify black hole index (integer)
 ////
 //// Written by Simon Portegies Zwart.
 ////
@@ -34,12 +35,13 @@ char  tmp_string[SEED_STRING_LENGTH];
 
 #ifdef TOOLBOX
 
-local void makeblack_hole(dyn* b, int id, real m_bh,
+#define TOL 1.e-6
+
+local void makeblack_hole(dyn* b, int id, real m_bh, real m_skip,
 			  bool r_flag, vec r_bh, bool v_flag, vec v_bh) {
 
     b->to_com();
 
-    real r_min = VERY_LARGE_NUMBER;
     dyn *bh = NULL;
 
     if (id > 0) {
@@ -53,12 +55,18 @@ local void makeblack_hole(dyn* b, int id, real m_bh,
 	    cerr << "Couldn't find index " << id
 		 << "; using central particle." << endl;
 	    id = -1;
+	} else if (twiddles(bh->get_mass(), m_skip, TOL)) {
+	    cerr << "Skipping central particle " << bh->format_label()
+		 << endl;
+	    id = -1;
 	}
     }
 
     if (id < 0) {
+	real r_min = VERY_LARGE_NUMBER;
 	for_all_daughters(dyn, b, bi) {
-	    if(abs(bi->get_pos()) < r_min) {
+	    if (abs(bi->get_pos()) < r_min
+	       && !twiddles(bi->get_mass(), m_skip, TOL)) {
 		r_min = abs(bi->get_pos());
 		bh = bi;
 	    }
@@ -134,6 +142,7 @@ int main(int argc, char ** argv) {
     vec r_bh = 0;
     bool v_flag = false;
     vec v_bh = 0;
+    real m_skip = 0;
 
     check_help();
 
@@ -141,7 +150,7 @@ int main(int argc, char ** argv) {
     extern char *poparr[];
 
     int c;
-    char* param_string = "c:i:M:r:::v:::";
+    char* param_string = "c:i:M:r:::s:v:::";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
@@ -156,6 +165,8 @@ int main(int argc, char ** argv) {
 				   atof(poparr[2]));
 	                r_flag = true;
 	    		break;
+	    case 's': 	m_skip = atof(poptarg);
+		      	break;
 	    case 'v':	v_bh = vec(atof(poparr[0]),
 				   atof(poparr[1]),
 				   atof(poparr[2]));
@@ -188,7 +199,7 @@ int main(int argc, char ** argv) {
 	  v_bh = v_bh * v_disp * sqrt(vcirc2(b, abs(r_bh)));
       }
 
-      makeblack_hole(b, id, m_bh, r_flag, r_bh, v_flag, v_bh);
+      makeblack_hole(b, id, m_bh, m_skip, r_flag, r_bh, v_flag, v_bh);
 
       real initial_mass = getrq(b->get_log_story(), "initial_mass");
 
