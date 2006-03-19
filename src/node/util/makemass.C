@@ -235,7 +235,7 @@ local real Kroupa_Tout_Gilmore(real m_lower, real m_upper) {
     return m;
 }
 
-static int ntot = 0, nheavy = 0;
+static int ntot = 0, n_heavy = 0;
 
 local real mf_TwoComponent(real m_lower, real m_upper, real heavyfrac)
 {
@@ -244,16 +244,16 @@ local real mf_TwoComponent(real m_lower, real m_upper, real heavyfrac)
 
     if (randinter(0,1) < heavyfrac) {
 	ntot++;
-	nheavy++;
-	if (nheavy > (int)(heavyfrac*ntot) + 2) {
-	    nheavy--;
+	n_heavy++;
+	if (n_heavy > (int)(heavyfrac*ntot) + 2) {
+	    n_heavy--;
 	    return m_lower;
 	} else
 	    return m_upper;
     } else {
 	ntot++;
-	if (nheavy < (int)(heavyfrac*ntot) - 2) {
-	    nheavy++;
+	if (n_heavy < (int)(heavyfrac*ntot) - 2) {
+	    n_heavy++;
 	    return m_upper;
 	} else
 	    return m_lower;
@@ -290,38 +290,38 @@ real get_random_stellar_mass(real m_lower, real m_upper,
     real m;
     switch(mf) {
        case Equal_Mass:
-	  if (m_lower==0) {
-	     cerr << "get_random_stellar_mass:"<<endl;
-	     cerr << "unambiguous choise of Equal_Mass."<<endl;
-	     cerr << "Use -m option to set fixed stellar mass."<<endl;
-	     exit(1);
-	  }
-	  m =  m_lower;
-	       break;
+	   if (m_lower==0) {
+	       cerr << "get_random_stellar_mass:"<<endl;
+	       cerr << "unambiguous choise of Equal_Mass."<<endl;
+	       cerr << "Use -m option to set fixed stellar mass."<<endl;
+	       exit(1);
+	   }
+	   m =  m_lower;
+	   break;
        case mf_Power_Law:
-	  m =  general_power_law(m_lower, m_upper, exponent);
-	       break;
+	   m =  general_power_law(m_lower, m_upper, exponent);
+	   break;
        case Miller_Scalo:
 	   m = mf_Miller_Scalo(m_lower, m_upper);
-	       break;
+	   break;
        case Scalo:
-	  m = mf_Scalo(m_lower, m_upper);
-	      break;
+	   m = mf_Scalo(m_lower, m_upper);
+	   break;
        case Kroupa: // Kroupa, Tout & Gilmore 1993, MNRAS 262, 545
-	  m = Kroupa_Tout_Gilmore(m_lower, m_upper);
-	      break;
+	   m = Kroupa_Tout_Gilmore(m_lower, m_upper);
+	   break;
        case GdeMarchi:
-	  m = mf_GdeMarchi(m_lower, m_upper);
-	      break;
+	   m = mf_GdeMarchi(m_lower, m_upper);
+	   break;
        case TwoComponent:
-	  m = mf_TwoComponent(m_lower, m_upper, exponent);    // use exponent to
+	   m = mf_TwoComponent(m_lower, m_upper, exponent);   // use exponent to
 							      // store heavyfrac
-	      break;
+	   break;
        default:
-          cerr << "WARNING: \n"
-	       << "        real get_random_stellar_mass:\n"
-	       << "        Mass function parameters not properly defined.\n";
-	  exit(1);
+	   cerr << "WARNING: \n"
+		<< "        real get_random_stellar_mass:\n"
+		<< "        Mass function parameters not properly defined.\n";
+	   exit(1);
     }
 
     return m;
@@ -413,7 +413,13 @@ void makemass(node* b, mass_function mf,
 	      real m_lower, real m_upper,
 	      real exponent, real total_mass, bool renumber_stars)
 {
-    if (mf == TwoComponent) ntot = nheavy = 0;
+    int n_target = 0;
+    if (mf == TwoComponent) {
+	ntot = n_heavy = 0;
+	for_all_daughters(node, b, bi) n_target++;
+	real x_target = n_target*exponent;
+	n_target = (int)x_target;
+    }
 
     real m, m_sum = 0;
     int n = 0;
@@ -424,40 +430,71 @@ void makemass(node* b, mass_function mf,
 	m_sum += bi->get_mass();
     }
 
+    if (mf == TwoComponent) {
+	// cerr << "makemass: "; PRC(n_heavy); PRL(n_target);
+	while (n_heavy < n_target) {	// need to add more heavy stars
+	    // cerr << "makemass: adding heavy star" << endl;
+	    int ntop = 0;
+	    for_all_daughters(node, b, bi)
+		if (bi->get_mass() != m_upper) ntop++;
+	    real f = 1.0/ntop;
+	    for_all_daughters(node, b, bi)
+		if (bi->get_mass() != m_upper && randinter(0,1) < f) {
+		    bi->set_mass(m_upper);
+		    n_heavy++;
+		    break;
+		}
+	}
+	// cerr << "makemass: "; PRC(n_heavy); PRL(n_target);
+	while (n_heavy > n_target) {	// need to remove heavy stars
+	    // cerr << "makemass: removing heavy star" << endl;
+	    int ntop = 0;
+	    for_all_daughters(node, b, bi)
+		if (bi->get_mass() == m_upper) ntop++;
+	    real f = 1.0/ntop;
+	    for_all_daughters(node, b, bi)
+		if (bi->get_mass() == m_upper && randinter(0,1) < f) {
+		    bi->set_mass(m_lower);
+		    n_heavy--;
+		    break;
+		}
+	}
+	cerr << "makemass: "; PRC(n_heavy); PRL(n_target);
+    }
+
     b->set_mass(m_sum);
 
     // Renumber the stars in order of mass.
-    // Highest mass gets smallest number (strange choise, but).
+    // Highest mass gets smallest number (strange choice, but...).
 
     if (renumber_stars) {
-      int istart = 1;
-      bool M_flag = true;
-      renumber(b, istart, M_flag);
+	int istart = 1;
+	bool M_flag = true;
+	renumber(b, istart, M_flag);
     }
 
 #if 0
-      nm_pair_ptr nm_table = new nm_pair[n];
-      if (nm_table == NULL) {
+    nm_pair_ptr nm_table = new nm_pair[n];
+    if (nm_table == NULL) {
 	cerr << "makemass: "
 	     << "not enough memory left for nm_table\n";
 	return;
-      }
+    }
 
-      int i=0;
-      for_all_daughters(node, b, bi) {
+    int i=0;
+    for_all_daughters(node, b, bi) {
 	nm_table[i].str = bi;
 	nm_table[i].mass = bi->get_mass();
 	i++;
-      }
-
-      qsort((void *)nm_table, (size_t)n, sizeof(nm_pair), compare_mass);
-
-      for (i=0; i<n; i++) {
-	nm_table[i].str->set_index(i+1);  // Ok, lets number from 1 to n
-      }
-
-      delete []nm_table;
     }
+
+    qsort((void *)nm_table, (size_t)n, sizeof(nm_pair), compare_mass);
+
+    for (i=0; i<n; i++) {
+	nm_table[i].str->set_index(i+1);  // Ok, lets number from 1 to n
+    }
+
+    delete []nm_table;
 #endif
 
     if (total_mass > 0) {
@@ -477,7 +514,7 @@ void makemass(node* b, mass_function mf,
 		"       %s mass function, total mass = %8.2f Solar",
 		type_string(mf), m_sum);
     b->log_comment(tmp_string);
-    cerr << "mass function is " << type_string(mf) << ", ";
+    cerr << "makemass: mass function is " << type_string(mf) << ", ";
     PRC(m_lower); PRL(m_upper);
 }
 

@@ -240,6 +240,7 @@ local void makesecondary(NODE* b, real binary_fraction,
 			 bool force_index, bool q_flag, bool ignore_limits,
 			 bool split)
 {
+    cerr << "makesecondary:" << endl;
     PRI(4); PRL(binary_fraction);
     PRI(4); PRL(min_mprim);
     PRI(4); PRL(max_mprim);
@@ -272,6 +273,14 @@ local void makesecondary(NODE* b, real binary_fraction,
     real m_primaries=0, m_secondaries=0, m_total=0;
     real sum = 0;
 
+    int n_binaries = 0, n_target = 0;
+    for_all_daughters(NODE, b, bi) {
+	m_prim = bi->get_mass();
+	if (m_prim >= min_mprim && m_prim <= max_mprim) n_target++;
+    }
+    real x_target = n_target*binary_fraction;
+    n_target = (int)x_target;
+
     if (q_flag) {
 
         // Choose the secondary mass ratio uniformly on
@@ -292,6 +301,7 @@ local void makesecondary(NODE* b, real binary_fraction,
 			
 			m_secondaries += add_secondary(bi, q, force_index,
 						       nmax, split);
+			n_binaries++;
 		    }
 		}
 	    }
@@ -352,6 +362,7 @@ local void makesecondary(NODE* b, real binary_fraction,
 			q = random_mass_ratio(qmin, qmax);
 			m_secondaries += add_secondary(bi, q, force_index,
 						       nmax, split);
+			n_binaries++;
 		    }
 		}
 	    }
@@ -359,6 +370,7 @@ local void makesecondary(NODE* b, real binary_fraction,
     }
 
     if(split) m_primaries -= m_secondaries;
+    PRI(4); PRC(n_target); PRL(n_binaries);
 
     // Recompute the total system mass.
 
