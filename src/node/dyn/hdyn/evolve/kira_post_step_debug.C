@@ -2,6 +2,21 @@
 // Place temporary post-step debugging code here, to clean up kira.C.
 
 #if 0
+    PRL(n_next);
+    for (int ii = 0; ii < n_next; ii++) {
+	hdyn *n = next_nodes[ii];
+	if (n && n->is_valid()) {
+	    PRC(n->format_label());
+	    PRC(n->get_timestep());
+	    PRL(n->get_next_time());
+//	    if (n->name_is("476")) pp3(n->get_top_level_node());
+	}
+    }
+    print_recalculated_energies(b);
+#endif
+
+
+#if 0
     int ppp = cerr.precision(HIGH_PRECISION);
     PRL(ds);
     pp3("1001");
