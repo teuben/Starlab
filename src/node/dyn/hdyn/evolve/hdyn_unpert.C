@@ -666,6 +666,12 @@ void hdyn::update_dyn_from_kepler(bool need_acc_and_jerk)	// default = true
 
 bool hdyn::is_close_pair()
 {
+    // This criterion is intended to preserve close binaries as
+    // unperturbed, with a relaxed perturbation threshhold.  Must
+    // be careful not to set the threshhold too high, and only
+    // apply this criterion when binary evolution is in force.
+
+    if (!get_use_dstar()) return false;
     if (kep == NULL) return false;
     if (kep->get_energy() >= 0) return false;
 
@@ -3458,7 +3464,8 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
     bool is_u = is_unperturbed_and_approaching();
 
 #if 0
-    PRC(format_label()); PRC(kep->get_rel_pos()*kep->get_rel_vel()); PRL(is_u);
+    PRC(format_label()); PRL(kep->get_rel_pos()*kep->get_rel_vel());
+    PRC(perturbation_squared); PRL(is_u);
 #endif
 
 #if 0
