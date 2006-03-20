@@ -2077,7 +2077,7 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 	    update_nn_coll(this, 1,		// (1 = ID)	// (inlined)
 			   distance_squared, bi, d_nn_sq, nn,
 			   sum_of_radii, d_coll_sq, coll,
-			   nn_id, coll_id);  //  wwvv added this line
+			   nn_id, coll_id);	//  wwvv added this line
 #else
 	    update_nn_coll(this, 1,		// (1 = ID)	// (inlined)
 			   distance_squared, bi, d_nn_sq, nn,
@@ -3651,7 +3651,7 @@ void hdyn::top_level_node_epilogue_force_calculation()
     // Note that the decision to use the low-level perturber list for the
     // top-level node as an efficiency measure (with errors) is completely
     // independent of the use of the list for low-level nodes.
-	
+
     if (valid_perturbers && n_perturbers > 0
 	|| valid_perturbers_low && n_perturbers_low > 0) {
 	
