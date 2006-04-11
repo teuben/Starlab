@@ -1,4 +1,4 @@
-# csh -f
+# /bin/tcsh -f
 #
 # Usage: loop wait-time command(s)
 #
