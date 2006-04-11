@@ -2,17 +2,103 @@
 // Place temporary post-step debugging code here, to clean up kira.C.
 
 #if 0
-    PRL(n_next);
-    for (int ii = 0; ii < n_next; ii++) {
-	hdyn *n = next_nodes[ii];
-	if (n && n->is_valid()) {
-	    PRC(n->format_label());
-	    PRC(n->get_timestep());
-	    PRL(n->get_next_time());
-//	    if (n->name_is("476")) pp3(n->get_top_level_node());
+    if (t > 1.10503 && t < 1.10608) {
+
+	// Output part of the system for xstarplot purposes.
+
+	int p = cout.precision(10);
+	cout << ";; system_time = " << t << endl;
+	int n = 0;
+	int nmax = 10;
+	vec pos, vel, pos0 = vec(0.1, 0.2, -0.1);
+ 	for_all_leaves(hdyn, b, bb) {
+	    pos = hdyn_something_relative_to_root(bb,
+						  &hdyn::get_nopred_pos);
+	    vel = hdyn_something_relative_to_root(bb,
+						  &hdyn::get_nopred_vel);
+	    if (abs(pos-pos0) < 0.01 && ++n < 25)
+		cout << bb->get_index() << " "
+		     << bb->get_mass() << " "
+		     << pos-pos0 << " " << vel << endl;
 	}
+	if (n < nmax) {
+	    for (int i = 0; i < nmax-n; i++) {
+		pos -= vec(10);
+		vel -= vec(10);
+		cout << "999 0.0001 " << pos-pos0 << " " << vel << endl;
+	    }
+	}
+	cout.precision(p);
+	cout << endl;
     }
-    print_recalculated_energies(b);
+#endif
+
+
+#if 0
+//    if (t > 1.10503 && t < 1.10608) {
+    if (t > 1.1332 && t < 1.14) {
+	int p = cerr.precision(10);
+	PRC(t);
+	cerr.precision(p);
+	PRL(n_next);
+	for (int ii = 0; ii < n_next; ii++) {
+	    hdyn *n = next_nodes[ii];
+	    if (n && n->is_valid()) {
+		PRI(4); PRC(n->format_label());	PRL(n->get_timestep());
+#if 1
+		if (n->is_parent() && n->is_top_level_node()
+		    && node_contains(n, 1267)) {
+		    pp3(n);
+#if 1
+		    vec act = n->get_acc();
+
+		    hdyn* bb = (hdyn*)node_with_name("1267", b);
+		    hdyn *bskip1 = bb->get_top_level_node();
+		    vec pos = hdyn_something_relative_to_root(bb,
+							&hdyn::get_nopred_pos);
+		    vec dpos = pos - n->get_pos();
+		    real dr1 = abs(dpos);
+		    vec acc = bb->get_mass()*dpos/pow(dr1,3);
+
+		    bb = (hdyn*)node_with_name("267", b);
+		    hdyn *bskip2 = bb->get_top_level_node();
+		    pos = hdyn_something_relative_to_root(bb,
+							&hdyn::get_nopred_pos);
+		    dpos = pos - n->get_pos();
+		    real dr2 = abs(dpos);
+		    acc += bb->get_mass()*dpos/pow(dr2,3);
+
+		    bb = bb->get_parent();
+		    pos = hdyn_something_relative_to_root(bb,
+							&hdyn::get_nopred_pos);
+		    dpos = pos - n->get_pos();
+		    real dr = abs(dpos);
+		    vec acm = bb->get_mass()*dpos/pow(dr,3);
+
+		    PRL(act);
+		    PRC(acc); PRC(dr1); PRL(dr2);
+		    PRC(acm); PRL(dr);
+
+		    vec alt = 0;
+		    for_all_daughters(hdyn, b, bb) {
+			if (bb != n && bb != bskip1 && bb != bskip2) {
+			    pos = hdyn_something_relative_to_root(bb,
+							&hdyn::get_nopred_pos);
+			    dpos = pos - n->get_pos();
+			    real dr = abs(dpos);
+			    alt += bb->get_mass()*dpos/pow(dr,3);
+			}
+		    }
+
+		    PRL(alt);
+#endif
+		}
+#endif
+	    }
+	}
+	// print_recalculated_energies(b);
+    }
+//if (t > 1.14) exit(0);
 #endif
 
 

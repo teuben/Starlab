@@ -3,6 +3,25 @@
 
 
 #if 0
+    if (t > 1.10503 && t < 1.10608) {
+	int p = cerr.precision(10);
+	cerr << "pre-step:  "; PRC(t);
+	cerr.precision(p);
+	PRL(n_next);
+	for (int ii = 0; ii < n_next; ii++) {
+	    hdyn *n = next_nodes[ii];
+	    if (n && n->is_valid()) {
+		PRI(4); PRC(n->format_label());	PRL(n->get_timestep());
+		if (n->is_parent()
+		    && streq(n->format_label(), "(151,10151)")) pp3(n);
+	    }
+	}
+	print_recalculated_energies(b);
+    }
+#endif
+
+
+#if 0
     if (t_prev == 252) {
 	int ppre = cerr.precision(20);
 	set_complete_system_dump(true);
