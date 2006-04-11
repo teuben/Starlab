@@ -3308,11 +3308,11 @@ local void rotate_kepler(kepler *k)
 // program, leading to divergences.
 
 #if 0						    // correct bound only
-#define ENERGY_LIMIT_1		0
-#define ENERGY_LIMIT_2		(-0.1*kT)
+#define ENERGY_LIMIT_1		(0)
+#define ENERGY_LIMIT_2		(-0.1)
 #else						    // correct all (preferred)
-#define ENERGY_LIMIT_1		VERY_LARGE_NUMBER
-#define ENERGY_LIMIT_2		VERY_LARGE_NUMBER
+#define ENERGY_LIMIT_1		(VERY_LARGE_NUMBER)
+#define ENERGY_LIMIT_2		(VERY_LARGE_NUMBER)
 #endif
 
 // Turn on/off the use of kira_smallN below.
@@ -3321,6 +3321,15 @@ static bool allow_isolated_multiples = false;
 void enable_isolated_multiples(bool value)	// default = true
 {
     allow_isolated_multiples = value;
+}
+
+local real distance_to_binary_sister_sq(hdyn *b)
+{
+    if (!b->is_low_level_node()) return -1;
+    hdyn *s = b->get_younger_sister();
+    if (!s) s = b->get_elder_sister();
+    if (!s) return -1;
+    return square(b->get_pos() - s->get_pos());
 }
 
 int hdyn::integrate_unperturbed_motion(bool& reinitialize,
@@ -3621,55 +3630,107 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	// ways.
 
 	hdyn *par = get_parent(), *pnn = par->get_nn();
-	while (pnn->get_kepler() && pnn->get_fully_unperturbed())
-	    pnn = pnn->get_parent();
 
-	// Last clause of the following if() is a bit restrictive, but very
-	// likely to be true, and for now we don't want to deal with all the
-	// possible special configurations that might conceivably turn up if
-	// we exclude it.
-	//						     (Steve, 8/03)
+	// PRC(pnn); PRC(binary_type); PRL(NOT_APPROACHING);
 
-	if (pnn
-	    && binary_type != NOT_APPROACHING
-	    && par->get_parent() == pnn->get_parent()) {
+	if (pnn					// should never test false...
+	    && binary_type != NOT_APPROACHING) {
 
-	    // Note that the code here is very similar to that used
-	    // in startup_unperturbed_motion().
+	    // Replace pnn by its parent if it is unperturbed.
 
-	    // Relative to root is too general if par and pnn have the
-	    // same parent, but keep as is...
+	    while (pnn->get_kepler() && pnn->get_fully_unperturbed())
+		pnn = pnn->get_parent();
 
-	    // Changed pred to nopred here... (Steve, 4/05)
+	    // Changed pred to nopred here...		(Steve, 4/05)
 
 	    vec ppos = hdyn_something_relative_to_root(par,
 						       &hdyn::get_nopred_pos);
-	    vec pvel = hdyn_something_relative_to_root(par,
-						       &hdyn::get_nopred_vel);
 	    vec npos = hdyn_something_relative_to_root(pnn,
 						       &hdyn::get_nopred_pos);
-	    vec nvel = hdyn_something_relative_to_root(pnn,
-						       &hdyn::get_nopred_vel);
+	    real R2 = square(npos - ppos);
 
-	    real m12 = par->get_mass();
-	    real m3 = pnn->get_mass();
-	    real m123 = m12 + m3;
-	    real mu123 = m12 * m3 / m123;
-	    real R = abs(npos - ppos);
-	    real Vsq = square(nvel - pvel);
+	    // Replace pnn by its parent if it is small compared to the
+	    // distance to this binary.  The 0.01 is ~arbitrary.
 
-	    real E = mu123*(0.5*Vsq - m123/R);
+	    while (pnn->is_low_level_node()
+		   && distance_to_binary_sister_sq(pnn) < 0.01*R2) {
+		pnn = pnn->get_parent();
+		npos = hdyn_something_relative_to_root(pnn,
+						       &hdyn::get_nopred_pos);
+		R2 = square(npos - ppos);
+	    }
 
-	    if (E < ENERGY_LIMIT_1) {
+	    // By construction, pnn is a component of a perturbed wide
+	    // binary, or a top-level node.  We must correct for the
+	    // tidal error incurred in replacing the center of mass
+	    // par by components in the potential on pnn.  We would
+	    // like to apply the tidal correction to the relative
+	    // motion of par (the CM of the unperturbed binary) and
+	    // pnn, but this may be tricky if par and pnn are
+	    // components of separate binary trees.  For now, we apply
+	    // the correction to the relative motion of the components
+	    // of their common ancestor, or to their top-level
+	    // nodes. (Steve, 3/06)
+
+	    // PRL(par->format_label());
+	    // PRL(pnn->format_label());
+
+	    // The following if() is too restrictive, although very
+	    // likely to be true.  If we require a common parent, we
+	    // exclude wide binary-binary systems from consideration.
+	    // Removed by Steve, 3/06.
+
+	    // if (par->get_parent() == pnn->get_parent()) {...
+
+	    // Nodes to receive the velocity correction.
+
+	    hdyn *pcorr = NULL, *ncorr = NULL;
+
+	    hdyn *anc = common_ancestor(par, pnn);
+	    if (anc->is_root()) {
+		pcorr = par->get_top_level_node();
+		ncorr = pnn->get_top_level_node();
+	    } else {
+		pcorr = anc->get_oldest_daughter();
+		ncorr = pcorr->get_younger_sister();
+		if (!is_descendent_of(par, pcorr, 1)) {
+		    hdyn *tmp = pcorr;
+		    pcorr = ncorr;
+		    ncorr = tmp;
+		}
+	    }
+
+	    // Note that the code here is similar to that used in
+	    // startup_unperturbed_motion().
+
+	    vec pcpos = hdyn_something_relative_to_root(pcorr,
+							&hdyn::get_nopred_pos);
+	    vec ncpos = hdyn_something_relative_to_root(ncorr,
+							&hdyn::get_nopred_pos);
+	    vec pcvel = hdyn_something_relative_to_root(pcorr,
+							&hdyn::get_nopred_vel);
+	    vec ncvel = hdyn_something_relative_to_root(ncorr,
+							&hdyn::get_nopred_vel);
+	    real mp = pcorr->get_mass();
+	    real mn = ncorr->get_mass();
+	    real mctot = mp + mn;
+	    real muc = mp * mn / mctot;
+	    real Rc = abs(ncpos - pcpos);
+	    real Vsq = square(ncvel - pcvel);
+	    real Ec = muc*(0.5*Vsq - mctot/Rc);
+
+	    // PRC(Ec); PRC(ENERGY_LIMIT_1); PRL(ENERGY_LIMIT_2);
+
+	    if (Ec < ENERGY_LIMIT_1) {
 
 		real kT = 1;
 
 		if (ENERGY_LIMIT_2 < 0) {
 
-		    // We need a real kT for comparison.  This should be
-		    //  arelatively rare calculation, so just do it the
-		    // hard way.  (Could perhaps save kT in the root dyn
-		    // story...?)
+		    // We need a real kT for comparison.  This should
+		    // be a relatively rare calculation, so just do it
+		    // the hard way.  (Could perhaps save kT in the
+		    // root dyn story...?)
 
 		    int ntop = 0;
 		    real kin = 0;
@@ -3680,7 +3741,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		    kT = 2*kin/(3*ntop);
 		}
 
-		if (E < ENERGY_LIMIT_2) {
+		if (Ec < ENERGY_LIMIT_2*kT) {
 
 		    bool randomize = false;	// try Fix 2 first
 
@@ -3689,9 +3750,10 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			// Fix 2: Compute the tidal error and absorb it.
 			//
 			// Note:  Numerical experiments indicate that the
-			// 	      change in the total energy is indeed well
-			//	      described by de_tidal computed below.
+			// 	  change in the total energy is indeed well
+			//	  described by de_tidal computed below.
 
+			real R = abs(npos - ppos);
 			vec pos1 = ppos + get_pos();
 			hdyn *sis = get_younger_sister();
 			vec pos2 = ppos + sis->get_pos();
@@ -3699,15 +3761,21 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			real r23 = abs(npos - pos2);
 			real m1 = get_mass();
 			real m2 = sis->get_mass();
+			real m12 = m1 + m2;
+			real m3 = pnn->get_mass();
 
 			// Tidal error:
 
 			real de_tidal = -m3 * (m1/r13 + m2/r23 - m12/R);
 
 #if 0
-			// Correction using the entire perturber list:
+			// Could compute the tidal energy correction
+			// using the entire perturber list, but this
+			// doesn't seem to be necessary, and hard to
+			// apportion the velocity correction in that
+			// case...
 
-			real de1 = 0;
+			real de_tidal1 = 0;
 			hdyn* pnode = find_perturber_node();
 			if (pnode) {
 			    int np = pnode->n_perturbers;
@@ -3721,10 +3789,11 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 				    real r1p = abs(pertpos - pos1);
 				    real r2p = abs(pertpos - pos2);
 				    real Rp = abs(pertpos - ppos);
-				    de1 += -mp * (m1/r1p + m2/r2p - m12/Rp);
+				    de_tidal1 += -mp * (m1/r1p + m2/r2p
+							- m12/Rp);
 				}
 			    }
-			    PRI(4); cerr << "**** "; PRL(de1);
+			    PRI(4); cerr << "**** "; PRL(de_tidal1);
 			}
 #endif
 
@@ -3740,7 +3809,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 //				 << endl << "    ";
 				 << ",  ";
 			    cerr.precision(p);
-			    PRC(E/kT); PRL(de_tidal);
+			    PRC(Ec/kT); PRL(de_tidal);
 
 //			    print_pert(true, 4);
 //			    print_perturber_list(cerr, "    ");
@@ -3776,9 +3845,14 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 			    cerr.precision(pp);
 #endif
+
+			    cerr << "applying correction to relative"
+				 << " motion of " << pcorr->format_label();
+			    cerr << " and " << ncorr->format_label() << endl;
+
 			}
 
-			if (abs(de_tidal) > 0.25*mu123*Vsq) {
+			if (abs(de_tidal) > 0.25*muc*Vsq) {
 
 			    // Error de_tidal is suspiciously large.  Could
 			    // correct exactly by rotating the binary, but
@@ -3794,19 +3868,19 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			} else {
 
 			    // Absorb the error.  Too complicated to adjust
-			    // velocities in non-synchronous nodes, so start by 
-			    // advancing par and pnn to the current time, if
-			    // necessary.  (Do this before terminating the
-			    // unperturbed motion, for consistency.)
+			    // velocities in non-synchronous nodes, so start
+			    // by advancing pcorr and ncorr to the current
+			    // time, if necessary.  (Do this before terminating
+			    // the unperturbed motion, for consistency.)
 			    //
 			    // This action will lead to scheduling problems
-			    // if par or pnn weren't on the timestep list.
+			    // if pcorr or ncorr weren't on the timestep list.
 			    // Must correct on return -- simplest just to
 			    // force the list to be reconstructed.
 			    // Indicators:
 			    //
 			    //     (1) full unperturbed motion has ended,
-			    //	   (2) par and/or pnn are up to date, but
+			    //	   (2) pcorr and/or ncorr are up to date, but
 			    //	       aren't on the integration list.
 			    //
 			    // If we confine this correction to top-level
@@ -3825,46 +3899,45 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			    // available on return, might be better to use
 			    // the story mechanism to set a flag, although
 			    // it seems that the problem can only occur in
-			    // situations where par would itself trigger the
-			    // rescheduling in any case.
+			    // situations where pcorr would itself trigger
+			    // the rescheduling in any case.
 			    //
-			    // Also, since pnn and par->nn are not necessarily
-			    // the same thing, just setting a flag may be the
-			    // cleanest way to avoid complicated logic in the
-			    // calling function.  (Steve, 8/04)
+			    // Just setting a flag may be the cleanest way
+			    // to avoid complicated logic in the calling
+			    // function.		(Steve, 8/04)
 
 			    bool resched = false;
 			    rmq(root->get_dyn_story(), "resched");
 
-			    if (par->time < system_time) {
+			    if (pcorr->time < system_time) {
 				if (verbose) {
-				    cerr << "    synchronizing parent "
-					 << par->format_label()
+				    cerr << "    synchronizing pcorr "
+					 << pcorr->format_label()
 					 << ":  time step "
-					 << par->get_timestep();
+					 << pcorr->get_timestep();
 				}
 
-				par->synchronize_node();
+				pcorr->synchronize_node();
 				resched = true;
 
 				if (verbose)
-				    cerr << " --> " << par->get_timestep()
+				    cerr << " --> " << pcorr->get_timestep()
 					 << endl;
 			    }
 
-			    if (pnn->time < system_time) {
+			    if (ncorr->time < system_time) {
 				if (verbose) {
-				    cerr << "    synchronizing pnn "
-					 << pnn->format_label()
+				    cerr << "    synchronizing ncorr "
+					 << ncorr->format_label()
 					 << ":  time step "
-					 << pnn->get_timestep();
+					 << ncorr->get_timestep();
 				}
 
-				pnn->synchronize_node();
+				ncorr->synchronize_node();
 				resched = true;
 
 				if (verbose)
-				    cerr << " --> " << par->get_timestep()
+				    cerr << " --> " << ncorr->get_timestep()
 					 << endl;
 			    }
 
@@ -3878,23 +3951,23 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			    // use the computed de_tidal, but recompute the
 			    // velocities, Vsq, etc.
 
-			    pvel = hdyn_something_relative_to_root(par,
-							      &hdyn::get_vel);
-			    nvel = hdyn_something_relative_to_root(pnn,
-							      &hdyn::get_vel);
-			    vec Vcm = (m12*pvel + m3*nvel) / m123;
-			    vec V = nvel - pvel;
+			    pcvel = hdyn_something_relative_to_root(pcorr,
+							&hdyn::get_nopred_vel);
+			    ncvel = hdyn_something_relative_to_root(ncorr,
+							&hdyn::get_nopred_vel);
+			    vec Vcm = (mp*pcvel + mn*ncvel) / mctot;
+			    vec V = ncvel - pcvel;
 			    Vsq = square(V);
 
 			    // Adjust velocities and correct jerks for the
-			    // mutual interaction between par and pnn.  Want
-			    // to change the relative velocity of par and pnn
-			    // to increase 0.5*mu123*Vsq by -de_tidal, without
-			    // changing their center-of-mass velocity.
+			    // mutual interaction between pcorr and ncorr.
+			    // We want to change the relative velocity of par
+			    // and pnn to increase 0.5*muc*Vsq by -de_tidal,
+			    // without changing their center-of-mass velocity.
 
-			    real Vfac = sqrt(1 - de_tidal/(0.5*mu123*Vsq));
-			    real facp = -Vfac*m3/m123;
-			    real facn = Vfac*m12/m123;
+			    real Vfac = sqrt(1 - de_tidal/(0.5*muc*Vsq));
+			    real facp = -Vfac*mn/mctot;
+			    real facn = Vfac*mp/mctot;
 
 			    if (verbose) {
 //				int p = cerr.precision(HIGH_PRECISION);
@@ -3904,11 +3977,11 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 //				cerr.precision(p);
 			    }
 
-			    vec dpvel = Vcm + facp*V - pvel;
-			    vec dnvel = Vcm + facn*V - nvel;
+			    vec dpvel = Vcm + facp*V - pcvel;
+			    vec dnvel = Vcm + facn*V - ncvel;
 
-			    par->inc_vel(dpvel);
-			    pnn->inc_vel(dnvel);
+			    pcorr->inc_vel(dpvel);
+			    ncorr->inc_vel(dnvel);
 
 			    // *Neglect* jerk corrections for now...
 
@@ -3932,18 +4005,11 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 				 << "    at time " << system_time
 				 << ",  outer ";
 			    cerr.precision(p);
-			    PRL(E/kT);
+			    PRL(Ec/kT);
 			}
 		    }
 		}
 	    }
-
-//	    pp3(par->get_top_level_node());
-//	    pp3(pnn->get_top_level_node());
-
-//	    if (system_time > 81.830965012 && system_time < 81.830965013)
-//		plot_stars(par->get_top_level_node());
-
 	}
 #endif
 
