@@ -1657,7 +1657,7 @@ void xstarplot(hdyn* b, float scale, int k, int d, float lmax,
 
 	//sprintf(temp_buffer, "   N = %d  (snapshot #%5d)   ",
 	//	n_stars, init_flag + 1);
-	sprintf(temp_buffer, "   N = %d  (frame %d, t = %.3f)   ",
+	sprintf(temp_buffer, "   N = %d  (frame %d, t = %.5f)   ",
 		n_stars, init_flag + 1, b->get_real_system_time());
 	lux_draw_image_string(win, (xmin+xmax)/2.0, ymax, 0.5, temp_buffer, 0);
 
@@ -1745,7 +1745,7 @@ main(int argc, char** argv)
     // Note: "short" is relative.  Currently, 128 copies of a 1000-body
     // is too much to keep in memory!
 
-#define MAX_SNAP 512
+#define MAX_SNAP 2048
 
     hdynptr b[MAX_SNAP];	// array of snapshots
     int max_snap = 1;
