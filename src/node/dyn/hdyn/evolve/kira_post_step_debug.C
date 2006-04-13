@@ -1,5 +1,52 @@
 
 // Place temporary post-step debugging code here, to clean up kira.C.
+// Current time is t, root node is b, integration list is next_nodes[],
+// of length n_next.
+
+#if 0
+    if (t > 661.076) {
+	int p = cerr.precision(10);
+	cerr << "post: "; PRC(t);
+	cerr.precision(p);
+	PRL(n_next);
+	for (int ii = 0; ii < n_next; ii++) {
+	    hdyn *n = next_nodes[ii];
+	    if (n && n->is_valid()) {
+		PRI(4); PRC(n->format_label());	PRL(n->get_timestep());
+		if (node_contains(n->get_top_level_node(), 19279)
+		    || node_contains(n->get_top_level_node(), 18160)) {
+		    pp3(n->get_top_level_node());
+		    vec npos = n->get_top_level_node()->get_pos();
+		    for_all_daughters(hdyn, b, bb)
+			if (bb != n->get_top_level_node()) {
+			    vec bbpos = bb->get_nopred_pos();
+			    if (square(npos-bbpos) < .025)
+				cerr << bb->format_label() << " "
+				     << abs(npos-bbpos) << endl;
+			}
+		}
+	    }
+	}
+	print_recalculated_energies(b);
+    } else if (t >= 661) {
+	for (int ii = 0; ii < n_next; ii++) {
+	    hdyn *n = next_nodes[ii];
+	    if (n && n->is_valid() && node_contains(n, 18160)) {
+	      pp3(n);
+	      pp3((hdyn*)node_with_name("19279", b));
+	      vec npos = n->get_pos();
+	      for_all_daughters(hdyn, b, bb)
+		  if (bb != n) {
+		      vec bbpos = bb->get_nopred_pos();
+		      if (square(npos-bbpos) < .025)
+			  cerr << bb->format_label() << " "
+			       << abs(npos-bbpos) << endl;
+		  }
+	    }
+	}
+    }
+    if (t > 661.076534) exit(0);
+#endif
 
 #if 0
     if (t > 1.10503 && t < 1.10608) {
