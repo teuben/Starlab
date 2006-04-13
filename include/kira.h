@@ -38,6 +38,7 @@ class kira_counters {
 	step_t pert_without_list;	// low-level *force* calculations
 					// without perturber list
 	step_t perturber_overflow;	// perturber list overflows
+	step_t neighbor_sync;		// synchronize nearest neighbor
 
 	step_t full_unpert_step;	// full unperturbed steps
 	step_t full_unpert_orbit;	// full unperturbed orbits
@@ -93,6 +94,7 @@ class kira_counters {
 	    pert_with_list           = 
 	    pert_without_list        = 
 	    perturber_overflow       = 
+	    neighbor_sync	     =
 	    full_unpert_step         = 
 	    full_unpert_orbit        = 
 	    partial_unpert_orbit     = 

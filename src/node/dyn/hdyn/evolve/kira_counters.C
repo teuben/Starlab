@@ -77,6 +77,7 @@ void initialize_counters_from_log(hdyn* b)
     GETLOG(pert_with_list);
     GETLOG(pert_without_list);
     GETLOG(perturber_overflow);
+    GETLOG(neighbor_sync);
 
     GETLOG(full_unpert_step);
     GETLOG(full_unpert_orbit);
@@ -140,6 +141,7 @@ void write_counters_to_log(hdyn* b)
     PUTLOG(pert_with_list);
     PUTLOG(pert_without_list);
     PUTLOG(perturber_overflow);
+    PUTLOG(neighbor_sync);
 
     PUTLOG(full_unpert_step);
     PUTLOG(full_unpert_orbit);
@@ -216,6 +218,7 @@ void print_counters(kira_counters* kc,
 	PRI(4); PRLOGL(pert_with_list);
 	PRI(4); PRLOGL(pert_without_list);
 	PRI(4); PRLOGL(perturber_overflow);
+	PRI(4); PRLOGL(neighbor_sync);
 
 	PRI(4); PRLOGL(force_correction);
 

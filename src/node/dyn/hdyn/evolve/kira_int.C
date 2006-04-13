@@ -526,6 +526,7 @@ local inline bool check_neighbor_steps(hdynptr next_nodes[], int n_next)
 		    // force reconstruction of the scheduling list.
 
 		    nn->synchronize_node();
+		    nn->get_kira_counters()->neighbor_sync++;
 		    status = true;
 		}
 	    }
