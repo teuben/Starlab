@@ -467,9 +467,77 @@ local hdyn* check_and_merge(hdyn* bi, int full_dump)
 }
 
 
+local inline bool check_neighbor_steps(hdynptr next_nodes[], int n_next)
+{
+    char *func = "check_neighbor_steps";
+    bool status = false;
+
+    // It is possible for the motion of a light particle to be
+    // dominated by a nearby approaching massive neighbor, but for the
+    // neighbor not to "feel" the lighter particle.  In that case, the
+    // light particle timestep can shrink far below that of the
+    // neighbor, which can lead to problems if the pair are combined
+    // into a binary and the neighbor is forced to synchronize itself.
+    // Prevent this by explicitly checking for such a configuration
+    // and forcing the neighbor to reduce its step.  (Steve, 4/06)
+    //
+    // The hallmark of the the problem seems to be a large disparity
+    // in timestep between mutual nearest neighbors.  Probably this
+    // can only occur when there is a large disparity in mass and
+    // hence asymmetry between the two timesteps.  In general, we
+    // would expect the timesteps of components of an isolated binary
+    // to be comparable, so simply force synchronization of the
+    // nearest neighbor when a suspect configuration is detected.
+
+    for (int i = 0; i < n_next; i++) {
+        hdyn *bb = next_nodes[i];
+	if (bb && bb->is_valid() && bb->is_top_level_node()) {
+	    hdyn *nn = bb->get_nn();
+	    if (nn) {
+
+		// Target criteria:
+		//
+		// 0. nn isn't on the integration list.
+		// 1. bb and nn are mutual nearest neighbors.
+	        // 2. nn is significantly more massive than bb.
+	        // 3. nn timestep is significantly greater than that of bb
+
+		const real mass_fac = 5, dt_fac = 16;		// "significant"
+
+		if (nn->get_time() < bb->get_time()			 // 0
+		    && nn->get_nn() == bb				 // 1
+		    && nn->get_mass() > mass_fac*bb->get_mass()		 // 2
+		    && nn->get_timestep() > dt_fac*bb->get_timestep()) { // 3
+
+#if 0						    // warrants a kira counter?
+		    cerr << endl << func
+			 << ": synchronizing mutual nearest neighbor "
+			 << nn->format_label() << " of ";
+		    cerr << bb->format_label() << " at time "
+			 << bb->get_time() << endl;
+
+		    PRC(nn->get_mass()); PRL(mass_fac*bb->get_mass());
+		    PRC(nn->get_timestep()); PRL(dt_fac*bb->get_timestep());
+		    // cerr << endl;
+#endif
+
+		    // Could synchronize nn or just schedule it for
+		    // the next step.  Do the former; true return will
+		    // force reconstruction of the scheduling list.
+
+		    nn->synchronize_node();
+		    status = true;
+		}
+	    }
+	}
+    }
+    return status;
+}
+
+
 
 // integrate_list:  Do the work of actually advancing in time
-//		    the nodes on the specified list.
+//		    the nodes on the integration list.
 //
 //		    Called only from evolve_system().
 
@@ -977,15 +1045,28 @@ int integrate_list(hdyn * b,
     }
 #endif
 
-    // Probably makes more sense to check for encounters for all stars
-    // before testing for mergers, tree changes, etc. (Steve, 3/24/00).
+
+    // All steps are completed.  Look for collisions, mergers, tree
+    // changes, etc.
+
+    // Check for encounters for all stars before applying other tests
+    // (Steve, 3/00).
 
     if (b->get_stellar_encounter_criterion_sq() > 0)
         for (i = 0; i < n_next; i++) 
 	    check_print_close_encounter(next_nodes[i]);
 
-    // ONLY ONE tree reconstruction (following a collision or
-    // otherwise) is currently permitted per block step.
+    // New experimental code (Steve, 4/06): ensure that near neighbors
+    // in which one particle dominates the motion of the other don't
+    // get too far out of sync (leads to problems if the pair are
+    // combined into a binary).
+
+    tree_changed |= check_neighbor_steps(next_nodes, n_next);
+
+    // Start by checking for mergers.
+
+    // Note that ONLY ONE tree reconstruction (following a collision
+    // or otherwise) is currently permitted per block step.
 
     //++ Note from Steve to Steve, 7/98.  Could we relax the
     //++ requirement of only one tree reconstruction per step?
@@ -1086,6 +1167,9 @@ int integrate_list(hdyn * b,
 	cerr << "DEBUG: integrate_list " << 8 << endl << flush;
     }
 #endif
+
+
+    // Reinitialize the system after a collision, or check for tree changes.
 
     if (reinitialize) {
 
