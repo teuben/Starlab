@@ -698,13 +698,13 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     // Make sure bi and bj are up to date.
 
-//     cerr << 1 << endl;
-//     print_recalculated_energies(bi->get_root());
+//    cerr << 1 << ": ";
+//    print_recalculated_energies(bi->get_root());
 
     predict_loworder_all(bi->get_root(), bi->get_system_time());
 
-//     cerr << 2 << endl;
-//     print_recalculated_energies(bi->get_root());
+//    cerr << 2 << ": ";
+//    print_recalculated_energies(bi->get_root());
 
     // print_recalculated_energies(bi->get_root());
     // pp3((bi->get_root()), cerr);
@@ -715,8 +715,8 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
     bi->synchronize_node();
     bj->synchronize_node();
 
-//     cerr << 3 << endl;
-//     print_recalculated_energies(bi->get_root());
+//    cerr << 3 << ": ";
+//    print_recalculated_energies(bi->get_root());
 
     if (full_dump) {
 
@@ -756,13 +756,14 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     create_binary_from_toplevel_nodes(bi, bj);		// --> (bj, bi)
 
-//     cerr << 4 << endl;
-//     print_recalculated_energies(bi->get_root());
+    hdyn *par = bj->get_parent();
+//    pp3(par);
+
+//    cerr << 4 << ": ";
+//    print_recalculated_energies(bi->get_root());
 
     // Copy any slow_perturbed lists to the new top-level node, and
     // delete the low-level lists.
-
-    hdyn *par = bj->get_parent();
 
     bi->copy_slow_perturbed(par);
     bi->clear_slow_perturbed();
@@ -798,7 +799,7 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
     // Note that this almost certainly starts the CM off with a step
     // far shorter than necessary.  Assume that it is OK to let the
     // timestep algorithm double the step back to the proper value
-    // over the next 10 or to time steps.
+    // over the next 10 or so time steps.
     //
     // An alternative is to compute the perturber lists etc. explicitly,
     // but we can't do this here, as the GRAPE doesn't yet know about
@@ -837,8 +838,8 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
       //           << "Can't reduce parent timestep sufficiently..." << endl;
     }
 
-    // PRC(dt_par); PRC(dt_min); PRL(par->get_timestep());
-    // pp3(par);
+//    PRC(dt_par); PRC(dt_min); PRL(par->get_timestep());
+//    pp3(par);
 
     bi->init_pred();
     bj->init_pred();
@@ -864,8 +865,8 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     bi->get_kira_counters()->top_level_combine++;
 
-//     cerr << 5 << endl;
-//     print_recalculated_energies(bi->get_root());
+//    cerr << 5 << ": ";
+//    print_recalculated_energies(bi->get_root());
 }
 
 void split_top_level_node(hdyn * bi,
