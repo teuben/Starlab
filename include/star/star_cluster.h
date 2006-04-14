@@ -1,144 +1,79 @@
 /*
- *  star_cluster.h: derived class for element evolution systems.
- *          functions as derived class for the real elements.
- *.............................................................................
- *    version 1:  Jan 1994   Simon F. Portegies Zwart
+ * star_cluster.h: derived class for evolution of sero radius stars 
+ *                which lose mass proportional to wind_constant.
+ *                This definition is used for the ski-jump problem.
+ *
+ *.....................................................................
+ *    version 1:  April 2005   Simon F. Portegies Zwart
  *    version 2:
- *.............................................................................
+ *...................................................................
  *     This file includes:
  *  1) definition of class star_cluster
  *
- *.............................................................................
+ *....................................................................
  */
-#ifndef     _STAR_CLUSTER
-#   define  _STAR_CLUSTER
 
-#include "stdinc.h"
-#include "base_element.h"
-#include "cluster_support.h"
-#include "star.h"
-#include "double_star.h"
+#ifndef   _STAR_CLUSTER
+#   define _STAR_CLUSTER
+
 #include "single_star.h"
-#include "scatter3_support.h"
 
-#include "node.h"
-//#include "main_sequence.h"
-#include "double_support.h"
+#define Rtidal_over_Rvir_KingW09 8.38684
 
 /*-----------------------------------------------------------------------------
- *  star_cluster  --  class for evolving cluster of stars and double_stars
+ *  star_cluster  --  a derived class for element evolution.
  *-----------------------------------------------------------------------------
  */
-class star_cluster
-    {
-    protected:
+class star_cluster : public single_star {
+      private:
 
-       base_element * cluster;
-       base_element * halo;
+        real black_hole_mass;
+	real trlx_initial;
 
-       bool field;
+      protected:
+	real rvir;
+	real nstar;
+	real x_imf;
+	real minimum_mass;
 
-       real cluster_age;
-       real dead_time;
+      public :
 
-       real core_radius;
-       real halfm_radius;
-       real tidal_radius;
+         star_cluster(node* n) : single_star(n) { }
+         ~star_cluster() {}
 
-       real core_density;	// n/pc^3
+         stellar_type get_element_type() {return Star_Cluster;}
+         bool hydrogen_envelope_star() {return false;}
 
-       real total_mass;
-       real v_disp;
-       
-       int n_singles;
-       int n_doubles;
-       int nh_singles;
-       int nh_doubles;
+         void instantaneous_element();
+         void evolve_element(const real);
+         void update();
+         void update_wind_constant(const real);
+         void stellar_wind(const real dt);
 
-       int n_single_esc;
-       int n_double_esc;
-       int n_multiple_esc;
- 
-       int n_scatter;
-       int n_collision;
-       int n_capture;
-     
-       initial_cluster init;
+//            Mass transfer utilities.
+	 star* subtrac_mass_from_donor(const real, real&);
+         real accretion_limit(const real, const real);
 
-    public:
-  
-       star_cluster(initial_cluster&);
+         void adjust_accretor_age(const real, const bool);
+         void adjust_next_update_age();
+         star* reduce_mass(const real);
 
-       base_element* get_cluster()   {return cluster;}
-       base_element* get_halo()   {return halo;}
-       bool get_field()              {return field;}
-       real get_cluster_age()        {return cluster_age;}
-       void set_cluster_age(real t)  {cluster_age=t;}
-       real get_core_density()       {return core_density;}
-       real get_core_radius()        {return core_radius;}
-       real get_halfm_radius()        {return halfm_radius;}
-       real get_tidal_radius()        {return tidal_radius;}
-       real get_core_volume()        {return (4./3.)*PI*pow(core_radius, 3);}
-       int  no_of_elements()              {return n_singles+n_doubles;}
-       real get_velocity_dispersion()	{return v_disp;}
-/*
-       void inc_n_singles()		{n_singles++;}
-       void inc_n_doubles()		{n_doubles++;}
-       void dec_n_singles()		{n_singles--;}
-       void dec_n_doubles()		{n_doubles--;}
-*/
-       void inc_n_scatter()                     {n_scatter++;}
-       void inc_n_capture()                     {n_capture++;}
-       void inc_n_collision()                   {n_collision++;}
-       int get_n_singles()			{return n_singles;}
-       int get_n_doubles()			{return n_doubles;}
-       int get_n_single_esc()			{return n_single_esc;}
-       int get_n_double_esc()			{return n_double_esc;}
+//              Stability rourines.
+         real zeta_thermal();
+	 real gyration_radius_sq();
 
-       real get_dead_time()		{return dead_time;}
-       void inc_dead_time(real dt)	{dead_time += dt;}
-       void reset_dead_time()		{dead_time = 0;}
+//              Specific star cluster functions
+	 void initialize_star_cluster();
+	 real mean_stellar_mass(const real t, const real mmin);
+	 real mean_stellar_mass();
+	 real mass_loss_by_evolution(const real dt);
+	 real turn_off_mass(const real t);
+	 real tidal_radius();
+	 real relaxation_time(real n, real m, real r);
 
-       void set_initial_cluster(initial_cluster& initial) {init=initial;}
-       void setup_star_cluster();
-       void calculate_equilibrium_velocities();
-       real escape_velocity();
-       void randomize_maxwellian_velocities();
-       real random_maxwellian_velocity(const real);
-       void freeze();
-       real velocity_dispersion();
-       //real get_total_energy();
-       //real get_potential_energy();
-       //real get_kinetic_energy();
-       real get_total_mass();
-       real obtain_total_mass();
-       real get_scatter_cross_section(base_element*);
-       void count_number_of_elements();
-       void update_cluster_parameters();
-// 		Escaper handling
-       void delete_escaper_from_cluster(base_element*);
-       void add_new_particle_to_cluster(int);
-       void remove_escapers();
-       double_init& halo_guest();
+	 void print(ostream& s);
 
-       void evolve_element(real);
-       void put_cluster() {
-                //cluster->put_star(cout, cluster);
-
-       }
-       void print_roche();
-       void put_state();
-       void put_hrd(ostream &);
-       void dump(ostream &); //char*);
-       void dump(char*); //char*);
-       void test_maxwellian_velocities();
-
-//		Profiler
-       void make_profile();
-
- 
     };
+#endif 		// _STAR_CLUSTER
 
-#define  put_element  put_node
 
-#endif      // _STAR_CLUSTER

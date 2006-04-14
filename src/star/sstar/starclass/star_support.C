@@ -7,6 +7,7 @@
 char* type_string(stellar_type tpe) {
    
       switch(tpe) {
+         case Star_Cluster:		return "star_cluster";
          case Static_Star:		return "static_star";
          case SPZDCH_Star:		return "SPZDCH_star";
          case NAS:			return "not_a_star";
@@ -39,6 +40,7 @@ char* type_string(stellar_type tpe) {
 char* type_short_string(stellar_type tpe) {
 
       switch(tpe) {
+         case Star_Cluster:             return "SC";
          case Static_Star:              return "SS";
          case SPZDCH_Star:              return "PZHs";
          case NAS:                      return "nas";
@@ -103,6 +105,7 @@ char* type_short_string(stellar_type_summary tpe) {
 stellar_type_summary summarize_stellar_type(stellar_type tpe) {
    
       switch(tpe) {
+         case Star_Cluster:	        
          case Static_Star:	        
          case SPZDCH_Star:	        
          case Proto_Star:	        
@@ -454,6 +457,8 @@ stellar_type extract_stellar_type_string(char* star_type_string) {
         type = SPZDCH_Star;
      else if (!strcmp(star_type_string, "static_star")) 
         type = Static_Star;
+     else if (!strcmp(star_type_string, "star_cluster")) 
+        type = Star_Cluster;
      else
         type = NAS;
 
@@ -486,6 +491,8 @@ stellar_type_summary extract_stellar_type_summary_string(char* star_type_string)
      else if (!strcmp(star_type_string, "proto_star")) 
         type = Unspecified;
      else if (!strcmp(star_type_string, "static_star"))
+        type = Unspecified;
+     else if (!strcmp(star_type_string, "star_cluster"))
         type = Unspecified;
      else
         type = no_of_star_type_summ;
@@ -626,6 +633,7 @@ bool remmant(stellar_type tpe) {
 int convert_SeBa_stellar_type_to_BSE(stellar_type tpe) {
    
       switch(tpe) {
+         case Star_Cluster:	        
          case Static_Star:	        
          case SPZDCH_Star:	        
          case Proto_Star:	        

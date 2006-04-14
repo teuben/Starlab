@@ -132,7 +132,7 @@ inline  starbase * new_starbase()    {return  new starbase;}
 // Mass function.
 enum mass_function {Unknown_MF=-1, 
 		    Equal_Mass, mf_Power_Law, Miller_Scalo, Scalo, Kroupa,
-		    GdeMarchi, TwoComponent};
+		    GdeMarchi, KTG91, TwoComponent};
 
 real get_random_stellar_mass(real m_lower, real m_upper, 
 			     mass_function mf, real exponent);

@@ -84,6 +84,8 @@ real double_star::mass_ratio()           {
 real double_star::get_evolve_timestep() {
 
   real delta_t = cnsts.safety(maximum_timestep); //donor_timescale;
+  // changed (again) spz:1 Jan 2006 
+  //  real delta_t = get_donor_timescale();
 
   if (bin_type != Merged) {
     if (get_primary()->get_evolve_timestep() <

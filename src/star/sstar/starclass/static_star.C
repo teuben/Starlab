@@ -1,5 +1,5 @@
 //
-// SPZDCH19_star.C
+// static_star.C
 //
 
 #include "star/static_star.h"

@@ -25,7 +25,8 @@
 
 #include "stdinc.h"
 
-enum stellar_type {Static_Star = -3, SPZDCH_Star = -2, NAS = -1, 
+enum stellar_type {Star_Cluster = -4, 
+		   Static_Star = -3, SPZDCH_Star = -2, NAS = -1, 
 		   Proto_Star = 0, Planet, Brown_Dwarf,
 		   Main_Sequence, Hyper_Giant, Hertzsprung_Gap,
 		   Sub_Giant, Horizontal_Branch, Super_Giant=8,

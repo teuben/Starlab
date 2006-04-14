@@ -8,6 +8,7 @@
 
 // Only to make SPZDCH star known to this file 
 #include "SPZDCH_star.h"
+#include "star_cluster.h"
 
 #define REPORT_MASS_TRANSFER_TIMESCALE true
 
@@ -23,12 +24,15 @@ single_star * new_single_star(stellar_type type,	// All defaults are
 			      real b_fld,
 			      node* n)
 {
-  //cerr << "Initialize from: "<< type_string(type)<<endl;
-  //PRC(id);PRC(t_cur);PRC(t_rel);PRC(m_rel);PRC(m_tot);
-  //PRL(m_core); 
+  cerr << "Initialize from: "<< type_string(type)<<endl;
+  PRC(id);PRC(t_cur);PRC(t_rel);PRC(m_rel);PRC(m_tot);
+  PRL(m_core); 
 
-  single_star* element = 0;
+  single_star* element = NULL;
   switch(type) {
+  case Star_Cluster: element = new star_cluster(n);
+    cerr << "new star_cluster in new_single_star()" << endl;
+    break;
   case SPZDCH_Star: element = new SPZDCH_star(n);
     break;
   case Proto_Star: element = new proto_star(n);
@@ -187,8 +191,8 @@ void single_star::initialize(int id, real t_cur,
 			     real t_rel, real m_rel, real m_tot,
 			     real m_core, real co_core) {
 
-  //cerr << "Initialize from: ";
-  //PRC(id);PRC(t_cur);PRC(t_rel);PRC(m_rel);PRC(m_tot);PRL(m_core);
+  //  cerr << "Initialize from: ";
+  //  PRC(id);PRC(t_cur);PRC(t_rel);PRC(m_rel);PRC(m_tot);PRL(m_core);
   
   real m_env = m_tot - m_core;
   if (m_rel<=0 || m_rel>cnsts.parameters(maximum_main_sequence)) {
@@ -220,7 +224,6 @@ void single_star::initialize(int id, real t_cur,
   instantaneous_element();
 
   update();
-
 }
 
 // Determine size of stellar core from fits to
@@ -1691,7 +1694,10 @@ real single_star::get_evolve_timestep() {
 
   real time_step = Starlab::max(next_update_age - relative_age, 0.0001);
   // (SPZ Sept 5 2004) old description gave problems with dynamics.
-  time_step = Starlab::min(time_step, 0.05);
+  //  time_step = Starlab::min(time_step, 0.05);
+  // (SPZ Jan 1 2006) changed again from min() to max() to satisfy McScatter
+  //  time_step = Starlab::max(time_step, 1.0);
+  //  time_step = Starlab::min(time_step, 0.05);
   return time_step;
 
 }

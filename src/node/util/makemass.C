@@ -26,10 +26,11 @@
 ////                        3) Scalo
 ////                        4) Kroupa
 ////                        5) GdeMarchi
-////                        6) TwoComponent (uses -h, -l and -u)
+////                        6) Kroupa, Tout & Gilmore 1991
+////                        7) TwoComponent (uses -h, -l and -u)
 ////                   option -F requires one of the following strings:
 ////                        Power_Law, Miller_Scalo, Scalo, Kroupa,
-////                        GdeMarchi, TwoComponent
+////                        GdeMarchi, KTG91, TwoComponent
 ////                   option -f requires the appropriate integer.
 ////         -h/H      fraction of stars in high-mass group (TwoComponent) [0]
 ////         -i        (re)number stellar index from highest to lowest mass.
@@ -235,6 +236,18 @@ local real Kroupa_Tout_Gilmore(real m_lower, real m_upper) {
     return m;
 }
 
+local real Kroupa_Tout_Gilmore_1991(real m_lower, real m_upper) {
+
+  real m, rnd;
+  do {
+    rnd = randinter(0,1);
+    real X = 1-rnd;
+    m = 0.33 * (1 /(pow(X, 0.75) + 0.04*pow(X, 0.25)) - pow(X, 2)/1.04);
+  }
+  while(m_lower>m || m>m_upper);
+  return m;
+}
+
 static int ntot = 0, n_heavy = 0;
 
 local real mf_TwoComponent(real m_lower, real m_upper, real heavyfrac)
@@ -311,8 +324,10 @@ real get_random_stellar_mass(real m_lower, real m_upper,
 	   m = Kroupa_Tout_Gilmore(m_lower, m_upper);
 	   break;
        case GdeMarchi:
-	   m = mf_GdeMarchi(m_lower, m_upper);
-	   break;
+	  m = mf_GdeMarchi(m_lower, m_upper);
+	      break;
+       case KTG91:
+	  m = Kroupa_Tout_Gilmore_1991(m_lower, m_upper);
        case TwoComponent:
 	   m = mf_TwoComponent(m_lower, m_upper, exponent);   // use exponent to
 							      // store heavyfrac
@@ -350,7 +365,10 @@ char* type_string(mass_function mf) {
        case GdeMarchi:
             sprintf(mf_name, "GdeMarchi");
 	    break;
-	    case TwoComponent:
+       case KTG91:
+            sprintf(mf_name, "KTG91");
+	    break;
+       case TwoComponent:
             sprintf(mf_name, "TwoComponent");
 	    break;
        default:
@@ -376,6 +394,8 @@ mass_function extract_mass_function_type_string(char* type_string) {
         type = Kroupa;
      else if (!strcmp(type_string, "GdeMarchi"))
         type = GdeMarchi;
+     else if (!strcmp(type_string, "KTG91"))
+        type = KTG91;
      else if (!strcmp(type_string, "TwoComponent"))
         type = TwoComponent;
      else if (!strcmp(type_string, "Unknown"))

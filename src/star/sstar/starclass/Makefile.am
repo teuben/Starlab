@@ -18,7 +18,7 @@
 
 noinst_LTLIBRARIES = libsstar-1.la
 
-libsstar_1_la_SOURCES = star.C single_star.C static_star.C SPZDCH_star.C \
+libsstar_1_la_SOURCES = star.C single_star.C star_cluster.C static_star.C SPZDCH_star.C \
     proto_star.C brown_dwarf.C main_sequence.C hertzsprung_gap.C sub_giant.C \
     horizontal_branch.C super_giant.C thorne_zytkow.C helium_star.C \
     helium_giant.C hyper_giant.C white_dwarf.C neutron_star.C black_hole.C \

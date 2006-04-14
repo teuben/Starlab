@@ -279,6 +279,10 @@ main(int argc, char ** argv)
     else
 	new_t_vir = t_vir;
 
+    //    if(T_flag) {
+    //      T_start = t_rel;
+    //    }
+
     // Try to derive quantities not yet known.
 
     bool check_consistent = true;
