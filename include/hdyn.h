@@ -129,9 +129,11 @@ class  hdyn : public _dyn_ {
 
         // Variables for unperturbed kepler motion:
 
-        real  perturbation_squared;  // relative perturbation squared
-        bool  fully_unperturbed;     // true if orbit is fully unperturbed
-        real  unperturbed_timestep;  // timestep for the unperturbed motion
+        real perturbation_squared;  // relative perturbation squared
+        bool fully_unperturbed;     // true if orbit is fully unperturbed
+        real unperturbed_timestep;  // timestep for the unperturbed motion
+	real t_next_tidal;	    // time limit on next tidal correction
+				    //  -- added 4/06 (SLWM)
 
         // Perturber information:
 
@@ -199,8 +201,9 @@ class  hdyn : public _dyn_ {
 	    on_integration_list = false;
 
 	    perturbation_squared = -1;
-            unperturbed_timestep  =  -VERY_LARGE_NUMBER;
+            unperturbed_timestep  = -VERY_LARGE_NUMBER;
             fully_unperturbed = false;
+	    t_next_tidal = -VERY_LARGE_NUMBER;
 
             n_perturbers = n_perturbers_low = 0;
 	    perturber_list = NULL;
@@ -228,8 +231,10 @@ class  hdyn : public _dyn_ {
         }
 
 	virtual ~hdyn() {
+	    for_all_daughters(hdyn, this, bb)
+		bb->t_next_tidal = -VERY_LARGE_NUMBER; // added 4/06 (SLWM)
 	    if (perturber_list)
-		delete [] perturber_list;	// added 7/29/98 (SLWM & JM)
+		delete [] perturber_list;	       // added 7/98 (SLWM & JM)
 	}
 
         // ------------------ Global variable accessors ------------------

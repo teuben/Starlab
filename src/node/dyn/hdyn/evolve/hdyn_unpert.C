@@ -1231,12 +1231,12 @@ local hdyn *has_binary_perturber(hdyn *b)
 
     bool p = false;
 
-    // p = (b->get_system_time() > 82.15 && b->get_system_time() < 82.25);
-
+#if 0
     if (p) {
 	PRC(b->get_system_time());
 	PRL(b->format_label());
     }
+#endif
 
     if (!b->is_low_level_node())
 	return NULL;
@@ -1255,7 +1255,7 @@ local hdyn *has_binary_perturber(hdyn *b)
     }
 
     hdyn *pnode = b->find_perturber_node();
-    if (p) PRL(pnode);
+    // if (p) PRL(pnode);
 
     // If pnode is null or perturbers are invalid, but we got to this point,
     // then the perturbation must have been computed using the whole system,
@@ -1293,7 +1293,56 @@ local hdyn *has_binary_perturber(hdyn *b)
     return NULL;
 }
 
+local inline void check_binary_perturber_limit(hdyn *b, real& crit_pert2)
+{
+    // Check to see if we need to reduce the unperturbed threshhold
+    // for node b, because it has one or more binaries among its
+    // perturbers.  On entry, crit_pert2 is the current threshhold.
 
+    hdyn *p = has_binary_perturber(b);
+
+    if (p) {
+
+	// cerr << "found binary perturber " << p->format_label();
+	// cerr << " of " << b->format_label() << endl;
+
+	// NN or a perturber is a binary.  Tighten the criterion for
+	// unperturbed motion.  The numbers are somewhat arbitrary,
+	// but seem to give reasonable results (Steve, 9/03).
+	// Modified the numbers (and the details) somewhat to avoid
+	// unnecessary delay of unperturbed motion (Steve, 4/06).
+
+	// Alternatively, we might simply use the presence of a binary
+	// perturber to suppress the relaxation of the perturbation
+	// criterion in continuing the binary motion.  (May be too
+	// severe...)
+
+	// These numbers should be contained in kira_options...
+
+	if (crit_pert2 > 1.e-10)
+	    crit_pert2 = Starlab::max(1.e-10, 0.25*crit_pert2);
+
+#if 0
+	if (b->name_is("151")) {
+	    cerr << "is_unperturbed_and_approaching 1: "
+		 << "reducing unperturbed limit on "
+		 << b->format_label() << endl;
+	    int prec = cerr.precision(HIGH_PRECISION);
+	    cerr << "    at time " << b->get_system_time()
+		 << " because of binary perturber ";
+	    cerr.precision(prec);
+	    hdyn *pp = p;
+	    if (p->is_low_level_node())
+		pp = p->get_parent();
+	    cerr << pp->format_label()
+		 << endl;
+	    PRL(crit_pert2);
+	}
+#endif
+    }
+}
+
+
 bool hdyn::is_unperturbed_and_approaching()
 
 // Test unperturbed criterion for startup *or* continuation of unperturbed
@@ -1320,11 +1369,12 @@ bool hdyn::is_unperturbed_and_approaching()
 // For multiples, the criterion is considerably more complicated...
 
 {
+    char *func = "is_unperturbed_and_approaching";
     if (!options->allow_unperturbed) return false;	// fixes all binary
 							// problems!
 
     if (diag->unpert_function_id) {
-	cerr << ">> check is_unperturbed_and_approaching for "
+	cerr << ">> check " << func << " for "
 	     << format_label() << " at time " << system_time << endl;
     }
 
@@ -1346,7 +1396,7 @@ bool hdyn::is_unperturbed_and_approaching()
 
     if (is_multiple(this)) {
 
-        // cerr << "unp_and_app: multiple" << endl << flush;
+        // cerr << func << ": multiple" << endl << flush;
 
 	init_binary_type = binary_type = MULTIPLE_CM;
 
@@ -1411,7 +1461,7 @@ bool hdyn::is_unperturbed_and_approaching()
 
     } else {
 
-        // cerr << "unp_and_app: binary" << endl << flush;
+        // cerr << func << ": binary" << endl << flush;
 
 	// Rest of function applies only to binaries.
 
@@ -1473,10 +1523,6 @@ bool hdyn::is_unperturbed_and_approaching()
 	// PRL(approaching);
 
 	if (!approaching) {
-
-	    // if (streq(format_label(), "100a"))
-	    //     cerr << "100a false not appr at " << get_time() << endl;
-
 	    init_binary_type = binary_type = NOT_APPROACHING;
 	    return false;
 	}
@@ -1506,8 +1552,8 @@ bool hdyn::is_unperturbed_and_approaching()
 		// from integrate_unperturbed_motion().  Assume that some
 		// reorganization has just taken place in the multiple
 		// system of which the binary is a member or that the
-		// top-level node has too many perturbers.  Check for
-		// problems and continue checking for unperturbed motion.
+		// top-level node has too many perturbers.  Check for simple
+		// problems and continue testing for unperturbed motion.
 
 		// return true;		// old
 
@@ -1524,7 +1570,6 @@ bool hdyn::is_unperturbed_and_approaching()
 
 		if (perturbation_squared < 0 || perturbation_squared > 1)
 		    return false;
-
 	    }
 	}
 
@@ -1558,9 +1603,6 @@ bool hdyn::is_unperturbed_and_approaching()
 	// version.  The value of perturbation_squared does *not* contain the
 	// slowdown factor.
 
-	// if (streq(format_label(), "100a"))
-	//     cerr << "100a perturbation = " << perturbation_squared << endl;
-
 	if ((perturbation_squared
 	     	< gamma2 * options->partial_merge_factor)
 	    && is_low_level_leaf()
@@ -1569,13 +1611,12 @@ bool hdyn::is_unperturbed_and_approaching()
 	    // Sufficient to pick up the binary here as partly unperturbed;
 	    // partial merger may be promoted to full merger later.
 
-	    // if (streq(format_label(), "100a"))
-	    //     cerr << "100a true peri refl..." << endl;
-
 #if 0
-	    cerr << "partial merger:  "; PRL(perturbation_squared);
-	    PRC(gamma2); PRL(options->partial_merge_factor);
-	    PRL(gamma2 * options->partial_merge_factor);
+	    if (name_is("151")) {
+		cerr << "partial merger:  "; PRL(perturbation_squared);
+		PRC(gamma2); PRL(options->partial_merge_factor);
+		PRL(gamma2 * options->partial_merge_factor);
+	    }
 #endif
 
 	    init_binary_type = binary_type = PERICENTER_REFLECTION;
@@ -1607,11 +1648,19 @@ bool hdyn::is_unperturbed_and_approaching()
 		// if (!KEP_OUTSIDE_SEMI(*kep))
 		    pert_fac = pow(kep->get_apastron()
 				    / kep->get_separation(), 6);
+		    // PRL(pert_fac);
+
+		// pert_fac will be used below to scale the perturbation
+		// to its value at apocenter.
 
 	    } else {
 
 		// Basic perturbation/binary check for new unperturbed
-		// motion.
+		// motion.  Crit_pert2 will be modified below, as will
+		// the effective perturbation_squared.  We proceed this
+		// way because we don't want to go to the expense of
+		// computing neighbor and orbital properties until we
+		// are more confident that they are needed.
 
 		real crit_pert2 = options->full_merge_tolerance;
 
@@ -1620,10 +1669,12 @@ bool hdyn::is_unperturbed_and_approaching()
 				 && younger_sister->is_low_level_leaf();
 
 #if 0
-		cerr << "checking perturbation for full merger..." << endl;
-		PRC(kep); PRL(get_parent()->format_label());
-		PRC(perturbation_squared); PRC(crit_pert2);
-		PRL(low_pert);
+		if (name_is("151")) {
+		    cerr << "checking perturbation for full merger..." << endl;
+		    PRC(kep); PRL(get_parent()->format_label());
+		    PRC(perturbation_squared); PRC(crit_pert2);
+		    PRL(low_pert);
+		}
 #endif
 
 		if (low_pert) {
@@ -1632,57 +1683,22 @@ bool hdyn::is_unperturbed_and_approaching()
 		    // large and one of the perturbers is a binary component.
 		    //					       (Steve, 8/03)
 
-		    hdyn *p = has_binary_perturber(this);
-
-		    if (p) {
-
-			// PRC(1); PRL(p);
-
-			// NN or a perturber is a binary.  Tighten the
-			// criterion for unperturbed motion.  Numbers
-			// are somewhat arbitrary, but seem to give
-			// reasonable results...
-
-			if (crit_pert2 > 1.e-10) {
-
-			    crit_pert2 = Starlab::max(1.e-10, 0.01*crit_pert2);
-
-			    // PRL(crit_pert2);
-
-			    if (perturbation_squared > crit_pert2) {
-#if 0
-				cerr << "is_unperturbed_and_approaching 1: "
-				     << "reducing unperturbed limit on "
-				     << format_label() << endl;
-				int prec = cerr.precision(HIGH_PRECISION);
-				cerr << "    at time " << system_time
-				     << " because of binary perturber ";
-				cerr.precision(prec);
-				hdyn *pp = p;
-				if (p->is _low_level_node())
-				    pp = p->get_parent();
-				cerr << pp->format_label()
-				     << endl;
-#endif
-				low_pert = false;
-			    }
-			}
-		    }
+		    check_binary_perturber_limit(this, crit_pert2);
+		    low_pert = (perturbation_squared < crit_pert2);
 		}
 
 	        if (low_pert) {
-
-		    // if (streq(format_label(), "100a"))
-		    //     cerr << "checking 100a..." << endl;
 
 		    // Note that the relevant "timestep" is the step in the
 		    // absence of slow motion (i.e. when unperturbed motion
 		    // would actually start).
 
-		    // if (streq(format_label(), "100a")) {
-		    //     PRL(get_parent()->timestep);
-		    //     PRL(10 * timestep/get_kappa());
-		    // }
+#if 0
+		    if (name_is("151")) {
+			PRC(get_parent()->timestep);
+			PRL(10 * timestep/get_kappa());
+		    }
+#endif
 
 		    // Not entirely clear what good this timestep
 		    // limit does... (Steve, 9/00)
@@ -1707,15 +1723,22 @@ bool hdyn::is_unperturbed_and_approaching()
 			//      PRL(kepl.get_period());
 			// }
 
+#if 0
+			if (name_is("151")) {
+			    PRL(kepl.get_energy());
+			}
+#endif
+
 			if (kepl.get_energy() < 0.0) {
 
 		      	    // Consider full merger if we are outside
 			    // the semi-major axis or if the scaled
-			    // perturbation is still small.
+			    // perturbation (at apocenter) is still
+			    // small.
 
 			    if (KEP_OUTSIDE_SEMI(kepl)
 				|| perturbation_squared
-    				    * pow(kepl.get_semi_major_axis()
+    				    * pow(kepl.get_apastron()
 					   / kepl.get_separation(), 6)
     				   < crit_pert2) {
 
@@ -1732,6 +1755,12 @@ bool hdyn::is_unperturbed_and_approaching()
 				// Require the period of a simple unperturbed
 				// binary to fit into ~1 parent timestep.  For
 				// multiples, this condition may be modified.
+
+#if 0
+				if (name_is("151")) {
+				    PRC(kepl.get_period()); PRL(dtp);
+				}
+#endif
 
 			        if (kepl.get_period() < dtp) {
 
@@ -1823,58 +1852,21 @@ bool hdyn::is_unperturbed_and_approaching()
 		bool close = is_close_pair();
 
 #if 0
-		PRC(kep); PRL(get_parent()->format_label());
-		PRC(pert_fac); PRC(perturbation_squared); PRL(crit_pert2);
-		PRC(low_pert); PRL(close);
+		if (name_is("151")) {
+		    PRC(kep); PRL(get_parent()->format_label());
+		    PRC(pert_fac); PRC(perturbation_squared); PRL(crit_pert2);
+		    PRC(low_pert); PRL(close);
+		}
 #endif
 
 		if (low_pert && !close) {
 
 		    // Modify the acceptance criterion if the threshhold is
 		    // large and one of the perturbers is a binary component.
-		    // (Note that, if full_merge_tolerance has been
-		    // increased, we probably should reduce relax_factor
-		    // somewhat.)
 		    //					       (Steve, 8/03)
 
-		    // Code here follows earlier "full_merge_tolerance" code.
-
-		    hdyn *p = has_binary_perturber(this);
-
-		    if (p) {
-
-			// PRC(2); PRL(p);
-
-			// NN or a perturber is a binary.  Tighten the
-			// criterion for unperturbed motion.  Numbers
-			// are somewhat arbitrary, but seem to give
-			// reasonable results...
-
-			if (crit_pert2 > 5.e-10) {
-
-			    crit_pert2 = Starlab::max(5.e-10, 0.01*crit_pert2);
-
-			    // PRL(crit_pert2);
-
-			    if (pert_fac*perturbation_squared > crit_pert2) {
-#if 0
-				cerr << "is_unperturbed_and_approaching 2: "
-				     << "reducing unperturbed limit on "
-				     << format_label() << endl;
-				int prec = cerr.precision(HIGH_PRECISION);
-				cerr << "    at time " << system_time
-				     << " because of binary perturber ";
-				cerr.precision(prec);
-				hdyn *pp = p;
-				if (p->is_low_level_node())
-				    pp = p->get_parent();
-				cerr << pp->format_label()
-				     << endl;
-#endif
-				low_pert = false;
-			    }
-			}
-		    }
+		    check_binary_perturber_limit(this, crit_pert2);
+		    low_pert = (pert_fac*perturbation_squared < crit_pert2);
 		}
 
 		// PRC(pert_fac*perturbation_squared); PRL(crit_pert2);
@@ -1996,12 +1988,6 @@ void hdyn::startup_unperturbed_motion()
 
         cerr << "    binary_type changed to " << binary_type
 	     << ":  " << bt[binary_type] << endl;
-
-//  	if (name_is("11")) {
-//  	    kep->print_all(cerr);
-//  	    pp3(get_parent());
-//  	}
-
     }
 
     // If steps = 0, there is no reason to start unperturbed motion.
@@ -2378,16 +2364,20 @@ real hdyn::set_unperturbed_timestep(bool restrict_phase)	// no default
 
 	    bool check_merger = outside_semi || (get_parent()->kep != NULL);
 
-	    if (!check_merger && !restrict_phase && !outside_semi)
+	    if (!check_merger && !restrict_phase && !outside_semi) {
 
 		// This check repeats some of the checks in
 		// is_unperturbed_and_approaching().  Use the
 		// unrelaxed criterion for promotion of close
 		// pericenter reflection to full merger.
 
+		real crit_pert2 = options->full_merge_tolerance;
+		check_binary_perturber_limit(this, crit_pert2);
+
 		if (perturbation_squared
 		     * pow(kep->get_apastron() / kep->get_separation(), 6)
-		    < options->full_merge_tolerance) check_merger = true;
+			< crit_pert2) check_merger = true;
+	    }
 
 	    if (check_merger) {
 
@@ -2481,6 +2471,8 @@ real hdyn::set_unperturbed_timestep(bool restrict_phase)	// no default
 							// or PERICENTER_REFL...
 			fully_unperturbed = true;
 
+//			cerr << format_label()
+//			     << ": promoting to full merger..." << endl;
 		    }
 		}
 	    }
@@ -3335,6 +3327,8 @@ local real distance_to_binary_sister_sq(hdyn *b)
 int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 				       bool force_time)   // default = false
 {
+    char *func = "integrate_unperturbed_motion";
+
     // Update unperturbed binary motion and check for continuation.
     // Return true (>0) iff binary is still unperturbed at end of step.
     // Normal return is 0 or 1.  A return value of 2 means that some
@@ -3352,7 +3346,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
     //	     an undesirable part of its orbit, causing large errors.
 
     if (diag->unpert_function_id) {
-	cerr << endl << ">> integrate_unperturbed_motion for "
+	cerr << endl << ">> " << func << " for "
 	     << format_label() << " at time " << system_time << endl;
     }
 
@@ -3383,8 +3377,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 	    if (!force_time && diag->report_continue_unperturbed) {
 
-		cerr << endl << "integrate_unperturbed_motion for "
-		     << format_label() << endl;
+		cerr << endl << func << " for " << format_label() << endl;
 
 		int p = cerr.precision(HIGH_PRECISION);
 		cerr << "time and system_time are different:" << endl;
@@ -3461,8 +3454,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 #if 0
     if (streq(format_label(), "xxx")) {
-	cerr << "in integrate_unperturbed motion for " << format_label()
-	     << endl;
+	cerr << "in " << func << " for " << format_label() << endl;
 	get_kepler()->print_all();
     }
 #endif
@@ -3570,7 +3562,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	// Note from Steve (10/04): The new time step is just the perturbed
 	// time step at the moment the unperturbed motion started, in which
 	// case we are guaranteed to be in a consistent block, as we have
-	// taken an integran number of such steps during the unperturbed
+	// taken an integral number of such steps during the unperturbed
 	// motion.  However, the separation now may be larger than the
 	// initial value, in which in case we could try to increase the
 	// time step, subject to the constraints that it
@@ -3586,17 +3578,18 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 #ifdef CORRECT_TIDAL
 
 	// The following lengthy workarounds are fixes for unperturbed
-	// systems that find themselves in relatively wide triple orbits.
+	// systems that find themselves in relatively wide triple or
+	// multiple orbits.
 	//						    (Steve, 8/03)
 	//
 	// The problem is that, since the orientation of an unperturbed
 	// binary remains fixed and its interaction with its neighbors is
 	// computed in the center-of-mass approximation, a tidal energy
-	// error accumulates during the unperturbed motion.
+	// error accumulates during the unperturbed portion of the motion.
 	//
 	// The computation of the energy always resolves the binary into
 	// its (static) components while it is unperturbed.  This has the
-	// conveniant effect of ensuring that the computed energy remains
+	// convenient effect of ensuring that the computed energy remains
 	// continuous as unperturbed motion starts.  However, since the
 	// outer orbit is computed in the center-of-mass approximation,
 	// while the energy is "exact" (the binary is frozen, but resolved),
@@ -3628,13 +3621,14 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	// case will be strictly periodic.  The problem arises because the
 	// partially unperturbed orbit is handled in two distinctly different
 	// ways.
-
+	//
 	hdyn *par = get_parent(), *pnn = par->get_nn();
 
 	// PRC(pnn); PRC(binary_type); PRL(NOT_APPROACHING);
 
-	if (pnn					// should never test false...
-	    && binary_type != NOT_APPROACHING) {
+	bool apply_correction = (pnn && binary_type != NOT_APPROACHING);
+
+	if (apply_correction) {
 
 	    // Replace pnn by its parent if it is unperturbed.
 
@@ -3670,15 +3664,15 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    // components of separate binary trees.  For now, we apply
 	    // the correction to the relative motion of the components
 	    // of their common ancestor, or to their top-level
-	    // nodes. (Steve, 3/06)
+	    // nodes.					(Steve, 3/06)
 
 	    // PRL(par->format_label());
 	    // PRL(pnn->format_label());
 
-	    // The following if() is too restrictive, although very
-	    // likely to be true.  If we require a common parent, we
-	    // exclude wide binary-binary systems from consideration.
-	    // Removed by Steve, 3/06.
+	    // The following if() is too restrictive, although likely
+	    // to be true.  If we require a common parent, we exclude
+	    // wide binary-binary systems from consideration.
+	    // Removed by Steve (3/06).
 
 	    // if (par->get_parent() == pnn->get_parent()) {...
 
@@ -3718,6 +3712,8 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    real Rc = abs(ncpos - pcpos);
 	    real Vsq = square(ncvel - pcvel);
 	    real Ec = muc*(0.5*Vsq - mctot/Rc);
+	    real outer_sma = 0.5*mp*mn/abs(Ec);			// always > 0
+	    real outer_period = 2*M_PI*sqrt(pow(outer_sma,3)/mctot);
 
 	    // PRC(Ec); PRC(ENERGY_LIMIT_1); PRL(ENERGY_LIMIT_2);
 
@@ -3800,7 +3796,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			if (verbose) {
 			    int p = cerr.precision(HIGH_PRECISION);
 			    cerr << endl
-				 << "integrate_unperturbed_motion: "
+				 << func << ": "
 				 << "absorbing tidal error for "
 				 << parent->format_label();
 			    cerr << "/" << pnn->format_label()
@@ -3846,9 +3842,10 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			    cerr.precision(pp);
 #endif
 
-			    cerr << "applying correction to relative"
+			    cerr << "    applying correction to relative"
 				 << " motion of " << pcorr->format_label();
 			    cerr << " and " << ncorr->format_label() << endl;
+			    cerr << "    "; PRC(outer_period); PRL(outer_sma);
 
 			}
 
@@ -3998,7 +3995,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			if (verbose) {
 			    int p = cerr.precision(HIGH_PRECISION);
 			    cerr << endl
-				 << "integrate_unperturbed_motion: "
+				 << func << ": "
 				 << "applied random rotation to "
 				 << parent->format_label()
 				 << endl
@@ -4060,7 +4057,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 		cerr << endl;
 
-#if 1
+#if 0
 //		PRI(4); PRL(get_effective_block(time));
 		PRI(4); PRL(sym_angle(kep->get_mean_anomaly()));
 //		int pp = cerr.precision(HIGH_PRECISION);
@@ -4175,7 +4172,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    create_or_delete_binary(get_parent(),
 				    update_dynamics);
 
-	    //cerr << "integrate_unperturbed_motion: "
+	    //cerr << func << ": "
 	    //     << "back from create_or_delete_binary" << endl << flush;
 
 	    // If a merger occurred in create_or_delete_binary, both
@@ -4214,7 +4211,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 	    reinitialize = update_dynamics[0];
 	    if (reinitialize)
-		cerr << "integrate_unperturbed_motion: reinitialization "
+		cerr << func << ": reinitialization "
 		     << "forced by binary evolution" << endl
 		     << "parent = " << get_parent()->format_label()
 		     << " time = " << get_system_time() << endl;
@@ -4256,7 +4253,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 		if (diag->report_continue_unperturbed)
 		    cerr << endl
-			 << "integrate_unperturbed_motion: timestep for "
+			 << func << ": timestep for "
 		         << format_label() << " reduced to " << timestep
 			 << endl << "                              "
 			 << "on restart at time " << time

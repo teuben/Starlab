@@ -420,11 +420,14 @@ local inline real _kepler_step(hdyn *b,
 
     hdyn* s = b->get_younger_sister();
 
+#define FACTOR 0.5				// empirical -- was 0.5
+
     if (s) {					// excessively cautious?
 
 	real dist, dtff2, dtv2;
 
-	// Use predicted quantities here, as sister may not have been updated yet.
+	// Use predicted quantities here, as sister may not have been
+	// updated yet.
 
 	dist = abs(b->get_nopred_pos() - s->get_nopred_pos());
 	dtff2 = dist*dist*dist / (2*b->get_parent()->get_mass());
@@ -432,9 +435,9 @@ local inline real _kepler_step(hdyn *b,
 
 	// PRC(dist); PRC(square(b->get_vel())); PRC(dtff2); PRL(dtv2);
 
-	return 0.5 * correction_factor		// 0.5 is empirical
-	    	   * b->get_eta()
-		   * sqrt(Starlab::min(dtff2, dtv2));
+	return FACTOR * correction_factor
+	    	      * b->get_eta()
+		      * sqrt(Starlab::min(dtff2, dtv2));
 
     } else if (false) {
 
@@ -447,9 +450,9 @@ local inline real _kepler_step(hdyn *b,
 	dtv2  = square(b->get_nopred_pos() - s->get_nopred_pos())
 		  / square(b->get_nopred_vel() - s->get_nopred_vel());
 
-	return 0.5 * correction_factor		// 0.5 is empirical
-	    	   * b->get_eta()
-		   * sqrt(Starlab::min(dtff2, dtv2));
+	return FACTOR * correction_factor
+	    	      * b->get_eta()
+		      * sqrt(Starlab::min(dtff2, dtv2));
 
     } else
 
@@ -735,7 +738,9 @@ local inline real new_timestep(hdyn *b,			// this node
 	newstep = altstep;	// comment out to retain Aarseth step
     }
 
+
     //-------------------------------------------------------------------------
+
 #if 0
     // EXPERIMENTAL: Reduce the time step of a strongly perturbed binary
     //		     component.
@@ -760,6 +765,9 @@ local inline real new_timestep(hdyn *b,			// this node
     // to facilitate timing checks of low-level steps.
     //
     // if (b->is_low_level_node()) newstep /= 32;
+
+    // if (b->is_low_level_node()) newstep /= 2;
+
     //-------------------------------------------------------------------------
 
     // The natural time step is newstep.  Force it into an appropriate
@@ -814,10 +822,10 @@ local inline real _timestep_correction_factor(hdyn *b)
 
     real correction_factor = 1;
 
-#if 0				// 0 here forces correction_factor = 1
+#if 1				// 0 here forces correction_factor = 1
 
-    // Steve 8/98:  1. 0.125 here is conservative -- expect *cumulative*
-    //			   energy error to be ~fourth order.
+    // Steve 8/98:  1. 0.1 here is conservative -- expect per-step
+    //			   energy error to be ~fifth order.
     //		    2. Could rewrite to replace pow() if necessary...
     //			   *** see kira_approx.C ***
 
@@ -825,14 +833,26 @@ local inline real _timestep_correction_factor(hdyn *b)
     // bug in Red Hat Linux 5.  In that case, use Steve's approximate
     // version instead.
 
-    if (pot_sq > 1)
-	// correction_factor = pow(pot_sq, -0.125);
-	correction_factor = pow_approx(pot_sq);	// -0.125 is built in!
+#define POT_SQ_THRESHHOLD	(10)
+#define MIN_CORRECTION_FACTOR	(0.25)
+
+    // Numbers fine-tuned by Steve, 4/06.  Note that reaching
+    // MIN_CORRECTION FACTOR with POT_SQ_THRESHHOLD = 10 corresponds
+    // to
+    //
+    //	sqrt(pot_sq) = 1.0e5	for	MIN_CORRECTION_FACTOR = 0.125
+    //		       3.2e3	for				0.25
+
+    if (pot_sq > POT_SQ_THRESHHOLD)
+	// correction_factor = pow(pot_sq/POT_SQ_THRESHHOLD, -0.1);
+	correction_factor
+		= pow_approx(pot_sq/POT_SQ_THRESHHOLD);	  // -0.1 is built in!
 
     // Desirable to place limits on the correction...
 
     if (correction_factor > 1.0) correction_factor = 1.0;
-    if (correction_factor < 0.2) correction_factor = 0.2;
+    if (correction_factor < MIN_CORRECTION_FACTOR)
+	correction_factor = MIN_CORRECTION_FACTOR;
 
 #if 0
     if (b->get_perturbation_squared() < 0.0001 && pot_sq > 1
