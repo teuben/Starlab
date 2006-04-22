@@ -14,7 +14,7 @@
 //// Usage: jiggle [OPTIONS] < input > output
 ////
 //// Options:     
-////		  -c    add a comment to the output snapshot [false]
+////              -c    add a comment to the output snapshot [false]
 ////              -f    specify (fractional) scale of perturbation [0.01]
 ////              -s    specify random seed [take from system clock]
 ////
