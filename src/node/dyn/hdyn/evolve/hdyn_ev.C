@@ -420,7 +420,7 @@ local inline real _kepler_step(hdyn *b,
 
     hdyn* s = b->get_younger_sister();
 
-#define FACTOR 0.5				// empirical -- was 0.5
+#define FACTOR 0.5				// empirical
 
     if (s) {					// excessively cautious?
 
@@ -764,9 +764,18 @@ local inline real new_timestep(hdyn *b,			// this node
     // Arbitrarily reduce low-level steps by some factor,
     // to facilitate timing checks of low-level steps.
     //
-    // if (b->is_low_level_node()) newstep /= 32;
+    // if (b->is_low_level_node()) newstep /= 16;
 
-    // if (b->is_low_level_node()) newstep /= 2;
+
+//      if (time > 11.8680 && time <= 11.8695) {
+// 	 real tmp = newstep;
+// 	 if (b->name_is("(30,56)")) newstep /= 2;
+// 	 if (b->name_is("(371,1371)")) newstep /= 2;
+// 	 if (b->name_is("30")) newstep /= 4;
+// 	 if (newstep != tmp)
+// 	     cerr << "reduced step for " << b->format_label() << endl;
+//      }
+
 
     //-------------------------------------------------------------------------
 
@@ -824,35 +833,36 @@ local inline real _timestep_correction_factor(hdyn *b)
 
 #if 1				// 0 here forces correction_factor = 1
 
-    // Steve 8/98:  1. 0.1 here is conservative -- expect per-step
-    //			   energy error to be ~fifth order.
-    //		    2. Could rewrite to replace pow() if necessary...
-    //			   *** see kira_approx.C ***
+    // Steve 8/98: 0.125 here is conservative -- expect per-step
+    //		   energy error to be ~fifth order (fourth-order
+    //		   cumulative error).
 
     // Hmmm...  This pow() seems to fall victim to the strange math.h
     // bug in Red Hat Linux 5.  In that case, use Steve's approximate
     // version instead.
 
-#define POT_SQ_THRESHHOLD	(10)
-#define MIN_CORRECTION_FACTOR	(0.25)
+#define POT_SQ_THRESHHOLD	(1)	    // using 10 makes matters worse...
+#define MIN_CORRECTION_FACTOR	(0.125)	    // basically betting that this
+					    // doesn't occur too often!
 
     // Numbers fine-tuned by Steve, 4/06.  Note that reaching
-    // MIN_CORRECTION FACTOR with POT_SQ_THRESHHOLD = 10 corresponds
-    // to
+    // MIN_CORRECTION FACTOR corresponds to
     //
-    //	sqrt(pot_sq) = 1.0e5	for	MIN_CORRECTION_FACTOR = 0.125
-    //		       3.2e3	for				0.25
+    //	sqrt(pot_sq/POT_...) = 4.1e3	for	MIN_CORRECTION_FACTOR = 0.125
+    //			       2.6e2	for				0.25
 
     if (pot_sq > POT_SQ_THRESHHOLD)
-	// correction_factor = pow(pot_sq/POT_SQ_THRESHHOLD, -0.1);
+	// correction_factor = pow(pot_sq/POT_SQ_THRESHHOLD, -0.125);
 	correction_factor
-		= pow_approx(pot_sq/POT_SQ_THRESHHOLD);	  // -0.1 is built in!
+		= pow_approx(pot_sq/POT_SQ_THRESHHOLD);	  // -0.125 is built in!
 
     // Desirable to place limits on the correction...
 
     if (correction_factor > 1.0) correction_factor = 1.0;
-    if (correction_factor < MIN_CORRECTION_FACTOR)
+    if (correction_factor < MIN_CORRECTION_FACTOR) {
+	b->get_kira_counters()->limit_timestep_correction++;
 	correction_factor = MIN_CORRECTION_FACTOR;
+    }
 
 #if 0
     if (b->get_perturbation_squared() < 0.0001 && pot_sq > 1
