@@ -1230,13 +1230,12 @@ local hdyn *has_binary_perturber(hdyn *b)
     // in the perturbation criterion.
 
     bool p = false;
+    // p = (b->get_system_time() > 42);
 
-#if 0
     if (p) {
 	PRC(b->get_system_time());
 	PRL(b->format_label());
     }
-#endif
 
     if (!b->is_low_level_node())
 	return NULL;
@@ -1255,7 +1254,7 @@ local hdyn *has_binary_perturber(hdyn *b)
     }
 
     hdyn *pnode = b->find_perturber_node();
-    // if (p) PRL(pnode);
+    if (p) PRL(pnode);
 
     // If pnode is null or perturbers are invalid, but we got to this point,
     // then the perturbation must have been computed using the whole system,
@@ -1319,8 +1318,8 @@ local inline void check_binary_perturber_limit(hdyn *b, real& crit_pert2)
 
 	// These numbers should be contained in kira_options...
 
-	if (crit_pert2 > 1.e-10)
-	    crit_pert2 = Starlab::max(1.e-10, 0.25*crit_pert2);
+	if (crit_pert2 > 5.e-10)
+	    crit_pert2 = Starlab::max(5.e-10, 0.01*crit_pert2);
 
 #if 0
 	if (b->name_is("151")) {
@@ -1734,10 +1733,12 @@ bool hdyn::is_unperturbed_and_approaching()
 		      	    // Consider full merger if we are outside
 			    // the semi-major axis or if the scaled
 			    // perturbation (at apocenter) is still
-			    // small.
+			    // small.  Drop the former test -- always
+			    // apply a consistent perturbation check
+			    // (Steve, 4/06)
 
-			    if (KEP_OUTSIDE_SEMI(kepl)
-				|| perturbation_squared
+			    if (// KEP_OUTSIDE_SEMI(kepl) ||
+				perturbation_squared
     				    * pow(kepl.get_apastron()
 					   / kepl.get_separation(), 6)
     				   < crit_pert2) {
