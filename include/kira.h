@@ -31,7 +31,7 @@ class kira_counters {
 	step_t step_top_cm;		// top-level CM steps
 	step_t step_low_level;		// low-level steps
 	step_t force_correction;	// force corrections
-	step_t min_timestep_correction;	// minimum timestep correction reached
+	step_t limit_timestep_correction;	// minimum timestep correction reached
 
 	step_t pert_step;		// low-level perturbed steps
 	step_t pert_with_list;		// low-level *interparticle force*
@@ -91,7 +91,7 @@ class kira_counters {
 	    step_top_cm              = 
 	    step_low_level           = 
 	    force_correction         = 
-	    min_timestep_correction  = 
+	    limit_timestep_correction  = 
 	    pert_step                = 
 	    pert_with_list           = 
 	    pert_without_list        = 
