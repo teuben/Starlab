@@ -717,6 +717,10 @@ local void evolve_system(hdyn * b,		// hdyn array
 
     real t_MPI_check = tt + 0.25 * randinter(0, dt_log);
 
+    // For use by pre/post-debug code:
+
+    real tdbg = -1;
+
     //----------------------------------------------------------------------
     // Frequencies of "other" (episodic) output.  Idea is that we will
     // have data blocks of width dt_alt2, sampled at intervals dt_alt1,
