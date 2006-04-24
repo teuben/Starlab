@@ -183,10 +183,11 @@ local inline real binary_scale(hdyn* cm)
     last_time = time;
     last_scale = Starlab::max(sma, sep);
 
-    //  =  max(2*sma, sep);	// Better? -- more conservative, and also
-				// avoids discontinuous changes in perturber
-				// lists as the binary phase changes.
-				// -- changes default gamma.
+    //  =  Starlab::max(2*sma, sep);	// Better? -- more conservative, and
+					// also avoids discontinuous changes
+					// in perturber lists as the binary
+					// phase changes.
+					//	-- changes default gamma.
 
 #ifdef T_DEBUG
     real sys_t = cm->get_system_time();
