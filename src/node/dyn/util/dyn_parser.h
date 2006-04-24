@@ -62,7 +62,7 @@ typedef union YYSTYPE {
   vector<double>* realvec_ptr;
 } YYSTYPE;
 /* Line 1318 of yacc.c.  */
-#line 66 "dyn_parser.h"
+#line 66 "y.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1
