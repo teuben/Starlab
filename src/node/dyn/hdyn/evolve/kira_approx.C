@@ -13,7 +13,7 @@
 //#include "hdyn.h"
 #include "stdinc.h"
 
-#define POW -0.1		// approximations work best for POW close to 0
+#define POW -0.125		// approximations work best for POW close to 0
 
 #ifndef TOOLBOX
 
