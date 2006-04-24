@@ -72,7 +72,7 @@ void initialize_counters_from_log(hdyn* b)
     GETLOG(step_top_cm);
     GETLOG(step_low_level);
     GETLOG(force_correction);
-    GETLOG(min_timestep_correction);
+    GETLOG(limit_timestep_correction);
 
     GETLOG(pert_step);
     GETLOG(pert_with_list);
@@ -137,7 +137,7 @@ void write_counters_to_log(hdyn* b)
     PUTLOG(step_top_cm);
     PUTLOG(step_low_level);
     PUTLOG(force_correction);
-    PUTLOG(min_timestep_correction);
+    PUTLOG(limit_timestep_correction);
 
     PUTLOG(pert_step);
     PUTLOG(pert_with_list);
@@ -223,7 +223,7 @@ void print_counters(kira_counters* kc,
 	PRI(4); PRLOGL(neighbor_sync);
 
 	PRI(4); PRLOGL(force_correction);
-	PRI(4); PRLOGL(min_timestep_correction);
+	PRI(4); PRLOGL(limit_timestep_correction);
 
 	PRI(4); PRLOGL(full_unpert_step);
 	PRI(4); PRLOGL(full_unpert_orbit);

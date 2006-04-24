@@ -1,10 +1,14 @@
 
 // Place temporary post-step debugging code here, to clean up kira.C.
-// Current time is t, root node is b, integration list is next_nodes[],
-// of length n_next.
+// Current time is t, root node is b.  The integration list is
+// next_nodes[], of length n_next.  Real steps counts particle steps;
+// real count counts block steps.  The variable tdbg may be used here
+// to control debugging output.  It is initialized to -1.
+
 
 #if 0
-    if (t > 661.076) {
+//    if (t >= 11.868 && t <= 11.8695) {
+    if (t >= 11.868 && t <= 11.870) {
 	int p = cerr.precision(10);
 	cerr << "post: "; PRC(t);
 	cerr.precision(p);
@@ -13,39 +17,14 @@
 	    hdyn *n = next_nodes[ii];
 	    if (n && n->is_valid()) {
 		PRI(4); PRC(n->format_label());	PRL(n->get_timestep());
-		if (node_contains(n->get_top_level_node(), 19279)
-		    || node_contains(n->get_top_level_node(), 18160)) {
-		    pp3(n->get_top_level_node());
-		    vec npos = n->get_top_level_node()->get_pos();
-		    for_all_daughters(hdyn, b, bb)
-			if (bb != n->get_top_level_node()) {
-			    vec bbpos = bb->get_nopred_pos();
-			    if (square(npos-bbpos) < .025)
-				cerr << bb->format_label() << " "
-				     << abs(npos-bbpos) << endl;
-			}
-		}
+		if (n->is_parent()) pp3(n);
 	    }
 	}
-	print_recalculated_energies(b);
-    } else if (t >= 661) {
-	for (int ii = 0; ii < n_next; ii++) {
-	    hdyn *n = next_nodes[ii];
-	    if (n && n->is_valid() && node_contains(n, 18160)) {
-	      pp3(n);
-	      pp3((hdyn*)node_with_name("19279", b));
-	      vec npos = n->get_pos();
-	      for_all_daughters(hdyn, b, bb)
-		  if (bb != n) {
-		      vec bbpos = bb->get_nopred_pos();
-		      if (square(npos-bbpos) < .025)
-			  cerr << bb->format_label() << " "
-			       << abs(npos-bbpos) << endl;
-		  }
-	    }
+	if (t > tdbg) {
+	    print_recalculated_energies(b);
+	    while (t > tdbg) tdbg += 1.e-6;
 	}
     }
-    if (t > 661.076534) exit(0);
 #endif
 
 #if 0
