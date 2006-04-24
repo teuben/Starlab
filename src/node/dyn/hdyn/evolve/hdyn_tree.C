@@ -224,7 +224,20 @@ local bool too_big(hdyn * bi, real limit_sq)
 
     // EXPERIMENTAL:  Probably shouldn't keep strongly perturbed binaries:
 
-    if (od->get_perturbation_squared() > 10) big = true;
+//    if (od->get_perturbation_squared() > 10) big = true;
+    if (od->get_perturbation_squared() > 0.1) big = true;
+
+
+
+
+//    if (bi->get_system_time() > 11.868 && bi->get_system_time() < 11.870
+// 	&& od->name_is("371") && od->get_perturbation_squared() > 0.05) {
+// 	cerr << bi->format_label() << " forced too big" << endl;
+// 	return true;
+//     }
+
+
+
 
     // Don't allow a slow binary to be split, but schedule the slow
     // motion to be stopped at next apocenter.
@@ -253,12 +266,7 @@ local bool too_big(hdyn * bi, real limit_sq)
 //		     **** Used only by adjust_low_level_node.		****
 //		     **** Called twice, with 'this' = either component.	****
 
-
-
-
 static int pp3count = 0;
-
-
 
 hdyn* hdyn::new_sister_node(bool & top_level_combine)
 {
