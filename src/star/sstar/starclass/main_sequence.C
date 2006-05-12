@@ -180,14 +180,14 @@ void main_sequence::instantaneous_element() {
 // the model described by Eggleton et al. 1989.
 void main_sequence::evolve_element(const real end_time) {
 
-  //    cerr << "void main_sequence::evolve_element(T="<<end_time<<")"<<endl;
-  //    cerr << identity<<" "<<luminosity<<" "<<radius<<endl;
-  //    PRL(wind_constant);
+  //      cerr << "void main_sequence::evolve_element(T="<<end_time<<")"<<endl;
+  //      cerr << identity<<" "<<luminosity<<" "<<radius<<endl;
+  //      PRL(wind_constant);
 
     real alpha, beta, gamma, delta, kappa, lambda;
 
-    //    PRC(current_time);PRC(end_time);PRL(relative_age);
-    //    PRL(next_update_age);
+    //        PRC(current_time);PRC(end_time);PRL(relative_age);
+    //        PRL(next_update_age);
 
     real dt = end_time - current_time;
     current_time = end_time;

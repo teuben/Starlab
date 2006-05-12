@@ -39,7 +39,7 @@ black_hole::black_hole(hyper_giant & w) : single_star(w) {
 
       post_constructor();
 
-      cout << get_total_mass() << endl;
+      //      cout << get_total_mass() << endl;
 
       if (is_binary_component()) {
 	get_binary()->set_first_contact(false);
@@ -78,7 +78,7 @@ black_hole::black_hole(super_giant & g) : single_star(g) {
  
       post_constructor();
 
-      cout << get_total_mass() << endl;
+      //      cout << get_total_mass() << endl;
 
       if (is_binary_component()) {
 	get_binary()->set_first_contact(false);
@@ -165,7 +165,7 @@ black_hole::black_hole(helium_giant & h) : single_star(h) {
 
       post_constructor();
 
-      cout << get_total_mass() << endl;
+      //      cout << get_total_mass() << endl;
 
       if (is_binary_component()) {
 	get_binary()->set_first_contact(false);
@@ -201,7 +201,7 @@ black_hole::black_hole(neutron_star & n) : single_star(n) {
 
       post_constructor();
 
-      cout << get_total_mass() << endl;
+      //      cout << get_total_mass() << endl;
 
       if (is_binary_component()) {
 	get_binary()->set_first_contact(false);

@@ -108,7 +108,8 @@ void star_cluster::initialize_star_cluster() {
   black_hole_mass = 0;
   rvir = 1.0;
   x_imf = 2.35;  // Salpeter
-  minimum_mass = 1.0;
+  //  minimum_mass = 1.0;
+  minimum_mass = 0.1;
   nstar = get_total_mass()/mean_stellar_mass();
   trlx_initial = relaxation_time(nstar, get_total_mass(), 
 				     tidal_radius());

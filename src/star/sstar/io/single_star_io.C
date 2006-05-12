@@ -199,7 +199,7 @@ void extract_story_chapter(stellar_type& type, real& t_cur, real& t_rel,
 			  T_eff, L_eff, p_rot, b_fld, *d);
     }
     
-    if (t_rel<=0)
+    if (t_rel<0)
       t_rel = t_cur;
 }
 

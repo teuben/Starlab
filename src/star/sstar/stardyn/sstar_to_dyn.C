@@ -70,13 +70,15 @@ stellar_type get_element_type(dyn *b) {
 
 local void evolve_the_stars(node* bi, const real end_time) {
 
-  if(DEBUG) 
-      cerr << "evolve_the_stars: " <<bi->format_label() <<" "<<end_time;
-  
     real current_time = ((star*)bi->get_starbase())->get_current_time();
     real time_step    =  bi->get_starbase()->get_evolve_timestep();
-    
-    // PRC(end_time); PRC(current_time); PRC(time_step);
+
+    if(DEBUG) {
+      cerr << "evolve_the_stars: " <<bi->format_label() <<" "<<end_time;
+      PRC(end_time); PRC(current_time); PRC(time_step);
+      real relative_age = ((star*)bi->get_starbase())->get_relative_age();
+      PRC(relative_age);
+    }
 
     // SPZ 20 Aug 2004: Just trying this, as it did not seem to work properly...
 

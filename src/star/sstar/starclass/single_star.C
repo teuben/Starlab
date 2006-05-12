@@ -1697,7 +1697,7 @@ real single_star::get_evolve_timestep() {
   //  time_step = Starlab::min(time_step, 0.05);
   // (SPZ Jan 1 2006) changed again from min() to max() to satisfy McScatter
   //  time_step = Starlab::max(time_step, 1.0);
-  //  time_step = Starlab::min(time_step, 0.05);
+  time_step = Starlab::min(time_step, 0.05);
   return time_step;
 
 }

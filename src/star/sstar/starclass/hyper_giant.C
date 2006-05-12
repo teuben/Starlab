@@ -14,7 +14,7 @@ hyper_giant::hyper_giant(main_sequence & m) : single_star(m) {
         core_mass = hyper_giant_core_mass();
         envelope_mass = m_tot - core_mass;
 
-	cout << get_total_mass() << " " << core_mass << " ";
+	//	cout << get_total_mass() << " " << core_mass << " ";
 // (GN+SPZ May  4 1999) last update age is time of previous type change
       last_update_age = next_update_age;
 
@@ -120,7 +120,7 @@ real hyper_giant::hyper_giant_core_mass() {
 
 void hyper_giant::create_remnant() {
 
-  cout << get_total_mass() << " ";
+  //  cout << get_total_mass() << " ";
 
     if (core_mass>=cnsts.parameters(COcore2black_hole)) {
       star_transformation_story(Black_Hole);

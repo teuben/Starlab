@@ -158,7 +158,7 @@ int main(int argc, char ** argv)
     // get_use_hdyn is therefore not defined.
     // The result is that kick velocities will be scaled
     // spuriously......
-    //    root->set_use_hdyn(false);
+    root->get_starbase()->set_use_hdyn(false);
     cerr.precision(STD_PRECISION);
 
     //    put_node(root);
