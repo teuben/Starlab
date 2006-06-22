@@ -15,7 +15,6 @@
 ////
 //// Options:     
 ////		  -p    specify precision of output [6 sig. fig.]
-////              -t    include time in output [no]
 ////
 //// Written by the Starlab development group.
 ////
@@ -34,15 +33,12 @@ main(int argc, char** argv)
     char* param_string = "p:t";
 
     int p = STD_PRECISION;
-    bool time = false;
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
 	switch(c)
 	    {
 	    case 'p': p = atoi(poptarg);
-		      break;
-	    case 't': time = !time;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
