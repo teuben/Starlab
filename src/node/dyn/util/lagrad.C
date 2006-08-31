@@ -368,7 +368,8 @@ real get_lagr_cutoff_mass_high()
 local bool massive_fn(dyn * b)
 {
     return (b->get_mass() >= cutoff_mass_low
-	    && b->get_mass() <= cutoff_mass_high);
+	    && b->get_mass() < cutoff_mass_high);	// replaced <= by <
+							// Aug 31, 2006 (Steve)
 }
 
 
