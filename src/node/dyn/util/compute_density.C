@@ -14,8 +14,7 @@
 ////
 //// Usage: compute_density [OPTIONS] < input > output
 ////
-//// Options:     
-////		  -c    add a comment to the output snapshot [false]
+//// Options:     -c    add a comment to the output snapshot [false]
 ////              -k    specify k [12]
 ////              -v    verbose mode [off]
 ////
