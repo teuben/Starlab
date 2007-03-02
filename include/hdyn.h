@@ -129,11 +129,9 @@ class  hdyn : public _dyn_ {
 
         // Variables for unperturbed kepler motion:
 
-        real perturbation_squared;  // relative perturbation squared
-        bool fully_unperturbed;     // true if orbit is fully unperturbed
-        real unperturbed_timestep;  // timestep for the unperturbed motion
-	real t_next_tidal;	    // time limit on next tidal correction
-				    //  -- added 4/06 (SLWM)
+        real  perturbation_squared;  // relative perturbation squared
+        bool  fully_unperturbed;     // true if orbit is fully unperturbed
+        real  unperturbed_timestep;  // timestep for the unperturbed motion
 
         // Perturber information:
 
@@ -142,6 +140,9 @@ class  hdyn : public _dyn_ {
         bool valid_perturbers;  // true if any particle is within the
 			        // perturbation radius and the perturber
 				// has not overflowed
+#ifdef USEMPI
+	int * seq;		// for receiving the sequence number
+#endif
         real  perturbation_radius_factor;
 
 	int n_perturbers_low;	// number of perturbers of lower-level nodes
@@ -165,12 +166,6 @@ class  hdyn : public _dyn_ {
                                 // measured by  distance - r1 - r2 )
         real d_coll_sq;		// distance squared to this neighbor
   
-#ifdef USEMPI
-	int nn_id, coll_id, node_id;				// wwvv added
-#endif
-
-	// Redundant: same use as node_id (I think) -- Steve, 7/05.
-
 	int MPI_id;
   
         // Variables for GRAPE-4/6:
@@ -201,12 +196,14 @@ class  hdyn : public _dyn_ {
 	    on_integration_list = false;
 
 	    perturbation_squared = -1;
-            unperturbed_timestep  = -VERY_LARGE_NUMBER;
+            unperturbed_timestep  =  -VERY_LARGE_NUMBER;
             fully_unperturbed = false;
-	    t_next_tidal = -VERY_LARGE_NUMBER;
 
             n_perturbers = n_perturbers_low = 0;
 	    perturber_list = NULL;
+#ifdef USEMPI
+	    seq = NULL;
+#endif
             valid_perturbers = valid_perturbers_low = false;
 	    perturbation_radius_factor = -1;
 
@@ -231,10 +228,12 @@ class  hdyn : public _dyn_ {
         }
 
 	virtual ~hdyn() {
-	    for_all_daughters(hdyn, this, bb)
-		bb->t_next_tidal = -VERY_LARGE_NUMBER; // added 4/06 (SLWM)
 	    if (perturber_list)
-		delete [] perturber_list;	       // added 7/98 (SLWM & JM)
+		delete [] perturber_list;	// added 7/29/98 (SLWM & JM)
+#ifdef USEMPI
+	    if (seq)
+	      delete [] seq;
+#endif
 	}
 
         // ------------------ Global variable accessors ------------------
@@ -391,9 +390,11 @@ class  hdyn : public _dyn_ {
         void zero_perturber_list()		{n_perturbers
 						     = n_perturbers_low = 0;}
         void set_n_perturbers(int n) {
+#ifndef USEMPI
 	    if (is_leaf())
 		cerr << "warning: setting n_perturbers for leaf "
 		     << format_label() << endl;
+#endif
 	    n_perturbers = n;
 	}
         void set_n_perturbers_low(int n) {
@@ -405,6 +406,9 @@ class  hdyn : public _dyn_ {
         inline int get_n_perturbers()	const	   {return n_perturbers;};
         inline int get_n_perturbers_low() const	   {return n_perturbers_low;};
         inline hdyn ** get_perturber_list() const  {return perturber_list;}
+#ifdef USEMPI
+        inline int * get_seq() 		const  	   {return seq;}
+#endif
 
         void remove_perturber_list()		{n_perturbers
 						     = n_perturbers_low = 0;
@@ -413,8 +417,14 @@ class  hdyn : public _dyn_ {
 						     = false;
 					         if (perturber_list)
 						     delete [] perturber_list;
-						 perturber_list = NULL;}
+						 perturber_list = NULL;
 
+#ifdef USEMPI
+					         if (seq)
+						     delete [] seq;
+						 seq = NULL;
+#endif
+	}
         void print_perturber_list(ostream & s = cerr, char* pre = "");
         void find_print_perturber_list(ostream & s = cerr, char* pre = "");
 
@@ -422,6 +432,11 @@ class  hdyn : public _dyn_ {
 	    if (perturber_list == NULL) {
 		perturber_list = new hdyn *[MAX_PERTURBERS];
 	    }
+#ifdef USEMPI
+	    if (seq == NULL) {
+		seq = new int[MAX_PERTURBERS];
+	    }
+#endif
 	    n_perturbers = n_perturbers_low = 0;
 	    valid_perturbers = valid_perturbers_low = false;
 	}
@@ -457,17 +472,6 @@ class  hdyn : public _dyn_ {
         void  set_coll(hdyn * new_coll)		{coll = new_coll;}
         inline real get_d_coll_sq()	const	{return d_coll_sq;}
         void  set_d_coll_sq(real d)		{d_coll_sq = d;}
-
-#ifdef USEMPI
-	inline int get_nn_id()			{return nn_id;}		// wwvv
-	inline int get_coll_id()		{return coll_id;}	// wwvv
-	inline int get_node_id()		{return node_id;}	// wwvv
-	inline void set_nn_id(int id)		{nn_id = id;}		// wwvv
-	inline void set_coll_id(int id)		{coll_id = id;} 	// wwvv
-	inline void set_node_id(int id)		{node_id = id;}		// wwvv
-#endif
-
-	// Same redundancy (Steve, 7/05):
 
 	inline int get_MPI_id()			{return MPI_id;}
 	inline void set_MPI_id(int id)		{MPI_id = id;}

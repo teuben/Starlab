@@ -16,7 +16,7 @@
 //  SPZ @MIT, August 2001
 
 #include "dyn.h"
-#include "constants.h"
+#include "starlab_constants.h"
 
 #ifdef TOOLBOX
 

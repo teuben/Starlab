@@ -2,7 +2,7 @@
 #   define STDFUNC
 
 #include "stdinc.h"
-#include "constants.h"
+#include "starlab_constants.h"
 #include "star_support.h"
 
 // Standard functions for various implementations.

@@ -42,13 +42,13 @@ local void evolve_star_until_next_time(node* bi, const real out_time) {
              time_step    =  bi->get_starbase()->get_evolve_timestep();
 
 	     star_state ss(dynamic_cast(star*, bi->get_starbase()));
-	     put_state(ss, cerr);
+	     //	     put_state(ss, cerr);
 
 	     // print_star(bi->get_starbase(), cerr);
 
-	     int p = cerr.precision(HIGH_PRECISION);
-	     bi->get_starbase()->dump(cerr, false);
-	     cerr.precision(p);
+	     //	     int p = cerr.precision(HIGH_PRECISION);
+	     //	     bi->get_starbase()->dump(cerr, false);
+	     //	     cerr.precision(p);
           }
          bi->get_starbase()->evolve_element(out_time);
 

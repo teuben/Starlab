@@ -19,7 +19,7 @@
 #include  "hdyn.h"
 
 #include "stdinc.h"
-#include "constants.h"
+#include "starlab_constants.h"
 
 #include "double_star.h"
 #include "sstar_to_dyn.h"

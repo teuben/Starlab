@@ -108,8 +108,10 @@ void star_cluster::initialize_star_cluster() {
   black_hole_mass = 0;
   rvir = 1.0;
   x_imf = 2.35;  // Salpeter
-  //  minimum_mass = 1.0;
-  minimum_mass = 0.1;
+  minimum_mass = 1.0;
+  //minimum_mass = 0.63;
+  //minimum_mass = 0.50;
+  //minimum_mass = 0.1;
   nstar = get_total_mass()/mean_stellar_mass();
   trlx_initial = relaxation_time(nstar, get_total_mass(), 
 				     tidal_radius());
@@ -119,8 +121,14 @@ void star_cluster::initialize_star_cluster() {
 
 real star_cluster::mass_loss_by_evolution(const real dt) {
 
-  real mm_old = mean_stellar_mass();
-  real mm_new = mean_stellar_mass(relative_age + dt, minimum_mass);
+  /// correcttion factor for emulating turn off mass to nuclear lifetime
+  //  real age_correction_factor = 0.85;
+  real age_correction_factor = 0.70;
+
+  real mm_old = mean_stellar_mass(age_correction_factor*relative_age, 
+				  minimum_mass);
+  real mm_new = mean_stellar_mass(age_correction_factor*(relative_age + dt), 
+				  minimum_mass);
   real mass_lost = nstar * (mm_old-mm_new);
 
   //  PRC(dt);PRC(mm_old);PRC(mm_new);PRL(mass_lost);

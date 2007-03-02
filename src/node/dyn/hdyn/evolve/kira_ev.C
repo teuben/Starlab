@@ -41,6 +41,8 @@
 #   undef T_DEBUG
 #endif
 
+#include <assert.h>
+
 
 //-------------------------------------------------------------------------
 //
@@ -83,12 +85,107 @@
 
 
 #ifdef USEMPI
-
-int mpi_communicator;
+MPI_Comm mpi_communicator;
 int mpi_myrank;
 int mpi_nprocs;
+hdyn * my_start_daughter;
+int my_daughter_count, my_start_count, my_end_count,num_daughters;
+
+long long *hdyn_ev_counts;
+long long hdyn_ev_count;
+// wwvv_counting:
+long long mpi_allreduce_count;
+long long mpi_allreduce_len;
+long long mpi_allgather_count;
+long long mpi_allgather_len;
+typedef struct {int id;int* seq;} id_seq_type ;
 
 typedef struct { real val; int id; } real_int_type;
+
+/*  decomp - Compute a balanced decomposition of a 1-D array
+
+    This code is from the mpich-distribution, in the function
+    MPE_Decomp1d. It is adapted for use in a C++ environment.
+  Input Parameters:
++ n  - Length of the array
+. size - Number of processors in decomposition
+- rank - Rank of this processor in the decomposition (0 <= rank < size)
+
+  Output Parameters:
+. s,e - Array indices are s:e, with the original array considered as 0:n-1.
+  s and e can be used in a 'standard' C loop:
+
+  for (i=s; i<e; i++) {
+  }
+
+Method:
+
+start with allocating nlocal = n/size elements to each processor.
+So, as a starting point, s = rank * nlocal
+In general, nlocal*size will be less than n. Call n-nlocal*size the
+deficit. This deficit is divided among the processes such that the
+first deficit processes get one element extra, which means that
+the starting point of the array for such a process will be augmented
+by its rank. The starting points of the rest of the processes will be
+augmented by deficit. nlocal for the first deficit processes will 
+be augmented by 1. The endpoint e of all processes is s+nlocal (conforming
+to C convention). So: s points to the first element, e points to the
+element after the last one.
+
+*/
+int decomp( int n, int size, int rank, int &s, int &e )
+{
+    int nlocal = n / size;
+    s = rank * nlocal;
+    int deficit = n - nlocal * size;
+    if (rank < deficit) {
+	    s += rank;
+	    e = s + nlocal + 1;
+    }
+    else {
+	    s += deficit;
+	    e = s + nlocal;
+    }
+
+    return MPI_SUCCESS;
+}
+
+void hpsortid_seq(int n,  id_seq_type ra[])
+  // sorts ra[] on sequence
+{
+	int  i,ir,j,l;
+	id_seq_type rra;
+
+	ra--;  /* this is a numerical recipes function, */
+	       /* so indexing starts with 1 (sic!)      */
+
+	if (n < 2) return;
+	l=(n >> 1)+1;
+	ir=n;
+	for (;;) {
+		if (l > 1) {
+			rra=ra[--l];
+		} else {
+			rra=ra[ir];
+			ra[ir]=ra[1];
+			if (--ir == 1) {
+				ra[1]=rra;
+				break;
+			}
+		}
+		i=l;
+		j=l+l;
+		while (j <= ir) {
+			if (j < ir && ra[j].seq < ra[j+1].seq) j++;
+			if (rra.seq < ra[j].seq) {
+				ra[i]=ra[j];
+				i=j;
+				j <<= 1;
+			} else j=ir+1;
+		}
+		ra[i]=rra;
+	}
+}
 
 void hpsortreal_int(int n,  real_int_type ra[], int ia[])
 {
@@ -133,6 +230,49 @@ void hpsortreal_int(int n,  real_int_type ra[], int ia[])
 	}
 }
 
+void hpsort_int_int(int n,int a[], int b[])
+{
+        int  i,ir,j,l;
+        int  ra,rb;
+
+        a--;  /* this is a numerical recipes function, so... */
+	b--;
+
+        if (n < 2) return;
+        l=(n >> 1)+1;
+        ir=n;
+        for (;;) {
+                if (l > 1) {
+                        ra=a[--l];
+			rb=b[l];
+                } else {
+                        ra=a[ir];
+			rb=b[ir];
+                        a[ir]=a[1];
+			b[ir]=b[1];
+                        if (--ir == 1) {
+                                a[1]=ra;
+				b[1]=rb;
+                                break;
+                        }
+                }
+                i=l;
+                j=l+l;
+                while (j <= ir) {
+                        if (j < ir && a[j] < a[j+1]) j++;
+                        if (ra < a[j]) {
+                                a[i]=a[j];
+				b[i]=b[j];
+                                i=j;
+                                j <<= 1;
+                        } else j=ir+1;
+                }
+                a[i]=ra;
+		b[i]=rb;
+        }
+}
+
+
 void mpi_sum_list(hdyn * next_nodes[], int n_next, 
                                    MPI_Comm mpi_communicator)
 {
@@ -142,14 +282,17 @@ void mpi_sum_list(hdyn * next_nodes[], int n_next,
   MPI_Allreduce(&n_next,&n_min,1,MPI_INT,MPI_MIN,mpi_communicator);
   if (n_max != n_min)
   {
-    cout << ":"<<mpi_myrank<<": Catastrophic error in "<<
+    cerr << ":"<<mpi_myrank<<": Catastrophic error in "<<
       __FILE__<<":"<<__LINE__<<" n_next's are not equal"
       ", my n_next is:"<<n_next<<endl;
     MPI_Finalize();
     exit(1);
   }
   {
-    // s/rbuf for sending/receiving acc, jerk and pot
+    // Here we accumulate all acc's jerk's and potentials
+    //
+    // sbuf/rbuf for sending/receiving acc, jerk and pot
+    //
     real *sbuf = new real[7*n_next];
     real *rbuf = new real[7*n_next];
     int k=0;
@@ -173,15 +316,27 @@ void mpi_sum_list(hdyn * next_nodes[], int n_next,
 		 ": NULL next_node " << i << endl;
         }
       }
-    int mpi_real = MPI_DOUBLE;
+    MPI_Datatype mpi_real = MPI_DOUBLE;
     if (sizeof(real) != sizeof(double) )
          mpi_real = MPI_FLOAT;
-    // add valuse of acc, jerk and pot in sbuf giving rbuf
-    cout << ":"<<mpi_myrank<<": TD: allreducing n_next: "<<n_next<<endl;
+    //
+    // add values of acc, jerk and pot in sbuf giving rbuf
+    //
+#ifdef MPIDEBUG
+    cerr << ":"<<mpi_myrank<<": TD: allreducing n_next: "<<n_next<<endl;
+#endif
     MPI_Allreduce(&sbuf[0],&rbuf[0],n_next*7,mpi_real,MPI_SUM,
             mpi_communicator);  
-    cout << ":"<<mpi_myrank<<": TD: allreduced n_next: "<<n_next<<endl;
+    // wwvv_counting:
+    mpi_allreduce_count++;
+    mpi_allreduce_len += n_next*7*sizeof(real);
+
+#ifdef MPIDEBUG
+    cerr << ":"<<mpi_myrank<<": TD: allreduced n_next: "<<n_next<<endl;
+#endif
+    //
     // copy summed acc, jerk and pot values to the nodes
+    //
     k=0;
     for (int i=0; i<n_next; i++)
     {
@@ -211,11 +366,11 @@ void mpi_sum_list(hdyn * next_nodes[], int n_next,
    //
    // The same story for coll.  
    //
-   // Eventually, the reduce for acc, jerk, pot and nn,coll can be done
-   // in one call. TODO
   {
+    //
     // sbuf for sending nn and coll stuff,
     // rbuf for receiving
+    //
     real_int_type *sbuf = new real_int_type[2*n_next];
     real_int_type *rbuf = new real_int_type[2*n_next];
 
@@ -223,34 +378,46 @@ void mpi_sum_list(hdyn * next_nodes[], int n_next,
     {
       if (next_nodes[i]){
 	sbuf[i+i].val = next_nodes[i] -> get_d_nn_sq();
-	sbuf[i+i].id = next_nodes[i] -> get_nn_id();
+	sbuf[i+i].id = (next_nodes[i] -> get_nn()) -> get_MPI_id();;
 	sbuf[i+i+1].val = next_nodes[i] -> get_d_coll_sq();
-	sbuf[i+i+1].id = next_nodes[i] -> get_coll_id();
+	sbuf[i+i+1].id = (next_nodes[i] -> get_coll()) -> get_MPI_id();
       }
       else
       {
-	cout << ":" << mpi_myrank << ":" << __FILE__ << ":"<< __LINE__ << 
+	cerr << ":" << mpi_myrank << ":" << __FILE__ << ":"<< __LINE__ << 
 	       ": NULL next_node " << i << endl;
       }
     }
+#ifdef MPIDEBUG
     for (int k=0; k<2*n_next; k+=2)
     {
-	cout << ":" << mpi_myrank << ": TD:" << k << 
+	cerr << ":" << mpi_myrank << ": TD:" << k << 
 	  " val: " << sbuf[k  ].val << " id: " << sbuf[k  ].id << 
 	  " val: " << sbuf[k+1].val <<  " id: " <<sbuf[k+1].id << endl;
     }
+#endif
 
-    int mpi_real_int = MPI_DOUBLE_INT;
+    MPI_Datatype mpi_real_int = MPI_DOUBLE_INT;
     if (sizeof(real) != sizeof(double) )
          mpi_real_int = MPI_FLOAT_INT;
 
     // find minimum of distances, giving rbuf
-    cout << ":"<<mpi_myrank<<": TD: allreducing coll nn n_next: "
+#ifdef MPIDEBUG
+    cerr << ":"<<mpi_myrank<<": TD: allreducing coll nn n_next: "
                <<n_next<<endl; 
+#endif
+
     MPI_Allreduce(&sbuf[0],&rbuf[0],n_next*2,mpi_real_int,MPI_MINLOC,
             mpi_communicator);  
-    cout << ":"<<mpi_myrank<<": TD: ready allreducing coll nn n_next: "
+    // wwvv_counting:
+    mpi_allreduce_count++;
+    mpi_allreduce_len += n_next*2*sizeof(real);
+
+
+#ifdef MPIDEBUG
+    cerr << ":"<<mpi_myrank<<": TD: ready allreducing coll nn n_next: "
                <<n_next<<endl; 
+#endif
     //
     // Now, in rbuf[i].id we find the nn_id (i even)
     // and                            coll_id (i odd)
@@ -259,95 +426,438 @@ void mpi_sum_list(hdyn * next_nodes[], int n_next,
     // put these in the nn and coll fields of the next_nodes array
     //
 
-    //
-    // We loop over the whole universe, looking if the id
-    // (i.e. the number of the daughter visited)
-    // is in rbuf. For efficiency, it is best to sort rbuf
-    // using the id field as key. 
-    // We have to remember if it is a nn or a coll and
-    // we have to keep track of original place in the
-    // next_nodes array. 
-    // We define an array, dimension 2*n_next which contains the
-    // indexes into the next_nodes array:
-    // 0 0 1 1 2 2 3 3 .....
-    // Multiply this by 2 and add 1 for the odd places:
-    // 0 1 2 3 4 5 6 7 .....
-    //
-    int * indices = new int[2*n_next];
-    for (int i=0; i<2*n_next; i++)
-    {
-      indices[i] = i;
-    }
-    for (int k=0; k<2*n_next; k++)
-    {
-	printf(":%d: TD:k%d: rbuf val %f id %d index %d\n",mpi_myrank,k,rbuf[k].val,
-	    rbuf[k].id,indices[k]);
-    }
-
-    printf(":%d: TD: calling hpsort\n",mpi_myrank);
-    hpsortreal_int(n_next*2, &rbuf[0], &indices[0]);
-    printf(":%d: TD: called hpsort\n",mpi_myrank);
-    for (int k=0; k<2*n_next; k++)
-    {
-	printf(":%d: TD:k%d: rbuf sort val %f id %d index %d\n",mpi_myrank,k,rbuf[k].val,
-	    rbuf[k].id,indices[k]);
-    }
-    int k=0;
-    int l;
-    int id = rbuf[k].id;
-    int counter = 0;
-
-    printf(":%d: TD: entering for_all_daughters loop\n",mpi_myrank);
-    for_all_daughters(hdyn,next_nodes[0]->get_root(),bi)
-    {
-      int daughter_id = bi->get_node_id();
-      // Just to test if numbering of the universe did not change
-      if (daughter_id != counter)
+    for (int i = 0; i<n_next; i++)
       {
-        cout << ":"<<mpi_myrank<<": Catastrophic error in "<<
-          __FILE__<<":"<<__LINE__<<" daughter_id: "<<daughter_id<<
-	  " counter: "<<counter<<endl;
-	cout << ":"<<mpi_myrank<<" these should be equal"<<endl;
-        MPI_Finalize();
-        exit(1);
-      }
-      counter++;
-      // printf (":%d: TD: examining id:%d daughter_id:%d \n",mpi_myrank,id,daughter_id);
-      if (id != daughter_id) continue;
-      // found an entry in rbuf with an id equal to the id
-      // of the current daughter
-      // Now, determine if this is a nn or a coll id, and act as appropriate
+         next_nodes[i]->set_nn(get_MPI_hdynptr(rbuf[i+i].id));
+	 next_nodes[i]->set_d_nn_sq(rbuf[i+i].val);
 
-      while (id == daughter_id)
-      {
-	l = indices[k]/2;
-	if (indices[k] & 1) // odd, so coll
-	{
-	  cout << ":"<<mpi_myrank<<": TD: setting coll "<<l<<" "<<rbuf[k].val<<endl;
-	  next_nodes[l] -> set_coll(bi);
-	  next_nodes[l] -> set_d_coll_sq(rbuf[k].val);
-	}
-	else // even, so nn
-	{
-	  cout << ":"<<mpi_myrank<<": TD: setting nn "<<l<<" "<<rbuf[k].val<<endl;
-	  next_nodes[l] -> set_nn(bi);
-	  next_nodes[l] -> set_d_nn_sq(rbuf[k].val);
-	  // TODO:    also set_d_nn_sq(rbuf[k].val); ??
-	}
-	// TODO : take in consideration the possibility of next_node[l]
-	// == NULL?
-	k++;
-	if (k >= 2*n_next)
-	  break;
-	id = rbuf[k].id;
+         next_nodes[i]->set_coll(get_MPI_hdynptr(rbuf[i+i+1].id));
+	 next_nodes[i]->set_d_coll_sq(rbuf[i+i+1].val);
       }
-      if (k >= 2*n_next)
-	break;
-    }
-    delete []sbuf;
+    
     delete []rbuf;
-    delete []indices;
+    delete []sbuf;
   }
+  //
+  // Handling of perturber lists
+  // Method:
+  //   for each node in the next_nodes array, get the perturbers
+  //   from the other processes.
+  //   These perturbers coded as two int's: the id and the sequence number.
+  //   The sequence number should be the same as in the serial
+  //   version: it is simply the number of the particle in the universe
+  //   that is investigated for perturberiness. 
+  //   After sorting according to the sequence numbers, we pick at most
+  //   MAX_PERTURBERS and put the corresponding pointers in the
+  //   node.
+  //   
+  //   wwvv
+#ifdef PERTURBER_METHOD_2
+  //
+  // Here we collect all perturber info so that everything can
+  // be gathered in one call. The code is somewhat more complex,
+  // but seems worthwhile.
+  //
+  {
+    //
+    //
+    // Step one: define the data that have to be send to the
+    // other processes. This data consists of all perturberlists
+    // on each processor. We could do this using derived datatypes, 
+    // but there are some doubts about the efficiency of derived
+    // datatype. So, we construct an array with the id's and seq's 
+    // of all perturbers. And we construct an array that tells 
+    // how meny perturbers each node has. 
+    // Carefull here: the number node->get_n_perturbers()
+    // is not always the actual number of perturbers stored. 
+    // The maximum number of perturbers stored is MAX_PERTURBERS.
+    // node->get_n_perturbers() returns how many perturbers where
+    // found. The actual number of perturbers stored is
+    // min(MAX_PERTURBERS,node->get_n_perturbers())
+    //
+    // There are mpi_nprocs * n_next perturber lists in total:
+    //
+    int *allnups = new int[mpi_nprocs * n_next];
+    //
+    // On this node, there are n_next perturber lists:
+    //
+    int * mynups = new int[n_next];
+    //
+    // Fill mynups with the required info:
+    //
+
+    for (int node=0; node<n_next; node++)
+      mynups[node] = next_nodes[node]->get_n_perturbers();
+    //
+    // Later on we need the sum of all perturbers for each node
+    // Determine that with an Allreduce:
+    //
+
+    int *totalnups = new int[n_next];
+
+    MPI_Allreduce(mynups, totalnups, n_next, MPI_INT,MPI_SUM,mpi_communicator);
+
+    //
+    // Replace values in mynups with values actually stored
+    // And keep track of the total number of perturbers found
+    // and the total number of perturbers stored
+    // 
+
+    int mystored_n_p = 0;
+    for(int node=0; node<n_next; node++)
+    {
+      if (mynups[node] > MAX_PERTURBERS)
+	mynups[node] = MAX_PERTURBERS;
+      mystored_n_p += mynups[node];
+    }
+
+    //
+    // distribute the mynups array to all other processes
+    // and receive the mynups arrays from the other processes
+    //
+
+    MPI_Allgather(mynups,  n_next, MPI_INT,
+	          allnups, n_next, MPI_INT,
+		  mpi_communicator);
+
+    //
+    // Now, copy my perturbers to a suitable array
+    // This array has place for the id's and seq's
+    //
+
+    id_seq_type *myperturbers = new id_seq_type[mystored_n_p];
+     
+    int k=0;
+    for (int node = 0; node < n_next; node++)
+    {
+
+      hdyn *curnode = next_nodes[node];
+      int nstored = curnode->get_n_perturbers();
+      if (nstored > MAX_PERTURBERS)
+	nstored = MAX_PERTURBERS;
+      hdyn **perturbers = curnode -> get_perturber_list();
+      for (int i=0; i<nstored; i++)
+      {
+	myperturbers[k].id = perturbers[i]->get_MPI_id();
+        myperturbers[k++].seq = perturbers[i]->get_seq();
+      }
+    }
+
+    //
+    // Now distribute the perturber lists
+    // The number of perturbers is different on each processor
+    // so we use Allgatherv.
+    // in the array allnups is the info about the number of 
+    // perturbers on each node on each processor.
+    // The array displs: recvs[i] is the total number of
+    // stored perturbers on processor[i]
+    // 
+
+    int * recvs = new int[mpi_nprocs];
+    // 
+    // Could have used a Allgather of mystored_n_p:
+    // MPI_Allgather(&mystored_n_p,1,MPI_INT,
+    //               recvs,       1,MPI_INT,mpi_communicator);
+    // but this is faster (no communication):
+    //
+
+    int sumrecvs = 0; // will hold the total number of all perturbers
+                       // on all processors on all nodes
+		       //
+    k=0;
+    for (int i=0; i<mpi_nprocs; i++)
+    {
+      recvs[i]=0;
+      for (int j=0; j<n_next; j++)
+	recvs[i] += allnups[k+j];
+      sumrecvs += recvs[i];
+      k += n_next;
+    }
+    int * displs = new int[mpi_nprocs];
+    displs[0] = 0;
+    for (int i=1; i<mpi_nprocs; i++)
+      displs[i] = displs[i-1]+recvs[i-1];
+
+    assert(mystored_n_p == recvs[mpi_myrank]);
+
+    //
+    // Create the array in which we will receive all id's and seq's of
+    // all perturbers of all processors
+    //
+
+    id_seq_type *allperturbers = new id_seq_type[sumrecvs];
+
+    //
+    // Finally, do the communication of all perturberlists:
+    //  (MPI knows the type of a struct containing 2 ints,
+    //   so we use that here. Otherwize, we would have to 
+    //   use MPI_BYTE as data type and adjust recvs and displs 
+    //   accordingly)
+    //
+
+    MPI_Allgatherv(myperturbers,  mystored_n_p,  MPI_2INT,
+	           allperturbers, recvs,displs, MPI_2INT,
+		   mpi_communicator);
+
+    //
+    // Now we have all information on this processor to
+    // adjust the perturberlists.
+    //
+    // The perturber lists are laid out in memory like this
+    // in the array allperturbers:
+    //
+    // example: 3 processors: 0 1 2
+    //          4 nodes:      a b c d
+    //
+    // memory lay out of allperturbers:
+    //
+    // 0a 0a 0a 0a 0a 0b 0b 0c 0c 0c 0d 1a 1a 1a 1b 1b 1c 1d 1d 1d 2a 2b 2b 2c 2c 2c
+    //
+    //
+    // Perturbers for node a:
+    //  *  *  *  *  *                    *  *  *                    *
+    // Perturbers for node b:
+    //                 * *                        *  *                 *  *
+    // Perturbers for node c:
+    //                       *  *  *                    *                    *  *  *
+    // Perturbers for node d:
+    //                                *                    *  *  *                  
+    //
+    // The necessary info to decode this is available in allnups[]:
+    // In the example the numbers in allnups should be:
+    // 0a 0a 0a 0a 0a 0b 0b 0c 0c 0c 0d 1a 1a 1a 1b 1b 1c 1d 1d 1d 2a 2b 2b 2c 2c 2c 2d
+    //
+    // 5              2     3        1  3        2     1  3        1  2     3        0
+    //
+    // For convenience, we create an array alldispls[], that will contain the
+    // starting locations of each series of perturbers:
+    //
+    // 0              5     8        9 12       14    15 18       19 21    24       24
+    //
+    // So, alldispls[n_next*p+n] gives the starting location of
+    // the perturbers of node n on processor p, while allnups[n_next*p+n]
+    // is equal to the number of perturbers of that node.
+    //
+    // So, there we go:
+    //
+
+    int *alldispls = new int[mpi_nprocs*n_next];
+
+    alldispls[0]=0;
+    for (int i=1; i<n_next*mpi_nprocs; i++)
+      alldispls[i] = alldispls[i-1]+allnups[i-1];
+
+    //
+    // allocate temp array that will be large enough to hold the perturbers
+    // of one node on all processors
+    //
+
+    id_seq_type *tmpper = new id_seq_type[MAX_PERTURBERS*mpi_nprocs];
+
+    for (int node = 0; node < n_next; node++)
+    {
+      hdyn *curnode = next_nodes[node];
+      int nper = 0;
+      //
+      // fill tmpper with the perturbers found on all processes
+      //
+      for (int p=0; p<mpi_nprocs; p++)
+      {
+        int k = p*n_next + node;
+	int jmin = alldispls[k];
+	int jmax =   allnups[k];
+	for (int j=jmin; j<jmax; j++)
+	  tmpper[nper++] = allperturbers[j];
+      }
+      //
+      // Sort tmpper on sequence:
+      //
+
+      hpsortid_seq(nper,tmpper);
+
+      //
+      // Now, tmpper contains the id's and seq's of the perturbers
+      // of this node in the order a sequential program
+      // would have obtained. We replace the perturber list with these
+      // values and put the total number of perturbers in place.
+      //
+      
+      int jmax = nper;
+      if (jmax > MAX_PERTURBERS)
+	jmax = MAX_PERTURBERS;
+
+      hdyn **perturbers = curnode -> get_perturber_list();
+      for (int j=0; j<jmax; j++)
+        perturbers[j]=get_MPI_hdynptr(tmpper[j].id);
+
+      curnode->set_n_perturbers(totalnups[node]);
+    }
+
+    delete[]allnups;
+    delete[]mynups;
+    delete[]totalnups;
+    delete[]alldispls;
+    delete[]recvs;
+    delete[]displs;
+    delete[]myperturbers;
+    delete[]allperturbers;
+    delete[]tmpper;
+  }
+#endif
+#ifdef PERTURBER_METHOD_1
+  //
+  // here we do a MPI_Allgatherv for each node. This leads to very many
+  // MPI_Allgatherv calls, so it is better to use the previous code
+  //
+  {
+    int * nups = new int[mpi_nprocs];  // will hold the numbers of perturbers
+                                       // in the next_nodes array
+
+    int * recvcounts = new int[mpi_nprocs];
+    int * displs = new int[mpi_nprocs];
+    for (int node=0; node<n_next; node++)
+    {
+      // tell each other how many perturbers there are here
+      //
+
+      hdyn *curnode = next_nodes[node];
+      // note: mynup can be bigger than MAX_PERTURBERS
+      int mynup = curnode->get_n_perturbers();
+
+      MPI_Allgather(&mynup,1,MPI_INT,&nups[0],1,MPI_INT,mpi_communicator);
+      // wwvv_counting:
+      mpi_allgather_count++;
+      mpi_allgather_len += sizeof(int);
+#ifdef MPIDEBUG
+      if (mpi_myrank == 0) {
+	cerr << mpi_myrank << ": TD: " << __FILE__ << ":" << __LINE__ << ": nups: ";
+	for (int i=0; i<mpi_nprocs; i++)
+	  cerr << nups[i] << " ";
+	cerr << endl;
+      }
+#endif
+
+      // Now we put things in place to perform an allgatherv for the id's
+      // and sequence numbers of the perturbers themselves
+      //
+      int totper = 0;
+      for (int i=0; i< mpi_nprocs; i++)
+	totper += nups[i];
+#ifdef MPIDEBUG
+      if (mpi_myrank == 0) {
+	cerr << mpi_myrank << ": TD: " << __FILE__ << ":" << __LINE__ << ": totper: ";
+	cerr << totper << endl;
+      }
+#endif
+      // totper now is the sum of all perturbers, not all have to be stored. 
+      // The maximum number of perturbers stored is MAX_PERTURBERS on
+      // each process.
+      // In the nups array, we now denote the actual numbers of
+      // perturbers actually stored. This info is needed for the MPI_Allgather
+      // call.
+
+      for (int i=0; i<mpi_nprocs; i++)
+	nups[i] = nups[i] > MAX_PERTURBERS ? MAX_PERTURBERS : nups[i];
+
+
+      // calculate now the total number of perturbers to receive,
+      // including mine: (Number of Perturbers To Receive)
+
+      int n_ptr = 0;
+      for (int i=0; i< mpi_nprocs; i++)
+	n_ptr += nups[i];
+
+      // Reserve place for the sequence numbers and
+      // id's of the total number total number of perturbers:
+      
+      int* seqs = new int[n_ptr];
+      int* ids = new int[n_ptr];
+
+      // n_pts will be equal to the number of perturbers this process
+      // is going to send. This number is already available in the
+      // nups array: (Number of Perturbers To Send)
+
+      int n_pts = nups[mpi_myrank];
+
+      // myids will contain the MPI_id's of my perturbers
+      // Will send n_pts of them (maximum = MAX_PERTURBERS):
+      
+      int* myids  = new int[n_pts];
+
+      hdyn ** perturbers = curnode -> get_perturber_list();
+
+      for (int i = 0; i<n_pts; i++)
+      {
+	myids[i] = perturbers[i]->get_MPI_id(); 
+      }
+
+      // calculate the displacements and receive counts
+
+      displs[0]=0;
+      recvcounts[0]=nups[0];
+      for (int i=1; i<mpi_nprocs;i++)
+      {
+	displs[i] = displs[i-1] + recvcounts[i-1];
+	recvcounts[i] = nups[i];
+      }
+
+      MPI_Allgatherv(&myids[0],
+	             n_pts,
+		     MPI_INT,
+		     &ids[0],&recvcounts[0],&displs[0],
+		     MPI_INT,mpi_communicator);
+      // wwvv_counting:
+      mpi_allgather_count++;
+      mpi_allgather_len += n_pts*sizeof(int);
+      MPI_Allgatherv(curnode->get_seq(),
+	             n_pts,
+		     MPI_INT,
+		     &seqs[0],&recvcounts[0],&displs[0],
+		     MPI_INT,mpi_communicator);
+      // wwvv_counting:
+      mpi_allgather_count++;
+      mpi_allgather_len += n_pts*sizeof(int);
+#ifdef MPIDEBUG
+      if (mpi_myrank == 0)
+      {
+        cerr << mpi_myrank << ": TD: " << __FILE__ << ":" << __LINE__ << ": ids and seqs: " << endl;
+	for (int i=0; i<n_ptr; i++)
+	  cerr << i << ": " << ids[i] << " " << seqs[i] << endl;
+      }
+#endif
+      // sort the array with perturber-id's and sequence number according
+      // to the sequence number:
+
+      hpsort_int_int(n_ptr,seqs,ids);
+
+#ifdef MPIDEBUG
+      if (mpi_myrank == 0)
+      {
+	cerr << mpi_myrank << ": TD: " << __FILE__ << ":" << __LINE__ << ": ids and seqs sorted: " << endl;
+	for (int i=0; i<n_ptr; i++)
+	  cerr << i << ": " << ids[i] << " " << seqs[i] << endl;
+      }
+#endif
+
+      curnode->set_n_perturbers(totper);
+      
+      // Put at maximum MAX_PERTURBERS into the pertuber_array:
+      // we have n_ptr perturbers, but can only store MAX_PERTURBERS:
+
+      int imax = n_ptr > MAX_PERTURBERS ? MAX_PERTURBERS : n_ptr;
+      for (int i=0; i<imax; i++)
+        perturbers[i]=get_MPI_hdynptr(ids[i]);
+
+      delete [] myids;
+      delete [] ids;
+      delete [] seqs;
+	
+    }
+    delete[] displs;
+    delete[] recvcounts;
+    delete[] nups;
+  }
+#endif
 }
 // USEMPI
 
@@ -721,13 +1231,47 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 // 				       restart_grape);
 
 #ifdef USEMPI
-	  // fill in node_id in all nodes. We need it later
-	  int node_id = 0;
-          for_all_daughters(hdyn,next_nodes[0]->get_root(),bi)
-          {
-            bi->set_node_id(node_id);
-	    node_id++;
-          }
+
+	  // Each mpi process will take into consideration
+	  // a part of the whole universe.
+	  // Some functions deeper, in the serial version
+	  // a scan over for_all_daughters is done for each
+	  // of the n_top next_nodes.
+	  //
+	  // Here we divide the work over the mpi-processes,
+	  // each takes about 
+	  // total_number_of_daughters/mpi_nprocs 
+	  // in consideration.
+
+	  // count the number of daughters:
+
+	  num_daughters=0;
+          hdyn *b = next_nodes[0]->get_root();
+	  for_all_daughters(hdyn,b,d)
+	    num_daughters++;
+
+	  // determine start and end of my daughters to consider:
+
+	  decomp(num_daughters, mpi_nprocs, mpi_myrank, 
+	         my_start_count, my_end_count);
+
+	  // number of daughters to consider:
+
+	  my_daughter_count = my_end_count - my_start_count;
+
+	  // find the first daughter to take into consideration:
+
+	  int dcounter=0;
+	  for_all_daughters(hdyn,b,d)
+	  {
+	    if (dcounter == my_start_count)
+	    {
+	      my_start_daughter = d;
+	      break;
+	    }
+	    dcounter++;
+	  }
+	  
 #endif
 
 	    n_force = _kira_calculate_top_level_acc_and_jerk(next_nodes,
@@ -741,37 +1285,22 @@ int calculate_acc_and_jerk_for_list(hdyn **next_nodes,
 	  // mpi_sum_list knows how to add them up and give each process the
 	  // same values.
 
-            cout << ":" << mpi_myrank <<":"
+#ifdef MPIDEBUG
+            cerr << ":" << mpi_myrank <<":"
 		 << " TD: calling mpi_sum_list n_top:"<< n_top 
 	         << " n_force:" << n_force << endl;
+#endif
 
             mpi_sum_list(next_nodes, n_top, mpi_communicator);
 
-	    // wwvv this is the place where the rest of the calculations
-	    // are to be done: the calculations that were skipped in the
-	    // for_all_daughters loop in hdyn_ev.C
-	    // Does not work. A rethinking of the way the calculations
-	    // are to be done is necessary.
-	    //
-	    // It would be nice, if the code leading to the for_all_daughters
-	    // loop in hdyn_ev.C could be separated: one call that only 
-	    // involves the calculations of the 'next_nodes' array, and
-	    // thereafter a call that updates the universe.
-	    //
-	    // In the current code, in hdyn_ev.C, after the calculations on
-	    // one element of 'next_nodes', the rest of the universe is updated,
-	    // which is not efficient in the parallel version, maybe even
-	    // not doable. In the parallel version, the sideeffects of the
-	    // calculations on the 'next_nodes' should be taken care off
-	    // after the MPI_Allreduce (... sum ...) of the 'next_nodes'.
-	    //
+#endif
+
 #if 0
 	    _kira_calculate_top_level_acc_and_jerk(next_nodes,
 							     n_top, time,
 							     restart_grape);
 #endif
 
-#endif
 
 	    // Note that we now clear restart_grape explicitly here.
 

@@ -195,6 +195,10 @@
 #endif
 
 #ifndef TOOLBOX
+double mpi_kira_timers[] = {0.0, 0.0, 0.0};
+// 0: evolve_system
+// 1: log_output
+// 2: snap_output
 
 #include "star/dstar_to_kira.h"
 #include "kira_timing.h"
@@ -208,6 +212,7 @@
 
 static hdyn **next_nodes = NULL;	// *** MAKE THIS GLOBAL HDYN ***
 static kira_counters kc_prev; 
+
 
 
 
@@ -717,10 +722,6 @@ local void evolve_system(hdyn * b,		// hdyn array
 
     real t_MPI_check = tt + 0.25 * randinter(0, dt_log);
 
-    // For use by pre/post-debug code:
-
-    real tdbg = -1;
-
     //----------------------------------------------------------------------
     // Frequencies of "other" (episodic) output.  Idea is that we will
     // have data blocks of width dt_alt2, sampled at intervals dt_alt1,
@@ -866,8 +867,16 @@ local void evolve_system(hdyn * b,		// hdyn array
 		    long_bin = 1;
 	    }
 
+#ifdef USEMPI
+            MPI_Barrier(MPI_COMM_WORLD);
+	    double mpi_kira_timer1 = MPI_Wtime();
+#endif
 	    log_output(b, count, steps, count_top_level, steps_top_level,
 		       &kc_prev, long_bin);
+#ifdef USEMPI
+            MPI_Barrier(MPI_COMM_WORLD);
+	    mpi_kira_timers[1] += MPI_Wtime() - mpi_kira_timer1;
+#endif
 
 //#ifdef USEMPI
 	    if (!check_MPI_id_array(b)) {
@@ -958,9 +967,17 @@ local void evolve_system(hdyn * b,		// hdyn array
 
 	    // PRC(ttmp), PRC(t_snap), PRL(dt_snap);
 
+#ifdef USEMPI
+            MPI_Barrier(MPI_COMM_WORLD);
+	    double mpi_kira_timer2 = MPI_Wtime();
+#endif
 	    snap_output(b, steps, snaps,
 			reg_snap, save_snap, snap_save_file,
 			t, ttmp, t_end, t_snap, dt_snap, verbose);
+#ifdef USEMPI
+            MPI_Barrier(MPI_COMM_WORLD);
+	    mpi_kira_timers[2] += MPI_Wtime() - mpi_kira_timer2;
+#endif
 
 	    if (reg_snap)
 		update_step(ttmp, t_snap, dt_snap);
@@ -1748,12 +1765,43 @@ void kira(hdyn * b,	       // hdyn array
   // computation in any initial perturbed binaries.  This will be done
   // in evolve_system() when the system is initialized.
 
+#ifdef USEMPI
+  MPI_Barrier(MPI_COMM_WORLD);
+    double mpi_kira_timer0 = MPI_Wtime();
+#endif
   evolve_system(b, delta_t, dt_log, long_binary_out,
 		dt_snap, dt_sstar, dt_esc, dt_reinit, dt_fulldump,
 		exact, cpu_time_limit,
 		verbose, snap_init, save_snap_at_log, snap_save_file,
 		n_stop, alt_flag);
 
+#ifdef USEMPI
+    // mpi_kira_timers[0] is for timing evolve_system without log_output()
+    // mpi_kira_timers[1] is for log_output()
+  MPI_Barrier(MPI_COMM_WORLD);
+    mpi_kira_timers[0] += MPI_Wtime() - mpi_kira_timer0 - mpi_kira_timers[1] -
+      mpi_kira_timers[2];
+    MPI_Gather(&hdyn_ev_count,1,MPI_LONG_LONG,hdyn_ev_counts,1,MPI_LONG_LONG,
+	        0,mpi_communicator);
+
+    if(mpi_myrank == 0)
+    {
+      cerr << "MPITIMING: procs: " << mpi_nprocs << 
+	    " evolve_system: " << mpi_kira_timers[0] << 
+	    " log_output: " << mpi_kira_timers[1] << 
+	    " snap_output: " << mpi_kira_timers[2] <<
+	    " allgathers: " << mpi_allgather_count << " " << mpi_allgather_len <<
+	    " allreduces: " << mpi_allreduce_count << " " << mpi_allreduce_len <<
+	    endl;
+      cerr << endl;
+
+      cerr << "hdyn_ev_counts: procs: " << mpi_nprocs << " ";
+      for (int i=0; i<mpi_nprocs; i++)
+	cerr << hdyn_ev_counts[i] << " ";
+      cerr << endl;
+    }
+         
+#endif
 }
 
 
@@ -1807,7 +1855,8 @@ void kira_finalize(hdyn *b)
     cerr << "cleanup complete" << endl << flush;
 
 #ifdef USEMPI
-    cerr << "Now finalizing mpi:" << endl << flush;
+    if (mpi_myrank == 0)
+      cerr << "Now finalizing mpi:" << endl << flush;
     MPI_Finalize();
 #endif
 
@@ -1818,6 +1867,12 @@ void kira_finalize(hdyn *b)
 
 
 // The standalone program.
+
+/*
+ * for getrlimit etc.
+ */
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #include <unistd.h>				// for termination below...
 #include <signal.h>
@@ -1918,6 +1973,19 @@ main(int argc, char **argv) {
 
 #ifdef USEMPI
     signal(11, signalhandler);
+#define PERTURBER_MSG "Not distributing perturber lists"
+
+#ifdef PERTURBER_METHOD_2
+#undef PERTURBER_MSG
+#define PERTURBER_MSG "Distributing perturber lists, method 2"
+#endif
+
+#ifdef PERTURBER_METHOD_1
+#undef PERTURBER_MSG
+#define PERTURBER_MSG "Distributing perturber lists, method 1"
+#endif
+
+    cerr << PERTURBER_MSG << endl;
 #endif
 
     check_help();
@@ -1965,6 +2033,13 @@ main(int argc, char **argv) {
     MPI_Comm_size(mpi_communicator,&mpi_nprocs);
     cerr << "Number of mpi processes: "<<mpi_nprocs<<endl;
     MPI_Comm_rank(mpi_communicator,&mpi_myrank);
+    hdyn_ev_counts = new long long[mpi_nprocs];
+    hdyn_ev_count= 0;
+    // wwvv_counting
+    mpi_allreduce_count = 0;
+    mpi_allreduce_len   = 0;
+    mpi_allgather_count = 0;
+    mpi_allgather_len   = 0;
 
 #endif
 

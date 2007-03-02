@@ -864,10 +864,6 @@ local bool get_neighbors_and_adjust_h2(int chip, hdyn * b)
     int nnb;
     bool no_nb = false;
 
-#ifdef USEMPI
-    int nn_id, coll_id;		//wwvv added
-#endif
-
     nnb = h3nblist_(&nboards, &chip, h3nb);	// get neighbor list for
 						// current neighbor radius
 
@@ -929,18 +925,10 @@ local bool get_neighbors_and_adjust_h2(int chip, hdyn * b)
 
 		real sum_of_radii = get_sum_of_radii(b, bb);
 
-#ifdef USEMPI
-		update_nn_coll(b, 100,		// (100 = ID)	    // inlined
-			       d2, bb, dmin_sq, bmin,
-			       sum_of_radii,
-			       dcmin_sq, cmin,
-			       nn_id,coll_id); //wwvv added
-#else
 		update_nn_coll(b, 100,		// (100 = ID)	    // inlined
 			       d2, bb, dmin_sq, bmin,
 			       sum_of_radii,
 			       dcmin_sq, cmin);
-#endif
 
 		// Recompute the perturber list for parent nodes.
 		// See equivalent code for use without GRAPE in
@@ -969,17 +957,11 @@ local bool get_neighbors_and_adjust_h2(int chip, hdyn * b)
 	else {
 	    b->set_nn(bmin);
 	    b->set_d_nn_sq(dmin_sq);
-#ifdef USEMPI
-	    b->set_nn_id(nn_id);		// wwvv added
-#endif
 	}
 
 	if (cmin != NULL) {
 	    b->set_coll(cmin);
 	    b->set_d_coll_sq(dcmin_sq);
-#ifdef USEMPI
-	    b->set_coll_id(coll_id);		// wwvv added
-#endif
 	}	
 
     }

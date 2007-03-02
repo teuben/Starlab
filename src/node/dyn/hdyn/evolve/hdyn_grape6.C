@@ -2396,19 +2396,10 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
 		real sum_of_radii = get_sum_of_radii(b, bb);
 
-#ifdef USEMPI
-		int nn_id, coll_id;		// wwvv added
-		update_nn_coll(b, 100,		// (100 = ID)	    // inlined
-			       diff2, bb, dmin_sq, bmin,
-			       sum_of_radii,
-			       dcmin_sq, cmin,
-			       nn_id,coll_id);	// wwvv added
-#else
 		update_nn_coll(b, 100,		// (100 = ID)	    // inlined
 			       diff2, bb, dmin_sq, bmin,
 			       sum_of_radii,
 			       dcmin_sq, cmin);
-#endif
 
 		// Recompute the perturber list for parent nodes.
 		// See equivalent code for use without GRAPE in

@@ -19,7 +19,7 @@
 #include  "dyn.h"
 
 #include "stdinc.h"
-#include "constants.h"
+#include "starlab_constants.h"
 
 /*-----------------------------------------------------------------------------
  *  sstar_to_dyn  --  

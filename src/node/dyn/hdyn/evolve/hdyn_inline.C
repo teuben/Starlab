@@ -31,20 +31,11 @@
 // inline void update_nn_coll
 //	update various neighbor pointers associated with a node.
 
-#ifdef USEMPI
-local inline void update_nn_coll(hdyn *this_node, int id,
-				 real d_to_b_sq, hdyn *b,
-				 real &d_nn_sq, hdyn *&nn,
-				 real sum_of_radii,
-				 real &d_coll_sq, hdyn *&coll,
-				 int &nn_id, int &coll_id)    // wwvv added line
-#else
 local inline void update_nn_coll(hdyn *this_node, int id,
 				 real d_to_b_sq, hdyn *b,
 				 real &d_nn_sq, hdyn *&nn,
 				 real sum_of_radii,
 				 real &d_coll_sq, hdyn *&coll)
-#endif
 
 // Note: arguments "this_node" and "id" are needed only for possible
 // 	 diagnostic output.
@@ -60,9 +51,6 @@ local inline void update_nn_coll(hdyn *this_node, int id,
 	d_nn_sq = d_to_b_sq;
 	nn = b;
 
-#ifdef USEMPI
-	nn_id = b->get_node_id();		// wwvv added
-#endif
 
 #if 0
 	if (this_node->get_real_system_time() > 13.62265) {
@@ -90,9 +78,6 @@ local inline void update_nn_coll(hdyn *this_node, int id,
     if (coll_dist < d_coll_sq) {
 	d_coll_sq = coll_dist;
 	coll = b;
-#ifdef USEMPI
-	coll_id = b->get_node_id();		//wwvv added
-#endif
     }
 }
 
@@ -183,11 +168,10 @@ local inline real binary_scale(hdyn* cm)
     last_time = time;
     last_scale = Starlab::max(sma, sep);
 
-    //  =  Starlab::max(2*sma, sep);	// Better? -- more conservative, and
-					// also avoids discontinuous changes
-					// in perturber lists as the binary
-					// phase changes.
-					//	-- changes default gamma.
+    //  =  max(2*sma, sep);	// Better? -- more conservative, and also
+				// avoids discontinuous changes in perturber
+				// lists as the binary phase changes.
+				// -- changes default gamma.
 
 #ifdef T_DEBUG
     real sys_t = cm->get_system_time();

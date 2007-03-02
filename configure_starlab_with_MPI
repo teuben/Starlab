@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#cd starlab || exit
+usempi=-DUSEMPI
+perturbermethod=-DPERTURBER_METHOD_2
+#PG=-pg
+mpiflags="$usempi $mpidebug $perturbermethod"
+export CXXFLAGS="-O2 -g $PG $mpiflags"
+export CFLAGS="-O2 -g $PG $mpiflags"
+export CPPFLAGS="-O2 $PG -g $mpiflags"
+export LDFLAGS="$PG"
+export CXX="mpicxx"
+./configure --without-grape --without-qt

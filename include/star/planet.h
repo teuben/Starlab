@@ -17,7 +17,7 @@
 
 //#include <stdlib.h>
 #include "stdinc.h"
-#include "constants.h"
+#include "starlab_constants.h"
 #include "star.h"
 //#include "ioserror.h"
 

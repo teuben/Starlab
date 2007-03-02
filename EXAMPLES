@@ -115,4 +115,13 @@ Note:  Most tools are just simple interfaces onto the corresponding
     scatter -i "-M 1.5 -r 0 -v 1 -t -a 1 -e 0 -p -a 1 -e 0 -p1 -a 0.1 -e 0" \
 	    -t 100 -d 1 -v
 
+
+* Run kira by calling
+   
+   kira < [infile] -t 1 
+
+* Run kira using the parallel MPI-enabeled version
+
+   mpirun -np 16 kira -R [infile] -t 1 
+
 (etc.)

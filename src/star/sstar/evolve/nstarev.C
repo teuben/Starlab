@@ -4,7 +4,9 @@
 //// Options:    -c    comment to put in the starbase log structure
 ////             -n    number of stars to evolve to t_end [all]
 ////             -s    Random seed
-////             -t    end time of the stellar evolution in Million year [100]
+////             -S    evolve until TAMS and not further [false]
+////             -t    start time of the stellar evolution in Million year [0]
+////             -T    end time of the stellar evolution in Million year [-]
 ////             -v    verbose output [false]
 ////
 //++ Notes:
@@ -86,7 +88,11 @@ local void evolve_the_stars(node* bi, const real end_time) {
 	cerr<<" and leave"<<endl;
 }
 
-bool stellar_evolution(dyn *b, real fraction_of_evolved_stars)
+bool stellar_evolution(dyn *b, 
+		       int n_outp,
+		       real fraction_of_evolved_stars, 
+		       bool TAMS = false,
+		       bool verbose = false)
 {
 
   PRL(fraction_of_evolved_stars);
@@ -109,18 +115,27 @@ bool stellar_evolution(dyn *b, real fraction_of_evolved_stars)
 	if (! bi->is_low_level_node()
 	    || !((star*)(bi->get_starbase()))->is_binary_component()) {
 
+	  if(TAMS)
+	    stellar_evolution_time = ((single_star*)(bi->get_starbase()))
+                                                       ->get_next_update_age();
+
+	  real dt = stellar_evolution_time/(real)(n_outp+1);
 	  sum += fraction_of_evolved_stars;
 	  if (sum >= 1) {
 	    sum -= 1;		
 
 	    //	    cerr << "evolve_star: i= " << bi->get_starbase()->get_identity() <endl;
 
+	    real time = 0;
+	    do {
+	      time += dt;
+
 	    starbase *sb = bi->get_starbase();
 	    if (DEBUG) ((star*)sb)->dump(cerr);
 
 
 	    real old_dyn_mass = bi->get_mass();
-	    evolve_the_stars(bi, stellar_evolution_time);
+	    evolve_the_stars(bi, time);
 
 	    sb = bi->get_starbase();		// may have changed
 	    
@@ -143,6 +158,12 @@ bool stellar_evolution(dyn *b, real fraction_of_evolved_stars)
 		>=cnsts.star_to_dyn(stellar_mass_update_limit)) {
 	      update_all_masses = true;
 	    }
+
+	    if(verbose)
+	      put_node(b);
+
+	    }
+	    while(time<stellar_evolution_time);
 	  }
 	  else {
 	    // do not evolve star but set its time to t_end
@@ -224,9 +245,13 @@ int main(int argc, char ** argv)
 {
     bool s_flag = false;
     bool c_flag = false;
+    bool T_flag = false;
     bool verbose = false;
+    bool TAMS = false;
 
-    int n_evolve = -1;   // number of stars to evolve [all]
+    int n_outp = 0;   // number of output steps [0]
+
+    int n_evolve = -1;   // number of output steps [all]
     real fraction_of_evolved_stars = 1;
     real t_end   = 100;  // end time of evolution in Myr [100]
 
@@ -235,7 +260,7 @@ int main(int argc, char ** argv)
     char  seedlog[SEED_STRING_LENGTH];
     extern char *poptarg;
     int c;
-    char* param_string = "n:f:s:t:v:c:";
+    char* param_string = "N:n:f:S:s:T:t:v:c:";
 
     check_help();
 
@@ -245,9 +270,15 @@ int main(int argc, char ** argv)
 
 	    case 'n': n_evolve = atoi(poptarg);
 		      break;
+	    case 'N': n_outp = atoi(poptarg);
+		      break;
 	    case 'f': fraction_of_evolved_stars = atof(poptarg);
 		      break;
-            case 't': t_end = atof(poptarg);
+	    case 't': t_end = atof(poptarg);
+                      break;
+   	    case 'T': TAMS = atof(poptarg);
+                      break;
+   	    case 'S': TAMS = !TAMS;
                       break;
             case 's': s_flag = TRUE;
                       input_seed = atoi(poptarg);
@@ -284,7 +315,7 @@ int main(int argc, char ** argv)
     b->get_starbase()->set_use_hdyn(false);
 
     b->set_system_time(b->get_starbase()->conv_t_star_to_dyn(t_end));
-    stellar_evolution(b, fraction_of_evolved_stars);
+    stellar_evolution(b, n_outp, fraction_of_evolved_stars, TAMS, verbose);
 
     if(verbose) {
       for_all_daughters(dyn, b, bi) {

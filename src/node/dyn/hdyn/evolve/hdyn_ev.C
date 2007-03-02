@@ -412,22 +412,19 @@ void hdyn::set_first_timestep(real additional_step_limit) // default = 0
 
 
 
-local inline real _kepler_step(hdyn *b,
-			       real correction_factor = 1)
+local inline real local_kepler_step(hdyn *b,
+				    real correction_factor = 1)
 {
     // Simple "kepler" time step criterion for elder binary component.
     // Used at low level, so minimal checks -- be careful!!
 
     hdyn* s = b->get_younger_sister();
 
-#define FACTOR 0.5				// empirical
-
     if (s) {					// excessively cautious?
 
 	real dist, dtff2, dtv2;
 
-	// Use predicted quantities here, as sister may not have been
-	// updated yet.
+	// Use predicted quantities here, as sister may not have been updated yet.
 
 	dist = abs(b->get_nopred_pos() - s->get_nopred_pos());
 	dtff2 = dist*dist*dist / (2*b->get_parent()->get_mass());
@@ -435,9 +432,9 @@ local inline real _kepler_step(hdyn *b,
 
 	// PRC(dist); PRC(square(b->get_vel())); PRC(dtff2); PRL(dtv2);
 
-	return FACTOR * correction_factor
-	    	      * b->get_eta()
-		      * sqrt(Starlab::min(dtff2, dtv2));
+	return 0.5 * correction_factor		// 0.5 is empirical
+	    	   * b->get_eta()
+		   * sqrt(Starlab::min(dtff2, dtv2));
 
     } else if (false) {
 
@@ -450,9 +447,9 @@ local inline real _kepler_step(hdyn *b,
 	dtv2  = square(b->get_nopred_pos() - s->get_nopred_pos())
 		  / square(b->get_nopred_vel() - s->get_nopred_vel());
 
-	return FACTOR * correction_factor
-	    	      * b->get_eta()
-		      * sqrt(Starlab::min(dtff2, dtv2));
+	return 0.5 * correction_factor		// 0.5 is empirical
+	    	   * b->get_eta()
+		   * sqrt(Starlab::min(dtff2, dtv2));
 
     } else
 
@@ -464,7 +461,7 @@ real kepler_step(hdyn *b,
 {
     // Globally accessible version of the above.
 
-    real keplstep = _kepler_step(b, correction_factor);
+    real keplstep = local_kepler_step(b, correction_factor);
 
 #if 0
     if (keplstep > 0) {
@@ -543,13 +540,33 @@ local inline real new_timestep(hdyn *b,			// this node
 			   && b->get_kira_diag()->check_diag(b));
 #endif
 
+
+
+    // keplstep = true;
+    // timestep_check = true;
+
+
+
     if (keplstep) {
 
 	// Use a simple "kepler" time step criterion if b is a binary
 	// and the perturbation is fairly small.
 
-	newstep = altstep = _kepler_step(b, correction_factor);
+	newstep = altstep = local_kepler_step(b, correction_factor);
 	if (newstep == 0) keplstep = false;
+
+
+#if 0
+	if (newstep < 1.e-11) { // && name_is(b, "14")) {
+	    PRL(11111);
+	    PRL(b->format_label());
+	    PRL(newstep);
+	    PRL(correction_factor);
+	    PRL(abs(b->get_pos()));
+	}
+#endif
+
+
     }
 
     real a2, j2, k2, l2;
@@ -739,45 +756,20 @@ local inline real new_timestep(hdyn *b,			// this node
     }
 
 
-    //-------------------------------------------------------------------------
-
-#if 0
     // EXPERIMENTAL: Reduce the time step of a strongly perturbed binary
     //		     component.
-    // Exponent in the pow() is largely empirical, based on the expression
-    // used by Aarseth...
+    // Exponent in the pow() comes from a simple comparison of time scales...
 
     if (b->is_low_level_node() && b->get_perturbation_squared() > 1)
-	newstep *= pow(b->get_perturbation_squared(), -0.16667);
-#endif
+	newstep *= pow(b->get_perturbation_squared(), -0.25);
 
-    // This is where to reduce time steps for debugging:
-
-//    if (b->get_time() > 1.1055 && b->get_time() < 1.1061) {
-//	if (b->is_parent() && streq(b->get_name(), "(157,1157)"))
-//	    newstep /= 16;
-//	if (b->is_parent() && streq(b->get_name(), "(151,10151)"))
-//	    newstep *= 2;
-//	if (b->get_index() == 157) newstep /= 4;
-//    }
 
     // Arbitrarily reduce low-level steps by some factor,
     // to facilitate timing checks of low-level steps.
     //
-    // if (b->is_low_level_node()) newstep /= 16;
+    // if (b->is_low_level_node()) newstep /= 32;
+    //
 
-
-//      if (time > 11.8680 && time <= 11.8695) {
-// 	 real tmp = newstep;
-// 	 if (b->name_is("(30,56)")) newstep /= 2;
-// 	 if (b->name_is("(371,1371)")) newstep /= 2;
-// 	 if (b->name_is("30")) newstep /= 4;
-// 	 if (newstep != tmp)
-// 	     cerr << "reduced step for " << b->format_label() << endl;
-//      }
-
-
-    //-------------------------------------------------------------------------
 
     // The natural time step is newstep.  Force it into an appropriate
     // power-of-two block.  A halving of timestep (not dt!) is always OK.
@@ -821,7 +813,7 @@ local inline real new_timestep(hdyn *b,			// this node
     }
 }
 
-local inline real _timestep_correction_factor(hdyn *b)
+real timestep_correction_factor(hdyn *b)
 {
     // Compute a correction factor to reduce the timestep
     // in a close binary, in order to improve energy errors.
@@ -829,40 +821,29 @@ local inline real _timestep_correction_factor(hdyn *b)
     real m = b->get_mass()/b->get_mbar();
     real pot_sq = m*m*b->get_d_min_sq()/square(b->get_pos());
 
-    real correction_factor = 1;
-
-#if 1				// 0 here forces correction_factor = 1
-
-    // Steve 8/98: 0.125 here is conservative -- expect per-step
-    //		   energy error to be ~fifth order (fourth-order
-    //		   cumulative error).
+    // Steve 8/98:  1. 0.125 here is conservative -- expect *cumulative*
+    //			   energy error to be ~fourth order.
+    //		    2. Could rewrite to replace pow() if necessary...
+    //			   *** see kira_approx.C ***
 
     // Hmmm...  This pow() seems to fall victim to the strange math.h
     // bug in Red Hat Linux 5.  In that case, use Steve's approximate
     // version instead.
 
-#define POT_SQ_THRESHHOLD	(1)	    // using 10 makes matters worse...
-#define MIN_CORRECTION_FACTOR	(0.125)	    // basically betting that this
-					    // doesn't occur too often!
+    real correction_factor = 1;
 
-    // Numbers fine-tuned by Steve, 4/06.  Note that reaching
-    // MIN_CORRECTION FACTOR corresponds to
-    //
-    //	sqrt(pot_sq/POT_...) = 4.1e3	for	MIN_CORRECTION_FACTOR = 0.125
-    //			       2.6e2	for				0.25
+    // correction_factor = pow(pot_sq, -0.1);
 
-    if (pot_sq > POT_SQ_THRESHHOLD)
-	// correction_factor = pow(pot_sq/POT_SQ_THRESHHOLD, -0.125);
-	correction_factor
-		= pow_approx(pot_sq/POT_SQ_THRESHHOLD);	  // -0.125 is built in!
+    if (pot_sq > 1)
+	// correction_factor = pow(pot_sq, -0.125);
+	correction_factor = pow_approx(pot_sq);	// -0.125 is built in!
 
-    // Desirable to place limits on the correction...
+    // correction_factor = pow(square(b->get_pos())/b->get_d_min_sq(), 0.025);
+
+    // May be desirable to place limits on the correction...
 
     if (correction_factor > 1.0) correction_factor = 1.0;
-    if (correction_factor < MIN_CORRECTION_FACTOR) {
-	b->get_kira_counters()->limit_timestep_correction++;
-	correction_factor = MIN_CORRECTION_FACTOR;
-    }
+    if (correction_factor < 0.2) correction_factor = 0.2;
 
 #if 0
     if (b->get_perturbation_squared() < 0.0001 && pot_sq > 1
@@ -871,16 +852,7 @@ local inline real _timestep_correction_factor(hdyn *b)
     }
 #endif
 
-#endif
-
     return correction_factor;
-}
-
-real timestep_correction_factor(hdyn *b)
-{
-    // Globally accessible version of the above:
-
-    return _timestep_correction_factor(b);
 }
 
 //-----------------------------------------------------------------------------
@@ -945,9 +917,46 @@ void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
     // Define correction factor for use in new_timestep.
 
     real correction_factor = 1;
-
     bool is_low = is_low_level_node();
-    if (is_low) correction_factor = _timestep_correction_factor(this);
+
+    if (is_low) {
+
+	// Correction factor reduces the timestep in a close binary,
+	// in order to improve energy errors.
+
+	real m = mass/mbar;
+	real pot_sq = m*m*d_min_sq/(pos*pos);
+
+	// Steve 8/98:  1. 0.125 here is conservative -- expect *cumulative*
+	//		   energy error to be ~fourth order.
+	//		2. Could rewrite to replace pow() if necessary...
+	//		   *** see kira_approx.C ***
+
+	// Hmmm...  This pow() seems to fall victim to the strange math.h
+	// bug in Red Hat Linux 5.  In that case, use Steve's approximate
+	// version instead.
+
+	// correction_factor = pow(pot_sq, -0.1);
+
+	if (pot_sq > 1)
+	    // correction_factor = pow(pot_sq, -0.125);
+	    correction_factor = pow_approx(pot_sq);	// -0.125 is built in!
+
+	// correction_factor = pow(pos*pos/d_min_sq, 0.025);
+
+	// May be desirable to place limits on the correction...
+
+	if (correction_factor > 1.0) correction_factor = 1.0;
+	if (correction_factor < 0.2) correction_factor = 0.2;
+
+#if 0
+	if (perturbation_squared < 0.0001 && pot_sq > 1
+	    && timestep < 1.e-11) {
+	    PRC(format_label()); PRL(correction_factor);
+	}
+#endif
+
+    }
 
     real new_dt = new_timestep(this, at3, bt2, jerk, acc, dt, time,
 			       correction_factor, perturbation_squared);
@@ -1938,11 +1947,6 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
     coll = NULL;
     d_coll_sq = VERY_LARGE_NUMBER;
 
-#ifdef USEMPI
-    nn_id = 0;		// wwvv added
-    coll_id = 0;	// wwvv added
-#endif
-
     real distance_squared;
 
     // ***********************************************************************
@@ -1954,11 +1958,7 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
     int n_top = 0;
 
 #ifdef USEMPI
-
-    // wwvv: another counter. Could have used n_top for the same purpose,
-    // but want to avoid double uses of the same variable. 
-    // doaughter_id is exclusively for identifying the daughter
-
+    n_top = my_start_count;
 #endif
 
     // Note special care in interpreting radius.  This code is duplicated
@@ -1990,25 +1990,32 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
     // wwvv could have used daughter_counter or n_top for the same
     // purpose, but again, I want to avoid double uses of the same variable
 
-    int mpidoit;
-    mpidoit = mpi_myrank;
+//    int mpidoit;
+//    mpidoit = mpi_myrank;
 
     // wwvv
     // in the MPI case, we calculate the acc and jerk only for a part of 
     // the daughters in each process. Later on, we add things up..
 
 #endif
-
-    for_all_daughters(hdyn, b, bi) {
-
+#ifdef USEMPI
+    int daughter_counter=0;
+    for ( hdyn* bi = my_start_daughter; 
+	  daughter_counter++ < my_daughter_count;
+	  bi = bi->get_younger_sister())
+#else
+    for_all_daughters(hdyn, b, bi) 
+#endif
+    {
 	n_top++;
 
 #ifdef USEMPI
 
 	// Check if we have to calculate for this daughter...
 
-	if (mpidoit-- != 0) continue;
-	mpidoit = mpi_nprocs-1;
+//	if (mpidoit-- != 0) continue;
+//	mpidoit = mpi_nprocs-1;
+	hdyn_ev_count++;
 #endif
 	if (bi != this) {
 
@@ -2049,37 +2056,13 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 	    // The nn and coll passed to update_nn_coll here are the actual
 	    // pointers, so this update changes the data in b.  
 
-	    // wwvv This is a problem for the MPI version.
-	    // How to notify other processes of these changes?
-	    //
-	    // It would be nice if the following code could be placed
-	    // after the call to _kira_calculate_top_level_acc_and_jerk
-	    // in kira_ev.C:363
-	    //
-	    // something like:
-	    // void update_nn_col_and_perturbers(hdyn*bb,b){
-	    //   
-	    // }
-	    // for (i=0; i<n_top; i++){
-	    //   update_nn_coll_and_perturbers(next_nodes[i],b)
-	    // }
-
-#ifdef USEMPI
-	    update_nn_coll(this, 1,		// (1 = ID)	// (inlined)
-			   distance_squared, bi, d_nn_sq, nn,
-			   sum_of_radii, d_coll_sq, coll,
-			   nn_id, coll_id);	//  wwvv added this line
-#else
 	    update_nn_coll(this, 1,		// (1 = ID)	// (inlined)
 			   distance_squared, bi, d_nn_sq, nn,
 			   sum_of_radii, d_coll_sq, coll);
-#endif
 
 	    // Note: we do *not* take the slowdown factor into account
 	    //	     when computing the perturber list.
 
-	    // In normal operation, this is the only place in the
-	    // front-end code where the perturber list is updated.
 	    // See equivalent code for use with GRAPE in
 	    // hdyn_grape[46].C/get_neighbors_and_adjust_h2.
 
@@ -2087,27 +2070,23 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 		&& is_perturber(this, bi->mass,			// (inlined)
 				distance_squared,
 				perturbation_radius_factor)) {
-
-		// Old code throws away all perturbers after overflow
-		// occurs, which is dangerous, as we may discard large
-		// perturbers.  Better to extend the list and compress
-		// it later (in the epilogue code).  GRAPE(-6) code
-		// already effectively does this.
-
-		// New code (to come) should increase the length of
-		// the array here by MAX_PERTURBERS and keep
-		// accumulating particles.  Can recover the length as
-		// the next multiple of MAX_PERTURBERS greater than
-		// n_perturbers.  To come...		(Steve, 4/06)
-
 		if (n_perturbers < MAX_PERTURBERS) {
 
 #ifdef USEMPI
-		    cout << ":"<<mpi_myrank<<": TD:"<<__FILE__<<":"
+#ifdef MPIDEBUG
+		    cerr << ":"<<mpi_myrank<<": TD:"<<__FILE__<<":"
 			 <<__LINE__<<" perturber modified"<<endl;
+#endif
 #endif
 
 		    perturber_list[n_perturbers] = bi;
+#ifdef USEMPI
+		    // to keep track of the order in which the
+		    // perturbers would have been found in the serial
+		    // version:
+
+		    seq[n_perturbers] = n_top;
+#endif
 #if 0
 		    cerr << "added " << bi->format_label();
 		    cerr << " to perturber list of "
@@ -2115,11 +2094,16 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 			 << endl;
 #endif
 		}
-		n_perturbers++;
+		n_perturbers++; // note: n_pertubers can get bigger than
+		                // MAX_PERTURBERS, but only MAXPERTURBERS
+				// are saved. wwvv
 	    }
 	}
     }
 
+#ifdef USEMPI
+    n_top = num_daughters;
+#endif
     return n_top;
 }
 
@@ -2274,16 +2258,9 @@ void hdyn::perturber_acc_and_jerk_on_leaf(vec &a,
 
 	real sum_of_radii = get_sum_of_radii(this, bb);
 
-#ifdef USEMPI
-	update_nn_coll(this, 2,					// (inlined)
-		       d2_bb, bb, p_d_nn_sq, p_nn,
-		       sum_of_radii, d_coll_sq, coll,
-		       nn_id, coll_id); // wwvv added
-#else
 	update_nn_coll(this, 2,					// (inlined)
 		       d2_bb, bb, p_d_nn_sq, p_nn,
 		       sum_of_radii, d_coll_sq, coll);
-#endif
 
     }
 
@@ -2369,16 +2346,9 @@ void hdyn::tree_walk_for_partial_acc_and_jerk_on_leaf(hdyn *b,
 
 	    real sum_of_radii = get_sum_of_radii(this, b);
 
-#ifdef USEMPI
-	    update_nn_coll(this, 3,
-			   d2, b, p_d_nn_sq, p_nn,
-			   sum_of_radii, d_coll_sq, coll,
-		           nn_id, coll_id); // wwvv added
-#else
 	    update_nn_coll(this, 3,
 			   d2, b, p_d_nn_sq, p_nn,
 			   sum_of_radii, d_coll_sq, coll);
-#endif
 
 	} else {
 
@@ -2757,9 +2727,9 @@ void hdyn::create_low_level_perturber_list(hdyn* pnode)
 
     valid_perturbers = true;
 
-    if (n_perturbers > MAX_PERTURBERS)		// can't happen?
+    if (n_perturbers > MAX_PERTURBERS)			// can't happen?
 
-	remove_perturber_list();		// will force use of pnode
+	remove_perturber_list();
 
     else {
 
@@ -3389,14 +3359,6 @@ local inline int n_leaves_or_unperturbed(hdyn* b)
 //		  Binaries undergoing partial unperturbed motion (pericenter
 //		  reflection) are always expanded.
 
-local inline int count_expanded_leaves(hdyn *b)
-{
-    if (RESOLVE_UNPERTURBED_PERTURBERS)
-	return b->n_leaves();
-    else
-	return n_leaves_or_unperturbed(b);
-}
-
 local inline bool expand_nodes(int &n, hdyn ** list, bool debug = false)
 {
      if (debug)
@@ -3413,7 +3375,12 @@ local inline bool expand_nodes(int &n, hdyn ** list, bool debug = false)
 	    if (debug)
 		cerr << "not a leaf" << endl;
 
-	    int nl = count_expanded_leaves(list[i]);
+	    int nl;
+
+	    if (RESOLVE_UNPERTURBED_PERTURBERS)
+		nl = list[i]->n_leaves();
+	    else
+		nl = n_leaves_or_unperturbed(list[i]);		// <-- new
 
 	    if (debug) {
 		pp3(list[i]->get_top_level_node());
@@ -3421,7 +3388,7 @@ local inline bool expand_nodes(int &n, hdyn ** list, bool debug = false)
 	    }
 
 	    if (n + nl - 1 > MAX_PERTURBERS)
-		return false;			// overflow
+		return false;
 
 	    // Make room for the expansion.
 
@@ -3444,7 +3411,7 @@ local inline bool expand_nodes(int &n, hdyn ** list, bool debug = false)
 		}
 	    } else {
 
-		for_all_leaves_or_unperturbed(hdyn, tmp, b) {
+		for_all_leaves_or_unperturbed(hdyn, tmp, b) {	// <-- new
 		    list[i + j] = b;
 		    if (debug)
 			cerr << "added " << b->format_label() << endl;
@@ -3566,17 +3533,28 @@ int hdyn::top_level_node_real_force_calculation()
 
         n_perturbers = 0;
         valid_perturbers = true;
-
-	// Initialization of "low" quantities may not strictly be
-	// needed, but include here for completeness.
-
-        n_perturbers_low = 0;
-	valid_perturbers_low = false;
-
     }
 
     clear_interaction();
+#ifdef USEMPI
+    double t0=MPI_Wtime();
+#endif
     int n_top = flat_calculate_acc_and_jerk(root, is_parent());
+#ifdef USEMPI
+#if 0
+    double t1=MPI_Wtime()-t0;
+    double *timers=new double[mpi_nprocs];
+    MPI_Gather(&t1,1,MPI_DOUBLE,timers,1,MPI_DOUBLE,0,mpi_communicator);
+    if (mpi_myrank == 0)
+    {
+      cerr << "flat_calculate_acc_and_jerk: ";
+      for (int i=0; i<mpi_nprocs; i++)
+	cerr << timers[i] << " ";
+      cerr << endl;
+    }
+    delete[]timers;
+#endif
+#endif
 
     if (nn == NULL) {
         // pretty_print_node(cerr); cerr << " nn NULL after flat " << endl;
@@ -3584,17 +3562,6 @@ int hdyn::top_level_node_real_force_calculation()
 
     return n_top;
 }
-
-class qb {
-public:
-    double q;
-    hdyn *b;
-    qb(double qq=0, hdyn *bb= NULL) {q = qq; b = bb;}
-    bool operator < (const qb y) const {return q < y.q;}
-};
-
-#include <vector>
-#include <algorithm>
 
 void hdyn::top_level_node_epilogue_force_calculation()
 {
@@ -3606,19 +3573,14 @@ void hdyn::top_level_node_epilogue_force_calculation()
     }
 #endif
 
-    // Include the tidal term in the center of mass force on a
-    // perturbed binary, by expanding the perturber list applying a
-    // currrection due to each member.  May also reduce the number of
-    // perturbers if necessary once the components are included.
-
-    // Should NOT be called in the exact case.
-
 #if 0
     if (time > 13.62265) {
 	cerr << func << "(1): " << endl;
 	PRC(format_label()); PRC(nn->format_label()); PRL(sqrt(d_nn_sq));
     }
 #endif
+
+    // Should NOT be called in exact case.
 
     // Take care of the case where the nearest neighbor is
     // a complex node, since otherwise nn may disappear.
@@ -3653,6 +3615,12 @@ void hdyn::top_level_node_epilogue_force_calculation()
 
     hdyn * root = get_root();
 	
+    // if (is_parent()) {
+    //     print_label(cerr); cerr << " nn before epilogue ";
+    //     n->print_label(cerr); cerr << " ";
+    //     RL(d_nn_sq);
+    // }
+
     // Perturber list was computed in "real_force_calculation" or by GRAPE.
 
     // If the perturber list has overflowed and no perturber list is available,
@@ -3668,10 +3636,6 @@ void hdyn::top_level_node_epilogue_force_calculation()
     // only "low" data available.
     //							(Steve, 3/03)
 
-    // New code can have perturber list temporarily longer than
-    // MAX_PERTURBERS.  Must intercept and compress down to
-    // MAX_PERTURBERS here.  To come...			(Steve 4/06)
-
     if (n_perturbers > MAX_PERTURBERS || !valid_perturbers) {
 	valid_perturbers = false;
 	kc->perturber_overflow++;
@@ -3681,159 +3645,76 @@ void hdyn::top_level_node_epilogue_force_calculation()
     // Note that the decision to use the low-level perturber list for the
     // top-level node as an efficiency measure (with errors) is completely
     // independent of the use of the list for low-level nodes.
-
-    if ((valid_perturbers && n_perturbers > 0)
-	|| (valid_perturbers_low && n_perturbers_low > 0)) {  // may happen in
-							      // GRAPE version
+	
+    if (valid_perturbers && n_perturbers > 0
+	|| valid_perturbers_low && n_perturbers_low > 0) {
 	
 	// Expand a copy of the perturber list to see in advance if the list
 	// will overflow.  Shrink the perturber list until the expansion is
 	// successful.
 
 	hdynptr plist[MAX_PERTURBERS];
-
 	int np = n_perturbers, nlist;
 	if (!valid_perturbers) np = n_perturbers_low;
-
 	nlist = np;
-	for (int i = 0; i < nlist; i++) plist[i] = perturber_list[i];
+	for (int i = 0; i < np; i++)
+	    plist[i] = perturber_list[i];
 
-#if 0
-	// Version 1: truncate the list by shrinking the radius.
-	// Works!
-
-	real qmax2 = 0;
-	real q2[MAX_PERTURBERS];
+	real dmax2 = 0;
+	real d2[MAX_PERTURBERS];
 
 	while (!expand_nodes(nlist, plist)) {
 
-	    // The expanded list is too long.  Reduce the length and
-	    // retry.  Start by determining distances or inverse
-	    // perturbations (r^3/m), if not yet known.  Choose
-	    // between the two possibilities with qwhich.
+	    // Expanded list is too long.  Reduce the length and retry.
 
-	    const int qwhich = 1;
-
-	    if (qmax2 == 0) {
+	    if (dmax2 == 0) {
 
 		kc->perturber_overflow++;
 
 		for (int i = 0; i < np; i++) {
-		    hdyn *perti = perturber_list[i];
-		    q2[i] = square(perti->get_nopred_pos() - pred_pos);
-		    if (qwhich)
-			q2[i] = pow(q2[i], 3) / pow(perti->get_mass(), 2);
-		    if (q2[i] > qmax2) qmax2 = q2[i];
+		    d2[i] = square(perturber_list[i]->get_pred_pos() - pred_pos);
+		    if (d2[i] > dmax2) dmax2 = d2[i];
 		}
 	    }
+
+	    // Shrink the list.
+
+	    dmax2 *= 0.95;
 
 	    int nskip = 0;
-	    while (nskip == 0) {
-
-		// Shrink the list by removing the outliers.
-
-		qmax2 *= 0.95;
-
-		for (int i = 0; i < np; i++) {
-		    if (nskip > 0) {
-			perturber_list[i-nskip] = perturber_list[i];
-			q2[i-nskip] = q2[i];
-		    }
-		    if (q2[i] > qmax2) nskip++;
+	    for (int i = 0; i < np; i++) {
+		if (nskip > 0) {
+		    perturber_list[i-nskip] = perturber_list[i];
+		    d2[i-nskip] = d2[i];
 		}
-		np -= nskip;
+		if (d2[i] > dmax2) nskip++;
 	    }
+	    np -= nskip;
 
 	    valid_perturbers = false;
-	    valid_perturbers_low = true;	// by construction here
+	    valid_perturbers_low = true;	// by construction
 
 	    // Make a new copy and continue.
 
 	    nlist = np;
-	    for (int i = 0; i < nlist; i++) plist[i] = perturber_list[i];
+	    for (int i = 0; i < np; i++)
+		plist[i] = perturber_list[i];
 	}
-#else
-	// Version 2: truncate the list by sorting it.
 
-	if (!expand_nodes(nlist, plist)) {
+	// Original list is perturber_list, of length np;
+	// expanded list is plist, of length nlist.
 
-	    kc->perturber_overflow++;
-
-	    // The expanded list will be too long.  Sort and truncate
-	    // it according to distance or inverse perturbation (r^3/m).
-	    // Choose between the two possibilities with qwhich.
-
-	    const int qwhich = 1;
-
-	    vector<qb> qblist;
-	    vector<qb>::iterator qbi;
-
-	    for (int i = 0; i < np; i++) {
-		hdyn *perti = perturber_list[i];
-		real q2 = square(perti->get_nopred_pos() - pred_pos);
-		if (qwhich) q2 = pow(q2, 3) / pow(perti->get_mass(), 2); 
-		qblist.push_back(qb(q2, perti));
-	    }
-
-	    sort(qblist.begin(), qblist.end());
-
-	    int newnp = 0, ntot = 0;
-	    for (qbi = qblist.begin(); qbi < qblist.end(); qbi++) {
-		hdyn *p = qbi->b;
-		int nl = count_expanded_leaves(p);
-		if (ntot + nl >= MAX_PERTURBERS) break;
-		ntot += nl;
-		perturber_list[newnp++] = p;
-	    }
-
-	    nlist = np = newnp;
-
-	    if (!expand_nodes(nlist, plist)) {
-		cerr << "shouldn't happen..." << endl;
-		exit(1);
-	    }
-
-	    valid_perturbers = false;
-	    valid_perturbers_low = true;	// by construction here
-	}
-#endif
-
-	// The original list is perturber_list, of length np; the
-	// expanded list is plist, of length nlist, and the expanded
-	// list is of legal length.
-
-	if (valid_perturbers)
-	    n_perturbers = np;
-	else
-	    n_perturbers_low = np;
-
-	// Now use the (partial) perturber list to correct the
-	// center-of-mass force.  First subtract out the
-	// center-of-mass contribution due to perturbers (note that,
-	// at this point, the perturber list contains only CMs).
-
-	// Note that calculate_partial_acc_and_jerk() will treat an
-	// unperturbed CM properly as a leaf.  However, the criterion
-	// for unperturbed treatment used there and later in
-	// correct_acc_and_jerk() is the existence of a kepler
-	// structure, not the absence of perturbers.  Use that
-	// criterion here too in deciding whether to resolve this
-	// binary.  (Code here basically expands this binary; we will
-	// expand neighbors later in correct_acc_and_jerk.)
-
-	bool unpert = od->get_kepler();
+	// Use the (partial) perturber list to correct the center-of-mass force.
+	// First, subtract out the center-of-mass contribution due to perturbers
+	// (note that, at this point, the perturber list contains only CMs):
 	
 	vec a_cm, a_p, j_cm, j_p;
-	real p_cm, p_p;
-
-	if (!unpert)
-	    calculate_partial_acc_and_jerk(this, this, this,
-					   a_cm, j_cm, p_cm, d_nn_sq, nn,
-					   USE_POINT_MASS,    	    // explicit
-					   this,	  	    // loop
-					   this);
-
-	// (Note: 'this' is OK here because this is a top-level node.)
+	real p_p;
+	calculate_partial_acc_and_jerk(this, this, this,
+				       a_cm, j_cm, p_p, d_nn_sq, nn,
+				       USE_POINT_MASS,	    	    // explicit
+				       this,	   		    // loop
+				       this);
 
 #if 0
 	if (time > 13.62265) {
@@ -3841,6 +3722,13 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	    PRC(format_label()); PRC(nn->format_label()); PRL(sqrt(d_nn_sq));
 	}
 #endif
+
+	// (Note: 'this' is OK here because this is a top-level node.)
+
+	// acc -= a_cm;
+	// jerk -= j_cm;
+
+	pot -= p_p;
 
 	// Replace nodes by components on the perturber list and
 	// add in contribution due to components.
@@ -3857,12 +3745,11 @@ void hdyn::top_level_node_epilogue_force_calculation()
 
 	// Include component forces in the CM force (explicit loop).
 	
-	if (!unpert)
-	    calculate_partial_acc_and_jerk(this, this, this,
-					   a_p, j_p, p_p, d_nn_sq, nn,
-					   !USE_POINT_MASS,
-					   this,
-					   this);
+	calculate_partial_acc_and_jerk(this, this, this,
+				       a_p, j_p, p_p, d_nn_sq, nn,
+				       !USE_POINT_MASS,
+				       this,
+				       this);
 
 #if 0
 	if (time > 13.62265) {
@@ -3885,21 +3772,29 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	// correct_and_update() should properly treat the dominant
 	// term due to the internal motion of this node.
 
+
+// 	if (time >= xreal(2296, 3651856000000000000)) {
+// 	    cerr << endl << "in top_level_node_epilogue_force_calculation"
+// 		 << endl;
+// 	    int p = cerr.precision(HIGH_PRECISION);
+// 	    PRL(format_label());
+// 	    pp3(get_top_level_node());
+// 	    cerr << endl;
+//	    cerr.precision(p);
+// 	}
+
+
 	if (!od->slow) {
 
 	    // Normal correction in non-slow case.
 
-	    if (!unpert) {
-		acc += a_p - a_cm;
-		jerk += j_p - j_cm;
-	    }
+	    acc += a_p - a_cm;
+	    jerk += j_p - j_cm;
 
 	} else {
 
 	    // Keep the CM approximation and save the perturbation
 	    // for use in correct_and_update().
-
-	    // Expect unpert = false in this case...
 
 	    od->slow->set_acc_p(a_p - a_cm);
 	    od->slow->set_jerk_p(j_p - j_cm);
@@ -3920,9 +3815,14 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	    }
 	}
 
-	if (!unpert)
-	    pot += p_p - p_cm;
+	pot += p_p;
 	
+
+	// if (nn == NULL) {
+	//     pretty_print_node(cerr);
+	//     cerr << " nn NULL after add back "<<endl;
+	// }
+
 #if 0
 	if (time > 13.62265) {
 	    cerr << "top_level_node_epilogue_force_calculation(4): " << endl;
@@ -3962,9 +3862,7 @@ void hdyn::top_level_node_epilogue_force_calculation()
     //	      perturber_list contains *leaves only.*
     //
     //	      If valid_perturbers is false, then the force on 'this'
-    //	      node has been computed exactly from an O(N) calculation,
-    //	      or approximately, using the truncated perturber list;
-    //	      wither way, no further correction is needed.
+    //	      node has been computed exactly; no correction is needed.
 
     // if (nn == NULL) {
     //     pretty_print_node(cerr);
@@ -4464,20 +4362,12 @@ local inline void check_and_apply_correction(hdyn * bj, hdyn * bi)
 	    // the left-most ("oldest") leaf of the clump, in order to
 	    // guarantee that btop is corrected only once.
 
-	    // Find the left-most leaf or unperturbed CM.
+	    // Find the left-most leaf.
 
 	    hdyn *b_oldest = btop;
 
-#if 1
-	    while (b_oldest->is_parent()
-		   && !b_oldest->get_oldest_daughter()	    // unpert test added
-			       ->get_kepler()		    // by Steve 4/06
-		)
-		b_oldest = b_oldest->get_oldest_daughter();
-#else
 	    while (b_oldest->is_parent())
 		b_oldest = b_oldest->get_oldest_daughter();
-#endif
 
 	    // Note that bi can be a top-level node in the case of correction
 	    // from a node without valid perturber list.
@@ -4489,8 +4379,7 @@ local inline void check_and_apply_correction(hdyn * bj, hdyn * bi)
 	    if (!btop->get_oldest_daughter()->get_kepler()) {  //  (*) <---
 
 		// Node btop is perturbed.  See if some component of bj
-		// is a perturber of btop (in which case the correction
-		// has already been made and we can return).
+		// is a perturber of btop.
 
 		// What if perturber list of btop is INVALID?  This in
 		// practice *should not* occur unless previous force
