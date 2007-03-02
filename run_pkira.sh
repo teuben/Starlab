@@ -25,7 +25,7 @@ esac
 
 $STARLAB_INSTALL_PATH/bin/kira "$@" 
 
-On the LISA cluster this script looks like:
+#On the LISA cluster this script looks like:
 # #!/bin/bash
 # nodes=$1
 # ppn=$2
