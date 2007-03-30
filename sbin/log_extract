@@ -2,7 +2,7 @@
 # -*-shell-script-*-
 
 # Extracts various data from Starlab log files.
-# Copyright (C) 2005 Ernest N. Mamikonyan
+# Copyright (C) 2005, 2007 Ernest N. Mamikonyan
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -51,8 +51,6 @@ Usage: ${0##*/} [OPTIONS] [LOG FILE] ...
 Extracts various data from Starlab log files.
 Defaults are shown in parentheses.
 
-  -A	modified center of mass position, X-Y projection
-  -B	modified center of mass galacto-centric distance
   -a	center of density position, X-Y projection
   -b	center of density galacto-centric distance
   -c	center of mass position, X-Y projection (default)
@@ -60,12 +58,14 @@ Defaults are shown in parentheses.
   -D DF look in the associated dyn file, DF, for scale factors
   -f	overwrite existing files silently ($force)
   -h	display this help message and exit
+  -M	mass loss due to dynamical evaporation and stellar evolution;
+	output will be 3 columns: time, dm_escapers, dm_massloss
   -m	mass (in stars) bound to the cluster
   -n	number of stars bound to the cluster
   -o F	output to file F ($output)
   -r	cluster half-mass radius
   -q	suppress all diagnostic output
-  -S SF assume the scale factors SF given in the order: mass, length, time
+  -S SF assume the scale factors SF given in the order: mass, length, time,
 	i.e., -S '91902.6 0.039 0.000377257' (search input)
   -V	display version information and exit
 " >&2
@@ -92,10 +92,8 @@ to_clobber() {
 
 shopt -s expand_aliases nullglob xpg_echo
 
-while getopts :AaBbcD:dfhmno:qrS:V option; do
+while getopts :abcD:dfhMmno:qrS:V option; do
     case $option in
-	A) action=mcom_position;;
-	B) action=mcom_distance;;
 	a) action=cod_position;;
 	b) action=cod_distance;;
 	c) action=com_position;;
@@ -103,6 +101,7 @@ while getopts :AaBbcD:dfhmno:qrS:V option; do
 	D) dyn="$OPTARG";;
 	f) force=true;;
 	h) usage 0;;
+	M) action=mass_loss;;
 	m) action=mass;;
 	n) action=star_number;;
 	o) output="$OPTARG";;
@@ -172,8 +171,9 @@ case $action in
     cod_distance)
 	echo -n computing the center of density galacto-centric distance...
 	awk "
+/^Time = / { t = ${sf[2]}*\$3 }
 /density_center = / {
-  print ${sf[2]}*i++, sqrt(\$3^2+\$4^2+\$5^2)*${sf[1]}
+  print t, sqrt(\$3^2+\$4^2+\$5^2)*${sf[1]}
 }" "$@" > "$output"
 	echo done
 	;;
@@ -188,8 +188,9 @@ case $action in
     com_distance)
 	echo -n computing the center of mass galacto-centric distance...
 	awk "
+/^Time = / { t = ${sf[2]}*\$3 }
 /center of mass position = / {
-  print ${sf[2]}*i++, sqrt(\$6^2+\$7^2+\$8^2)*${sf[1]}
+  print t, sqrt(\$6^2+\$7^2+\$8^2)*${sf[1]}
 }" "$@" > "$output"
 	echo done
 	;;
@@ -201,6 +202,16 @@ case $action in
 }" "$@" > "$output"
 	echo done
 	;;
+    mass_loss)
+	echo -n extracting mass loss due to evaporation and stellar evolution...
+	awk "
+/^Time = / { t = ${sf[2]}*\$3 }
+/dm_escapers = / { me = ${sf[0]}*\$3 }
+/dm_massloss = / {
+  print t, me, ${sf[0]}*\$3
+}" "$@" > "$output"
+	echo done
+	;;
     mass)
 	echo -n computing the bound mass...
 	awk "
@@ -209,27 +220,12 @@ case $action in
 }" "$@" > "$output"
 	echo done
 	;;
-    mcom_distance)
-	echo -n computing the modified center of mass galacto-centric distance...
-	awk "
-/Lagrangian radii relative to / {
-  print ${sf[2]}*i++, sqrt(substr(\$5,2)^2+\$6^2+\$7^2)*${sf[1]}
-}" "$@" > "$output"
-	echo done
-	;;
-    mcom_position)
-	echo -n extracting the modified center of mass position \(X-Y plane\)...
-	awk "
-/Lagrangian radii relative to / {
-  print substr(\$5,2)*${sf[1]}, \$6*${sf[1]}
-}" "$@" > "$output"
-	echo done
-	;;
     rhalf)
 	echo -n extracting the half-mass radius...
 	awk "
+/^Time = / { t = ${sf[2]}*\$3 }
 /rhalf = / {
-  print ${sf[2]}*i++, \$3*${sf[1]}
+  print t, \$3*${sf[1]}
 }" "$@" > "$output"
 	echo done
 	;;
