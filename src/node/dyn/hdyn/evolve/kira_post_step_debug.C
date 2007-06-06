@@ -1,10 +1,91 @@
 
 // Place temporary post-step debugging code here, to clean up kira.C.
 // Current time is t, root node is b.  The integration list is
-// next_nodes[], of length n_next.  Real steps counts particle steps;
-// real count counts block steps.  The variable tdbg may be used here
-// to control debugging output.  It is initialized to -1.
+// next_nodes[], of length n_next.  The current time is t.  Real steps
+// counts particle steps; real count counts block steps.  The variable
+// tdbg may be used here to control debugging output.  It is
+// initialized to -1.
 
+#if 0
+if (t > 1360.926581) {
+  int p = cerr.precision(15);
+  cerr << endl; PRL(t);
+  cerr.precision(p);
+  for (int ii = 0; ii < n_next; ii++) {
+    hdyn *n = next_nodes[ii];
+    if (n && n->is_valid() && (n->is_parent() || n->is_low_level_node())) {
+      PRC(n->format_label()); PRL(n->get_timestep());
+      if (n->is_low_level_node())
+	PRC(n->get_posvel()); PRL(n->get_pos()*n->get_vel());
+    }
+  }
+}
+#endif
+
+#if 0
+if (t > 361.1566) {
+  for (int ii = 0; ii < n_next; ii++) {
+    hdyn *n = next_nodes[ii];
+    if (n && n->is_valid() && n->get_oldest_daughter()) {
+      hdyn *od = n->get_oldest_daughter();
+      hdyn *yd = od->get_younger_sister();
+
+      // Compute the CM acceleration the hard way, using the CM
+      // approximation for other stars.
+
+      // Compute the forces on od and yd, the hard way...
+
+      vec xod = n->get_pos() + od->get_nopred_pos();
+      vec xyd = n->get_pos() + yd->get_nopred_pos();
+      vec acm = 0, aod = 0, ayd = 0;
+      for_all_daughters(hdyn, od->get_root(), bb) {
+	if (bb != n) {
+	  vec x = bb->get_nopred_pos() - n->get_pos();
+	  real r2 = x*x + n->get_eps2();
+	  acm += bb->get_mass()*x/(r2*sqrt(r2));
+	  x = bb->get_nopred_pos() - xod;
+	  r2 = x*x + od->get_eps2();
+	  aod += bb->get_mass()*x/(r2*sqrt(r2));
+	  x = bb->get_nopred_pos() - xyd;
+	  r2 = x*x + yd->get_eps2();
+	  ayd += bb->get_mass()*x/(r2*sqrt(r2));
+	}
+      }
+      vec x12 = yd->get_nopred_pos() - od->get_nopred_pos();
+      real r2 = x12*x12 + n->get_eps2();
+      vec a12 =  yd->get_mass()*x12/(r2*sqrt(r2));
+      vec a21 = -od->get_mass()*x12/(r2*sqrt(r2));
+      vec atop = (od->get_mass()*aod + yd->get_mass()*ayd)/n->get_mass();
+      cerr << "comparing CM acc on " << n->format_label() << endl;
+      PRL(acm);
+      PRL(aod);
+      PRL(ayd);
+      PRL(a12);
+      PRL(atop);
+      PRL(n->get_acc());
+      PRL(aod+a12);
+      PRL(aod+a12-atop);
+      PRL(od->get_acc());
+      PRL(ayd+a21);
+      PRL(ayd+a21-atop);
+      PRL(yd->get_acc());
+      vec od_abs_acc = hdyn_something_relative_to_root(od, &hdyn::get_acc);
+      PRL(od_abs_acc);
+    }
+  }
+}
+#endif
+
+#if 0
+for (int ii = 0; ii < n_next; ii++) {
+    hdyn *n = next_nodes[ii];
+    if (n && n->is_valid()) {
+	if (n->name_is("174") || n->name_is("881")) {
+	  PRC(n->format_label()); PRL(n->get_timestep());
+	}
+    }
+}
+#endif
 
 #if 0
 //    if (t >= 11.868 && t <= 11.8695) {
