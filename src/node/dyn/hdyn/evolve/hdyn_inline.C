@@ -277,6 +277,10 @@ local inline real perturber_rescale(hdyn *b, real fac)
 }
 
 // is_perturber: check the perturbation criterion.
+//
+// (Note that we implicitly assume eps = 0 here.  This underestimates
+// the number of perturbers by overestimating the binary interaction.
+// 							SLWM, 5/07)
 
 local inline bool is_perturber(hdyn *b,			     // 'this' CM node
 			       real m_pert,		     // perturber mass
