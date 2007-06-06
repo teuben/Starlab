@@ -214,6 +214,9 @@ static hdyn **next_nodes = NULL;	// *** MAKE THIS GLOBAL HDYN ***
 static kira_counters kc_prev; 
 
 
+bool temp_debug_flag = false;
+
+
 
 
 local void full_reinitialize(hdyn* b, xreal t, bool verbose,
