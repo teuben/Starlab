@@ -43,6 +43,10 @@
 #include <star/dstar_to_kira.h>
 #include <star/single_star.h>
 
+
+extern bool temp_debug_flag;			// defined in kira.C
+
+
 // Note:  The *only* places in kira where "close" is defined, for
 //	  purposes of making binary trees, are too_close() and
 //	  new_sister_node().
@@ -132,6 +136,8 @@ local bool number_of_daughter_nodes_exceeds(node * b, int n)
 local void halve_timestep(hdyn * b)
 {
     b->set_timestep(0.5 * b->get_timestep());
+//     cerr << "halved timestep for " << b->format_label()
+// 	 << " to " << b->get_timestep() << endl;
 }
 
 local void print_relative_energy_and_period(hdyn* bi, hdyn* bj)
@@ -147,6 +153,7 @@ local void print_relative_energy_and_period(hdyn* bi, hdyn* bj)
 
 
 local bool too_close(hdyn * bi, hdyn * bj, real limit_sq,
+		     bool check_big = false,
 		     bool print = true)
 {
     if (bi == bj)
@@ -155,7 +162,10 @@ local bool too_close(hdyn * bi, hdyn * bj, real limit_sq,
     // Note: pred_pos necessary here to take care of runaways where a
     // neighbor time step runs away to zero.  (Steve, 4/03).
 
-    real gap_sq = square(bi->get_pred_pos() - bj->get_pred_pos());
+    vec ipos = bi->get_pred_pos();
+    vec jpos = bj->get_pred_pos();
+    vec sep = ipos - jpos;
+    real gap_sq = square(sep);
 
     // Binary criterion modified 7/98 by SLWM and SPZ to depend on
     // acceleration; modified again by SLWM and JM to include potential.
@@ -190,6 +200,60 @@ local bool too_close(hdyn * bi, hdyn * bj, real limit_sq,
 
     close = (gap_sq < mass_factor * limit_sq);
 
+#if 1
+
+    // EXPERIMENTAL: Probably shouldn't keep/accept strongly perturbed
+    // binaries.  Note that, if we apply this test, MUST make
+    // acceptance (too close) stronger than rejection (too big).
+
+    real pert2 = 0;
+    if (check_big) {
+
+	// Call came from too_big() and bi and bj are binary sisters.
+	// Use the perturbation as is.
+
+	if (bi->get_valid_perturbers() && bi->get_n_perturbers() > 0)
+	    pert2 = bi->get_perturbation_squared();
+
+//	cerr << "check_big: " << bi->format_label() << " ";
+//	cerr << bj->format_label() << " ";
+//	PRL(pert2);
+
+    } else if (close) {
+
+	// bi and bj are close and not binary sisters.  Compute a
+	// perturbation from their accelerations.  Write ai = aij +
+	// aip, aj = aji + ajp and solve for aip, ajp.
+
+	real mi = bi->get_mass(), mj = bj->get_mass();
+	vec ai = hdyn_something_relative_to_root(bi, &hdyn::get_acc);
+	vec aj = hdyn_something_relative_to_root(bj, &hdyn::get_acc);
+	real r2eps = gap_sq + bi->get_eps2();
+	vec fij = -mi*mj*sep/(r2eps*sqrt(r2eps));
+	vec aip = ai - fij/mi;
+	vec ajp = aj + fij/mj;
+	fij *= (mi+mj)/(mi*mj);
+	pert2 = square(aip-ajp)/square(fij);
+
+// 	cerr << "close: " << bi->format_label() << " ";
+// 	cerr << bj->format_label() << " ";
+// 	PRL(pert2);
+// 	PRL(sep);
+// 	PRC(gap_sq); PRL(r2eps);
+// 	PRL(ai);
+// 	PRL(aj);
+// 	PRL(fij/mi);
+// 	PRL(aip);
+// 	PRL(ajp);
+
+	pert2 *= 1.2;			// harder to combine than to split
+    }
+
+    close &= (pert2 < 0.1);		// choice of 0.1 here is ~arbitrary
+
+#endif
+
+
     if (close && print && bi->get_kira_diag()->tree
 		       && bi->get_kira_diag()->tree_level > 0) {
 	cerr << endl << "*** "; bi->print_label(cerr);
@@ -220,14 +284,8 @@ local bool too_big(hdyn * bi, real limit_sq)
 	if (pert2 >= 0 && pert2 <= 1.e-10) return false;
     }
 
-    bool big = !too_close(od, od->get_younger_sister(), limit_sq, false);
-
-    // EXPERIMENTAL:  Probably shouldn't keep strongly perturbed binaries:
-
-//    if (od->get_perturbation_squared() > 10) big = true;
-    if (od->get_perturbation_squared() > 0.1) big = true;
-
-
+    bool big = !too_close(od, od->get_younger_sister(), limit_sq,
+			  true, false);
 
 
 //    if (bi->get_system_time() > 11.868 && bi->get_system_time() < 11.870
@@ -235,8 +293,6 @@ local bool too_big(hdyn * bi, real limit_sq)
 // 	cerr << bi->format_label() << " forced too big" << endl;
 // 	return true;
 //     }
-
-
 
 
     // Don't allow a slow binary to be split, but schedule the slow
@@ -656,7 +712,9 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
         cerr << endl << "combine_top_level_nodes: attaching ",
 	bj->pretty_print_node(cerr);
 	cerr << " to ", bi->pretty_print_node(cerr);
+	int p = cerr.precision(INT_PRECISION);
 	cerr << " at time " << bj->get_system_time();
+	cerr.precision(p);
 
 	if (bj->get_kira_diag()->tree_level > 0) {
 
@@ -807,13 +865,15 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
     // Note that this almost certainly starts the CM off with a step
     // far shorter than necessary.  Assume that it is OK to let the
     // timestep algorithm double the step back to the proper value
-    // over the next 10 or so time steps.
+    // over the next 10 or so time steps.  (Doesn't seem to do any
+    // harm...)
     //
     // An alternative is to compute the perturber lists etc. explicitly,
     // but we can't do this here, as the GRAPE doesn't yet know about
     // the CM.  Could do it from the top-level in kira.  (Steve, 3/03)
 
     halve_timestep(par);
+
     real dt_par = par->get_timestep();
     // PRL(dt_par);
 
@@ -841,6 +901,9 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
       if (dt_min > dt_par/16) {			// 16 is arbitrary
 	  dt_par = dt_min;
 	  par->set_timestep(dt_par);
+	  cerr << "reduced timestep for " << par->format_label()
+	       << " to " << dt_par << endl;
+
       }
       // else cerr << "combine_top_level_nodes: "
       //           << "Can't reduce parent timestep sufficiently..." << endl;
@@ -905,7 +968,9 @@ void split_top_level_node(hdyn * bi,
 
         cerr << endl << "split_top_level_node: splitting ";
 	bi->pretty_print_node(cerr);
+	int p = cerr.precision(INT_PRECISION);
 	cerr << " at time " << bi->get_system_time();
+	cerr.precision(p);
 
 	if (bi->get_kira_diag()->tree_level >= 1) {
 	    cerr << endl;
@@ -990,18 +1055,97 @@ void split_top_level_node(hdyn * bi,
 	put_node(bi, cout, false, 3);
     }
 
+#if 0
+
+    // Compute the CM and component accelerations directly, using the CM
+    // approximation for other stars; then repeat component calculation
+    // using perturbers.
+
+    vec xod = bi->get_pos() + od->get_nopred_pos();
+    vec xyd = bi->get_pos() + yd->get_nopred_pos();
+    vec acm = 0, aod = 0, ayd = 0;
+    for_all_daughters(hdyn, od->get_root(), bb) {
+      if (bb != bi) {
+	vec x = bb->get_nopred_pos() - bi->get_pos();
+	real r2 = x*x + bi->get_eps2();
+	acm += bb->get_mass()*x/(r2*sqrt(r2));
+	x = bb->get_nopred_pos() - xod;
+	r2 = x*x + od->get_eps2();
+	aod += bb->get_mass()*x/(r2*sqrt(r2));
+	x = bb->get_nopred_pos() - xyd;
+	r2 = x*x + yd->get_eps2();
+	ayd += bb->get_mass()*x/(r2*sqrt(r2));
+      }
+    }
+    vec atop = (od->get_mass()*aod + yd->get_mass()*ayd)/bi->get_mass();
+    vec x12 = yd->get_nopred_pos() - od->get_nopred_pos();
+    real r2 = x12*x12 + bi->get_eps2();
+    vec a12 = yd->get_mass()*x12/(r2*sqrt(r2));
+    aod += a12;
+    ayd -= a12*od->get_mass()/yd->get_mass();
+
+    vec aodp = 0;
+    int np = bi->get_n_perturbers();
+    hdyn **plist = bi->get_perturber_list();
+    cerr << "perturbers: ";
+    for (int k = 0; k < np; k++) {
+        hdyn *p = plist[k];
+	cerr << p->format_label() << " ";
+	vec xp = hdyn_something_relative_to_root(p, &hdyn::get_nopred_pos);
+	vec x = xp - xod;
+	r2 = x*x + od->get_eps2();
+	aodp += p->get_mass()*x/(r2*sqrt(r2));
+	x = xp - xyd;
+	r2 = x*x + yd->get_eps2();
+	aodp -= p->get_mass()*x/(r2*sqrt(r2));
+    }
+    cerr << endl;
+    aodp *= yd->get_mass()/bi->get_mass();
+    aodp += a12;
+
+    PRL(bi->get_acc());
+    PRL(acm);
+    PRL(atop);
+    PRL(atop-bi->get_acc());
+
+    PRL(od->get_acc());
+    PRL(aod-atop);
+    PRL(aod-atop-od->get_acc());
+
+    PRL(yd->get_acc());
+    PRL(ayd-atop);
+    PRL(ayd-atop-yd->get_acc());
+
+    PRL(a12);
+    PRL(np);
+    PRL(aodp);
+    PRL(aodp-od->get_acc());
+
+#endif
+
     // Express od and yd quantities relative to root.
 
     od->set_pos(hdyn_something_relative_to_root(od, &hdyn::get_pos));
     od->set_vel(hdyn_something_relative_to_root(od, &hdyn::get_vel));
-    od->set_acc(hdyn_something_relative_to_root(od, &hdyn::get_acc));
-    od->set_jerk(hdyn_something_relative_to_root(od, &hdyn::get_jerk));
-    od->store_old_force();
-
     yd->set_pos(hdyn_something_relative_to_root(yd, &hdyn::get_pos));
     yd->set_vel(hdyn_something_relative_to_root(yd, &hdyn::get_vel));
+
+    od->set_acc(hdyn_something_relative_to_root(od, &hdyn::get_acc));
+    od->set_jerk(hdyn_something_relative_to_root(od, &hdyn::get_jerk));
     yd->set_acc(hdyn_something_relative_to_root(yd, &hdyn::get_acc));
     yd->set_jerk(hdyn_something_relative_to_root(yd, &hdyn::get_jerk));
+
+    // Reconstructing acc and jerk this way explicitly neglects the
+    // differential contribution of non-perturbers, introducing errors
+    // at the level of the perturbation threshold.  Ordinarily this is
+    // negligible, and is recovered after a few steps.  However, in
+    // exceptional circumstances (or due to bugs elsewhere), it can
+    // happen that we repeatedly form and destroy a binary, in which
+    // case repeatedly introcuce this (constant) error and may force
+    // the time step to zero.  Safest to recompute acc and jerk on od
+    // and yd once they are restored below.  (SLWM, 5/07)
+
+    od->store_old_force();
     yd->store_old_force();
 
     od->init_pred();
@@ -1053,6 +1197,43 @@ void split_top_level_node(hdyn * bi,
 
     add_node(od, root);
     add_node(yd, root);
+
+#if 1
+
+    //    if (od->get_system_time() > 361.15673100948) {
+    if (od->get_system_time() > 0) {
+
+	// Recompute acc and jerk on od and yd (see note above).  Should
+	// be possible to use GRAPE to do this, but defer for now to avoid
+	// possible internal bookkeeping problems in the kira_ev/GRAPE
+	// code -- to be checked.  (Steve, 5/07)
+
+        // Note that the front-end calculation must deviate from that
+        // done on the GRAPE at some level of precision.  In that
+        // case, there will always be a discrepancy in the
+        // accelerations at some level, which will eventually
+        // translate into the time step going to zero.  Only solution
+        // may be to avoid this circumstance by being more careful
+        // about combine/split commands...
+
+	od->calculate_acc_and_jerk(true);
+	yd->calculate_acc_and_jerk(true);
+
+	od->store_old_force();
+	yd->store_old_force();
+
+	od->init_pred();
+	yd->init_pred();
+    }
+
+#endif
+
+#if 0
+      temp_debug_flag = true;
+      cerr << "setting temp_debug_flag" << endl;
+#endif
+
+    // Bad idea to routinely reduce time steps.
 
     // halve_timestep(od);
     // halve_timestep(yd);
@@ -1108,7 +1289,7 @@ local void combine_low_level_nodes(hdyn * bi, hdyn * bj,
 //    pp3_at_end = (bi->get_time() > 82 && bi->get_time() < 82.5);
 
     if (bi->get_kira_diag()->tree && bi->get_kira_diag()->tree_level > 0) {
-        cerr << endl << "combine_low_level_nodes:  combining ";
+	cerr << endl << "combine_low_level_nodes:  combining ";
 	bi->pretty_print_node(cerr);
 	cerr << " and ";
 	bj->pretty_print_node(cerr);
@@ -1316,7 +1497,7 @@ local int adjust_low_level_node(hdyn * bi, int full_dump = 0)
 
 	    if (bi->get_kira_diag()->tree
 		    && bi->get_kira_diag()->tree_level > 1) {
-	        cerr << "\nadjust_low_level_node: "
+		cerr << "\nadjust_low_level_node: "
 		     << "normal top level combine at time "
 		     << bi->get_time() << endl;
 		// print_recalculated_energies(bi->get_root());
@@ -1333,7 +1514,7 @@ local int adjust_low_level_node(hdyn * bi, int full_dump = 0)
 
 	    if (bi->get_kira_diag()->tree
 		    && bi->get_kira_diag()->tree_level > 1) {
-	        cerr << "adjust_low_level_node:"
+		cerr << "adjust_low_level_node:"
 		     << " top level combine with two top level nodes at time "
 		     << bi->get_time() << endl;
 		// print_recalculated_energies(bi->get_root());
@@ -1418,6 +1599,9 @@ local inline bool check_binary_params(hdyn *b)
 
 		od->synchronize_node();
 		od->set_timestep(b->get_timestep());
+		cerr << "set component timestep for " << od->format_label()
+		     << " to " << b->get_timestep() << endl;
+
 
 		if (b->get_kira_diag()->tree
 		    && b->get_kira_diag()->tree_level > reason)
@@ -1444,7 +1628,7 @@ local void print_tree_structure(hdyn *bb)		// for debugging
 
 	cerr << endl << "tree structure for " << b->format_label()
 	     << " at time " << b->get_system_time() << endl;
-        cerr << "output triggered by " << bb->format_label() << endl;
+	cerr << "output triggered by " << bb->format_label() << endl;
 
 	// Daughters:
 
