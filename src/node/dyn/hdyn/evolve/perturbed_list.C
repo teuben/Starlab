@@ -281,7 +281,7 @@ void hdyn::add_to_perturbed_list(int id) // default = 0
 
 	cerr << "***** warning: add_to_perturbed_list: node "
 	     << this << " " << format_label() << " already on list"
-	     << endl;
+	     << " at location " << i << endl;
 
 	check_perturbed_list();
 
@@ -341,8 +341,13 @@ void hdyn::remove_from_perturbed_list(int id) // default = 0
     if (i < 0 || i >= n_perturbed || perturbed_list[i] != this) {
 
 	cerr << "***** warning: remove_from_perturbed_list(" << id
-	     << "): node " << this << " " << format_label() << " not on list"
-	     << endl;
+	     << "):" << endl
+	     << "node " << this << " = " << format_label()
+	     << " not on list" << endl;
+	PRC(i); PRL(n_perturbed);
+	if (i >= 0 && i < n_perturbed)
+	  cerr << "perturbed_list[i] = "
+	       << perturbed_list[i]->format_label() << endl;
 
 	check_perturbed_list();
 
