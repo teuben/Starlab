@@ -3296,7 +3296,7 @@ local void rotate_kepler(kepler *k)
 
 #define CORRECT_TIDAL		1
 
-// Funny syntax here is to presere the if () structures below.  Removing
+// Funny syntax here is to preserve the if () structures below.  Removing
 // them completely may subtly alter the optimization structure of the
 // program, leading to divergences.
 
@@ -4309,11 +4309,11 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	     || 0.01*peristep < DBL_EPSILON*(real)time
 	    ) {
 
-	    int prec = cerr.precision(HIGH_PRECISION);
-	    cerr << endl << "short time step for " << format_label()
-		 << " at "; PRL(time);
-	    cerr.precision(prec);
-	    PRC(timestep); PRC(keplstep); PRL(peristep);
+// 	    int prec = cerr.precision(HIGH_PRECISION);
+// 	    cerr << endl << "short time step for " << format_label()
+// 		 << " at "; PRL(time);
+// 	    cerr.precision(prec);
+// 	    PRC(timestep); PRC(keplstep); PRL(peristep);
 
 	    // Timestep is close to being insignificant.  The short timestep
 	    // (presumably) indicates that we have a very close perturbed
@@ -4329,9 +4329,17 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    // ended.
 
 	    hdyn *top = get_top_level_node();
-	    PRL(top->format_label());
+//	    PRL(top->format_label());
 	    hdyn **pertlist;
 	    int np;
+
+	    // Short version of output message:
+
+	    int prec = cerr.precision(HIGH_PRECISION);
+ 	    cerr << endl << "short time step for " << format_label();
+	    cerr << " under " << top->format_label()
+ 		 << " at t = " << time << flush << endl;
+ 	    cerr.precision(prec);
 
 	    if (top->valid_perturbers) {
 		np = top->n_perturbers;
@@ -4382,13 +4390,13 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		// PRC(rpert3); PRL(pert);
 	    }
 
-	    PRC(count_pert); PR(max_pert);
-	    if (max_pert_node && max_pert_node->is_valid())
-		cerr << " (" << max_pert_node->format_label() << ")";
+//	    PRC(count_pert); PR(max_pert);
+//	    if (max_pert_node && max_pert_node->is_valid())
+//		cerr << " (" << max_pert_node->format_label() << ")";
 
 	    if (count_pert) {
 
-		cerr << " -- too large" << endl;
+		// cerr << " -- too large" << endl;
 
 		// Note: if the timestep is in danger of becoming too short,
 		// but the multiple is too strongly perturbed, then it may
@@ -4406,9 +4414,11 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 	    } else {
 
-		cerr << endl << "top-level node is effectively unperturbed "
-		     << "-- candidate for special treatment." << endl;
-		print_structure_recursive(top);
+		// cerr << endl
+		//	<< "top-level node is effectively unperturbed -- ";
+		cerr << "candidate for special treatment" << endl;
+
+		// print_structure_recursive(top);
 
 		// We have just perturbed the inner component of a hard
 		// multiple system and we expect time step problems near
@@ -4420,9 +4430,9 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 		if (allow_isolated_multiples) {
 
-		    cerr << endl;
-		    for (int i = 0; i < 75; i++) cerr << "=";
-		    cerr << endl;
+		    // cerr << endl;
+		    // for (int i = 0; i < 75; i++) cerr << "=";
+		    // cerr << endl;
 
 		    // Make sure the entire multiple tree is synchronized.
 
@@ -4434,7 +4444,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		    // internal structure may have changed.
 
 		    print_recalculated_energies(get_root());
-		    real t_mult = integrate_multiple(top);
+		    real t_mult = integrate_multiple(top, 1);
 		    cerr << "multiple integration time = " << t_mult << endl;
 		    print_recalculated_energies(get_root());
 
@@ -4444,11 +4454,11 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		    // keep track of it -- NB likely to have a cumulative
 		    // effect if multiple outer passes take place.
 
-		    cerr << endl;
-		    for (int i = 0; i < 75; i++) cerr << "=";
-		    cerr << endl;
+		    // cerr << endl;
+		    // for (int i = 0; i < 75; i++) cerr << "=";
+		    // cerr << endl;
 
-		    unpert = 2;	// will force time step list rescheduling.
+		    unpert = 2;	// force time step list rescheduling.
 
 		} else
 
