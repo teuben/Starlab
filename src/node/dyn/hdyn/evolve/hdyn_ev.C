@@ -168,6 +168,8 @@
 
 static bool dbg = false;
 
+extern bool temp_debug_flag;			// defined in kira.C
+
 
 //=============================================================================
 //  node synchronization functions
@@ -546,7 +548,6 @@ local inline real new_timestep(hdyn *b,			// this node
     // timestep_check = true;
 
 
-
     if (keplstep) {
 
 	// Use a simple "kepler" time step criterion if b is a binary
@@ -614,19 +615,22 @@ local inline real new_timestep(hdyn *b,			// this node
 	    // as the higher derivatives may become very large...
 
 #if 0
-	    // Handy to be able to check details (e.g. in case of
-	    // inconsistencies in external fields).
+	    if (b->get_system_time() > 361.1566) {
 
-	    cerr << endl;
-	    PRL(b->format_label());
-	    PRL(acc);
-	    PRL(jerk);
-	    PRL(bt2);
-	    PRL(at3);
-	    PRC(abs(acc)); PRL(abs(jerk));
-	    PRC(a2); PRL(j2);
-	    PRC(abs(bt2)); PRL(abs(at3));
-	    PRC(k2); PRL(l2);
+	      // Handy to be able to check details (e.g. in case of
+	      // inconsistencies in external fields).
+
+	      cerr << endl;
+	      PRL(b->format_label());
+	      PRL(acc);
+	      PRL(jerk);
+	      PRL(bt2);
+	      PRL(at3);
+	      PRC(abs(acc)); PRL(abs(jerk));
+	      PRC(a2); PRL(j2);
+	      PRC(abs(bt2)); PRL(abs(at3));
+	      PRC(k2); PRL(l2);
+	    }
 #endif
 
 	} else {
@@ -693,27 +697,35 @@ local inline real new_timestep(hdyn *b,			// this node
 	    }
 
 #if 0
-	    // Handy to look at timestep details (e.g. inconsistent acc
-	    // and jerk in an external potential...).
+	    if (b->get_system_time() > 361.1566) {
 
-	    cerr << endl;
-	    PRL(b->format_label());
-	    PRL(acc);
-	    PRL(jerk);
-	    PRL(bt2);
-	    PRL(at3);
-	    PRC(abs(acc)); PRL(abs(jerk));
-	    PRC(a2); PRL(j2);
-	    PRC(abs(bt2)); PRL(abs(at3));
-	    PRC(k2); PRL(l2);
-	    PRC(tmp1); PRC(tmp2); PRC(tmp3); PRL(tmp4);
+	      // Handy to look at timestep details (e.g. inconsistent acc
+	      // and jerk in an external potential...).
+
+	      cerr << endl;
+	      PRL(b->format_label());
+	      PRL(acc);
+	      PRL(jerk);
+	      PRL(bt2);
+	      PRL(at3);
+	      PRC(abs(acc)); PRL(abs(jerk));
+	      PRC(a2); PRL(j2);
+	      PRC(abs(bt2)); PRL(abs(at3));
+	      PRC(k2); PRL(l2);
+	      PRC(tmp1); PRC(tmp2); PRC(tmp3); PRL(tmp4);
+
+	    }
 #endif
 
 	}
 
 	newstep = aarsethstep * correction_factor;
+
 #if 0
-	PRC(dt); PRC(timestep); PRL(newstep);
+	if (temp_debug_flag && b->is_top_level_node()) {
+	    PRC(aarsethstep); PRL(correction_factor);
+	    PRC(dt); PRC(timestep); PRL(newstep);
+	}
 #endif
     }
 
@@ -787,30 +799,41 @@ local inline real new_timestep(hdyn *b,			// this node
 	while (fmod(time, timestep) != 0) timestep /= 2;
     }
 
+    real final_step = timestep;
+
     if (newstep < timestep) {
 
-	return 0.5 * timestep;
+	final_step = 0.5 * timestep;
+	// return 0.5 * timestep;
 
-   }  else if (newstep < 2 * timestep)
+    }  else if (newstep < 2 * timestep) {
 
-	return timestep;
+	// return timestep;
 
-    else if (fmod(time, 2 * timestep * b->get_kappa()) != 0.0
-	     || 2 * timestep * b->get_kappa() > b->get_step_limit())
+    } else if (fmod(time, 2 * timestep * b->get_kappa()) != 0.0
+	       || 2 * timestep * b->get_kappa() > b->get_step_limit()) {
 
-	return timestep;
+	// return timestep;
 
-    else {
+    } else {
 
 	// Added by Steve 7/28/98 to deal with pathological ICs from SPZ...
 	// Do not double if this is a strongly perturbed center of mass node...
 
 	if (b->is_leaf()
-	    || b->get_oldest_daughter()->get_perturbation_squared() < 1)
-	    return 2 * timestep;
-	else
-	    return timestep;
+	    || b->get_oldest_daughter()->get_perturbation_squared() < 1) {
+
+	    final_step = 2 * timestep;
+	    // return 2 * timestep;
+
+	} else {
+
+	    // return timestep;
+
+	}
     }
+
+    return final_step;
 }
 
 real timestep_correction_factor(hdyn *b)
@@ -885,7 +908,8 @@ void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
     //			bt2  =  a''  dt^2 / 2
 
 #if 0
-    if (time > 0) {
+    //if (time > 361.1566) {
+    if (temp_debug_flag && is_top_level_leaf()) {
 
 	// Handy to be able to check details (e.g. in case of
 	// inconsistencies in external fields).
@@ -893,13 +917,16 @@ void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
 	cerr << endl;
 	PRC(time); PRL(format_label());
 	PRI(4); PRC(index); PRL(dt);
+	int p = cerr.precision(10);
 	PRI(4); PRL(pred_pos);
 	PRI(4); PRL(pos);
+	PRI(4); PRL(pos-pred_pos);
 	PRI(4); PRL(pred_vel);
 	PRI(4); PRL(vel);
 	PRI(4); PRL(old_acc);
 	PRI(4); PRL(acc);
 	PRI(4); PRL(old_jerk);
+	cerr.precision(p);
 	PRI(4); PRL(jerk);
 	PRI(4); PRL((acc-old_acc)/dt);
 	PRI(4); PRL(2*bt2/(dt*dt));
@@ -911,6 +938,7 @@ void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
 	PRI(4); PRL(2 * (old_acc - acc));
 	PRI(4); PRL(dt * (old_jerk + jerk));
 	PRI(4); PRL(at3);
+
     }
 #endif
 
@@ -960,6 +988,14 @@ void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
 
     real new_dt = new_timestep(this, at3, bt2, jerk, acc, dt, time,
 			       correction_factor, perturbation_squared);
+
+#if 0
+    if (temp_debug_flag && is_top_level_node()) {
+	cerr << "clearing temp_debug_flag" << endl << endl;
+	temp_debug_flag = false;
+    }
+#endif
+
 
     if (new_dt <= 0) {
 	cerr << "update:  dt = " << new_dt
@@ -2095,7 +2131,7 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 #endif
 		}
 		n_perturbers++; // note: n_pertubers can get bigger than
-		                // MAX_PERTURBERS, but only MAXPERTURBERS
+		                // MAX_PERTURBERS, but only MAX_PERTURBERS
 				// are saved. wwvv
 	    }
 	}
@@ -2595,20 +2631,18 @@ void hdyn::calculate_partial_acc_and_jerk(hdyn * top,
 
 	    // (We probably don't need to check all these!)
 
-	    // "Daughter" quantities refer to the younger daughter on
-	    // leaving the loop.  The vector a_2b is the two-body
-	    // relative acceleration of the components (computed here
-	    // in the point-mass approximation).
+	    // Need to set a perturbation in this case.  In the stored
+	    // accelerations, "save" refers to the older daughter,
+	    // "daughter" to the younger daughter.
 
 	    hdyn* od = get_oldest_daughter();
 	    hdyn* yd = get_oldest_daughter()->get_younger_sister();
 
 	    // Perturbation_squared does *not* contain the slowdown factor.
 
-	    real pscale = m_daughter / (m_daughter + mass);
 	    real r2 = square(od->pos - yd->pos);
 	    od->perturbation_squared =
-			square(pscale * (a_save - a_daughter))
+			square(a_save - a_daughter)
 			        * square(r2/mass);
  	}
     }
@@ -2993,53 +3027,74 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
     if (grape_pert) {
 
-	// Calculate perturbations to this and sister simultaneously on GRAPE.
-	// Don't update nn, etc and use point-mass approximation for all forces.
-        // (Assume for now that the sister or a component will be the nn/coll.)
-	// Probably should expand this function to get nn and coll properly...
+	// Calculate perturbations to this and sister simultaneously
+	// on GRAPE.  Don't update nn, etc and use point-mass
+	// approximation for all forces.  (Assume for now that the
+	// sister or a component will be the nn/coll.)  Probably
+	// should expand this function to get nn and coll properly...
+	// Note that this call violates the convention that all calls
+	// that might use GRAPE be switched in kira_ev.C.
        
 	grape6_calculate_perturbation(get_parent(),
 				      apert1, apert2, jpert1, jpert2);
 
-#if 1
 
 	if (get_parent() != top_level) {
 
-	    cerr << "Computed perturbation on " << get_parent()->format_label()
-		 << " using GRAPE; np = " << np << endl << flush;
+	    int p = cerr.precision(HIGH_PRECISION);
 
-	  // Check: do the O(N) calculation on the front-end too...
+	    //cerr << endl
+	    //	 <<  "computing perturbation on "
+	    //	 << get_parent()->format_label()
+	    //	 << " using GRAPE; np = " << np << endl << flush;
+	    // cerr << "this = " << format_label() << ", ";
+	    // cerr << "sister = " << sister->format_label() << ", ";
+	    // PRL(system_time);
 
-	  vec apert1_test, jpert1_test;
-	  vec apert2_test, jpert2_test;
-	  real d_nn_sq_dummy;
-	  hdyn *nn_dummy;
+	    // Shortened version:
 
-	  calculate_partial_acc_and_jerk(root, root, top_level,
-					 apert1_test, jpert1_test, p_dummy,
-					 d_nn_sq_dummy, nn_dummy,
-					 USE_POINT_MASS,    // explicit loop
-					 NULL,		    // no list
-					 this);		    // node to charge
+	    cerr << endl
+	    	 <<  "GRAPE perturbation on "
+	    	 << get_parent()->format_label()
+	    	 << " at t = " << system_time << endl << flush;
 
-	  sister
-	    ->calculate_partial_acc_and_jerk(root, root, top_level,
-					     apert2_test, jpert2_test, p_dummy,
-					     d_nn_sq_dummy, nn_dummy,
-					     USE_POINT_MASS,// explicit loop
-					     NULL,	    // no list
-					     this);	    // node to charge
+	    cerr.precision(p);
 
-	  cerr << "test 1:" << endl;
-	  vec da1 = apert1_test - apert1;
-	  PRC(apert1); PRL(da1/abs(apert1));
-	  vec da2 = apert2_test - apert2;
-	  PRC(apert2); PRL(da2/abs(apert2));
-	  PRL(apert2 - apert1);
-	  PRL(apert2_test - apert1_test);
-	}
+#if 0
+
+	    // Check: do the O(N) calculation on the front-end too...
+
+	    vec apert1_FE, jpert1_FE;
+	    vec apert2_FE, jpert2_FE;
+	    real d_nn_sq_dummy;
+	    hdyn *nn_dummy;
+
+	    calculate_partial_acc_and_jerk(root, root, top_level,
+					   apert1_FE, jpert1_FE, p_dummy,
+					   d_nn_sq_dummy, nn_dummy,
+					   USE_POINT_MASS,    // explicit loop
+					   NULL,	      // no list
+					   this);	      // node to charge
+
+	    sister
+	      ->calculate_partial_acc_and_jerk(root, root, top_level,
+					       apert2_FE, jpert2_FE, p_dummy,
+					       d_nn_sq_dummy, nn_dummy,
+					       USE_POINT_MASS, // explicit loop
+					       NULL,	       // no list
+					       this);	       // node to charge
+
+	    cerr << "test 1:" << endl;
+	    vec da1 = apert1_FE - apert1;
+	    PRC(apert1); PRL(da1/abs(apert1));
+	    vec da2 = apert2_FE - apert2;
+	    PRC(apert2); PRL(da2/abs(apert2));
+	    PRL(apert2 - apert1);
+	    PRL(apert2_FE - apert1_FE);
 
 #endif
+
+	}
 
 	// The above calculation *excludes* the perturbation due to
 	// other components of the top-level node.  Include them here,
@@ -3048,8 +3103,6 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	// (Note also that we don't resolve neighboring binaries.)
 
 	if (get_parent() != top_level) {
-
-	    cerr << "Adding perturbation due to sisters" << endl << flush;
 
 	    vec apert1_local, jpert1_local;
 	    vec apert2_local, jpert2_local;
@@ -3079,10 +3132,22 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	    apert2 += apert2_local;
 	    jpert2 += jpert2_local;
 
-#if 1
-	    // Alternate test: replacing top_level in the previous check
-	    // by get_parent() should also include the perturbation due
-	    // to the clump.
+#if 0
+	    cerr << "adding perturbation due to aunt and cousins"
+		 << endl << flush;
+
+	    PRL(apert1);
+	    PRL(apert2);
+
+#endif
+
+#if 0
+
+	    // Alternate test: replacing top_level in the previous
+	    // check by get_parent() should also include the
+	    // perturbation due to the clump.  Ought to work, but
+	    // seems not to...  However, the values just computed seem
+	    // to be the right ones!
 
 	    vec apert1_test, jpert1_test;
 	    vec apert2_test, jpert2_test;
@@ -3106,11 +3171,42 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
 	    cerr << "test 2:" << endl;
 	    vec da1 = apert1_test - apert1;
-	    PRC(apert1); PRL(da1/abs(apert1));
+	    PRL(apert1); PRC(apert1_test); PRL(da1/abs(apert1));
 	    vec da2 = apert2_test - apert2;
-	    PRC(apert2); PRL(da2/abs(apert2));
+	    PRL(apert2); PRC(apert2_test); PRL(da2/abs(apert2));
 	    PRL(apert2 - apert1);
 	    PRL(apert2_test - apert1_test);
+
+
+
+
+	    hdyn *aunt = get_parent()->get_binary_sister();
+
+	    if (aunt) {
+	      cerr << "relative to parent: " << endl;
+	      PRL(aunt->format_label());
+	      vec thispos = pred_pos;
+	      vec sispos = sister->pred_pos;
+	      vec auntpos = aunt->get_nopred_pos()-get_parent()->pred_pos;
+	      PRL(thispos);
+	      PRL(sispos);
+	      PRL(auntpos);
+	      PRL(thispos-auntpos);
+	      PRL(abs(thispos-auntpos));
+	      vec tmp = thispos-auntpos;
+	      vec aprt1 = -aunt->mass*tmp/pow(square(tmp), 1.5);
+	      PRL(aprt1);
+	      PRL(sispos-auntpos);
+	      PRL(abs(sispos-auntpos));
+	      tmp = sispos-auntpos;
+	      vec aprt2 = -aunt->mass*tmp/pow(square(tmp), 1.5);
+	      PRL(aprt2);
+	      tmp = thispos-sispos;
+	      vec a12 = -sister->mass*tmp/pow(square(tmp), 1.5);
+	      PRL(a12);
+	    }
+
+
 #endif
 
 	}
