@@ -511,6 +511,9 @@ void hdyn::setup_binary_node()
     younger_daughter->store_old_force();
     younger_daughter->pred_pos -= pred_pos;
     younger_daughter->pred_vel -= pred_vel;
+
+    older_daughter->posvel = older_daughter->pos * older_daughter->vel;
+    younger_daughter->posvel = younger_daughter->pos * younger_daughter->vel;
 }
 
 void create_binary_from_toplevel_nodes(hdyn *bi, hdyn *bj)
