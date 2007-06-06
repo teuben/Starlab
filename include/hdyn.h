@@ -1201,15 +1201,15 @@ int  get_smallN_niter();
 real get_smallN_dtcrit();
 real get_smallN_rcrit();
 
-real smallN_evolve(hdyn *b,
-		   real t_end = VERY_LARGE_NUMBER,
-		   real break_r2 = VERY_LARGE_NUMBER,
-		   real end_on_unpert = false,
-		   real dt_log = 0,
-		   real dt_energy = 0,
-		   real dt_snap = 0);
+int smallN_evolve(hdyn *b,
+		  real t_end = VERY_LARGE_NUMBER,
+		  real break_r2 = VERY_LARGE_NUMBER,
+		  real end_on_unpert = false,
+		  real dt_log = 0,
+		  real dt_energy = 0,
+		  real dt_snap = 0);
 
-real integrate_multiple(hdyn *b);
+real integrate_multiple(hdyn *b, int mode = 1);
 
 // ----- In kira_id_manager.C
 
