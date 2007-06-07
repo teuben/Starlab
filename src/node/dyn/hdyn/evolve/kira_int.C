@@ -542,7 +542,7 @@ local inline bool check_neighbor_steps(hdynptr next_nodes[], int n_next)
 //
 //		    Called only from evolve_system().
 
-int integrate_list(hdyn * b,
+int integrate_list(hdyn * b,				// root node
 		   hdyn ** next_nodes, int n_next,
 		   bool exact, bool & tree_changed,
 		   int& n_list_top_level,
@@ -1064,7 +1064,137 @@ int integrate_list(hdyn * b,
 
     tree_changed |= check_neighbor_steps(next_nodes, n_next);
 
-    // Start by checking for mergers.
+    // Start by checking for mergers and isolated multiple motion (may
+    // result in mergers).
+        
+    // Look for an isolated multiple node with dangerously short (and
+    // decreasing) component time steps.  New code (05/07; SLWM).
+
+    hdyn *root = b->get_root();			// b should be root...
+    real crit_step = 1.e-13*max(1.0, b->get_system_time());
+    real crit_pert2 = 1.e-8;			// ~arbitrary
+
+    for (i = 0; i < n_next; i++) {
+	
+        hdyn *bi = next_nodes[i];
+	if (bi && bi->is_valid()) {
+
+	    hdyn *bmult = NULL;
+
+// 	    if (b->get_system_time() > 1360.072724
+// 		&& (bi->is_parent() || bi->is_low_level_node())) {
+// 	      PRC(i); cerr << "pp3 output:" << endl;
+// 	      pp3(bi);
+// 	    }
+
+// 	    if (b->get_system_time() > 1360.072725) exit(0);
+
+#if 0
+	    hdyn *od = bi->get_oldest_daughter();
+	    if (od && !od->get_kepler()
+		&& bi->get_valid_perturbers()
+		&& od->get_perturbation_squared() < crit_pert2) {
+
+		hdyn *yd = od->get_younger_sister();
+		if (od->get_oldest_daughter()
+		    || yd->get_oldest_daughter()) {
+
+		    // This is a lightly perturbed multiple.  See if
+		    // any components have short steps.
+
+		    for_all_nodes(hdyn, bi, bb) {
+			if (bb != bi
+			    && !bb->get_elder_sister()
+			    && !bb->get_kepler()
+			    && bb->get_posvel() < 0
+			    && bb->get_timestep() < crit_step) {
+			    cerr << endl << "found step < crit_step for "
+				 << bb->format_label();
+			    int p = cerr.precision(HIGH_PRECISION);
+			    cerr << " under " << bi->format_label()
+			         << " at t = " << bi->get_system_time()
+				 << endl;
+			    cerr.precision(p);
+			    bmult = bi;
+			    break;
+			}
+		    }
+		}
+	    }
+#else
+	    // Alternative version: check for short step first,
+	    // then look for an unperturbed ancestor.
+
+	    if (bi->get_parent() != root
+		&& bi->get_timestep() < crit_step
+		&& !bi->get_kepler()
+		&& bi->get_posvel() < 0) {
+
+	        // This low-level, perturbed node, has approaching
+	        // components and a short time step.  See if we can
+	        // identify an isolated multiple containing it.
+
+		hdyn *bb = bi;
+		hdyn *pp = bi->get_parent();
+		hdyn *gg = pp->get_parent();
+
+		// Only consider nodes at least 2 levels down (true
+		// multiples).  Accept a node with small perturbation
+		// if there are at least three leaves under its parent.
+
+		while (1) {
+
+		    // Perturbation information should (may) only reside
+		    // in the elder sister.
+
+		    while (bb->get_elder_sister()) bb = bb->get_elder_sister();
+
+		    if (pp->get_valid_perturbers()
+			&& bb->get_perturbation_squared() < crit_pert2
+			&& pp->n_leaves() >= 3) {
+
+			// Looks like this will do.
+
+			cerr << endl << "found step < crit_step for "
+			     << bi->format_label();
+			int p = cerr.precision(HIGH_PRECISION);
+			cerr << " under " << pp->format_label()
+			     << " at t = " << pp->get_system_time()
+			     << endl;
+			cerr.precision(p);
+
+			bmult = pp;
+			break; 
+		    }
+
+		    if (pp->is_top_level_node()) break;
+
+		    bb = pp;
+		    pp = gg;
+		    if (gg) gg = gg->get_parent();
+		}
+	    }
+#endif
+	    if (bmult) {
+
+		//PRL(bmult->format_label());
+		//PRL(bmult->get_top_level_node()->format_label());
+		//pp3(bmult);
+
+		integrate_multiple(bmult, 2);
+
+		//PRL(bmult->format_label());
+		//PRL(bmult->get_top_level_node()->format_label());
+		//pp3(bmult->get_top_level_node());
+
+		tree_changed = true;
+		restart_grape = true;
+		reset_force_correction = true;	// no longer used
+
+		return return_fac*steps;
+	    }
+	}
+    }
 
     // Note that ONLY ONE tree reconstruction (following a collision
     // or otherwise) is currently permitted per block step.
@@ -1198,6 +1328,8 @@ int integrate_list(hdyn * b,
 	reset_force_correction = true;	// no longer used
 
     } else {
+
+	// Check for changes to the tree structure.
 
 	for (i = 0; i < n_next; i++) {
 
