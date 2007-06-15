@@ -434,7 +434,7 @@ dyn *get_col(istream& s = cin,
 
 /// Write col format data to a stream.
 
-void put_col(dyn*, ostream& s = cout);
+void put_col(dyn*, ostream& s = cout, bool put_time = true);
 
 /// Read a standard format dyn snapshot from a stream.
 

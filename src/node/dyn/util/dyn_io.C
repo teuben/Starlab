@@ -409,7 +409,7 @@ dyn* get_col(istream& s,
 
 // This I/O problem is getting to be a real pain in the (my) ass...
 
-void put_col(dyn* root, ostream& s) {
+void put_col(dyn* root, ostream& s, bool put_time) {
 
   int p = adjust_starlab_precision(-1);	  // odd name, but establishes
 					  // the precision of the output
