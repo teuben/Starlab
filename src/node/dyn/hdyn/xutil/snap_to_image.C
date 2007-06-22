@@ -7,6 +7,7 @@
 ////           -c           compress the image file(s) using gzip          [no]
 ////           -C colormap  specify a colormap file name                   [no]
 ////           -d           delete frames once the animation is made       [no]
+////           -D           delay between movie frames in ms                [0]
 ////           -f filename  specify root name of image files   ["-" --> stdout]
 ////           -F format    specify image file format
 ////                            (0 = PNG, 1 = SUN, 2 = GIF)                 [2]
@@ -609,11 +610,13 @@ main(int argc, char** argv)
 
     vec xoffset, voffset, dxoffset;	// origin = 1, 3, or 4
 
+    int delay = 0;
+
     check_help();
 
     extern char *poptarg, *poparr[];
     int c;
-    char* param_string = "1acC:df:F:gGi:Hl:L:X:x:Y:y:mn:N:o:O:p:P:qrRs:.S:tT:";
+    char* param_string = "1acC:dD:f:F:gGi:Hl:L:X:x:Y:y:mn:N:o:O:p:P:qrRs:.S:tT:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1) {
@@ -630,6 +633,8 @@ main(int argc, char** argv)
 			break;
 	    case 'd':	delete_frames = !delete_frames;
 	    		break;
+	    case 'D':	delay = atoi(poptarg);
+			break;
 	    case 'f':
 	    case 'o':	strncpy(output_file_id, poptarg, 63);
 			output_file_id[63] = '\0';	// just in case
@@ -1276,8 +1281,8 @@ main(int argc, char** argv)
 //		Works on linux and MacOS.
 
 		sprintf(command,
-		    "/bin/ls %s %s.*%s | xargs gifsicle --loopcount=%d -o %s%s",
-		    rev, output_file_id, ext1, loop, output_file_id, ext2);
+	    "/bin/ls %s %s.*%s | xargs gifsicle --loopcount=%d -d %d -o %s%s",
+ 	       rev, output_file_id, ext1, loop, delay, output_file_id, ext2);
 	    }
 
 	    cerr << endl
