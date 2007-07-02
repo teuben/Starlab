@@ -125,7 +125,9 @@ enum boolean_parameter {hyper_critical,
 			super_giant_disintegration,
 			proto_star_to_binary,
 			impulse_kick_for_black_holes,
-			use_angular_momentum_gamma
+			use_angular_momentum_tidal,
+			use_common_envelope_gamma_gamma,
+			use_common_envelope_alpha_alpha
 		     };
 
 enum super_nova_kick_distribution {internally_decided_velocity_kick,
@@ -201,6 +203,8 @@ class stellar_evolution_constants {  // Easy to have a name for compiling.
   real parameters(astronomical_scale_parameter);
   real parameters(pulsar_initial_conditions);
   real parameters(stellar_mass_limits);
+
+  int use_common_envelope_method();
   
   bool parameters(boolean_parameter);
   real parameters(accretion_parameter);

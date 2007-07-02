@@ -241,6 +241,14 @@ real stellar_evolution_constants::parameters(stellar_mass_limits pm) {
     }
 }
 
+int stellar_evolution_constants::use_common_envelope_method() {
+  int cc_parameter = 1; // default (use alpha-gamma)
+  //  cc_parameter = 2;     // default (use gamma-gamma)
+  //  cc_parameter = 3;     // default (use alpha-alpha)
+  return cc_parameter;
+}
+
+
 
 bool stellar_evolution_constants::parameters(boolean_parameter pb) {
 
@@ -253,10 +261,22 @@ bool stellar_evolution_constants::parameters(boolean_parameter pb) {
         case proto_star_to_binary:                     return false;
              break;						    
         case impulse_kick_for_black_holes:             return true;
-             break;						    
-        case use_angular_momentum_gamma:               return true;
-             break;						    
-        default:
+             break;				
+        case use_angular_momentum_tidal:               return false;
+	     break;
+        case use_common_envelope_gamma_gamma:
+             if (cnsts.use_common_envelope_method()==2) 
+	       return true;
+	     else
+	       return false;
+	     break;
+        case use_common_envelope_alpha_alpha:
+             if(cnsts.use_common_envelope_method()==3) 
+	       return true;
+	     else
+	       return false;
+	     break;
+    default:
 	     cerr << "\nNo recognized option in "
 		     "stellar_evolution_constants::"
 		     "parameters(boolean_parameter "
@@ -416,9 +436,4 @@ real stellar_evolution_constants::star_to_dyn(dynamics_update_parameter dup) {
              exit(1);
     }
 }
-
-
-
-
-
 
