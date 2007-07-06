@@ -65,7 +65,8 @@ class sigma_input : public scatter_input {
 #ifdef HAS_MPI
   MPI_Datatype sigma_input::initialize_data_structures_MPI();
 #else
-  MPI_Datatype sigma_input::initialize_data_structures_MPI() {
+  //  MPI_Datatype sigma_input::initialize_data_structures_MPI() {
+  MPI_Datatype initialize_data_structures_MPI() {
     MPI_Datatype dummy;
     return dummy;
 }

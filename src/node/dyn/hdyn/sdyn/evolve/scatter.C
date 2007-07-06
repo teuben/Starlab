@@ -111,7 +111,7 @@ void scatter(sdyn* b, real eta,
   b->flatten_node();
   real etot_init = calculate_energy_from_scratch(b, kin, pot); 
   real Ltot_init = calculate_angular_mometum_from_scratch(b);
-  make_tree(b, DYNAMICS, STABILITY, K_MAX, debug);
+  make_tree(b, DYNAMICS, STABILITY, K_MAX, false);
 
   // loop continues for ever or unit termination time is reached or
   // system is unbound (see extend_or_end.C)
@@ -121,10 +121,17 @@ void scatter(sdyn* b, real eta,
 			    snap_cube_size, 
 			    eta, min_min_ssd, cpu_time_check);
 
+    make_tree(b, DYNAMICS, !STABILITY, K_MAX, false);
     calculate_energy(b, kin, pot);
     if (debug) {
       cerr.precision(6), cerr << "\nStatus at time " << b->get_time();
-      cerr.precision(9), cerr << " (energy = " << kin + pot << "):\n";
+      cerr.precision(9), cerr << " (energy = " << kin + pot << "): ";
+      print_normal_form(b, cerr);
+      //      cerr << endl;
+      //      ppn(b, cerr);
+      //      vec center = b->get_pos();
+      //      print_structure_recursive(b, 0., center, true, true, 4);
+
       cerr.precision(6);
     }
     
@@ -148,13 +155,21 @@ void scatter(sdyn* b, real eta,
     }
     
     if(t>=t_end) {
-      cerr << "Early termination"<<endl;
+      cerr << "Early termination" << endl;
       experiment.set_scatter_discriptor(stopped);
       experiment.set_stop(true);
       real ekin, epot;
       calculate_energy(b, ekin, epot);
       cerr << "Time = " << b->get_time() 
 	   << "  Etot = " << ekin + epot << endl;
+
+      print_normal_form(b, cerr);
+      b->set_name("root");
+      ppn(b, cerr);
+      vec center = b->get_pos();
+      print_structure_recursive(b, 0., center, true, true, 4);
+      cerr << "Done" << endl;
+
       break;
     }
     
@@ -162,6 +177,7 @@ void scatter(sdyn* b, real eta,
     de_merge += merge_collisions(b, coll_flag);
     
     make_tree(b, DYNAMICS, STABILITY, K_MAX, false);
+    //    make_tree(b, !DYNAMICS, STABILITY, K_MAX, true);
     
     int unbound = extend_or_end_scatter(b, ttf, false);
     if(unbound==2) {   // two body system is bound but we stop anyway
@@ -256,8 +272,11 @@ void scatter(sdyn* b, scatter_input input,
    calculate_energy(b, kin, pot);
    if (debug) {
       cerr.precision(6), cerr << "\nStatus at time " << b->get_time();
-    cerr.precision(9), cerr << " (energy = " << kin + pot << "):\n";
-    cerr.precision(6);
+      cerr.precision(9), cerr << " (energy = " << kin + pot << "):";
+      print_normal_form(b, cerr);
+      cerr << endl;
+      ppn(b, cerr);
+      cerr.precision(6);
     }
     
     
@@ -336,7 +355,8 @@ void slave_part_of_experiment(scatter_input input,
        << "  n_rand = " << get_n_rand() << flush << "\n";
     
   sdyn *b = mkscat(input.init_string);
-    
+  //  ppn(b, cerr);
+
   //        b->log_history(argc, argv);
   b->flatten_node();
     
@@ -348,6 +368,7 @@ void slave_part_of_experiment(scatter_input input,
 	 << ")  Tinf = " << kin/pot << endl;
   }
   make_tree(b, !DYNAMICS, STABILITY, K_MAX, input.debug);
+  ppn(b, cerr);
   
   // Initial output:
   cerr << "*** Initial configuration (random seed = "
@@ -372,7 +393,7 @@ void slave_part_of_experiment(scatter_input input,
   print_normal_form(b, cerr);
   b->set_name("root");
   ppn(b, cerr);
-  //	vec center = b->get_pos();
+  //  vec center = b->get_pos();
   print_structure_recursive(b, 0., center, true, true, 4);
   
   cerr << "Nearest neighbor information." << endl;
@@ -482,6 +503,7 @@ main(int argc, char **argv)
     case 't': input.delta_t = atof(poptarg);
       break;
     case 'v': input.debug = 1 - input.debug;
+              input.verbose = 1;
       break;
     case 's': input.seed = atoi(poptarg);
       break;

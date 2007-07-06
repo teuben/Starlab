@@ -22,6 +22,7 @@
 ////            -q    minimal output [false]
 ////            -Q    intermediate amount of output [false]
 ////            -s    specify random seed [taken from system clock]
+////            -t    specify time span of integration [infty]
 ////            -v    specify incomer velocity at infinity [0 ==> Etot = 0]
 ////            -V    maximize output [false]
 ////            -x    specify primary radius [0]
@@ -41,14 +42,15 @@ main(int argc, char **argv) {
   // identical binary collision
   //  char* default_init  
   //       = "-M 1 -v 1 -rm 3 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
-  char* default_init 
-   = "-M 0.66 -rm 3 -v 0.0358 -t -q 0.43 -r1 0.0322 -r2 0.0217 -p -a 5.1190 -q 0.84 -r1 0.0278 -r2 0.0172";
-  
+  char *default_init; 
+  //  default_init 
+  //    = "-M 0.66 -rm 3 -v 0.0358 -t -q 0.43 -r1 0.0322 -r2 0.0217 -p -a 5.1190 -q 0.84 -r1 0.0278 -r2 0.0172";
+
    // = "M 0.92 -rm 3 -v 0.031631 -t -q 0.56 -r1 0.0638 -r2 0.0383 -p -a 9.2571 -q 1.0 -r1 0.0446 -r2 0.0510";
 
 
 
-  strcpy(&input.init_string[0], default_init);
+  //  strcpy(&input.init_string[0], default_init);
 
   //    check_help();
   
@@ -67,13 +69,8 @@ main(int argc, char **argv) {
     case 'c': input.cpu_time_check = 3600*atof(poptarg);
       // (Specify in hours)
       break;
-#if 0
-    case 'C': if (!pvm) 
-      input.snap_cube_size = atof(poptarg);
-    else
-      cerr << "\"-C\" option disallowed in PVM mode\n";
+    case 'C': input.snap_cube_size = atof(poptarg);
       break;
-#endif
     case 'd': input.max_trial_density = atof(poptarg);
       break;
     case 'D': input.dt_out = atof(poptarg);
@@ -91,7 +88,9 @@ main(int argc, char **argv) {
       break;
       //case 'I': intermediate_sigma = 1 - intermediate_sigma;
       //break;
-    case 'i': strcpy(input.init_string, poptarg);
+      //    case 'i': strcpy(input.init_string, poptarg);
+      //    case 'i': strcpy(&default_init[0], poptarg);
+    case 'i': default_init = poptarg;
       break;
     case 'M': input.pmass = atof(poptarg);
       break;
@@ -119,12 +118,14 @@ main(int argc, char **argv) {
       break;
     case 'v': input.v_inf = atof(poptarg);
       break;
-    case 'V': //input.debug = atoi(poptarg);
-      input.verbose = atoi(poptarg);
+    case 'V': input.debug = 1 - input.debug;
+              input.verbose = atoi(poptarg);
       break;
     case '?': params_to_usage(cerr, argv[0], param_string);
       //		      get_help();
     }
+
+    strcpy(&input.init_string[0], default_init);
     
     execute_sigma_experiment(input);
     

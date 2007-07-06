@@ -101,7 +101,7 @@ class scatter_hist : public scatter_exp {
        scatter_hist* get_scatter_hist(sdyn* b=NULL);
        void add_scatter_hist(istream &s);
        void add_scatter_hist(scatter_exp he, int zone);
-       scatter_hist* scatter_hist::contains(scatter_hist*);
+       scatter_hist* contains(scatter_hist*);
 
   scatter_hist* get_identical_scatter_hist();
   void inc_id_scenario();
