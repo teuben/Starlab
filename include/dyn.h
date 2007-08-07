@@ -961,6 +961,10 @@ void check_set_external(dyn *b, bool verbose = false, int fric_int = -1);
 
 void check_set_ignore_internal(dyn *b, bool verbose = false);
 
+// Optionally modify external parameters.
+
+void update_external(dyn *b, real t);
+
 //----------------------------------------------------------------------
 //
 // Standard wrappers (for starcluster).

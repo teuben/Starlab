@@ -226,6 +226,13 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
 
     b->set_system_time(t);
     b->set_time(t);
+
+    // New (Steve, 8/07): allow the possibility of changing the
+    // external field (see dyn/util/update_external.C).  Default
+    // action is to do nothing.
+
+    update_external(b, t);
+
     initialize_system_phase1(b, t);
     initialize_system_phase2(b, 3, 0);			// "0" here means
 							// timesteps are only

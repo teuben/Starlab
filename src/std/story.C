@@ -481,8 +481,8 @@ local void write_vq(story * a_story_line, char * name, vec & value,
 	PRL(1);
 	char *c = a_story_line->get_text();
 	PRL(10);
-	unsigned int ic =(unsigned int) c;
-	PRL(ic);
+	//	unsigned int ic =(unsigned int) c;
+	//	PRL(ic);
 	if (c) {
 	    PRL(*c);
 	    PRL(c);
