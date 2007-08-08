@@ -57,8 +57,8 @@ void update_external(dyn *b,		// root node
     // Default is to do nothing.
 
 #if 1
-    M = initial_M * (1 - t/100.)
-    a_sq = initial_a_sq * (1 + t/50.)
+    M = initial_M * (1 - t/100.);
+    a_sq = initial_a_sq * (1 + t/50.);
 #endif
 
     //--------------------------------------------------------------------
