@@ -51,7 +51,7 @@
 //// Report bugs to starlab@sns.ias.edu.
 
 //   Steve McMillan, July 1996
-//   Simon Portegies Zwart, Tokyo, December 1997
+//   Simon Portegies Zwart, December 1997
 
 #ifndef DYN
 #   include "node.h"
@@ -400,6 +400,14 @@ local void makesecondary(NODE* b, real binary_fraction,
 
     if (find_qmatch(b->get_log_story(), "initial_mass"))
 	putrq(b->get_log_story(), "initial_mass", m_tot);
+
+    // Erase any info on virial radius or total energy, as we
+    // do not recompute these quantities here.
+
+    if (find_qmatch(b->get_log_story(), "initial_total_energy"))
+        rmq(b->get_log_story(), "initial_total_energy");
+    if (find_qmatch(b->get_log_story(), "initial_rvirial"))
+        rmq(b->get_log_story(), "initial_rvirial");
 }
 
 int main(int argc, char ** argv)

@@ -86,6 +86,16 @@ int main(int argc, char ** argv)
 		default:  get_help();
 	    }
 
+    // Erase any info on initial mass, virial radius or total energy,
+    // as we do not recompute these quantities here.
+
+    if (find_qmatch(b->get_log_story(), "initial_mass"))
+	rmq(b->get_log_story(), "initial_mass");
+    if (find_qmatch(b->get_log_story(), "initial_total_energy"))
+	rmq(b->get_log_story(), "initial_total_energy");
+    if (find_qmatch(b->get_log_story(), "initial_rvirial"))
+	rmq(b->get_log_story(), "initial_rvirial");
+
     put_node(b);
     return 0;
 }

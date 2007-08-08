@@ -661,6 +661,17 @@ int main(int argc, char ** argv)
         putrq(b->get_log_story(), "initial_mass", b->get_mass(),
 	      HIGH_PRECISION);
 
+    if (b->get_mass() != initial_mass) {
+
+	// Erase any info on virial radius or total energy, as we
+	// do not recompute these quantities here.
+
+	if (find_qmatch(b->get_log_story(), "initial_total_energy"))
+	    rmq(b->get_log_story(), "initial_total_energy");
+	if (find_qmatch(b->get_log_story(), "initial_rvirial"))
+	    rmq(b->get_log_story(), "initial_rvirial");
+    }
+
     // Add stellar conversion data, so add_star will work.
 
     real m_sum = b->get_mass();
