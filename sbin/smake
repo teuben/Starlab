@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Make command-line arguments, starting at the top-level Starlab
 # (or other) directory and suppressing some extraneous output.
@@ -10,7 +10,7 @@ list=""
 dir=$STARLAB_PATH
 
 while [ "x$1" != "x" ]; do
-    if [[ "x$1" = "x-d" || "x$1" = "x-C" ]]; then
+    if [ "x$1" = "x-d" -o "x$1" = "x-C" ]; then
 	shift
 	dir=$1
     else
