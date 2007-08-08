@@ -47,22 +47,28 @@ void update_external(dyn *b,		// root node
 	initialized = true;
     }
 
+    real M = initial_M;
+    real a_sq = initial_a_sq;
+
     //--------------------------------------------------------------------
     //
     // Modify the global Plummer parameters at time t.
     // User specifies the *relative* scaling of M and a^2 here.
     // Default is to do nothing.
 
-    real M = initial_M;			// e.g. initial_M * (1 - t/100.)
-    real a_sq = initial_a_sq;		// e.g. initial_a_sq * (1 + t/50.)
+#if 1
+    M = initial_M * (1 - t/100.)
+    a_sq = initial_a_sq * (1 + t/50.)
+#endif
 
     //--------------------------------------------------------------------
 
     if (M < 0) M = 0;
     if (a_sq < 0) a_sq = 0;
 
-    cerr << endl << "update_plummer: new "; PRC(M); PRL(a_sq);
-
-    b->set_p_mass(M);
-    b->set_p_scale_sq(a_sq);
+    if (M != initial_M || a_sq != initial_a_sq) {
+	cerr << endl << "update_plummer: new "; PRC(M); PRL(a_sq);
+	b->set_p_mass(M);
+	b->set_p_scale_sq(a_sq);
+    }
 }
