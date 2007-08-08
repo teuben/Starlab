@@ -52,13 +52,14 @@ void update_external(dyn *b,		// root node
 
     //--------------------------------------------------------------------
     //
-    // Modify the global Plummer parameters at time t.
-    // User specifies the *relative* scaling of M and a^2 here.
-    // Default is to do nothing.
+    // Modify the global Plummer parameters at time t.  Specify the
+    // *relative* scaling of M and a^2.  (Default is to do nothing.)
 
-#if 1
-    M = initial_M * (1 - t/100.);
-    a_sq = initial_a_sq * (1 + t/50.);
+    // To use, replace #if 0 by #if 1 and apply the desired scaling.
+
+#if 0
+    M = initial_M * (1 - t/50.);
+    a_sq = initial_a_sq * (1 + t/10.);
 #endif
 
     //--------------------------------------------------------------------
