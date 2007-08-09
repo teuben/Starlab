@@ -231,7 +231,7 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
     // external field (see dyn/util/update_external.C).  Default
     // action is to do nothing.
 
-    update_external(b, t);
+    update_external(b);
 
     initialize_system_phase1(b, t);
     initialize_system_phase2(b, 3, 0);			// "0" here means

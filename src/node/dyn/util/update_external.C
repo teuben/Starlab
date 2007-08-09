@@ -36,16 +36,17 @@ static bool initialized = false;
 static real initial_M = 0;
 static real initial_a_sq = 0;
 
-void update_external(dyn *b,		// root node
-		     real t)		// system time
+void update_external(dyn *b)			// root node
 {
-    if (!b->get_plummer()) return;	// Plummer only
+    if (!b->get_plummer()) return;		// Plummer only
 
     if (!initialized) {
 	initial_M = b->get_p_mass();		// initial M
 	initial_a_sq = b->get_p_scale_sq();	// initial a^2
 	initialized = true;
     }
+
+    real t = b->get_system_time();		// system time
 
     real M = initial_M;
     real a_sq = initial_a_sq;
@@ -58,8 +59,10 @@ void update_external(dyn *b,		// root node
     // To use, replace #if 0 by #if 1 and apply the desired scaling.
 
 #if 0
+
     M = initial_M * (1 - t/50.);
     a_sq = initial_a_sq * (1 + t/10.);
+
 #endif
 
     //--------------------------------------------------------------------

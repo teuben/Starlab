@@ -963,7 +963,7 @@ void check_set_ignore_internal(dyn *b, bool verbose = false);
 
 // Optionally modify external parameters.
 
-void update_external(dyn *b, real t);
+void update_external(dyn *b);
 
 //----------------------------------------------------------------------
 //
