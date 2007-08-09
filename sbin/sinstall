@@ -8,7 +8,7 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
-if [ "x$STARLAB_INSTALL_PATH" == "x" ]; then
+if [ "x$STARLAB_INSTALL_PATH" = "x" ]; then
     echo STARLAB_INSTALL_PATH not set
     exit 1
 fi

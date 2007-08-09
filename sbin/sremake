@@ -18,4 +18,3 @@ while [ "x$1" != "x" ]; do
     sinstall $1
     shift
 done
-
