@@ -413,7 +413,11 @@ local void modify_params(hdyn * b, char * name,
 
 	    } else if (s = strstr(line, "-u")) {
 
-		toggle_unperturbed(b, 1);
+		int tmp = atoi(s+2);
+		if (tmp == 0)
+		  set_allow_multiples(b, false);
+		else
+		  set_allow_multiples(b, true);
 		print_unperturbed_options(b);
 
 	    } else if (s = strstr(line, "-U")) {

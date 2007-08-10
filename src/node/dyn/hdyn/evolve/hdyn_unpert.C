@@ -502,7 +502,7 @@ void set_allow_unperturbed(hdyn *b,
 }
 
 void set_allow_multiples(hdyn *b,
-			 bool value)	// defualt =true
+			 bool value)	// default =true
 {
     b->get_kira_options()->allow_multiples = value;
     if (b->get_kira_options()->allow_multiples)

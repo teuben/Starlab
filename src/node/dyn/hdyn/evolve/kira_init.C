@@ -802,7 +802,7 @@ bool kira_initialize(int argc, char** argv,
 					// as of 8/99 (Steve)
     int c;
     char* param_string =
-"*:0123a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:uUvVW:xX:y:z:Z:";
+"*:0123a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:u.UvVW:xX:y:z:Z:";
 
    // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
 
@@ -1059,16 +1059,20 @@ bool kira_initialize(int argc, char** argv,
             case 'T':	n_threads = atoi(poptarg);
 			b->set_n_threads(n_threads);
 			break;
-	    case 'u':	toggle_unperturbed(b, 1);
+	    case 'u':	{int mult = 1;
+			if (poptarg) mult = atoi(poptarg);
+			if (mult == 0)
+			   set_allow_multiples(b, false);
+			else
+			   set_allow_multiples(b, true);
+			}
 			break;
 	    case 'U':	toggle_unperturbed(b, 0);
 			break;
 	    case 'v':	verbose = !verbose;
 			break;
-
 	    case 'V':	print_recalculated_energies(b);
 			exit(0);
-
 	    case 'W':	dt_fulldump = atof(poptarg);
 	    		if (dt_fulldump < 0)
 			    dt_fulldump = pow(2.0, dt_fulldump);

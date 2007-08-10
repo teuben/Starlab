@@ -94,7 +94,7 @@
 ////              -S    turn on stellar evolution [off][*]
 ////              -t    specify time span of calculation [10]
 ////              -T    enable experimental threading and specify n_threads [0]
-////              -u    toggle unperturbed multiple motion [disabled][*]
+////              -u    enable/disable unperturbed multiples [enabled][*]
 ////              -U    toggle all unperturbed motion [enabled][*]
 ////              -v    toggle "verbose" mode [on]
 ////              -W    specify full-dump (worldline) timescale [1]
