@@ -801,10 +801,9 @@ bool kira_initialize(int argc, char** argv,
     extern char *poptarg, *poparr[];	// multiple arguments are allowed
 					// as of 8/99 (Steve)
     int c;
-    char* param_string =
-"*:0123a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:u.UvVW:xX:y:z:Z:";
+    char* param_string = "*:0123a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:u.UvVW:xX:y:z:Z:";
 
-   // ^	optional (POSITIVE!) arguments are allowed as of 8/99 (Steve)
+    // Optional (POSITIVE!) arguments are allowed as of 8/99 (Steve).
 
     // Make a preliminary pass over the argument list to check for
     // --version or an input file:
@@ -1059,12 +1058,13 @@ bool kira_initialize(int argc, char** argv,
             case 'T':	n_threads = atoi(poptarg);
 			b->set_n_threads(n_threads);
 			break;
-	    case 'u':	{int mult = 1;
-			if (poptarg) mult = atoi(poptarg);
-			if (mult == 0)
-			   set_allow_multiples(b, false);
-			else
-			   set_allow_multiples(b, true);
+	    case 'u':	{
+			    int mult = 1;
+			    if (poptarg) mult = atoi(poptarg);
+			    if (mult == 0)
+				set_allow_multiples(b, false);
+			    else
+				set_allow_multiples(b, true);
 			}
 			break;
 	    case 'U':	toggle_unperturbed(b, 0);
