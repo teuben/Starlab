@@ -434,7 +434,7 @@ void master_part_of_experiment(scatter_input input,
     
     hi->add_scatter_hist(experiment, 0);
     cerr << "scatter history" << flush << endl;
-    hi->put_scatter_hist(cerr, false);
+    hi->put_scatter_hist(cerr, true);
     cerr << " N done = " << n_exp+1 << endl;
   }
 }

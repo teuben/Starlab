@@ -88,6 +88,10 @@ int multiscatter3(scatter_profile & prof, sigma_out & out,
 
 	else if (scatter_summary > 1) print_scatter3_report(init, inter, final, cpu_scatter);
 
+
+	print_scatter3_report(init, inter, final, cpu_scatter, 1);
+
+
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 	// Accumulate statistics on the results.
