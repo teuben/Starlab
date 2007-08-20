@@ -34,7 +34,7 @@
 ////            -e    specify initial eccentricity [0]
 ////            -g    specify tidal tolerance [1.e-6]
 ////            -l    specify minimum initial outer separation [10]
-////            -L    specify CPU limit and snap limit [none]
+////            -L    specify CPU limit and snap limit in seconds [3600]
 ////            -m    specify secondary mass (binary mass = 1) [0.5]
 ////            -M    specify incomer mass [0.5]
 ////            -n    specify number of scattering experiments [1]

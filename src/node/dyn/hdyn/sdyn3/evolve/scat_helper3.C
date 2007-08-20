@@ -6,6 +6,9 @@
 
 #include "scatter3.h"
 
+//#define INITIAL_CPU_LIMIT VERY_LARGE_NUMBER
+#define INITIAL_CPU_LIMIT 3600            // CPU limit in seconds
+
 // Translate enum states into strings:
 
 char * state_string(intermediate_descriptor3 s)
@@ -245,6 +248,6 @@ void make_standard_init(initial_state3 & init)
     initialize_bodies(init.system);
     init.id = get_initial_seed() + get_n_rand();
 
-    init.cpu_limit = VERY_LARGE_NUMBER;
+    init.cpu_limit = INITIAL_CPU_LIMIT;
     init.snap_limit = -1;
 }
