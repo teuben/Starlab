@@ -41,6 +41,24 @@ real get_sum_of_radii(hdyn* bi, hdyn* bj,
     return compute_sum_of_radii(bi, radi, bi_is_bh, bj, radj, bj_is_bh);
 }
 
+local real conv_v_dyn_to_star(real v, real rf, real tf) {
+
+//              Internal velocity is km/s
+//              Internal size is solar raii
+//              Internal time is Myr.
+//              km/s to Rsun/Myr
+//      real to_Rsun_Myr = cnsts.physics(km_per_s) * cnsts.physics(Myear)
+//	               / cnsts.parameters(solar_radius);
+
+      real myear = 3.15e+13;
+      real km_s = 1.0e+5;
+      real R_sun = 6.960e+10;
+      real to_Rsun_Myr = km_s * myear / R_sun;
+      real to_dyn      = rf/tf;
+      
+      return v/(to_Rsun_Myr * to_dyn);
+   }
+
 real print_encounter_elements(hdyn* bi, hdyn* bj,
 			      char* s, 		    // default = "Collision"
 			      bool verbose)	    // default = true
@@ -95,7 +113,14 @@ real print_encounter_elements(hdyn* bi, hdyn* bj,
 		 << k.get_periastron()
 		 << " ("
 		 << bi->get_starbase()->conv_r_dyn_to_star(k.get_periastron())
-		 << " [Rsun]).";
+		 << " [Rsun])"
+		 <<" and velocity "
+		 << k.get_rel_vel()
+	      	 << " ("
+		 << conv_v_dyn_to_star(abs(k.get_rel_vel()),
+			       bi->get_starbase()->conv_r_star_to_dyn(1),
+			       bi->get_starbase()->conv_t_star_to_dyn(1))
+	         << " [km/s]).";
 
 	} else {
 
@@ -110,8 +135,9 @@ real print_encounter_elements(hdyn* bi, hdyn* bj,
 	       (find_qmatch(bj->get_log_story(), "black_hole") &&
 		getiq(bj->get_log_story(), "black_hole")==1))
 		cerr << " [bh] ";
+	    cerr << "\n     at distance " << k.get_periastron()
+		 <<" and velocity " << k.get_rel_vel();
 
-	    cerr << "\n     at distance " << k.get_periastron();
       
 	}
 
