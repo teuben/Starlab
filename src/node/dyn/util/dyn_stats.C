@@ -291,6 +291,12 @@ void compute_core_parameters(dyn* b, int k,
     if (getrq(b->get_dyn_story(), "density_time")
 		!= b->get_system_time()) {
 
+	if (b->n_leaves() < 12) {	// don't even try...
+	    ncore = 0;
+	    rcore = mcore = 0;
+	    return;
+	}
+
 	if (!allow_n_sq_ops) {
 	    cerr << "compute_core_parameters:  no densities available "
 		 << "and allow_n_sq_ops set false" << endl;
