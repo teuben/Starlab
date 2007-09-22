@@ -565,7 +565,7 @@ local inline bool create_binary(hdyn *bi, hdyn *bj)
 
     cerr << "created new binary " << cm->format_label() << endl;
     pp(p), cerr << endl;
-    k->print_all();
+    // k->print_all();
     real dt_unpert = bi->get_t_pred() - time;
     PRC(dt_unpert); PRL(bi->get_t_pred());
 
@@ -594,7 +594,7 @@ local inline bool terminate_binary(hdyn*& bi)
     if (!k) err_exit("smallN: binary with no kepler.");
 
     cerr << endl << "terminating binary " << bi->format_label() << endl;
-    k->print_all();
+    // k->print_all();
     PRL(od->get_t_pred());
 
     hdyn *p = bi->get_parent();
@@ -1414,8 +1414,8 @@ int smallN_evolve(hdyn *b,
     // Termination criteria:
     //
     //     (1) t >= t_end  (checked at start of the while loop).
-    //     (2) r > break_r (checked after every NCHECK steps)
-    //     (3) inner binary is unperturbed (checked after each step).
+    //     (2) optional: r > break_r (checked after every NCHECK steps)
+    //     (3) optional: inner binary is unperturbed (checked after each step)
 
     while (b->get_time() < t_end) {
 
@@ -1567,10 +1567,10 @@ int smallN_evolve(hdyn *b,
 	    hdyn *od = NULL;
 	    if (od = bi->get_oldest_daughter())
 		if (od->get_t_pred() <= b->get_time()) {
-		    int p = cerr.precision(HIGH_PRECISION);
-		    cerr << b->get_time() << " (xxxxx): ";
-		    cerr.precision(p);
-		    print_recalculated_energies((dyn*)b, 1);
+// 		    int p = cerr.precision(HIGH_PRECISION);
+// 		    cerr << b->get_time() << " (xxxxx): ";
+// 		    cerr.precision(p);
+// 		    print_recalculated_energies((dyn*)b, 1);
 		    tree_changed |= terminate_binary(bi);
 		}
 	}
@@ -1586,10 +1586,10 @@ int smallN_evolve(hdyn *b,
 	    PRL(dt);
 
 	    set_all_timesteps(b, dt);
-	    int p = cerr.precision(HIGH_PRECISION);
-	    cerr << b->get_time() << " (yyyyy): ";
-	    cerr.precision(p);
-	    print_recalculated_energies((dyn*)b, 1);
+// 	    int p = cerr.precision(HIGH_PRECISION);
+// 	    cerr << b->get_time() << " (yyyyy): ";
+// 	    cerr.precision(p);
+// 	    print_recalculated_energies((dyn*)b, 1);
 	}
 
 	// Optional output:
