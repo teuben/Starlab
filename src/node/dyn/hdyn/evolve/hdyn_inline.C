@@ -397,19 +397,19 @@ local inline real estimated_perturbation(hdyn *cm, hdyn *p)
     // Return the perturbation on the binary with center of mass cm
     // due to perturber p.  (Consistent with is_perturber().)
 
-    PRC(cm); PRL(p);
+    // PRC(cm); PRL(p);
     real m_bin = cm->get_mass();
     real m_pert = p->get_mass();
     int  perturber_criterion = cm->get_kira_options()->perturber_criterion;
-    PRL(perturber_criterion);
+    // PRL(perturber_criterion);
 
     real r_bin = binary_scale(cm);
     real d2 = r_bin * r_bin;
-    PRL(r_bin);
+    // PRL(r_bin);
     real distance_squared
 	= square(hdyn_something_relative_to_root(cm, &hdyn::get_pos)
 		  - hdyn_something_relative_to_root(p, &hdyn::get_pos));
-    PRL(sqrt(distance_squared));
+    // PRL(sqrt(distance_squared));
 
     real gamma = pow(d2/distance_squared, 1.5);
     if (perturber_criterion == 1

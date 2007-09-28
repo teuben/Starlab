@@ -631,9 +631,12 @@ local inline bool terminate_binary(hdyn*& bi)
 	    dphi_tidal += bk->get_mass()*dphi_k;
 	}
 
-    PRC(dphi_tidal); PRC(od->get_pot());
+    if (VERBOSE) {
+      PRC(dphi_tidal); PRC(od->get_pot());
+    }
     dphi_tidal -= od->get_pot();
-    PRL(dphi_tidal);
+    if (VERBOSE)
+      PRL(dphi_tidal);
 
     // Clear flags.
 
