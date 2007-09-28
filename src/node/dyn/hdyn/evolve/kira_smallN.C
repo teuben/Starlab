@@ -139,6 +139,8 @@ real get_smallN_rcrit()		{return sqrt(r2_crit);}
 static bool dbg_allow_binary = true;	// set false to disable binaries
 static real rbin = 0;			// use to keep track of close pair
 
+const bool VERBOSE = false;
+
 // Global pointers to the closest pair and next nearest object.
 
 static hdyn *bi_min = NULL, *bj_min = NULL, *bk_nn = NULL;
@@ -531,11 +533,13 @@ local inline bool create_binary(hdyn *bi, hdyn *bj)
     bj->inc_pos(-cm->get_pos());
     bj->inc_vel(-cm->get_vel());
 
-    cerr << endl << "too close: " << bi->format_label();
-    cerr << " and " << bj->format_label() << endl;
-
-    hdyn *p = bi->get_parent();
-    pp(p), cerr << endl;
+    hdyn *p;
+    if (VERBOSE) {
+      cerr << endl << "too close: " << bi->format_label();
+      cerr << " and " << bj->format_label() << endl;
+      p = bi->get_parent();
+      pp(p), cerr << endl;
+    }
 
     // Restructure the tree.
 
@@ -563,11 +567,13 @@ local inline bool create_binary(hdyn *bi, hdyn *bj)
     // Eventually we will allow possibility of completely unperturbed
     // motion extending over several orbits, as in kira.
 
-    cerr << "created new binary " << cm->format_label() << endl;
-    pp(p), cerr << endl;
-    // k->print_all();
-    real dt_unpert = bi->get_t_pred() - time;
-    PRC(dt_unpert); PRL(bi->get_t_pred());
+    if (VERBOSE) {
+      cerr << "created new binary " << cm->format_label() << endl;
+      pp(p), cerr << endl;
+      // k->print_all();
+      real dt_unpert = bi->get_t_pred() - time;
+      PRC(dt_unpert); PRL(bi->get_t_pred());
+    }
 
     // Make sure pos and pred_pos agree.
 
@@ -593,12 +599,14 @@ local inline bool terminate_binary(hdyn*& bi)
     kepler *k = od->get_kepler();
     if (!k) err_exit("smallN: binary with no kepler.");
 
-    cerr << endl << "terminating binary " << bi->format_label() << endl;
-    // k->print_all();
-    PRL(od->get_t_pred());
-
-    hdyn *p = bi->get_parent();
-    pp(p), cerr << endl;
+    hdyn *p;
+    if (VERBOSE) {
+      cerr << endl << "terminating binary " << bi->format_label() << endl;
+      // k->print_all();
+      PRL(od->get_t_pred());
+      p = bi->get_parent();
+      pp(p), cerr << endl;
+    }
 
     // Offset the components to include the center of mass pos and vel.
 
@@ -650,7 +658,9 @@ local inline bool terminate_binary(hdyn*& bi)
     od->set_vel(vfac*od->get_vel());
     yd->set_vel(vfac*yd->get_vel());
 
-    cerr << "corrected component velocities: "; PRL(vfac);
+    if (VERBOSE) {
+      cerr << "corrected component velocities: "; PRL(vfac);
+    }
 
     // Update the tree.
 
@@ -664,7 +674,9 @@ local inline bool terminate_binary(hdyn*& bi)
     bi->set_oldest_daughter(NULL);
     delete(bi);
 
-    pp(p), cerr << endl;
+    if (VERBOSE) {
+      pp(p), cerr << endl;
+    }
 
     // Make sure pos and pred_pos agree.  Note that init_pred sets
     // t_pred = time as well as pred_pos = pos.
@@ -1533,24 +1545,28 @@ int smallN_evolve(hdyn *b,
 
 		hdyn *cm = bi_min->get_parent();
 		kepler *k = bi_min->get_kepler();
-		PRC(cm); PRL(k);
+		if (VERBOSE) {
+		  PRC(cm); PRL(k);
+		}
 
 		if (k->get_energy() < 0) {
 
 		    real gamma = estimated_perturbation(bi_min->get_parent(),
 							bk_nn);
-		    PRL(gamma);
+		    if (VERBOSE) PRL(gamma);
 
 		    // Conservatively advance the perturbation to apastron.
 
 		    gamma *= pow(k->get_apastron()/k->get_separation(), 3);
-		    PRL(gamma);
+		    if (VERBOSE) PRL(gamma);
 		    vec dr = hdyn_something_relative_to_root(cm, &hdyn::get_pos)
 		       - hdyn_something_relative_to_root(bk_nn, &hdyn::get_pos);
-		    PRL(dr);
+		    if (VERBOSE) PRL(dr);
 		    vec dv = hdyn_something_relative_to_root(cm, &hdyn::get_vel)
 		       - hdyn_something_relative_to_root(bk_nn, &hdyn::get_vel);
-		    PRC(dv); PRL(dr*dv);
+		    if (VERBOSE) {
+		      PRC(dv); PRL(dr*dv);
+		    }
 
 		    if (gamma < 1.e-4 && dr*dv > 0) {
 			cerr << "new binary is fully unperturbed -- exiting"
@@ -1581,9 +1597,11 @@ int smallN_evolve(hdyn *b,
 
 	    dt = acc_and_jerk_and_get_dt(b);
 
-	    cerr << endl << "new structure: "; pp(b);
-	    cerr << ",  ";
-	    PRL(dt);
+	    if (VERBOSE) {
+	      cerr << endl << "new structure: "; pp(b);
+	      cerr << ",  ";
+	      PRL(dt);
+	    }
 
 	    set_all_timesteps(b, dt);
 // 	    int p = cerr.precision(HIGH_PRECISION);
