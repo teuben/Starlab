@@ -1442,6 +1442,12 @@ int smallN_evolve(hdyn *b,
 	// time step for the system at the end of the step.  The return
 	// value of the function is the new system time.
 
+//      PRC(b->get_time()); PRC(dt); cerr << "a" << endl;
+// 	int p = cerr.precision(18);
+// 	for_all_daughters(hdyn, b, bb)
+// 	  cerr << " " << bb->format_label() << " " << bb->get_pos() << endl;
+// 	cerr.precision(p);
+
 	b->set_time(take_a_step(b, dt));
 
 	// Update all times and time steps.
@@ -1449,6 +1455,12 @@ int smallN_evolve(hdyn *b,
 	set_all_timesteps(b, dt);
 	set_all_times(b);
 	n_steps++;
+
+// 	PRC(b->get_time()); cerr << "b" << endl;
+// 	p = cerr.precision(18);
+// 	for_all_daughters(hdyn, b, bb)
+// 	  cerr << " " << bb->format_label() << " " << bb->get_pos() << endl;
+// 	cerr.precision(p);
 
 #if 0
 	cerr << b->get_time() << " (" << n_steps << "): ";
@@ -1642,7 +1654,7 @@ int smallN_evolve(hdyn *b,
 	}
     }
 
-    PRL(n_steps);
+    // PRL(n_steps);
     return 1;
 }
 
