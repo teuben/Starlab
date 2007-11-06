@@ -85,7 +85,8 @@ main(int argc, char **argv)
 
     // Parse the remaining options using the dyn version parser.
 
-    bool binaries, long_binary_output, B_flag, verbose, out, n_sq, calc_e;
+    int  verbose;
+    bool binaries, long_binary_output, B_flag, out, n_sq, calc_e;
     int which_lagr;
 
     // (Defaults are set in dyn/util/sys_stats.C)

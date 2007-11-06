@@ -1274,7 +1274,7 @@ local void sys_stats(hdyn *b)
 
 	// The usual version.
 
-	sys_stats(b, 1, true, true, false, 2, true, true, true);
+	sys_stats(b, 1, 1, true, false, 2, true, true, true);
 }
 
 

@@ -815,7 +815,7 @@ local void print_binary_histograms()
 
 local void print_binaries(dyn* b, real kT,
 			  vec center, real rcore, real rhalf,
-			  bool verbose,
+			  int verbose,
 			  bool long_binary_output = true,
 			  void (*dstar_params)(dyn*) = NULL)
 {
@@ -853,7 +853,7 @@ local void print_binaries(dyn* b, real kT,
 	    (pass == 2 && bi->n_leaves() == 2 && od->get_kepler() == NULL) ||
 	    (pass == 3 && bi->n_leaves() == 2 && od->get_kepler() != NULL)) {
 
-	    if (verbose) {
+	    if (verbose > 0) {
 		if (od->get_kepler() == NULL)
 		    cerr << "    ";
 		else
@@ -865,7 +865,7 @@ local void print_binaries(dyn* b, real kT,
 
 	    if (bi->n_leaves() > 2) {
 
-		if (verbose) {
+		if (verbose > 0) {
 		    for (int i = 0; i < init_indent; i++) cerr << " ";
 		    cerr << "is a multiple system" << endl;
 		}
@@ -875,14 +875,14 @@ local void print_binaries(dyn* b, real kT,
 		eb += print_structure_recursive(bi,
 						dstar_params,
 						n_unp, e_unp,
-						kT, center, verbose,
+						kT, center, verbose>0,
 						long_binary_output);
 
 		bin_recursive(bi, center, rcore, rhalf, kT);
 
 	    } else {
 
-		// if (verbose) {
+		// if (verbose > 0) {
 		//    if (od->get_kepler()) {
 		//	PRI(init_indent);
 		//	cerr << "is unperturbed (has a kepler pointer)"
@@ -901,7 +901,7 @@ local void print_binaries(dyn* b, real kT,
 		real dist_from_center = abs(bi->get_pos() - center);
 
 		eb += print_binary_params(od->get_kepler(), od->get_mass(),
-					  kT, dist_from_center, verbose,
+					  kT, dist_from_center, verbose>0,
 					  long_binary_output, init_indent);
 		nb++;
 
@@ -944,7 +944,7 @@ local void print_binaries(dyn* b, real kT,
 
     else {
 
-	if (verbose) cerr << endl;
+	if (verbose > 0) cerr << endl;
 	cerr << "  Total binary energy ("
 	     << nb << " binaries) = " << eb << endl;
 
@@ -957,13 +957,10 @@ local void print_binaries(dyn* b, real kT,
 	    cerr << "  nbcore = " << nbcore
 		 << "  mbcore = " << mbcore << endl;
 
-	print_binary_histograms();	// should this always be done, or
-					// only when binary output is turned
-					// on (as at present)?
-					//
-					// -- histograms are presently only
-					//    computed if binary output is
-					//    enabled
+	if (verbose > 1)
+	  print_binary_histograms();	// histograms are presently only
+					// computed if binary output is
+					// enabled
     }
 }
 
@@ -1164,7 +1161,7 @@ local void print_dominated_velocity_dispersions(dyn* b, dyn* b_dom)
 }
 
 //-----------------------------------------------------------------------------
-
+
 bool parse_sys_stats_main(int argc, char *argv[],
 			  int &which_lagr,
 			  bool &binaries,
@@ -1173,7 +1170,7 @@ bool parse_sys_stats_main(int argc, char *argv[],
 			  bool &calc_e,
 			  bool &n_sq,
 			  bool &out,
-			  bool &verbose,
+			  int  &verbose,
 			  char *cvs_id,
 			  char *source)
 {
@@ -1189,7 +1186,7 @@ bool parse_sys_stats_main(int argc, char *argv[],
     n_sq = false;			// don't allow n^2 operations
     out = false;			// write cin to cout
     long_binary_output = true;		// long binary output
-    verbose = true;			// extended output
+    verbose = 1;			// extended output
 
     extern char *poptarg;
     int c;
@@ -1234,10 +1231,10 @@ bool parse_sys_stats_main(int argc, char *argv[],
 
     return true;
 }
-
+
 void sys_stats(dyn* b,
 	       real energy_cutoff,			// default = 1
-	       bool verbose,				// default = true
+	       int  verbose,				// default = 2
 	       bool binaries,				// default = true
 	       bool long_binary_output,			// default = false
 	       int  which_lagr,				// default = 2
@@ -1273,7 +1270,7 @@ void sys_stats(dyn* b,
 	    print_sstar_time_scales(b);
     }
 
-    if (verbose) cerr << "\n  Overall parameters (sys_stats):\n";
+    cerr << "\n  Overall parameters (sys_stats):\n";
     bool mass_spectrum = false;
     print_numbers_and_masses(b, mass_spectrum);
 
@@ -1327,6 +1324,8 @@ void sys_stats(dyn* b,
     real kT = 0;
     int nd = b->n_daughters();
 
+    const int BIG_ND = 10;
+
     if (compute_energy)					// recompute energies
 
         print_energies(b, potential_energy, kinetic_energy, kT,
@@ -1357,7 +1356,8 @@ void sys_stats(dyn* b,
 
     // "Dominant" mass means > 50% of the total mass of the system.
 
-    dyn* b_dom = dominant_mass(b, 0.5);
+    dyn* b_dom = NULL;
+    if (nd > BIG_ND) b_dom = dominant_mass(b, 0.5);
 
     if (!b_dom) {
 
@@ -1366,7 +1366,7 @@ void sys_stats(dyn* b,
 	bool has_densities = (getrq(b->get_dyn_story(), "density_time")
 			       == b->get_system_time());
 
-	if (has_densities || allow_n_sq_ops) {
+	if (verbose > 1 && (has_densities || allow_n_sq_ops)) {
 
 	    // cerr << "Compute densities" << endl;	// ???
 
@@ -1375,20 +1375,18 @@ void sys_stats(dyn* b,
 	    // only do O(N^2) operations if no current densities are found
 	    // and allow_n_sq_ops is true.
 
-	    if (verbose) {
-		cerr << "\n  Core parameters";
-		if (has_densities)
-		    cerr << " (densities from input snapshot)";
-		cerr << ":\n";
-	    }
-
+	    cerr << "\n  Core parameters";
+	    if (has_densities)
+	      cerr << " (densities from input snapshot)";
+	    cerr << ":\n";
+	    
 	    // Core parameters are always expressed relative to the
 	    // (mean) density center.
 
 	    print_core_parameters(b, allow_n_sq_ops, center, rcore);
 
 	    if (rcore > 0 && r_virial > 0) {
-		if (verbose) cerr << "\n  Dynamical King parameters:\n";
+		cerr << "\n  Dynamical King parameters:\n";
 		print_fitted_king_model(rcore/r_virial, rcore_rvirial);
 	    }
 	}
@@ -1409,25 +1407,29 @@ void sys_stats(dyn* b,
 	//			= 3 : heavy stars (heavy_stars = true)
 	//			= 4 : most massive stars (mass_spectrum = true)
 
-	cerr << endl << "  All single stars/CMs:";
-	rhalf = print_lagrangian_radii(b, which_lagr, verbose, 0);
-	PRI(4); PRL(rhalf);
+	if (verbose > 1 || (verbose > 0 && nd > BIG_ND)) {
 
-	if (rhalf > 0) {
-	    real density = 1.5*b->get_root()->get_mass()
+	    cerr << endl << "  All single stars/CMs:";
+	    rhalf = print_lagrangian_radii(b, which_lagr, verbose>0, 0);
+	    PRI(4); PRL(rhalf);
+
+	    if (rhalf > 0) {
+	      real density = 1.5*b->get_root()->get_mass()
 				/ (4*M_PI*pow(rhalf, 3));
-	    putrq(b->get_root()->get_dyn_story(), "kira_rhalf", rhalf);
-	    putrq(b->get_root()->get_dyn_story(), "kira_half_density", density);
-	    set_new_rhalf();
+	      putrq(b->get_root()->get_dyn_story(), "kira_rhalf", rhalf);
+	      putrq(b->get_root()->get_dyn_story(),
+		    "kira_half_density", density);
+	      set_new_rhalf();
+	    }
 	}
 
 	// PRL(heavy_stars);
 
-	if (heavy_stars && verbose) {
+	if (heavy_stars && verbose > 1) {
 	    cerr << endl << "  \"Light\" stars only:";
-	    print_lagrangian_radii(b, which_lagr, verbose, 2);
+	    print_lagrangian_radii(b, which_lagr, verbose>0, 2);
 	    cerr << endl << "  \"Heavy\" stars only:";
-	    print_lagrangian_radii(b, which_lagr, verbose, 3);
+	    print_lagrangian_radii(b, which_lagr, verbose>0, 3);
 	}
 
 	if (mass_spectrum) {
@@ -1440,53 +1442,53 @@ void sys_stats(dyn* b,
 	    cerr << endl << "  Most massive stars (cutoff_mass = "
 		 << get_lagr_cutoff_mass() << "):";
 	    real rhalf_massive = print_lagrangian_radii(b, which_lagr,
-							verbose, 4);
+							verbose>0, 4);
 	    PRI(4); PRL(rhalf_massive);
 
-	    if (verbose)
+	    if (verbose > 1) {
 		cerr << endl
 		     << "  Mass distribution by Lagrangian zone (singles):"
 		     << endl;
-	    print_numbers_and_masses_by_radial_zone(b, 0);
+		print_numbers_and_masses_by_radial_zone(b, 0);
 
-	    if (verbose)
 		cerr << endl
 		     << "  Mass distribution by Lagrangian zone (multiples):"
 		     << endl;
-	    print_numbers_and_masses_by_radial_zone(b, 1);
-
+		print_numbers_and_masses_by_radial_zone(b, 1);
+	    }
 	}
 
-	print_parameters_for_massive_black_holes(b, kT, center, verbose);
+	if (verbose > 1)
+	  print_parameters_for_massive_black_holes(b, kT, center, verbose>1);
 
-	if (verbose)
+	if (verbose > 1) {
 	    cerr << "\n  Anisotropy by Lagrangian zone (singles):\n";
-	print_anisotropy_by_radial_zone(b, 0);
+	    print_anisotropy_by_radial_zone(b, 0);
 
-	if (verbose)
 	    cerr << "\n  Anisotropy by Lagrangian zone (multiple CMs):\n";
-	print_anisotropy_by_radial_zone(b, 1);
+	    print_anisotropy_by_radial_zone(b, 1);
 
-	if (heavy_stars && verbose) {
-	    // if (verbose)
-	    cerr << endl
-		 << "  Mass distribution by Lagrangian zone (light stars):"
-		 << endl;
-	    print_numbers_and_masses_by_radial_zone(b, 2);
+	    if (heavy_stars) {
+	        // if (verbose)
+		cerr << endl
+		     << "  Mass distribution by Lagrangian zone (light stars):"
+		     << endl;
+		print_numbers_and_masses_by_radial_zone(b, 2);
 
-	    // if (verbose)
-	    cerr << endl
-		 << "  Mass distribution by Lagrangian zone (heavy stars):"
-		 << endl;
-	    print_numbers_and_masses_by_radial_zone(b, 3);
+		// if (verbose)
+		cerr << endl
+		     << "  Mass distribution by Lagrangian zone (heavy stars):"
+		     << endl;
+		print_numbers_and_masses_by_radial_zone(b, 3);
 
-	    // if (verbose)
-	    cerr << "\n  Anisotropy by Lagrangian zone (light stars):\n";
-	    print_anisotropy_by_radial_zone(b, 2);
+		// if (verbose)
+		cerr << "\n  Anisotropy by Lagrangian zone (light stars):\n";
+		print_anisotropy_by_radial_zone(b, 2);
 
-	    // if (verbose)
-	    cerr << "\n  Anisotropy by Lagrangian zone (heavy stars):\n";
-	    print_anisotropy_by_radial_zone(b, 3);
+		// if (verbose)
+		cerr << "\n  Anisotropy by Lagrangian zone (heavy stars):\n";
+		print_anisotropy_by_radial_zone(b, 3);
+	    }
 	}
 
     } else {
@@ -1514,10 +1516,10 @@ void sys_stats(dyn* b,
     bool sstar = b->get_use_sstar();
 
     if (print_dstar_stats != NULL)
-	sstar = !print_dstar_stats(b, mass_spectrum, center, verbose);
+	sstar = !print_dstar_stats(b, mass_spectrum, center, verbose>0);
 
     if (sstar)
-	  sstar_stats(b, mass_spectrum, center, verbose);
+	  sstar_stats(b, mass_spectrum, center, verbose>0);
 
     if (binaries) {
 
@@ -1526,11 +1528,11 @@ void sys_stats(dyn* b,
 	if (find_qmatch(b->get_dyn_story(), "lagr_pos"))
 	    center = getvq(b->get_dyn_story(), "lagr_pos");
 	else
-	    warning("sys_stats: lagr_pos not found");
+	    if (verbose > 1) warning("sys_stats: lagr_pos not found");
 
 	set_kepler_tolerance(2);	// avold termination on error
 
-	if (verbose) {
+	if (verbose > 0) {
 	    cerr << endl;
 	    cerr << "  Binaries/multiples";
 	    if (!long_binary_output) cerr << " (short output)";
@@ -1542,7 +1544,7 @@ void sys_stats(dyn* b,
 
 	if (allow_n_sq_ops) {
 
-	    if (verbose) {
+	    if (verbose > 0) {
 		cerr << "\n  Other bound pairs with ";
 		if (kT > 0)
 		    cerr << "|E| > " << energy_cutoff << " kT:\n";
@@ -1550,7 +1552,7 @@ void sys_stats(dyn* b,
 		    cerr << "|E/mu| > " << energy_cutoff << ":\n";
 	    }
 	    search_for_binaries(b, energy_cutoff, kT,
-				center, verbose, long_binary_output);
+				center, verbose>0, long_binary_output);
 
 	} else {
 
@@ -1560,7 +1562,7 @@ void sys_stats(dyn* b,
 	    bool found = false;
 	    for_all_daughters(dyn, b, bb)
 		found |= bb->nn_stats(energy_cutoff, kT,   // Dummy function for
-				      center, verbose,     // dyn; get NN binary
+				      center, verbose>0,   // dyn; get NN binary
 				      long_binary_output,  // info for hdyn
 				      which++);
 	    if (!found)
@@ -1582,7 +1584,8 @@ main(int argc, char **argv)
 {
     check_help();
 
-    bool binaries, long_binary_output, B_flag, verbose, out, n_sq, calc_e;
+    int  verbose;
+    bool binaries, long_binary_output, B_flag, out, n_sq, calc_e;
     int which_lagr;
 
     if (!parse_sys_stats_main(argc, argv,

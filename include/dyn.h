@@ -1,8 +1,8 @@
 
-       //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\ ~
-     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+       //=======================================================//   _\|/_
+      //  __  _____           ___                    ___       //     /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //         _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //           /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
   //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
  //                                                       //            _\|/_
@@ -655,7 +655,7 @@ bool parse_sys_stats_main(int argc, char *argv[],
 			  bool &calc_e,
 			  bool &n_sq,
 			  bool &out,
-			  bool &verbose,
+			  int  &verbose,
 			  char *cvs_id, char *source);
 void check_addstar(dyn* b);
 
@@ -663,7 +663,7 @@ void check_addstar(dyn* b);
 
 void sys_stats(dyn* root,
 	       real energy_cutoff = 1,
-	       bool verbose = true,
+	       int  verbose = 2,
 	       bool binaries = true,
 	       bool long_binary_output = false,
 	       int which_lagr = 2,
