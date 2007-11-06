@@ -92,6 +92,7 @@
 
 #include  "hdyn.h"
 #include  "hdyn_inline.C"
+#include "kira_defaults.h"
 
 
 
@@ -1363,10 +1364,13 @@ local bool fully_unperturbed(hdyn *b)
 
 
 // Evolve the system to time t_end, using the input data and settings
-// without modification.  Stop if (1) t >= t_end, or (2) any particle
-// gets too far from the origin, or (3) (optionally) if the closest
-// binary is unperturbed.  The return value is 1, 2, or 3 for these
-// three cases.
+// without modification.  Stop if
+//
+//	(1) t >= t_end,
+//	(2) any particle gets too far (break_r2) from the origin, or
+//	(3) (optionally) if the closest binary is unperturbed.
+//
+// The return value is 1, 2, or 3 for these three cases.
 
 #define NCHECK 100
 
@@ -1471,7 +1475,7 @@ int smallN_evolve(hdyn *b,
 	// Time step dt was set by bi_min and bj_min during the last acc
 	// and jerk calculation.
 
-	// Debugging:
+	// Debugging (rbin can only be set later in this function):
 
 	if (rbin > 0 && abs(bi_min->get_pos()-bj_min->get_pos()) > rbin) {
 
@@ -1509,8 +1513,8 @@ int smallN_evolve(hdyn *b,
 		  return 2;
 	}
 
-	// Check for the start/end of unperturbed motion, and also
-	// the third (unperturbed) termination condition.  Use various
+	// Check for the start/end of unperturbed motion, and also the
+	// third (unperturbed) termination condition.  Use various
 	// thresholds to avoid this check at the end of every step:
 	//
 	//	time step dt < dt_crit
@@ -1519,12 +1523,13 @@ int smallN_evolve(hdyn *b,
 	//	bi_min and bj_min are approaching
 	//	others...
 	//
-	// Once the check fails, a more clever search would defer further
-	// checks until the components had approached each other
-	// significantly, but this will entail significant bookeeping.
-	// For now, just live with the fact that we carry out this check
-	// at roughly half the total number of staps, as the initial
-	// hard binary will likely dominate the time step.
+	// Once the check fails, a more clever search would defer
+	// further checks until the components had approached each
+	// other significantly, but this would entail significant
+	// bookeeping.  For now, just live with the fact that we carry
+	// out this check at roughly half the total number of staps,
+	// as the initial hard binary will likely dominate the time
+	// step.
 
 	bool tree_changed = false;
 
@@ -1553,7 +1558,7 @@ int smallN_evolve(hdyn *b,
 		tree_changed = false;
 	    }
 
-	    if (tree_changed) {
+	    if (tree_changed && end_on_unpert) {
 
 		// See if the new binary triggers the termination criterion.
 		// Nearest neighbor is bk_nn.
@@ -1565,6 +1570,9 @@ int smallN_evolve(hdyn *b,
 		}
 
 		if (k->get_energy() < 0) {
+
+		    // Note that estimated_perturbation is a kira
+		    // function (in hdyn_inline.C).
 
 		    real gamma = estimated_perturbation(bi_min->get_parent(),
 							bk_nn);
@@ -1583,11 +1591,11 @@ int smallN_evolve(hdyn *b,
 		      PRC(dv); PRL(dr*dv);
 		    }
 
-		    if (gamma < 1.e-4 && dr*dv > 0) {
-			cerr << "new binary is fully unperturbed -- exiting"
-			    << endl;
-			exit(1);
-		    }
+		    // Exit if the binary would be unperturbed and
+		    // approaching by (default) kira standards.
+
+		    if (gamma < DEFAULT_FULL_MERGE_TOLERANCE && dr*dv > 0)
+			return 3;
 		}
 	    }
 	}
