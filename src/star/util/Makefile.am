@@ -19,7 +19,7 @@
 noinst_LTLIBRARIES = libsstar-5.la
 bin_PROGRAMS =  kingfit red_stellar_system rcore2 coagulation rearrange_mf \
     red_star_cluster encountervelocity imf_evolve proj_lagr lmt_to_ubvri \
-    makedyn_from_input nn_distribution
+    makedyn_from_input nn_distribution calculate_individual_energies
 
 libsstar_5_la_SOURCES = kingfit.C lmt_to_ubvri.C proj_lagr.C
 
@@ -35,6 +35,7 @@ proj_lagr_CPPFLAGS = -DTOOLBOX
 lmt_to_ubvri_CPPFLAGS = -DTOOLBOX
 makedyn_from_input_CPPFLAGS = -DTOOLBOX
 nn_distribution_CPPFLAGS = -DTOOLBOX
+calculate_individual_energies = -DTOOLBOX
 
 kingfit_LDADD = ../dstar/libdstar.la ../../node/dyn/libdyn.la
 red_stellar_system_LDADD = ../dstar/libdstar.la ../../node/dyn/libdyn.la
@@ -48,6 +49,8 @@ proj_lagr_LDADD = ../dstar/libdstar.la ../../node/dyn/libdyn.la
 lmt_to_ubvri_LDADD = ../dstar/libdstar.la ../../node/dyn/libdyn.la
 makedyn_from_input_LDADD = ../dstar/libdstar.la ../../node/dyn/libdyn.la
 nn_distribution_LDADD = ../dstar/libdstar.la ../../node/dyn/libdyn.la
+calculate_individual_energies_LDADD = ../dstar/libdstar.la ../../node/dyn/libdyn.la
+
 
 kingfit_SOURCES = kingfit.C
 red_stellar_system_SOURCES = red_stellar_system.C
@@ -61,3 +64,4 @@ proj_lagr_SOURCES = proj_lagr.C
 lmt_to_ubvri_SOURCES = lmt_to_ubvri.C
 makedyn_from_input_SOURCES = makedyn_from_input.C
 nn_distribution_SOURCES = nn_distribution.C
+calculate_individual_energies_SOURCES = calculate_individual_energies.C
