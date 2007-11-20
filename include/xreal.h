@@ -73,8 +73,8 @@ class xreal {
 	void print(ostream& s = cerr,
 		   bool newline = false);		///< xprint(x) is better
 
-	xreal::operator int() {return to_int();}
-	xreal::operator real() {return to_real();}
+	operator int() {return to_int();}
+	operator real() {return to_real();}
 
 	// Unary -, binary +, -, +=, -= (don't check for over/underflow):
 
