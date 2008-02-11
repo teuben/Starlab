@@ -120,8 +120,25 @@ real print_encounter_elements(hdyn* bi, hdyn* bj,
 		 << conv_v_dyn_to_star(abs(k.get_rel_vel()),
 			       bi->get_starbase()->conv_r_star_to_dyn(1),
 			       bi->get_starbase()->conv_t_star_to_dyn(1))
-	         << " [km/s]).";
-
+	         << " [km/s])." << endl;
+	    cerr << "  Primary position: " << bi->get_pos() << endl;
+	    cerr << "         Dpos: " << bi->get_pos()-bj->get_pos() 
+		 << " (" << bi->get_starbase()->conv_r_dyn_to_star(bi->get_pos()[0]-bj->get_pos()[0]) 
+		 << ", " << bi->get_starbase()->conv_r_dyn_to_star(bi->get_pos()[1]-bj->get_pos()[1]) 
+		 << ", " << bi->get_starbase()->conv_r_dyn_to_star(bi->get_pos()[2]-bj->get_pos()[2]) << " [Rsun])." 
+		 << endl;
+	    cerr << "  Primary velocity: " << bi->get_vel() << endl;
+	    cerr << "         Dvel: " << bi->get_vel()-bj->get_vel() 
+		 << " (" << conv_v_dyn_to_star(bi->get_vel()[0]-bj->get_vel()[0],
+				   bi->get_starbase()->conv_r_star_to_dyn(1),
+				   bi->get_starbase()->conv_t_star_to_dyn(1)) 
+		 << ", " << conv_v_dyn_to_star(bi->get_vel()[1]-bj->get_vel()[1],
+				   bi->get_starbase()->conv_r_star_to_dyn(1),
+				   bi->get_starbase()->conv_t_star_to_dyn(1))
+		 << ", " << conv_v_dyn_to_star(bi->get_vel()[2]-bj->get_vel()[2],
+				   bi->get_starbase()->conv_r_star_to_dyn(1),
+				   bi->get_starbase()->conv_t_star_to_dyn(1)) 
+		 << " [km/s])." << endl;
 	} else {
 
 	    cerr << " between " << bi->format_label();
