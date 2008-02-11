@@ -4304,16 +4304,27 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	//
 	// Use the values in float.h instead.  (Steve, 12/04)
 
-	if (	// binary_type != NOT_APPROACHING &&
-	     0.001*keplstep < DBL_EPSILON*(real)time
-	     || 0.01*peristep < DBL_EPSILON*(real)time
+	// New features: (1) only apply periastron check if components
+	// are approaching, and (2) don't apply any of this machinery
+	// to a true binary -- let the unperturbed motion criteria
+	// handle it.  (steve, 2/08)
+
+	if (parent->n_leaves() > 2				// (2)
+	    && (0.01*keplstep < DBL_EPSILON*(real)time
+		|| (binary_type != NOT_APPROACHING		// (1)
+		    && 0.05*peristep < DBL_EPSILON*(real)time))
 	    ) {
 
-// 	    int prec = cerr.precision(HIGH_PRECISION);
-// 	    cerr << endl << "short time step for " << format_label()
-// 		 << " at "; PRL(time);
-// 	    cerr.precision(prec);
-// 	    PRC(timestep); PRC(keplstep); PRL(peristep);
+#if 1
+	  {
+ 	    int prec = cerr.precision(HIGH_PRECISION);
+ 	    cerr << endl << "short time step for " << format_label()
+ 		 << " at "; PRL(time);
+	    cerr.precision(prec);
+ 	    PRC(binary_type); PRL(NOT_APPROACHING);
+	    PRC(timestep); PRC(keplstep); PRL(peristep);
+	  }
+#endif
 
 	    // Timestep is close to being insignificant.  The short timestep
 	    // (presumably) indicates that we have a very close perturbed
@@ -4334,12 +4345,11 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    int np;
 
 	    // Short version of output message:
-
-	    int prec = cerr.precision(HIGH_PRECISION);
+	    {int prec = cerr.precision(HIGH_PRECISION);
  	    cerr << endl << "short time step for " << format_label();
 	    cerr << " under " << top->format_label()
  		 << " at t = " << time << flush << endl;
- 	    cerr.precision(prec);
+ 	    cerr.precision(prec);}
 
 	    if (top->valid_perturbers) {
 		np = top->n_perturbers;
@@ -4408,7 +4418,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		// strongly on d_min_sq, as this defines the multiples and
 		// we only work with top-level clumps.  A better approach
 		// would be to ascend the tree to the top level looking for
-		// suffieiently unperturbed CMs, and to allow the possibility
+		// sufficiently unperturbed CMs, and to allow the possibility
 		// of incorporating other top-level nodes into the multiple.
 		// To be done.  (Steve, 12.04)
 
@@ -4444,6 +4454,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		    // internal structure may have changed.
 
 		    print_recalculated_energies(get_root());
+		    PRL(top->format_label());
 		    real t_mult = integrate_multiple(top, 1);
 		    cerr << "multiple integration time = " << t_mult << endl;
 		    print_recalculated_energies(get_root());

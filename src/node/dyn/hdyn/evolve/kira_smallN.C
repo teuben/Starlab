@@ -1,11 +1,11 @@
 
-       //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\ ~
-     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+       //=======================================================//   _\|/_
+      //  __  _____           ___                    ___       //     /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //         _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //           /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
   //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
- //                                       
+ //                                                                     _\|/_
 //=======================================================//              /|\ ~
 
 
@@ -50,12 +50,12 @@
 //	real smallN_evolve()
 //	real integrate_multiple()
 //
-// As currently envisaged, on entry we will have an isolated (that is,
-// relatively unperturbed) few-body (N <~ 5) system in which a hard
-// binary has just become perturbed by a neighbor.  A typical scenario
-// might be that a stable triple has been perturbed into an unstable
-// orbit, and now the outer component has become a perturber of the
-// inner pair.  Fow now, we
+// As currently envisaged, on entry from kira we will have an isolated
+// (that is, relatively unperturbed) few-body (N <~ 5) system in which
+// a hard binary has just become perturbed by a neighbor.  A typical
+// scenario might be that a stable triple has been perturbed into an
+// unstable orbit, and now the outer component has become a perturber
+// of the inner pair.  Fow now, we
 //
 //	* integrate the multiple in isolation,
 //	* stop when an unperturbed hard binary is again identified,
@@ -1941,7 +1941,8 @@ local kepler get_multiple_params(hdyn *b,
     // already in the form of two binary sisters.  Find the closest
     // such pair, to set time and length scales.  Use both minimum
     // distance and maximum potential criteria in the search.  Return
-    // a kepler structure describing the closest pair.
+    // a kepler structure describing the closest pair and set inner
+    //pointing to the inner CM.
 
     hdyn *bimin, *bjmin;
     real rmin = VERY_LARGE_NUMBER;
@@ -2222,7 +2223,16 @@ real integrate_multiple(hdyn *b, int mode)	// default mode = 1
 	PRC(mass); PRC(sma); PRL(inner->format_label());
     }
 
+    // Inner is the center of mass of the inner binary.
+
     hdyn *sis = inner->get_binary_sister();
+
+    // Flag and ignore incorrect call (Steve, 2.08).
+
+    if (sis->is_top_level_node()) {		// shouldn't happen
+        cerr << "integrate_multiple: binary system!" << endl;
+	return 0;
+    }
     kepler k_out;
     initialize_kepler_from_dyn_pair(k_out, inner, sis, false);
     real rnn = k_out.get_separation();
