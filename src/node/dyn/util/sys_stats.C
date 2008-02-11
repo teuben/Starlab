@@ -579,7 +579,8 @@ local void print_energies(dyn* b,
     cerr << "    top-level internal potential = " << pot_int
 	 << ",  kinetic = " << kin_int
 	 << endl
-	 << "    virial_ratio = " << virial_ratio
+	 << "    top-level total energy = " << pot_int + kin_int
+	 << ",  virial_ratio = " << virial_ratio
 	 << endl;
 
     // PRL(get_external_virial(b));
