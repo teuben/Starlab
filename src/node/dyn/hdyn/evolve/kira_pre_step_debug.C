@@ -4,6 +4,20 @@
 // of length n_next.
 
 #if 0
+if (t > 83.29) {
+  int p = cerr.precision(15);
+  cerr << endl; cerr << "before "; PRL(t);
+  cerr.precision(p);
+  for (int ii = 0; ii < n_next; ii++) {
+    hdyn *n = next_nodes[ii];
+    if (n && n->is_valid() && (n->is_parent() || n->is_low_level_node())) {
+      PRC(n->format_label()); PRL(n->get_timestep());
+    }
+  }
+}
+#endif
+
+#if 0
 if (t > 1397.478) {
     int p = cerr.precision(15);
     cerr << endl; PRL(t);

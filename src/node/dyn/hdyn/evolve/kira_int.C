@@ -836,20 +836,22 @@ int integrate_list(hdyn * b,				// root node
 
 			//--------------------------------------------------
 			//
-			// New (Steve, 9/03): the end of unperturbed motion
-			// may have caused the parent or the parent nn node
-			// to have been synchronized out of order.  Check
-			// for and correct this, if necessary.  Correction
-			// entails recomputing the scheduling list...
+			// New (Steve, 9/03): the end of unperturbed
+			// motion may have caused the parent or the
+			// parent nn node to have been synchronized
+			// out of order.  Check for and correct this,
+			// if necessary.  Correction entails
+			// recomputing the scheduling list...
 			//
-			// Indicator: par and pnn are up to date, but one
-			// or both aren't on the integration list.
+			// Indicator: par and pnn are up to date, but
+			// one or both aren't on the integration list.
 			//
-			// New (Steve, 2/04): this may fail if the neighbor
-			// has changed while the parent was being updated!
-			// Also, the logic becomes more tricky if par->nn
-			// and pnn are not the same thing...  Best to rely
-			// on the resched flag.
+			// New (Steve, 2/04): this may fail if the
+			// neighbor has changed while the parent was
+			// being updated!  Also, the logic becomes
+			// more tricky if par->nn and pnn are not the
+			// same thing...  Best to rely on the resched
+			// flag.  Odd place to check -- move?
 
 			if (!pert) {
 
@@ -861,6 +863,7 @@ int integrate_list(hdyn * b,				// root node
 
 				cerr << "kira: recomputing scheduling list "
 				     << "at time " << sys_t << endl;
+				PRL(b->format_label());
 
 				rmq(s, "resched");
 			    }

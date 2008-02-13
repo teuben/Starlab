@@ -2309,6 +2309,7 @@ real hdyn::set_unperturbed_timestep(bool restrict_phase)	// no default
 
 	    real peri_time = -mean_anomaly / kep->get_mean_motion();
 	    steps = ceil(2 * peri_time / timestep);
+	    // PRC(0); PRL(steps);
 
 	    // Recall that ceil rounds to the next integer up, so we
 	    // overshoot slightly.  We *don't want to do this for slow
@@ -2408,6 +2409,7 @@ real hdyn::set_unperturbed_timestep(bool restrict_phase)	// no default
 		} else {
 
 		    real usteps = get_max_unperturbed_steps(!is_multiple(this));
+		    // PRC(2); PRL(usteps);
 
 		    // Unperturbed timestep will be set equal to
 		    // timestep * usteps if usteps > 0, unless
@@ -2489,6 +2491,8 @@ real hdyn::set_unperturbed_timestep(bool restrict_phase)	// no default
 
 #endif
 
+	// PRC(1); PRL(steps);
+
 	// Now steps is the number of perturbed time steps to the reflection
 	// point (rounded to the nearest integer), or the number of perturbed
 	// steps corresponding to an integral number of orbits (plus mapping
@@ -2545,11 +2549,29 @@ real hdyn::set_unperturbed_timestep(bool restrict_phase)	// no default
 		    binary_type = FULL_MERGER;
 		    fully_unperturbed = true;
 		}
+
+		// PRC(2); PRL(steps);
 	    }
 	}
     }
 
-    // PRL(steps);
+    // PRC(3); PRL(steps);
+
+    // If this binary has been forced to be updated from elsewhere
+    // (e.g. as part of a multiple), it is possible that the implied
+    // next time is less than the system time.  Check and correct that
+    // here.
+
+    if (time + timestep*steps < system_time) {
+
+	// Add an integral number of orbital periods to the time step.
+
+	real delta_t = system_time - time - timestep*steps;
+	steps += ceil(delta_t/kep->get_period())*kep->get_period()/timestep;
+
+	cerr << "set_unperturbed timestep: extended step to reach system_time"
+	     << endl; 
+    }
 
     // Redundant comment: for slow binary motion, timestep is temporarily
     // dtau, so multiply unperturbed_timestep by kappa here (value is
@@ -2773,7 +2795,9 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	if (diag->report_continue_unperturbed)
 	  cerr << func << ": unperturbed step for " << format_label()
 		 << " limited by unpert_step_limit" << endl;
+	// PRC(pdt);
 	pdt = unpert_step_limit;
+	// PRL(unpert_step_limit);
     }
 
     // Next step must end after current system time.  (Not relevant
@@ -2814,7 +2838,9 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
     }
 
     if (pdt2 > unpert_step_limit) pdt2 = unpert_step_limit;
+    // PRL(pdt2);
 
+    // pdt = pdt2;	// ?????
 
     // Goal: to advance the binary by as great a time as possible,
     //	     subject to the constraints that (a) we do not wish to
@@ -2869,6 +2895,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
     // real orb = floor(pdt / kep->get_period());
 
     real orb = ceil(pdt / kep->get_period());
+    // PRC(1); PRL(orb);
 
     // Recall that ceil rounds up to the next integer, so orb orbital
     // periods calculated with ceil end *after* pdt.  The idea is that
@@ -2892,7 +2919,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
     if (orb*kep->get_period() > unpert_step_limit)
       orb = floor(unpert_step_limit / kep->get_period());
 
-    // PRL(orb);
+    // PRC(2); PRL(orb);
 
     // Note that orb may = 0...
 
@@ -2914,6 +2941,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 
     real pert_steps = 0;
 
+    // PRL(to_apo);
     if (to_apo) {
 
 	// Get time to next apocenter.
@@ -2961,6 +2989,8 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	// before).
     }
 
+    // PRC(1); PRL(pert_steps);
+
     // Recheck that step will advance beyond system_time.  By construction,
     // it should fall short by at most 1 period...
 
@@ -2970,6 +3000,8 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 		 << " increased to reach system_time" << endl;
 	pert_steps += ceil(kep->get_period() / timestep);
     }
+
+    // PRC(2); PRL(pert_steps);
 
     // Check that we really will pass apocenter at end of step.
 
@@ -2998,6 +3030,9 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	  cerr << func << ": mcount = 0 for " << format_label()
 	       << " at time " << time << endl;
     }
+
+    // PRC(3); PRL(pert_steps);
+    // PRL(options->optimize_scheduling);
 
     //-----------------------------------------------------------------
 
@@ -3201,12 +3236,31 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	}
     }
 
+    // PRC(4); PRL(pert_steps);
+
     // One final time step check.
 
-    if (pert_steps*timestep > unpert_step_limit)
-	return 0;
-    else
-	return pert_steps;		// unit = current unperturbed timestep
+    if (pert_steps*timestep > unpert_step_limit) {
+
+      // We need to reduce the step.  Setting pert_steps = 0 will have
+      // the effect of reverting to periastron reflection, which may
+      // be converted to a full orbit, depending on phase.  However,
+      // this may be overkill in many circumstances.  Try to wind back
+      // by an integral number of orbits (we will likely lose our spot
+      // in the tree), but don't take a step to less than the current
+      // system time.
+
+      real delta_t = pert_steps*timestep > unpert_step_limit;
+      pert_steps -= ceil(delta_t/kep->get_period())*kep->get_period()/timestep;
+
+      // Give up and revert to reflection if this time step is too short.
+
+      if (time + pert_steps*timestep < system_time)
+	pert_steps = 0;
+    }
+
+    // PRC(5); PRL(pert_steps);
+    return pert_steps;		// unit = current perturbed timestep
 }
 
 void hdyn::recompute_unperturbed_step()
@@ -3227,6 +3281,7 @@ void hdyn::recompute_unperturbed_step()
     // unsigned long usteps = get_max_unperturbed_steps(true);
 
     real usteps = get_max_unperturbed_steps(true);
+    PRC(1); PRL(usteps);
 
     if (usteps > 0) {
 
@@ -3887,18 +3942,20 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 			    // However, the corrective action must be taken
 			    // in the calling function in any case.
 			    //
-			    // Note from Steve (2/04): Remarkably, it is
-			    // possible for the nearest neighbor of the
-			    // parent node to change when the node is
-			    // synchronized!  This makes it hard to infer
-			    // in the calling function whether pnn is out
-			    // of order on the scheduling list.  Rather than
-			    // trying to guess the outcome from the data
-			    // available on return, might be better to use
-			    // the story mechanism to set a flag, although
-			    // it seems that the problem can only occur in
-			    // situations where pcorr would itself trigger
-			    // the rescheduling in any case.
+			    // Note from Steve (2/04): It is possible
+			    // for the nearest neighbor of the parent
+			    // node to change when the node is
+			    // synchronized!  This makes it hard to
+			    // infer in the calling function whether
+			    // pnn is out of order on the scheduling
+			    // list.  Rather than trying to guess the
+			    // outcome from the data available on
+			    // return, might be better to use the
+			    // story mechanism to set a flag, although
+			    // it seems that the problem can only
+			    // occur in situations where pcorr would
+			    // itself trigger the rescheduling in any
+			    // case.
 			    //
 			    // Just setting a flag may be the cleanest way
 			    // to avoid complicated logic in the calling
@@ -3939,8 +3996,11 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 					 << endl;
 			    }
 
-			    if (resched) putiq(root->get_dyn_story(),
-			    		       "resched", 1);
+			    if (resched) {
+			        putiq(root->get_dyn_story(), "resched", 1);
+				cerr << "    forced rescheduling due to "
+				     << format_label() << endl;
+			    }
 
 			    // Note that we should really repeat the entire
 			    // previous calculation, since all quantities will
