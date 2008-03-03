@@ -8,7 +8,7 @@
 #include "sstar_to_dyn.h"
 #include "hdyn.h"
 
-#ifndef TOOLBOX
+#ifdef TOOLBOX
 
 #if 0
 local void combine_ubvri(real Up, real Bp, real Vp, real Rp, real Ip,
@@ -96,7 +96,7 @@ local void get_UBVRI_of_star(hdyn *bi, vec pos,
              getsq(bi->get_star_story(), "Class"));
        if (L_eff>0)
           R_eff = 
-	    * sqrt(L_eff)/pow(T_eff/cnsts.parameters(solar_temperature), 2);
+	    sqrt(L_eff)/pow(T_eff/cnsts.parameters(solar_temperature), 2);
      }
      else {
        cout << "    No stellar information found: " << endl;

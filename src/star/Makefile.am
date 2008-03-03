@@ -23,3 +23,5 @@ SUBDIRS = sstar dstar util
 if !NO_X
    SUBDIRS += xutil
 endif
+
+SUBDIRS += rdc

@@ -124,7 +124,7 @@ class SeBa_hist {
        void put_single_reverse(ostream&);
        void put_first_formed_left(char*, real);
 
-       bool SeBa_hist::binary_contains(char*, char *, binary_type);
+       bool binary_contains(char*, char *, binary_type);
        bool binary_limits(binary_parameter, real, real);
        real get_parameter(binary_parameter);
        binary_type get_binary_type() { return bin_tpe;}
