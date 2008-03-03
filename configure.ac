@@ -407,9 +407,9 @@ AC_CONFIG_FILES([Makefile starlab_start.csh starlab_start.sh \
     src/star/dstar/init/Makefile src/star/dstar/stardyn/Makefile \
     src/star/dstar/util/Makefile src/star/dstar/sdyn3/Makefile \
     src/star/dstar/evolve/Makefile \
-    src/star/util/Makefile src/star/xutil/Makefile src/hydro/Makefile \
-    src/hydro/util/Makefile src/hydro/init/Makefile src/hydro/evolve/Makefile \
-    src/harpsims/Makefile])
+    src/star/util/Makefile src/star/xutil/Makefile src/star/rdc/Makefile \
+    src/hydro/Makefile src/hydro/util/Makefile src/hydro/init/Makefile \
+    src/hydro/evolve/Makefile src/harpsims/Makefile])
 
 #--------------------------------------------------------------------------
 # From Steve, 09/03/04:  We would like to make a handy link to the appropriate
