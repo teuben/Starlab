@@ -3281,7 +3281,7 @@ void hdyn::recompute_unperturbed_step()
     // unsigned long usteps = get_max_unperturbed_steps(true);
 
     real usteps = get_max_unperturbed_steps(true);
-    PRC(1); PRL(usteps);
+    // PRC(1); PRL(usteps);
 
     if (usteps > 0) {
 

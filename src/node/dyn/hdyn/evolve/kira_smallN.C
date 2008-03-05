@@ -2404,14 +2404,14 @@ real integrate_multiple(hdyn *b, int mode)	// default mode = 1
     real dtcrit = sqrt(eta*kepler_step_sq(rcrit, mass,
 					  2*(energy + mass/rcrit)));
 
-//    PRC(eta); PRC(rcrit); PRC(mass); PRL(energy);
-//    PRL(energy + mass/rcrit);
-//    PRL(kepler_step_sq(rcrit, mass, 2*(energy + mass/rcrit)));
+    // PRC(eta); PRC(rcrit); PRC(mass); PRL(energy);
+    // PRL(energy + mass/rcrit);
+    // PRL(kepler_step_sq(rcrit, mass, 2*(energy + mass/rcrit)));
     
     set_smallN_dtcrit(dtcrit);
     set_smallN_rcrit(rcrit);
 
-//    PRC(get_smallN_dtcrit()); PRL(get_smallN_rcrit());
+    // PRC(get_smallN_dtcrit()); PRL(get_smallN_rcrit());
     local_sys_stats = true;
 
     //=================================================================
@@ -2461,7 +2461,7 @@ real integrate_multiple(hdyn *b, int mode)	// default mode = 1
     real phi1 = perturber_pot(b);
 
     int np = b->get_n_perturbers();
-    PRC(np); PRC(phi0); PRC(phi1); PRL(phi1-phi0);
+    PRC(np); PRC(phi0); PRL(phi1); PRL(phi1-phi0);
 
     if (status != 3) {
 
@@ -2479,24 +2479,26 @@ real integrate_multiple(hdyn *b, int mode)	// default mode = 1
 	bi_min->startup_unperturbed_motion();
 
 	for (int i = 0; i < ilist; i++) {
-	    hdyn *bb = nlist[ilist];
+	    hdyn *bb = nlist[i];
+	    if (bb) {
 	    int np = bb->get_n_perturbers();
-	    if (np > MAX_PERTURBERS) np = MAX_PERTURBERS;
-	    int count = 0;
-	    for (int ip = 0; ip < np; ip++) {
-		hdyn *pert = bb->get_perturber_list()[ip];
-		if (pert == bi_min || pert == bj_min) {
+		if (np > MAX_PERTURBERS) np = MAX_PERTURBERS;
+		int count = 0;
+		for (int ip = 0; ip < np; ip++) {
+		  hdyn *pert = bb->get_perturber_list()[ip];
+		  if (pert == bi_min || pert == bj_min) {
 		    pert = bi_min->get_parent();
 		    count++;
-		}
-		if (count > 1 && ip+count-1 < np) {
+		  }
+		  if (count > 1 && ip+count-1 < np) {
 		    bb->get_perturber_list()[ip]
 		      = bb->get_perturber_list()[ip+count-1];
 		    ip--;
+		  }
 		}
+		np -= count-1;
+		bb->set_n_perturbers(np);
 	    }
-	    np -= count-1;
-	    bb->set_n_perturbers(np);
 	}
     }
 
