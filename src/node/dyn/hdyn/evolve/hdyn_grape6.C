@@ -3371,7 +3371,10 @@ int grape6_calculate_perturbation(hdyn *parent,
 
     // Test the state of the GRAPE and (re)open it if necessary.
 
-    int nj = check_reattach_grape6((real)xtime, func, parent->get_root());
+    char temp[1024];
+    sprintf(temp, "%s for %s", func, parent->format_label());
+    // int nj = check_reattach_grape6((real)xtime, func, parent->get_root());
+    int nj = check_reattach_grape6((real)xtime, temp, parent->get_root());
 
     //------------------------------------------------------------------
 
@@ -3391,7 +3394,8 @@ int grape6_calculate_perturbation(hdyn *parent,
     // Pack the i-particle data and start the GRAPE calculation.
     // Top-level index will prevent self-interaction.
 
-    int itop = parent->get_top_level_node()->get_grape_index();
+    hdyn *top = parent->get_top_level_node();
+    int itop = top->get_grape_index();
 
     int ni = 0;
     for_all_daughters(hdyn, parent, bi) {	// only 2 daughters expected
@@ -3478,6 +3482,31 @@ int grape6_calculate_perturbation(hdyn *parent,
     apert2 = iacc[1];
     jpert1 = ijerk[0];
     jpert2 = ijerk[1];
+
+#if 0
+
+    // Check that the perturbation is "reasonable"...
+
+    hdyn *tnn = top->get_nn();
+    if (tnn) {
+	hdyn *od = parent->get_oldest_daughter();
+	hdyn *yd = od->get_younger_sister();
+	vec dr = od->get_nopred_pos() - yd->get_nopred_pos();
+	real dr2 = dr*dr;
+	real gam = abs(apert1 - apert2)*dr2/parent->get_mass();
+	vec drnn = tnn->get_nopred_pos() - top->get_nopred_pos();
+	real drnn2 = drnn*drnn;
+	real gnn = 2*tnn->get_mass()*pow(dr2/drnn2, 1.5)/parent->get_mass();
+	if (gam < 0.01*gnn || gam > 10*gnn) {
+	  cerr << func << ":" << endl;
+	    PRI(4); PRL(parent->format_label());
+	    PRI(4); PRL(tnn->format_label());
+	    PRI(4); PRC(sqrt(dr2)); PRL(sqrt(drnn2));
+	    PRI(4); PRC(gam); PRL(gnn);
+	}
+    }
+
+#endif
 
     return error;		// don't iterate for now...
 }
