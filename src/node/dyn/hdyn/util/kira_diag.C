@@ -1,12 +1,12 @@
 
-       //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\ ~
-     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+       //=======================================================//   _\|/_
+      //  __  _____           ___                    ___       //     /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //         _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //           /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
   //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
- //                                                       //            _\|/_
-//=======================================================//              /|\ ~
+ //                                                       //           _\|/_
+//=======================================================//             /|\ ~
 
 // kira_diag:  Starlab kira/diag-specific functions.
 
@@ -29,9 +29,9 @@ kira_diag::kira_diag() {		    // (Steve's 6/00
     n_check_runtime				= 2500;
 
     unpert_function_id				= false;
-    report_start_unperturbed			= false;	// SPZ mod
+    report_start_unperturbed			= true;   // turn off in .kira
     report_continue_unperturbed			= false;
-    report_end_unperturbed			= false;	// SPZ mod
+    report_end_unperturbed			= true;   // turn off in .kira
     report_pericenter_reflection		= false;
     report_impending_multiple_status		= false;
     report_zero_unpert_steps			= false;
