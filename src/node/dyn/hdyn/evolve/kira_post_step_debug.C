@@ -8,6 +8,28 @@
 
 
 #if 0
+if (t < 400.5) {
+  int p = cerr.precision(15);
+  cerr << endl; cerr << "after "; PRL(t);
+  cerr.precision(p);
+  for (int ii = 0; ii < n_next; ii++) {
+    hdyn *n = next_nodes[ii];
+    if (n && n->is_valid() && n->is_low_level_node()) {
+      PRC(n->format_label()); PRL(n->get_timestep());
+      PRL(n->get_valid_perturbers());
+      PRL(n->get_parent()->get_valid_perturbers());
+      PRL(n->get_perturbation_squared());
+      PRL(n->get_kappa());
+      hdyn *pnn = n->get_parent()->get_nn();
+      PRL(pnn);
+      if (pnn) PRL(pnn->format_label());
+    }
+  }
+} else
+  exit(1);
+#endif
+
+#if 0
 if (t > 83.29) {
   int p = cerr.precision(15);
   cerr << endl; cerr << "after "; PRL(t);
@@ -17,6 +39,41 @@ if (t > 83.29) {
     if (n && n->is_valid() && (n->is_parent() || n->is_low_level_node())) {
       PRC(n->format_label()); PRL(n->get_timestep());
       if (n->get_kepler()) PRL(n->get_unperturbed_timestep());
+    }
+  }
+}
+#endif
+
+#if 0
+if (t > 16.4342) {
+  bool first = true;
+  int p = cerr.precision(15);
+  cerr << endl; PRC(t); PRL(n_next);
+  cerr.precision(p);
+  for (int ii = 0; ii < n_next; ii++) {
+    hdyn *n = next_nodes[ii];
+    if (n && n->is_valid() && (n->is_parent() || n->is_low_level_node())) {
+      PRC(ii); PRC(n->format_label()); PRL(n->get_timestep());
+      if (n->is_low_level_node() && n->get_timestep() < 1.e-9) {
+	int prec = cerr.precision(HIGH_PRECISION);
+	PRL(n->get_perturbation_squared());
+	cerr.precision(prec);
+	PRL(n->get_parent()->get_valid_perturbers());
+	PRL(n->get_kepler());
+	hdyn *p = n->get_top_level_node();
+	hdyn *pnn = NULL;
+	real r2nn = VERY_LARGE_NUMBER;
+	for_all_daughters(hdyn, b, bb) {
+	  if (bb != p) {
+	    real r2 = square(bb->get_pos()-p->get_pos());
+	    if (r2 < r2nn) {
+	      pnn = bb;
+	      r2nn = r2;
+	    }
+	  }
+	}
+	PRC(pnn->format_label()); PRC(pnn->get_mass()); PRL(sqrt(r2nn));
+      }
     }
   }
 }
