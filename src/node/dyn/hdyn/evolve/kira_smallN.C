@@ -2418,11 +2418,11 @@ real integrate_multiple(hdyn *b, int mode)	// default mode = 1
     //
     // Integrate the clump.
 
-    cerr << "entering smallN_evolve()" << endl;
+    cerr << "entering smallN_evolve()" << endl << flush;
     int status = smallN_evolve(b, t_end, r_end, end_on_unpert, DIAG*t_log);
     cerr << "exiting smallN_evolve(), ";
     real t = b->get_time();
-    PRL(t);
+    PRL(t); cerr << flush;
 
     //=================================================================
 
@@ -2471,17 +2471,21 @@ real integrate_multiple(hdyn *b, int mode)	// default mode = 1
 	if (fully_unperturbed(b)) status = 3;
     }
 
+    PRL(status);
+
     if (status == 3) {
 
 	// Officially restart unperturbed motion, and replace bi_min
 	// and bj_min by CM on perturber lists listed in nlist.
 
+	cerr << "startup_unperturbed_motion for " << bi_min->format_label()
+	     << endl << flush;
 	bi_min->startup_unperturbed_motion();
 
 	for (int i = 0; i < ilist; i++) {
 	    hdyn *bb = nlist[i];
 	    if (bb) {
-	    int np = bb->get_n_perturbers();
+		int np = bb->get_n_perturbers();
 		if (np > MAX_PERTURBERS) np = MAX_PERTURBERS;
 		int count = 0;
 		for (int ip = 0; ip < np; ip++) {
@@ -2502,7 +2506,7 @@ real integrate_multiple(hdyn *b, int mode)	// default mode = 1
 	}
     }
 
-    cerr << "leaving integrate_multiple" << endl;
+    cerr << "leaving integrate_multiple" << endl << flush;
 
     delete [] nlist;
     return t;
