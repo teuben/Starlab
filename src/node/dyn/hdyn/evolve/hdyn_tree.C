@@ -210,9 +210,14 @@ local bool too_close(hdyn * bi, hdyn * bj, real limit_sq,
     if (check_big) {
 
 	// Call came from too_big() and bi and bj are binary sisters.
-	// Use the perturbation as is.
+	// Use the perturbation as is.  Note that valid_perturbers()
+	// is too strong a condition, as a perturbation will be
+	// computed even if the list is not valid.  Better simply to
+	// look for a non-negative perturbation.  (Steve, 8/07)  Note
+        // also bug in the earlier code: bi should be bi->get_parent().
 
-	if (bi->get_valid_perturbers() && bi->get_n_perturbers() > 0)
+//	if (bi->get_valid_perturbers() && bi->get_n_perturbers() > 0)
+	if (bi->get_perturbation_squared() >= 0)
 	    pert2 = bi->get_perturbation_squared();
 
 //	cerr << "check_big: " << bi->format_label() << " ";
@@ -278,7 +283,7 @@ local bool too_big(hdyn * bi, real limit_sq)
     // not actually unperturbed.  May need other checks on nn distance,
     // timestep, etc...  (Steve, 12/12/01)
 
-    if (od->get_valid_perturbers()) {
+    if (bi->get_valid_perturbers()) {	// was od->... BUG! SMcM 3/08
 	real pert2 = od->get_perturbation_squared();
 	// if (pert2 >= 0 && pert2 <= od->get_gamma2()) return false;
 	if (pert2 >= 0 && pert2 <= 1.e-10) return false;
