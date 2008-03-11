@@ -1,12 +1,12 @@
 
-       //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\ ~
-     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+       //=======================================================//   _\|/_
+      //  __  _____           ___                    ___       //     /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //         _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //           /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
   //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
- //                                                       //            _\|/_
-//=======================================================//              /|\ ~
+ //                                                       //           _\|/_
+//=======================================================//             /|\ ~
 
 //  hdyn_ev.C: functions related to orbit integration within the hdyn class.
 //.............................................................................
@@ -426,15 +426,19 @@ local inline real local_kepler_step(hdyn *b,
 
 	real dist, dtff2, dtv2;
 
-	// Use predicted quantities here, as sister may not have been updated yet.
+	// Use predicted quantities here, as sister may not have been
+	// updated yet.
 
 	dist = abs(b->get_nopred_pos() - s->get_nopred_pos());
-	dtff2 = dist*dist*dist / (2*b->get_parent()->get_mass());
+	dtff2 = dist*dist*dist / (b->get_parent()->get_mass());
 	dtv2  = square(b->get_nopred_pos()) / square(b->get_nopred_vel());
 
 	// PRC(dist); PRC(square(b->get_vel())); PRC(dtff2); PRL(dtv2);
 
-	return 0.5 * correction_factor		// 0.5 is empirical
+	// Current choice takes ~100 steps for a circular orbit with no
+	// correction and eta = 0.1.  Calibrate against the Aarseth step.
+
+	return 0.6 * correction_factor
 	    	   * b->get_eta()
 		   * sqrt(Starlab::min(dtff2, dtv2));
 
@@ -442,14 +446,14 @@ local inline real local_kepler_step(hdyn *b,
 
         // Experimental code, in case s isn't a binary sister someday.
 
-	real dist, dtff2, dtv2, mtot = b->get_mass()+s->get_mass();
+	real dist, dtff2, dtv2, mtot = b->get_mass() + s->get_mass();
 
 	dist = abs(b->get_nopred_pos() - s->get_nopred_pos());
-	dtff2 = dist*dist*dist / (2*mtot);
+	dtff2 = dist*dist*dist / mtot;
 	dtv2  = square(b->get_nopred_pos() - s->get_nopred_pos())
 		  / square(b->get_nopred_vel() - s->get_nopred_vel());
 
-	return 0.5 * correction_factor		// 0.5 is empirical
+	return 0.6 * correction_factor
 	    	   * b->get_eta()
 		   * sqrt(Starlab::min(dtff2, dtv2));
 
@@ -542,11 +546,21 @@ local inline real new_timestep(hdyn *b,			// this node
 			   && b->get_kira_diag()->check_diag(b));
 #endif
 
+    // Too many debugging flags...  This one is strictly local.
 
+    bool local_debug = false;
 
-    // keplstep = true;
-    // timestep_check = true;
+    if (0 && time > 400 && b->name_is("3277")) {
+      local_debug = true;
+      // keplstep = true;		// force a Kepler step
+      timestep_check = true;		// force Kepler/Aarseth comparison
+    }
 
+    if (local_debug) {
+	cerr << endl;
+	PRC(keplstep);
+	PRL(correction_factor);
+    }
 
     if (keplstep) {
 
@@ -556,6 +570,10 @@ local inline real new_timestep(hdyn *b,			// this node
 	newstep = altstep = local_kepler_step(b, correction_factor);
 	if (newstep == 0) keplstep = false;
 
+	if (local_debug) {
+	    PRC(keplstep);
+	    PRL(newstep);
+	}
 
 #if 0
 	if (newstep < 1.e-11) { // && name_is(b, "14")) {
@@ -566,7 +584,6 @@ local inline real new_timestep(hdyn *b,			// this node
 	    PRL(abs(b->get_pos()));
 	}
 #endif
-
 
     }
 
@@ -721,6 +738,12 @@ local inline real new_timestep(hdyn *b,			// this node
 
 	newstep = aarsethstep * correction_factor;
 
+
+	if (local_debug) {
+	  PRC(aarsethstep); PRL(correction_factor); PRL(newstep);
+	}
+
+
 #if 0
 	if (temp_debug_flag && b->is_top_level_node()) {
 	    PRC(aarsethstep); PRL(correction_factor);
@@ -764,6 +787,10 @@ local inline real new_timestep(hdyn *b,			// this node
 	    cerr.precision(p);
 	}
 
+	if (local_debug) {
+	    PRC(b->format_label()); PRC(altstep); PRL(newstep);
+	}
+
 	newstep = altstep;	// comment out to retain Aarseth step
     }
 
@@ -799,6 +826,10 @@ local inline real new_timestep(hdyn *b,			// this node
 	while (fmod(time, timestep) != 0) timestep /= 2;
     }
 
+
+    if (local_debug) PRL(timestep);
+
+
     real final_step = timestep;
 
     if (newstep < timestep) {
@@ -833,6 +864,7 @@ local inline real new_timestep(hdyn *b,			// this node
 	}
     }
 
+    if (local_debug) PRL(final_step);
     return final_step;
 }
 
@@ -841,13 +873,13 @@ real timestep_correction_factor(hdyn *b)
     // Compute a correction factor to reduce the timestep
     // in a close binary, in order to improve energy errors.
 
-    real m = b->get_mass()/b->get_mbar();
+    real m = b->get_parent()->get_mass()/b->get_mbar();
     real pot_sq = m*m*b->get_d_min_sq()/square(b->get_pos());
 
-    // Steve 8/98:  1. 0.125 here is conservative -- expect *cumulative*
-    //			   energy error to be ~fourth order.
+    // Steve 8/98:  1. Local energy error is fifth order; scale
+    //		       the step accordingly
     //		    2. Could rewrite to replace pow() if necessary...
-    //			   *** see kira_approx.C ***
+    //		       *** see kira_approx.C ***
 
     // Hmmm...  This pow() seems to fall victim to the strange math.h
     // bug in Red Hat Linux 5.  In that case, use Steve's approximate
@@ -855,17 +887,11 @@ real timestep_correction_factor(hdyn *b)
 
     real correction_factor = 1;
 
-    // correction_factor = pow(pot_sq, -0.1);
-
-    if (pot_sq > 1)
-	// correction_factor = pow(pot_sq, -0.125);
-	correction_factor = pow_approx(pot_sq);	// -0.125 is built in!
-
-    // correction_factor = pow(square(b->get_pos())/b->get_d_min_sq(), 0.025);
+    if (pot_sq > 100)		// threshold is ~arbitrary
+        correction_factor = pow(pot_sq/100, -0.1);
 
     // May be desirable to place limits on the correction...
 
-    if (correction_factor > 1.0) correction_factor = 1.0;
     if (correction_factor < 0.2) correction_factor = 0.2;
 
 #if 0
@@ -938,53 +964,15 @@ void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
 	PRI(4); PRL(2 * (old_acc - acc));
 	PRI(4); PRL(dt * (old_jerk + jerk));
 	PRI(4); PRL(at3);
-
     }
 #endif
+
+    bool is_low = is_low_level_node();
 
     // Define correction factor for use in new_timestep.
 
     real correction_factor = 1;
-    bool is_low = is_low_level_node();
-
-    if (is_low) {
-
-	// Correction factor reduces the timestep in a close binary,
-	// in order to improve energy errors.
-
-	real m = mass/mbar;
-	real pot_sq = m*m*d_min_sq/(pos*pos);
-
-	// Steve 8/98:  1. 0.125 here is conservative -- expect *cumulative*
-	//		   energy error to be ~fourth order.
-	//		2. Could rewrite to replace pow() if necessary...
-	//		   *** see kira_approx.C ***
-
-	// Hmmm...  This pow() seems to fall victim to the strange math.h
-	// bug in Red Hat Linux 5.  In that case, use Steve's approximate
-	// version instead.
-
-	// correction_factor = pow(pot_sq, -0.1);
-
-	if (pot_sq > 1)
-	    // correction_factor = pow(pot_sq, -0.125);
-	    correction_factor = pow_approx(pot_sq);	// -0.125 is built in!
-
-	// correction_factor = pow(pos*pos/d_min_sq, 0.025);
-
-	// May be desirable to place limits on the correction...
-
-	if (correction_factor > 1.0) correction_factor = 1.0;
-	if (correction_factor < 0.2) correction_factor = 0.2;
-
-#if 0
-	if (perturbation_squared < 0.0001 && pot_sq > 1
-	    && timestep < 1.e-11) {
-	    PRC(format_label()); PRL(correction_factor);
-	}
-#endif
-
-    }
+    if (is_low) correction_factor = timestep_correction_factor(this);
 
     real new_dt = new_timestep(this, at3, bt2, jerk, acc, dt, time,
 			       correction_factor, perturbation_squared);
