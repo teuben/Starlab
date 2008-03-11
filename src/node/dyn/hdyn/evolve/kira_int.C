@@ -1,12 +1,12 @@
 
-       //=======================================================//    _\|/_
-      //  __  _____           ___                    ___       //      /|\ ~
-     //  /      |      ^     |   \  |         ^     |   \     //          _\|/_
-    //   \__    |     / \    |___/  |        / \    |___/    //            /|\ ~
+       //=======================================================//   _\|/_
+      //  __  _____           ___                    ___       //     /|\ ~
+     //  /      |      ^     |   \  |         ^     |   \     //         _\|/_
+    //   \__    |     / \    |___/  |        / \    |___/    //           /|\ ~
    //       \   |    /___\   |  \   |       /___\   |   \   // _\|/_
   //     ___/   |   /     \  |   \  |____  /     \  |___/  //   /|\ ~
- //                                       
-//=======================================================//              /|\ ~
+ //                                                       //           _\|/_
+//=======================================================//             /|\ ~
 
 
 // kira_int:  This file contains only integrate_list() and helper
@@ -320,11 +320,24 @@ local inline void check_set_slow(hdyn *bi)
 
     // if (streq(bi->get_parent()->format_label(), "(652a,652b)")) return;
 
+#if 0
+    cerr << "in check_set_slow..." << endl;
+
+    PRL(bi->get_max_slow_factor());
+    PRL(bi->is_leaf());
+    PRL(bi->get_younger_sister()->is_leaf());
+    PRL(bi->get_parent()->get_valid_perturbers());
+    PRL(bi->get_perturbation_squared());
+    PRL(bi->get_max_slow_perturbation_sq());
+    PRL(bi->passed_apo());
+    PRL(get_total_energy(bi, bi->get_younger_sister()));
+#endif
+
     if (bi->get_max_slow_factor() > 1
 	&& (bi->is_leaf() || bi->get_oldest_daughter()->get_kepler())
 	&& (bi->get_younger_sister()->is_leaf()
 	    || bi->get_younger_sister()->get_kepler())
-	&& bi->get_valid_perturbers()
+	&& bi->get_parent()->get_valid_perturbers()
 	&& bi->get_perturbation_squared()
 		< bi->get_max_slow_perturbation_sq()/2
 	&& bi->passed_apo()
@@ -714,7 +727,8 @@ int integrate_list(hdyn * b,				// root node
 
 		    bi->clear_interaction();
 		    bi->calculate_acc_and_jerk(true);		// painful...
-		    bi->set_valid_perturbers(false);
+		    if (bi->is_low_level_node())
+			bi->get_parent()->set_valid_perturbers(false);
 
 		    if (bi->is_top_level_node()
 			&& b->get_external_field() > 0) {
@@ -1074,8 +1088,9 @@ int integrate_list(hdyn * b,				// root node
     // decreasing) component time steps.  New code (05/07; SLWM).
 
     hdyn *root = b->get_root();			// b should be root...
+
     real crit_step = 1.e-13*max(1.0, b->get_system_time());
-    real crit_pert2 = 1.e-8;			// ~arbitrary
+    real crit_pert2 = 1.e-7;			// ~arbitrary
 
     for (i = 0; i < n_next; i++) {
 	
@@ -1126,7 +1141,7 @@ int integrate_list(hdyn * b,				// root node
 	    }
 #else
 	    // Alternative version: check for short step first,
-	    // then look for an unperturbed ancestor.
+	    // then look for a sufficiently unperturbed ancestor.
 
 	    if (bi->get_parent() != root
 		&& bi->get_timestep() < crit_step
@@ -1152,22 +1167,41 @@ int integrate_list(hdyn * b,				// root node
 
 		    while (bb->get_elder_sister()) bb = bb->get_elder_sister();
 
-		    if (pp->get_valid_perturbers()
-			&& bb->get_perturbation_squared() < crit_pert2
+//		    if (pp->get_valid_perturbers()    // too restrictive
+		    if (bb->get_perturbation_squared() >= 0
 			&& pp->n_leaves() >= 3) {
 
-			// Looks like this will do.
+		        bool mult = bb->get_perturbation_squared()
+					< crit_pert2;
+			if (!mult) {
 
-			cerr << endl << "found step < crit_step for "
-			     << bi->format_label();
-			int p = cerr.precision(HIGH_PRECISION);
-			cerr << " under " << pp->format_label()
-			     << " at t = " << pp->get_system_time()
-			     << endl;
-			cerr.precision(p);
+			    // Loosen the criterion for an unbound orbit.
 
-			bmult = pp;
-			break; 
+			    if (bb->get_perturbation_squared()
+					< 4*crit_pert2) {
+			        hdyn *ss = bb->get_younger_sister();
+				vec dr = bb->get_pos() - ss->get_pos();
+				vec dv = bb->get_vel() - ss->get_vel();
+				if (dv*dv > 2*pp->get_mass()/abs(dr))
+				    mult = true;
+			    }
+			}
+
+			if (mult) {
+
+			    // Looks like this will do.
+
+			    cerr << endl << "found step < crit_step for "
+				 << bi->format_label();
+			    int p = cerr.precision(HIGH_PRECISION);
+			    cerr << " under " << pp->format_label()
+				 << " at t = " << pp->get_system_time()
+				 << endl << flush;
+			    cerr.precision(p);
+
+			    bmult = pp;
+			    break; 
+			}
 		    }
 
 		    if (pp->is_top_level_node()) break;
@@ -1180,6 +1214,8 @@ int integrate_list(hdyn * b,				// root node
 #endif
 	    if (bmult) {
 
+		PRL(bmult);
+		PRL(bmult->is_valid());
 		//PRL(bmult->format_label());
 		//PRL(bmult->get_top_level_node()->format_label());
 		//pp3(bmult);
