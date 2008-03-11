@@ -1460,7 +1460,7 @@ bool hdyn::is_unperturbed_and_approaching()
 
     } else {
 
-        // cerr << func << ": binary" << endl << flush;
+	// cerr << func << ": binary" << endl << flush;
 
 	// Rest of function applies only to binaries.
 
@@ -1518,8 +1518,6 @@ bool hdyn::is_unperturbed_and_approaching()
 
 	    approaching = (posvel*posvel < 1.e-6 * square(pos)*square(vel));
 	}
-
-	// PRL(approaching);
 
 	if (!approaching) {
 	    init_binary_type = binary_type = NOT_APPROACHING;
@@ -1699,12 +1697,18 @@ bool hdyn::is_unperturbed_and_approaching()
 		    }
 #endif
 
-		    // Not entirely clear what good this timestep
-		    // limit does... (Steve, 9/00)
+		    // Not entirely clear what good the timestep
+		    // limits below do... (Steve, 9/00) The first
+		    // mainly serves to prevent computation of the
+		    // kepler structure in cases where the second
+		    // won't be met.
 
+#define SKIP_TIMESTEP_CHECK	// experimental skip; added 3/08 by Steve
+
+#ifndef SKIP_TIMESTEP_CHECK
 		    if (get_parent()->timestep
 			  > 10 * timestep/get_kappa()) {  // 10 is ~arbitrary
-
+#endif
 		        kepler kepl;
 			hdyn *sister = get_binary_sister();
 
@@ -1753,43 +1757,54 @@ bool hdyn::is_unperturbed_and_approaching()
 				    		- time;
 				if (!slow) dtp += get_parent()->get_timestep();
 
-				// Require the period of a simple unperturbed
-				// binary to fit into ~1 parent timestep.  For
-				// multiples, this condition may be modified.
+#ifndef SKIP_TIMESTEP_CHECK
+				// Require the period of a simple
+				// unperturbed binary to fit into ~1
+				// parent timestep.  For multiples,
+				// this condition may be modified.
 
 #if 0
 				if (name_is("151")) {
 				    PRC(kepl.get_period()); PRL(dtp);
 				}
 #endif
-
 			        if (kepl.get_period() < dtp) {
+#endif
 
-				    // Eligible for full unperturbed motion.
-				    // Defer only if slow set.
+				    // Eligible for full unperturbed
+				    // motion.  Defer only if slow
+				    // set.
 
-				    // Note from Steve (8/99).  This may lead to
-				    // a "race" condition in the case of slow
-				    // binary motion, as the parent time step in
-				    // the slow case will generally be longer
-				    // than in the normal case.  Thus, the slow
-				    // motion may think there is enough time to
-				    // allow unperturbed motion to start, but
-				    // this condition may not be met once normal
-				    // motion resumes.  The same issue exists
-				    // when unperturbed motion starts, as the
-				    // center of mass timestep will in general
-				    // increase significantly.  May be time to
-				    // reconsider the use of the parent time
-				    // step as a limiting factor here and below.
+				    // Note from Steve (8/99).  This
+				    // time step check may lead to a
+				    // "race" condition in the case of
+				    // slow binary motion, as the
+				    // parent time step in the slow
+				    // case will generally be longer
+				    // than in the normal case.  Thus,
+				    // the slow motion may think there
+				    // is enough time to allow
+				    // unperturbed motion to start,
+				    // but this condition may not be
+				    // met once normal motion resumes.
+				    // The same issue exists when
+				    // unperturbed motion starts, as
+				    // the center of mass timestep
+				    // will in general increase
+				    // significantly.  May be time to
+				    // reconsider the use of the
+				    // parent time step as a limiting
+				    // factor here and below.
 
-				    // Don't permit a direct transition to
-				    // unperturbed motion for slow binaries,
-				    // as the slow motion has to end at the
-				    // proper phase in the orbit.  Present
-				    // strategy is to flag the slow motion
-				    // for termination, after which unperturbed
-				    // motion may begin normally.
+				    // Don't permit a direct
+				    // transition to unperturbed
+				    // motion for slow binaries, as
+				    // the slow motion has to end at
+				    // the proper phase in the orbit.
+				    // Present strategy is to flag the
+				    // slow motion for termination,
+				    // after which unperturbed motion
+				    // may begin normally.
 
 				    if (slow) {
 
@@ -1832,14 +1847,16 @@ bool hdyn::is_unperturbed_and_approaching()
 					// return true;
 
 				    }
+#ifndef SKIP_TIMESTEP_CHECK
 				}
+#endif
 			    }
 			}
+#ifndef SKIP_TIMESTEP_CHECK
 		    }
+#endif
 		}
 	    }
-
-	    // PRC(binary_type); PRL(pert_fac);
 
 	    if (kep || binary_type == FULL_MERGER) {
 
