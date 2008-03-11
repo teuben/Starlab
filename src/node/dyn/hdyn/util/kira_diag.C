@@ -8,14 +8,15 @@
  //                                                       //           _\|/_
 //=======================================================//             /|\ ~
 
-// kira_diag:  Starlab kira/diag-specific functions.
+// kira_diag: Starlab kira/diag-specific functions.  Many can be
+// modified using the .kira file in the home and/or current directory
+// (read in that order).
 
 #include "hdyn.h"
 
 #ifndef TOOLBOX
 
-kira_diag::kira_diag() {		    // (Steve's 6/00
-	    				    //  preferences...)
+kira_diag::kira_diag() {
 
     name					= NULL;
     t1						= -VERY_LARGE_NUMBER;
@@ -29,9 +30,9 @@ kira_diag::kira_diag() {		    // (Steve's 6/00
     n_check_runtime				= 2500;
 
     unpert_function_id				= false;
-    report_start_unperturbed			= true;   // turn off in .kira
+    report_start_unperturbed			= false;
     report_continue_unperturbed			= false;
-    report_end_unperturbed			= true;   // turn off in .kira
+    report_end_unperturbed			= false;
     report_pericenter_reflection		= false;
     report_impending_multiple_status		= false;
     report_zero_unpert_steps			= false;
@@ -45,9 +46,9 @@ kira_diag::kira_diag() {		    // (Steve's 6/00
 
     ev_function_id				= false;
     ev						= false;
-    grape					= false;	// SLWM 5/02
+    grape					= false;
     grape_level					= 0;
-    timestep_check				= false;	// SLWM 5/02
+    timestep_check				= false;
     correct					= false;
     slow_perturbed				= false;
 
