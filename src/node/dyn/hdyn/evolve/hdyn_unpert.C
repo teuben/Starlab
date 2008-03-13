@@ -415,6 +415,8 @@ local inline real dt_perturbers(hdyn *b)
     // Effectively replace gamma2 by multiple_merge_tolerance in
     // the usual perturbation criterion.
 
+    // Use top rather than pnode, note.
+
     hdyn *top = b->get_top_level_node();
     real t_min = VERY_LARGE_NUMBER;
 
