@@ -333,11 +333,13 @@ local inline void check_set_slow(hdyn *bi)
     PRL(get_total_energy(bi, bi->get_younger_sister()));
 #endif
 
-    if (bi->get_max_slow_factor() > 1
+    hdyn *pnode = bi->get_parent()->find_perturber_node();
+
+    if (pnode && bi->get_max_slow_factor() > 1
 	&& (bi->is_leaf() || bi->get_oldest_daughter()->get_kepler())
 	&& (bi->get_younger_sister()->is_leaf()
 	    || bi->get_younger_sister()->get_kepler())
-	&& bi->get_parent()->get_valid_perturbers()
+	&& pnode->get_valid_perturbers()
 	&& bi->get_perturbation_squared()
 		< bi->get_max_slow_perturbation_sq()/2
 	&& bi->passed_apo()
