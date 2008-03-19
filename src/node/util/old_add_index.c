@@ -17,22 +17,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-/*
- * Modified by Emiliano Gregori 11-8-2006 to fix compilation problems
- * on Mac OSX 10.3.9 (with gcc 4.1.0).  Finally added by SMcM, 3/08!
- * 
- * 1) Removed the inclusion of error.h (this is a GNU glibc header, not 
- *    present in MAC OSX).
- * 2) Wrote a tiny error() function with the same calling style as glibc.
- * 3) At lines 91,109,112 of the original source code, removed assignments
- *    to stdin and stdout that caused an "invalid lvalue" error message.
- *    (It seems that stdin and stdout are not regular FILE object, and
- *    cannot be assigned to; see
- *
- *    http://www.uwsg.iu.edu/hypermail/linux/kernel/0007.1/1067.html
- *
- *    for more details.)
- */
 
 #include "config.h"
 #include <getopt.h>
@@ -45,10 +29,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
-/* #include <error.h> */
+#include <error.h>
 #include <stdlib.h>
 #include <inttypes.h>
-#include <stdarg.h>
 
 
 size_t Snaps;
@@ -69,23 +52,6 @@ static void usage(const int es) {
 " -V, --version		display version and copyright information and exit\n",
        es == EXIT_SUCCESS ? stdout : stderr);
   exit(es);
-}
-
-static void error (int status, int errnum, const char *message, ...)
-{
-  char buffer[1024];
-
-  va_list args;
-  va_start (args, message);
-
-  fflush (stdout);
-
-  sprintf(buffer,message,args);
-  perror(buffer);
-  fflush (stderr);
-
-  if (status)
-    exit (status);
 }
 
 static inline char proc_char(const char c) {
@@ -122,8 +88,7 @@ int main(int argc, char *argv[]) {
     case 'A': append = true; break;
     case 'h': usage(EXIT_SUCCESS);
     case 'o':
-   /* if (strcmp(optarg, "-") && !(stdout = freopen(optarg, "w", stdout))) */
-      if (strcmp(optarg, "-") && !(freopen(optarg, "w", stdout)))
+      if (strcmp(optarg, "-") && !(stdout = freopen(optarg, "w", stdout)))
 	error(EXIT_FAILURE, errno, "can't open `%s' for writing: freopen(3)",
 	      optarg);
       break;
@@ -141,12 +106,10 @@ int main(int argc, char *argv[]) {
   }
 
   if (optind < argc) {
- /* if (!(stdin = freopen(argv[optind], "r", stdin))) */
-    if (!(freopen(argv[optind], "r", stdin)))
+    if (!(stdin = freopen(argv[optind], "r", stdin)))
     error(EXIT_FAILURE, errno, "can't open `%s' for reading: freopen(3)",
 	  argv[optind]);
- /* if (append && !(stdout = freopen(argv[optind], "a", stdout))) */
-    if (append && !(freopen(argv[optind], "a", stdout)))
+    if (append && !(stdout = freopen(argv[optind], "a", stdout)))
       error(EXIT_FAILURE, errno, "can't open `%s' for writing: freopen(3)",
 	    argv[optind]);
   }
