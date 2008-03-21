@@ -1091,7 +1091,7 @@ int integrate_list(hdyn * b,				// root node
 
     hdyn *root = b->get_root();			// b should be root...
 
-    real crit_step = 1.e-13*max(1.0, b->get_system_time());
+    real crit_step = 1.e-13*max(1.0, (real)b->get_system_time());
     real crit_pert2 = 1.e-7;			// ~arbitrary
 
     for (i = 0; i < n_next; i++) {

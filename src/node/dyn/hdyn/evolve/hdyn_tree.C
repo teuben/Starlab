@@ -1206,7 +1206,7 @@ void split_top_level_node(hdyn * bi,
 #if 1
 
     //    if (od->get_system_time() > 361.15673100948) {
-    if (od->get_system_time() > 0) {
+    if (od->get_system_time() > 0.) {
 
 	// Recompute acc and jerk on od and yd (see note above).  Should
 	// be possible to use GRAPE to do this, but defer for now to avoid
