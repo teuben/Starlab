@@ -22,6 +22,7 @@
 
 #include "hdyn.h"
 #include <vector>
+#include <algorithm>
 
 #define DEBUG 0
 

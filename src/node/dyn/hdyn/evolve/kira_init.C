@@ -827,7 +827,9 @@ bool kira_initialize(int argc, char** argv,
 	    }
 	}
 
+#ifdef TOOLBOX
     kira_system_id(argc, argv);
+#endif
 
     // Read in a snapshot:
 
