@@ -357,7 +357,7 @@ int  pgetopt(int argc, char ** argv, char *optstr,
 
 #else
 
-int main(char argc, char ** argv)
+int main(int argc, char ** argv)
 {
     extern char *poptarg;
     extern char *poparr[];				// new (8/99)
