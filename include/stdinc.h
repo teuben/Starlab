@@ -68,6 +68,7 @@ href=mailto:steve@physics.drexel.edu>steve@physics.drexel.edu</a><br><br>
 
 #include  <cstdlib>      // stdlib.h with namespace std
 #include  <cmath>        // math.h   with namespace std
+#include  <cstring>
 #include  <string>
 #include  <fstream>
 
