@@ -88,6 +88,13 @@ vector<real>& get_radial_numdensities(dyn *b, vec cpos, vector<real>& r,
 	++rho[j];
     }
     delete table;
+
+    real v0 = 0;	// assume that the first zone extends in to r = 0
+    for (int j = 0; j < r.size(); j++) {
+	real v1 = pow(r[j], 3);
+	rho[j] /= (4*M_PI/3) * (v1 - v0);	// dM --> dM/dV
+	v0 = v1;
+    }
     return rho;
 }
 
