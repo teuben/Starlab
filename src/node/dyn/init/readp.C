@@ -10,9 +10,9 @@
 
 //// Convert ASCII "dumbp" format:
 ////
-////                    (mass1, pos1, vel1,
-////                     mass2, pos2, vel2,
-////                     mass3, pos3, vel3,
+////                    (id1, mass1, pos1, vel1,
+////                     id2, mass2, pos2, vel2,
+////                     id3, mass3, pos3, vel3,
 ////                    etc.)
 ////
 //// data into a Starlab snapshot (flat tree).  This is the inverse

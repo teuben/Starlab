@@ -18,7 +18,8 @@
 
 noinst_LTLIBRARIES = libdyn-3.la
 bin_PROGRAMS = makecube makedisk makeplummer makepyth makesphere makewrite \
-    apply_plummer makebinary split_particles makeking makeheavystar readp \
+    apply_plummer makebinary split_particles makeking makeheavystar \
+    readp readp2 \
     readstoa makeplanetary makeblack_hole grow_black_hole makepowerlaw \
     cutrandomsample
 
@@ -43,6 +44,7 @@ split_particles_CPPFLAGS = -DTOOLBOX
 makeking_CPPFLAGS = -DTOOLBOX
 makeheavystar_CPPFLAGS = -DTOOLBOX
 readp_CPPFLAGS = -DTOOLBOX
+readp2_CPPFLAGS = -DTOOLBOX
 readstoa_CPPFLAGS = -DTOOLBOX
 makeplanetary_CPPFLAGS = -DTOOLBOX
 makeblack_hole_CPPFLAGS = -DTOOLBOX
@@ -62,6 +64,7 @@ split_particles_LDADD = ../libdyn.la
 makeking_LDADD = ../libdyn.la
 makeheavystar_LDADD = ../libdyn.la
 readp_LDADD = ../libdyn.la
+readp2_LDADD = ../libdyn.la
 readstoa_LDADD = ../libdyn.la
 makeplanetary_LDADD = ../libdyn.la
 makeblack_hole_LDADD = ../libdyn.la
@@ -81,6 +84,7 @@ split_particles_SOURCES = split_particles.C
 makeking_SOURCES = makeking.C
 makeheavystar_SOURCES = makeheavystar.C
 readp_SOURCES = readp.C
+readp2_SOURCES = readp2.C
 readstoa_SOURCES = readstoa.C
 makeplanetary_SOURCES = makeplanetary.C
 makeblack_hole_SOURCES = makeblack_hole.C
