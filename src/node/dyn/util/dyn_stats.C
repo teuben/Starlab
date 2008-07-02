@@ -46,6 +46,7 @@ real print_binary_params(kepler* k, real m1, real kT,
 	    if (kT > 0) cerr << " E/kT= " << mu_kT*k->get_energy();
 
 	    cerr << " D= " << dist_from_center;
+	    cerr << " n= " << k->get_normal_unit_vector();
 
 	    // cerr << endl;	// newline should be added by calling
 				// function (e.g. print_pert)
@@ -60,6 +61,9 @@ real print_binary_params(kepler* k, real m1, real kT,
 
 	    PRI(indent); cerr << "r = " << k->get_separation()
 			      << "  D = " << dist_from_center
+			      << endl;
+	    
+	    PRI(indent); cerr << " n= " << k->get_normal_unit_vector()
 			      << endl;
 
 	    PRI(indent); cerr << "P = " << k->get_period()
