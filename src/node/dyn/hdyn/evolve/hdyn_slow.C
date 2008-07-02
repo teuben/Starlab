@@ -116,13 +116,13 @@
 // in _dyn_slow.C.  The only use is in kira, accessed via this file.
 
 
-// ***********************************************************************
-// ** From Steve (3/03).  The slow binary code has no knowledge of the  **
-// ** "valid_perturbers_low" options just implemented, so low-leel slow **
-// ** binaries currently cannot take advantage of the partial top-level **
-// ** perturber list when the full perturber list is invalid.           **
-// ** To be fixed...
-// ***********************************************************************
+//  **********************************************************************
+//  * From Steve (3/03).  The slow binary code has no knowledge of the   *
+//  * "valid_perturbers_low" options just implemented, so low-level slow *
+//  * binaries currently cannot take advantage of the partial top-level  *
+//  * perturber list when the full perturber list is invalid.            *
+//  * To be fixed...                                                     *
+//  **********************************************************************
 
 
 #include "hdyn.h"
@@ -497,10 +497,12 @@ void clear_perturbers_slow_perturbed(hdyn * b)
     // Clear slow binary b from the slow_perturbed lists of all
     // of its perturbers.
 
-    if (b->get_valid_perturbers())
-	for (int j = 0; j < b->get_n_perturbers(); j++) {
-	    hdyn * pert_top = b->get_perturber_list()[j]
-			       ->get_top_level_node();
+    hdyn *pnode = b->find_perturber_node();
+
+    if (pnode && pnode->get_valid_perturbers())
+	for (int j = 0; j < pnode->get_n_perturbers(); j++) {
+	    hdyn * pert_top = pnode->get_perturber_list()[j]
+			           ->get_top_level_node();
 #if 0
 	    cerr << "removing " << b->format_label();
 	    cerr << " from slow_perturbed list of "

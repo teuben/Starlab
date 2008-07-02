@@ -2662,11 +2662,11 @@ void hdyn::check_add_perturber(hdyn* p, vec& this_pos)
     // Note 1: we do *not* take the slowdown factor into account
     //	       when computing the perturber list.
 
-    // *************************************************************************
-    // ** Note 2: the perturber list code here does not (yet) allow for "low" **
-    // ** perturber lists in the event that the top-level list overflows.     **
-    // ** See hdyn_grape6.C.  (Steve, 3/03)                                   **
-    // *************************************************************************
+    // *********************************************************************
+    // * Note 2: the perturber list code here does not yet allow for "low" *
+    // * perturber lists in the event that the top-level list overflows.   *
+    // * See hdyn_grape6.C.  (Steve, 3/03)                                 *
+    // *********************************************************************
 
     if (is_perturber(this, p->mass,
 		     square(this_pos - ppos),
@@ -3756,7 +3756,8 @@ void hdyn::top_level_node_epilogue_force_calculation()
 		kc->perturber_overflow++;
 
 		for (int i = 0; i < np; i++) {
-		    d2[i] = square(perturber_list[i]->get_pred_pos() - pred_pos);
+		    d2[i] = square(perturber_list[i]->get_pred_pos()
+				   - pred_pos);
 		    if (d2[i] > dmax2) dmax2 = d2[i];
 		}
 	    }
