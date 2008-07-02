@@ -561,7 +561,7 @@ void print_statistics(hdyn* b,
 #if 1
     sys_stats(b,
 	      0.5,			// energy cutoff
-	      true,			// verbose output
+	      2,			// verbose output (int now)
 	      (long_binary_output > 0),	// print binaries
 	      (long_binary_output > 1),	// full binary_output
 	      2,			// which lagr

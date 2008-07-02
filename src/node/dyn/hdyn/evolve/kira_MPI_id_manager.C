@@ -18,7 +18,7 @@
 //	void recompute_MPI_id_array(hdyn *b)
 //	hdynptr get_MPI_hdynptr(int id)
 
-//#ifdef USEMPI
+#ifdef USEMPI
 
 #include "hdyn.h"
 #include <vector>

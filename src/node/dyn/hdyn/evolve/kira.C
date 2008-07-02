@@ -292,10 +292,10 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
 
     if (init) b->recompute_unperturbed_steps();
 
-//#ifdef USEMPI
+#ifdef USEMPI
     recompute_MPI_id_array(b);
     if (!check_MPI_id_array(b)) exit(1);
-//#endif
+#endif
 
     if (verbose) {
 	cerr << "CPU time for reinitialization = "
@@ -888,12 +888,12 @@ local void evolve_system(hdyn * b,		// hdyn array
 	    mpi_kira_timers[1] += MPI_Wtime() - mpi_kira_timer1;
 #endif
 
-//#ifdef USEMPI
+#ifdef USEMPI
 	    if (!check_MPI_id_array(b)) {
 		recompute_MPI_id_array(b);
 		if (!check_MPI_id_array(b)) exit(1);
 	    }
-//#endif
+#endif
 
 	    // (Incorporate count, steps, etc. into kira_counters...?)
 
@@ -1285,7 +1285,7 @@ local void evolve_system(hdyn * b,		// hdyn array
 				tree_changed, n_list_top_level,
 				full_dump, r_reflect);
 
-//#ifdef USEMPI
+#ifdef USEMPI
 	if (tree_changed) recompute_MPI_id_array(b);	// *way* overkill:
 							// should just remove
 							// the old nodes and
@@ -1298,7 +1298,7 @@ local void evolve_system(hdyn * b,		// hdyn array
 //	    t_MPI_check += 0.25 * randinter(0, dt_log);
 //	}
 
-//#endif
+#endif
 
 
 	if (n_list_top_level > 0) {
