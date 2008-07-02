@@ -1187,12 +1187,12 @@ bool parse_sys_stats_main(int argc, char *argv[],
     n_sq = false;			// don't allow n^2 operations
     out = false;			// write cin to cout
     long_binary_output = true;		// long binary output
-    verbose = 1;			// extended output
+    verbose = 2;			// extended output
 
     extern char *poptarg;
     int c;
     char* param_string = "0b.Bnel.o";	// note: "v" removed because only the
-					// "verbose = true" option works!
+					// "verbose > 0" options work!
 
     while ((c = pgetopt(argc, argv, param_string, cvs_id, source)) != -1)
 	switch(c) {
@@ -1223,8 +1223,6 @@ bool parse_sys_stats_main(int argc, char *argv[],
 	    case 'n': n_sq = !n_sq;
 		      break;
 	    case 'o': out = true;
-		      break;
-	    case 'v': verbose = false;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 		      return false;

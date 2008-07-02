@@ -9,6 +9,21 @@
 //=======================================================//              /|\ ~
 
 // dyn_stats.C:  Helper functions used mainly by sys_stats.
+//
+// Global functions:
+//
+//	real print_binary_params()
+//	real get_total_energy()
+//	real get_semi_major_axis()
+//	real get_period()
+//	void get_total_energy_and_period()
+//	void initialize_kepler_from_dyn_pair()
+//	void print_binary_from_dyn_pair()
+//	real print_structure_recursive()
+//	real print_structure_recursive()
+//	void compute_core_parameters()
+//
+// Note that all "verbose" arguments to these functions are bool.
 
 #include "dyn.h"
 
