@@ -229,7 +229,7 @@ main(int argc, char ** argv) {
 
     check_help();
 
-    char* param_string = "m:r:t:";
+    const char *param_string = "m:r:t:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

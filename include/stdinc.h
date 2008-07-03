@@ -381,15 +381,15 @@ void identify_xreal(ostream& s = cerr);
 //  Various declarations
 //=============================================================================
 
-void print_message(char*);
-void warning(char*);
-void err_exit(char*);
+void print_message(const char*);
+void warning(const char*);
+void err_exit(const char*);
 
-int pgetopt(int argc, char** argv, char *optstr,
-	    char *cvs_id = NULL, char *source = NULL);
+int pgetopt(int argc, char** argv, const char *optstr,
+	    const char *cvs_id = NULL, const char *source = NULL);
 
 void pskipopt();
-void params_to_usage(ostream&, char*, char*);
+void params_to_usage(ostream&, char*, const char*);
 
 int  srandinter(int, int n = 0);
 int  get_initial_seed();
@@ -413,8 +413,10 @@ char * gethist(int, char **);
 // Convenient invocation of run-time help function.
 
 void check_runtime_help(int argc, char** argv,
-			char* source_file, char* date, char *time);
-void get_runtime_help(char* source_file, char* date, char *time, int level = 1);
+			const char* source_file,
+			const char* date, const char *time);
+void get_runtime_help(const char* source_file,
+		      const char* date, const char *time, int level = 1);
 
 // Note: assuming here that the macros __DATE__ and __TIME__ are standard...
 // Macro _SRC_ will be provided by configure/make.

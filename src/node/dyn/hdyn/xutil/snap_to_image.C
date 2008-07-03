@@ -421,7 +421,7 @@ local void write_image_file(unsigned char *a, int nx, int ny,
 			    unsigned char *blue,
 			    const char *comment = NULL)
 {
-    char *func = "write_image_file";
+    const char *func = "write_image_file";
 
     // Note that write_xxx will write the image left to right,
     // top to bottom.
@@ -732,10 +732,10 @@ main(int argc, char** argv)
     int ncolor = 0;
     real index_all = -1;
 
-    char *color[5] = {"none", "index", "mass", "radius", "temperature"};
+    const char *color[5] = {"none", "index", "mass", "radius", "temperature"};
     int colorvar = 0;
     bool colorvar_set = false;
-    char *radius[4] = {"none", "mass", "radius", "luminosity"};
+    const char *radius[4] = {"none", "mass", "radius", "luminosity"};
     int radiusvar = 0;
     bool radiusvar_set = false;
 
@@ -764,7 +764,7 @@ main(int argc, char** argv)
 
     extern char *poptarg, *poparr[];
     int c;
-    char* param_string = 
+    const char *param_string = 
       "1ac:::C:dD:f:F:gGi:Hl:L:X:x:Y:y:n:N:o:O:p:P:qr:::Rs:.S:tT:z";
 
     char c0;

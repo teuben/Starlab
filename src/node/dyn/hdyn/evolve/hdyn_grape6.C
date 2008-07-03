@@ -123,7 +123,7 @@ static bool grape_was_used_to_calculate_potential = false;
 
 
 
-local void reattach_grape(real time, char *id, kira_options *ko)
+local void reattach_grape(real time, const char *id, kira_options *ko)
 
 // Reattach the GRAPE-6.
 
@@ -132,7 +132,7 @@ local void reattach_grape(real time, char *id, kira_options *ko)
 //		grape6_calculate_densities()			// global
 
 {
-    static char *func = "reattach_grape";
+    static const char *func = "reattach_grape";
 
     cerr << id << ":  ";
     if (!grape_first_attach) cerr << "re";
@@ -179,7 +179,7 @@ local INLINE void send_j_node_to_grape(hdyn *b,
 // root node.
 
 {
-    static char *func = "send_j_node_to_grape";
+    static const char *func = "send_j_node_to_grape";
 
 #ifdef T_DEBUG
     bool in_debug_range = IN_DEBUG_RANGE(b->get_system_time());
@@ -269,7 +269,7 @@ local int initialize_grape_arrays(hdyn *b,		// root node
 //		grape6_calculate_densities()			// global
 
 {
-    static char *func = "initialize_grape_arrays";
+    static const char *func = "initialize_grape_arrays";
 
 #ifdef T_DEBUG
     real sys_t = b->get_real_system_time();
@@ -450,7 +450,7 @@ local INLINE int force_by_grape(xreal xtime,
 // still be used for debugging purposes (Steve).
 
 {
-    static char *func = "force_by_grape";
+    static const char *func = "force_by_grape";
 
     if (ni <= 0) return 0;
     if (ni > n_pipes) err_exit("force_by_grape: ni too large\n");
@@ -856,7 +856,7 @@ local INLINE int force_by_grape(xreal xtime,
 
 
 
-local void hw_err_exit(char *func, int id, hdyn *b)
+local void hw_err_exit(const char *func, int id, hdyn *b)
 
 // Exit following a serious hardware error...
 
@@ -870,7 +870,7 @@ local void hw_err_exit(char *func, int id, hdyn *b)
 
     // Dump out a copy of the system.
 
-    char *dumpfile = "hw_error_dump";
+    const char *dumpfile = "hw_error_dump";
 
     ofstream dump(dumpfile);
     if (dump) {
@@ -1095,7 +1095,7 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 // Called by:	grape6_calculate_energies()			// global
 
 {
-    static char *func = "send_all_xxx_to_grape";
+    static const char *func = "send_all_xxx_to_grape";
 
 #ifdef T_DEBUG
     real sys_t = b->get_real_system_time();
@@ -1205,7 +1205,7 @@ local bool force_by_grape_on_all_e_nodes(hdyn **e_nodes,    // node list
 // Called by:	grape6_calculate_energies()			// global
 
 {
-    static char *func = "force_by_grape_on_all_e_nodes";
+    static const char *func = "force_by_grape_on_all_e_nodes";
     if (nj <= 0) return false;
 
 #ifdef T_DEBUG
@@ -1262,7 +1262,7 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 // Called by:	grape6_calculate_energies()			// global
 
 {
-    static char *func = "force_by_grape_on_all_leaves";
+    static const char *func = "force_by_grape_on_all_leaves";
 
 #ifdef T_DEBUG
     real sys_t = b->get_real_system_time();
@@ -1355,7 +1355,7 @@ void grape6_calculate_energies(hdyn *b,			// root node
     // nodes.  If cm = false, then still use the CM approximation for
     // sufficiently close binaries to avoid roundoff errors on the GRAPE.
 
-    static char *func = "grape6_calculate_energies";
+    static const char *func = "grape6_calculate_energies";
 
 #ifdef T_DEBUG
     real sys_t = b->get_real_system_time();
@@ -1508,7 +1508,7 @@ local int send_all_leaves_to_grape(hdyn *b,		// root node
 // Called by:	grape6_calculate_energies()			// global
 
 {
-    static char *func = "send_all_leaves_to_grape";
+    static const char *func = "send_all_leaves_to_grape";
 
 #ifdef T_DEBUG
     real sys_t = b->get_real_system_time();
@@ -1609,7 +1609,7 @@ local bool force_by_grape_on_all_leaves(hdyn *b,		// root node
 // Called by:	grape6_calculate_energies()			// global
 
 {
-    static char *func = "force_by_grape_on_all_leaves";
+    static const char *func = "force_by_grape_on_all_leaves";
 
 #ifdef T_DEBUG
     real sys_t = b->get_real_system_time();
@@ -1687,7 +1687,7 @@ void grape6_calculate_energies(hdyn *b,			// root node
     // nodes.  If cm = false, then still use the CM approximation for
     // sufficiently close binaries to avoid roundoff errors on the GRAPE.
 
-    static char *func = "grape6_calculate_energies";
+    static const char *func = "grape6_calculate_energies";
 
 #ifdef T_DEBUG
      real sys_t = b->get_real_system_time();
@@ -1800,7 +1800,7 @@ local INLINE bool set_grape_neighbor_radius(hdyn * b, int nj_on_grape)
 // Called by:	grape6_calculate_acc_and_jerk()			// global
 
 {
-    static char *func = "set_grape_neighbor_radius";
+    static const char *func = "set_grape_neighbor_radius";
 
     b->set_grape_rnb_sq(0.0);
 
@@ -1949,7 +1949,7 @@ local INLINE int get_force_and_neighbors(xreal xtime,
 //		get_densities					// local
 
 {
-    static char *func = "get_force_and_neighbors";
+    static const char *func = "get_force_and_neighbors";
 
     if (ni <= 0) return 2;
 
@@ -2143,7 +2143,7 @@ local INLINE int sort_nodes_and_reduce_rnb(hdynptr ilist[], int ni)
 // Called by:	grape6_calculate_acc_and_jerk()			// global
 
 {
-    static char *func = "sort_nodes_and_reduce_rnb";
+    static const char *func = "sort_nodes_and_reduce_rnb";
 
     if (print_overflow_message) {
         cerr << "in " << func << "()";
@@ -2236,7 +2236,7 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 // Called by:	get_coll_and_perturbers()			// local
 
 {
-    static char *func = "get_neighbors_and_adjust_h2";
+    static const char *func = "get_neighbors_and_adjust_h2";
 
     // Get the list of b's neighbors from the GRAPE, if available.
 
@@ -2747,7 +2747,7 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 // Called by:	grape6_calculate_acc_and_jerk()			// global
 
 {
-    static char *func = "get_coll_and_perturbers";
+    static const char *func = "get_coll_and_perturbers";
 
     int inext = 0;
 
@@ -2936,7 +2936,7 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 
 
 
-local inline int check_reattach_grape6(real time, char *func,
+local inline int check_reattach_grape6(real time, const char *func,
 				       hdyn *root, bool restart = false)
 {
     // (Re)open the GRAPE and reset data structures if necessary.
@@ -3008,7 +3008,7 @@ int grape6_calculate_acc_and_jerk(hdyn **next_nodes,
 //  which is called only from calculate_acc_and_jerk_for_list.
 
 {
-    static char *func = "grape6_calculate_acc_and_jerk";
+    static const char *func = "grape6_calculate_acc_and_jerk";
 
     static int n_pipes = 0;		// number of pipelines to use
 
@@ -3356,7 +3356,7 @@ int grape6_calculate_perturbation(hdyn *parent,
 
     // Return 0 iff no problems occur.
 
-    static char *func = "grape6_calculate_perturbation";
+    static const char *func = "grape6_calculate_perturbation";
 
     // PRL(func);
 
@@ -3537,7 +3537,7 @@ local INLINE void set_grape_density_radius(hdyn *b, real rnn_sq)
 // Called by:	grape6_calculate_densities()			// global
 
 {
-    static char *func = "set_grape_density_radius";
+    static const char *func = "set_grape_density_radius";
 
 #ifdef T_DEBUG
     real sys_t = b->get_real_system_time();
@@ -3638,7 +3638,7 @@ local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 //			+1	too few neighbors, radius increased
 
 {
-    static char *func = "count_neighbors_and_adjust_h2";
+    static const char *func = "count_neighbors_and_adjust_h2";
 
 #ifdef T_DEBUG
     real sys_t = b->get_real_system_time();
@@ -3816,7 +3816,7 @@ local INLINE bool old_get_densities(xreal xtime, hdyn *nodes[],
     // could not be determined.  The calling function should then reduce
     // all neighbor radii and retry.
 
-    static char *func = "get_densities";
+    static const char *func = "get_densities";
     bool error = false;
 
     if (ni <= 0) return error;			// should never happen
@@ -3994,7 +3994,7 @@ local INLINE int get_densities(xreal xtime, hdyn *nodes[],
     // In the former case, the calling function should reduce all neighbor
     // radii and retry.  In the latter, the caller should give up.
 
-    static char *func = "get_densities";
+    static const char *func = "get_densities";
     int error = 0;
 
     if (ni <= 0) return 0;			// should never happen
@@ -4190,7 +4190,7 @@ local INLINE int get_densities(xreal xtime, hdyn *nodes[],
 bool grape6_calculate_densities(hdyn* b,		// root node
 				real h2_crit)		// default = 4
 {
-    static char *func = "grape6_calculate_densities";
+    static const char *func = "grape6_calculate_densities";
 
 #ifdef T_DEBUG
     real sys_t = b->get_real_system_time();

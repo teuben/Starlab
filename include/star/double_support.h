@@ -34,9 +34,9 @@ enum binary_type  {Strong_Encounter=-1, Unknown_Binary_Type=0,
 		   Double_Spiral_In,
                    Merged, Disrupted, Spiral_In};
 
-char * type_string(binary_type);
+const char * type_string(binary_type);
 double_star * get_new_binary(double_init&, const int);
-binary_type extract_binary_type_string(char*);
+binary_type extract_binary_type_string(const char*);
 
 /*-----------------------------------------------------------------------------
  *  double_hist  -- base struct keeps track of double_star history.
@@ -77,7 +77,7 @@ struct double_init
     void read_element();
     void put_element();
     void dump(ostream &);
-    void dump(char*);
+    void dump(const char*);
 
     };
 
@@ -140,8 +140,8 @@ void put_profile(double_profile&);
 //		Independend initialization and constructor functions.
 //double_star * triple_star(double_init&, double_init&, int id=1);
 
-void ppperiod(real period, ostream & s = cerr, char *p ="Porb");
-void pptime(real time, ostream & s = cerr, char *t = "time");
+void ppperiod(real period, ostream & s = cerr, const char *p ="Porb");
+void pptime(real time, ostream & s = cerr, const char *t = "time");
 
 
 real period_to_semi(real period, real m_prim, real m_sec);

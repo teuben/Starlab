@@ -38,7 +38,7 @@ static vector<hdynptr> *id_array = NULL;
 
 local inline void initialize_id_array(hdyn *b)		// count nodes
 {
-    static char *func = "initialize_id_array 1";
+    static const char *func = "initialize_id_array 1";
     if (DEBUG) cerr << "in " << func << endl;
     if (id_array) return;
 
@@ -52,7 +52,7 @@ local inline void initialize_id_array(hdyn *b)		// count nodes
 
 local inline void initialize_id_array(int n)		// specify array length
 {
-    static char *func = "initialize_id_array 2";
+    static const char *func = "initialize_id_array 2";
     if (DEBUG) cerr << "in " << func << endl;
     if (id_array) return;
 
@@ -106,7 +106,7 @@ local inline int find_array_id(hdyn *b)	// should return same as b->get_MPI_id()
 
 bool check_MPI_id_array(hdyn *b)
 {
-    static char *func = "check_id_array";
+    static const char *func = "check_id_array";
     bool ret = true;
 
     // Check list consistency, and repair if broken
@@ -186,7 +186,7 @@ bool check_MPI_id_array(hdyn *b)
 int add_to_MPI_id_array(hdyn *b,
 			bool check)		// default = false
 {
-    static char *func = "add_to_id_array";
+    static const char *func = "add_to_id_array";
     if (DEBUG) {
 	cerr << "in " << func << " for " << b->format_label() << ", ";
 	PRL(b->get_MPI_id());

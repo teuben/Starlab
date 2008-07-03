@@ -146,7 +146,7 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "n:";
+    const char *param_string = "n:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

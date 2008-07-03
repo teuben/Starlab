@@ -95,7 +95,7 @@ bool compute_general_mass_radii(dyn * b,
 				boolfn bf,		// default = NULL
 				bool verbose)		// default = true
 {
-    static char *func = "compute_general_mass_radii";
+    static const char *func = "compute_general_mass_radii";
 
     if (nonlin && nzones != 10) return false;		// special case
 
@@ -544,7 +544,7 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:n:st";
+    const char *param_string = "c:n:st";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

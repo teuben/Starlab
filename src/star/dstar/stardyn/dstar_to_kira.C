@@ -202,8 +202,8 @@ local void evolve_an_unperturbed_binary(hdyn *bi,	// bi is binary CM
     real m2 = secondary->get_total_mass();
     real semi = bi->get_starbase()->get_semi();
     real ecc = bi->get_starbase()->get_eccentricity();
-    char * t1 = type_string(primary->get_element_type());
-    char * t2 = type_string(secondary->get_element_type());
+    const char * t1 = type_string(primary->get_element_type());
+    const char * t2 = type_string(secondary->get_element_type());
 
     if (REPORT_EVOLVE_DOUBLE) 
 	if (check_binary_sma || check_binary_mass || check_binary_merger) {

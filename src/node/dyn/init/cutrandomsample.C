@@ -121,7 +121,7 @@ int main(int argc, char ** argv)
     int  input_seed, actual_seed;
     extern char *poptarg;
     int c;
-    char* param_string = "m:n:Ss:u";
+    const char *param_string = "m:n:Ss:u";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

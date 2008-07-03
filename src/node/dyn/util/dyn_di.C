@@ -13,25 +13,25 @@
 
 #include "dyn.h"
 
-void dbg_message(char* s, dyn* b) {
+void dbg_message(const char* s, dyn* b) {
 #ifdef DEBUG    
     cerr << s << " ";
     b->pretty_print_node(cerr); cerr << "\n";
 #else
-    char* dummy_char = s;   	// to keep the compiler happy
-    dyn* dummy = b;       	// to keep the compiler happy
+    const char* dummy_char = s;   	// to keep the compiler happy
+    dyn* dummy = b;       		// to keep the compiler happy
 #endif    
 }
 
-void dbg_message(char* s, dyn* bj, dyn *bi) {
+void dbg_message(const char* s, dyn* bj, dyn *bi) {
 #ifdef DEBUG    
     cerr << s << " ";
     bj->pretty_print_node(cerr); cerr << "->";
     bi->pretty_print_node(cerr); cerr << "\n";
 #else
-    char* dummy_char = s;       // to keep the compiler happy
-    dyn* dummy_i = bi;       	// to keep the compiler happy
-    dyn* dummy_j = bj;       	// to keep the compiler happy
+    const char* dummy_char = s;		// to keep the compiler happy
+    dyn* dummy_i = bi;       		// to keep the compiler happy
+    dyn* dummy_j = bj;       		// to keep the compiler happy
 #endif    
 }
 

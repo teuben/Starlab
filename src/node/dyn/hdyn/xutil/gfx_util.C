@@ -285,7 +285,7 @@ void update_with_delay(unsigned long win, float t)
 
 // Overloaded function:
 
-void show_instructions(unsigned long win, float r, char* buffer,
+void show_instructions(unsigned long win, float r, const char* buffer,
 		       int update)
 {
     float statusx, statusy; 
@@ -306,7 +306,7 @@ void show_instructions(unsigned long win, float r, char* buffer,
 }
 
 
-void show_instructions(unsigned long win, float r, char* buffer,
+void show_instructions(unsigned long win, float r, const char* buffer,
 		       int line, int update)
 {
     float statusx, statusy; 
@@ -404,7 +404,7 @@ void show_main_instructions(unsigned long instr, float r, int d, int u,
 
 local void format_and_show_instructions(unsigned long co, float r,
 					unsigned long *c_i, int index, int tab,
-					char* cstring, int line, int u)
+					const char* cstring, int line, int u)
 {
     if (index > 0) lux_set_color(co, c_i[index]);
 

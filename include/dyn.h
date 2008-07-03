@@ -466,8 +466,8 @@ inline dyn * common_ancestor(dyn * bi, dyn * bj)
 
 vec something_relative_to_root(dyn * b, dyn_VMF_ptr mf);
 
-void dbg_message(char*, dyn*);
-void dbg_message(char*, dyn*, dyn*);
+void dbg_message(const char*, dyn*);
+void dbg_message(const char*, dyn*, dyn*);
 
 // From dyn/init (used in sdyn3/evolve/bound3.C):
 
@@ -656,7 +656,7 @@ bool parse_sys_stats_main(int argc, char *argv[],
 			  bool &n_sq,
 			  bool &out,
 			  int  &verbose,
-			  char *cvs_id, char *source);
+			  const char *cvs_id, const char *source);
 void check_addstar(dyn* b);
 
 /// General statistics and diagnostics on an N-body system.
@@ -809,7 +809,7 @@ bool parse_scale_main(int argc, char *argv[],
 		      bool& q_flag, real& q,
 		      bool& r_flag, real& r,
 		      bool& debug,
-		      char *cvs_id, char *source);
+		      const char *cvs_id, const char *source);
 
 /// Scale masses, radii, and velocities according to various criteria.
 

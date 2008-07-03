@@ -514,7 +514,7 @@ bool parse_scale_main(int argc, char *argv[],
 		      bool& q_flag, real& q,
 		      bool& r_flag, real& r,
 		      bool& debug,
-		      char *cvs_id, char *source)
+		      const char *cvs_id, const char *source)
 {
     // Defaults:
 
@@ -532,7 +532,7 @@ bool parse_scale_main(int argc, char *argv[],
 
     extern char *poptarg;
     int c;
-    char* param_string = "0cdm:M:q:Q:e:E:r:R:sS";
+    const char *param_string = "0cdm:M:q:Q:e:E:r:R:sS";
 
     while ((c = pgetopt(argc, argv, param_string, cvs_id, source)) != -1)
 	switch(c) {

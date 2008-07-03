@@ -32,7 +32,7 @@ main(int argc, char** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "p:";
+    const char *param_string = "p:";
 
     int p = STD_PRECISION;
 

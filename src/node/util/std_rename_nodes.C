@@ -52,7 +52,7 @@ local int compare_indices(const void * pi, const void * pj)
 
 local void check_unique_indices(node *b)
 {
-    char *func = "check_unique_indices";
+    const char *func = "check_unique_indices";
 
     // Check for uniqueness in node indices (potentially expensive),
     // and correct any duplicates.
@@ -110,7 +110,7 @@ local void check_unique_indices(node *b)
 
 local void check_valid_indices(node *b)
 {
-    char *func = "check_valid_indices";
+    const char *func = "check_valid_indices";
 
     // Check for validity of indices and apply changes as needed.
     // Code may duplicate some of the operations of the previous function.
@@ -152,7 +152,7 @@ int main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "cp";
+    const char *param_string = "cp";
 
     bool preserve = true, check = true;
 

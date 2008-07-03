@@ -1182,7 +1182,7 @@ main(int argc, char ** argv)
     int camera_on_star_id = -1;
     int nstart = 0;
 
-    char * mpeg_paramfile = "paramfile.mpeg";
+    const char * mpeg_paramfile = "paramfile.mpeg";
     int horizontal =  90;
     int vertical   = 120;
     int first_frame = 1;
@@ -1201,7 +1201,7 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "a:Bb:F:f:g:H:hI:L:N:n:W:X:x:Y:y:Z:z:P:T:S:s:c:";
+    const char *param_string = "a:Bb:F:f:g:H:hI:L:N:n:W:X:x:Y:y:Z:z:P:T:S:s:c:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

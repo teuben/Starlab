@@ -35,7 +35,7 @@ void initialize_graphics(float r_factor,	     // (input) scale factor
 	    linespacing = 1.1;
     } else if (r_factor >= 0.65) {
 	set_default_font("6x12");
-	if (r_factor >= 0.725)
+	if (r_factor > 0.725)
 	    linespacing = 1.05;
 	else
 	    linespacing = 1.0;
@@ -254,7 +254,7 @@ void update_with_delay(unsigned long win, float t)
 
 // Overloaded function:
 
-void show_instructions(unsigned long  win, float r, char* buffer,
+void show_instructions(unsigned long  win, float r, const char* buffer,
 		       int update)
 {
     float statusx, statusy; 
@@ -274,7 +274,7 @@ void show_instructions(unsigned long  win, float r, char* buffer,
 }
 
 
-void show_instructions(unsigned long win, float r, char* buffer,
+void show_instructions(unsigned long win, float r, const char* buffer,
 		       int line, int update)
 {
     float statusx, statusy; 
@@ -334,7 +334,7 @@ void show_main_instructions(unsigned long instr,float r,int d,int u)
 
 local void format_and_show_instructions(unsigned long co, float r,
 					unsigned long *c_i, int index, int tab,
-					char* cstring, int line, int u)
+					const char* cstring, int line, int u)
 {
     if (index > 0) lux_set_color(co, c_i[index]);
 

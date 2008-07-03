@@ -435,9 +435,9 @@ int main(int argc, char ** argv)
     int c;
 
 #ifndef DYN
-    char* param_string = "qf:M:m:il:nu:Ss:I";
+    const char *param_string = "qf:M:m:il:nu:Ss:I";
 #else
-    char* param_string = "Cqf:M:m:il:nu:Ss:I";
+    const char *param_string = "Cqf:M:m:il:nu:Ss:I";
 #endif
 
     while ((c = pgetopt(argc, argv, param_string,

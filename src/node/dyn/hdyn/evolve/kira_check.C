@@ -17,7 +17,7 @@
 
 #include "hdyn.h"
 
-bool check_kira_flag(hdyn* b, char* kira_flag)
+bool check_kira_flag(hdyn* b, const char* kira_flag)
 {
     // Return true iff the specified kira flag exists and is set to 1.
 
@@ -29,7 +29,7 @@ bool check_kira_flag(hdyn* b, char* kira_flag)
 }
 
 bool check_allowed(bool allow_kira_override,
-		   char * what_is_allowed,
+		   const char * what_is_allowed,
 		   bool verbose, bool& need_skip)
 {
     if (allow_kira_override) {

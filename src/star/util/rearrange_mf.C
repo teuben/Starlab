@@ -80,7 +80,7 @@ main(int argc, char ** argv)
     
   extern char *poptarg;
   int c;
-  char* param_string = "c:";
+  const char *param_string = "c:";
   pgetopt(argc, argv, "", "$Revision$", _SRC_);
 
   dyn *b;

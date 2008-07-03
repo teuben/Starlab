@@ -802,8 +802,9 @@ sdyn* mkscat(int argc, char **argv, scatter_profile &prof) {
 
 #define TEXT_BUFFER_SIZE 1024
 
-static char temp[TEXT_BUFFER_SIZE];	// argv will point into this array
-static char* name = "parse_string";	// Any name will do...
+static char temp[TEXT_BUFFER_SIZE];	   // argv will point into this array
+static char name_chars[32];
+static char* name = NULL;
 
 // parse_string: Split a character string into words.  Return a list of
 //               substrings, using the same conventions as argc and argv
@@ -813,6 +814,11 @@ void parse_string(char* s, int& argc, char* argv[]) {
 
     int length = strlen(s);
     if (length >= TEXT_BUFFER_SIZE) err_exit("String too long.");
+
+    if (!name) {
+	strcpy(name_chars, "parse_string");	// any name will do...
+	name = name_chars;
+    }
 
     argv[0] = name;
     argc = 1;

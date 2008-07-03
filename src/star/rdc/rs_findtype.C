@@ -54,8 +54,8 @@
 
 
 local void extract_binary_on_stellar_types(SeBa_hist *ha,
-					   char* prim_string,
-					   char* sec_string,
+					   const char* prim_string,
+					   const char* sec_string,
 					   binary_type bt,
 					   real a_min, real a_max,
 					   real m_min, real m_max,
@@ -145,8 +145,8 @@ main(int argc, char ** argv) {
     bool  R_flag = false;
     bool  first_occasion = true;
     
-    char * primary_type_string = "bla";
-    char * secondary_type_string = "bla";
+    const char * primary_type_string = "bla";
+    const char * secondary_type_string = "bla";
 
     binary_type bt = Detached;
 
@@ -169,7 +169,7 @@ main(int argc, char ** argv) {
 
     extern char *poptarg;
     int c;
-    char* param_string = "P:p:S:s:B:A:a:M:m:E:e:Q:q:ft:vR";
+    const char *param_string = "P:p:S:s:B:A:a:M:m:E:e:Q:q:ft:vR";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

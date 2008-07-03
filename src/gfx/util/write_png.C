@@ -141,7 +141,9 @@ int write_png(FILE *dst,
     if (comment) {
 	png_text text;
 	text.compression = PNG_TEXT_COMPRESSION_zTXt;
-	text.key = "Comment";
+	char comm_chars[32];
+	strcpy(comm_chars, "Comment");
+	text.key = comm_chars;
 	text.text = (char*)comment;
 	text.text_length = 0;
 	png_set_text(png_ptr, info_ptr, &text, 1);

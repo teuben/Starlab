@@ -3649,7 +3649,7 @@ int hdyn::top_level_node_real_force_calculation()
 
 void hdyn::top_level_node_epilogue_force_calculation()
 {
-    static char *func = "top_level_node_epilogue_force_calculation";
+    static const char *func = "top_level_node_epilogue_force_calculation";
 
 #ifdef KIRA_DEBUG
     if (diag->ev_function_id && diag->check_diag(this)) {

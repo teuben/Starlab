@@ -132,7 +132,7 @@ real  dynamic_timestep(sdyn * b, real eta)
 	sqrt(Starlab::min(global_min_encounter_time_sq, global_min_free_fall_time_sq));
     }
 
-tfp timestep_function_ptr(char * timestep_name)
+tfp timestep_function_ptr(const char * timestep_name)
     {
     if (streq(timestep_name, "constant_timestep"))
 	return constant_timestep;
@@ -302,7 +302,7 @@ bool low_n_evolve(sdyn * b,       // sdyn array
 		  real eps,       // softening length 
 		  real eta,       // time step parameter
 		  int x_flag,     // exact-time termination flag
-		  char * timestep_name,
+		  const char * timestep_name,
 		  int s_flag,     // symmetric timestep ?
 		  int n_iter,     // number of iterations
 		  real n_max,     // if > 0: max. number of integration steps
@@ -487,7 +487,7 @@ main(int argc, char **argv)
     real  cpu_time_check = 3600;
 
     real  eps = 0.0;     // softening length 	       	   
-    char  *timestep_name = "dynamic_timestep";
+    const char  *timestep_name = "dynamic_timestep";
 
     bool  a_flag = FALSE;
     bool  d_flag = FALSE;
@@ -512,7 +512,7 @@ main(int argc, char **argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "A:c:C:d:D:e:f:n:qr:st:xz:";
+    const char *param_string = "A:c:C:d:D:e:f:n:qr:st:xz:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

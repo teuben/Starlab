@@ -124,7 +124,7 @@ class SeBa_hist {
        void put_single_reverse(ostream&);
        void put_first_formed_left(char*, real);
 
-       bool binary_contains(char*, char *, binary_type);
+       bool binary_contains(const char*, const char *, binary_type);
        bool binary_limits(binary_parameter, real, real);
        real get_parameter(binary_parameter);
        binary_type get_binary_type() { return bin_tpe;}
@@ -291,8 +291,8 @@ void SeBa_hist::move_SeBa_hist_to(SeBa_hist *next_hi) {
     next_hi->past   = NULL;
 }
 
-bool SeBa_hist::binary_contains(char *prim_string,
-				char *sec_string,
+bool SeBa_hist::binary_contains(const char *prim_string,
+				const char *sec_string,
 				binary_type bt = Detached) {
 
 
@@ -543,7 +543,7 @@ main(int argc, char ** argv) {
 
     extern char *poptarg;
     int c;
-    char* param_string = "P:p:S:s:B:A:a:M:m:E:e:fc:t:vRT:";
+    const char *param_string = "P:p:S:s:B:A:a:M:m:E:e:fc:t:vRT:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

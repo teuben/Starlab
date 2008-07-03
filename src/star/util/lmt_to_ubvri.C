@@ -945,7 +945,7 @@ main(int argc, char **argv)
     check_help();
     extern char *poptarg;
     int c;
-    char* param_string = "M:m:T:t:L:l:v";
+    const char *param_string = "M:m:T:t:L:l:v";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

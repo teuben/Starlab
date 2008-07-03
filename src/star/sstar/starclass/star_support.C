@@ -4,7 +4,7 @@
 
 #include "star_support.h"
 
-char* type_string(stellar_type tpe) {
+const char* type_string(stellar_type tpe) {
    
       switch(tpe) {
          case Star_Cluster:		return "star_cluster";
@@ -37,7 +37,7 @@ char* type_string(stellar_type tpe) {
       }
    }
 
-char* type_short_string(stellar_type tpe) {
+const char* type_short_string(stellar_type tpe) {
 
       switch(tpe) {
          case Star_Cluster:             return "SC";
@@ -70,7 +70,7 @@ char* type_short_string(stellar_type tpe) {
       }
    }
 
-char* type_string(stellar_type_summary tpe) {
+const char* type_string(stellar_type_summary tpe) {
    
       switch(tpe) {
          case ZAMS:			return "ZAMS";
@@ -86,7 +86,7 @@ char* type_string(stellar_type_summary tpe) {
       }
    }
 
-char* type_short_string(stellar_type_summary tpe) {
+const char* type_short_string(stellar_type_summary tpe) {
 
       switch(tpe) {
 	case ZAMS:                     return "ms";
@@ -144,7 +144,7 @@ stellar_type_summary summarize_stellar_type(stellar_type tpe) {
       }
    }
 
-char* type_string(spectral_class class_tpe) {
+const char* type_string(spectral_class class_tpe) {
 
       switch(class_tpe) {
          case O5:			return "O5";
@@ -199,7 +199,7 @@ char* type_string(spectral_class class_tpe) {
    }
 
 
-char* type_short_string(spectral_class class_tpe) {
+const char* type_short_string(spectral_class class_tpe) {
 
       switch(class_tpe) {
          case O5:
@@ -253,7 +253,7 @@ char* type_short_string(spectral_class class_tpe) {
       }
    }
 
-char* type_string(luminosity_class lum_c) {
+const char* type_string(luminosity_class lum_c) {
 
     switch(lum_c) {
 	case I:            return "I";
@@ -265,7 +265,7 @@ char* type_string(luminosity_class lum_c) {
     }
 }
 
-char* type_string(star_type_spec spec) {
+const char* type_string(star_type_spec spec) {
 
       switch(spec) {
          case NAC:			return "";
@@ -281,7 +281,7 @@ char* type_string(star_type_spec spec) {
       }
    }
 
-char* type_short_string(star_type_spec spec) {
+const char* type_short_string(star_type_spec spec) {
 
       switch(spec) {
          case NAC:                      return "";
@@ -407,7 +407,7 @@ real lum_class_limit(const real log_temp,
 }
 
 
-stellar_type extract_stellar_type_string(char* star_type_string) {
+stellar_type extract_stellar_type_string(const char* star_type_string) {
 
      stellar_type type = NAS;
 
@@ -500,7 +500,7 @@ stellar_type_summary extract_stellar_type_summary_string(char* star_type_string)
      return type;
    }
 
-star_type_spec extract_stellar_spec_summary_string(char* star_spec_string) {
+star_type_spec extract_stellar_spec_summary_string(const char* star_spec_string) {
 
      star_type_spec type = NAC;
 
@@ -527,7 +527,7 @@ star_type_spec extract_stellar_spec_summary_string(char* star_spec_string) {
    }
 
  
-char* type_string(mass_transfer_type type) {
+const char* type_string(mass_transfer_type type) {
    
   switch(type) {
     case Unknown:		return "Unknown";
@@ -539,7 +539,7 @@ char* type_string(mass_transfer_type type) {
   }
 }
 
-char* type_short_string(mass_transfer_type type) {
+const char* type_short_string(mass_transfer_type type) {
    
   switch(type) {
     case Unknown:		return "?";
@@ -593,7 +593,7 @@ supernova_type type_of_supernova(stellar_type progenitor) {
   return ns_type;
 }
 
-char *type_string(supernova_type sn_type) {
+const char *type_string(supernova_type sn_type) {
 
   switch(sn_type) {
     case NAT:    return "nat";

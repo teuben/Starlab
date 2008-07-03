@@ -129,7 +129,7 @@ int main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "iw";
+    const char *param_string = "iw";
 
     bool i_flag = false;
     bool w_flag = false;

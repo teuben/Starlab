@@ -707,7 +707,8 @@ local void evolve_system(hdyn * b,		// hdyn array
 
     real t_log = tt;			// time of next log output
     //    if (t > (xreal)0) 
-    //    	t_log += dt_log;	// uncomment to prevent initial output
+    //    	t_log += dt_log;	// uncomment to prevent
+    //    	initial output
 
     real t_snap = tt + dt_snap;		// time of next snapshot output
     if (snap_init) t_snap = tt;

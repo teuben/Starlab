@@ -60,7 +60,7 @@ local real conv_v_dyn_to_star(real v, real rf, real tf) {
    }
 
 real print_encounter_elements(hdyn* bi, hdyn* bj,
-			      char* s, 		    // default = "Collision"
+			      const char* s,	    // default = "Collision"
 			      bool verbose)	    // default = true
 {
     kepler k;

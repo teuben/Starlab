@@ -6,7 +6,7 @@
 
 #include "stdinc.h"
 
-void params_to_usage(ostream& s, char* name, char* param_string)
+void params_to_usage(ostream& s, char* name, const char *param_string)
 {
     int i = 0;
 

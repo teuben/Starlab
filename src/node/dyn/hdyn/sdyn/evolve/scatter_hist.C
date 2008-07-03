@@ -156,7 +156,7 @@ void main(int argc, char **argv) {
     check_help();
     extern char *poptarg;
     int c;
-    char* param_string = "c:";
+    const char *param_string = "c:";
 
     real cpu_time_check;
     while ((c = pgetopt(argc, argv, param_string,

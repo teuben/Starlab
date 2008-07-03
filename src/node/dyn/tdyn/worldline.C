@@ -237,7 +237,7 @@ unique_id_t unique_id(node *b)
         return -1;
 }
 
-void print_id(void *id, char *s = NULL, int offset = 0)
+void print_id(void *id, const char *s = NULL, int offset = 0)
 {
     real *r = (real *)id;
     unsigned long long *u = (unsigned long long *)id;
@@ -341,7 +341,7 @@ void worldline::check(int i)	// default = -1
     }
 }
 
-void segment::print(char *label)
+void segment::print(const char *label)
 {
     if (label == NULL) label = "    ";
     cerr << label << "name " << first_event->format_label()

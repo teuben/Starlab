@@ -403,7 +403,7 @@ int main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "f:l:s:o:u:e:";
+    const char *param_string = "f:l:s:o:u:e:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
@@ -448,8 +448,8 @@ int main(int argc, char ** argv)
     // Look in the log or dyn story to see if a total system energy
     // is known.  If it is, scale lower and upper accordingly.
 
-    char* log_energy_string = "initial_total_energy";
-    char* dyn_energy_string = "total_energy";
+    const char* log_energy_string = "initial_total_energy";
+    const char* dyn_energy_string = "total_energy";
 
     // Scale input to N-body units where appropriate.
     // Possible options are:

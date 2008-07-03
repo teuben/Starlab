@@ -38,8 +38,9 @@ main(int argc, char** argv)
     int i;
     float f;
 
-    char *gif = "gif", *png = "png";
-    char *fmt = gif;
+    const char *gif = "gif", *png = "png";
+    char fmt[8];
+    strcpy(fmt, gif);
     bool nset = false;
 
     char *comment = NULL;
@@ -55,15 +56,15 @@ main(int argc, char** argv)
 				break;
 		case 'f':	which = 2;
 				break;
-		case 'F':	fmt = argv[++i];
+		case 'F':	strcpy(fmt, argv[++i]);
 				break;
-		case 'g':	fmt = gif;
+		case 'g':	strcpy(fmt, gif);
 				break;
 		case 'i':	which = 1;
 				break;
 		case 'm':	colormap = argv[++i];
 				break;
-		case 'p':	fmt = png;
+		case 'p':	strcpy(fmt, png);
 				break;
 		case 's':	m = atoi(argv[++i]);
 				if (i+1 < argc && argv[i+1][0] != '-') {

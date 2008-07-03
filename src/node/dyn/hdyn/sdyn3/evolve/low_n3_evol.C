@@ -72,7 +72,7 @@ static real last_error = 0, last_test3 = 0;
 
 local void print_unperturbed_diag(sdyn3* b, sdyn3* b1, sdyn3* b2, sdyn3* b3,
 				  kepler& inner, kepler& outer,
-				  char* header)
+				  const char* header)
 {
     if (UNPERTURBED_DIAG) {
 
@@ -655,7 +655,7 @@ real dynamic_timestep(sdyn3* b, real eta)
 			  global_min_free_fall_time_sq));
 }
 
-local tfp get_timestep_function_ptr(char* timestep_name)
+local tfp get_timestep_function_ptr(const char* timestep_name)
 {
     if (streq(timestep_name, "constant_timestep"))
 	return constant_timestep;
@@ -740,7 +740,7 @@ bool low_n3_evolve(sdyn3* b,	   // sdyn3 array
 		   real eps,	   // softening length 
 		   real eta,	   // time step parameter
 		   int  x_flag,	   // exact-time termination flag
-		   char* timestep_name,
+		   const char* timestep_name,
 		   int  s_flag,	   // symmetric timestep?
 		   int  n_iter_in, // number of iterations
 		   real n_max,	   // if > 0: max. number of integration steps
@@ -992,13 +992,13 @@ main(int argc, char **argv)
     real cpu_time_check = 3600;
 
     real eps = 0.05;	   // softening length 	       	   
-    char* timestep_name = "constant_timestep";
+    const char* timestep_name = "constant_timestep";
 
     check_help();
 
     extern char *poptarg;
     int c;
-    char* param_string = "A:c:C:d:D:e:f:n:qr:st:xz:";
+    const char *param_string = "A:c:C:d:D:e:f:n:qr:st:xz:";
 
     bool a_flag = FALSE;
     bool d_flag = FALSE;

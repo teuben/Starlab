@@ -199,7 +199,7 @@ class node
 
 	/// Set the node ID label.
 
-	void  set_label(char * a_string)        // to set the name to a string
+	void  set_label(const char * a_string)  // to set the name to a string
 	    {
 	    if(name != NULL)
 	        delete [] name;
@@ -214,7 +214,7 @@ class node
 
 	/// Set the node ID label (alternate name).
 
-	void  set_name(char * a_string)        // to set the name to a string
+	void  set_name(const char * a_string)   // to set the name to a string
 	{
 	    if (name)
 	        delete [] name;
@@ -461,7 +461,7 @@ class node
 
 	/// Is this the name of this node?
 
-        bool name_is(char*) const;
+        bool name_is(const char*) const;
 
 	/// Return the label (index or name) of this node.
 
@@ -561,7 +561,7 @@ bool node_contains(node * b, int i);
 
 /// True if string s corresponds to node b or a descendent.
 
-bool node_contains(node * b, char* s);
+bool node_contains(node * b, const char* s);
 
 /// True if index i corresponds to b->get_top_level_node() or a descendent.
 
@@ -569,7 +569,7 @@ bool clump_contains(node * b, int i);
 
 /// True if string s corresponds to b->get_top_level_node() or a descendent.
 
-bool clump_contains(node * b, char *s);
+bool clump_contains(node * b, const char *s);
 
 /// Recursively pretty-print a node.
 

@@ -252,7 +252,7 @@ main(int argc, char **argv)
     real dt_snap = VERY_LARGE_NUMBER;
     real snap_cube_size = 10;
 
-    char* indent = "12345678901234567890";
+    char indent[32];
 
     // Default dimensionless parameters:
 
@@ -403,7 +403,7 @@ main(int argc, char **argv)
 	prof.m3 = m3 / m_unit;
 	v_rel_th = sqrt( mv/(m1 + m2) + mv/m3 ) * v_rms / v_unit;
 
-	indent = "                 ";
+	strcpy(indent, "                 ");
 	cerr << "physical units:  m1 = " << m1 << "  m2 = " << m2
 	     << "  m3 = " << m3 << "  mv = " << mv << "  (Msolar)\n";
 	cerr << indent << "binary semi-major axis = " << sma << "  (Rsolar)\n";
@@ -422,7 +422,7 @@ main(int argc, char **argv)
 	prof.m3 = M;
 	v_rel_th = v_rms;
 
-	indent = "                      ";
+	strcpy(indent, "                      ");
 	cerr << "dimensionless units:  m = " << m << "  M = " << M << endl;
     }
 

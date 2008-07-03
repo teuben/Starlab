@@ -98,7 +98,7 @@ class segment {
 	    }
 	}
 
-	void print(char *label = NULL);
+	void print(const char *label = NULL);
 };
 
 /// \a worldline: Indexed pointer to the start of a linked list of segments.
@@ -322,7 +322,7 @@ typedef worldbundle *worldbundleptr;
 
 /// Print unique ID corresponding to id.
 
-void print_id(void *id, char *label = NULL);
+void print_id(void *id, const char *label = NULL);
 
 /// Read a bundle of worldlines describing an N-body system for a time interval.
 
@@ -398,8 +398,8 @@ void preload_pdyn(worldbundleptr wh[], int nh,
 
 /// Set all root nodes to use the specified center for center tracking.
 
-char *set_center(worldbundleptr wh[], int nh, int center_number,
-		 bool verbose = false);
+const char *set_center(worldbundleptr wh[], int nh, int center_number,
+		       bool verbose = false);
 
 /// Identify which type of center we are using for center tracking.
 
@@ -411,7 +411,7 @@ int get_center();
 
 /// Current possibilities are (1) "standard-center" and (2) "bound-center".
 
-char *get_center_id(int center_number = -1);
+const char *get_center_id(int center_number = -1);
 
 /// Position of the current center.
 

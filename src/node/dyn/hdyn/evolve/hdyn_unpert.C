@@ -187,18 +187,18 @@ static int binary_type;		// eventual binary_type
 #define UNKNOWN_PERTURBERS		10
 #define DEFERRED			11
 
-static char* bt[12] = {"unknown status",
-		      "stable multiple outer binary",
-		      "stable multiple inner binary",
-		      "components not approaching",
-		      "pericenter reflection",
-		      "full binary merger",
-		      "continue existing merger",
-		      "perturbed binary",
-		      "multiple system",
-		      "unperturbed multiple component",
-		      "no valid perturber list",
-		      "unperturbed motion deferred"};
+static const char* bt[12] = {"unknown status",
+			     "stable multiple outer binary",
+			     "stable multiple inner binary",
+			     "components not approaching",
+			     "pericenter reflection",
+			     "full binary merger",
+			     "continue existing merger",
+			     "perturbed binary",
+			     "multiple system",
+			     "unperturbed multiple component",
+			     "no valid perturber list",
+			     "unperturbed motion deferred"};
 
 static int multiple_type;
 
@@ -206,9 +206,9 @@ static int multiple_type;
 #define FULL_MULTIPLE			1
 #define APOCENTER_REFLECTION		2
 
-static char* tt[3] = {"not multiple",
-		      "full_multiple merger",
-		      "apocenter reflection"};
+static const char* tt[3] = {"not multiple",
+			    "full_multiple merger",
+			    "apocenter reflection"};
 
 //------------------------------------------------------------------------
 
@@ -714,17 +714,17 @@ bool hdyn::is_close_pair()
 //
 //			 New function written by Steve, 8/98.
 
-static char* wp[11] = {"unknown status",
-		       "not low-level node",
-		       "unbound orbit",
-		       "no perturber node",
-		       "no valid perturbers",
-		       "perturbation too large",
-		       "extended outer orbit",
-		       "inside semi and perturbed",
-		       "short parent time step",
-		       "already uperturbed",
-		       "weakly perturbed"};
+static const char* wp[11] = {"unknown status",
+			     "not low-level node",
+			     "unbound orbit",
+			     "no perturber node",
+			     "no valid perturbers",
+			     "perturbation too large",
+			     "extended outer orbit",
+			     "inside semi and perturbed",
+			     "short parent time step",
+			     "already uperturbed",
+			     "weakly perturbed"};
 
 bool hdyn::is_weakly_perturbed(int& status)
 {
@@ -1370,7 +1370,7 @@ bool hdyn::is_unperturbed_and_approaching()
 // For multiples, the criterion is considerably more complicated...
 
 {
-    char *func = "is_unperturbed_and_approaching";
+    const char *func = "is_unperturbed_and_approaching";
     if (!options->allow_unperturbed) return false;	// fixes all binary
 							// problems!
 
@@ -2775,7 +2775,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 // configuration.
 
 {
-    char *func = "get_max_unperturbed_steps";
+    const char *func = "get_max_unperturbed_steps";
 
     // Return the maximum number of current time steps we can take to
     // advance unperturbed binary motion up to (but not too far past)
@@ -3402,7 +3402,7 @@ local real distance_to_binary_sister_sq(hdyn *b)
 int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 				       bool force_time)   // default = false
 {
-    char *func = "integrate_unperturbed_motion";
+    const char *func = "integrate_unperturbed_motion";
 
     // Update unperturbed binary motion and check for continuation.
     // Return true (>0) iff binary is still unperturbed at end of step.

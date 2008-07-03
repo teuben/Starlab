@@ -200,7 +200,7 @@ main(int argc, char ** argv)
 
     char  *comment;
     extern char *poptarg;
-    char * param_string = "M:R:Q:T:t:s:c:";
+    const char * param_string = "M:R:Q:T:t:s:c:";
 
     check_help();
 

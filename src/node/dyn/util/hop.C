@@ -133,7 +133,7 @@ int main(int argc, char ** argv)
 
     extern char *poptarg;
     int c; 
-    char* param_string = "in:v";
+    const char *param_string = "in:v";
 
     check_help();
 

@@ -75,7 +75,7 @@ main(int argc, char *argv[])
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "a:c:C:::fm:M:nR:";
+    const char *param_string = "a:c:C:::fm:M:nR:";
 
     // Parse the argument list:
 

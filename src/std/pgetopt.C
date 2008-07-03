@@ -101,7 +101,7 @@ char *poptarg;				// global variable
 
 char *poparr[N_POP_ARG];		// global array
 
-local inline char *get_version(char *cvs_id)
+local inline char *get_version(const char *cvs_id)
 {
     // Extract a version string from the CVS id.
     // CVS id format is "$Revision$".
@@ -135,18 +135,18 @@ local inline char *get_version(char *cvs_id)
     }
 }
 
-local inline char *get_name(char *source)
+local inline char *get_name(const char *source)
 {
     // Extract a program name from a source file specification.
     // Source format is /a/b/c/program.[cCfF].
 
     if (!source) return NULL;
 
-    char *start = source + strlen(source);
+    const char *start = source + strlen(source);
     while (start > source && *start != '/') start--;
     if (*start == '/') start++;
 
-    char *end = start;
+    const char *end = start;
     while (*end > 0 && *end != '.') end++;
     if (*end == '.') end--;
 
@@ -198,9 +198,10 @@ local inline char *get_name(char *source)
 //
 //----------------------------------------------------------------------------
 
-int  pgetopt(int argc, char ** argv, char *optstr,
-	     char *cvs_id,		// default = NULL
-	     char *source)		// default = NULL
+int  pgetopt(int argc, char ** argv,
+	     const char *optstr,
+	     const char *cvs_id,	// default = NULL
+	     const char *source)	// default = NULL
 {
     static int argv_counter = 1;	// argument counter
 					// skip argv[0], the command name
@@ -208,7 +209,8 @@ int  pgetopt(int argc, char ** argv, char *optstr,
 					// (multiple switches per argument
 					//  are allowed)
 
-    static char *minus = "-";
+    static char minus_chars[2] = {'-', 0};
+    static char *minus = minus_chars;
 
     if (argv_counter >= argc)
 	return -1;			// signal that we've run out of options
@@ -362,7 +364,7 @@ int main(int argc, char ** argv)
     extern char *poptarg;
     extern char *poparr[];				// new (8/99)
     int c;
-    char* param_string = "ab:c::d:::e::::fg.h";
+    const char *param_string = "ab:c::d:::e::::fg.h";
 
     check_help();
 

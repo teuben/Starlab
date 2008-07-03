@@ -404,7 +404,7 @@ local void set_temp_buffer(int which)
 	temp_buffer[0] = c;
 }
 
-local void set_diag_item(int which, char* id, int label_on_left,
+local void set_diag_item(int which, const char* id, int label_on_left,
 			 int x1, int x2, int y)
 {
     set_temp_buffer(which);
@@ -1498,7 +1498,7 @@ main(int argc, char** argv)
     check_help();
 
     extern char *poptarg;
-    char* params = "a:d:D:efl:op:P:rs:t";
+    const char* params = "a:d:D:efl:op:P:rs:t";
     int   c;
 
     while ((c = pgetopt(argc, argv, params,

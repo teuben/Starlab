@@ -15,7 +15,7 @@ main(int argc, char** argv)
     int verbose = 0;
 
     extern char *poptarg;
-    char* params = "F:v";
+    const char* params = "F:v";
     int   c;
 
     while ((c = pgetopt(argc, argv, params,

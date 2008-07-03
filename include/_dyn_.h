@@ -342,7 +342,7 @@ class  _dyn_ : public dyn
 				 bool overwrite = false,
 				 bool verbose = false);
 	void remove_slow_perturbed(_dyn_ *n, bool verbose = false);
-	void dump_slow_perturbed(char *string = "");
+	void dump_slow_perturbed(const char *string = "");
 	void print_slow_perturbed();
 	int count_slow_perturbed();
 	    

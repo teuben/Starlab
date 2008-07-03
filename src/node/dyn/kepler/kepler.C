@@ -113,7 +113,7 @@ int kepler_tolerance()
     return kepler_tolerance_level;
 }
 
-local int check_trig_limit(kepler* k, real &c, char *s)
+local int check_trig_limit(kepler* k, real &c, const char *s)
 {
     int forced = 0;
 
@@ -159,7 +159,7 @@ local int check_trig_limit(kepler* k, real &c, char *s)
 #define MAX_WARNINGS 10
 static int nwarnings = 0;
 
-local void err_or_warn(char *s)
+local void err_or_warn(const char *s)
 {
     if (kepler_tolerance_level > 0) {
 

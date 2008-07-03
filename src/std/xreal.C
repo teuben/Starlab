@@ -278,7 +278,7 @@ local bool read_int_pair_from_stream(istringstream& ss,
     //		int + 0xuint
     //		real
 
-    static char *func = "read_int_pair_from_stream";
+    static const char *func = "read_int_pair_from_stream";
 
     i = 0;
     f = 0;

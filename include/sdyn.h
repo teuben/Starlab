@@ -281,7 +281,7 @@ bool  tree_evolve(sdyn*, real, real, real, real, real,
 		  real dt = VERY_LARGE_NUMBER,
 		  sdyn_print_fp p = NULL);
 bool  low_n_evolve(sdyn*, real, real, real, real, real, real,
-		   int, char *, int, int, real, 
+		   int, const char *, int, int, real, 
 		   real&,
 		   real cpu_time_check = 3600,
 		   real dt = VERY_LARGE_NUMBER,

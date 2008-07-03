@@ -296,7 +296,7 @@ bool  tree3_evolve(sdyn3*, real, real, real, real, real,
 		   sdyn3_print_fp p = NULL,
 		   int snap_limit = -1);
 bool  low_n3_evolve(sdyn3*, real, real, real, real, real, real,
-		    int, char *, int, int, real,
+		    int, const char *, int, int, real,
 		    real cpu_time_check = 3600,
 		    real dt = VERY_LARGE_NUMBER,
 		    sdyn3_print_fp p = NULL,

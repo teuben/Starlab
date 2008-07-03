@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "o:";
+    const char *param_string = "o:";
 
     int option = 0;
 

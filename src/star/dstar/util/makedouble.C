@@ -111,7 +111,7 @@ void main(int argc, char ** argv) {
     real t_end   = 100;
     extern char *poptarg;
     int c;
-    char* param_string = "A:a:E:e:f:l:M:n:R:S:s:T:t:";
+    const char *param_string = "A:a:E:e:f:l:M:n:R:S:s:T:t:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

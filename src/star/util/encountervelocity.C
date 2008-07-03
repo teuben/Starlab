@@ -678,7 +678,7 @@ main(int argc, char **argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "n:Mmeor:v";	// Note: "v" removed because only the
+    const char *param_string = "n:Mmeor:v";	// Note: "v" removed because only the
 					// "verbose" option currently works.
 
     while ((c = pgetopt(argc, argv, param_string,

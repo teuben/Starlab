@@ -40,7 +40,7 @@ int main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:i";
+    const char *param_string = "c:i";
 
     char *comment;
     bool c_flag = false;

@@ -208,8 +208,8 @@ void  scatter3(initial_state3&, intermediate_state3&, final_state3&,
 
 /* Helpers: */
 
-char * state_string(intermediate_descriptor3); /* If state is X, print "X" */
-char * state_string(final_descriptor3);
+const char * state_string(intermediate_descriptor3); // if state is X, print "X"
+const char * state_string(final_descriptor3);
 
 void print_bodies(ostream&, body*, int prec = 6);
 void print_initial(ostream&, initial_state3&,

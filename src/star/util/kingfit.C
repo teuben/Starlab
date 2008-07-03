@@ -89,7 +89,7 @@ main(int argc, char **argv)
 
   extern char *poptarg;
   int c;
-  char* param_string = "L:l:R:r:";
+  const char *param_string = "L:l:R:r:";
 
   if (nlagrad<0 || nlagrad>2) {
     cerr << " kingfit -n " << nlagrad << endl;

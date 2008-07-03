@@ -325,7 +325,7 @@ local sdyn* make_tuple_cm(sdyn* list[], int k_tuple, real radius,
 
 // identify_node: Print node address and ID.
 
-local void identify_node(char* string, sdyn* bb)
+local void identify_node(const char* string, sdyn* bb)
 {
     cerr << string << " = " << bb;
     if (bb != NULL) cerr << " = " << id(bb);
@@ -429,7 +429,7 @@ local bool check_quarantine(sdyn* b, sdyn* n, real sma, real ecc, int debug)
 
     sdyn* first = first_leaf(b);
 
-    int  qflag = first->get_quarantine_flag();
+    long int  qflag = first->get_quarantine_flag();
     real qtime = first->get_quarantine_time();
     real qsma = first->get_quarantine_sma();
     real qecc = first->get_quarantine_ecc();
@@ -456,7 +456,7 @@ local bool check_quarantine(sdyn* b, sdyn* n, real sma, real ecc, int debug)
     // Start a new quarantine if this is a new system, or if the
     // parameters of an old system have drifted too much.
 
-    qflag = (int)b / 4 + (int)n / 4;
+    qflag = (long int)b / 4 + (long int)n / 4;
     qtime = b->get_time();
 
     set_quar(b, qflag, qtime, sma, ecc);

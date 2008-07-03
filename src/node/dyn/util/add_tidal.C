@@ -50,7 +50,7 @@ main(int argc, char *argv[])
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:F:J:";
+    const char *param_string = "c:F:J:";
 
     // Parse the argument list:
 

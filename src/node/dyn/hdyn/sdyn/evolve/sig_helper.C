@@ -73,7 +73,7 @@ void print_profile(ostream & s, scatter_profile & p, int prec)
 
 void make_standard_profile(scatter_profile & prof)
 {
-  prof.init_string = "-M 1 -v 2 -t -p";    // head on collision
+  strcpy(prof.init_string, "-M 1 -v 2 -t -p");    // head on collision
   prof.mt = 1;
   prof.mp = 1;				// mass of projectile binary
   prof.ap = 1;                            // semi major axis of projectile 
@@ -144,7 +144,7 @@ int n_coll(sigma_out out) {
 //           0          1          2          3
 
 
-static char *f_lab[] = {"non_res", "res", "stop", "unknown"};
+static const char *f_lab[] = {"non_res", "res", "stop", "unknown"};
 // (static here to keep Sun CC happy...)
 
 // NOTE: All "print_sigma" functions start on the current line (i.e. they

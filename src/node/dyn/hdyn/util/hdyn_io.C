@@ -679,7 +679,7 @@ local int compare(const void *pi, const void *pj)
 
 //#define SORT_PERTURBERS
 
-void hdyn::print_perturber_list(ostream & s, char *pre)
+void hdyn::print_perturber_list(ostream & s, const char *pre)
 {
     // NOTE: 'this' is a binary center of mass.
 
@@ -775,7 +775,7 @@ void hdyn::print_perturber_list(ostream & s, char *pre)
     // s << "leaving print_perturber_list" << endl << flush;
 }
 
-void hdyn::find_print_perturber_list(ostream & s, char* pre)
+void hdyn::find_print_perturber_list(ostream & s, const char* pre)
 {
     s << pre << "perturber list node for " << format_label() << " is ";
 

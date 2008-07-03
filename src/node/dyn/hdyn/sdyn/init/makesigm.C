@@ -543,8 +543,8 @@ sdyn* mkscat(int argc, char **argv, sigma_input &input) {
 #define MAX_ARGS 256
 #define TEXT_BUFFER_SIZE 1024
 
-static char temp[TEXT_BUFFER_SIZE];	// argv will point into this array
-static char* name = "parse_string";	// Any name will do...
+static char temp[TEXT_BUFFER_SIZE];	    // argv will point into this array
+static const char* name = "parse_string";   // any name will do...
 
 // parse_string: Split a character string into words.  Return a list of
 //               substrings, using the same conventions as argc and argv

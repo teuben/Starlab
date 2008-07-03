@@ -83,7 +83,7 @@ main(int argc, char **argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "A:c:C:d:D:qt:";
+    const char *param_string = "A:c:C:d:D:qt:";
 
     bool  a_flag = FALSE;
     bool  d_flag = FALSE;

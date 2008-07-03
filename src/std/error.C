@@ -5,7 +5,7 @@
 
 #include "stdinc.h"
 
-void print_message(char* line)
+void print_message(const char* line)
 {
     if (line)
 	cerr << line;
@@ -14,14 +14,14 @@ void print_message(char* line)
     cerr << endl;
 }
 
-void  err_exit(char * line)
+void  err_exit(const char * line)
 {
     cerr << "error: ";
     print_message(line);
     exit(1);
 }
 
-void  warning(char * line)
+void  warning(const char * line)
 {
     cerr << "warning: ";
     print_message(line);

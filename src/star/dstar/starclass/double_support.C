@@ -5,7 +5,7 @@
 #include "double_support.h"
 #include "double_star.h"
 
-binary_type extract_binary_type_string(char *type) {
+binary_type extract_binary_type_string(const char *type) {
 
   if (!strcmp("synchronized", type))        return Synchronized;
   else if (!strcmp("strong_encounter", type)) return Strong_Encounter;
@@ -22,7 +22,7 @@ binary_type extract_binary_type_string(char *type) {
 
 }
 
-char* type_string(binary_type tpe) {
+const char* type_string(binary_type tpe) {
    
   switch(tpe) {
   case Strong_Encounter:	return "strong_encounter";
@@ -82,7 +82,7 @@ void double_init::dump(ostream & s) {
 
 }
 
-void double_init::dump(char* filename) {
+void double_init::dump(const char* filename) {
 
   ofstream s(filename, ios::app|ios::out);
   if(!s) cerr << "error: couldn't create file "<<filename<<endl;
@@ -107,7 +107,7 @@ double_star * get_new_binary(double_init& init, const int id) {
 
 void pptime(real time,
 	    ostream & s,		// default = cerr
-	    char *t) {			// default = "time"
+	    const char *t) {		// default = "time"
 
   if (time<1.e-3) 
     ppperiod(365.25*time*1.e+6, s, t);
@@ -130,7 +130,7 @@ void pptime(real time,
 
 void ppperiod(real period,
 	      ostream & s,		// default = cerr
-	      char *p) {		// default ="Porb"
+	      const char *p) {		// default ="Porb"
 
   if (period>1000*365.25)
     pptime(period*1.e-6/365.25, s, p);

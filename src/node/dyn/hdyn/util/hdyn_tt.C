@@ -345,7 +345,7 @@ inline int within_tolerance(real x, real scale)
 
 void check_consistency_of_node(hdyn * node,
 			       hdyn_VMF_ptr get_something,
-			       char *id)
+			       const char *id)
 {
     hdyn *first_child = node->get_oldest_daughter();
     hdyn *second_child = first_child->get_younger_sister();

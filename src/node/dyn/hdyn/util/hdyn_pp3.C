@@ -53,7 +53,7 @@ local void skip(int n, ostream & s)
     for (int i = 0; i < n; i++) s << " ";
 }
 
-local void print_node(char* label, hdyn * b, ostream & s)
+local void print_node(const char* label, hdyn * b, ostream & s)
 {
     skip(MAX_INDENT, s); s << " \t" << label;
 
@@ -374,7 +374,7 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:";
+    const char *param_string = "c:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

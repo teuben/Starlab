@@ -11,7 +11,7 @@
 
 // Translate enum states into strings:
 
-char * state_string(intermediate_descriptor3 s)
+const char * state_string(intermediate_descriptor3 s)
 {
     switch(s) {
         case non_resonance:          return "non_resonance";
@@ -21,7 +21,7 @@ char * state_string(intermediate_descriptor3 s)
     }
 }
 
-char * state_string(final_descriptor3 s)
+const char * state_string(final_descriptor3 s)
 {
     switch(s) {
         case preservation:     	return "preservation";

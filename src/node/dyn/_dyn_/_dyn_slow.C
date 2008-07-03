@@ -350,7 +350,7 @@ bool _dyn_::copy_slow_perturbed(_dyn_ *to,
     return true;
 }
 
-void _dyn_::dump_slow_perturbed(char *string)		// default = ""
+void _dyn_::dump_slow_perturbed(const char *string)	// default = ""
 {
     // Dump all slow_perturber data.
 

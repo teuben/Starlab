@@ -285,13 +285,13 @@ static int n_center = 2;
 static int which_center = 0;	// 0 to n_center-1 are legal
 static int which_std = 0;	// 1 or 2 is legal
 
-static char *center_id[] = {"standard-center", "bound-center"};
-static char *std_center_id[] = {"density-center", "modified-com"};
+static const char *center_id[] = {"standard-center", "bound-center"};
+static const char *std_center_id[] = {"density-center", "modified-com"};
 
 int get_n_center() {return n_center;}
 int get_center() {return which_center;}
 
-char *get_center_id(int center_number)		// default = -1
+const char *get_center_id(int center_number)		// default = -1
 {
     // Don't attempt to tie the descriptive string to the strings used
     // in the root dyn stories.
@@ -379,10 +379,10 @@ local bool scan_root_nodes(worldbundleptr wh[],
     return true;
 }
 
-char *set_center(worldbundleptr wh[],	// entire worldbundle array
-		 int nh,
-		 int new_center,
-		 bool verbose)		// default = false
+const char *set_center(worldbundleptr wh[],	// entire worldbundle array
+		       int nh,
+		       int new_center,
+		       bool verbose)		// default = false
 {
     // Set all root nodes to use the specified center, and return
     // a string describing that center.

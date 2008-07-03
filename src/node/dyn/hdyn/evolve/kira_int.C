@@ -484,7 +484,7 @@ local hdyn* check_and_merge(hdyn* bi, int full_dump)
 
 local inline bool check_neighbor_steps(hdynptr next_nodes[], int n_next)
 {
-    char *func = "check_neighbor_steps";
+    const char *func = "check_neighbor_steps";
     bool status = false;
 
     // It is possible for the motion of a light particle to be

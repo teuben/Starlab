@@ -111,7 +111,7 @@ local void dissociate_binary(hdyn* bi)
 
 real cpu;
 
-local void print_start_evolution(char* s, hdyn *b)
+local void print_start_evolution(const char* s, hdyn *b)
 {
     real t = b->get_system_time();
     starbase *sb = b->get_starbase();
@@ -126,7 +126,7 @@ local void print_start_evolution(char* s, hdyn *b)
     cpu = cpu_time();
 }
 
-local void print_end_evolution(char* s, bool correct_dynamics)
+local void print_end_evolution(const char* s, bool correct_dynamics)
 {
     real delta_cpu = cpu_time() - cpu;
     PRC(delta_cpu);

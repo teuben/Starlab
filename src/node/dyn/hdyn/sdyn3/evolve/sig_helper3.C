@@ -193,7 +193,7 @@ int n_coll(int n_hits[N_INTER][N_FINAL][N_RHO_ZONE_MAX], int i_max)
 #define output_header_4 \
   "  mrg_b1 mrg_b2 mrg_b3 mrg_e1 mrg_e2 mrg_e3 3coll\n"
 
-static char *f_lab[] = {"non_res", "hier_res", "dem_res", "unknown"};
+static const char *f_lab[] = {"non_res", "hier_res", "dem_res", "unknown"};
 // (static here to keep Sun CC happy...)
 
 // NOTE: All "print_sigma" functions start on the current line (i.e. they
@@ -400,7 +400,7 @@ void print_sigma3_mergers(real sigma[N_INTER][N_FINAL],
     }
 }
 
-local void create_temp(char* temp, int length, char* string)
+local void create_temp(char* temp, int length, const char* string)
 {
     for (int k = 0; k < length; k++) temp[k] = ' ';
     strcpy(temp, string);

@@ -88,7 +88,7 @@ local void correct_multiples(hdyn* b,
 }
 
 local void choose_param(hdyn* b, bool verbose,
-			real& x, bool x_flag, char* x_id,
+			real& x, bool x_flag, const char* x_id,
 			bool zero_OK = false)
 {
     // Set kira parameter x, subject to the twin constraints of
@@ -174,7 +174,7 @@ local void choose_param(hdyn* b, bool verbose,
 }
 
 local void choose_param(hdyn* b, bool verbose,
-			int& ix, bool x_flag, char* x_id,
+			int& ix, bool x_flag, const char* x_id,
 			bool zero_OK = false)
 {
     // Use real version to achieve desired effect.  Rely on I/O
@@ -801,7 +801,7 @@ bool kira_initialize(int argc, char** argv,
     extern char *poptarg, *poparr[];	// multiple arguments are allowed
 					// as of 8/99 (Steve)
     int c;
-    char* param_string = "*:0123a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:u.UvVW:xX:y:z:Z:";
+    const char *param_string = "*:0123a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:u.UvVW:xX:y:z:Z:";
 
     // Optional (POSITIVE!) arguments are allowed as of 8/99 (Steve).
 

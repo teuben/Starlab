@@ -63,7 +63,7 @@ short need = 8;
 GifTree *empty[256], GifRoot = {LOOKUP, 0, 0, empty, NULL, NULL},
 	*topNode, *baseNode, **nodeArray, **lastArray;
 
-void TheEnd1(char *s)
+void TheEnd1(const char *s)
 {
     fprintf(stderr, "%s\n", s);
     exit(2);

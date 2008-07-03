@@ -178,7 +178,7 @@ main(int argc, char *argv[])
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "A:a:c:C:::e:E:GM:nR:x:X:";
+    const char *param_string = "A:a:c:C:::e:E:GM:nR:x:X:";
 
     // Parse the argument list:
 

@@ -39,7 +39,7 @@ int get_line(istream & s, char * line)
     return strlen(line);
 }
 
-int check_input_line(istream &s, char* reference_string)
+int check_input_line(istream &s, const char* reference_string)
 {
     char input_line[MAX_INPUT_LINE_LENGTH];
     get_line(s,input_line);
@@ -51,7 +51,7 @@ int check_input_line(istream &s, char* reference_string)
     return matchbracket(reference_string, input_line);
 }    
 
-int check_and_skip_input_line(istream &s, char* reference_string)
+int check_and_skip_input_line(istream &s, const char* reference_string)
 {
 //  char dummy;
     char input_line[MAX_INPUT_LINE_LENGTH];
@@ -172,7 +172,7 @@ bool use_short_story_keywords( bool useshort ) {
 }
 
 
-void put_story_header(ostream & s, char * id)
+void put_story_header(ostream & s, const char * id)
 {
 #ifdef BAD_GNU_IO
     if (s == cout) {
@@ -191,7 +191,7 @@ void put_story_header(ostream & s, char * id)
     }
 }
 
-void put_story_footer(ostream & s, char * id)
+void put_story_footer(ostream & s, const char * id)
 {
 #ifdef BAD_GNU_IO
     if (s == cout) {
@@ -219,7 +219,7 @@ void put_story_footer(ostream & s, char * id)
 
 // See also xreal version in xreal.C.
 
-void put_real_number(ostream & s, char * label, real x)
+void put_real_number(ostream & s, const char * label, real x)
 {
     // Note from Steve (7/04).  The precision of a stream isn't
     // exactly what we need here.  It simply determines the number
@@ -314,7 +314,7 @@ void put_real_number(ostream & s, char * label, real x)
 	s.precision(old_precision);
 }
 
-void put_real_vector(ostream & s, char * label, vec v)
+void put_real_vector(ostream & s, const char * label, vec v)
 {
     // See various notes in put_real_number above...
 
@@ -391,7 +391,7 @@ void put_real_vector(ostream & s, char * label, vec v)
 	s.precision(old_precision);
 }
 
-void put_integer(ostream & s, char * label, int i)
+void put_integer(ostream & s, const char * label, int i)
 {
 #ifndef BAD_GNU_IO
     s << label << i << endl;
@@ -403,7 +403,7 @@ void put_integer(ostream & s, char * label, int i)
 #endif
 }
 
-void put_string(ostream & s, char * label, char * str)
+void put_string(ostream & s, const char * label, const char * str)
 {
 #ifndef BAD_GNU_IO
     s << label << str << endl;

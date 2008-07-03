@@ -95,7 +95,7 @@ main(int argc, char *argv[])
 
     extern char *poptarg;
     int c;
-    char* param_string = "d:DF:t:v:";
+    const char *param_string = "d:DF:t:v:";
   
     check_help();
   

@@ -351,7 +351,7 @@ main(int argc, char **argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "A:dDe:m:M:n:opPr:R:s:t:v:";
+    const char *param_string = "A:dDe:m:M:n:opPr:R:s:t:v:";
 
     initial_state3 init;
     make_standard_init(init);

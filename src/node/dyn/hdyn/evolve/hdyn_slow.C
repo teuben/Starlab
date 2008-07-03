@@ -383,10 +383,11 @@ void hdyn::startup_slow_motion()
     }
 }
 
-static char* term_reason[4] = {"forced",	   // set_stop
-			       "invalid plist",	   // get_slowdown_factor = -1
-			       "binary perturber", // get_slowdown_factor =  0
-			       "perturbed"};	   // get_slowdown_factor =  1
+static const char* term_reason[4]
+	= {"forced",	   		// set_stop
+	   "invalid plist",		// get_slowdown_factor = -1
+	   "binary perturber",		// get_slowdown_factor =  0
+	   "perturbed"};		// get_slowdown_factor =  1
 
 void hdyn::extend_or_end_slow_motion(real P)	// convenient to pass P (!)
 						// as an optional argument

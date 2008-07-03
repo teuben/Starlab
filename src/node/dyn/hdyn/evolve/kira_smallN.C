@@ -937,17 +937,17 @@ local real take_a_step(hdyn *b,		// root node
 
 
 
-local void set_tag(hdyn *b, char *s)
+local void set_tag(hdyn *b, const char *s)
 {
     putiq(b->get_log_story(), s, 1);
 }
 
-local bool check_tag(hdyn *b, char *s)
+local bool check_tag(hdyn *b, const char *s)
 {
     return (find_qmatch(b->get_log_story(), s) != NULL);
 }
 
-local void clear_tag(hdyn *b, char *s)
+local void clear_tag(hdyn *b, const char *s)
 {
     rmq(b->get_log_story(), s);
 }
@@ -2524,7 +2524,7 @@ main(int argc, char *argv[])
 
     extern char *poptarg;
     int c;
-    char* param_string = "a:d:D:E:g:n:r:t:";
+    const char *param_string = "a:d:D:E:g:n:r:t:";
 
     real dt_log = 0;
     bool d_set = false;

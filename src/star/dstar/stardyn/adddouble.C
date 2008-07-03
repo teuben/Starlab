@@ -347,7 +347,7 @@ main(int argc, char ** argv)
     char  *comment;
     extern char *poptarg;
 
-    char * param_string = "A:a:E:e:M:R:Q:T:t:Ss:c:";
+    const char * param_string = "A:a:E:e:M:R:Q:T:t:Ss:c:";
     check_help();
 
     while ((c = pgetopt(argc, argv, param_string,

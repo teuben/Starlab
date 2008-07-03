@@ -102,7 +102,7 @@ int main(int argc, char ** argv)
     char  *comment;
     int input_seed=0, actual_seed;
     extern char *poptarg;
-    char *param_string = "n:M:R:T:t:S:s:c:";
+    const char *param_string = "n:M:R:T:t:S:s:c:";
 
     check_help();
     

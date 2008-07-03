@@ -20,7 +20,7 @@
 #include "kira_defaults.h"
 #include <unistd.h>
 
-local void clean_up_file(char* name)
+local void clean_up_file(const char* name)
 {
     char tmp[80];
 
@@ -55,20 +55,20 @@ void clean_up_files()
 {
     // List files to be explicitly cleaned up:
 
-    char * files[N_FILES] = {"ALLOW_CHECK",
-			     "ABORT",
-			     "DIAG",
-			     "DUMP",
-			     "ENERGY",
-			     "KILL_MULTIPLES",
-			     "LOG",
-			     "MULTIPLES",
-			     "OPTIONS",
-			     "PARAMS",
-			     "PP",
-			     "QT",
-			     "SCHED",
-			     "STOP"};
+    const char * files[N_FILES] = {"ALLOW_CHECK",
+				   "ABORT",
+				   "DIAG",
+				   "DUMP",
+				   "ENERGY",
+				   "KILL_MULTIPLES",
+				   "LOG",
+				   "MULTIPLES",
+				   "OPTIONS",
+				   "PARAMS",
+				   "PP",
+				   "QT",
+				   "SCHED",
+				   "STOP"};
 
     // Clean up...
 
@@ -81,7 +81,7 @@ void clean_up_files()
     }
 }
 
-bool check_file(char* name,
+bool check_file(const char* name,
 		bool del)	// default = true
 {
     ifstream file(name);
@@ -262,7 +262,7 @@ local bool kill_multiples(hdyn * b)
 // Note the many similarities between modify_params, modify_options,
 // and modify_diag -- possible merger of the three?
 
-local void modify_params(hdyn * b, char * name,
+local void modify_params(hdyn * b, const char * name,
 			 real& t_end, real& new_dt_log, real& new_dt_snap,
 			 int& long_binary_output, char* new_snap_save_file)
 {
@@ -496,7 +496,7 @@ local char *get_string(char *s)
 }
 
 
-local void modify_options(hdyn * b, char * name, bool del = true)
+local void modify_options(hdyn * b, const char * name, bool del = true)
 {
     // Modify entries in the hdyn::kira_options class.
 
@@ -712,7 +712,7 @@ local void modify_options(hdyn * b, char * name, bool del = true)
 }
 
 
-local void modify_diag(hdyn * b, char * name, bool del = true)
+local void modify_diag(hdyn * b, const char * name, bool del = true)
 {
     // Modify entries in the hdyn::kira_diag class.
 
@@ -983,7 +983,7 @@ local void modify_diag(hdyn * b, char * name, bool del = true)
 }
 
 
-local void pp(hdyn * b, char * name)
+local void pp(hdyn * b, const char * name)
 {
     ifstream file(name);
     if (file) {
@@ -1041,7 +1041,7 @@ local void pp(hdyn * b, char * name)
     }
 }
 
-local void qt(hdyn * b, char * name)
+local void qt(hdyn * b, const char * name)
 {
     ifstream file(name);
     if (file) {
@@ -1062,7 +1062,7 @@ local void qt(hdyn * b, char * name)
     }
 }
 
-local void dump_to_file(hdyn* b, char* name)
+local void dump_to_file(hdyn* b, const char* name)
 {
     ifstream file(name);
     bool written = false;

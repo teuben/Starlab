@@ -214,8 +214,8 @@ void SeBa_hist::move_SeBa_hist_to(SeBa_hist *next_hi) {
     next_hi->past   = NULL;
 }
 
-bool SeBa_hist::binary_contains(char *prim_string,
-				char *sec_string,
+bool SeBa_hist::binary_contains(const char *prim_string,
+				const char *sec_string,
 				binary_type bt = Detached) {
 
 
@@ -250,7 +250,7 @@ bool SeBa_hist::binary_contains(char *prim_string,
        
 }
 
-void SeBa_hist::put_first_formed_left(char *string_type, real dt) {
+void SeBa_hist::put_first_formed_left(const char *string_type, real dt) {
 
 // (GN Apr  6 1999)
 //  for_all_SeBa_hist(SeBa_hist, this, hi) {

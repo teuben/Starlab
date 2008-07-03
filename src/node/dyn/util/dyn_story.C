@@ -395,11 +395,11 @@ local bool matches(real r, real v)
     return (abs(r/v - 1) < MATCH_TOL);
 }
 
-static char* tidal_type[5] = {"none",
-			      "point-mass",
-			      "isothermal",
-			      "disk",
-			      "custom"};
+static const char* tidal_type[5] = {"none",
+				    "point-mass",
+				    "isothermal",
+				    "disk",
+				    "custom"};
 
 // Express Galactic parameters in "Stellar" units (see Mihalas 1968):
 //

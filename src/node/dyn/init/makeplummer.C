@@ -306,7 +306,7 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "c:Cim:n:os:r:Ru";
+    const char *param_string = "c:Cim:n:os:r:Ru";
 
     mfrac = rfrac = VERY_LARGE_NUMBER;
 

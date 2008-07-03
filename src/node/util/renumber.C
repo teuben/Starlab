@@ -123,7 +123,7 @@ int main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "MmNI:i:sSc:";
+    const char *param_string = "MmNI:i:sSc:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

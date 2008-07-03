@@ -34,7 +34,7 @@ main(int argc, char ** argv)
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "n";
+    const char *param_string = "n";
 
     // Parse the argument list:
 

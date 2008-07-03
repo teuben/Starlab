@@ -236,7 +236,7 @@ int main(int argc, char ** argv) {
 
     extern char *poptarg;
     int c;
-    char* param_string = "n:N:RDSM:m:x:F:f:A:a:y:G:g:E:e:v:U:u:Q:q:T:t:I:w:P:p:n:s:";
+    const char *param_string = "n:N:RDSM:m:x:F:f:A:a:y:G:g:E:e:v:U:u:Q:q:T:t:I:w:P:p:n:s:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

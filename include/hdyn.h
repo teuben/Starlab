@@ -425,8 +425,10 @@ class  hdyn : public _dyn_ {
 						 seq = NULL;
 #endif
 	}
-        void print_perturber_list(ostream & s = cerr, char* pre = "");
-        void find_print_perturber_list(ostream & s = cerr, char* pre = "");
+        void print_perturber_list(ostream & s = cerr,
+				  const char* pre = "");
+        void find_print_perturber_list(ostream & s = cerr,
+				       const char* pre = "");
 
         void new_perturber_list() {
 	    if (perturber_list == NULL) {
@@ -1075,9 +1077,9 @@ void initialize_system_phase2(hdyn * b,
 
 // ----- In kira_check.C: -----
 
-bool check_kira_flag(hdyn* b, char* kira_flag);
+bool check_kira_flag(hdyn* b, const char* kira_flag);
 bool check_allowed(bool allow_kira_override,
-			 char * what_is_allowed,
+			 const char * what_is_allowed,
 			 bool verbose, bool& need_skip);
 
 // ----- In kira_init.C: -----
@@ -1161,7 +1163,7 @@ void snap_output(hdyn * b, real steps, int& snaps,
 // ----- In kira_runtime.C: -----
 
 void clean_up_files();
-bool check_file(char* name,
+bool check_file(const char* name,
 		bool del = true);
 
 void check_kira_init(hdyn* b);
@@ -1179,7 +1181,7 @@ bool evolve_stars(hdyn* b, int full_dump = 0);
 
 real get_sum_of_radii(hdyn* bi, hdyn* bj, bool check_story = false);
 real print_encounter_elements(hdyn* bi, hdyn* bj,
-			      char* s = "Collision",
+			      const char* s = "Collision",
 			      bool verbose = true);
 
 void check_print_close_encounter(hdyn *bi);

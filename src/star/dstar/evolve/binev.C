@@ -72,7 +72,7 @@ void main(int argc, char ** argv) {
     real end_time   = 35;
     extern char *poptarg;
     int c;
-    char* param_string = "a:P:e:M:m:n:q:s:T:R:";
+    const char *param_string = "a:P:e:M:m:n:q:s:T:R:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

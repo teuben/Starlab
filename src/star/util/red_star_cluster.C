@@ -32,7 +32,8 @@
 
 #define SCRATCH_PAD_LINE_LENGTH 255
 
-char* stellar_type_summ_string = "ZAMS\tEarly_G\tLate_G\tHelium\tInert\tUnknown";
+const char* stellar_type_summ_string
+	= "ZAMS\tEarly_G\tLate_G\tHelium\tInert\tUnknown";
 
 #define MAX_PREDEF_RADII 8
 enum bin_option {lineair, predefined
@@ -1230,7 +1231,7 @@ main(int argc, char ** argv)
   
   extern char *poptarg;
   int c;
-  char* param_string = "a:B:C:c:l:N:noS:sv";
+  const char *param_string = "a:B:C:c:l:N:noS:sv";
 
   while ((c = pgetopt(argc, argv, param_string,
 		  "$Revision$", _SRC_)) != -1)

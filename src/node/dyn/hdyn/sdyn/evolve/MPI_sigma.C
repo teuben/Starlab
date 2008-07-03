@@ -432,7 +432,7 @@ main(int argc, char **argv) {
 
     extern char *poptarg;
     int c;
-    char* param_string = "A:c:C:d:D:e:g:Ii:m:M:N:pqQs:t:v:V:";
+    const char *param_string = "A:c:C:d:D:e:g:Ii:m:M:N:pqQs:t:v:V:";
 
     cerr << "We enter the command line master"<<endl;
 

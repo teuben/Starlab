@@ -741,7 +741,7 @@ local void bin_recursive(dyn* bi,
     }	
 }
 
-local void print_histogram(int histogram[][NR], int n, char *label)
+local void print_histogram(int histogram[][NR], int n, const char *label)
 {
     cerr << endl
 	 << "  Binary distribution by " << label << " and radius:"
@@ -1172,8 +1172,8 @@ bool parse_sys_stats_main(int argc, char *argv[],
 			  bool &n_sq,
 			  bool &out,
 			  int  &verbose,
-			  char *cvs_id,
-			  char *source)
+			  const char *cvs_id,
+			  const char *source)
 {
     // Parse the sys_stats command-line (used by both dyn and hdyn versions).
 
@@ -1191,7 +1191,8 @@ bool parse_sys_stats_main(int argc, char *argv[],
 
     extern char *poptarg;
     int c;
-    char* param_string = "0b.Bnel.ov";	// only the "verbose > 0" options work!
+    const char *param_string = "0b.Bnel.ov";
+					// only the "verbose > 0" options work!
 
     while ((c = pgetopt(argc, argv, param_string, cvs_id, source)) != -1)
 	switch(c) {
@@ -1366,7 +1367,7 @@ void sys_stats(dyn* b,
 	bool has_densities = (getrq(b->get_dyn_story(), "density_time")
 			       == b->get_system_time());
 
-	if (verbose > 1 && (has_densities || allow_n_sq_ops)) {
+	if (verbose > 0 && (has_densities || allow_n_sq_ops)) {
 
 	    // cerr << "Compute densities" << endl;	// ???
 

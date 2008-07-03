@@ -60,7 +60,7 @@ main(int argc, char ** argv)
     int m_flag = false;
     extern char *poptarg;
     int c;
-    char* param_string = "m:";
+    const char *param_string = "m:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

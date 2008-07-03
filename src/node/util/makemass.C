@@ -573,9 +573,9 @@ int main(int argc, char ** argv)
     int c;
 
 #ifndef DYN
-    char* param_string = "E:e:iF:f:h:L:l:M:m:s:U:u:X:x:";
+    const char *param_string = "E:e:iF:f:h:L:l:M:m:s:U:u:X:x:";
 #else
-    char* param_string = "CE:e:iF:f:h:L:l:M:m:s:U:u:X:x:";
+    const char *param_string = "CE:e:iF:f:h:L:l:M:m:s:U:u:X:x:";
 #endif
 
     while ((c = pgetopt(argc, argv, param_string,

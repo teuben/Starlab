@@ -260,7 +260,7 @@ int main(int argc, char ** argv)
     char  seedlog[SEED_STRING_LENGTH];
     extern char *poptarg;
     int c;
-    char* param_string = "N:n:f:S:s:T:t:v:c:";
+    const char *param_string = "N:n:f:S:s:T:t:v:c:";
 
     check_help();
 

@@ -95,7 +95,7 @@ void main(int argc, char ** argv) {
     char seedlog[64];
     extern char *poptarg;
     int c;
-    char* param_string = "A:a:e:M:m:N:n:Q;q:Rs:T:";
+    const char *param_string = "A:a:e:M:m:N:n:Q;q:Rs:T:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

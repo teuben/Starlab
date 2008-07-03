@@ -219,7 +219,7 @@ local void print_perioapo_clustron(hdyn* bi) {
 
 	  // Always print unbound encounter elements.
 
-	  print_encounter_elements(bi, bj, "Perioclustron", false);
+	  print_encounter_elements(bi, bj, "Periclustron", false);
 
 	}
 	else {

@@ -50,7 +50,7 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "ci0";
+    const char *param_string = "ci0";
 
     bool force_nogrape = false;
 

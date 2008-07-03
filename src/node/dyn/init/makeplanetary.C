@@ -368,7 +368,7 @@ int main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "f:l:s:o:u:e:";
+    const char *param_string = "f:l:s:o:u:e:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
@@ -413,7 +413,7 @@ int main(int argc, char ** argv)
     // is not known, lower and upper are absolute limits on the
     // binary kinetic energy.
 
-    char* energy_string = "initial_total_energy";
+    const char* energy_string = "initial_total_energy";
 
     if (function_select == 1) {
 	if (b->get_starbase()->get_stellar_evolution_scaling()) {

@@ -4,8 +4,8 @@
 #define MAX_INPUT_LINE_LENGTH 255
 
 int get_line(istream & s, char * line);
-int check_input_line(istream &s, char* reference_string);
-int check_and_skip_input_line(istream &s, char* reference_string);
+int check_input_line(istream &s, const char* reference_string);
+int check_and_skip_input_line(istream &s, const char* reference_string);
 int get_data_line(istream & s,char * input_line);
 void set_vector_from_input_line(vec & v, char * input_line);
 void set_vector_from_string(vec & v, char *str);
@@ -28,12 +28,12 @@ void write_unformatted32_vector( ostream & s, vec & v );
 
 // Kludges to make GNU/HP output work:
 
-void put_story_header(ostream & s, char * id);
-void put_story_footer(ostream & s, char * id);
-void put_real_number(ostream & s, char *, xreal x);
-void put_real_number(ostream & s, char *, real x);
-void put_real_vector(ostream & s, char *, vec v);
-void put_integer(ostream & s, char *, int i);
-void put_string(ostream & s, char *, char * str);
+void put_story_header(ostream & s, const char * id);
+void put_story_footer(ostream & s, const char * id);
+void put_real_number(ostream & s, const char *, xreal x);
+void put_real_number(ostream & s, const char *, real x);
+void put_real_vector(ostream & s, const char *, vec v);
+void put_integer(ostream & s, const char *, int i);
+void put_string(ostream & s, const char *, const char * str);
 
  

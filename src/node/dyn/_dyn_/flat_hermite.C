@@ -229,7 +229,7 @@ main(int argc, char **argv)
 
     extern char *poptarg;
     int c;
-    char* param_string = "a:c:C:d:D:e:qt:";
+    const char *param_string = "a:c:C:d:D:e:qt:";
 
     while ((c = pgetopt(argc, argv, param_string,
 			"$Revision$", _SRC_)) != -1)

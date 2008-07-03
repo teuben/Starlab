@@ -59,7 +59,7 @@
 #define lux_set_nobuffer	    LUX_set_nobuffer
 
 extern "C" unsigned long lux_openwin(int , int , int , int );
-extern "C" int lux_set_window_name(unsigned long, char*);
+extern "C" int lux_set_window_name(unsigned long, const char*);
 extern "C" int lux_setup_region(unsigned long, float,float,float,float );
 extern "C" int lux_clear_current_region(unsigned long);
 extern "C" int lux_setup_axis(unsigned long, float,float,float,float );
@@ -75,21 +75,21 @@ extern "C" int lux_set_color(unsigned long, long);
 extern "C" int lux_set_window_bgcolor(unsigned long, long);
 extern "C" int lux_set_bgcolor(unsigned long, long);
 extern "C" unsigned long lux_rgb_pixel(unsigned long, float, float,float);
-extern "C" unsigned long lux_lookup_color(unsigned long, char*);
+extern "C" unsigned long lux_lookup_color(unsigned long, const char*);
 extern "C" int lux_draw_string(unsigned long, float, float, float,
-			       char*, char);
+			       const char*, char);
 extern "C" int lux_draw_vstring(unsigned long, float, float, float,
-				char*, char);
+				const char*, char);
 extern "C" int lux_draw_image_string(unsigned long, float, float, float,
 				     char*, char);
 extern "C" int lux_check_keypress(unsigned long,char);
 extern "C" int lux_check_buttonpress(unsigned long);
 extern "C" unsigned long lux_open_dialog(int, int, int, int);
 extern "C" int lux_set_item(unsigned long, int, int, int, int,
-			    int, int, char*);
+			    int, int, const char*);
 extern "C" int lux_draw_palette(unsigned long);
-extern "C" int lux_get_itemvalue(unsigned long, int, int, int, char*);
-extern "C" int lux_update_itemvalue(unsigned long, int, int, int, char*);
+extern "C" int lux_get_itemvalue(unsigned long, int, int, int, const char*);
+extern "C" int lux_update_itemvalue(unsigned long, int, int, int, const char*);
 extern "C" int lux_clear_window(unsigned long);
 extern "C" int lux_reset_window(unsigned long);
 extern "C" int lux_update_fg(unsigned long);
@@ -103,7 +103,7 @@ extern "C" void lux_set_nobuffer();
 // These should perhaps be made into "interface" routines someday...
 
 extern "C" int get_mouse_position(unsigned long, float*, float*);
-extern "C" void set_default_font(char*);
+extern "C" void set_default_font(const char*);
 extern "C" void lux_pause(int);
 extern "C" int lux_get_display_width();
 extern "C" int lux_get_display_height();
@@ -206,14 +206,14 @@ void draw3d_axis(unsigned long, float, float, float, float, float);
 void draw2d_axis(unsigned long, float, float, float, float, int);
 void update_with_delay(unsigned long, float);
 
-void show_instructions(unsigned long, float, char*, int);
-void show_instructions(unsigned long, float, char*, int, int);
+void show_instructions(unsigned long, float, const char*, int);
+void show_instructions(unsigned long, float, const char*, int, int);
 
 void show_main_instructions(unsigned long, float, int, int, bool,
 			    int, int, int, int, int);
 local void format_and_show_instructions(unsigned long, float,
 					unsigned long*, int, int,
-					char*, int, int);
+					const char*, int, int);
 void show_color_scheme(unsigned long, unsigned long*, unsigned long*,
 		       float, char, bool, int);
 void init_colors(unsigned long,

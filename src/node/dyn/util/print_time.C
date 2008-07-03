@@ -19,7 +19,7 @@ main(int argc, char ** argv)
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "";
+    const char *param_string = "";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

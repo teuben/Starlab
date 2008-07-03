@@ -84,7 +84,7 @@ void compute_mcom(dyn *b,
 
     int n = 0;
     for_all_daughters(dyn, b, bb) n++;
-    rp_pair *rp = new rp_pair[n];
+    rp_pair_ptr rp = new rp_pair[n];		// <-- can fail here???
 
     if (rp == NULL) {
 	cerr << "compute_mcom: "
@@ -185,7 +185,7 @@ main(int argc, char ** argv)
     extern char *poptarg;
     int c;
     real f = 0.9;
-    char* param_string = "c:f:";
+    const char *param_string = "c:f:";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)

@@ -174,7 +174,7 @@ bool node_contains(node * b, int i)		// overloaded
     return false;
 }
 
-bool node_contains(node * b, char* s)		// overloaded
+bool node_contains(node * b, const char* s)		// overloaded
 {
     if (b->is_parent()) {
         for_all_nodes(node, b, bi)
@@ -192,12 +192,12 @@ bool clump_contains(node * b, int i)		// overloaded
     return node_contains(b->get_top_level_node(), i);
 }
 
-bool clump_contains(node * b, char *s)		// overloaded
+bool clump_contains(node * b, const char *s)		// overloaded
 {
     return node_contains(b->get_top_level_node(), s);
 }
 
-bool node::name_is(char* s) const
+bool node::name_is(const char* s) const
 {
     return streq(format_label(), s);
 }

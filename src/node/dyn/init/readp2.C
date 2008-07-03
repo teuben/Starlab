@@ -105,7 +105,7 @@ int main(int argc, char ** argv)
     extern char *poptarg;
     extern char *poparr[];
     int c;
-    char* param_string = "c:iv::";
+    const char *param_string = "c:iv::";
 
     char *comment;
     bool c_flag = false;
