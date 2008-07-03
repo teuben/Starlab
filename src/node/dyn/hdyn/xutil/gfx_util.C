@@ -274,11 +274,13 @@ void draw2d_axis(unsigned long win, float xmin, float xmax,
     }
 }
 
+#include <unistd.h>						// quick fix!
 
 void update_with_delay(unsigned long win, float t)
 {
     lux_update_fg(win);
-    if (t > 0.0)  lux_pause((int)(t*1000.0));
+    //    if (t > 0.0)  lux_pause((int)(t*1000.0));		// quick fix!
+    if (t > 0.0) usleep((int)1000*t);
 }
 
 // Overloaded function:

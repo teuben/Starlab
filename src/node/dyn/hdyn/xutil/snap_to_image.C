@@ -4,7 +4,16 @@
 //// Options:
 ////           -1           combine all frames in a simgle image          [yes]
 ////           -a           produce a series of frames for animation       [no]
-////           -c           compress the image file(s) using gzip          [no]
+//   OLD       -c           compress the image file(s) using gzip          [no]
+////           -c variable  specify the variable setting point color,
+////                        followed by the limits to use in determining
+////                        the color; variables are index, mass, radius,
+////                        temperature, and limits are logarithmic except
+////                        for index; three arguments are required, but
+////                        setting equal limits (e.g. 0 0) does nothing,
+////                        and using "." means determine the limit
+////                        automatically                           [index . .] 
+////                        (additional optional arguments set min and max)
 ////           -C colormap  specify a colormap file name                   [no]
 ////           -d           delete frames once the animation is made       [no]
 ////           -D           delay between movie frames in ms                [0]
@@ -20,7 +29,7 @@
 ////                                                       [use internal index]
 ////           -l scale     specify width of field of view (+/- scale)      [3]
 ////           -L loop      specify number of loops in animation           [10]
-////           -m           use mass to determine star color and/or size   [no]
+//   OLD       -m           use mass to determine star color and/or size   [no]
 ////           -n nmax      specify maximum number of images to produce   [Inf]
 ////           -N nbody     color using a (small-N) colormap               [no]
 ////           -o filename  same as -f (more standard name)
@@ -38,31 +47,37 @@
 ////                                  the vector is a single argument)
 ////                                - the "{" version specifies an incremental
 ////                                  offest between successive frames.
-////           -p psize     specify (maximum) star radius/scale, in pixels
-////                        (psize < 0 ==> lower limit on pixel size = 0,
-////                        otherwise, limit = 1)
+////           -p psize     specify (maximum) stellar radius, in pixels (if
+////                        psize < 0, use |psize} and set the  lower limit
+////                        on pixel size to 0, otherwise, the limit is 1)
 ////                                          [0 (single image), 1 (animation)]
 ////           -P axis      specify projection axis                         [z]
 ////           -q           toggle suppression of diagnostic output
 ////                                                           [don't suppress]
-////           -r           use stellar radius to set point size           [no]
+//   OLD       -r           use stellar radius to set point size           [no]
+////           -r variable  specify the variable setting point radius,
+////                        followed  by the limits to use in determining
+////                        the radius; variables are mass, radius,
+////                        luminosity; details are as for -c above      [none]
+////                        (additional optional arguments set min and max)
 ////           -R           animate in reverse                             [no]
 ////           -s nx ny     specify image size, in pixels                 [256]
 ////           -S nskip     specify snaps to skip between images            [0]
 ////           -t           test the color map [don't test]
 ////           -T           specify precedence scheme for points in the image
 ////                            (c = color, r = radius, z = depth)          [z]
-////           -x           specify right (log effective temparature) edge
-////                            of HRD (-H only)                            [3]
-////           -X           specify left (log effective temparature) edge
-////                            of HRD (-H only)                            [5]
+////           -x           specify right (log effective temperature) edge
+////                            of HRD (-H only)                          [3.5]
+////           -X           specify left (log effective temperature) edge
+////                            of HRD (-H only)                          [4.5]
 ////           -y           specify minimum (log luminosity/Lsun) limit
-////                            of HRD (-H only)                           [-3]
+////                            of HRD (-H only)                         [-2.5]
 ////           -Y           specify maximum (log luminosity/Lsun) limit
-////                            of HRD (-H only)                            [3]
+////                            of HRD (-H only)                         [3.75]
+////           -z           compress the image file(s) using gzip          [no]
 ////
 //// In the case of GIF output, the command line responsible for creation of
-//// the image is encoded in the text segmant of the output file.  Note that
+//// the image is encoded in the text segment of the output file.  Note that
 //// the default output format has been changed to GIF now that the LZW patent
 //// issues seem to have gone away.
 ////
@@ -74,11 +89,21 @@
 ////        3. The "T" option determines which attribute is favored in
 ////           displaying a particle in the image.  The default is depth,
 ////           but we can also raise particles based on color or radius.
+////
+//// Note: the comand-line option list has changed as of June 2008.
+//// The old "-c" (gzip) option has been renamed to "-z".  The old
+//// "-m" and "-r" options have been removed.  The new "-c" and "-r"
+//// options control point size and color using the variables index,
+//// mass, radius, temperature, and luminosity, extending and
+//// superceding the old "-m" and "-r" options.  The limits are
+//// generally logarithmic (except in index).  The "x/X/y/Y" arguments
+//// are probably redundant now and may be removed soon...
 //.............................................................................
 //
-//    version 1:  Nov 1998   Steve McMillan	 email: steve@zonker.drexel.edu
+//    version 1:  Nov 1998   Steve McMillan	 email: steve@physics.drexel.edu
 //			     Drexel University, Philadelphia, PA, USA
 //    version 2:  Aug 2002   Steve McMillan
+//    version 2:  Jun 2008   Steve McMillan
 //.............................................................................
 
 
@@ -171,6 +196,30 @@ local void make_local_alternate_colormap(unsigned char* red,
 					 int psize)
 {
     make_alternate_colormap(red, green, blue);
+
+    // Compress:
+
+    for (int i = 1; i < 85; i++) {
+	red[255-i] = red[255-3*i];
+	green[255-i] = green[255-3*i];
+	blue[255-i] = blue[255-3*i];
+    }
+
+    // Extend:
+
+    extend_local_colormap(red, green, blue, psize);
+}
+
+void make_stellar_colormap(unsigned char* red,
+			   unsigned char* green,
+			   unsigned char* blue);
+
+local void make_local_stellar_colormap(unsigned char* red,
+				       unsigned char* green,
+				       unsigned char* blue,
+				       int psize)
+{
+    make_stellar_colormap(red, green, blue);
 
     // Compress:
 
@@ -554,6 +603,88 @@ local string identify_frame(hdyn *b, int count)
     return s.str();		// no newline at end
 }
 
+real get_logtemp(hdyn *bb)
+{
+    // Need to be careful where we search for star data.  Look in the
+    // star story, then in the dyn story, then quit.
+
+    real T_eff = -1;
+    story *st = bb->get_star_story();
+    if (st) T_eff = getrq(st, "T_eff"); 
+    if (T_eff <= 0) {
+      st = bb->get_dyn_story();
+      T_eff = getrq(st, "T");	    // really pdyn
+    }
+    if (T_eff <= 0) {
+      cerr << "No temperature data available"
+	   << endl;
+      exit(1);
+    }
+
+    return log10(T_eff);;
+}
+
+real get_loglum(hdyn *bb)
+{
+    // Need to be careful where we search for star data.  Look in the
+    // star story, then in the dyn story, then quit.
+
+    real L_eff = -1;
+    story *st = bb->get_star_story();
+    if (st) L_eff = getrq(st, "L_eff"); 
+    if (L_eff <= 0) {
+      st = bb->get_dyn_story();
+      L_eff = getrq(st, "L");	    // really pdyn
+    }
+    if (L_eff <= 0) {
+      cerr << "No luminosity data available"
+	   << endl;
+      exit(1);
+    }
+
+    return log10(L_eff);;
+}
+
+real get_color_data(hdyn *bb, int colorvar)
+{
+    real x;
+    if (colorvar == 1)
+	x = bb->get_index();
+    else if (colorvar == 2)
+	x = log10(bb->get_mass());
+    else if (colorvar == 3) {
+	x = bb->get_radius();
+	if (x <= 0) {
+	    cerr << "No radius data available"
+		 << endl;
+	    exit(1);
+	}
+	x = log10(x);
+    } else if (colorvar == 4)
+	x = get_logtemp(bb);
+
+    return x;
+}
+
+real get_radius_data(hdyn *bb, int radiusvar)
+{
+    real x;
+    if (radiusvar == 1)
+	x = log10(bb->get_mass());
+    else if (radiusvar == 2) {
+	x = bb->get_radius();
+	if (x <= 0) {
+	    cerr << "No radius information available"
+		 << endl;
+	    exit(1);
+	}
+	x = log10(x);
+    } else if (radiusvar == 3)
+	x = get_loglum(bb);
+
+    return x;
+}
+
 main(int argc, char** argv)
 {
     char output_file_id[FILE_NAME_LEN];
@@ -593,13 +724,20 @@ main(int argc, char** argv)
     bool testmap = false;
 
     bool grid = true;
-    bool mass = false;
-    bool radius = false;
+//    bool mass = false;
+//    bool radius = false;
     int psize = 1;
     bool psize_set = false;
     real minpixel = 1;
     int ncolor = 0;
     real index_all = -1;
+
+    char *color[5] = {"none", "index", "mass", "radius", "temperature"};
+    int colorvar = 0;
+    bool colorvar_set = false;
+    char *radius[4] = {"none", "mass", "radius", "luminosity"};
+    int radiusvar = 0;
+    bool radiusvar_set = false;
 
     bool quiet = true;
     bool delete_frames = false;
@@ -612,11 +750,25 @@ main(int argc, char** argv)
 
     int delay = 0;
 
+    // Scaling data for colors and radii.
+
+    real cmin = VERY_LARGE_NUMBER, cmax = -VERY_LARGE_NUMBER;
+    bool cmin_set = false, cmax_set = false;
+    real color_scale;
+    
+    real rmin = VERY_LARGE_NUMBER, rmax = -VERY_LARGE_NUMBER;
+    bool rmin_set = false, rmax_set = false;
+    real radius_scale;
+
     check_help();
 
     extern char *poptarg, *poparr[];
     int c;
-    char* param_string = "1acC:dD:f:F:gGi:Hl:L:X:x:Y:y:mn:N:o:O:p:P:qrRs:.S:tT:";
+    char* param_string = 
+      "1ac:::C:dD:f:F:gGi:Hl:L:X:x:Y:y:n:N:o:O:p:P:qr:::Rs:.S:tT:z";
+
+    char c0;
+    real temp0, temp1;
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1) {
@@ -625,7 +777,34 @@ main(int argc, char** argv)
 			break;
 	    case 'a':	combine = false;
 			break;
-	    case 'c':	compress = true;
+//	    case 'c':	compress = true;
+//			break;
+	    case 'c': 	c0 = poptarg[0];
+			colorvar_set = true;
+			if (c0 == 'i' || c0 == 'I')
+			  colorvar = 1;		// index
+			else if (c0 == 'm' || c0 == 'M')
+			  colorvar = 2;		// mass
+			else if (c0 == 'r' || c0 == 'R')
+			  colorvar = 3;		// radius
+			else if (c0 == 't' || c0 == 'T')
+			  colorvar = 4;		// temperature
+			else
+			  colorvar_set = false;
+			if (colorvar_set) index_all = -1;
+			if (strcmp(poparr[1], ".")) {
+			    cmin_set = true;
+			    cmin = atof(poparr[1]);
+			}
+			if (strcmp(poparr[2], ".")) {
+			    cmax_set = true;
+			    cmax = atof(poparr[2]);
+			}
+			if (cmin_set && cmax_set && cmin == cmax) {
+			    cmin = VERY_LARGE_NUMBER;
+			    cmax = -VERY_LARGE_NUMBER;
+			    cmin_set = cmax_set = false;
+			}
 			break;
 	    case 'C':	strncpy(colormap, poptarg, 63);
 			colormap[63] = '\0';	// just in case
@@ -646,22 +825,35 @@ main(int argc, char** argv)
 	    case 'G':	grid = !grid;
 			break;
 	    case 'H':	HRD = !HRD;
+			if (HRD) {
+			  if (colorvar_set && colorvar != 4)
+			    cerr << "warning: -H option overrides color = \""
+				 << color[colorvar] << "\"" << endl;
+			  if (radiusvar_set && radiusvar != 2)
+			    cerr << "warning: -H option overrides radius = \""
+				 << radius[radiusvar] << "\"" << endl;
+			  colorvar = 4;		// temperature
+			  radiusvar = 2;	// radius
+			  colorvar_set = radiusvar_set = false;
+			}
 			break;
 	    case 'i':	index_all = atof(poptarg);
 	    		if (index_all < 0)
 			    index_all = 0;
 	    		else if (index_all > 1)
 			    index_all = 1;
+			colorvar = 0;
 			break;
 	    case 'l':	boxw = atof(poptarg);
 			break;
 	    case 'L':	loop = atoi(poptarg);
 	    		break;
-	    case 'm':	mass = true;
-			break;
+//	    case 'm':	mass = true;
+//			break;
 	    case 'n':	n = atoi(poptarg);
 	    		break;
 	    case 'N':	ncolor = atoi(poptarg);
+			colorvar = 1;
 			index_all = -1;
 	    		break;
 	    case 'O':	if (poptarg[0] == '[' || poptarg[0] == '('
@@ -691,7 +883,31 @@ main(int argc, char** argv)
 			break;
 	    case 'q':	quiet = !quiet;
 			break;
-	    case 'r':	radius = true;
+//	    case 'r':	radius = true;
+//			break;
+	    case 'r': 	c0 = poptarg[0];
+			radiusvar_set = true;
+			if (c0 == 'm' || c0 == 'M')
+			  radiusvar = 1;	// mass
+			else if (c0 == 'r' || c0 == 'R')
+			  radiusvar = 2;	// radius
+			else if (c0 == 'l' || c0 == 'L')
+			  radiusvar = 3;	// luminosity
+			else
+			  radiusvar_set = false;
+			if (strcmp(poparr[1], ".")) {
+			    rmin_set = true;
+			    rmin = atof(poparr[1]);
+			}
+			if (strcmp(poparr[2], ".")) {
+			    rmax_set = true;
+			    rmax = atof(poparr[2]);
+			}
+			if (rmin_set && rmax_set && rmin == rmax) {
+			    rmin = VERY_LARGE_NUMBER;
+			    rmax = -VERY_LARGE_NUMBER;
+			    rmin_set = rmax_set = false;
+			}
 			break;
 	    case 'R':	reverse = true;
 			break;
@@ -721,17 +937,28 @@ main(int argc, char** argv)
 	    case 'y':	ybot = atof(poptarg);
 			ylim_set = true;
 			break;
+	    case 'z':	compress = true;
+			break;
 	    default:
 	    case '?':	params_to_usage(cerr, argv[0], param_string);
 			return false;
 	}
     }
 
-
     PRC(origin); PRL(xoffset); PRL(dxoffset);
 
+    // Check color and radius choices and echo settings.
+
+    if (colorvar < 0 || colorvar > 4) colorvar = 0;
+    if (radiusvar < 0 || radiusvar > 3) radiusvar = 0;
+
+    cerr << "color variable choice is \""<< color[colorvar] << "\"" << endl;
+    if (index_all >= 0) PRL(index_all);
+    if (ncolor > 0) PRL(ncolor);
+    cerr << "radius variable choice is \""<< radius[radiusvar] << "\"" << endl;
+
     if (!psize_set) {
-	if (combine && !radius) {
+	if (combine && radiusvar == 0) {
 	    psize = 0;
 	    minpixel = 0;
 	} else {
@@ -762,13 +989,13 @@ main(int argc, char** argv)
     char *output_file_name = NULL;
 
     if (HRD) {
-	if (!xlim_set) {
-	    xleft = 5;
-	    xright = 3;
+	if (!xlim_set) {	// also use these for color scaling, if chosen
+	    xleft = 4.5;
+	    xright = 3.5;
 	}
 	if (!ylim_set) {
-	    ybot = -3;
-	    ytop = 3;
+	    ybot = -2.5;
+	    ytop = 3.75;
 	}
     } else {
 	xleft = -boxw;
@@ -779,52 +1006,48 @@ main(int argc, char** argv)
 
     // Note on color maps and conventions (Steve, 8/02):
     //
-    // If a colormap file is specified, use it and simply use the index
-    // (internal or global) as a pointer into the file.  Not recommended.
+    // If a colormap file is specified, use it and simply use the
+    // index (internal or global) or scaled color ariable as a pointer
+    // into the file.  Not recommended.
     //
     // If no colormap file is specified and we are told to use:
     //
-    //     - the internal particle index (index_all < 0), use a (local)
+    //     - the internal particle index (colorvar = 1), use a (local)
     // 	     standard colormap, or the small-N colormap, if specified
-    //	     (ncolor = 3 or 4: -N)
+    // 	     (ncolor = 3 or 4: -N option)
     //
-    //     - a single index (index_all > 0: -i), use the grey map for now
+    //     - a single index (colorvar = 0; 0 < index_all < 1: -i
+    //     - option), use the grey map for now
     //
-    //	   - the particle mass (mass: -m), use the (local) alternate colormap,
-    //	     which runs from red to blue to better mimic the mass (note that
-    //	     mass supercedes index for color, if specified)
+    //	   - the particle mass or radius (colorvar = 1 or 2): use the
+    //	     (local) alternate colormap, which runs from red to blue
+    //	     to better mimic the mass
     //
-    // Particle radii may be determined by
+    //	   - the particle luminosity (colorvar = 3): use the
+    //	     (local) stellar colormap, which runs from red to voilet
+    //	     to better mimic stellar colors
     //
-    //	   - the value of psize (command-line option -p)
+    // Particle radii are determined by
     //
-    //	   - the mass, if mass is set (-m) and radius (-r) is not
+    //	   - the value of psize (radiusvar = 0; command-line option -p)
     //
-    //     - the radius (scaled by psize) if radius is set (-r)
-    //
-    // Adding HR diagrams raises even more options.  Color is temperature,
-    // but could also be mass.  Radius is radius if available, but should
-    // probably be log radius, and could use mass if radius is unknown.
-    // Not fully coded yet...				(Steve, 8/02)
+    //	   - the particle mass, radius, or luminosity (radiusvar = 1,
+    //	   - 2, 3), optionally scaled by psize; we actually use the
+    //	   - log of the quantity, not the quantity itself
 
     unsigned char red[256], green[256], blue[256];
 
     if (!colormap_set) {
 
-	// Need to clean up these options, as they can be mutually
-	// incompatible.
-
-	if (mass || HRD)
-	    make_local_alternate_colormap(red, green, blue, psize);
+	if (colorvar == 4)
+	    make_local_stellar_colormap(red, green, blue, psize);
 	else if (ncolor > 0)
 	    make_local_small_n_colormap(red, green, blue, ncolor, psize);
 	else {
 	    if (index_all < 0)
 		make_local_standard_colormap(red, green, blue, psize);
-//		make_standard_colormap(red, green, blue);
 	    else
 		make_local_greymap(red, green, blue, psize);
-//		make_greymap(red, green, blue);
 	}
     }
 
@@ -864,12 +1087,6 @@ main(int argc, char** argv)
 	kax = 2;
     }
 
-    int cmin = 1000000, cmax = -1000000;
-    real color_scale;
-
-    real mmin = VERY_LARGE_NUMBER, mmax = -VERY_LARGE_NUMBER;
-    real rmin = VERY_LARGE_NUMBER, rmax = -VERY_LARGE_NUMBER;
-
     // Box settings (some may change with the first dataset):
 
     real logfac = 1, rfac = nx/(2*boxw);
@@ -885,10 +1102,11 @@ main(int argc, char** argv)
     // PRC(xleft); PRC(xright); PRL(lx);
     // PRC(ybot); PRC(ytop); PRL(ly);
 
-    // Loop over input snapshots.
-
     hdyn* b;
     string frame_id_string;
+
+    // Loop over input snapshots.  Loop is too long -- should be split
+    // into more elementary functions.
 
     while (b = get_hdyn()) {
 
@@ -920,13 +1138,18 @@ main(int argc, char** argv)
 
 	    if (count1 == 0) {
 
-		// This is the first frame to be converted into an image.
-		// Determine overall scalings (and the mass range, if
-		// relevant) from *this* snapshot.
+		// This is the first frame to be converted into an
+		// image.  Initialize all dynamic quantities here.
+		// Determine overall scalings and the mass and other
+		// ranges (as relevant) from *this* snapshot.
 
-		// Start by checking that some points will actually be visible!
+		// Start by ensuring that some points will actually be
+		// visible!
 
 		if (!HRD) {
+
+		    // Determine spatial box scale and limits.
+
 		    int total, count;
 		    real boxw_save = boxw;
 		    boxw /= 2;
@@ -956,7 +1179,7 @@ main(int argc, char** argv)
 			ybot = -(boxw*ny)/nx;
 			ytop = (boxw*ny)/nx;
 			rfac = nx/(2*boxw);
-
+ 
 			lx = xright - xleft;
 			ly = ytop - ybot;
 
@@ -1015,36 +1238,46 @@ main(int argc, char** argv)
 		    }
 		}
 
-		if (HRD || mass || radius || index_all < 0) {
+		// Set color scaling.
 
-		    // We are coloring by mass or index and sizing by mass
-		    // or radius.
+		if (ncolor > 0) {
 
-		    // Special case:
+		    cmin = 1;
+		    cmax = ncolor;
 
-		    if (ncolor > 0) {
-			cmin = 1;
-			cmax = ncolor;
+		} else if (colorvar > 0) {
+
+		    // Derive scaling information for point color.
+
+		    if (colorvar < 4) {
+			for_all_leaves(hdyn, b, bb) {
+			    real x = get_color_data(bb, colorvar);
+			    if (!cmin_set) cmin = Starlab::min(cmin, x);
+			    if (!cmax_set) cmax = Starlab::max(cmax, x);
+			}
+		    } else {
+			if (!cmin_set) cmin = 3.5;	// hard-wire, for now
+			if (!cmax_set) cmax = 4.5;
 		    }
+		    color_scale = 1.0 / (cmax-cmin);
+		    cerr << "color (log " << color[colorvar] << ") limits: ";
+		    PRC(cmin); PRL(cmax);
+		}
+
+		// Set radius scaling.
+
+		if (radiusvar > 0) {
+
+		    // Derive scaling information for point radii.
 
 		    for_all_leaves(hdyn, b, bb) {
-			if (ncolor == 0 && index_all < 0
-			    && bb->get_index() >= 0) {
-			    cmin = Starlab::min(cmin, bb->get_index());
-			    cmax = Starlab::max(cmax, bb->get_index());
-			}
-			if (mass && bb->get_mass() > 0) {
-			    mmin = Starlab::min(mmin, bb->get_mass());
-			    mmax = Starlab::max(mmax, bb->get_mass());
-			}
-			if (radius) {
-			    rmin = Starlab::min(mmin, bb->get_radius());
-			    rmax = Starlab::max(mmax, bb->get_radius());
-			}
+			real x = get_radius_data(bb, radiusvar);
+			if (!rmin_set) rmin = Starlab::min(rmin, x);
+			if (!rmax_set) rmax = Starlab::max(rmax, x);
 		    }
-
-		    color_scale = 1.0 / (cmax-cmin);
-		    if (mass && mmax > mmin) logfac = 1.0/log10(mmax/mmin);
+		    radius_scale = 1.0 / (rmax-rmin);
+		    cerr << "radius (log " << radius[radiusvar] << ") limits: ";
+		    PRC(rmin); PRL(rmax);
 		}
 
 		// For a combined image, initialize here.
@@ -1086,10 +1319,12 @@ main(int argc, char** argv)
 	    hdyn *root = b->get_root();
 	    for_all_leaves(hdyn, b, bb) {
 
+		// First determine cooordinates on the display.
+
 		real x, y, z;
+
 		if(!HRD) {
 		    vec pos = bb->get_pos();
-
 		    hdyn *p = bb->get_parent();
 		    while (p) {
 			pos += p->get_pos();
@@ -1102,75 +1337,35 @@ main(int argc, char** argv)
 		    y = pos[jax];
 		    z = pos[kax];
 
-		}
-		else {
-
-		    // Need to be careful where we search for star data...
-
-		    real T_eff, L_sun, stp = -1;
-		    story *st = bb->get_star_story();
-
-		    if (st) {
-			T_eff = getrq(st, "T_eff"); 
-			L_sun = getrq(st, "L_eff");
-			// stp = getrq(st, "Type");	// need to convert...
-
-			if (T_eff == -VERY_LARGE_NUMBER) st = NULL;
-		    }
-
-		    if (!st) {
-			st = bb->get_dyn_story();
-			T_eff = getrq(st, "T");		// these are really
-			L_sun = getrq(st, "L");		// pdyn data...
-			stp = getrq(st, "S");
-		    }
-
-		    x = log10(T_eff);
-		    y = log10(L_sun);
+		} else {
+		    x = get_logtemp(bb);
+		    y = get_loglum(bb);
 		    z = 0;
 		}
 
-		// PRC(x); PRC(xmin); PRL(xmax);
-		// PRC(y); PRC(ymin); PRL(ymax);
+		// If point is visible, determine its properties.
 
 		if (x > xmin && x < xmax && y > ymin && y < ymax) {
 
-		    // Set color (by mass or index) and radius (fixed, by mass,
-		    // or by radius).  Color is a float between 0 and 1.
+		    // Set color and radius.  Color is real, between 0 and 1.
 
-		    float color = 1;
-		    real r = psize;
+		    float color = 1;	// default = top end of the colormap
 
-		    if (HRD)
-
-			color = Starlab::max(0.0,		  // ~arbitrary
-					     Starlab::min(1.0,
-							  x - 3.5));
-
-		    else if (mass && bb->get_mass() > 0) {
-
-			// Mass scaling is logarithmic.
-
-			color = log10(bb->get_mass()/mmin) * logfac;
-
-			// Minimum size is 1 pixel (r = 0), maximum radius
-			// is psize.
-
-			r *= color;
-
-			// PRC(bb->get_mass()); PRC(mmin); PRC(color); PRL(r);
-
-		    } else if (index_all < 0 && bb->get_index() > 0)
-
-			color = (bb->get_index() - cmin)
-					* color_scale;	    // note offset !!!
-
-		    else if (index_all >= 0)
-
+		    if (index_all >= 0)
 			color = color_all;
+		    else if (colorvar > 0) {
+			real x = get_color_data(bb, colorvar);
+			color = (x-cmin)*color_scale;
+		    }
 
-		    if (radius || (HRD && bb->get_radius() > 0))
-			r = psize * bb->get_radius() * rfac;
+		    if (color < 0) color = 0;
+		    if (color > 1) color = 1;
+
+		    real r = psize;	// default size
+		    if (radiusvar > 0) {
+			real x = get_radius_data(bb, radiusvar);
+			r *= (x-rmin)*radius_scale;
+		    }
 
 		    // Single pixels may be too small for an animation.
 		    // Allow specification of a lower limit.
@@ -1184,7 +1379,6 @@ main(int argc, char** argv)
 
 		    x = ((x - xleft) * 1.0 * nx / lx);
 		    int i = (int) x;
-		    // y = ((y - ybot) * 1.0 * ny / ly);
 		    y = ((ytop - y) * 1.0 * ny / ly);
 		    int j = (int) y;
 
@@ -1233,7 +1427,8 @@ main(int argc, char** argv)
 	    cerr << count1 << "/" << count << " ";
 
 	if (n > 0 && count1 >= n) break;
-    }
+
+    }	// end of (excessively long) loop over input snapshots
 
     if (!quiet) cerr << endl;
 
