@@ -82,6 +82,18 @@ void initialize_counters_from_log(hdyn* b)
 
     GETLOG(full_unpert_step);
     GETLOG(full_unpert_orbit);
+
+    // Latter number has been known to overflow (bug?), apparently
+    // corrupting the data structures.  Check and reset if this
+    // occurs.  Apply an arbitrary limit of 2^62.  See also
+    // hdyn_unpert.C.
+
+    if (b->get_kira_counters()->full_unpert_orbit > ((step_t) 1)<<62) {
+	cerr << "kira_counters: overflow in counter 'full_unpert_orbit': "
+	     << "resetting to 0" << endl;
+	b->get_kira_counters()->full_unpert_orbit = 0;
+    }
+
     GETLOG(partial_unpert_orbit);
 
     GETLOG(tree_change);

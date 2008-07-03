@@ -570,7 +570,7 @@ void print_statistics(hdyn* b,
 	      false,			// don't allow n^2 ops
 	      kira_calculate_energies,	// energy calculation function
 	      print_dstar_params,	// allow access to dstar_to_kira
-	      print_dstar_stats);	// from dyn sys_stats function
+	      print_dstar_stats);	//     from dyn sys_stats function
 #else
     cerr << "(sys_stats omitted)" << endl;
 #endif

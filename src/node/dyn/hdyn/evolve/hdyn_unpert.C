@@ -3521,8 +3521,22 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
     }
     else {
         kc->full_unpert_step++;
-        kc->full_unpert_orbit += (int) (unperturbed_timestep
-					   	/ kep->get_period());
+        kc->full_unpert_orbit += (step_t) (unperturbed_timestep
+					    / kep->get_period());
+
+	// Latter number has been known to overflow (bug?), apparently
+	// corrupting the data structures.  Check and reset if this
+	// occurs.  Apply an arbitrary limit of 2^62.  See also
+	// kira_counters.C.
+
+	if (kc->full_unpert_orbit > ((step_t) 1)<<62) {
+	    cerr << func << ": overflow in counter full_unpert_orbit: "
+		 << "resetting to 0" << endl;
+	    kc->full_unpert_orbit = 0;
+	    PRC(unperturbed_timestep); PRL(kep->get_period());
+	    PRL((step_t) (unperturbed_timestep/kep->get_period()));
+	}
+
 	// PRC(kc->full_unpert_step);
 	// PRL(kc->full_unpert_orbit);
     }

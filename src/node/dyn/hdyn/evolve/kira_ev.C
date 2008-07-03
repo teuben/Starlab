@@ -1734,7 +1734,9 @@ void initialize_system_phase2(hdyn *b,
     }
 
     for_all_nodes(hdyn, b, bb) {
-	if (!bb->get_kepler() && (bb->get_unperturbed_timestep() > 0)) {
+      if (bb->is_low_level_node()
+	  && !bb->get_kepler()
+	  && (bb->get_unperturbed_timestep() > 0)) {
 
 	    // When is this necessary? (SLWM 3/98)
 
