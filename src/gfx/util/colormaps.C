@@ -46,7 +46,7 @@ void make_alternate_colormap(unsigned char* red,
 			     unsigned char* green,
 			     unsigned char* blue)
 {
-    // Make a "reverse standard colormap" (red --> blue).
+    // Make a "reverse standard colormap" (red --> violet).
 
     int i;
 
@@ -67,7 +67,7 @@ void make_alternate_colormap(unsigned char* red,
     }
     for (i = 100; i < 130; i++) {			// green to yellow
         red[i] = (unsigned char)(8.5*(i-100));		//   0 255   0
-        green[i] = 255;					// 246 p255   0
+        green[i] = 255;					// 246 255   0
         blue[i] = 0;
     }
     for (i = 130; i < 215; i++) {			// yellow to red
@@ -76,8 +76,8 @@ void make_alternate_colormap(unsigned char* red,
         blue[i] = 0;
     }
     for (i = 215; i < 256; i++) {			// red to dark red
-        red[i] = 255 - 2*(i-215);			// 255 255   0
-        green[i] = 0;					// 255 175   0
+        red[i] = 255 - 2*(i-215);			// 255   0   0
+        green[i] = 0;					// 175   0   0
         blue[i] = 0;
     }
 
@@ -85,6 +85,30 @@ void make_alternate_colormap(unsigned char* red,
 	swap(red+i, red+255-i);
 	swap(green+i, green+255-i);
 	swap(blue+i, blue+255-i);
+    }
+}
+
+void make_stellar_colormap(unsigned char* red,
+			   unsigned char* green,
+			   unsigned char* blue)
+{
+    // Make a "stellar" colormap (red, orange, yellow, white, blue
+    // violet, no green!).  We place white (10^4 K) in the middle of
+    // the range and assume that the temperature limits are chosen
+    // accordingly.
+
+    const int nseg = 6, delta = 256/nseg+1;
+    unsigned char r[nseg+1] = {150, 255, 255, 255, 200, 150, 230};
+    unsigned char g[nseg+1] = {  0,  64, 255, 255, 200, 150, 150};
+    unsigned char b[nseg+1] = {  0,   0,   0, 255, 255, 255, 255};
+
+    for (int i = 0; i < 256; i++) {
+        int j0 = i/delta, j1 = j0+1, i0 = j0*delta, i1 = i0+delta;
+	if (i1 > 255) i1 = 255;
+	real del = (i-i0)/(real)delta;
+	red[i]   = r[j0] + (unsigned char)(del*(r[j1]-r[j0]));
+	green[i] = g[j0] + (unsigned char)(del*(g[j1]-g[j0]));
+	blue[i]  = b[j0] + (unsigned char)(del*(b[j1]-b[j0]));
     }
 }
 

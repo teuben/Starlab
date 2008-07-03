@@ -47,19 +47,19 @@ int  is_chapter(story * s)
 	return 0;
 }
 
-int  is_chapter_begin_line(char * line)
+int  is_chapter_begin_line(const char * line)
 {
     return (*line == chapter_begin_char);
 }
 
-int  is_chapter_end_line(char * line)
+int  is_chapter_end_line(const char * line)
 {
     return (*line == chapter_end_char);
 }
 
-int get_story_line(istream & str, char * line)
+local int get_story_line(istream & str, char * line)
 {
-    str.get(line,MAX_STORY_LINE_LENGTH,'\n');
+    str.get(line, MAX_STORY_LINE_LENGTH, '\n');
 
     if(str.eof())
         return 0;
@@ -144,7 +144,7 @@ story* mk_story_line()
     return s;
 }
 
-story* mk_story_line(char * line)
+story* mk_story_line(const char * line)
 {
     story* s = new story(0);
     s->set_text(line);
@@ -153,14 +153,14 @@ story* mk_story_line(char * line)
 
 story* mk_story_chapter()       {story* s = new story(1); return s;}
 
-story* mk_story_chapter(char * title)
+story* mk_story_chapter(const char * title)
 {
     story* s = new story(1);
     s->set_text(title);
     return s;
 }
 
-void add_story_line(story * s, char * line)
+void add_story_line(story * s, const char * line)
 {
     if (!s || !line) return;
 
@@ -168,7 +168,7 @@ void add_story_line(story * s, char * line)
     add_daughter_story(s, new_s);
 }
 
-story* get_chapter(istream& str, char* line)
+story* get_chapter(istream& str, const char* line)
 {
     if (!is_chapter_begin_line(line)) {
 	cerr << "get_chapter: first line not chapter_begin_line";
@@ -201,7 +201,10 @@ story* get_chapter(istream& str, char* line)
     return chap;
 }
 
-story* get_story(istream & str, char *line)  {return get_chapter(str, line);}
+story* get_story(istream & str, const char *line)
+{
+    return get_chapter(str, line);
+}
 
 story* get_story(istream& str)
 { 
@@ -210,11 +213,10 @@ story* get_story(istream& str)
     if (!get_story_line(str, line))
         return(NULL);
 
-    if (!is_chapter_begin_line(line))
-        {
-	cerr << "get_story: first line not chapter_begin_line\n";
+    if (!is_chapter_begin_line(line)) {
+        cerr << "get_story: first line not chapter_begin_line\n";
 	exit(1);
-	}
+    }
 
     return get_chapter(str, line);
 }
@@ -269,7 +271,7 @@ void put_chapter(ostream& str, story& s)
 }
 
 void put_simple_story_contents(ostream& str, story& s,
-			       char *prefix)		// default = NULL
+			       const char *prefix)	// default = NULL
 {
     // Assume s is a chapter and ignore any subchapters.
     // Intended for use with put_col() -- Log and Dyn stories,
@@ -289,7 +291,7 @@ void put_simple_story_contents(ostream& str, story& s,
 }
 
 void put_simple_story_contents(FILE *fp, story& s,
-			       char *prefix)		// default = NULL
+			       const char *prefix)	// default = NULL
 {
     // Assume s is a chapter and ignore any subchapters.
     // Intended for use with put_col() -- Log and Dyn stories,
@@ -310,7 +312,7 @@ void put_simple_story_contents(FILE *fp, story& s,
 }
 
 void put_story_contents(ostream& str, story& s,
-			char *prefix)		// default = NULL
+			const char *prefix)	// default = NULL
 {
     if (!is_chapter(&s))
 	{
@@ -362,7 +364,8 @@ void put_story(ostream& str, story& s)
  *  write_iq  --  write an integer quantity to a line.
  *-----------------------------------------------------------------------------
  */
-local void  write_iq(story * a_story_line, char * name, int value)
+local void  write_iq(story * a_story_line, const char * name,
+		     int value)
 {
     if (!a_story_line || !name) return;
 
@@ -382,7 +385,8 @@ local void  write_iq(story * a_story_line, char * name, int value)
  *  write_ulq  --  write an unsigned long integer quantity to a line.
  *-----------------------------------------------------------------------------
  */
-local void  write_ulq(story * a_story_line, char * name, unsigned long value)
+local void  write_ulq(story * a_story_line, const char * name,
+		      unsigned long value)
 {
     if (!a_story_line || !name) return;
 
@@ -402,7 +406,7 @@ local void  write_ulq(story * a_story_line, char * name, unsigned long value)
  *  write_rq  --  write a real quantity to a line.
  *-----------------------------------------------------------------------------
  */
-local void  write_rq(story * a_story_line, char * name, real value,
+local void  write_rq(story * a_story_line, const char * name, real value,
 		     int p = STD_PRECISION)
 {
     if (!a_story_line || !name) return;
@@ -429,7 +433,8 @@ local void  write_rq(story * a_story_line, char * name, real value,
  *  write_sq  --  write a string quantity to a line.
  *-----------------------------------------------------------------------------
  */
-local void  write_sq(story * a_story_line, char * name, char * value)
+local void  write_sq(story * a_story_line, const char * name,
+		     const char * value)
 {
     if (!a_story_line || !name) return;
 
@@ -450,7 +455,7 @@ local void  write_sq(story * a_story_line, char * name, char * value)
 //  write_vq  --  write a vector quantity to a line.
 //-----------------------------------------------------------------------------
 
-local void write_vq(story * a_story_line, char * name, vec & value,
+local void write_vq(story * a_story_line, const char * name, vec & value,
 		    int p = STD_PRECISION)
 {
     if (DEBUG) {
@@ -503,7 +508,8 @@ local void write_vq(story * a_story_line, char * name, vec & value,
  *  write_ra  --  write a real array to a line.
  *-----------------------------------------------------------------------------
  */
-local void  write_ra(story * a_story_line, char * name, real * value, int n)
+local void  write_ra(story * a_story_line, const char * name,
+		     real * value, int n)
 {
     if (!a_story_line || !name) return;
 
@@ -534,7 +540,8 @@ local void  write_ra(story * a_story_line, char * name, real * value, int n)
  *  write_ia  --  write an integer array to a line.
  *-----------------------------------------------------------------------------
  */
-local void  write_ia(story * a_story_line, char * name, int * value, int n)
+local void  write_ia(story * a_story_line, const char * name,
+		     int * value, int n)
 {
     if (!a_story_line || !name) return;
 
@@ -564,7 +571,7 @@ local void  write_ia(story * a_story_line, char * name, int * value, int n)
  *  write_ia  --  write an unsigned long array to a line.
  *-----------------------------------------------------------------------------
  */
-local void  write_ia(story * a_story_line, char * name,
+local void  write_ia(story * a_story_line, const char * name,
 		     unsigned long * value, int n)
 {
     if (!a_story_line || !name) return;
@@ -601,7 +608,7 @@ local void  write_ia(story * a_story_line, char * name,
  *              line is not a proper quantity line) FALSE is returned.
  *-----------------------------------------------------------------------------
  */
-local bool qmatch(story * a_story_line, char * name)
+local bool qmatch(story * a_story_line, const char * name)
 {
     if (!a_story_line || !name) return false;
 
@@ -648,7 +655,7 @@ local bool qmatch(story * a_story_line, char * name)
  *                   line is not found.
  *-----------------------------------------------------------------------------
  */
-story * find_qmatch(story * a_story, char * name)
+story * find_qmatch(story * a_story, const char * name)
 {
     if (!a_story || !name) return NULL;
 
@@ -693,7 +700,7 @@ local char * get_qstring(story * a_story_line)
  *  getiq  --  reads an integer quantity from a line in a story
  *-----------------------------------------------------------------------------
  */
-int getiq(story * a_story, char * name, bool verbose)
+int getiq(story * a_story, const char * name, bool verbose)
 {
     if (!a_story || !name) return 0;
 
@@ -714,7 +721,7 @@ int getiq(story * a_story, char * name, bool verbose)
  *  getulq  --  reads an unsigned long integer quantity from a line in a story
  *-----------------------------------------------------------------------------
  */
-unsigned long getulq(story *  a_story, char * name, bool verbose)
+unsigned long getulq(story *  a_story, const char * name, bool verbose)
 {
     if (!a_story || !name) return 0;
 
@@ -736,7 +743,7 @@ unsigned long getulq(story *  a_story, char * name, bool verbose)
  *  getrq  --  reads a real quantity from a line in a story
  *-----------------------------------------------------------------------------
  */
-real getrq(story * a_story, char * name, bool verbose)
+real getrq(story * a_story, const char * name, bool verbose)
 {
     if (!a_story || !name) return 0.0;
 
@@ -763,7 +770,7 @@ real getrq(story * a_story, char * name, bool verbose)
  *                   `getnsq' that returns a new string (as a copy).
  *-----------------------------------------------------------------------------
  */
-char *getsq(story * a_story, char * name, bool verbose)
+char *getsq(story * a_story, const char * name, bool verbose)
 {
     if (!a_story || !name) return NULL;
 
@@ -784,7 +791,7 @@ char *getsq(story * a_story, char * name, bool verbose)
  *  getvq  --  reads a vector quantity from a line in a story
  *-----------------------------------------------------------------------------
  */
-vec getvq(story *  a_story, char * name, bool verbose)
+vec getvq(story *  a_story, const char * name, bool verbose)
 {
     if (!a_story || !name) return vec(-VERY_LARGE_NUMBER,
 					      -VERY_LARGE_NUMBER,
@@ -908,7 +915,7 @@ local void get_array(char * sin, unsigned long * x, int n)  // overloaded!
  *  getra  --  reads a real array of length n from a line in a story
  *-----------------------------------------------------------------------------
  */
-void getra(story *  a_story, char * name, real * x, int n, bool verbose)
+void getra(story *  a_story, const char * name, real * x, int n, bool verbose)
 {
     if (!a_story || !name) {
 	*x = -VERY_LARGE_NUMBER;
@@ -934,7 +941,7 @@ void getra(story *  a_story, char * name, real * x, int n, bool verbose)
  *  getia  --  reads an integer array of length n from a line in a story
  *-----------------------------------------------------------------------------
  */
-void getia(story *  a_story, char * name, int * x, int n, bool verbose)
+void getia(story *  a_story, const char * name, int * x, int n, bool verbose)
 {
     if (!a_story || !name) {
 	*x = -VERY_LARGE_INTEGER;
@@ -960,7 +967,7 @@ void getia(story *  a_story, char * name, int * x, int n, bool verbose)
  *  getia  --  reads an unsigned long array of length n from a line in a story
  *-----------------------------------------------------------------------------
  */
-void getia(story *  a_story, char * name, unsigned long * x,
+void getia(story *  a_story, const char * name, unsigned long * x,
 	   int n, bool verbose)
 {
     if (!a_story || !name) {
@@ -989,7 +996,7 @@ void getia(story *  a_story, char * name, unsigned long * x,
  *             overwrite the line containing that quantity.
  *-----------------------------------------------------------------------------
  */
-void putiq(story * a_story, char * name, int value)
+void putiq(story * a_story, const char * name, int value)
 {
     if (!a_story || !name) return;
 
@@ -1010,7 +1017,7 @@ void putiq(story * a_story, char * name, int value)
  *             overwrite the line containing that quantity.
  *-----------------------------------------------------------------------------
  */
-void putulq(story * a_story, char * name, unsigned long value)
+void putulq(story * a_story, const char * name, unsigned long value)
 {
     if (!a_story || !name) return;
 
@@ -1055,7 +1062,7 @@ void dump_story(story* s, int indent)
  *             overwrite the line containing that quantity.
  *-----------------------------------------------------------------------------
  */
-void putrq(story * a_story, char * name, real value,
+void putrq(story * a_story, const char * name, real value,
 	   int precision)			// default = STD_PRECISION
 {
     if (!a_story || !name) return;
@@ -1102,7 +1109,7 @@ void putrq(story * a_story, char * name, real value,
  *             overwrite the line containing that quantity.
  *-----------------------------------------------------------------------------
  */
-void putra(story * a_story, char * name, real * value, int n)
+void putra(story * a_story, const char * name, real * value, int n)
 {
     if (!a_story || !name) return;
 
@@ -1123,7 +1130,7 @@ void putra(story * a_story, char * name, real * value, int n)
  *             overwrite the line containing that quantity.
  *-----------------------------------------------------------------------------
  */
-void putia(story * a_story, char * name, int * value, int n)
+void putia(story * a_story, const char * name, int * value, int n)
 {
     if (!a_story || !name) return;
 
@@ -1144,7 +1151,7 @@ void putia(story * a_story, char * name, int * value, int n)
  *             overwrite the line containing that quantity.
  *-----------------------------------------------------------------------------
  */
-void putia(story * a_story, char * name, unsigned long * value, int n)
+void putia(story * a_story, const char * name, unsigned long * value, int n)
 {
     if (!a_story || !name) return;
 
@@ -1165,7 +1172,7 @@ void putia(story * a_story, char * name, unsigned long * value, int n)
  *             overwrite the line containing that quantity.
  *-----------------------------------------------------------------------------
  */
-void putsq(story * a_story, char * name, char * value)
+void putsq(story * a_story, const char * name, const char * value)
 {
     if (!a_story || !name) return;
 
@@ -1186,7 +1193,7 @@ void putsq(story * a_story, char * name, char * value)
  *             overwrite the line containing that quantity.
  *-----------------------------------------------------------------------------
  */
-void putvq(story * a_story, char * name, vec & value,
+void putvq(story * a_story, const char * name, vec & value,
 	   int precision)			// default = STD_PRECISION
 {
     if (!a_story || !name) return;
@@ -1207,7 +1214,7 @@ void putvq(story * a_story, char * name, vec & value,
  *           returns 0 when no line is found for quantity name `name'.
  *-----------------------------------------------------------------------------
  */
-int  rmq(story *  a_story, char * name)
+int  rmq(story *  a_story, const char * name)
 {
     if (!a_story || !name) return 0;
 
@@ -1227,7 +1234,7 @@ int  rmq(story *  a_story, char * name)
  *                        returns 0 when that quantity is not found.
  *-----------------------------------------------------------------------------
  */
-int  is_quantity_name(story * a_story, char * name)
+int  is_quantity_name(story * a_story, const char * name)
 {
     if (!a_story || !name) return 0;
 

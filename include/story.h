@@ -129,7 +129,7 @@ class story
 
 	/// Add text to a story node.
 
-        void set_text(char * a_string)
+        void set_text(const char * a_string)
 	    {
 	    if(text != NULL)
 	        delete [] text;
@@ -143,39 +143,39 @@ class story
     };
 
 story* mk_story_line();
-story* mk_story_line(char *);
+story* mk_story_line(const char *);
 story* mk_story_chapter();
-story* mk_story_chapter(char *);
+story* mk_story_chapter(const char *);
 
 story* get_story(istream &);
-story* get_story(istream &, char *);
+story* get_story(istream &, const char *);
 void put_story(ostream &, story &);
-void put_story_contents(ostream &, story &, char *prefix = NULL);
-void put_simple_story_contents(ostream& str, story& s, char *prefix = NULL);
-void put_simple_story_contents(FILE *fp, story& s, char *prefix = NULL);
-void add_story_line(story *, char *);
+void put_story_contents(ostream &, story &, const char *prefix = NULL);
+void put_simple_story_contents(ostream& str, story& s, const char *prefix = NULL);
+void put_simple_story_contents(FILE *fp, story& s, const char *prefix = NULL);
+void add_story_line(story *, const char *);
 void rm_daughter_story(story * s, story * d);
 
-story * find_qmatch(story *, char *);
-int  rmq(story *, char *);
+story * find_qmatch(story *, const char *);
+int  rmq(story *, const char *);
 
-int  getiq(story *, char *, bool verbose=false);
-unsigned long  getulq(story *, char *, bool verbose=false);
-real  getrq(story *, char *, bool verbose=false);
-char *getsq(story *, char *, bool verbose=false);
-vec  getvq(story *, char *, bool verbose=false);
-void getra(story *, char *, real *, int, bool verbose=false);
-void getia(story *, char *, int *, int, bool verbose=false);
-void getia(story *, char *, unsigned long *, int, bool verbose=false);
+int  getiq(story *, const char *, bool verbose=false);
+unsigned long  getulq(story *, const char *, bool verbose=false);
+real  getrq(story *, const char *, bool verbose=false);
+char *getsq(story *, const char *, bool verbose=false);
+vec  getvq(story *, const char *, bool verbose=false);
+void getra(story *, const char *, real *, int, bool verbose=false);
+void getia(story *, const char *, int *, int, bool verbose=false);
+void getia(story *, const char *, unsigned long *, int, bool verbose=false);
 
-void putiq(story *, char *, int);
-void putulq(story *, char *, unsigned long);
-void putrq(story *, char *, real, int precision = STD_PRECISION);
-void putra(story *, char *, real *, int);
-void putia(story *, char *, int *, int);
-void putia(story *, char *, unsigned long *, int);
-void putsq(story *, char *, char *);
-void putvq(story *, char *, vec &, int precision = STD_PRECISION);
+void putiq(story *, const char *, int);
+void putulq(story *, const char *, unsigned long);
+void putrq(story *, const char *, real, int precision = STD_PRECISION);
+void putra(story *, const char *, real *, int);
+void putia(story *, const char *, int *, int);
+void putia(story *, const char *, unsigned long *, int);
+void putsq(story *, const char *, const char *);
+void putvq(story *, const char *, vec &, int precision = STD_PRECISION);
 
 void dump_story(story* s, int indent = 0);
 
