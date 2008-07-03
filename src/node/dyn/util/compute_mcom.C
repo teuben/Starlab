@@ -84,7 +84,8 @@ void compute_mcom(dyn *b,
 
     int n = 0;
     for_all_daughters(dyn, b, bb) n++;
-    rp_pair_ptr rp = new rp_pair[n];		// <-- can fail here???
+
+    rp_pair_ptr rp = new rp_pair[n];
 
     if (rp == NULL) {
 	cerr << "compute_mcom: "

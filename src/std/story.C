@@ -726,7 +726,6 @@ unsigned long getulq(story *  a_story, const char * name, bool verbose)
     if (!a_story || !name) return 0;
 
     story * story_line;
-    unsigned long l;
 
     if ((story_line = find_qmatch(a_story, name)) == NULL)
 	{
