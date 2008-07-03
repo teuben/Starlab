@@ -18,7 +18,7 @@
 
 noinst_LTLIBRARIES = libhdyn-1.la
 bin_PROGRAMS = hdyn_pp3 reset_counters hsys_stats hscale get_densities \
-		hdyn_io
+		hdyn_io sync_times
 
 libhdyn_1_la_SOURCES = hdyn_io.C hdyn_init.C hdyn_kepler.C hdyn_pp3.C \
     hdyn_tt.C kira_diag.C kira_options.C reset_counters.C
@@ -29,6 +29,7 @@ hsys_stats_CPPFLAGS = -DTOOLBOX
 hscale_CPPFLAGS = -DTOOLBOX
 get_densities_CPPFLAGS = -DTOOLBOX
 hdyn_io_CPPFLAGS = -DTOOLBOX
+sync_times_CPPFLAGS = -DTOOLBOX
 
 hdyn_pp3_LDADD = ../libhdyn.la
 reset_counters_LDADD = ../libhdyn.la
@@ -36,6 +37,7 @@ hsys_stats_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la
 hscale_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la
 get_densities_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la
 hdyn_io_LDADD = ../libhdyn.la ../../../../star/dstar/libdstar.la
+sync_times_LDADD = ../libhdyn.la
 
 hdyn_pp3_SOURCES = hdyn_pp3.C
 reset_counters_SOURCES = reset_counters.C
@@ -43,6 +45,7 @@ hsys_stats_SOURCES = hsys_stats.C
 hscale_SOURCES = hscale.C
 get_densities_SOURCES = get_densities.C
 hdyn_io_SOURCES = hdyn_io.C
+sync_times_SOURCES = sync_times.C
 
 if HAVE_GRAPE
   hsys_stats_LDADD += $(GRAPE_LIBS)
