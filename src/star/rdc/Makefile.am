@@ -23,7 +23,7 @@ bin_PROGRAMS = list_sdumb makepovfile rdc_SeBa rs_birthrate rs_countsn \
 librdc_la_SOURCES = SeBa_hist.C makepovfile.C rdc_SeBa.C
 
 list_sdumb_CPPFLAGS = -DTOOLBOX
-make_ccd_CPPFLAGS = -DTOOLBOX
+#make_ccd_CPPFLAGS = -DTOOLBOX
 makepovfile_CPPFLAGS = -DTOOLBOX
 rdc_SeBa_CPPFLAGS = -DTOOLBOX
 rs_birthrate_CPPFLAGS = -DTOOLBOX
@@ -36,7 +36,7 @@ rs_snapshot_CPPFLAGS = -DTOOLBOX
 
 
 list_sdumb_LDADD = ../sstar/libsstar.la ../../node/dyn/hdyn/libhdyn.la
-make_ccd_LDADD = ../sstar/libsstar.la ../../node/dyn/libdyn.la
+#make_ccd_LDADD = ../sstar/libsstar.la ../../node/dyn/libdyn.la
 makepovfile_LDADD = librdc.la ../sstar/libsstar.la ../../node/dyn/libdyn.la
 rdc_SeBa_LDADD = librdc.la ../dstar/libdstar.la ../../node/dyn/libdyn.la
 rs_birthrate_LDADD = librdc.la ../dstar/libdstar.la ../../node/libnode.la
@@ -48,7 +48,7 @@ rs_scenarios_LDADD = librdc.la ../dstar/libdstar.la ../../node/libnode.la
 rs_snapshot_LDADD = librdc.la ../dstar/libdstar.la ../../node/libnode.la
 
 list_sdumb_SOURCES = list_sdumb.C
-make_ccd_SOURCES = make_ccd.C
+#make_ccd_SOURCES = make_ccd.C
 makepovfile_SOURCES = makepovfile.C
 rdc_SeBa_SOURCES = makepovfile.C
 rs_birthrate_SOURCES = rs_birthrate.C
