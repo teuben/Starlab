@@ -50,5 +50,7 @@ hxstarplot_SOURCES = hxstarplot.C gfx_util.C dyn_util.C
 .PHONY: libs
 libs: libxhdyn.la
 
+# The "touch" below is to ensure that the .C file exists even if moc
+# is not avaliable -- shouldn't be necessary... (Steve, 7/08).
 moc_pp3_widget.C: ../../../../../include/pp3_widget.h
-	@MOC@ -o $@ $<
+	@MOC@ -o $@ $< ; touch $@
