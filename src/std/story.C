@@ -10,8 +10,8 @@
 ////
 //// Report bugs to starlab@sns.ias.edu.
 
-// The multiple instances of functions below are crying out to be
-// templatized...
+// The multiple instances of functions below are crying out
+// to be templatized...  (Steve, 7/08)
 
 #include "story.h"
 
