@@ -1,8 +1,7 @@
-//
-//  story.C
-//
 
-//// Test Starlab story manipulation functions.
+//  story.C
+
+//// Starlab story manipulation functions.
 ////
 //// Options:
 //// None.
@@ -11,6 +10,8 @@
 ////
 //// Report bugs to starlab@sns.ias.edu.
 
+// The multiple instances of functions below are crying out to be
+// templatized...
 
 #include "story.h"
 
@@ -403,6 +404,27 @@ local void  write_ulq(story * a_story_line, const char * name,
 }
 
 /*-----------------------------------------------------------------------------
+ *  write_ullq  --  write an unsigned long long quantity to a line.
+ *-----------------------------------------------------------------------------
+ */
+local void  write_ullq(story * a_story_line, const char * name,
+		       unsigned long long value)
+{
+    if (!a_story_line || !name) return;
+
+    char * new_string;
+    int  new_string_length;
+    
+    new_string_length = EXTRA_LENGTH + strlen(name) + SAFE_INT_LENGTH;
+    new_string  = new char[new_string_length];
+
+    sprintf(new_string, "  %s = %llu", name, value);
+
+    a_story_line->set_text(new_string);
+    delete [] new_string;
+}
+
+/*-----------------------------------------------------------------------------
  *  write_rq  --  write a real quantity to a line.
  *-----------------------------------------------------------------------------
  */
@@ -599,6 +621,37 @@ local void  write_ia(story * a_story_line, const char * name,
 }
 
 /*-----------------------------------------------------------------------------
+ *  write_ia  --  write an unsigned long long array to a line.
+ *-----------------------------------------------------------------------------
+ */
+local void  write_ia(story * a_story_line, const char * name,
+		     unsigned long long * value, int n)
+{
+    if (!a_story_line || !name) return;
+
+    char *new_string, *tmp;
+    int  new_string_length;
+
+    new_string_length = EXTRA_LENGTH + strlen(name)
+      				+ n * (SAFE_INT_LENGTH + 2);
+    new_string  = new char[new_string_length];
+    tmp = new char[SAFE_INT_LENGTH + 2];
+
+    sprintf(new_string, "  %s =", name);
+
+    for (int i = 0; i < n; i++) {
+
+	sprintf(tmp, " %d", value[i]);
+
+	strcat(new_string, tmp);
+    }
+
+    a_story_line->set_text(new_string);
+    delete [] new_string;
+    delete [] tmp;
+}
+
+/*-----------------------------------------------------------------------------
  *  qmatch  --  checks whether a line contains a physical quantity with a
  *              matching name; if so, returns TRUE, otherwise FALSE.
  *         note: 
@@ -736,6 +789,27 @@ unsigned long getulq(story *  a_story, const char * name, bool verbose)
 	}
 
     return strtoul(get_qstring(story_line), (char**)NULL, 10);
+}
+
+/*-----------------------------------------------------------------------------
+ *  getullq  --  reads an unsigned long long quantity from a line in a story
+ *-----------------------------------------------------------------------------
+ */
+unsigned long long getullq(story *  a_story, const char * name, bool verbose)
+{
+    if (!a_story || !name) return 0;
+
+    story * story_line;
+
+    if ((story_line = find_qmatch(a_story, name)) == NULL)
+	{
+	if (verbose) cerr << "getulq: no quantity found with name \""
+	                  << name << "\"" << endl;
+	return 0;
+	// exit(1);
+	}
+
+    return strtoull(get_qstring(story_line), (char**)NULL, 10);
 }
 
 /*-----------------------------------------------------------------------------
@@ -1011,12 +1085,12 @@ void putiq(story * a_story, const char * name, int value)
 }
 
 /*-----------------------------------------------------------------------------
- *  putulq  -- write an unsigned long integer quantity at the end of a
- *             story; or, if a previous quantity of the same name is found,
- *             overwrite the line containing that quantity.
+ *  putiq  -- write an unsigned long integer quantity at the end of a
+ *            story; or, if a previous quantity of the same name is found,
+ *            overwrite the line containing that quantity.
  *-----------------------------------------------------------------------------
  */
-void putulq(story * a_story, const char * name, unsigned long value)
+void putiq(story * a_story, const char * name, unsigned long value)
 {
     if (!a_story || !name) return;
 
@@ -1029,6 +1103,27 @@ void putulq(story * a_story, const char * name, unsigned long value)
 	}
 
     write_ulq(story_line, name, value);
+}
+
+/*-----------------------------------------------------------------------------
+ *  putiq  -- write an unsigned long long quantity at the end of a
+ *            story; or, if a previous quantity of the same name is found,
+ *            overwrite the line containing that quantity.
+ *-----------------------------------------------------------------------------
+ */
+void putiq(story * a_story, const char * name, unsigned long long value)
+{
+    if (!a_story || !name) return;
+
+    story * story_line;
+    
+    if ((story_line = find_qmatch(a_story, name)) == NULL)
+	{
+	story_line = new story;	
+	add_daughter_story(a_story, story_line);
+	}
+
+    write_ullq(story_line, name, value);
 }
 
 
@@ -1151,6 +1246,27 @@ void putia(story * a_story, const char * name, int * value, int n)
  *-----------------------------------------------------------------------------
  */
 void putia(story * a_story, const char * name, unsigned long * value, int n)
+{
+    if (!a_story || !name) return;
+
+    story * story_line;
+    
+    if ((story_line = find_qmatch(a_story, name)) == NULL)
+	{
+	story_line = new story;	
+	add_daughter_story(a_story, story_line);
+	}
+
+    write_ia(story_line, name, value, n);
+}
+
+/*-----------------------------------------------------------------------------
+ *  putia  --  write an unsigned long long array at the end of a story;
+ *             or, if a previous quantity of the same name is found,
+ *             overwrite the line containing that quantity.
+ *-----------------------------------------------------------------------------
+ */
+void putia(story * a_story, const char * name, unsigned long long * value, int n)
 {
     if (!a_story || !name) return;
 

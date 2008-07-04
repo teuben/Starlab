@@ -1,7 +1,7 @@
 
 // Counters for kira:
 
-typedef unsigned long step_t;
+typedef unsigned long long step_t;
 
 #define SLOW_BINS 20
 

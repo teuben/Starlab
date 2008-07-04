@@ -3535,6 +3535,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 	    kc->full_unpert_orbit = 0;
 	    PRC(unperturbed_timestep); PRL(kep->get_period());
 	    PRL((step_t) (unperturbed_timestep/kep->get_period()));
+	    PRL(((step_t) 1)<<62);
 	}
 
 	// PRC(kc->full_unpert_step);

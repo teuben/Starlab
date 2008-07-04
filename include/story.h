@@ -160,20 +160,24 @@ story * find_qmatch(story *, const char *);
 int  rmq(story *, const char *);
 
 int  getiq(story *, const char *, bool verbose=false);
-unsigned long  getulq(story *, const char *, bool verbose=false);
+unsigned long getulq(story *, const char *, bool verbose=false);
+unsigned long long getullq(story *, const char *, bool verbose=false);
 real  getrq(story *, const char *, bool verbose=false);
 char *getsq(story *, const char *, bool verbose=false);
 vec  getvq(story *, const char *, bool verbose=false);
 void getra(story *, const char *, real *, int, bool verbose=false);
 void getia(story *, const char *, int *, int, bool verbose=false);
 void getia(story *, const char *, unsigned long *, int, bool verbose=false);
+void getia(story *, const char *, unsigned long long *, int, bool verbose=false);
 
 void putiq(story *, const char *, int);
-void putulq(story *, const char *, unsigned long);
+void putiq(story *, const char *, unsigned long);
+void putiq(story *, const char *, unsigned long long);
 void putrq(story *, const char *, real, int precision = STD_PRECISION);
 void putra(story *, const char *, real *, int);
 void putia(story *, const char *, int *, int);
 void putia(story *, const char *, unsigned long *, int);
+void putia(story *, const char *, unsigned long long *, int);
 void putsq(story *, const char *, const char *);
 void putvq(story *, const char *, vec &, int precision = STD_PRECISION);
 
