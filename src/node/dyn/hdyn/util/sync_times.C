@@ -14,9 +14,16 @@
 ////             This is the avenue of last resort in fixing a
 ////             problematic data set!
 ////
-////             Experimental: May require some fine tuning...
+//// Usage: sync_times [OPTIONS] < input > output
 ////
-//// Steve McMillan (July 2008).
+//// Options:
+////              -c    add a comment to the system log story       [none]
+////              -t    set the system time                    [don't set]
+////
+//// Note: this is experimental code, and may need some fine tuning...
+////
+//// Written by Steve McMillan (July 2008).
+//// Report bugs to starlab@sns.ias.edu.
 
 #include "hdyn.h"
 
