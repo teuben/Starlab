@@ -8,12 +8,12 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\ ~
 
-//// Convert an extended version of ASCII "dumbp" format:
+//// Convert an extended version of ASCII "dumbp" format
 ////
-////                    (id1, mass1, pos1, vel1, var11, var21, var31,...
-////                     id2, mass2, pos2, vel2, var12, var22, var32,...
-////                     id3, mass3, pos3, vel3, var13, var23, var33,...
-////                    etc.)
+////            (id1, mass1, pos1, vel1, var11, var21, var31,...
+////             id2, mass2, pos2, vel2, var12, var22, var32,...
+////             id3, mass3, pos3, vel3, var13, var23, var33,...
+////             etc.)
 ////
 //// data into a Starlab snapshot (flat tree).  This is the inverse
 //// function to dumbp.  It differs from readp in that up to 128 extra
@@ -26,7 +26,7 @@
 ////              -c    add a comment to the output snapshot [false]
 ////              -i    number the particles sequentially [don't number]
 ////              -v    specify name for extra variable (e.g. -v 2 temp)
-////                    (numbering starts at 1, note)
+////                    (note that numbering starts at 1)
 ////
 //// Written by Steve McMillan.
 ////
@@ -41,27 +41,33 @@
 #define MAX_LINE 1024
 #define MAX_DATA  128
 
-// Unabashed C code!
+// Unabashed ~C code!
 
-int is_space(char *s)
+local bool is_space(char *s)
 {
-  if (*s == ' ' || *s == '\t')
-    return 1;
-  else
-    return 0;
+  if (!s) return false;
+  return (*s == '\t' || *s == ' ');		// space characters: '\t', ' '
+}
+
+local bool is_term(char *s)
+{
+  if (!s) return true;				// terminating characters:
+  return (*s < ' ' && *s != '\t');		// anything < ' ' except '\t'
 }
 
 char *current_word(char *s)
 {
-  while (is_space(s)) s++;	/* skip whitespace */
-  if (*s == '\0' || *s == '\n') return NULL;
+  if (!s) return NULL;
+  while (is_space(s)) s++;			// skip whitespace
+  if (is_term(s)) return NULL;
   return s;
 }
  
 char *next_word(char *s)
 {
+  if (!s) return NULL;
   if (!is_space(s))
-    while (!is_space(s)) s++;	/* go to end of current word */
+    while (!is_space(s) && !is_term(s)) s++;	// go to end of current word
   return current_word(s);
 }
 
@@ -69,16 +75,17 @@ int get_data(int &i, real &m, vec &pos, vec &vel, real data[])
 {
   char input[MAX_LINE], *s = input;
   int count = 0;
-  s = fgets(input, MAX_LINE, stdin);
+  s = fgets(input, MAX_LINE, stdin);		// NULL terminated, w/newline
   if (s) {
     s = current_word(s);
     while (s) {
       real x;
       int j;
-      if (++count == 1)
+      if (count == 0)
 	j = sscanf(s, "%d", &i);
       else
 	j = sscanf(s, "%lf", &x);
+      count += j;
       if (j > 0) {
 	if (count == 1)
 	  ;
@@ -95,7 +102,7 @@ int get_data(int &i, real &m, vec &pos, vec &vel, real data[])
       s = next_word(s);
     }
   }
-  return count;
+  return count;					// return # of variables read
 }
 
 int main(int argc, char ** argv)
@@ -168,7 +175,11 @@ int main(int argc, char ** argv)
       bb->set_pos(pos);
       bb->set_vel(vel);
 
-      for (k = 0; k < n-9; k++)
+      // The returned value n is the total number of variables read
+      // from the line.  The first 8 are "known": ID, mass, pos, vel.
+      // The 9th and above are extra.
+
+      for (k = 0; k < n-8; k++)
 	putrq(bb->get_dyn_story(), varname[k], vardata[k]);
     }
 
