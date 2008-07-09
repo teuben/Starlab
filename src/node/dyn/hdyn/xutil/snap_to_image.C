@@ -66,10 +66,10 @@
 ////           -t           test the color map [don't test]
 ////           -T           specify precedence scheme for points in the image
 ////                            (c = color, r = radius, z = depth)          [z]
-////           -x           specify right (log effective temperature) edge
-////                            of HRD (-H only)                          [3.5]
-////           -X           specify left (log effective temperature) edge
+////           -x           specify left (log effective temperature) edge
 ////                            of HRD (-H only)                          [4.5]
+////           -X           specify right (log effective temperature) edge
+////                            of HRD (-H only)                          [3.5]
 ////           -y           specify minimum (log luminosity/Lsun) limit
 ////                            of HRD (-H only)                         [-2.5]
 ////           -Y           specify maximum (log luminosity/Lsun) limit
@@ -96,8 +96,7 @@
 //// options control point size and color using the variables index,
 //// mass, radius, temperature, and luminosity, extending and
 //// superceding the old "-m" and "-r" options.  The limits are
-//// generally logarithmic (except in index).  The "x/X/y/Y" arguments
-//// are probably redundant now and may be removed soon...
+//// generally logarithmic (except in index).
 //.............................................................................
 //
 //    version 1:  Nov 1998   Steve McMillan	 email: steve@physics.drexel.edu
@@ -616,12 +615,12 @@ real get_logtemp(hdyn *bb)
       T_eff = getrq(st, "T");	    // really pdyn
     }
     if (T_eff <= 0) {
-      cerr << "No temperature data available"
+      cerr << "No temperature data available for " << bb->format_label()
 	   << endl;
       exit(1);
     }
 
-    return log10(T_eff);;
+    return log10(T_eff);
 }
 
 real get_loglum(hdyn *bb)
@@ -637,12 +636,12 @@ real get_loglum(hdyn *bb)
       L_eff = getrq(st, "L");	    // really pdyn
     }
     if (L_eff <= 0) {
-      cerr << "No luminosity data available"
+      cerr << "No luminosity data available for " << bb->format_label()
 	   << endl;
       exit(1);
     }
 
-    return log10(L_eff);;
+    return log10(L_eff);
 }
 
 real get_color_data(hdyn *bb, int colorvar)
@@ -705,10 +704,6 @@ main(int argc, char** argv)
     real ytop = L;
 
     bool HRD = false;
-    // real xleft = 5;		// suitable for HRDs only...
-    // real xright = 3;
-    // real ybot = -3;
-    // real ytop = 3;
 
     bool xlim_set = false;
     bool ylim_set = false;
@@ -1099,8 +1094,8 @@ main(int argc, char** argv)
     real ymin = Starlab::min(ybot, ytop);
     real ymax = Starlab::max(ybot, ytop);
 
-    // PRC(xleft); PRC(xright); PRL(lx);
-    // PRC(ybot); PRC(ytop); PRL(ly);
+    PRC(xleft); PRC(xright); PRL(lx);
+    PRC(ybot); PRC(ytop); PRL(ly);
 
     hdyn* b;
     string frame_id_string;
