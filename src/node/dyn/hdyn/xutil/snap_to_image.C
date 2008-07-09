@@ -631,7 +631,7 @@ real get_loglum(hdyn *bb)
 
     real L_eff = -1;
     story *st = bb->get_star_story();
-    if (st) L_eff = getrq(st, "L_eff"); 
+    if (st) L_eff = getrq(st, "L_eff");
     if (L_eff <= 0) {
       st = bb->get_dyn_story();
       L_eff = getrq(st, "L");	    // really pdyn
