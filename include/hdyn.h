@@ -1151,6 +1151,7 @@ void log_output(hdyn * b,
 		real count, real steps,
 		real count_top_level, real steps_top_level,
 		kira_counters* kc_prev,
+		real delta_t,
 		int long_binary_output = 2);
 void force_nodensity();
 
