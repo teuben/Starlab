@@ -883,7 +883,7 @@ local void evolve_system(hdyn * b,		// hdyn array
 	    double mpi_kira_timer1 = MPI_Wtime();
 #endif
 	    log_output(b, count, steps, count_top_level, steps_top_level,
-		       &kc_prev, long_bin);
+		       &kc_prev, dt_log, long_bin);
 #ifdef USEMPI
             MPI_Barrier(MPI_COMM_WORLD);
 	    mpi_kira_timers[1] += MPI_Wtime() - mpi_kira_timer1;

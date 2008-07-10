@@ -648,6 +648,7 @@ void log_output(hdyn * b,
 		real count, real steps,
 		real count_top_level, real steps_top_level,
 		kira_counters* kc_prev,
+		real delta_t,
 		int long_binary_output)		// default = 2
 {
     // Standard log output (to stderr, note).
@@ -693,9 +694,21 @@ void log_output(hdyn * b,
 
     cerr << endl;
     for (int k = 0 ; k < 40; k++) cerr << '-';
+
+    // Adjust the time precision to resolve delta_t.
+
+    real tt = b->get_system_time();
+    int it = 1;
+    if (tt > 0) it = (int)log10(tt) + 1;
+    if (delta_t < 1) it -= (int)log10(delta_t)-4;    // resolve ~4 digits of dt
+    if (it < STD_PRECISION) it = STD_PRECISION;
+
+    int p2 = cerr.precision(it);
     cerr << endl << endl
-	 << "Time = " << b->get_system_time()
-	 << "  N = "    << b->n_leaves() << " (" << n_bound << " bound)"
+	 << "Time = " << b->get_system_time();
+    cerr.precision(p2);
+
+    cerr << "  N = "    << b->n_leaves() << " (" << n_bound << " bound)"
 	 << "  mass = " << total_mass(b) << " (" << m_bound << " bound)"
 	 << endl;
 
