@@ -153,6 +153,8 @@ local int bitcount(unsigned int i)
 #define M_TOL 1.e-4
 #define M_ITER_MAX 20
 
+#define TTOL 1.e-12				// arbitrary tolerance
+
 void refine_cluster_mass2(dyn *b,		// root node
 			  int verbose)		// default = 0
 {
@@ -172,8 +174,8 @@ void refine_cluster_mass2(dyn *b,		// root node
     // values are up to date.
 
     if (verbose == 0
-	&& getrq(b->get_dyn_story(), "bound_center_time")
-		== b->get_system_time())
+	&& twiddles(getrq(b->get_dyn_story(), "bound_center_time"),
+		    b->get_system_time(), TTOL))
 	return;
 
     unsigned int ext = b->get_external_field();
@@ -399,7 +401,8 @@ void refine_cluster_mass2(dyn *b,		// root node
     vec bc_pos = bpos + center;
     vec bc_vel = bvel + vcenter;
 
-    putrq(b->get_dyn_story(), "bound_center_time", (real)b->get_system_time());
+    putrq(b->get_dyn_story(), "bound_center_time", (real)b->get_system_time(),
+	  HIGH_PRECISION);
     putvq(b->get_dyn_story(), "bound_center_pos", bc_pos);
     putvq(b->get_dyn_story(), "bound_center_vel", bc_vel);
 

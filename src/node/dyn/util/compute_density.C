@@ -58,7 +58,8 @@
 
 local void write_density(dyn *d, int k, real density)
 {
-    putrq(d->get_dyn_story(), "density_time", d->get_system_time());
+    putrq(d->get_dyn_story(), "density_time", d->get_system_time(),
+	  HIGH_PRECISION);
     putiq(d->get_dyn_story(), "density_k_level", k);
     putrq(d->get_dyn_story(), "density", density);
 }
@@ -227,7 +228,8 @@ void  compute_density(dyn * b,	      // pointer to N-body system or node
 
     if (!list) {
 	dyn* root = b->get_root();
-	putrq(root->get_dyn_story(), "density_time", root->get_system_time());
+	putrq(root->get_dyn_story(), "density_time", root->get_system_time(),
+	      HIGH_PRECISION);
     }
 
     // Clean up.

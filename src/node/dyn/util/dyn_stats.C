@@ -298,6 +298,8 @@ real print_structure_recursive(dyn* bi,
 				     verbose, long_binary_output, indent);
 }
 
+#define TTOL 1.e-12				// arbitrary tolerance
+
 void compute_core_parameters(dyn* b, int k,
 			     bool allow_n_sq_ops,
 			     vec& center,
@@ -307,8 +309,8 @@ void compute_core_parameters(dyn* b, int k,
 
     // Write densities to particle dyn stories, if necessary.
 
-    if (getrq(b->get_dyn_story(), "density_time")
-		!= b->get_system_time()) {
+    if (!twiddles(getrq(b->get_dyn_story(), "density_time"),
+		  b->get_system_time(), TTOL)) {
 
 	if (b->n_leaves() < 12) {	// don't even try...
 	    ncore = 0;
@@ -330,8 +332,8 @@ void compute_core_parameters(dyn* b, int k,
 
     // Compute max (not mean) density center, if necessary.
 
-    if (getrq(b->get_dyn_story(), "density_center_time")
-		!= b->get_system_time()
+    if (!twiddles(getrq(b->get_dyn_story(), "density_center_time"),
+		  b->get_system_time(), TTOL)
 	|| !strcmp(getsq(b->get_dyn_story(), "density_center_type"), "mean")) {
 
 	// Find point with maximum density (changed by SM&SPZ Oct 11, 2001)

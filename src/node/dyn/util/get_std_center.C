@@ -34,8 +34,10 @@
 
 #ifndef TOOLBOX
 
+#define TTOL 1.e-12				// arbitrary tolerance
+
 int get_std_center(dyn *b, vec& pos, vec& vel,
-		   bool verbose)			// default = false
+		   bool verbose)		// default = false
 {
     int which = 0;
 
@@ -43,8 +45,8 @@ int get_std_center(dyn *b, vec& pos, vec& vel,
 
     if (find_qmatch(b->get_dyn_story(), "density_center_pos")) {
 
-	if (getrq(b->get_dyn_story(), "density_center_time")
-		!= b->get_system_time()) {
+ 	if (!twiddles(getrq(b->get_dyn_story(), "density_center_time"),
+		      b->get_system_time(), TTOL)) {
 
 	    if (verbose)
 	      warning("get_std_center: ignoring out-of-date density center");
@@ -67,8 +69,8 @@ int get_std_center(dyn *b, vec& pos, vec& vel,
 
 	    // Try modified center of mass instead.
 
-	    if (getrq(b->get_dyn_story(), "mcom_time")
-		    != b->get_system_time()) {
+	    if (!twiddles(getrq(b->get_dyn_story(), "mcom_time"),
+			  b->get_system_time(), TTOL)) {
 
 		if (verbose)
 		    warning("get_std_center: ignoring out-of-date mcom");
@@ -95,7 +97,8 @@ int get_std_center(dyn *b, vec& pos, vec& vel,
 	}
     }
 
-    putrq(b->get_dyn_story(), "std_center_time", b->get_system_time());
+    putrq(b->get_dyn_story(), "std_center_time", b->get_system_time(),
+	  HIGH_PRECISION);
     putvq(b->get_dyn_story(), "std_center_pos", pos);
     putvq(b->get_dyn_story(), "std_center_vel", vel);
 

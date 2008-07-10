@@ -54,10 +54,11 @@
 //-----------------------------------------------------------------------------
 
 #define MAX_MSG_COUNT 5
-#define TTOL 1.e-6	// arbitrary tolerance
 
 static bool print_msg = true;
 static int msg_count = 0;
+
+#define TTOL 1.e-12				// arbitrary tolerance
 
 void compute_mean_cod(dyn *b, vec& pos, vec& vel)
 {
@@ -84,7 +85,7 @@ void compute_mean_cod(dyn *b, vec& pos, vec& vel)
 	real dens_time = getrq(d->get_dyn_story(), "density_time");
 
 	if (print_msg
-	    && !twiddles(dens_time, (real) b->get_system_time(), 1.e-9)) {
+	    && !twiddles(dens_time, (real) b->get_system_time(), TTOL)) {
 	    warning("compute_mean_cod: using out-of-date densities.");
 	    PRL(d->format_label());
 	    int p = cerr.precision(HIGH_PRECISION);
@@ -121,7 +122,8 @@ void compute_mean_cod(dyn *b, vec& pos, vec& vel)
     vel += b->get_vel();
 
     putsq(b->get_dyn_story(), "density_center_type", "mean");
-    putrq(b->get_dyn_story(), "density_center_time", b->get_system_time());
+    putrq(b->get_dyn_story(), "density_center_time", b->get_system_time(),
+	  HIGH_PRECISION);
     putvq(b->get_dyn_story(), "density_center_pos", pos);
     putvq(b->get_dyn_story(), "density_center_vel", vel);
 }

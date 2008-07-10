@@ -221,7 +221,8 @@ bool compute_general_mass_radii(dyn * b,
 	putiq(b->get_dyn_story(), "boolfn", 1);
 
     putiq(b->get_dyn_story(), "n_nodes", n);
-    putrq(b->get_dyn_story(), "lagr_time", b->get_system_time());
+    putrq(b->get_dyn_story(), "lagr_time", b->get_system_time(),
+	  HIGH_PRECISION);
     putvq(b->get_dyn_story(), "lagr_pos", lagr_pos);
     putvq(b->get_dyn_story(), "lagr_vel", lagr_vel);
     putsq(b->get_dyn_story(), "pos_type", lagr_string);
@@ -374,6 +375,8 @@ local bool massive_fn(dyn * b)
 
 
 
+#define TTOL 1.e-12				// arbitrary tolerance
+
 real print_lagrangian_radii(dyn* b,
 			    int which_lagr,	// default = 2 (nonlinear)
 			    bool verbose,	// default = true
@@ -415,7 +418,8 @@ real print_lagrangian_radii(dyn* b,
 	status = compute_general_mass_radii(b, nl, nonlin, massive_fn, verbose);
 
     if (status && find_qmatch(b->get_dyn_story(), "n_lagr")
-	&& getrq(b->get_dyn_story(), "lagr_time") == b->get_system_time()) {
+	&& twiddles(getrq(b->get_dyn_story(), "lagr_time"),
+		    b->get_system_time(), TTOL)) {
 
 	// Assume that lagr_pos has been properly set if n_lagr is set and
 	// lagr_time is current.  Redundant now that status is returned.

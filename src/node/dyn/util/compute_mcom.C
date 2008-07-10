@@ -51,6 +51,8 @@ local int compare_radii(const void * pi, const void * pj)  // increasing radius
         return 0;
 }
 
+#define TTOL 1.e-12				// arbitrary tolerance
+
 void compute_mcom(dyn *b,
 		  vec& pos, vec& vel,
 		  real f,			// default = 0.9
@@ -61,7 +63,8 @@ void compute_mcom(dyn *b,
 
     if (find_qmatch(b->get_dyn_story(), "mcom_pos")
 	&& getrq(b->get_dyn_story(), "mcom_f") == f
-	&& getrq(b->get_dyn_story(), "mcom_time") == b->get_system_time()) {
+	&& twiddles(getrq(b->get_dyn_story(), "mcom_time"),
+		    b->get_system_time(), TTOL)) {
 	pos = getvq(b->get_dyn_story(), "mcom_pos");
 	vel = getvq(b->get_dyn_story(), "mcom_vel");
 	return;
@@ -71,7 +74,8 @@ void compute_mcom(dyn *b,
     // Com quantities now include the root node (Steve, 6/03).
 
     if (find_qmatch(b->get_dyn_story(), "com_pos")
-	&& getrq(b->get_dyn_story(), "com_time") == b->get_system_time()) {
+	&& twiddles(getrq(b->get_dyn_story(), "com_time"),
+		    b->get_system_time(), TTOL)) {
 	pos = getvq(b->get_dyn_story(), "com_pos");
 	vel = getvq(b->get_dyn_story(), "com_vel");
     } else
@@ -146,11 +150,11 @@ void compute_mcom(dyn *b,
     pos += b->get_pos();
     vel += b->get_vel();
 
-    // Use INT_PRECISION here because these quentities may be used
+    // Use INT/HIGH_PRECISION here because these quentities may be used
     // in detailed calculations elsewhere.
 
     putrq(b->get_dyn_story(), "mcom_time", b->get_system_time(),
-	  INT_PRECISION);
+	  HIGH_PRECISION);
     putvq(b->get_dyn_story(), "mcom_pos", pos,
 	  INT_PRECISION);
     putvq(b->get_dyn_story(), "mcom_vel", vel,

@@ -980,9 +980,11 @@ local void print_core_parameters(dyn* b, bool allow_n_sq_ops,
     cerr << "    rcore = " << rcore << "  ncore = " << ncore
 	 << "  mcore = " << mcore << endl;
 
-    // Place the data in the root dyn story.
+    // Place the data in the root dyn story.  Use HIGH_PRECISION for
+    // the time stamp.
 
-    putrq(b->get_dyn_story(), "core_radius_time", b->get_system_time());
+    putrq(b->get_dyn_story(), "core_radius_time", b->get_system_time(),
+	  HIGH_PRECISION);
     putrq(b->get_dyn_story(), "core_radius", rcore);
     putiq(b->get_dyn_story(), "n_core", ncore);
     putrq(b->get_dyn_story(), "m_core", mcore);
@@ -1233,6 +1235,9 @@ bool parse_sys_stats_main(int argc, char *argv[],
     return true;
 }
 
+
+#define TTOL 1.e-12				// arbitrary tolerance
+
 void sys_stats(dyn* b,
 	       real energy_cutoff,			// default = 1
 	       int  verbose,				// default = 2
@@ -1301,8 +1306,8 @@ void sys_stats(dyn* b,
 
     if (r_virial == -1) {
         if (find_qmatch(b->get_dyn_story(), "energy_time")
-	    && getrq(b->get_dyn_story(), "energy_time")
-	                         == b->get_system_time()) {
+	    && twiddles(getrq(b->get_dyn_story(), "energy_time"),
+			b->get_system_time(), TTOL)) {
 
 	    // Take energies from the dyn story.
 
@@ -1364,8 +1369,8 @@ void sys_stats(dyn* b,
 
 	// No dominant mass.
 
-	bool has_densities = (getrq(b->get_dyn_story(), "density_time")
-			       == b->get_system_time());
+	bool has_densities = (twiddles(getrq(b->get_dyn_story(), "density_time"),
+				       b->get_system_time(), TTOL));
 
 	if (verbose > 0 && (has_densities || allow_n_sq_ops)) {
 

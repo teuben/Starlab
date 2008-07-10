@@ -48,7 +48,7 @@
 //-----------------------------------------------------------------------------
 
 #define MAX_MSG_COUNT 5
-#define TTOL 1.e-6	// arbitrary tolerance
+#define TTOL 1.e-12				// arbitrary tolerance
 
 static bool print_msg = true;
 static int msg_count = 0;
@@ -77,7 +77,7 @@ void compute_max_cod(dyn *b, vec& pos, vec& vel)
 
 	real dens_time = getrq(d->get_dyn_story(), "density_time");
 
-	if (dens_time != b->get_system_time() && print_msg) {
+	if (!twiddles(dens_time, b->get_system_time(), TTOL) && print_msg) {
 	    warning("compute_max_cod: using out-of-date densities.");
 	    PRC(d->format_label()), PRL(dens_time);
 	    if (++msg_count > MAX_MSG_COUNT) print_msg = false;
@@ -106,7 +106,8 @@ void compute_max_cod(dyn *b, vec& pos, vec& vel)
     vel += b->get_vel();
 
     putsq(b->get_dyn_story(), "density_center_type", "max");
-    putrq(b->get_dyn_story(), "density_center_time", b->get_system_time());
+    putrq(b->get_dyn_story(), "density_center_time", b->get_system_time(),
+	  HIGH_PRECISION);
     putvq(b->get_dyn_story(), "density_center_pos", pos);
     putvq(b->get_dyn_story(), "density_center_vel", vel);
 }

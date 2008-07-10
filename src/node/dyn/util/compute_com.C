@@ -30,7 +30,7 @@
 
 #define DEBUG false
 
-#define TTOL 1.e-6	// arbitrary tolerance
+#define TTOL 1.e-12				// arbitrary tolerance
 
 void compute_com(dyn *b, vec& com_pos, vec& com_vel)
 {
