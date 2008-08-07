@@ -365,7 +365,7 @@ inline real	square(real x)			{return x*x;}
 #endif
 
 #ifndef HAVE_STPCPY
-  char *stpcpy(char *restrict, const char *restrict);
+  char *stpcpy(char *restrict0, const char *restrict1);
 #endif
 
 // Intended for xreal, but referenced in the real version too.
