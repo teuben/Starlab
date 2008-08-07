@@ -205,7 +205,7 @@ as shown in `local/grape.sh.examples'.])
     grape6=no
 
     for gl in $GRAPE_LIBS_; do
-        AC_CHECK_LIB(${gl/-l/}, g6_open_, grape6=yes, grape6=no)
+        AC_CHECK_LIB(${gl/-l/}, g6_open_, grape6=yes, grape6=no, -lg6bx -lxhib)
 	if test "x$grape6" = "xyes"; then break; fi
     done
 
@@ -450,57 +450,49 @@ else
     echo "configure arguments: $all_args"		>> CONFIGURE_HOST
 fi
 echo "configuration:"					>> CONFIGURE_HOST
-echo -n "    "						>> CONFIGURE_HOST
 if test "x$xreal" = "xyes"; then
-    echo with xreal					>> CONFIGURE_HOST
+    echo "    " with xreal				>> CONFIGURE_HOST
 else
-    echo without xreal					>> CONFIGURE_HOST
+    echo "    " without xreal				>> CONFIGURE_HOST
 fi
-echo -n "    "						>> CONFIGURE_HOST
 if test "x$grape" = "xyes"; then
-    echo with GRAPE					>> CONFIGURE_HOST
-    echo "        LDFLAGS = $GRAPE_LDFLAGS"		>> CONFIGURE_HOST
-    echo "        LIBS = $GRAPE_LIBS"			>> CONFIGURE_HOST
-    echo "        OLD_READ_NEIGHBOUR_LIST" \
+    echo "    " with GRAPE				>> CONFIGURE_HOST
+    echo "    " "        LDFLAGS = $GRAPE_LDFLAGS"	>> CONFIGURE_HOST
+    echo "    " "        LIBS = $GRAPE_LIBS"		>> CONFIGURE_HOST
+    echo "    " "        OLD_READ_NEIGHBOUR_LIST" \
 		= $OLD_READ_NEIGHBOUR_LIST		>> CONFIGURE_HOST
 else
-    echo without GRAPE					>> CONFIGURE_HOST
+    echo "    " without GRAPE				>> CONFIGURE_HOST
 fi
-echo -n "    "						>> CONFIGURE_HOST
 if test "x$sdyn3" = "xyes"; then
-    echo with sdyn3					>> CONFIGURE_HOST
+    echo "    " with sdyn3				>> CONFIGURE_HOST
 else
-    echo without sdyn3					>> CONFIGURE_HOST
+    echo "    " without sdyn3				>> CONFIGURE_HOST
 fi
-echo -n "    "						>> CONFIGURE_HOST
 if test "x$sdyn" = "xyes"; then
-    echo with sdyn					>> CONFIGURE_HOST
+    echo "    " with sdyn				>> CONFIGURE_HOST
 else
-    echo without sdyn					>> CONFIGURE_HOST
+    echo "    " without sdyn				>> CONFIGURE_HOST
 fi
-echo -n "    "						>> CONFIGURE_HOST
 if test "x$F77" != "x"; then
-    echo with f77					>> CONFIGURE_HOST
+    echo "    " with f77				>> CONFIGURE_HOST
 else
-    echo without f77					>> CONFIGURE_HOST
+    echo "    " without f77				>> CONFIGURE_HOST
 fi
-echo -n "    "						>> CONFIGURE_HOST
 if test "x$no_x" = "xyes"; then
-    echo without X support				>> CONFIGURE_HOST
+    echo "    " without X support			>> CONFIGURE_HOST
 else
-    echo with X support					>> CONFIGURE_HOST
+    echo "    " with X support				>> CONFIGURE_HOST
 fi
-echo -n "    "						>> CONFIGURE_HOST
 if test "x$good_qt" = "xyes"; then
-    echo with Qt \($qt_libs\)				>> CONFIGURE_HOST
+    echo "    " with Qt \($qt_libs\)			>> CONFIGURE_HOST
 else
-    echo without Qt					>> CONFIGURE_HOST
+    echo "    " without Qt				>> CONFIGURE_HOST
 fi
-echo -n "    "						>> CONFIGURE_HOST
 if test "x$ac_cv_lib_png_main" = "xyes"; then
-    echo with PNG					>> CONFIGURE_HOST
+    echo "    " with PNG				>> CONFIGURE_HOST
 else
-    echo without PNG					>> CONFIGURE_HOST
+    echo "    " without PNG				>> CONFIGURE_HOST
 fi
 
 #==========================================================================
