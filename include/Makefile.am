@@ -27,6 +27,7 @@ nobase_pkginclude_HEADERS = bound3.h chydro.h config.h \
     sigma3.h slow_binary.h stamp-h.in \
     starbase.h star/black_hole.h star/brown_dwarf.h \
     star/cluster_support.h star/constants.h \
+    star/starlab_constants.h \
     star/constants_new.h star/disintegrated.h \
     star/double_star.h star/double_support.h \
     star/dstar_to_dyn.h star/dstar_to_kira.h \
