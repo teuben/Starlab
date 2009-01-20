@@ -18,7 +18,7 @@
 
 \section overview Overview
 
-This is the (automaticaly generated) top-level page documenting
+This is the (automatically generated) top-level page documenting
 Starlab's internal structure.  It contains detailed listings of the
 header files, major classes, and global functions found in the
 package.  These pages are still under construction.  If there are

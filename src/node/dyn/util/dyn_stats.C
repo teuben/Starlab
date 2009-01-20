@@ -78,7 +78,7 @@ real print_binary_params(kepler* k, real m1, real kT,
 			      << "  D = " << dist_from_center
 			      << endl;
 	    
-	    PRI(indent); cerr << " n= " << k->get_normal_unit_vector()
+	    PRI(indent); cerr << "n = " << k->get_normal_unit_vector()
 			      << endl;
 
 	    PRI(indent); cerr << "P = " << k->get_period()
