@@ -869,7 +869,13 @@ int integrate_list(hdyn * b,				// root node
 			// same thing...  Best to rely on the resched
 			// flag.  Odd place to check -- move?
 
-			if (!pert) {
+			// if (!pert) {	// removed this check because it is
+					// possible that a correction was
+					// applied at pericenter reflection;
+					// the alternative is to retain the
+					// check here and adjust the logic
+					// in integrate_unperturbed_motion()
+					//			(Steve 2/09)
 
 			    story *s = b->get_root()->get_dyn_story();
 			    if (find_qmatch(s, "resched")) {
@@ -883,7 +889,7 @@ int integrate_list(hdyn * b,				// root node
 
 				rmq(s, "resched");
 			    }
-			}
+			    // }
 
 			//--------------------------------------------------
 
