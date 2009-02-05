@@ -4,6 +4,37 @@
 // of length n_next.
 
 #if 0
+if (t > 0.045) {
+  int p = cerr.precision(20);
+  cerr << endl; cerr << "before "; PRC(t); PRL(n_next);
+  cerr.precision(p);
+  //dump_node_list();
+  hdyn *n = (hdyn*)node_with_name("(346,10346)", b);
+  if (n) {
+    PRC(n->format_label());
+    PRL(n->get_timestep());
+    int p = cerr.precision(20);
+    PRC(n->get_time());
+    PRL(n->get_next_time());
+    cerr.precision(p);
+  }
+  dump_node_list_for("(346,10346)");
+  if (t > 0.051) {
+    for (int ii = 0; ii < n_next; ii++) {
+      hdyn *n = next_nodes[ii];
+      if (n && n->is_valid()) {
+	PRL(n->format_label());
+	int p = cerr.precision(20);
+	PRI(4); PRL(n->get_time());
+	cerr.precision(p);
+	PRI(4); PRL(n->get_timestep());
+      }
+    }
+  }
+}
+#endif
+
+#if 0
 if (t > 83.29) {
   int p = cerr.precision(15);
   cerr << endl; cerr << "before "; PRL(t);

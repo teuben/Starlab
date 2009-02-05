@@ -8,6 +8,39 @@
 
 
 #if 0
+if (t > 0.045) {
+  int p = cerr.precision(20);
+  cerr << endl; cerr << "after "; PRC(t); PRL(t_prev);
+  cerr.precision(p);
+  //dump_node_list();
+  hdyn *n = (hdyn*)node_with_name("(346,10346)", b);
+  if (n) {
+    PRC(n->format_label());
+    PRL(n->get_timestep());
+    int p = cerr.precision(20);
+    PRC(n->get_time());
+    PRL(n->get_next_time());
+    cerr.precision(p);
+  }
+  n = (hdyn*)node_with_name("346", b);
+  PRC(n->get_kepler()); PRL(n->get_fully_unperturbed());
+  dump_node_list_for("(346,10346)");
+  if (t > 0.051) {
+    for (int ii = 0; ii < n_next; ii++) {
+      hdyn *n = next_nodes[ii];
+      if (n && n->is_valid()) {
+	PRL(n->format_label());
+	int p = cerr.precision(20);
+	PRI(4); PRL(n->get_time());
+	cerr.precision(p);
+	PRI(4); PRL(n->get_timestep());
+      }
+    }
+  }
+}
+#endif
+
+#if 0
 if (t < 400.5) {
   int p = cerr.precision(15);
   cerr << endl; cerr << "after "; PRL(t);
