@@ -1323,7 +1323,7 @@ local void evolve_system(hdyn * b,		// hdyn array
 
 	for (int ii = 0; ii < n_next; ii++) {
 	    hdyn *bb = next_nodes[ii];
-	    if (bb && bb->is_top_level_node()) {
+	    if (bb && bb->is_valid() && bb->is_top_level_node()) {
 
 		// Check for a close NN.
 
