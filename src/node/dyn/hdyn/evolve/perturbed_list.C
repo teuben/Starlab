@@ -255,8 +255,9 @@ void hdyn::check_perturbed_list()
 	// Fix any problems.
 
 	if (reconstruct_list) {
-	    dump_perturbed_list();
+	    // dump_perturbed_list();
 	    reconstruct_perturbed_list();
+	    cerr << "perturbed_list reconstructed" << endl;
 	}
     }
 }
@@ -279,8 +280,8 @@ void hdyn::add_to_perturbed_list(int id) // default = 0
 
     if (i >= 0 && i < n_perturbed && perturbed_list[i] == this) {
 
-	cerr << "***** warning: add_to_perturbed_list: node "
-	     << this << " " << format_label() << " already on list"
+	cerr << "add_to_perturbed_list: "
+	     << format_label() << " already on list"
 	     << " at location " << i << endl;
 
 	check_perturbed_list();
@@ -340,13 +341,10 @@ void hdyn::remove_from_perturbed_list(int id) // default = 0
 
     if (i < 0 || i >= n_perturbed || perturbed_list[i] != this) {
 
-	cerr << "***** warning: remove_from_perturbed_list(" << id
-	     << "):" << endl
-	     << "node " << this << " = " << format_label()
-	     << " not on list" << endl;
-	PRC(i); PRL(n_perturbed);
+	cerr << "remove_from_perturbed_list(" << id
+	     << "): " << format_label() << " not on list" << endl;
 	if (i >= 0 && i < n_perturbed)
-	  cerr << "perturbed_list[i] = "
+	  cerr << "    perturbed_list[i] = "
 	       << perturbed_list[i]->format_label() << endl;
 
 	check_perturbed_list();
