@@ -4032,7 +4032,7 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 			    if (resched) {
 			        putiq(root->get_dyn_story(), "resched", 1);
-				cerr << "    forced rescheduling due to "
+				cerr << "forced rescheduling due to "
 				     << format_label() << endl;
 			    }
 

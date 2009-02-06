@@ -885,7 +885,6 @@ int integrate_list(hdyn * b,				// root node
 
 				cerr << "kira: recomputing scheduling list "
 				     << "at time " << sys_t << endl;
-				PRL(b->format_label());
 
 				rmq(s, "resched");
 			    }
