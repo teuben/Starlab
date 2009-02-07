@@ -716,11 +716,11 @@ class  hdyn : public _dyn_ {
 
 	bool is_perturbed_cpt();
 	bool is_perturbed_cm();
-	void reconstruct_perturbed_list();
+	void reconstruct_perturbed_list(bool verbose = false);
 	void dump_perturbed_list();
 	int  get_index_on_perturbed_list(bool debug = false);
 	bool on_perturbed_list();
-	void check_perturbed_list();
+	void check_perturbed_list(int id = 0, bool verbose = false);
 	void add_to_perturbed_list(int id = 0);
 	void remove_from_perturbed_list(int id = 0);
 
