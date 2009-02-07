@@ -6,6 +6,10 @@
 // tdbg may be used here to control debugging output.  It is
 // initialized to -1.
 
+#if 0
+hdyn *n = (hdyn*)node_with_name("825", b);
+if (n) {PRC(n->get_system_time());PRL(n->get_timestep());}
+#endif
 
 #if 0
 if (t > 0.045) {

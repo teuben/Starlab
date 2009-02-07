@@ -4,6 +4,18 @@
 // of length n_next.
 
 #if 0
+    for (int ii = 0; ii < n_next; ii++) {
+      hdyn *n = next_nodes[ii];
+      if (n && n->is_valid()) {
+	PRC(n->format_label());
+	int p = cerr.precision(20);
+	PRL(n->get_time()-t);
+	cerr.precision(p);
+      }
+    }
+#endif
+
+#if 0
 if (t > 0.045) {
   int p = cerr.precision(20);
   cerr << endl; cerr << "before "; PRC(t); PRL(n_next);
