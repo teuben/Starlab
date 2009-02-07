@@ -261,7 +261,8 @@ void hdyn::synchronize_node(bool exact)		// default = true, so
 	cerr << "Enter synchronize_node for " << format_label() << endl;
 #endif
 
-    if (time == system_time) return;
+    if (time == system_time || kep) return;	// don't sync unperturbed
+						// binary motion
 
     if (is_low_level_node()
 	&& (get_parent()->get_oldest_daughter() != this)) {
@@ -275,17 +276,17 @@ void hdyn::synchronize_node(bool exact)		// default = true, so
     // No need to adjust timestep before taking the step -- step is now
     // determined by system_time (Steve, 4/03).
 
-//     real old_timestep = timestep;
-//     timestep = system_time - time;
-//
-//     if (timestep < 0.0) {
-//
-//     if (do_diag)
-//  	    cerr << "synchronize_node: negative timestep..." << system_time
-//  		 << " " << time << flush << endl;
-//  	    put_node(this, cerr, options->print_xreal);
-//  	    exit(-1);
-//     }
+    // real old_timestep = timestep;
+    // timestep = system_time - time;
+    //
+    // if (timestep < 0.0) {
+    //
+    // if (do_diag)
+    //     cerr << "synchronize_node: negative timestep..."
+    //  	<< system_time << " " << time << flush << endl;
+    //     put_node(this, cerr, options->print_xreal);
+    //     exit(-1);
+    // }
 
     if (do_diag) {
 	cerr << "synchronize_node for " << format_label()
@@ -294,43 +295,53 @@ void hdyn::synchronize_node(bool exact)		// default = true, so
 	cerr << flush;
     }
 
-    // cerr << "Energy before "; print_recalculated_energies(get_root());
-
     // NOTE: the "false" here means that we do NOT attempt to
     //	     synchronize unperturbed binaries...
 
     // cerr << "synchronize_node " << format_label() << endl;
     // PRC(system_time); PRL(time);
 
+    // Use integrate_node() to do the actual work.  Don't integrate
+    // unperturbed binary motion.
+
+    // cerr << "Energy before "; print_recalculated_energies(get_root());
+
     integrate_node(exact,
 		   false,		// don't integrate unperturbed binaries
-		   false);		// don't force binary time
+		   false);		// don't force unperturbed binary time
 
     // cerr << "Energy after "; print_recalculated_energies(get_root());
 
-    if (do_diag)
+    if (do_diag) {
 	cerr <<"After integrate_node "<<endl;
-
-    // Must ensure that particle time steps are consistent with system_time
-    // (which should now be identical to time).
-
-    // cerr << format_label() << " "; PRC(timestep);
-
-    int iter = 0;
-    while (fmod(time, timestep) != 0) {
-	if (iter++ > 30) break;
-	timestep *= 0.5;
+	PRC(format_label()); PRC(system_time); PRL(time);
     }
 
-    // PRL(timestep);
+    if (!kep) {
 
-    if (iter > 20) {
-	cerr << "synchronize_node: " << format_label() << " "; PRL(iter);
-	PRI(4); PRC(fmod(time, timestep)); PRL(timestep);
+        // Must ensure that the new particle time steps are consistent
+        // with system_time (which should now be identical to time).
+
+        real old_timestep = timestep;
+
+	int iter = 0;
+	while (fmod(time, timestep) != 0) {
+	    if (iter++ > 30) break;
+	    timestep *= 0.5;
+	}
+
+	if (do_diag || iter > 20) {
+	    cerr << "synchronize_node: " << format_label() << " "; PRL(iter);
+	    int p = cerr.precision(15);
+	    PRI(4); PRC(time); PRL(system_time);
+	    PRI(4); PRC(old_timestep); PRL(fmod(time, old_timestep));
+	    PRI(4); PRL(timestep); PRL(fmod(time, timestep));
+	    cerr.precision(p);
+	}
+
+	if (is_low_level_node())
+	    update_binary_sister(this);
     }
-
-    if (is_low_level_node())
-	update_binary_sister(this);
 
     if (do_diag)
 	cerr << "Leave synchronize_node for " << format_label() << endl;
@@ -401,6 +412,7 @@ void hdyn::set_first_timestep(real additional_step_limit) // default = 0
 	cerr << endl << "set_first_timestep: dt = 0 at time "
 	     << get_system_time() << endl;
 
+	PRL(additional_step_limit);
 	PRC(dt_adot); PRL(dt_ff);
 	PRC(a2); PRC(j2); PRL(pot);
 	pp3(this);
@@ -1774,7 +1786,7 @@ bool hdyn::correct_and_update()
     // Call update here to avoid recomputation of bt2 and at3.
     //--------------------------------------------------------
 
-    update(bt2, at3);
+    update(bt2, at3);		// sets time
 
 #if 0
     if (name_is("3007")) {
@@ -4616,7 +4628,7 @@ void hdyn::integrate_node(bool exact,			// default = true
 
     if (time == system_time) return;
 
-    if (kep == NULL) {
+    if (!kep) {
 
 	clear_interaction();
 	calculate_acc_and_jerk(exact);
@@ -4663,9 +4675,8 @@ void synchronize_tree(hdyn * b)		// update all top-level nodes
     // cerr << "synchronize_tree for " << b->format_label()
     //      << " at time " << b->get_system_time() << endl;
 
-
     // Added by Steve (11/04) to avoid losing perturber list information
-    // when a multiple clump is synched.  Not clear if exact = true was
+    // when a multiple clump is synced.  Not clear if exact = true was
     // ever necessary -- watch this!!
 
     bool exact = false;
