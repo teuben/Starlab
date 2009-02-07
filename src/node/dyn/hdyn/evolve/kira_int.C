@@ -629,7 +629,7 @@ int integrate_list(hdyn * b,				// root node
 
     // Separate the force calculation from the rest for GRAPE implementation.
 
-    xreal t_next = next_nodes[0]->get_next_time();
+    xreal t_next = next_nodes[0]->get_next_time();	// = sys_t
 
 #ifdef TIME_LIST
     for (int k = 0; k < kmax; k++) {
@@ -704,7 +704,7 @@ int integrate_list(hdyn * b,				// root node
 		}
 #endif
 
-		if (!bi->correct_and_update()) {
+		if (!bi->correct_and_update()) {	// sets time)
 
 #ifdef T_DEBUG
 		    if (IN_DEBUG_RANGE(sys_t)) {
