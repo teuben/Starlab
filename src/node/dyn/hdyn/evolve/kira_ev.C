@@ -1650,7 +1650,12 @@ void kira_synchronize_tree(hdyn *b,
 	    if (iter > 20) {
 		cerr << "kira_synchronize_tree: " << bi->format_label() << " ";
 		PRL(iter);
-		PRI(4); PRC(fmod(st, timestep)); PRL(timestep);
+		int p = cerr.precision(15);
+		PRI(4); PRC(bi->get_time()); PRL(st);
+		PRI(4); PRC(bi->get_timestep());
+		PRL(fmod(st, bi->get_timestep()));
+		PRI(4); PRL(timestep); PRC(fmod(st, timestep));
+		cerr.precision(p);
 	    }
 
 	    bi->set_timestep(timestep);
