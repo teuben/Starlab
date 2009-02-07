@@ -40,7 +40,7 @@ bool hdyn::is_perturbed_cm()
     return (is_parent() && get_oldest_daughter()->is_perturbed_cpt());
 }
 
-// Initial asumption was that, in use, the list would be checked
+// Initial assumption was that, in use, the list would be checked
 // frequently, but updated relatively rarely.  Thus, we expected to
 // use an ordered list for convenience of searching, even though that
 // means updates may be significantly more expensive -- monitor this!
@@ -77,7 +77,7 @@ local int compare_ptr(const void * pi, const void * pj)
         return 0;
 }
 
-void hdyn::reconstruct_perturbed_list()
+void hdyn::reconstruct_perturbed_list(bool verbose)	// default = false
 {
     if (!options->use_perturbed_list) return;
 
@@ -90,12 +90,14 @@ void hdyn::reconstruct_perturbed_list()
 	if (bi->is_perturbed_cm()) {
 
 	    perturbed_list[n_perturbed++] = bi;
-
-	    //cerr << "Added node " << bi << " " << bi->format_label()
-	    //     << " as perturbed_list[" << n_perturbed-1
-	    //	   << "] at time " << bi->get_system_time()
-	    //	   << endl;
-
+#if 0
+	    if (verbose) {
+	      cerr << "Added node " << bi << " " << bi->format_label()
+		   << " as perturbed_list[" << n_perturbed-1
+		   << "] at time " << bi->get_system_time()
+		   << endl;
+	    }
+#endif
 	}
 
     if (FAST_ACCESS) {
@@ -105,9 +107,9 @@ void hdyn::reconstruct_perturbed_list()
 	qsort(perturbed_list, n_perturbed, sizeof(hdynptr), compare_ptr);
     }
 
-    cerr << endl
-	 << "rebuilt perturbed_list; n_perturbed = " << n_perturbed
-	 << endl;
+    if (verbose)
+      cerr << "rebuilt perturbed_list; n_perturbed = " << n_perturbed
+	   << endl;
 }
 
 void hdyn::dump_perturbed_list()
@@ -202,7 +204,7 @@ bool hdyn::on_perturbed_list()
     return (i >= 0 && i < n_perturbed && perturbed_list[i] == this);
 }
 
-void hdyn::check_perturbed_list()
+void hdyn::check_perturbed_list(int id, bool verbose)	// defaults = 0, false
 {
     // Note: checking and reconstruction are O(N log N) operations
     //	     if FAST_ACCESS is true; otherwise checking is O(N^2),
@@ -211,7 +213,7 @@ void hdyn::check_perturbed_list()
     if (!perturbed_list) {
 
 	cerr << endl
-	     << "check_perturbed_list:  perturbed_list = NULL!"
+	     << "check_perturbed_list (" << id << "):  perturbed_list = NULL!"
 	     << endl;
 
     } else {
@@ -226,8 +228,8 @@ void hdyn::check_perturbed_list()
 		if ((i = bi->get_index_on_perturbed_list()) < 0
 		    || i >= n_perturbed
 		    || perturbed_list[i] != bi) {
-		    cerr << "check_perturbed_list:  " << bi->format_label()
-			 << " not on perturbed_list" << endl;
+		    cerr << "check_perturbed_list (" << id << "):  "
+			 << bi->format_label() << " not on list" << endl;
 		    reconstruct_list = true;
 		}
 	    }
@@ -236,7 +238,7 @@ void hdyn::check_perturbed_list()
 
 	for (i = 0; i < n_perturbed; i++) {
 	    if (!perturbed_list[i]->is_perturbed_cm()) {
-		cerr << "check_perturbed_list:  entry " << i
+	      cerr << "check_perturbed_list (" << id << "):  entry " << i
 		     << " " << perturbed_list[i]->format_label()
 		     << " is not perturbed" << endl;
 		 reconstruct_list = true;
@@ -247,7 +249,8 @@ void hdyn::check_perturbed_list()
 
 	for (i = 0; i < n_perturbed-1; i++) {
 	     if (perturbed_list[i] >= perturbed_list[i+1]) {
-		 cerr << "perturbed_list corrupted at i = " << i << endl;
+	         cerr << "check_perturbed_list (" << id
+		      << "): list corrupted at i = " << i << endl;
 		 reconstruct_list = true;
 	     }
 	}
@@ -256,8 +259,7 @@ void hdyn::check_perturbed_list()
 
 	if (reconstruct_list) {
 	    // dump_perturbed_list();
-	    reconstruct_perturbed_list();
-	    cerr << "perturbed_list reconstructed" << endl;
+	    reconstruct_perturbed_list(id>0);
 	}
     }
 }
@@ -284,7 +286,7 @@ void hdyn::add_to_perturbed_list(int id) // default = 0
 	     << format_label() << " already on list"
 	     << " at location " << i << endl;
 
-	check_perturbed_list();
+	check_perturbed_list(1, false);
 
     } else {
 
@@ -347,7 +349,10 @@ void hdyn::remove_from_perturbed_list(int id) // default = 0
 	  cerr << "    perturbed_list[i] = "
 	       << perturbed_list[i]->format_label() << endl;
 
-	check_perturbed_list();
+	// Suppress check_perturber_list ouptut if id = 2 (new unpert
+	// binary with CM not already on the list).	(Steve, 2/09)
+
+	check_perturbed_list(2, (id != 2));
 
     } else {
 
