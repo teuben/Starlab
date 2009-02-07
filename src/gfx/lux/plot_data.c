@@ -1666,7 +1666,7 @@ main(int argc, char* argv[])
 
 		n = 0;		/* This will force exit from the while loop */
 
-	    } else {
+	    } else if (n > 0) {
 
 		/* Save last point for connection to next segment. */
 
