@@ -458,6 +458,8 @@ void hdyn::setup_binary_node()
 	}
     }
 
+#if 1
+
     // Make sure timestep is consistent with the current time.
     // (Should be unnecessary, as time should be a multiple of the
     // component time steps which triggered the creation of this node.)
@@ -479,6 +481,8 @@ void hdyn::setup_binary_node()
 	    break;
 	}
     }
+
+#endif
 
     mass = older_daughter->mass + younger_daughter->mass;
 
