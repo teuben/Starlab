@@ -252,8 +252,11 @@ void hdyn::synchronize_node(bool exact)		// default = true, so
 						// may not be very useful...
 						// Just added -- maybe cut?
 						// 		Steve, 8/03
+						// But see opposing note at
+						// the end of this file....
 {
-    bool do_diag = false;
+  bool do_diag = false; 	// time > 0.0492;
+
 
 #ifdef KIRA_DEBUG
     do_diag = (diag->ev && diag->check_diag(this));
@@ -291,6 +294,8 @@ void hdyn::synchronize_node(bool exact)		// default = true, so
     if (do_diag) {
 	cerr << "synchronize_node for " << format_label()
 	     << " at time " << system_time << endl << flush;
+	PRL(system_time-time);
+	PRC(timestep); PRL(is_low_level_node());
 	if (is_low_level_node()) pp3(get_parent());
 	cerr << flush;
     }
@@ -306,37 +311,46 @@ void hdyn::synchronize_node(bool exact)		// default = true, so
 
     // cerr << "Energy before "; print_recalculated_energies(get_root());
 
+    if (do_diag) PRL(timestep);
     integrate_node(exact,
 		   false,		// don't integrate unperturbed binaries
 		   false);		// don't force unperturbed binary time
+    if (do_diag) PRL(timestep);
 
     // cerr << "Energy after "; print_recalculated_energies(get_root());
 
     if (do_diag) {
 	cerr <<"After integrate_node "<<endl;
-	PRC(format_label()); PRC(system_time); PRL(time);
+	PRC(timestep); PRC(system_time); PRL(time);
+	PRL(kep);
     }
 
     if (!kep) {
 
         // Must ensure that the new particle time steps are consistent
         // with system_time (which should now be identical to time).
+        // However, as in kira_ev.C, we skip this if the current time
+        // is in a very high block number, and rely on later
+        // synchronization to fix the problem.
 
-        real old_timestep = timestep;
+	int kb = get_effective_block(time);
+	if (kb < 35) {				// ~ arbitrary limit
 
-	int iter = 0;
-	while (fmod(time, timestep) != 0) {
-	    if (iter++ > 30) break;
-	    timestep *= 0.5;
-	}
+	    real old_timestep = timestep;
+	    int iter = 0;
+	    while (fmod(time, timestep) != 0) {
+	      if (iter++ > 30) break;		// also arbitrary
+		timestep *= 0.5;
+	    }
 
-	if (do_diag || iter > 20) {
-	    cerr << "synchronize_node: " << format_label() << " "; PRL(iter);
-	    int p = cerr.precision(15);
-	    PRI(4); PRC(time); PRL(system_time);
-	    PRI(4); PRC(old_timestep); PRL(fmod(time, old_timestep));
-	    PRI(4); PRL(timestep); PRL(fmod(time, timestep));
-	    cerr.precision(p);
+	    if (do_diag || iter > 20) {
+		cerr << "synchronize_node: " << format_label() << " "; PRL(iter);
+		int p = cerr.precision(15);
+		PRI(4); PRC(time); PRL(system_time);
+		PRI(4); PRC(old_timestep); PRL(fmod(time, old_timestep));
+		PRI(4); PRC(timestep); PRL(fmod(time, timestep));
+		cerr.precision(p);
+	    }
 	}
 
 	if (is_low_level_node())
@@ -520,6 +534,15 @@ local inline real new_timestep(hdyn *b,			// this node
 			       real correction_factor,
 			       real pert_sq)
 {
+    // On entry, dt is the actual step taken to reach the current
+    // time.  The current particle step is timestep, which usually
+    // will be dt.  However, in case of a forced synchronization, dt
+    // will be less than timestep.  We must use dt for computation of
+    // the derivatives below, but timestep is still the proper
+    // starting point for step modification below.
+
+    // N.B. "dt" may really be dtau (if b->get_kappa() > 1).
+
     if (dt <= 0) {
 
 	// Shouldn't happen now, as this will be caught in
@@ -539,12 +562,16 @@ local inline real new_timestep(hdyn *b,			// this node
 	    exit(0);
     }
 
-    real timestep = b->get_timestep();
+    // Too many debugging flags in this file!  This one is strictly local.
 
-    if (timestep == 0)
-	cerr << "new_timestep: particle timestep = 0" << endl;
+    bool local_debug = false;		// (b->get_time() > 0.0492);
 
-    // N.B. "dt" may really be dtau (if b->get_kappa() > 1).
+    //----------------------------------------------------------------------
+    //
+    // Determine the particle's new "natural" step.  Normally use the
+    // Aarseth criterion, but that may be replaced by a simpler kepler
+    // step for lightly perturbed binaries.  Optionally compare the
+    // Aarseth and kepler steps for debugging purposes.
 
     real newstep, altstep;
     bool keplstep = (pert_sq >= 0 && pert_sq < 0.0001
@@ -558,10 +585,6 @@ local inline real new_timestep(hdyn *b,			// this node
 			   && b->get_kira_diag()->check_diag(b));
 #endif
 
-    // Too many debugging flags...  This one is strictly local.
-
-    bool local_debug = false;
-
     if (0 && time > 400 && b->name_is("3277")) {
       local_debug = true;
       // keplstep = true;		// force a Kepler step
@@ -570,8 +593,8 @@ local inline real new_timestep(hdyn *b,			// this node
 
     if (local_debug) {
 	cerr << endl;
-	PRC(keplstep);
-	PRL(correction_factor);
+	PRC(keplstep); PRL(correction_factor);
+	PRC(dt); PRL(b->get_timestep());
     }
 
     if (keplstep) {
@@ -607,7 +630,7 @@ local inline real new_timestep(hdyn *b,			// this node
 	// Simple criterion:
 	// real newstep = b->get_eta() * sqrt(sqrt(a2 / k2));
 
-	// Use the Aarseth criterion here.
+	// Use the Aarseth criterion here (use dt to determine derivatives).
 
 	real dt2 = dt * dt;
 	real dt4 = dt2 * dt2;
@@ -750,16 +773,14 @@ local inline real new_timestep(hdyn *b,			// this node
 
 	newstep = aarsethstep * correction_factor;
 
-
 	if (local_debug) {
 	  PRC(aarsethstep); PRL(correction_factor); PRL(newstep);
 	}
 
-
 #if 0
 	if (temp_debug_flag && b->is_top_level_node()) {
 	    PRC(aarsethstep); PRL(correction_factor);
-	    PRC(dt); PRC(timestep); PRL(newstep);
+	    PRC(dt); PRC(b->get_timestep()); PRL(newstep);
 	}
 #endif
     }
@@ -780,7 +801,7 @@ local inline real new_timestep(hdyn *b,			// this node
 		PRC(b->get_system_time()); xprint(b->get_system_time());
 		PRC(b->get_time()); xprint(b->get_time());
 		PRC(b->get_t_pred()); xprint(b->get_t_pred());
-		PRC(dt); PRL(timestep);
+		PRC(dt); PRL(b->get_timestep());
 		xreal xdt = b->get_t_pred() - b->get_time();
 		PRC(xdt); xprint(xdt);
 		PRL(acc);
@@ -806,75 +827,104 @@ local inline real new_timestep(hdyn *b,			// this node
 	newstep = altstep;	// comment out to retain Aarseth step
     }
 
-
-    // EXPERIMENTAL: Reduce the time step of a strongly perturbed binary
-    //		     component.
-    // Exponent in the pow() comes from a simple comparison of time scales...
+    // Reduce the time step of a strongly perturbed binary component.
+    // Exponent in the pow() comes from a simple comparison of time
+    // scales...
 
     if (b->is_low_level_node() && b->get_perturbation_squared() > 1)
 	newstep *= pow(b->get_perturbation_squared(), -0.25);
-
 
     // Arbitrarily reduce low-level steps by some factor,
     // to facilitate timing checks of low-level steps.
     //
     // if (b->is_low_level_node()) newstep /= 32;
+
+    //----------------------------------------------------------------------
     //
+    // Now newstep is the "natural" time step for the particle.  Force
+    // it into an appropriate scheduling block.  Ordinarily this will
+    // mean that the time step should be a power of two, but in some
+    // circumstances (usually if the system took a very short step in
+    // the past, or synchronization is being forced), it may not be
+    // possible to find a reasonable step that is commensurate with
+    // the current time.  In that case, we may want to take a
+    // non-power-of-two step to restore the scheduling (NOT yet
+    // implemented).
 
+    real timestep = b->get_timestep();
+    if (timestep == 0) cerr << "new_timestep: particle timestep = 0" << endl;
 
-    // The natural time step is newstep.  Force it into an appropriate
-    // power-of-two block.  A halving of timestep (not dt!) is always OK.
-    // To preserve the synchronization, a doubling is OK only if the
-    // current time could be reached by an integral number of doubled
-    // time steps (see use of fmod below).
+    // If dt is less than timestep, it means that the current step has
+    // been forced, usually by a system synchronization.  Timestep is
+    // probably still OK as a starting point for determining the new
+    // step (dt could in principle be very short), but cautiously
+    // reduce timestep below dt, if possible.  However, don't let the
+    // time step decrease by too much.
 
-    // If dt is less than timestep, reduce timestep to match dt.
-    // Note that timestep is always a power of 2.  However, if timestep
-    // differs from dt, it probably means that time is not commensurate
-    // with timestep.  Correct that here (shouldn't happen often...).
+    // Find the first power of 2 below timestep.  This is redundant if
+    // timestep is already a power of 2, but will become necessary if
+    // non-power-of-two time steps are allowed.
 
-    if (dt < timestep) {
-	while (dt < timestep) timestep /= 2;
-	while (fmod(time, timestep) != 0) timestep /= 2;
+    int exponent;
+    real timestep2 = timestep/(2*frexp(timestep, &exponent));
+
+    if (local_debug) {
+      PRC(1001); PRC(dt); PRL(timestep); PRL(timestep2);
+      int kb = get_effective_block(time);
+      PRC(kb); PRL(pow(2,-kb));
     }
 
+    while (dt < timestep2 && timestep2 > 0.01*timestep) timestep2 /= 2;
 
-    if (local_debug) PRL(timestep);
+    if (local_debug) {PRC(1002); PRC(dt); PRL(timestep); PRL(timestep2);}
 
+    // Note: At this stage it is possible that timestep2 is not
+    // commensurate with the current time.  DON'T force it (likely to
+    // drop the step to an unacceptable value):
+    //
+    // while (fmod(time, timestep2) != 0) timestep2 /= 2;
 
-    real final_step = timestep;
+    // Choose the final time step.  Start with timestep2, then adjust
+    // it toward newstep if necessary.
 
-    if (newstep < timestep) {
+    real final_step = timestep2;
 
-	final_step = 0.5 * timestep;
-	// return 0.5 * timestep;
+    if (newstep < timestep2) {
 
-    }  else if (newstep < 2 * timestep) {
+	// Halving the timestep is always OK.  Note that we don't
+	// necessarily drop the step below newstep -- we assume that a
+	// single halving is sufficient.
 
-	// return timestep;
-
-    } else if (fmod(time, 2 * timestep * b->get_kappa()) != 0.0
-	       || 2 * timestep * b->get_kappa() > b->get_step_limit()) {
-
-	// return timestep;
+	final_step = 0.5 * timestep2;
 
     } else {
 
-	// Added by Steve 7/28/98 to deal with pathological ICs from SPZ...
-	// Do not double if this is a strongly perturbed center of mass node...
+	real t2 = 2 * timestep2;
+	if (newstep >= t2) {
 
-	if (b->is_leaf()
-	    || b->get_oldest_daughter()->get_perturbation_squared() < 1) {
+	    //To preserve the synchronization, a doubling is OK only
+	    // if the current time could be reached by an integral
+	    // number of doubled time steps (use of fmod below).
 
-	    final_step = 2 * timestep;
-	    // return 2 * timestep;
+	    if (fmod(time, t2 * b->get_kappa()) == 0.0
+		&& t2 * b->get_kappa() <= b->get_step_limit()) {
 
-	} else {
+		// Added by Steve 7/98 to deal with pathological
+		// ICs from SPZ...  Do not double if this is a
+		// strongly perturbed center of mass node.
 
-	    // return timestep;
-
+		if (b->is_leaf()
+		    || b->get_oldest_daughter()
+			->get_perturbation_squared() < 1) final_step = t2;
+	    }
 	}
     }
+
+    // There is no guarantee that final_step as just defined is
+    // commensurate with time, so if we are currently in an
+    // undesirably low block we will remain there.  Correcting this
+    // would require a non-power-of-two step.  If that is desired, do
+    // it here (and reinstate the "timestep2" code above).
 
     if (local_debug) PRL(final_step);
     return final_step;
@@ -931,6 +981,8 @@ void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
     // time += timestep;
     // real dt = timestep;
 
+    bool local_debug = false;	// time > 0.614;
+
     real dt = system_time - time;
     time = system_time;
 
@@ -986,8 +1038,12 @@ void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
     real correction_factor = 1;
     if (is_low) correction_factor = timestep_correction_factor(this);
 
+    if (local_debug) {PRC(101); PRL(timestep);}
+
     real new_dt = new_timestep(this, at3, bt2, jerk, acc, dt, time,
 			       correction_factor, perturbation_squared);
+
+    if (local_debug) {PRC(102); PRL(timestep);}
 
 #if 0
     if (temp_debug_flag && is_top_level_node()) {
@@ -4628,6 +4684,8 @@ void hdyn::integrate_node(bool exact,			// default = true
 
     if (time == system_time) return;
 
+    bool local_debug = false;	// time > 0.614;
+
     if (!kep) {
 
 	clear_interaction();
@@ -4638,8 +4696,12 @@ void hdyn::integrate_node(bool exact,			// default = true
 	    get_external_acc(this, pred_pos, pred_vel,
 			     pot, acc, jerk);
 
+	if (local_debug) {PRC(1); PRL(timestep);}
+
 	correct_and_update();		// sets time, timestep,...
-	// update();			// note: no retry on error
+					// note: no retry on error
+
+	if (local_debug) {PRC(2); PRL(timestep);}
 
 	store_old_force();
 
@@ -4675,9 +4737,10 @@ void synchronize_tree(hdyn * b)		// update all top-level nodes
     // cerr << "synchronize_tree for " << b->format_label()
     //      << " at time " << b->get_system_time() << endl;
 
-    // Added by Steve (11/04) to avoid losing perturber list information
-    // when a multiple clump is synced.  Not clear if exact = true was
-    // ever necessary -- watch this!!
+    // Added by Steve (11/04) to avoid losing perturber list
+    // information when a multiple clump is synced.  Not clear if
+    // exact = true was ever necessary -- watch this!!  See also
+    // contrary note in synchronize_node() -- to be resolved...
 
     bool exact = false;
 
