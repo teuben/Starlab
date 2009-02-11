@@ -261,8 +261,10 @@ real print_structure_recursive(dyn* bi,
 				  long_binary_output, init_indent);
 	// cerr << endl;
 
-	if (dstar_params != NULL && od->is_leaf() && yd->is_leaf())
+	if (dstar_params != NULL && od->is_leaf() && yd->is_leaf()) {
+	    cerr << endl;
 	    dstar_params(bi);
+	}
 		    
 	real e = od->print_pert(long_binary_output);
 	if (e != 0) {
