@@ -7,8 +7,66 @@
 // initialized to -1.
 
 #if 0
-hdyn *n = (hdyn*)node_with_name("825", b);
-if (n) {PRC(n->get_system_time());PRL(n->get_timestep());}
+if (t > 0.16) exit(1);
+#endif
+
+#if 0
+if (t > 0.03125) {
+  int p = cerr.precision(20);
+  PRC(t); PRC(get_effective_block(t)); PRL(n_next);
+  cerr.precision(p);
+  for (int ii = 0; ii < n_next; ii++) {
+    hdyn *n = next_nodes[ii];
+    if (n && n->is_valid() && !n->get_kepler()) {
+      PRC(n->format_label()); PRL(n->get_timestep());
+      PRL(fmod(t,n->get_timestep()));
+    }
+  }
+  if (t > 0.1) exit(1);
+ }
+#endif
+
+#if 0
+if (t >= 0) {
+  real n2 = 1;
+  int block = 1;
+  while (fmod(t, n2) != 0) {block++; n2 /= 2;}
+  if (block > 30 || t > 0.049) {
+    PRC(block); PRL(n2);
+    PRL(n_next);
+    for (int ii = 0; ii < n_next; ii++) {
+      hdyn *n = next_nodes[ii];
+      if (n && n->is_valid()) {
+	PRL(n->format_label());
+	int p = cerr.precision(20);
+	PRI(4); PRL(n->get_time());
+	cerr.precision(p);
+	PRI(4); PRL(n->get_timestep());
+      }
+    }
+  }
+ }
+#endif
+
+#if 0
+if (t > 0.6) {
+  hdyn *n = (hdyn*)node_with_name("233", b);
+  if (n) {
+    PRC(n->format_label());
+    PRC(n->get_system_time());
+    PRL(n->get_timestep());
+  }
+  n = (hdyn*)node_with_name("(233,10233)", b);
+  if (n) {
+    PRC(n->format_label());
+    PRC(n->get_system_time());
+    PRL(n->get_timestep());
+  }
+  real n2 = 1;
+  int block = 1;
+  while (fmod(t, n2) != 0) {block++; n2 /= 2;}
+  PRC(block); PRL(n2);
+}
 #endif
 
 #if 0

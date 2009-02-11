@@ -35,7 +35,7 @@ bool kira_calculate_densities(hdyn* b, vec& cod_pos, vec& cod_vel)
 
     if (b->has_grape()) {
 
-	cerr << "Computing densities using GRAPE..." << endl;
+	cerr << "computing densities using GRAPE..." << endl;
 	real cpu0 = cpu_time();
 
 	// The second argument determines the squared radius at which
@@ -61,8 +61,9 @@ bool kira_calculate_densities(hdyn* b, vec& cod_pos, vec& cod_vel)
     } else {
 
 	// Skip (too expensive if no GRAPE is available...).
+	// Need a standalone (kd)tree module...
 
-	cerr << "Skipping density calculation..." << endl;
+	cerr << "skipping density calculation..." << endl;
     }
 
     return status;
