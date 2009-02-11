@@ -670,7 +670,7 @@ void log_output(hdyn * b,
     // Superceded with the with_density flag (Steve, 2/05).
 
     real cpu = cpu_time();
-    cerr << endl << "Computing densities..." << flush;
+    cerr << endl << "computing densities..." << flush;
 
     // Possible that the density calculation will fail, in which case
     // we delete the "density_time" entry from the root dyn story.
