@@ -299,11 +299,11 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
 
     if (verbose) {
 	cerr << "CPU time for reinitialization = "
-	     << cpu_time() - cpu_0 << endl;
+	     << cpu_time() - cpu_0 << endl << endl;
     }
 }
 
-#define N_CHECK 3
+#define N_CHECK 5
 
 local bool check_sync(hdyn* b, int max_count = N_CHECK)
 {
@@ -325,8 +325,10 @@ local bool check_sync(hdyn* b, int max_count = N_CHECK)
 	}
 #endif
 
-	if (bb->get_time() != b->get_system_time()
-	     && bb->get_kepler() == NULL) {
+	if (!bb->get_kepler()
+	    && bb->get_time() != b->get_system_time()) {
+
+	    // Node is not synchronzed.
 
 	    if (++count <= max_count) {
 	        cerr << "check_sync warning:  node "
@@ -337,8 +339,17 @@ local bool check_sync(hdyn* b, int max_count = N_CHECK)
 		cerr << "                     node time   = "
 		     << bb->get_time() << " (";
 		xprint(bb->get_time(), cerr, false); cerr << ")" << endl;
+		PRC(bb->get_timestep()); PRL(bb->get_next_time());
 		need_new_list = true;
 	    }
+
+#if 1
+	    // Optionally synchronize it now.
+
+	    cerr << "check_sync: synchronizing node " << bb->format_label()
+		 << endl;
+	    bb->synchronize_node(false);    // see note at end of hdyn_ev.C
+#endif
 	}
     }
 
