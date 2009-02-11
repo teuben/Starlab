@@ -2073,12 +2073,13 @@ void hdyn::startup_unperturbed_motion()
 
 	    cerr << "    dt = " << timestep
 		 << "  dt_unpert = " << unperturbed_timestep << endl;
+	    PRI(4); PRL(get_effective_block(time));
+	    PRI(4); PRL(get_effective_block(time+unperturbed_timestep));
 
 	    if (diag->unpert_report_level > 0)
 		print_unperturbed_binary_params();
 
 #if 0
-
 	    real predicted_mean_anomaly = kep->get_mean_anomaly()
 	      + unperturbed_timestep * kep->get_mean_motion();
 	    predicted_mean_anomaly = sym_angle(predicted_mean_anomaly);
@@ -2657,7 +2658,9 @@ real hdyn::set_unperturbed_timestep(bool restrict_phase)	// no default
 #undef DEBUG_SCHEDULE
 
 #ifdef DEBUG_SCHEDULE
-bool debug_flag = false;
+bool sched_debug_flag = true;	    // overkill to avoid run-time overhead...
+#else
+bool sched_debug_flag = false;
 #endif
 
 // Careful!  Debugging causes problems with optimization under
@@ -2691,9 +2694,7 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
     xreal t_last = dtblock * f;			// target time on this block
 
 #ifdef DEBUG_SCHEDULE
-    if (debug_flag) {
-        PRC(t_last); PRL(t_min);
-    }
+    if (sched_debug_flag) {PRC(t_min); PRC(t_max); PRL(t_last);}
 #endif
 
     if (t_last <= t_min) return t_min;
@@ -2704,21 +2705,19 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
     real ma = sym_angle(mean_anomaly + mean_motion * (real)(t_last - t_min));
 
 #ifdef DEBUG_SCHEDULE
-    if (debug_flag) {
-        PRC(ma); PRC(ma_min); PRL(ma_max);
-    }
+    if (sched_debug_flag) {PRC(ma); PRC(ma_min); PRL(ma_max);}
 #endif
 
-    if (ma > ma_min && ma < ma_max) return t_last;
+    if (ma_min <= ma && ma <= ma_max) return t_last;
 
-    // Determine (modulo 2 PI) the change in ma per dtblock.
+    // Mean anomaly is not in the desired range.  Determine (modulo 2
+    // PI) the change in ma per dtblock.  The function sym_angle
+    // returns a value in the range [-PI,PI).
 
     real dma = sym_angle(dtblock * mean_motion);
 
 #ifdef DEBUG_SCHEDULE
-    if (debug_flag) {
-        PRL(dma);
-    }
+    if (sched_debug_flag) PRL(dma);
 #endif
 
     if (dma == 0) return t_min;
@@ -2726,18 +2725,19 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
     // Find how many backward steps of dtblock we must take for
     // mean_anomaly to move into the desired range.  Simplify the
     // calculation by placing the lower limit of the range at ma_min
-    // effectively moving all quantities into the range (0, 2 PI).
+    // effectively moving all quantities into the range (0, 2 PI), so
+    // now ma_max > 0 and we want to find a time t_last that moves ma
+    // into the range [0, ma_max].
 
-    ma -= ma_min;
     ma_max -= ma_min;
+    ma -= ma_min;
+    if (ma <= 0) ma += 2*M_PI;	// force ma_max < ma < 2*M_PI
     ma_min = 0;
 
-    // Now we want to find a time t_last corresponding to 0 < ma < ma_max.
-
 #ifdef DEBUG_SCHEDULE
-    if (debug_flag) {
+    if (sched_debug_flag) {
 	PRC(t_min); PRC(t_max); PRL(dtblock);
-	PRC(ma_max); PRC(ma/(2*M_PI)); PRL(dma/(2*M_PI));
+	PRC(ma); PRC(ma_max); PRC(ma/(2*M_PI)); PRL(dma/(2*M_PI));
     }
 #endif
 
@@ -2745,8 +2745,9 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
 
     if (dma < 0 && dma > -ma_max) {
 
-	// A single backward step will increase ma by 0 < -dma < ma_max.
-	// By construction, we now have 0 < -dma < ma_max < ma < 2*M_PI.
+	// A single backward step by one orbit will increase ma by 0 <
+	// -dma < ma_max.  By construction, we now have 0 < -dma <
+	// ma_max < ma < 2*M_PI.
 
 	t_last -= dtblock * ceil((2*M_PI - ma) / (-dma));
 
@@ -2762,10 +2763,7 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
 	// Do it the hard way (step by step), for now.
 
 #ifdef DEBUG_SCHEDULE
-	if (debug_flag) {
-	    cerr << "the hard way..." << endl << flush;#endif
-
-	}
+	if (sched_debug_flag) cerr << "the hard way..." << endl << flush;
 #endif
 
 	while (t_last > t_min) {
@@ -2773,15 +2771,12 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
 	    ma -= dma;
 	    if (ma <= 0) ma += 2*M_PI;
 	    if (ma > 2*M_PI) ma -= 2*M_PI;
-//	    PRC(t_last); PRL(ma);
 	    if (ma < ma_max) break;
 	}
     }
 
 #ifdef DEBUG_SCHEDULE
-    if (debug_flag) {
-	PRL(t_last);
-    }
+    if (sched_debug_flag) PRL(t_last);
 #endif
     return t_last;
 }
@@ -2820,30 +2815,33 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
     // If to_apo is true (default), the step will continue on to the
     // next apocenter (before the CM step).
 
-    // First check if parent is younger binary sister, in which case
-    // its time step may not be "definitive."
-
-    // Note from Steve, 7/97: For unknown reasons, this function fails
-    // to compile properly under g++ version cygnus-2.7-96q4 on Dec
-    // UNIX V4.0B, at optimization levels higher than 0...
-
     // *** NOTE: Do not assume approaching components, or ***
     // ***	 time = system_time or parent time...	  ***
 
-
     if (!kep) return 0;
 
-//    cerr << "in " << func << " for " << format_label()
-//	   << " at " << time << "/" << system_time << endl;
+    // cerr << "in " << func << " for " << format_label()
+    //	    << " at " << time << "/" << system_time << endl;
+
+    // First check if parent is younger binary sister, in which case
+    // its time step may not be "definitive."
 
     hdyn * p = get_parent();
     if (p->is_low_level_node() && p->get_elder_sister() != NULL)
 	p = p->get_elder_sister();
 
-    bool local_debug = false;	// e.g. name_is("322");
-    if (local_debug) {PRC(format_label()); PRL(system_time);}
+    // Use of local_debug here is redundant -- sched_debug_flag plays
+    // the same role, and extends to latest_time() too.  Default is
+    // false, set above.  Really should #ifdef all, or drop the
+    // #ifdefs...
 
-    // Set a limit on the next unperturbed step.
+    // bool local_debug = true;			// e.g. ... = name_is("322");
+    // sched_debug_flag = name_is("322");	// better to do this...
+
+    if (sched_debug_flag) {PRC(format_label()); PRL(system_time);}
+
+    // Set a limit on the next unperturbed step, governed by the
+    // parent step and the unperturbed step limit.
 
     real pdt = p->get_next_time() - time;	// time to end of parent time
 						// step; note that time may
@@ -2858,7 +2856,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	pdt = unpert_step_limit;
     }
 
-    if (local_debug) {PRC(pdt); PRL(unpert_step_limit);}
+    if (sched_debug_flag) {PRC(pdt); PRL(unpert_step_limit);}
 
     // Next step must end after current system time.  (Not relevant
     // during normal unperturbed step, but needed when recomputing step
@@ -2879,11 +2877,10 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	return 0;
     }
 
-    // Allow some overshoot past the end of the parent step.
+    // Allow some overshoot past the end of the parent step and define
+    // a perturber crossing time pdt2.
 
     real pdt2 = pdt + dt_overshoot(this);
-
-    if (local_debug) {PRC(pdt); PRL(pdt2);}
 
     // Special treatment of multiple motion, since the cost of not
     // starting unperturbed motion is so high...
@@ -2898,8 +2895,10 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
     }
 
     if (pdt2 > unpert_step_limit) pdt2 = unpert_step_limit;
-    // PRL(pdt2);
-    // pdt = pdt2;	// ?????
+
+    // Note that both pdt and pdt2 are limited by unpert_step_limit.
+
+    if (sched_debug_flag) {PRC(pdt); PRL(pdt2);}
 
     // Goal: to advance the binary by as great a time as possible,
     //	     subject to the constraints that (a) we do not wish to
@@ -2948,22 +2947,14 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 
     // Determine the integral number of orbits to take.
 
-    // Recall that floor rounds down to the next integer, so orb
-    // orbital periods calculated with floor end *before* pdt.
-    //
-    // real orb = floor(pdt / kep->get_period());
+    // Recall that ceil rounds up to the next integer, so orb orbital
+    // periods calculated with ceil end *after* pdt.
 
     real orb = ceil(pdt / kep->get_period());
 
-    if (local_debug) PRL(orb);
+    if (sched_debug_flag) PRL(orb);
 
-    // Recall that ceil rounds up to the next integer, so orb orbital
-    // periods calculated with ceil end *after* pdt.  The idea is that
-    // it is OK to overshoot the parent step slightly.  However, we
-    // must check that we don't exceed unpert_step_limit, which is
-    // possible if the period is very long.
-
-    if (orb <= 0) {		// can't happen if we use ceil.
+    if (orb <= 0) {		// can't happen if we use ceil
 
 	// See if we can take an orbital step in less than half the
 	// next parent step or the perturber crossing time (pdt2).
@@ -2979,7 +2970,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
     if (orb*kep->get_period() > unpert_step_limit)
         orb = floor(unpert_step_limit / kep->get_period());
 
-    if (local_debug) PRL(orb);
+    if (sched_debug_flag) PRL(orb);
 
     // Note that orb may = 0...
 
@@ -2997,11 +2988,10 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	mean_anomaly += ((real)(time - kep->get_time())) * mean_motion;
     mean_anomaly = sym_angle(mean_anomaly);		// in (-PI, PI]
 
-    // Determine number of perturbed steps in the next unperturbed step.
+    // Determine the number of perturbed steps in the next unperturbed step.
 
     real pert_steps = 0;
 
-    // PRL(to_apo);
     if (to_apo) {
 
 	// Get time to next apocenter.
@@ -3036,7 +3026,10 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	// If orb = 0, this step takes us to the next apocenter, regardless
 	// of the parent step.
 
-	if (local_debug) {PRC(1); PRL(pert_steps);}
+	if (sched_debug_flag) {
+	    PRC(pert_steps);
+	    PRL(pert_steps*timestep-unpert_step_limit);
+	}
 
     } else {
 
@@ -3050,10 +3043,11 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	// sure that the step really ends after apocenter (and not just
 	// before).
 
-	if (local_debug) {PRC(2); PRL(pert_steps);}
+	if (sched_debug_flag) {
+	    PRC(pert_steps);
+	    PRL(pert_steps*timestep-unpert_step_limit);
+	}
     }
-
-    // PRC(1); PRL(pert_steps);
 
     // Recheck that step will advance beyond system_time.  By construction,
     // it should fall short by at most 1 period...
@@ -3064,8 +3058,6 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 		 << " increased to reach system_time" << endl;
 	pert_steps += ceil(kep->get_period() / timestep);
     }
-
-    // PRC(2); PRL(pert_steps);
 
     // Check that we really will pass apocenter at end of step.
 
@@ -3095,15 +3087,45 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	       << " at time " << time << endl;
     }
 
+    // Check (again) that we haven't exceeded the limit.
+
+    if (pert_steps*timestep > unpert_step_limit) {
+
+	// We need to reduce the step.  Setting pert_steps = 0 will
+	// have the effect of reverting to periastron reflection,
+	// which may be converted to a full orbit, depending on phase.
+	// However, this will be overkill in many circumstances.  Try
+	// to wind back by an integral number of orbits, but don't
+	// take a step to less than the current system time.
+
+        orb = floor(unpert_step_limit / kep->get_period());
+	pert_steps = floor(orb * kep->get_period() / timestep);
+
+	if (sched_debug_flag) {
+	    cerr << "restricting pert_steps to unpert_limit" << endl;
+	    PRL(pert_steps);
+	}
+
+	// Give up and revert to reflection if this time step is too short.
+
+	if (time + pert_steps*timestep < system_time) pert_steps = 0;
+    }
+
     //-----------------------------------------------------------------
 
     // We have now determined the best unconstrained value of pert_steps.
-    // Optionally try to modify the choice to improve scheduling.
 
-    if (local_debug) {
-      PRC(3); PRL(pert_steps);
-      PRL(options->optimize_scheduling);
+    if (sched_debug_flag) {
+	PRC(pert_steps); PRL(pert_steps*timestep);
+	PRL(unpert_step_limit);
+	PRL(get_effective_block(time));
+	PRL(get_effective_block(timestep));
+	PRL(get_effective_block(pert_steps*timestep));
+	PRL(get_effective_block(time+pert_steps*timestep));
+	PRL(options->optimize_scheduling);
     }
+
+    // Optionally try to modify the choice to improve scheduling.
 
     if (pert_steps > 0 && options->optimize_scheduling) {
 
@@ -3117,7 +3139,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	// Note that this procedure overrides and largely ignores
 	// the previous timestep determination...
 
-        if (local_debug) PRL(options->optimize_block);
+        if (sched_debug_flag) PRL(options->optimize_block);
 
 	if (!options->optimize_block) {
 
@@ -3133,7 +3155,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	    int minus = (int)((end_mean_anomaly + M_PI) / d_mean_anomaly);
 	    int plus = (int)((-0.9*M_PI - end_mean_anomaly) / d_mean_anomaly);
 
-	    if (local_debug) {PRC(minus); PRL(plus);}
+	    if (sched_debug_flag) {PRC(minus); PRL(plus);}
 
 	    // Limits should be unnecessary, but...
 
@@ -3158,7 +3180,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	    p2 /= 2;
 	    new_steps -= p2/2;
 
-	    if (local_debug) {PRC(new_steps); PRL(p2);}
+	    if (sched_debug_flag) {PRC(new_steps); PRL(p2);}
 
 	    pert_steps = new_steps;
 
@@ -3200,8 +3222,10 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	    real mean_anomaly_min = mean_anomaly
 					+ ((real)(t_min-time))*mean_motion;
 
-	    real pdt = p->get_timestep();
+	    real pdt = p->get_timestep();	// different pdt from above!
 	    xreal t_max = p->get_next_time() + 0.5*pdt;
+	    if (t_max > time + unpert_step_limit)
+		t_max = time + unpert_step_limit;
 
 	    // Define range of acceptable final mean anomalies.
 
@@ -3216,8 +3240,9 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	    int kb = get_effective_block(dtblock);
 
 #ifdef DEBUG_SCHEDULE
-	    debug_flag = false;
-	    if (name_is("11032") || name_is("13993")) debug_flag = true;
+	    if (sched_debug_flag) {
+		PRI(4); cerr << "initial "; PRC(kb); PRC(t_min); PRL(t_max);
+	    }
 #endif
 
 	    while (dtblock >= timestep) {
@@ -3225,6 +3250,14 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 				     ma_min, ma_max,
 				     mean_anomaly_min,
 				     mean_motion);
+
+		// Time t_next lies in block kb.  Note that it is
+		// possible that this is also the boundary of a lower
+		// block.
+
+#ifdef DEBUG_SCHEDULE
+		if (sched_debug_flag) {PRC(kb); PRL(t_next);}
+#endif
 		if (t_next > t_min) break;
 		kb++;
 		dtblock /= 2;
@@ -3249,7 +3282,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 
 		// (These debugging lines can be quite expensive...)
 
-		if (debug_flag) {
+		if (sched_debug_flag) {
 //		if (system_time > 0.112) {
 
 		    cerr << endl << func << " for " << format_label()
@@ -3262,7 +3295,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 		    PRI(4); PRL(get_effective_block(time));
 		    PRI(4); PRL(get_effective_block(timestep));
 
-		    PRI(4); PRL(old_steps);
+		    PRI(4); PRC(old_steps); PRL(old_steps*timestep);
 		    PRI(4); PRL(time+old_steps*timestep);
 		    PRI(4); PRL(get_effective_block(old_steps*timestep));
 		    PRI(4); PRL(get_effective_block(time+old_steps*timestep));
@@ -3272,30 +3305,28 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 		    PRI(4); PRC(ma_min); PRL(ma_max);
 		    PRI(4); PRC(kb); PRC(dtblock); PRL(dtblock/timestep);
 		    PRI(4); PRC(t_next); PRL(t_min);
-		    PRI(4); PRC(pert_steps); PRL(pert_steps/old_steps);
+		    PRI(4); PRC(pert_steps); PRL(pert_steps*timestep);
+		    PRI(4); PRL(pert_steps/old_steps);
 		    PRI(4); PRL(get_effective_block(pert_steps*timestep));
 		    PRI(4); PRL(get_effective_block(time+pert_steps*timestep));
+		    if (get_effective_block(time+pert_steps*timestep) > kb)
+			cerr << "        -- wrong block????" << endl;
+
 		    PRI(4); PRL(sym_angle(mean_anomaly
 				+ mean_motion*pert_steps*timestep));
 
-		    if (get_effective_block(time+pert_steps*timestep) != kb)
-			cerr << "    ????" << endl;
-
 		    cerr.precision(pp);
-
 
 		    real predicted_mean_anomaly = kep->get_mean_anomaly()
 		      + pert_steps * timestep * kep->get_mean_motion();
 		    predicted_mean_anomaly = sym_angle(predicted_mean_anomaly);
 		    PRI(4); PRL(predicted_mean_anomaly);
-
-
 		}
 #endif
 
 	    }
 
-	    if (local_debug) {
+	    if (sched_debug_flag) {
 	        PRC(t_next); PRC(t_min); PRL(system_time);
 		PRC(pert_steps); PRL(pert_steps*timestep);
 	    }
@@ -3303,40 +3334,26 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	}
     }
 
-    if (local_debug) {PRC(4); PRL(pert_steps);}
+    if (sched_debug_flag) {PRC(4); PRL(pert_steps);}
 
-    // One final time step check.
+    // (Shouldn't be necessary to recheck the time step limit in
+    // either the unoptimized or the block optimized case, but check
+    // and flag just in case.)
 
     if (pert_steps*timestep > unpert_step_limit) {
-
-      // We need to reduce the step.  Setting pert_steps = 0 will have
-      // the effect of reverting to periastron reflection, which may
-      // be converted to a full orbit, depending on phase.  However,
-      // this will be overkill in many circumstances.  Try to wind back
-      // by an integral number of orbits (we will likely lose our spot
-      // in the tree), but don't take a step to less than the current
-      // system time.
-
-      real delta_t = pert_steps*timestep - unpert_step_limit;
-      pert_steps -= ceil(delta_t/kep->get_period())*kep->get_period()/timestep;
-
-      // Give up and revert to reflection if this time step is too short.
-
-      if (time + pert_steps*timestep < system_time)
-	pert_steps = 0;
+	cerr << "*** warning: get_max_unperturbed_steps(): ";
+	PRC(pert_steps*timestep); PRL(unpert_step_limit);
     }
-
-    if (local_debug) {PRC(5); PRL(pert_steps);}
 
     return pert_steps;		// unit = current perturbed timestep
 }
 
 void hdyn::recompute_unperturbed_step()
 {
-    //	    cerr << "Recomputing unperturbed step for "
-    //		 << "(" << b->format_label() << ",";
-    //	    cerr << b->get_binary_sister()->format_label() << ")\n";
-    //	    PRL(b->get_fully_unperturbed());
+    // cerr << "Recomputing unperturbed step for "
+    //	    << "(" << b->format_label() << ",";
+    // cerr << b->get_binary_sister()->format_label() << ")\n";
+    // PRL(b->get_fully_unperturbed());
 
     // Ordinarily, if the motion is flagged as unperturbed on restart,
     // the unperturbed timestep should be trustworthy.  However, it
@@ -3349,7 +3366,6 @@ void hdyn::recompute_unperturbed_step()
     // unsigned long usteps = get_max_unperturbed_steps(true);
 
     real usteps = get_max_unperturbed_steps(true);
-    // PRC(1); PRL(usteps);
 
     if (usteps > 0) {
 
@@ -3359,7 +3375,7 @@ void hdyn::recompute_unperturbed_step()
 
     } else {
 
-	// Just live with this, and assume that it will be handled
+	// Just live with this and assume that it will be handled
 	// properly once the step is over...
 
     }
@@ -3647,6 +3663,8 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 		 << "    perturbation = " << sqrt(perturbation_squared)
 		 << "  (" << bt[init_binary_type] << ")"
 		 << endl;
+	    PRI(4); PRL(get_effective_block(time));
+	    PRI(4); PRL(get_effective_block(time+unperturbed_timestep));
 
 	    // PRL(get_kepler()->get_separation());
 	    // PRL(get_kepler()->get_semi_major_axis());
@@ -4074,8 +4092,9 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 			    if (resched) {
 			        putiq(root->get_dyn_story(), "resched", 1);
-				cerr << "forced rescheduling due to "
-				     << format_label() << endl;
+				if (verbose)
+				    cerr << "    forced rescheduling due to "
+					 << format_label() << endl;
 			    }
 
 			    // Note that we should really repeat the entire
