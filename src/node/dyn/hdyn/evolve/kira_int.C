@@ -883,8 +883,9 @@ int integrate_list(hdyn * b,				// root node
 				tree_changed = true;	// force a new
 							// timestep list
 
-				cerr << "kira: recomputing scheduling list "
-				     << "at time " << sys_t << endl;
+				if (diag)
+				  cerr << "kira: recomputing scheduling list "
+				       << "at time " << sys_t << endl;
 
 				rmq(s, "resched");
 			    }
