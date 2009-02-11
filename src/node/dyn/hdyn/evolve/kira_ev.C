@@ -1629,6 +1629,7 @@ void kira_synchronize_tree(hdyn *b,
 	// Apply corrector and redetermine timesteps.
 
 	real st = sys_t;
+	int kb = get_effective_block(st);
 
 	for (int i = 0; i < n_next; i++) {
 	    hdyn *bi = next_nodes[i];
@@ -1636,26 +1637,32 @@ void kira_synchronize_tree(hdyn *b,
 	    bi->init_pred();
 	    bi->store_old_force();
 
-	    // As in synchronize_tree, make sure time step is consistent with
-	    // system_time (= time).
+	    // As in synchronize_tree, make sure time step is
+	    // consistent with system_time (= time).  However, skip
+	    // this if the current time is in a very high block
+	    // number, and rely on later synchronization to fix the
+	    // problem.
 
 	    real timestep = bi->get_timestep();
 
-	    int iter = 0;
-	    while (fmod(st, timestep) != 0) {
-		if (iter++ > 30) break;
-		timestep *= 0.5;
-	    }
+	    if (kb < 35) {			// ~ arbitrary limit
+		int iter = 0;
+		while (fmod(st, timestep) != 0) {
+		    if (iter++ > 30) break;
+		    timestep *= 0.5;
+		}
 
-	    if (iter > 20) {
-		cerr << "kira_synchronize_tree: " << bi->format_label() << " ";
-		PRL(iter);
-		int p = cerr.precision(15);
-		PRI(4); PRC(bi->get_time()); PRL(st);
-		PRI(4); PRC(bi->get_timestep());
-		PRL(fmod(st, bi->get_timestep()));
-		PRI(4); PRL(timestep); PRC(fmod(st, timestep));
-		cerr.precision(p);
+		if (iter > 20) {
+		    cerr << "kira_synchronize_tree: "
+			 << bi->format_label() << " ";
+		    PRL(iter);
+		    int p = cerr.precision(15);
+		    PRI(4); PRC(bi->get_time()); PRL(st);
+		    PRI(4); PRC(bi->get_timestep());
+		    PRL(fmod(st, bi->get_timestep()));
+		    PRI(4); PRL(timestep); PRC(fmod(st, timestep));
+		    cerr.precision(p);
+		}
 	    }
 
 	    bi->set_timestep(timestep);
