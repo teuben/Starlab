@@ -841,7 +841,7 @@ void log_output(hdyn * b,
 
 void snap_output(hdyn * b, real steps, int& snaps,
 		 bool reg_snap, bool last_snap,
-		 char * snap_save_file,
+		 const char * snap_save_file,
 		 xreal t, xreal ttmp, real t_end,
 		 real& t_snap, real dt_snap, bool verbose)
 {

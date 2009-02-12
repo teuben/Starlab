@@ -23,7 +23,7 @@
 #include "story.h"
 #include "node.h"
 
-void  node::log_comment(char * comment)
+void  node::log_comment(const char * comment)
 {
     if (log_story)
 	add_story_line(log_story, comment);

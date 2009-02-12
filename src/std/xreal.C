@@ -434,7 +434,7 @@ istream & operator >> (istream & s, xreal & x)
 
 #endif
 
-xreal get_xreal(char *str)
+xreal get_xreal(const char *str)
 {
 #if defined USE_XREAL
 
@@ -530,7 +530,7 @@ void xreal::print(ostream& s,
 
 // Xreal version of put_real_number is just xprint with a label.
 
-void put_real_number(ostream & s, char * label, xreal x)
+void put_real_number(ostream & s, const char * label, xreal x)
 {
     s << label;
     xprint(x, s);
@@ -569,6 +569,8 @@ main()
 
 	xreal x = get_xreal(s);
 	put_real_number(cerr, "x = ", x);
+	real xx = x;
+	put_real_number(cerr, "x = ", xx);	// same??
 
 	cerr << "real "; PRC(x); cerr << "xreal: "; x.print(); cerr << endl;
 

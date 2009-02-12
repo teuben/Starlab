@@ -809,10 +809,10 @@ void pp3(hdyn *, ostream & s = cerr, int i = 0);
 void pp3_minimal(hdyn *, ostream & s = cerr, int i = 0);
 void pp3_tree(hdyn *, ostream & s = cerr, int i = 0);
 
-void pp3_maximal(char *, ostream & s = cerr, int i = 0);
-void pp3(char *, ostream & s = cerr, int i = 0);
-void pp3_minimal(char *, ostream & s = cerr, int i = 0);
-void pp3_tree(char *, ostream & s = cerr, int i = 0);
+void pp3_maximal(const char *, ostream & s = cerr, int i = 0);
+void pp3(const char *, ostream & s = cerr, int i = 0);
+void pp3_minimal(const char *, ostream & s = cerr, int i = 0);
+void pp3_tree(const char *, ostream & s = cerr, int i = 0);
 
 // ----- In util/Qt_pp3.C: -----
 
@@ -838,7 +838,7 @@ typedef void (hdyn::*hdyn_MF_ptr)(const vec &);	// member function pointer
 
 void check_consistency_of_node(hdyn * node,
 			       hdyn_VMF_ptr get_something,
-			       char *id);
+			       const char *id);
 void check_consistency_of_nodes(hdyn * node);
 
 void create_binary_from_toplevel_nodes(hdyn * bi, hdyn * bj);
@@ -966,7 +966,7 @@ void fast_get_nodes_to_move(hdyn * b,
 			    bool & reset);
 
 void dump_node_list(int n = 1000000000);
-void dump_node_list_for(char *s);
+void dump_node_list_for(const char *s);
 
 // ----- In hdyn_slow.C: -----
 
@@ -1157,7 +1157,7 @@ void force_nodensity();
 
 void snap_output(hdyn * b, real steps, int& snaps,
 		 bool reg_snap, bool last_snap,
-		 char * snap_save_file,
+		 const char * snap_save_file,
 		 xreal t, xreal ttmp, real t_end,
 		 real& t_snap, real dt_snap, bool verbose);
 

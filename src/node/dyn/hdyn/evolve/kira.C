@@ -258,11 +258,11 @@ local void full_reinitialize(hdyn* b, xreal t, bool verbose,
     pot /= 2;
 
     int p = cerr.precision(INT_PRECISION);
-
     PRC(mass); PRC(pot);
     real r_virial = -0.5*mass*mass/pot;
     PRC(r_virial); PRL(n);
 
+    cerr.precision(STD_PRECISION);
     cerr << "old "; PRC(b->get_d_min_sq());
     real d_min_sq = square(b->get_d_min_fac()*r_virial/n);
     b->set_d_min_sq(d_min_sq);

@@ -396,7 +396,7 @@ node * node_with_index(int i, node * top)	// recursive; default top = NULL
     return NULL;
 }
 
-node * node_with_name(char* s, node * top)	// recursive; default top = NULL
+node * node_with_name(const char* s, node * top) // recursive; default top = NULL
 {
     if (!top) return NULL;
     node * n = top;

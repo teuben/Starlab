@@ -332,7 +332,7 @@ void pp3_tree(hdyn * b,					// data+links, recursive
     }
 }
 
-void pp3_maximal(char *n,
+void pp3_maximal(const char *n,
 		 ostream & s,	// default = cerr
 		 int level)	// default = 0		// -1 ==> no recursion
 {
@@ -340,7 +340,7 @@ void pp3_maximal(char *n,
     pp3_maximal((hdyn*)node_with_name(n, tmp.get_root()), s, level);
 }
 
-void pp3_minimal(char *n,
+void pp3_minimal(const char *n,
 		 ostream & s,	// default = cerr
 		 int level)	// default = 0		// -1 ==> no recursion
 {
@@ -348,7 +348,7 @@ void pp3_minimal(char *n,
     pp3_minimal((hdyn*)node_with_name(n, tmp.get_root()), s, level);
 }
 
-void pp3(char *n,
+void pp3(const char *n,
 	 ostream & s,		// default = cerr
 	 int level)		// default = 0		// -1 ==> no recursion
 {
@@ -356,7 +356,7 @@ void pp3(char *n,
     pp3((hdyn*)node_with_name(n, tmp.get_root()), s, level);
 }
 
-void pp3_tree(char *n,
+void pp3_tree(const char *n,
 	      ostream & s,	// default = cerr
 	      int level)	// default = 0		// -1 ==> no recursion
 {

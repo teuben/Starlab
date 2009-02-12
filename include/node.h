@@ -270,7 +270,7 @@ class node
 
 	/// Add a comment to the log story.
 
-        void  log_comment(char *);
+        void  log_comment(const char *);
 
 	/// Add the argument list to the log story.
 
@@ -646,7 +646,7 @@ node * node_with_index(int i, node * top = NULL);
 
 /// Return a pointer to the node with the specified name.
 
-node * node_with_name(char* s, node * top = NULL);
+node * node_with_name(const char* s, node * top = NULL);
 
 /// Return the depth of node n in the tree.
 

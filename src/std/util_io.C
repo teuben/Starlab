@@ -81,7 +81,7 @@ int check_and_skip_input_line(istream &s, const char* reference_string)
     return 1;
 }    
 
-int get_data_line(istream & s,char * input_line)
+int get_data_line(istream & s, char * input_line)
 {
     get_line(s,input_line);
     return strcmp(input_line,")");

@@ -6,7 +6,7 @@
 int get_line(istream & s, char * line);
 int check_input_line(istream &s, const char* reference_string);
 int check_and_skip_input_line(istream &s, const char* reference_string);
-int get_data_line(istream & s,char * input_line);
+int get_data_line(istream & s, char * input_line);
 void set_vector_from_input_line(vec & v, char * input_line);
 void set_vector_from_string(vec & v, char *str);
 xreal get_xreal_from_input_line(char * input_line);

@@ -129,6 +129,6 @@ inline bool operator >= (real x, xreal y) {return ((xreal)x >= y);}
 // inline real operator + (xreal x, real y) {return (real)(x + (xreal)y);}
 // inline real operator - (xreal x, real y) {return (real)(x - (xreal)y);}
 
-void put_real_number(ostream & s, char * label, xreal x);
+void put_real_number(ostream & s, const char * label, xreal x);
 
 #endif

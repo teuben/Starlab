@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 
 typedef double real;
 typedef int (*action)(int);
