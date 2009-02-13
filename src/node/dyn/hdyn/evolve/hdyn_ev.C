@@ -871,7 +871,7 @@ local inline real new_timestep(hdyn *b,			// this node
     if (local_debug) {
       PRC(1001); PRC(dt); PRL(timestep); PRL(timestep2);
       int kb = get_effective_block(time);
-      PRC(kb); PRL(pow(2,-kb));
+      PRC(kb); PRL(pow(2.0,-kb));
     }
 
     while (dt < timestep2 && timestep2 > 0.01*timestep) timestep2 /= 2;
