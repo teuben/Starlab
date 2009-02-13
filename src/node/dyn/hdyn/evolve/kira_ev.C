@@ -98,9 +98,8 @@ long long mpi_allreduce_count;
 long long mpi_allreduce_len;
 long long mpi_allgather_count;
 long long mpi_allgather_len;
-typedef struct {int id;int* seq;} id_seq_type ;
-
-typedef struct { real val; int id; } real_int_type;
+typedef struct {int id;int* seq;} id_seq_type;
+typedef struct {real val; int id;} real_int_type;
 
 /*  decomp - Compute a balanced decomposition of a 1-D array
 
@@ -1628,7 +1627,7 @@ void kira_synchronize_tree(hdyn *b,
 
 	// Apply corrector and redetermine timesteps.
 
-	real st = sys_t;
+	xreal st = sys_t;
 	int kb = get_effective_block(st);
 
 	for (int i = 0; i < n_next; i++) {

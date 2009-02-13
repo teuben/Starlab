@@ -35,7 +35,10 @@ real print_binary_params(kepler* k, real m1, real kT,
 			 int indent)			// default = BIN_INDENT
 
 // Print out the orbital parameters of a binary, regardless of energy.
-// Return the total energy of the binary system.
+// Return the total energy of the binary system.  Note that we do *not*
+// end the output with a newline, to allow more flexibility to the
+// calling function (e.g. if this output is to be embedded in a longer
+// line).
 
 {
     real m = k->get_total_mass();
@@ -61,7 +64,7 @@ real print_binary_params(kepler* k, real m1, real kT,
 	    if (kT > 0) cerr << " E/kT= " << mu_kT*k->get_energy();
 
 	    cerr << " D= " << dist_from_center;
-	    cerr << " n= " << k->get_normal_unit_vector();
+	    // cerr << " n= " << k->get_normal_unit_vector();  // odd choice...
 
 	    // cerr << endl;	// newline should be added by calling
 				// function (e.g. print_pert)
@@ -94,7 +97,7 @@ real print_binary_params(kepler* k, real m1, real kT,
 	    cerr << endl;
 
 	    PRI(indent); cerr << "masses  " << m1 << "  " << m2
-			      << "  (total = " << m << ")" << endl;
+			      << "  (total = " << m << ")";	// << endl;
 	}
 
     } else {
@@ -106,7 +109,7 @@ real print_binary_params(kepler* k, real m1, real kT,
 	     << "  " << k->get_energy();
 	if (kT > 0) cerr << "  " << -mu_kT*k->get_energy();
 	cerr << "  " << dist_from_center
-	     << endl;
+	  ;	// << endl;
     }
 
     return mu*k->get_energy();
@@ -183,7 +186,10 @@ void print_binary_from_dyn_pair(dyn* bi, dyn* bj,
 				bool long_binary_output) // default = true
 {
     // Print out the relative orbital parameters of a dyn pair,
-    // regardless of their relative energy.
+    // regardless of their relative energy.  Note that we do *not* end
+    // the output with a newline, to allow more flexibility to the
+    // calling function (e.g. if this output is to be embedded in a
+    // longer line).
 
     kepler k;
     initialize_kepler_from_dyn_pair(k, bi, bj);
@@ -259,12 +265,10 @@ real print_structure_recursive(dyn* bi,
 	eb += print_binary_params(&k, primary->get_mass(), kT,
 				  dist_from_center, verbose,
 				  long_binary_output, init_indent);
-	// cerr << endl;
+	cerr << endl;	// newline not provided by function
 
-	if (dstar_params != NULL && od->is_leaf() && yd->is_leaf()) {
-	    cerr << endl;
+	if (dstar_params != NULL && od->is_leaf() && yd->is_leaf())
 	    dstar_params(bi);
-	}
 		    
 	real e = od->print_pert(long_binary_output);
 	if (e != 0) {

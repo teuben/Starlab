@@ -1532,10 +1532,11 @@ local void evolve_system(hdyn * b,		// hdyn array
 
 	// Optionally check the heartbeat...
 
-	// Not much point continuing if t - t_prev = 0...
-	// Eventually may want more diagnostics.  For now, just quit!
+	// May not be much point continuing if t - t_prev = 0...
+	// Eventually may want more diagnostics.  For now, just flag
+	// -- let the error occur later if real!
 
-	real dt_true = t - t_prev;
+	real dt_true = (real)(t - t_prev);
 
 	if (dt_true <= 0
 	    || (kd->check_heartbeat
@@ -1559,10 +1560,19 @@ local void evolve_system(hdyn * b,		// hdyn array
 	}
 
 	if (dt_true <= 0) {
-	    cerr << endl << "time step error at ";
-	    cerr.precision(HIGH_PRECISION);
+	    cerr << endl << "time step warning at ";
+	    int p = cerr.precision(HIGH_PRECISION);
 	    PRL(b->get_system_time());
-	    PRC(t); PRL(t_prev);
+	    PRI(4); PRL(t);
+	    PRI(4); PRL(t_prev);
+	    PRI(4); PRL(dt_true);
+	    cerr.precision(p);
+
+#ifdef USE_XREAL
+	    cerr << "    xreal system_time = "; xprint(b->get_system_time());
+	    cerr << "    xreal t           = "; xprint(t);
+	    cerr << "    xreal t_prev      = "; xprint(t_prev);
+#endif
 
 	    cerr << endl << "integration list (n_next = "
 		 << n_next << "):" << endl << endl;
@@ -1587,7 +1597,9 @@ local void evolve_system(hdyn * b,		// hdyn array
 		    pp3(top);
 		}
 
-	    err_exit("zero effective time step");
+	    // Don't quit!
+	    //
+	    // err_exit("zero effective time step");
 	}
 
 	// Integrate_list handles tree changes -- allows one per step.

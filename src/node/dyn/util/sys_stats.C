@@ -181,6 +181,7 @@ local void print_parameters_for_massive_black_holes(dyn *b,
 		print_binary_from_dyn_pair(bi,bi->get_binary_sister(),
 					   kT, center, verbose,
 					   long_binary_output);
+		cerr << endl;	// newline not provided by function
 	    }
 	}
     }
@@ -615,7 +616,7 @@ void search_for_binaries(dyn* b,
 		print_binary_from_dyn_pair(bi, bj,
 					   kT, center, verbose,
 					   long_binary_output);
-		cerr << endl;
+		cerr << endl;	// newline not provided by function
 
 		found = true;
 	    }
@@ -904,11 +905,12 @@ local void print_binaries(dyn* b, real kT,
 		eb += print_binary_params(od->get_kepler(), od->get_mass(),
 					  kT, dist_from_center, verbose>0,
 					  long_binary_output, init_indent);
+		cerr << endl;	// newline not provided by function
 		nb++;
 
 		// Indirect reference to dstar output:
 
-		if (dstar_params != NULL)
+		if (dstar_params)
 		    dstar_params(bi);
 
 		if (rcore > 0) {

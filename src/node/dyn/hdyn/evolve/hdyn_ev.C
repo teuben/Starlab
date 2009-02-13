@@ -530,7 +530,7 @@ local inline real new_timestep(hdyn *b,			// this node
 			       vec& jerk,		// 1st order term
 			       vec& acc,		// 0th order term
 			       real dt,			// current step
-			       real time,		// present time
+			       xreal time,		// present time
 			       real correction_factor,
 			       real pert_sq)
 {
@@ -585,7 +585,7 @@ local inline real new_timestep(hdyn *b,			// this node
 			   && b->get_kira_diag()->check_diag(b));
 #endif
 
-    if (0 && time > 400 && b->name_is("3277")) {
+    if (0 && time > 400.0 && b->name_is("3277")) {
       local_debug = true;
       // keplstep = true;		// force a Kepler step
       timestep_check = true;		// force Kepler/Aarseth comparison
@@ -970,8 +970,8 @@ real timestep_correction_factor(hdyn *b)
 // update:  Update the time and the timestep.
 //-----------------------------------------------------------------------------
 
-void hdyn::update(vec& bt2, vec& at3)    // pass arguments to
-					       // avoid recomputation
+void hdyn::update(vec& bt2, vec& at3)	// pass arguments to
+					// avoid recomputation
 {
     // Note from Steve (4/03):  We now draw a distinction betwen dt, the
     // step actually taken, and timestep, the particle's natural step.

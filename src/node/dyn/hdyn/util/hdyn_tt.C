@@ -267,8 +267,6 @@ real hdyn::print_pert(bool long_binary_output,		// default = true
 	hdyn* parent = get_parent();
 	hdyn* nn = parent->get_nn();
 
-	// cerr << endl;		// omitted by print_binary_params...
-
 	if (timestep > 0 && parent->timestep > 0) {
 	    PRI(indent);
 	    cerr << "cpt timestep = " << timestep
@@ -315,12 +313,6 @@ real hdyn::print_pert(bool long_binary_output,		// default = true
 		// }
 	    }
 	}
-
-    } else {
-
-	if (slow) cerr << " [" << get_kappa() << "]";
-	cerr << endl;
-
     }
 
     real e_unp = 0;
