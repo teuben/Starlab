@@ -1584,6 +1584,10 @@ void sys_stats(dyn* b,
 
     refine_cluster_mass(b, 1);
     cerr << endl;
+
+    // New call to user-provided code (may be empty; Steve, 2/09).
+
+    user_diag(b);
 }
 
 #else
