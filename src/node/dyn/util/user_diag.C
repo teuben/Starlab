@@ -19,7 +19,7 @@
 
 void user_diag(dyn *b)
 {
-  // cerr << endl << "user_diag: No user-provided code" << endl << endl;
+  cerr << "  user_diag: No user-provided diagnostic code" << endl;
 }
 
 #endif

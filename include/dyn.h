@@ -750,6 +750,9 @@ void compute_core_parameters(dyn* b, int k,
                              vec& center,
                              real& rcore, int& ncore, real& mcore);
 
+// From user_diag.C:
+
+void user_diag(dyn *b);		// user-provided code
 
 // From plot_stars.C:
 
