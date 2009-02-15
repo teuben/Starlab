@@ -6,8 +6,20 @@
 // tdbg may be used here to control debugging output.  It is
 // initialized to -1.
 
-#if 0
-if (t > 0.16) exit(1);
+#if 1
+if (t > 23.571) {
+  b->get_kira_diag()->n_check_heartbeat = 1;
+  int p = cerr.precision(20);
+  PRC(t); PRL(n_next);
+  cerr.precision(p);
+  for (int ii = 0; ii < n_next; ii++) {
+    hdyn *n = next_nodes[ii];
+    if (n && n->is_valid() && !n->get_kepler()) {
+      PRC(n->format_label()); PRL(n->get_timestep());
+    }
+  }
+  if (count > 169000 || t > 23.5736) exit(1);
+ }
 #endif
 
 #if 0
