@@ -29,6 +29,8 @@
 
 real print_binary_params(kepler* k, real m1, real kT,
 			 real dist_from_center,
+			 real speed,
+			 real radial_velocity,
 			 bool verbose,			// default = true
 			 bool long_binary_output,	// default = true
 			 int init_indent,		// default = 0
@@ -75,19 +77,13 @@ real print_binary_params(kepler* k, real m1, real kT,
 
 	    cerr << "a = " << k->get_semi_major_axis()
 		 << "  e = " << k->get_eccentricity()
+	         << "  P = " << k->get_period()
 		 << endl;
 
 	    PRI(indent); cerr << "r = " << k->get_separation()
-			      << "  D = " << dist_from_center
-			      << endl;
-	    
-	    PRI(indent); cerr << "n = " << k->get_normal_unit_vector()
-			      << endl;
-
-	    PRI(indent); cerr << "P = " << k->get_period()
 			      << "  peri = " <<  k->get_periastron();
 	    if (k->get_energy() < 0)
-		cerr << "  apo = " <<  k->get_semi_major_axis()
+	        cerr << "  apo = " <<  k->get_semi_major_axis()
 		    			* (1 + k->get_eccentricity());
 	    cerr << endl;
 
@@ -96,6 +92,14 @@ real print_binary_params(kepler* k, real m1, real kT,
 	    if (kT > 0) cerr << "  E/kT = " << mu_kT*k->get_energy();
 	    cerr << endl;
 
+	    // PRI(indent); cerr << "n = " << k->get_normal_unit_vector()
+	    //		      << endl;
+
+	    PRI(indent); cerr << "R = " << dist_from_center
+			      << "  V = " << speed
+			      << "  vr = " << radial_velocity
+			      << endl;
+	    
 	    PRI(indent); cerr << "masses  " << m1 << "  " << m2
 			      << "  (total = " << m << ")";	// << endl;
 	}
@@ -207,14 +211,27 @@ void print_binary_from_dyn_pair(dyn* bi, dyn* bj,
     secondary->pretty_print_node(cerr);
     cerr << "):  ";
 
-    real dist_from_center = abs(primary->get_pos() - center);
+    vec pos = (primary->get_mass()
+			* something_relative_to_root(primary, &dyn::get_pos)
+		+ secondary->get_mass()
+			* something_relative_to_root(secondary, &dyn::get_pos))
+	      / (primary->get_mass() + secondary->get_mass());
+    vec vel = (primary->get_mass()
+			* something_relative_to_root(primary, &dyn::get_vel)
+		+ secondary->get_mass()
+			* something_relative_to_root(secondary, &dyn::get_vel))
+	      / (primary->get_mass() + secondary->get_mass());
+    
+    real dist_from_center = abs(pos - center);
+    real speed = abs(vel);	// NB: no v_center currently available
+    real radial_velocity = vel*(pos - center) / dist_from_center;
 
     int init_indent = 11 - strlen(bi->format_label());
     init_indent -= strlen(bj->format_label()) ;
 
     print_binary_params(&k, primary->get_mass(), kT,
-			dist_from_center, verbose, long_binary_output,
-			init_indent);
+			dist_from_center, speed, radial_velocity,
+			verbose, long_binary_output, init_indent);
 
     // No newline -- should be added by calling function.
 }
@@ -247,7 +264,11 @@ real print_structure_recursive(dyn* bi,
 	k.initialize_from_pos_and_vel(true, false);  // minimal, non-verbose
 
 	dyn* primary = od;
-	if (yd->get_mass() > od->get_mass()) primary = yd;
+	dyn* secondary = yd;
+	if (yd->get_mass() > od->get_mass()) {
+	    primary = yd;
+	    secondary = od;
+	}
 
 	int init_indent = BIN_INDENT;
 	if (indent > 0) {
@@ -260,11 +281,24 @@ real print_structure_recursive(dyn* bi,
 	    init_indent -= 4 + strlen(bi->format_label()) + indent;
 	}
 
-	real dist_from_center = abs(primary->get_pos() - center);
+	vec pos = (primary->get_mass()
+			* something_relative_to_root(primary, &dyn::get_pos)
+		   + secondary->get_mass()
+			* something_relative_to_root(secondary, &dyn::get_pos))
+		  / (primary->get_mass() + secondary->get_mass());
+	vec vel = (primary->get_mass()
+			* something_relative_to_root(primary, &dyn::get_vel)
+		   + secondary->get_mass()
+			* something_relative_to_root(secondary, &dyn::get_vel))
+		  / (primary->get_mass() + secondary->get_mass());
+    
+	real dist_from_center = abs(pos - center);
+	real speed = abs(vel);		// NB: no v_center currently available
+	real radial_velocity = vel*(pos - center) / dist_from_center;
 
 	eb += print_binary_params(&k, primary->get_mass(), kT,
-				  dist_from_center, verbose,
-				  long_binary_output, init_indent);
+				  dist_from_center, speed, radial_velocity,
+				  verbose, long_binary_output, init_indent);
 	cerr << endl;	// newline not provided by function
 
 	if (dstar_params != NULL && od->is_leaf() && yd->is_leaf())

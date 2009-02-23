@@ -868,8 +868,8 @@ local void print_binaries(dyn* b, real kT,
 	    if (bi->n_leaves() > 2) {
 
 		if (verbose > 0) {
-		    for (int i = 0; i < init_indent; i++) cerr << " ";
-		    cerr << "is a multiple system" << endl;
+		    for (int i = 0; i < init_indent-1; i++) cerr << " ";
+		    cerr << " is a multiple system" << endl;
 		}
 
 		// Recursively print out the structure (indent = 0, note):
@@ -901,9 +901,14 @@ local void print_binaries(dyn* b, real kT,
 		}
 
 		real dist_from_center = abs(bi->get_pos() - center);
+		real speed = abs(bi->get_vel());    // no v_center available
+		real radial_velocity = bi->get_vel()*(bi->get_pos() - center)
+					  / dist_from_center;
 
 		eb += print_binary_params(od->get_kepler(), od->get_mass(),
-					  kT, dist_from_center, verbose>0,
+					  kT, dist_from_center,
+					  speed, radial_velocity,
+					  verbose>0,
 					  long_binary_output, init_indent);
 		cerr << endl;	// newline not provided by function
 		nb++;
