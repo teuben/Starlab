@@ -163,7 +163,9 @@ real print_encounter_elements(hdyn* bi, hdyn* bj,
 	if (k.get_energy() < 0) {
 	    cerr << "     Orbital parameters: ";
 
-	    print_binary_params(&k, bi->get_mass(), 0.0,
+	    // (Don't bother with global distance and speed variables.)
+
+	    print_binary_params(&k, bi->get_mass(), 0.0, 0.0, 0.0,
 				abs(bi->get_pos()), verbose, 10, 10);
 	    cerr << endl;
 	}
