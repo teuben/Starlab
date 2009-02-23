@@ -920,8 +920,9 @@ local inline int std_top_level_acc_and_jerk_for_list(hdyn **next_nodes,
 
     for (int i = 0; i < n_next; i++) {
 	hdyn *bi = next_nodes[i];
-	if (bi->is_top_level_node())
+	if (bi->is_top_level_node()) {
 	    n_top += bi->top_level_node_real_force_calculation(); // hdyn_ev.C
+	}
     }
 
     return n_top;
