@@ -689,6 +689,7 @@ void refine_cluster_mass2(dyn *b, int verbose = 0);
 
 real print_binary_params(kepler* k, real m1, real kT,
 			 real dist_from_cod,
+			 real speed, real radial_velocity,
 			 bool verbose = true,
 			 bool long_output = true,
 			 int init_indent = 0,
