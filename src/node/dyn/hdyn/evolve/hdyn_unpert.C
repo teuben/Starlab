@@ -129,7 +129,7 @@
 // The following parameters are used in is_stable() for assessing
 // multiple stability.
 //
-// MULTIPLE_MERGE_TOLERANCE:  Perturnation limit (independnt of gamma2,
+// MULTIPLE_MERGE_TOLERANCE:  Perturbation limit (independent of gamma2,
 // as of 1/14/01) at which we permit merging of an inner binary orbit.
 // Defines "weakly perturbed outer orbit."
 //
@@ -712,7 +712,7 @@ bool hdyn::is_close_pair()
 //			 for the outer binary of an unperturbed multiple
 //			 system.
 //
-//			 New function written by Steve, 8/98.
+//			 Function written by Steve, 8/98.
 
 static const char* wp[11] = {"unknown status",
 			     "not low-level node",
@@ -767,13 +767,13 @@ bool hdyn::is_weakly_perturbed(int& status)
 
     // New code mimics that for binaries in function
     // is_unperturbed_and_approaching().
-    //					    (Steve, 4/99)
+    //		
 
     if (!pnode) {
 
 	// Possible that a newly formed center of mass node hasn't
 	// yet taken a step, so no perturber list exists.  However,
-	// we shouldn't break up an unperturbed system.
+	// we probably shouldn't break up an unperturbed system.
 
 	if (kep) {
 
@@ -781,8 +781,17 @@ bool hdyn::is_weakly_perturbed(int& status)
 	    // the unperturbed multiple system of which 'this' is a
 	    // member, and allow the unperturbed motion to continue.
 
-	    status = 9;
-	    return true;
+	    // Still check the perturbation, though (maybe just always
+	    // check the perturbation before looking for perturbers?).
+	    //					(BUG fix: Steve, 2/09)
+
+	    if (perturbation_squared < options->multiple_merge_tolerance) {
+		status = 9;
+		return true;
+	    } else {
+		status = 5;
+		return false;
+	    }
 
 	} else {
 
@@ -804,9 +813,10 @@ bool hdyn::is_weakly_perturbed(int& status)
 
     // Definition of "not weakly perturbed" (see *** note below):
 
-    // *** May want to modify this criterion (especially if the unperturbed
-    // *** limit is set large) if the nn is a binary...  See code below using
-    // *** the new function has_binary_perturber().
+    // *** May want to modify this criterion (especially if the
+    // *** unperturbed limit is set large) if the nn is a binary...
+    // *** See code below using the new function
+    // *** has_binary_perturber().
 
     if (perturbation_squared > options->multiple_merge_tolerance) {
 	status = 5;
@@ -1395,9 +1405,9 @@ bool hdyn::is_unperturbed_and_approaching()
     // function set_unperturbed_timestep().  This possibility causes
     // some redundancy in the tests applied, but keep for now.
 
-    if (is_multiple(this)) {
+    bool local_debug = false;	// name_is("(1092,11092)");
 
-        // cerr << func << ": multiple" << endl << flush;
+    if (is_multiple(this)) {
 
 	init_binary_type = binary_type = MULTIPLE_CM;
 
@@ -1421,18 +1431,22 @@ bool hdyn::is_unperturbed_and_approaching()
 	multiple_type = NOT_MULTIPLE;
 	int weak_stat;
 
+	if (local_debug)
+	  cerr << func << ": multiple " << format_label() << endl << flush;
+
 	if (is_weakly_perturbed(weak_stat)) {
 
-#if 0
-	    cerr << endl
-	     	 << format_label()
-	    	 << " is weakly perturbed at time " << time
-	    	 << "  perturbation = " << sqrt(perturbation_squared)
-	    	 << endl;
-#endif
+	    if (local_debug)
+		cerr << "    is weakly perturbed at time " << time << endl
+		     << "     pert = " << sqrt(perturbation_squared)
+		     << "  status = " << weak_stat
+		     << " (" << wp[weak_stat] << ")"
+		     << endl << flush;
 
 	    int stable_stat;
 	    if (is_stable(stable_stat)) {
+
+	      if (local_debug) cerr << "    is stable" << endl << flush;
 
 		init_binary_type = binary_type = STABLE_OUTER;
 		return true;
@@ -1447,17 +1461,12 @@ bool hdyn::is_unperturbed_and_approaching()
 
 	} else {
 
-#if 0
-	    cerr << endl
-		 << format_label() << " is not weakly perturbed at time "
-		 << time
-		 << endl
-		 << "perturbation = " << sqrt(perturbation_squared)
-		 << "  status = " << weak_stat
-		 << " (" << wp[weak_stat] << ")"
-		 << endl;
-#endif
-
+	    if (local_debug) 
+		cerr << "    is not weakly perturbed at time " << time << endl
+		     << "    pert = " << sqrt(perturbation_squared)
+		     << "  status = " << weak_stat
+		     << " (" << wp[weak_stat] << ")"
+		     << endl;
 	}
 
     } else {
@@ -2315,7 +2324,8 @@ real hdyn::set_unperturbed_timestep(bool restrict_phase)	// no default
 	     << format_label() << endl;
     }
 
-    bool local_debug = false;	// e.g. name_is("322");
+    bool local_debug = false;	// name_is("(1092,11092)");
+
     if (local_debug) {PRC(format_label()); PRL(system_time);}
 
     hdyn * sister = get_binary_sister();
@@ -2375,6 +2385,11 @@ real hdyn::set_unperturbed_timestep(bool restrict_phase)	// no default
     if (kep->get_energy() < 0) {
 
 	// Consider the possibility of complete merging in a bound orbit.
+
+	if (local_debug) {
+	    PRC(is_multiple(this)); PRC(multiple_type);
+	    PRL(APOCENTER_REFLECTION);
+	}
 
 	if (is_multiple(this) && multiple_type == APOCENTER_REFLECTION) {
 
@@ -2654,14 +2669,8 @@ real hdyn::set_unperturbed_timestep(bool restrict_phase)	// no default
 
 
 
-#define DEBUG_SCHEDULE
-#undef DEBUG_SCHEDULE
-
-#ifdef DEBUG_SCHEDULE
-bool sched_debug_flag = true;	    // overkill to avoid run-time overhead...
-#else
-bool sched_debug_flag = false;
-#endif
+bool sched_debug = false;	// debugging flag for next 2 functions; define
+				// here, but set in get_max_unpert_steps()
 
 // Careful!  Debugging causes problems with optimization under
 // RH Linux 7.2 with g++ 2.96...  Adding/cutting lines can change
@@ -2693,9 +2702,7 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
     real f = floor((real)t_max / dtblock);
     xreal t_last = dtblock * f;			// target time on this block
 
-#ifdef DEBUG_SCHEDULE
-    if (sched_debug_flag) {PRC(t_min); PRC(t_max); PRL(t_last);}
-#endif
+    if (sched_debug) {PRC(t_min); PRC(t_max); PRL(t_last);}
 
     if (t_last <= t_min) return t_min;
 
@@ -2704,9 +2711,7 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
 
     real ma = sym_angle(mean_anomaly + mean_motion * (real)(t_last - t_min));
 
-#ifdef DEBUG_SCHEDULE
-    if (sched_debug_flag) {PRC(ma); PRC(ma_min); PRL(ma_max);}
-#endif
+    if (sched_debug) {PRC(ma); PRC(ma_min); PRL(ma_max);}
 
     if (ma_min <= ma && ma <= ma_max) return t_last;
 
@@ -2716,9 +2721,7 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
 
     real dma = sym_angle(dtblock * mean_motion);
 
-#ifdef DEBUG_SCHEDULE
-    if (sched_debug_flag) PRL(dma);
-#endif
+    if (sched_debug) PRL(dma);
 
     if (dma == 0) return t_min;
 
@@ -2734,12 +2737,10 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
     if (ma <= 0) ma += 2*M_PI;	// force ma_max < ma < 2*M_PI
     ma_min = 0;
 
-#ifdef DEBUG_SCHEDULE
-    if (sched_debug_flag) {
+    if (sched_debug) {
 	PRC(t_min); PRC(t_max); PRL(dtblock);
 	PRC(ma); PRC(ma_max); PRC(ma/(2*M_PI)); PRL(dma/(2*M_PI));
     }
-#endif
 
     // Deal with the easy cases first...
 
@@ -2762,9 +2763,7 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
 
 	// Do it the hard way (step by step), for now.
 
-#ifdef DEBUG_SCHEDULE
-	if (sched_debug_flag) cerr << "the hard way..." << endl << flush;
-#endif
+	if (sched_debug) cerr << "the hard way..." << endl << flush;
 
 	while (t_last > t_min) {
 	    t_last -= dtblock;
@@ -2775,9 +2774,7 @@ xreal latest_time(xreal t_min, xreal t_max, real dtblock,
 	}
     }
 
-#ifdef DEBUG_SCHEDULE
-    if (sched_debug_flag) PRL(t_last);
-#endif
+    if (sched_debug) PRL(t_last);
     return t_last;
 }
 
@@ -2830,15 +2827,13 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
     if (p->is_low_level_node() && p->get_elder_sister() != NULL)
 	p = p->get_elder_sister();
 
-    // Use of local_debug here is redundant -- sched_debug_flag plays
-    // the same role, and extends to latest_time() too.  Default is
-    // false, set above.  Really should #ifdef all, or drop the
-    // #ifdefs...
+    // The flag sched_debug plays the same role as local_debug
+    // elsewhere, but extends to latest_time() too.  Default is false,
+    // set above.
 
-    // bool local_debug = true;			// e.g. ... = name_is("322");
-    // sched_debug_flag = name_is("322");	// better to do this...
+    sched_debug = false;	// name_is("(1092,11092)");
 
-    if (sched_debug_flag) {PRC(format_label()); PRL(system_time);}
+    if (sched_debug) {PRC(format_label()); PRL(system_time);}
 
     // Set a limit on the next unperturbed step, governed by the
     // parent step and the unperturbed step limit.
@@ -2856,7 +2851,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	pdt = unpert_step_limit;
     }
 
-    if (sched_debug_flag) {PRC(pdt); PRL(unpert_step_limit);}
+    if (sched_debug) {PRC(pdt); PRL(unpert_step_limit);}
 
     // Next step must end after current system time.  (Not relevant
     // during normal unperturbed step, but needed when recomputing step
@@ -2885,11 +2880,22 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
     // Special treatment of multiple motion, since the cost of not
     // starting unperturbed motion is so high...
 
+    if (sched_debug) {
+	PRC(USE_DT_PERTURBERS); PRL(is_multiple(this));
+    }
+
     if (USE_DT_PERTURBERS && is_multiple(this)) {
 
 	// Include perturber crossing time in pdt2...
 
 	real pert_dt = dt_perturbers(this);
+
+	if (sched_debug) {
+	  PRC(pert_dt); PRC(perturbation_squared);
+	  PRL(get_parent()->perturbation_squared);
+	  PRL(get_parent()->get_nn()->format_label());
+	}
+
 	if (pert_dt > 0)
 	    pdt2 = Starlab::max(pdt2, 0.25*pert_dt);	// conservative
     }
@@ -2898,7 +2904,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 
     // Note that both pdt and pdt2 are limited by unpert_step_limit.
 
-    if (sched_debug_flag) {PRC(pdt); PRL(pdt2);}
+    if (sched_debug) {PRC(pdt); PRL(pdt2);}
 
     // Goal: to advance the binary by as great a time as possible,
     //	     subject to the constraints that (a) we do not wish to
@@ -2952,7 +2958,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 
     real orb = ceil(pdt / kep->get_period());
 
-    if (sched_debug_flag) PRL(orb);
+    if (sched_debug) PRL(orb);
 
     if (orb <= 0) {		// can't happen if we use ceil
 
@@ -2970,7 +2976,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
     if (orb*kep->get_period() > unpert_step_limit)
         orb = floor(unpert_step_limit / kep->get_period());
 
-    if (sched_debug_flag) PRL(orb);
+    if (sched_debug) PRL(orb);
 
     // Note that orb may = 0...
 
@@ -3026,7 +3032,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	// If orb = 0, this step takes us to the next apocenter, regardless
 	// of the parent step.
 
-	if (sched_debug_flag) {
+	if (sched_debug) {
 	    PRC(pert_steps);
 	    PRL(pert_steps*timestep-unpert_step_limit);
 	}
@@ -3043,7 +3049,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	// sure that the step really ends after apocenter (and not just
 	// before).
 
-	if (sched_debug_flag) {
+	if (sched_debug) {
 	    PRC(pert_steps);
 	    PRL(pert_steps*timestep-unpert_step_limit);
 	}
@@ -3101,7 +3107,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
         orb = floor(unpert_step_limit / kep->get_period());
 	pert_steps = floor(orb * kep->get_period() / timestep);
 
-	if (sched_debug_flag) {
+	if (sched_debug) {
 	    cerr << "restricting pert_steps to unpert_limit" << endl;
 	    PRL(pert_steps);
 	}
@@ -3115,7 +3121,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 
     // We have now determined the best unconstrained value of pert_steps.
 
-    if (sched_debug_flag) {
+    if (sched_debug) {
 	PRC(pert_steps); PRL(pert_steps*timestep);
 	PRL(unpert_step_limit);
 	PRL(get_effective_block(time));
@@ -3139,7 +3145,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	// Note that this procedure overrides and largely ignores
 	// the previous timestep determination...
 
-        if (sched_debug_flag) PRL(options->optimize_block);
+        if (sched_debug) PRL(options->optimize_block);
 
 	if (!options->optimize_block) {
 
@@ -3155,7 +3161,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	    int minus = (int)((end_mean_anomaly + M_PI) / d_mean_anomaly);
 	    int plus = (int)((-0.9*M_PI - end_mean_anomaly) / d_mean_anomaly);
 
-	    if (sched_debug_flag) {PRC(minus); PRL(plus);}
+	    if (sched_debug) {PRC(minus); PRL(plus);}
 
 	    // Limits should be unnecessary, but...
 
@@ -3180,7 +3186,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	    p2 /= 2;
 	    new_steps -= p2/2;
 
-	    if (sched_debug_flag) {PRC(new_steps); PRL(p2);}
+	    if (sched_debug) {PRC(new_steps); PRL(p2);}
 
 	    pert_steps = new_steps;
 
@@ -3239,11 +3245,9 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	    real dtblock = Starlab::min(unpert_step_limit, 2*pdt);
 	    int kb = get_effective_block(dtblock);
 
-#ifdef DEBUG_SCHEDULE
-	    if (sched_debug_flag) {
+	    if (sched_debug) {
 		PRI(4); cerr << "initial "; PRC(kb); PRC(t_min); PRL(t_max);
 	    }
-#endif
 
 	    while (dtblock >= timestep) {
 		t_next = latest_time(t_min, t_max, dtblock,
@@ -3255,9 +3259,8 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 		// possible that this is also the boundary of a lower
 		// block.
 
-#ifdef DEBUG_SCHEDULE
-		if (sched_debug_flag) {PRC(kb); PRL(t_next);}
-#endif
+		if (sched_debug) {PRC(kb); PRL(t_next);}
+
 		if (t_next > t_min) break;
 		kb++;
 		dtblock /= 2;
@@ -3269,21 +3272,17 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 		// Nothing to be gained from optimizing.  Don't
 		// change pert_steps.
 
-#ifdef DEBUG_SCHEDULE
-		cerr << "    retaining unoptimized pert_steps" << endl;
-#endif
+		if (sched_debug)
+		    cerr << "    retaining unoptimized pert_steps" << endl;
 
 	    } else {
 
 		real old_steps = pert_steps;
 		pert_steps = floor(((real)(t_next - time)) / timestep + 0.1);
 
-#ifdef DEBUG_SCHEDULE
+		if (sched_debug) {
 
-		// (These debugging lines can be quite expensive...)
-
-		if (sched_debug_flag) {
-//		if (system_time > 0.112) {
+		    // (These debugging lines can be quite expensive...)
 
 		    cerr << endl << func << " for " << format_label()
 			 << " at time " << system_time << ":" << endl;
@@ -3322,11 +3321,10 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 		    predicted_mean_anomaly = sym_angle(predicted_mean_anomaly);
 		    PRI(4); PRL(predicted_mean_anomaly);
 		}
-#endif
 
 	    }
 
-	    if (sched_debug_flag) {
+	    if (sched_debug) {
 	        PRC(t_next); PRC(t_min); PRL(system_time);
 		PRC(pert_steps); PRL(pert_steps*timestep);
 	    }
@@ -3334,7 +3332,7 @@ real hdyn::get_max_unperturbed_steps(bool to_apo,  // default true (for binary)
 	}
     }
 
-    if (sched_debug_flag) {PRC(4); PRL(pert_steps);}
+    if (sched_debug) {PRC(4); PRL(pert_steps);}
 
     // (Shouldn't be necessary to recheck the time step limit in
     // either the unoptimized or the block optimized case, but check
