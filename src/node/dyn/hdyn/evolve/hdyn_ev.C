@@ -345,7 +345,7 @@ void hdyn::synchronize_node(bool exact)		// default = true, so
 
 	    if (do_diag || iter > 20) {
 		cerr << "synchronize_node: " << format_label() << " "; PRL(iter);
-		int p = cerr.precision(15);
+		int p = cerr.precision(HIGH_PRECISION);
 		PRI(4); PRC(time); PRL(system_time);
 		PRI(4); PRC(old_timestep); PRL(fmod(time, old_timestep));
 		PRI(4); PRC(timestep); PRL(fmod(time, timestep));
@@ -2416,17 +2416,18 @@ void hdyn::tree_walk_for_partial_acc_and_jerk_on_leaf(hdyn *b,
 
     // Stop descent of the tree at an unperturbed CM, *except* when
     // that CM is the parent of 'this' node (to get the correct 2-body
-    // internal force).
+    // internal force).  *** BUG! Code changed by Steve 2/09. ***
 
     if (b->is_leaf()
 	|| (b->is_top_level_node() && point_mass_flag)
-	|| (b->kep != NULL && b != parent)
+	// || (b->kep != NULL && b != parent)			// ***
+	|| (b->get_oldest_daughter()->kep && b != parent)
 	) {
 
 	if (b != this) {
 	    real d2;
 
-	    accumulate_acc_and_jerk(b, offset_pos, offset_vel,	  // (inlined)
+	    accumulate_acc_and_jerk(b, offset_pos, offset_vel,	// (inlined)
 				    eps2, a, j, p, d2);
 
 	    step_node->inc_indirect_force();
@@ -2671,7 +2672,6 @@ void hdyn::calculate_partial_acc_and_jerk(hdyn * top,
 	//	valid_perturbers = false
 	//	n_perturbers <= 0
 	//
-
 	// In this case, we should set perturbation_squared before
 	// leaving the function.  Note that perturbation_squared is
 	// attached to the daughter nodes, but the perturber list,
@@ -3198,7 +3198,6 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 #endif
 
 #if 0
-
 	    // Alternate test: replacing top_level in the previous
 	    // check by get_parent() should also include the
 	    // perturbation due to the clump.  Ought to work, but
@@ -3603,7 +3602,6 @@ void hdyn::calculate_acc_and_jerk_on_top_level_node(bool exact)
 	top_level_node_real_force_calculation();
 	top_level_node_epilogue_force_calculation();
     }
-
 }
 
 
