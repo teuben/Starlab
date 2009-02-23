@@ -6,20 +6,77 @@
 // tdbg may be used here to control debugging output.  It is
 // initialized to -1.
 
-#if 1
-if (t > 23.571) {
+#if 0
+if (count > 163000) {
   b->get_kira_diag()->n_check_heartbeat = 1;
-  int p = cerr.precision(20);
-  PRC(t); PRL(n_next);
-  cerr.precision(p);
+  int p = cerr.precision(20); PRC(t); cerr.precision(p); PRL(n_next);
   for (int ii = 0; ii < n_next; ii++) {
     hdyn *n = next_nodes[ii];
     if (n && n->is_valid() && !n->get_kepler()) {
       PRC(n->format_label()); PRL(n->get_timestep());
     }
   }
-  if (count > 169000 || t > 23.5736) exit(1);
  }
+if (count > 165000) exit(0);
+#endif
+
+#if 0
+if (count > 188000 && count < 205000) {
+  b->get_kira_diag()->n_check_heartbeat = 1;
+  int p = cerr.precision(20);
+  PRC(t); PRL(n_next); cerr.precision(p);
+
+  for (int ii = 0; ii < n_next; ii++) {
+    hdyn *n = next_nodes[ii];
+    if (n && n->is_valid() && !n->get_kepler()) {
+      PRC(n->format_label()); PRL(n->get_timestep());
+#if 0
+      if (n->name_is("(114,10114)")
+	  || n->name_is("((1092,11092),222)")
+	  || n->name_is("((114,10114),((1092,11092),222))")) {
+
+	hdyn *b1 = (hdyn*)node_with_name("(114,10114)",
+					 n->get_root());
+	hdyn *b2 = (hdyn*)node_with_name("((1092,11092),222)",
+					 n->get_root());
+	real m1 = b1->get_mass();
+	real m2 = b2->get_mass();
+
+	cerr << "%%% ";
+	vec force1 = m1*b1->get_acc();
+	vec force2 = m2*b2->get_acc();
+	int p = cerr.precision(HIGH_PRECISION); PRC(t); cerr.precision(p);
+	PRC(count); PRC(force1); PRC(force2); PRL(force1+force2);
+
+	real mu = m1*m2/(m1+m2);
+	vec dx = b2->get_pos() - b1->get_pos();
+	vec dv = b2->get_vel() - b1->get_vel();
+	real dx1 = abs(dx);
+	PRC(dx1); PRL(abs(dv));
+	real E12 = 0.5*mu*square(dv)-m1*m2/dx1;
+	PRC(E12/mu); PRL(E12);
+
+	real dx3 = pow(dx1,3);
+	real a1 = abs(b1->get_acc());
+	real a2 = abs(b2->get_acc());
+	PRC(a1); PRC(abs(m2*dx/dx3)); PRC(a2); PRL(abs(-m1*dx/dx3));
+      }
+
+      if (n->name_is("((114,10114),((1092,11092),222))"))
+	pp3(n);
+      else if (n->name_is("((1092,11092),222)")) {
+	n->print_perturber_list();
+	n->get_oldest_daughter()->print_pert();
+      } else if (n->name_is("(1092,11092)"))
+	n->print_pert();
+      else if (n->name_is("114"))
+	n->print_pert();
+#endif
+    }
+  }
+ }
+if (count > 205000)
+  b->get_kira_diag()->n_check_heartbeat = 1000;
 #endif
 
 #if 0
