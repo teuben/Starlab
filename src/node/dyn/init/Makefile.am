@@ -21,7 +21,7 @@ bin_PROGRAMS = makecube makedisk makeplummer makepyth makesphere makewrite \
     apply_plummer makebinary split_particles makeking makeheavystar \
     readp readp2 \
     readstoa makeplanetary makeblack_hole grow_black_hole makepowerlaw \
-    cutrandomsample
+    cutrandomsample makeeff87
 
 if HAVE_F77
   bin_PROGRAMS += make_aniso_king
@@ -35,6 +35,7 @@ libdyn_3_la_SOURCES = makesphere.C
 makecube_CPPFLAGS = -DTOOLBOX
 makedisk_CPPFLAGS = -DTOOLBOX
 makeplummer_CPPFLAGS = -DTOOLBOX
+makeeff87_CPPFLAGS = -DTOOLBOX
 makepyth_CPPFLAGS = -DTOOLBOX
 makesphere_CPPFLAGS = -DTOOLBOX
 makewrite_CPPFLAGS = -DTOOLBOX
@@ -55,6 +56,7 @@ cutrandomsample_CPPFLAGS = -DTOOLBOX
 makecube_LDADD = ../libdyn.la
 makedisk_LDADD = ../libdyn.la
 makeplummer_LDADD = ../libdyn.la
+makeeff87_LDADD = ../libdyn.la
 makepyth_LDADD = ../libdyn.la
 makesphere_LDADD = ../libdyn.la
 makewrite_LDADD = ../libdyn.la
@@ -75,6 +77,7 @@ cutrandomsample_LDADD = ../libdyn.la
 makecube_SOURCES = makecube.C
 makedisk_SOURCES = makedisk.C
 makeplummer_SOURCES = makeplummer.C
+makeeff87_SOURCES = makeeff87.C
 makepyth_SOURCES = makepyth.C
 makesphere_SOURCES = makesphere.C
 makewrite_SOURCES = makewrite.C
