@@ -132,7 +132,7 @@ struct spline {
 
 
 struct eff87 {
-  double gamma, rc, rt, rcut;
+  double gamma, rc, rt, rcut, Rhm;
   int nbins;
   double phi_infty;
   spline spl_tmp, spl_mass, spl_phi;
@@ -278,7 +278,7 @@ struct eff87 {
 
     fprintf(stderr, " ** Computing distribution functions, f(E), a(E) & b(E)\n");
     compute_fg();
-    double Rhm = radius(mass(Rcut)*0.5);
+    Rhm = radius(mass(Rcut)*0.5);
     fprintf(stderr, "     Rcut  = %lg\n", Rcut);
     fprintf(stderr, "     Rhm  = %lg\n", Rhm);
     fprintf(stderr, "     rc   = %lg\n", rc);
@@ -383,6 +383,14 @@ local void makeeff87(dyn *b, int n, int Rcut, real gamma3D, bool dump_fg) {
     bi->set_vel(vec(velocity * sin( theta ) * cos( phi ),
 		    velocity * sin( theta ) * sin( phi ),
  		    velocity * cos( theta )));
+  }
+
+  real xfac = 0.8/m.Rhm;
+  real vfac = 1.0/sqrt(xfac);
+  
+  for_all_daughters(dyn, b, bi) {
+    bi->set_pos(xfac*bi->get_pos());
+    bi->set_vel(vfac*bi->get_vel());
   }
 
 
