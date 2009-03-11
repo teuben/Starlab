@@ -22,7 +22,7 @@
 ////          -i    number the particles sequentially [don't number]
 ////          -n    specify number of particles [no default]
 ////          -o    echo value of random seed [don't echo]
-////          -r    specify radius cutoff [default 1e6]
+////          -r    specify radius cutoff in Rc [default 33.76]
 ////          -s    specify random seed [random from system clock]
 ////          -g    set gamma3D value [no default]
 ////          -T    dump to stdout: f(E), 
@@ -38,6 +38,7 @@
 //............................................................................
 //   version 1:    March 2009  Evghenii Gaburov               
 //   version 1.1:  March 2009  Evghenii Gaburov               
+//   version 1.2:  March 2009  Evghenii Gaburov               
 //                           email: egaburov@strw.leideuniv.nl
 // ---
 //  Reference: Binney & Tremaine, p. 236
@@ -217,19 +218,9 @@ struct eff87 {
     spl_bE.init(elist, blist);
   }
 
-  void init(double g, double Rcut, int n) {
-    gamma = g;
-    nbins = 2*n;
-    rcut  = Rcut;
-
-    fprintf(stderr, "Generating EFF87 profile:\n");
-    fprintf(stderr, "  gamma3D= %lg\n", gamma);
-    fprintf(stderr, "  Rcut   = %lg\n", rcut);
+  double compute_enclosed_mass(double Rcut) {
     
-    // build r-array
-
-    rc    = sqrt(pow(2.0, 2.0/gamma) - 1);
-    rt    = 2*rc;
+    int n = nbins/2;
     r.resize(nbins);
     tmp.resize(nbins);
     double dr = rt/n;
@@ -237,7 +228,7 @@ struct eff87 {
       r[i] = 0.5*rc/n + i*dr;
     
     double r1 = log(rt);
-    double r2 = log(rcut);
+    double r2 = log(Rcut);
     dr = (r2 - r1)/n;
     r1 += 0.5*dr;
     for (int i = 0; i < n; i++)
@@ -245,12 +236,32 @@ struct eff87 {
 
     
     // compute enclosed mass, m(r)
-    fprintf(stderr, " ** Computing enclosed mass, m(r) & r(m)\n");
     for (int i = 0; i < nbins; i++)
       tmp[i] = 4*M_PI*r[i]*r[i]*rho(r[i]);
     spl_tmp.init(r, tmp);
     spl_mass = spl_tmp.integrate();
     spl_r_mass.init(spl_mass.y, spl_mass.x);
+
+    return spl_mass.y[spl_mass.y.size()-1];
+  }
+
+  void init(double g, double Rcut, int n) {
+    gamma = g;
+    nbins = 2*n;
+
+    fprintf(stderr, "Generating EFF87 profile:\n");
+    fprintf(stderr, "  gamma3D= %lg\n", gamma);
+    
+    // build r-array
+
+    rc     = sqrt(pow(2.0, 2.0/gamma) - 1);
+    rt     = 2*rc;
+    Rcut  *= rc;
+
+    rcut  = Rcut;
+
+    fprintf(stderr, " ** Computing enclosed mass, m(r) & r(m)\n");
+    double Mtot = compute_enclosed_mass(Rcut);
 
     // compute potential, phi(r)
     
@@ -278,22 +289,21 @@ struct eff87 {
 
     fprintf(stderr, " ** Computing distribution functions, f(E), a(E) & b(E)\n");
     compute_fg();
-    Rhm = radius(mass(Rcut)*0.5);
-    fprintf(stderr, "     Rcut  = %lg\n", Rcut);
-    fprintf(stderr, "     Rhm  = %lg\n", Rhm);
-    fprintf(stderr, "     rc   = %lg\n", rc);
-    fprintf(stderr, "     rc/Rhm   = %lg  Rhm/rc= %lg\n", rc/Rhm, Rhm/rc);
-    fprintf(stderr, "     Rcut/Rhm = %lg  Rhm/Rcut= %lg\n", Rcut/Rhm, Rhm/Rcut);
-    fprintf(stderr, "     Mtot = %lg\n", mass(Rcut));
-    fprintf(stderr, "     phi(0)   = %lg\n", phi_infty);
+    Rhm = radius(Mtot*0.5);
+    fprintf(stderr, "     Rc/Rh  = %lg \n",  rc/Rhm);
+    fprintf(stderr, "     Rt/Rc  = %lg \n",  Rcut/rc);
+    fprintf(stderr, "     Rt/Rh  = %lg \n",  Rcut/Rhm);
+    fprintf(stderr, "     M(Rt)  = %lg\n",  Mtot);
+    fprintf(stderr, "     phi(0) = %lg\n", phi_infty);
   };
  
 };
 
 
-local void makeeff87(dyn *b, int n, int Rcut, real gamma3D, bool dump_fg) {
+local void makeeff87(dyn *b, int n, double Rcut, real gamma3D, bool dump_fg) {
   eff87 m(gamma3D, Rcut, 1000);
-
+  Rcut = m.rcut;
+  
   if (dump_fg) {
     fprintf(stderr, " ** Dumping f(E) & g(E) into stdout \n");
     int n = m.spl_fE.x.size();
@@ -488,7 +498,7 @@ main(int argc, char ** argv) {
   int c;
   const char *param_string = "c:Cin:os:r:Rug:T";
   
-  rfrac = 1e6;
+  rfrac = 33.76;
   
   while ((c = pgetopt(argc, argv, param_string,
 		      "$Revision$", _SRC_)) != -1)
