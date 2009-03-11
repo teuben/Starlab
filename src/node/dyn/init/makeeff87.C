@@ -36,7 +36,8 @@
 //// Report  Starlab  bugs to starlab@sns.ias.edu.
 
 //............................................................................
-//   version 1:  March 2009  Evghenii Gaburov               
+//   version 1:    March 2009  Evghenii Gaburov               
+//   version 1.1:  March 2009  Evghenii Gaburov               
 //                           email: egaburov@strw.leideuniv.nl
 // ---
 //  Reference: Binney & Tremaine, p. 236
@@ -277,8 +278,14 @@ struct eff87 {
 
     fprintf(stderr, " ** Computing distribution functions, f(E), a(E) & b(E)\n");
     compute_fg();
-    fprintf(stderr, "   * M(Rcut)= %lg\n", mass(Rcut));
-    fprintf(stderr, "   * phi(0) = %lg\n", phi_infty);
+    double Rhm = radius(mass(Rcut)*0.5);
+    fprintf(stderr, "     Rcut  = %lg\n", Rcut);
+    fprintf(stderr, "     Rhm  = %lg\n", Rhm);
+    fprintf(stderr, "     rc   = %lg\n", rc);
+    fprintf(stderr, "     rc/Rhm   = %lg  Rhm/rc= %lg\n", rc/Rhm, Rhm/rc);
+    fprintf(stderr, "     Rcut/Rhm = %lg  Rhm/Rcut= %lg\n", Rcut/Rhm, Rhm/Rcut);
+    fprintf(stderr, "     Mtot = %lg\n", mass(Rcut));
+    fprintf(stderr, "     phi(0)   = %lg\n", phi_infty);
   };
  
 };
