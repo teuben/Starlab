@@ -144,7 +144,7 @@ struct eff87 {
   vector<double> r, tmp;
   eff87(double g, double Rcut = 100, int n = 1000) {init(g, Rcut, n); }
 
-  double rho(double x)    { return pow(1+x*x, -0.5*gamma); }
+  double rho(double x)    { return pow(1+x*x, -0.5*gamma) - pow(1+rcut*rcut, -0.5*gamma); }
   double drho(double x)   { return  -x*gamma*pow(1+x*x,-0.5*gamma - 1); }
   double d2rho(double x)  { return -gamma*pow(1+x*x,-0.5*gamma - 2)*(1-x*x*(gamma+1)); }
   double mass(double x)   { return spl_mass.eval(x); }
@@ -293,6 +293,7 @@ struct eff87 {
     fprintf(stderr, "     Rc/Rh  = %lg \n",  rc/Rhm);
     fprintf(stderr, "     Rt/Rc  = %lg \n",  Rcut/rc);
     fprintf(stderr, "     Rt/Rh  = %lg \n",  Rcut/Rhm);
+    fprintf(stderr, "     Mc/M    = %lg\n",  mass(rc)/Mtot);
     fprintf(stderr, "     M(Rt)  = %lg\n",  Mtot);
     fprintf(stderr, "     phi(0) = %lg\n", phi_infty);
   };
