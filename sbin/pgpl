@@ -1,0 +1,320 @@
+#!/usr/bin/env python
+
+# Simple script providing minimal but usually sufficient plotting
+# functionality using gnuplot.
+#
+# Options:	-c i j k ...	columns to plot (x y z...) [1 2]
+#		-f		linear fit to first plot [no]
+#		-F x1 x2	x limits to fit [plot limits]
+#		-g <geometry>	specify X-window geometry [xdefault]
+#		-G		toggle PNG graphics output [off]
+#		-h header	specify an overall header [none]
+#		-k		suppress "column x" key [no]
+#		-l x1 x2 y1 y2	specify plot limits [automatic]
+#		-L size		specify plot limits [automatic]
+#		-p		toggle points [on]
+#		-P		toggle PostScript output [off]
+#		-s scriptname	save the script in the named file [don't save]
+#               -S              request a square plot [no]
+#		-x		specify x-label [none]
+#		-y		specify y-label [none]
+#		-Y a b ...	specify plot labels ["column j", ...]
+#
+# Gnuplot PNG/Postscript output, if any, is sent to stdout.
+
+import os, random, re, signal, sys
+
+def print_help():
+    print ''
+    print '(p)gpl:    minimal subset of gnuplot commands, with data from stdin'
+    print ''
+    print 'Options:   -c i j k...     columns to plot (x y1 y2...)       [1 2]'
+    print '           -f              linear fit to first plot            [no]'
+    print '           -F x1 x2        x limits to fit            [plot limits]'
+    print '           -g <geometry>   specify X-window geometry     [xdefault]'
+    print '           -G              toggle PNG graphics output         [off]'
+    print '           -h header       specify an overall header         [none]'
+    print '           -k              suppress key giving column info     [no]'
+    print '           -l x1 x2 y1 y2  specify plot limits          [automatic]'
+    print '           -L size         specify plot limits (+/- L)  [automatic]'
+    print '           -p              toggle points/lines             [points]'
+    print '           -P              toggle PostScript output           [off]'
+    print '           -s script       save the script in the named file   [no]'
+    print '           -S              request a square plot               [no]'
+    print '           -x              specify x-label                   [none]'
+    print '           -y              specify y-label                   [none]'
+    print '           -Y a b ...      specify plot labels    ["column j", ...]'
+    print ''
+    print 'Gnuplot PNG/Postscript output, if any, is sent to stdout.'
+    print ''
+
+#-----------------------------------------------------------------------
+
+# Parse the command line.  Treat sole "-h" or "--help" as a special case.
+
+if len(sys.argv[1:]) > 0 and (sys.argv[1] == '-h' or sys.argv[1] == '--help'):
+    print_help()
+    sys.exit(0)
+
+# Set defaults:
+
+col = [1, 2]
+l = 1
+nokey = 0
+png = 0
+post = 0
+script = ""
+square = 0
+xlabel = ""
+title = ""
+ylabel = ""
+Ylabel = []
+xlims = ""
+ylims = ""
+geom = "400x400+0+0"
+fit = 0
+xflims = ""
+
+# We could try to use pgetopt to parse the argument list argv[1:], but
+# the handling of variable numbers of arguments may get messy.  Maybe
+# there is a better version of pgetopt that permits this.  In the
+# meantime, parse the argumet list "by hand," using essentially the
+# logic imported from the shel-script version.     (Steve, 4/09)
+
+narg = len(sys.argv[1:])
+i = 0
+while i < narg:			# loop through the argument list
+    i += 1
+    arg = sys.argv[i]
+
+    if arg == '-c':
+	col = []
+        j = i
+	while j < narg:
+	    j += 1
+            argj = sys.argv[j]
+            if argj[0] == '-':	# stop when we encounter a leading '-'
+		i = j - 1
+		break
+	    else:
+		col.append(int(argj))
+		i = j
+
+    elif arg == '-g':
+	i += 1
+	geom = sys.argv[i]
+
+    elif arg == '-G':
+	png = 1 - png
+
+    elif arg == '-h':
+	i += 1
+	title = sys.argv[i]
+
+    elif arg == '-k':
+	nokey = 1
+
+    elif arg == '-l':
+	i += 1
+	x1 = sys.argv[i]
+	i += 1
+	x2 = sys.argv[i]
+	i += 1
+	y1 = sys.argv[i]
+	i += 1
+	y2 = sys.argv[i]
+	xlims = '['+x1+':'+x2+']'
+	ylims = '['+y1+':'+y2+']'
+
+    elif arg == '-L':
+	i += 1
+	size = sys.argv[i]
+	xlims = '[-'+size+':'+size+']'
+        ylims = xlims
+
+    elif arg == '-p':
+	l = 1 - l
+
+    elif arg == '-P':
+	post = 1 - post
+
+    elif arg == '-s':
+	i += 1
+	script = sys.argv[i]
+	infile = script
+
+    elif arg == '-S':
+	square = 1 - square
+
+    elif arg == '-x':
+	i += 1
+	xlabel = sys.argv[i]
+
+    elif arg == '-y':
+	i += 1
+	ylabel = sys.argv[i]
+
+    elif arg == '-Y':
+        j = i
+	while j < narg:
+	    j += 1
+            argj = sys.argv[j]
+            if argj[0] == '-':	# stop when we encounter a leading '-'
+				# (this is a potential bug...)
+		i = j - 1
+		break
+	    else:
+		Ylabel.append(argj)
+		i = j
+
+    elif arg == '-f':
+	fit = 1 - fit
+
+    elif arg == '-F':
+	i += 1
+	x1 = sys.argv[i]
+	i += 1
+	x2 = sys.argv[i]
+	xflims = '['+x1+':'+x2+']'
+
+if len(col) < 2: cleanup()
+
+if  xlabel == '':
+    xlabel = 'column '+str(col[0])
+
+if  ylabel == '':
+    ylabel = 'column '
+    for i in col[1:]:
+        if i != col[1]: ylabel = ylabel+','
+        ylabel = ylabel+str(i)
+
+# Ylabel should contain 1 less entry than col.  Pad if necessary with
+# generic labels.
+
+ncol = len(col)
+nY = len(Ylabel)
+if nY < ncol - 1:
+    j = nY + 1
+    while j < ncol:
+	Ylabel.append('column_'+str(col[j]))
+	j += 1
+
+#-----------------------------------------------------------------------
+
+# Define names for temporary files.
+
+rid = int(1000000000*random.random())
+id = 'pgpl'+str(rid)
+
+datafile = '/tmp/'+id+'.dat'
+gnufile  = '/tmp/'+id+'.in'
+fitlog   = '/tmp/'+id+'.fit'
+
+#-----------------------------------------------------------------------
+
+# Create the datafile for gnuplot to use (copy stdin to datafile).
+
+lines = sys.stdin.readlines()
+if len(lines) <= 0: sys.exit(0)
+out = open(datafile, 'w')
+for line in lines: out.write(line)
+out.close()
+
+#-----------------------------------------------------------------------
+
+# Define clean-up actions following an interrupt (control-C).
+
+def cleanup():
+    os.system('/bin/rm -f '+datafile+' '+gnufile+' '+fitlog)
+    sys.exit(0)
+signal.signal(signal.SIGINT, cleanup)
+
+#-----------------------------------------------------------------------
+
+# Create the gnuplot script.
+
+gnu = open(gnufile, 'w')
+
+if ncol > 1:
+
+    gnu.write('set tmargin 2\n')
+    gnu.write('set bmargin 4\n')
+    gnu.write('set lmargin 16\n')
+    gnu.write('set rmargin 7\n')
+
+    if square == 1: gnu.write('set size square\n')
+    if nokey == 1: gnu.write('set nokey\n')
+
+    if post == 1:
+        gnu.write('set term post color 18\n')
+    elif png == 1:
+	gnu.write('set term png\n')
+    else:
+	gnu.write('set term x11\n')
+
+    # Label convention: replace "_" by space in xlabel, ylabel, and title.
+
+    xlabel = re.sub('_', ' ', xlabel)
+    ylabel = re.sub('_', ' ', ylabel)
+    title = re.sub('_', ' ', title)
+
+    gnu.write('set xlabel "'+xlabel+'"\n')
+    gnu.write('set ylabel "'+ylabel+'"\n')
+    gnu.write('set title "'+title+'"\n')
+
+    x = str(col[0])
+    y = str(col[1])
+
+    # Linear fit:
+
+    if fit == 1:
+	gnu.write('f(x) = a*x+b\n')
+	gnu.write('fit '+xflims+' f(x) \''+datafile \
+			+'\' using '+x+':'+y+' via a,b\n')
+
+    # Plot the graph(s).
+
+    gnu.write('plot '+xlims+' '+ylims+'\\\n')
+
+    if l == 1:
+	lines = "lines"
+    else:
+	lines = "points"
+
+    i = 1
+    j = 0
+    while i < ncol:
+	gnu.write('    \''+datafile+'\' using '+x+':'+str(col[i]))
+
+	# Label convention: replace "_" by space.
+
+        Ylabel[j] = re.sub('_', ' ', Ylabel[j])
+	gnu.write(' title "'+Ylabel[j]+'" with '+lines)
+
+	if i < ncol-1:
+	    gnu.write(', \\\n')
+	else:
+	    if fit == 0:
+		gnu.write('\n')
+	    else:
+		gnu.write(', f(x) with lines\n')
+	i += 1
+	j += 1
+
+gnu.close()
+
+#-----------------------------------------------------------------------
+
+# Run the script.
+
+try:
+    os.system('export FIT_LOG='+fitlog
+                +'; gnuplot -geometry '+geom+' -persist '+gnufile)
+except:
+    print 'sorry, can\'t find gnuplot...'
+
+#-----------------------------------------------------------------------
+
+# Clean up and exit:
+
+cleanup()
