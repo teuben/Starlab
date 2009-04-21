@@ -17,10 +17,27 @@
 #		-s scriptname	save the script in the named file [don't save]
 #               -S              request a square plot [no]
 #		-x		specify x-label [none]
+#		-X		toggle explicit X-window output
 #		-y		specify y-label [none]
 #		-Y a b ...	specify plot labels ["column j", ...]
 #
 # Gnuplot PNG/Postscript output, if any, is sent to stdout.
+
+#-----------------------------------------------------------------------
+# **** Potentially problematic parameters ****
+#
+# These variables control the margins around the box in the output
+# window.  The optimal choices seem to change with new releases of
+# gnuplot.  If you don't like the appearance of the plot, try
+# experimenting with these.  Making a number smaller makes the margin
+# smaller and hence increases the size of the box, but leaves less
+# room for labels.
+
+tmargin = 1
+bmargin = 2
+lmargin = 8
+rmargin = 3
+#-----------------------------------------------------------------------
 
 import os, random, re, signal, sys
 
@@ -40,8 +57,9 @@ def print_help():
     print '           -p              toggle points/lines             [points]'
     print '           -P              toggle PostScript output           [off]'
     print '           -s script       save the script in the named file   [no]'
-    print '           -S              request a square plot               [no]'
+    print '           -S              request a square plot              [yes]'
     print '           -x              specify x-label                   [none]'
+    print '           -X              toggle explicit X-window output    [yes]'
     print '           -y              specify y-label                   [none]'
     print '           -Y a b ...      specify plot labels    ["column j", ...]'
     print ''
@@ -63,8 +81,9 @@ l = 1
 nokey = 0
 png = 0
 post = 0
-script = ""
-square = 0
+X = 1
+script = 0
+square = 1
 xlabel = ""
 title = ""
 ylabel = ""
@@ -74,12 +93,13 @@ ylims = ""
 geom = "400x400+0+0"
 fit = 0
 xflims = ""
+gnufile = ""
 
 # We could try to use pgetopt to parse the argument list argv[1:], but
 # the handling of variable numbers of arguments may get messy.  Maybe
 # there is a better version of pgetopt that permits this.  In the
 # meantime, parse the argumet list "by hand," using essentially the
-# logic imported from the shel-script version.     (Steve, 4/09)
+# logic imported from the shell-script version.     (Steve, 4/09)
 
 narg = len(sys.argv[1:])
 i = 0
@@ -140,8 +160,8 @@ while i < narg:			# loop through the argument list
 
     elif arg == '-s':
 	i += 1
-	script = sys.argv[i]
-	infile = script
+	script = 1
+	gnufile = sys.argv[i]
 
     elif arg == '-S':
 	square = 1 - square
@@ -149,6 +169,9 @@ while i < narg:			# loop through the argument list
     elif arg == '-x':
 	i += 1
 	xlabel = sys.argv[i]
+
+    elif arg == '-X':
+	X = 1 - X
 
     elif arg == '-y':
 	i += 1
@@ -207,7 +230,7 @@ rid = int(1000000000*random.random())
 id = 'pgpl'+str(rid)
 
 datafile = '/tmp/'+id+'.dat'
-gnufile  = '/tmp/'+id+'.in'
+if script == 0: gnufile  = '/tmp/'+id+'.in'
 fitlog   = '/tmp/'+id+'.fit'
 
 #-----------------------------------------------------------------------
@@ -224,8 +247,11 @@ out.close()
 
 # Define clean-up actions following an interrupt (control-C).
 
-def cleanup():
-    os.system('/bin/rm -f '+datafile+' '+gnufile+' '+fitlog)
+def cleanup(script=0):
+    if script:
+        os.system('/bin/rm -f '+datafile+' '+fitlog)
+    else:
+        os.system('/bin/rm -f '+datafile+' '+gnufile+' '+fitlog)
     sys.exit(0)
 signal.signal(signal.SIGINT, cleanup)
 
@@ -237,10 +263,10 @@ gnu = open(gnufile, 'w')
 
 if ncol > 1:
 
-    gnu.write('set tmargin 2\n')
-    gnu.write('set bmargin 4\n')
-    gnu.write('set lmargin 16\n')
-    gnu.write('set rmargin 7\n')
+    gnu.write('set tmargin 1\n')
+    gnu.write('set bmargin 2\n')
+    gnu.write('set lmargin 8\n')
+    gnu.write('set rmargin 3\n')
 
     if square == 1: gnu.write('set size square\n')
     if nokey == 1: gnu.write('set nokey\n')
@@ -249,7 +275,7 @@ if ncol > 1:
         gnu.write('set term post color 18\n')
     elif png == 1:
 	gnu.write('set term png\n')
-    else:
+    elif X == 1:
 	gnu.write('set term x11\n')
 
     # Label convention: replace "_" by space in xlabel, ylabel, and title.
@@ -317,4 +343,4 @@ except:
 
 # Clean up and exit:
 
-cleanup()
+cleanup(script)
