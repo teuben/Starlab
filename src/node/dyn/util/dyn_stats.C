@@ -224,7 +224,9 @@ void print_binary_from_dyn_pair(dyn* bi, dyn* bj,
     
     real dist_from_center = abs(pos - center);
     real speed = abs(vel);	// NB: no v_center currently available
-    real radial_velocity = vel*(pos - center) / dist_from_center;
+    real radial_velocity = 0;
+    if (dist_from_center > 0)
+        radial_velocity = vel*(pos - center) / dist_from_center;
 
     int init_indent = 11 - strlen(bi->format_label());
     init_indent -= strlen(bj->format_label()) ;
@@ -294,7 +296,9 @@ real print_structure_recursive(dyn* bi,
     
 	real dist_from_center = abs(pos - center);
 	real speed = abs(vel);		// NB: no v_center currently available
-	real radial_velocity = vel*(pos - center) / dist_from_center;
+	real radial_velocity = 0;
+	if (dist_from_center > 0)
+	    radial_velocity = vel*(pos - center) / dist_from_center;
 
 	eb += print_binary_params(&k, primary->get_mass(), kT,
 				  dist_from_center, speed, radial_velocity,

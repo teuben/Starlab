@@ -902,7 +902,10 @@ local void print_binaries(dyn* b, real kT,
 
 		real dist_from_center = abs(bi->get_pos() - center);
 		real speed = abs(bi->get_vel());    // no v_center available
-		real radial_velocity = bi->get_vel()*(bi->get_pos() - center)
+
+		real radial_velocity = 0;
+		if (dist_from_center > 0)
+		    radial_velocity = bi->get_vel()*(bi->get_pos() - center)
 					  / dist_from_center;
 
 		eb += print_binary_params(od->get_kepler(), od->get_mass(),
