@@ -26,7 +26,7 @@
 #define ALLOW_LOW_LEVEL_PERTURBERS		true
 #define RESOLVE_UNPERTURBED_PERTURBERS		false
 
-// For full_dump binary ouptut:
+// For full_dump binary output:
 
 #define SMALL_TDYN_PERT_SQ 1.e-4
 

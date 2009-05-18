@@ -654,7 +654,7 @@ int depth_of_node(node *n);
 
 /// Construct a label for a binary from the component names.
 
-char * construct_binary_label(node * ni, node * nj);
+const char * construct_binary_label(node * ni, node * nj);
 
 /// Label a binary node based on the component names (a,b).
 
