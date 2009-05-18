@@ -1100,7 +1100,8 @@ int integrate_list(hdyn * b,				// root node
     real crit_step = 1.e-13*max(1.0, (real)b->get_system_time());
     real crit_pert2 = 1.e-7;			// ~arbitrary
 
-    for (i = 0; i < n_next; i++) {
+    if (b->get_eps2() == 0)			// only for unsoftened systems
+      for (i = 0; i < n_next; i++) {
 	
         hdyn *bi = next_nodes[i];
 	if (bi && bi->is_valid()) {
@@ -1241,7 +1242,7 @@ int integrate_list(hdyn * b,				// root node
 		return return_fac*steps;
 	    }
 	}
-    }
+      }
 
     // Note that ONLY ONE tree reconstruction (following a collision
     // or otherwise) is currently permitted per block step.
