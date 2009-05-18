@@ -41,8 +41,10 @@ enum stellar_type_summary {ZAMS=0, Early_Giant, Late_Giant,
 			   Neutron_Remnant, Inert_Remnant,
 			   Unspecified, Undefined, no_of_star_type_summ};
 
+// Note that g++ no longer likes B0... (Steve, 3/09).
+
 enum spectral_class {O5=0, O6, O7, O8, O9, O95, 
-                     B0=6, B05, B1, B2, B3, B5, B6, B7, B8, B9, B95,
+                     _B0=6, B05, B1, B2, B3, B5, B6, B7, B8, B9, B95,
                      A0=17, A1, A2, A3, A4, A5, A7,
                      F0=24, F2, F3, F5, F6, F7, F8,
                      G0=31, G1, G2, G5, K0, K5, M0, M5, M8,
