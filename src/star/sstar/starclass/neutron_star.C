@@ -834,8 +834,8 @@ real neutron_star::magnetic_moment() {
 real neutron_star::magnetic_field_decay(const real log_B,
 					const real dt_tau=0) {
   
-  real B0 = pow(10., log_B);
-  real B1 = Starlab::max(1.,  B0 / exp(dt_tau));
+  real lB0 = pow(10., log_B);
+  real B1 = Starlab::max(1.,  lB0 / exp(dt_tau));
 
   return log10(B1);
 }

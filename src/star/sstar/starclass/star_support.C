@@ -153,7 +153,7 @@ const char* type_string(spectral_class class_tpe) {
          case O8:			return "O8";
          case O9:			return "O9";
          case O95:			return "O9.5";
-         case B0:			return "B0";
+         case _B0:			return "B0";	// g++ doesn't like B0
          case B05:			return "B0.5";
          case B1:			return "B1";
          case B2:			return "B2";
@@ -208,7 +208,7 @@ const char* type_short_string(spectral_class class_tpe) {
          case O8:
          case O9:
          case O95:			return "O";
-         case B0:
+         case _B0:
          case B05:
          case B1:
          case B2:
@@ -316,7 +316,7 @@ spectral_class get_spectral_class(const real temperature) {
         else if(log_temp>=4.544) spectral_type = O8;
         else if(log_temp>=4.535) spectral_type = O9;
         else if(log_temp>=4.506) spectral_type = O95;
-        else if(log_temp>=4.490) spectral_type = B0;
+        else if(log_temp>=4.490) spectral_type = _B0;
         else if(log_temp>=4.418) spectral_type = B05;
         else if(log_temp>=4.354) spectral_type = B1;
         else if(log_temp>=4.312) spectral_type = B2;
