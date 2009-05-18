@@ -12,7 +12,7 @@ void move_to(float x, float y);
 void draw_to(float x, float y);
 void point(float x, float y, float size);
 void get_mouse(float *x, float *y);
-void pause(int time);
+/* void pause(int time); */
 void clear_graphics();
 void exit_graphics();
 
