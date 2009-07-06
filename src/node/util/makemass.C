@@ -28,9 +28,10 @@
 ////                        5) GdeMarchi
 ////                        6) Kroupa, Tout & Gilmore 1991
 ////                        7) TwoComponent (uses -h, -l and -u)
+////                        8) Kroupa 2001
 ////                   option -F requires one of the following strings:
 ////                        Power_Law, Miller_Scalo, Scalo, Kroupa,
-////                        GdeMarchi, KTG91, TwoComponent
+////                        GdeMarchi, KTG91, TwoComponent, Kroupa01
 ////                   option -f requires the appropriate integer.
 ////         -h/H      fraction of stars in high-mass group (TwoComponent) [0]
 ////         -i        (re)number stellar index from highest to lowest mass.
@@ -248,6 +249,99 @@ local real Kroupa_Tout_Gilmore_1991(real m_lower, real m_upper) {
   return m;
 }
 
+
+/* broken power-law MF that takes the form
+
+                     _
+                    |
+                    | m^alpha1    if (m_lower < m <= m0) 
+       MF(m) = A * -|
+                    | m^alpha2    if (m0 < m <= m_upper) 
+                    |_
+
+   only true cases of broken PLMF are treated meaning that
+   anything with m_lower >= m0, m_upper <= m0 and alpha1==alpha2 
+   is calculated using the single PLMF
+              
+ */
+local real broken_power_law(real m_lower, real m_upper, real m0, 
+                            real alpha1, real alpha2) {
+
+  real norm,nlow,nup,xlow;
+  real a11=alpha1+1, a21=alpha2+1, m0inv=1.0/m0;
+
+  // if the mass limits are the same or very close all stars will
+  // have the same mass (needed?)
+  //if (twiddles(m_lower, m_upper, TOL))
+  //  return 0.5*(m_lower+m_upper);		// Steve, 5/05
+
+
+  // test for cases that are single power laws
+  if (m_lower >= m0 || m_upper <= m0 || alpha1 == alpha2) {
+    if (m_lower >= m0) alpha1 = alpha2;      
+    return general_power_law(m_lower, m_upper, alpha1);
+  }
+
+  // normalize broken powerlaw IMF
+  if (alpha1 == -1 || alpha2 == -1) {
+    if (alpha1 == -1) {
+      nlow = log(m0*m_lower);
+      nup  = (pow(m_upper, a21) - pow(m0inv, a21)) / a21; 
+      norm = 1./( nup - nlow );      
+    }
+    else {
+      nlow = (pow(m_lower, a11) - pow(m0inv, a11)) / a11;
+      nup  = log(m0*m_upper);
+      norm = 1./( nup - nlow );      
+    }
+  }
+  else {
+    // no -1 exponent
+    nlow = (pow(m_lower/m0, a11) - 1) / a11;
+    nup  = (pow(m_upper/m0, a21) - 1) / a21;
+    norm = 1./( nup - nlow );
+  }
+
+  // compute fraction of stars in low-mass part of MF
+  xlow = norm * (-nlow);
+  
+  // decide by random number if a star is in the low- or
+  // high-mass part of the MF, the use single PLMF to get 
+  // random mass
+   if (randinter(0,1) <= xlow) {
+     return general_power_law(m_lower, m0, alpha1);
+   }
+   else {
+     return general_power_law(m0, m_upper, alpha2);
+   }
+
+}
+
+
+/* Kroupa IMF (Kroupa, 2001, MNRAS 322, 231), a broken PLMF
+   of the form
+
+                     _
+                    |
+                    | m^(-1.3)    if (m_lower < m <= 0.5) 
+       MF(m) = A * -|
+                    | m^(-2.3)    if (0.5 < m <= m_upper) 
+                    |_
+
+   NOTE: the mass regime below 0.08 M_sun is ignored, if m_lower 
+         is lower than that value the MF is not exactly Kroupa01
+
+   this mass function is a special case of the broken power-law MF
+              
+ */
+local real Kroupa_2001(real m_lower, real m_upper) {
+
+  real m0 = 0.5, alpha1=-1.3, alpha2=-2.3;
+
+  return broken_power_law( m_lower, m_upper, m0, alpha1, alpha2);
+
+}
+
 static int ntot = 0, n_heavy = 0;
 
 local real mf_TwoComponent(real m_lower, real m_upper, real heavyfrac)
@@ -273,7 +367,6 @@ local real mf_TwoComponent(real m_lower, real m_upper, real heavyfrac)
     }
 }
 
-
 //----------------------------------------------------------------------
 // Global functions.
 //----------------------------------------------------------------------
@@ -332,6 +425,9 @@ real get_random_stellar_mass(real m_lower, real m_upper,
 	   m = mf_TwoComponent(m_lower, m_upper, exponent);   // use exponent to
 							      // store heavyfrac
 	   break;
+       case Kroupa01: // Kroupa, 2001, MNRAS, 322, 231
+    	   m = Kroupa_2001(m_lower, m_upper);
+	   break;
        default:
 	   cerr << "WARNING: \n"
 		<< "        real get_random_stellar_mass:\n"
@@ -371,6 +467,9 @@ char* type_string(mass_function mf) {
        case TwoComponent:
             sprintf(mf_name, "TwoComponent");
 	    break;
+       case Kroupa01:
+            sprintf(mf_name, "Kroupa01");
+	    break;
        default:
             sprintf(mf_name, "Unknown");
 	    break;
@@ -398,6 +497,8 @@ mass_function extract_mass_function_type_string(char* type_string) {
         type = KTG91;
      else if (!strcmp(type_string, "TwoComponent"))
         type = TwoComponent;
+     else if (!strcmp(type_string, "Kroupa01"))
+        type = Kroupa01;
      else if (!strcmp(type_string, "Unknown"))
         type = Unknown_MF;
      else {
