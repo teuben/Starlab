@@ -213,7 +213,9 @@ istream & hdyn::scan_dyn_story(istream & s)
     char input_line[MAX_INPUT_LINE_LENGTH];
     real last_real = false;
 
-    while (get_line(s, input_line), strcmp(END_DYNAMICS, input_line)) {
+    while (get_line(s, input_line),
+//	   strcmp(END_DYNAMICS, input_line)) {
+	   !matchbracket(END_DYNAMICS, input_line)) {
 
 	char keyword[MAX_INPUT_LINE_LENGTH];
 	const char *val = getequals(input_line, keyword);
