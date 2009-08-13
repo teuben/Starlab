@@ -46,8 +46,8 @@ CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"
 
 #--------------------------------------------------------------------------
 # Checks for programs.
-AM_PROG_CC_C_O
 #AC_PROG_CC
+AM_PROG_CC_C_O
 
 AC_ARG_WITH(f77,
     AS_HELP_STRING([--with-f77], use the F77 [[[default=yes]]]),
