@@ -36,7 +36,6 @@ if HAVE_LIBQT
   Qt_pp3_CPPFLAGS = -DTOOLBOX
   Qt_pp3_LDADD = libxhdyn.la
   Qt_pp3_SOURCES = Qt_pp3.C
-  AM_LDFLAGS = $(X_LIBS)
   BUILT_SOURCES = moc_pp3_widget.C
   CLEANFILES = moc_pp3_widget.C
 endif
