@@ -105,9 +105,12 @@ void kira_print_config(unsigned int config)
 {
     if (config <= 0)
         cerr << "no hardware acceleration" << endl;
-    else if (config%2 == 0)
-        cerr << "found GRAPE-6 acceleration" << endl;
-    else
+    else if (config%2 == 0) {
+	if (g6_npipes_() <= 48)
+	    cerr << "found GRAPE-6 acceleration" << endl;
+	else
+	    cerr << "found GPU acceleration" << endl;
+    } else
         cerr << "found GRAPE-4 acceleration" << endl;
 }
 

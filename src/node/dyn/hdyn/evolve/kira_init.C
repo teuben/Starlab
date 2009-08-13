@@ -16,6 +16,7 @@
 //	bool kira_initialize
 
 #include "hdyn.h"
+#include "grape6.h"
 #include "star/dstar_to_kira.h"
 #include "kira_defaults.h"
 
@@ -885,6 +886,7 @@ bool kira_initialize(int argc, char** argv,
     b->set_kira_diag(new kira_diag);
 
     check_kira_init(b);			// allow changes to kira defaults
+    bool set_grape_max_cpu = false;
 
     b->log_history(argc, argv);
 
@@ -924,6 +926,7 @@ bool kira_initialize(int argc, char** argv,
 			comment = poptarg;
 			break;
 	    case 'C':	b->get_kira_options()->grape_max_cpu = atof(poptarg);
+			set_grape_max_cpu = true;
 			break;
 	    case 'd':	dt_log = atof(poptarg);
 	    		if (dt_log < 0) dt_log = pow(2.0, dt_log);
@@ -1544,7 +1547,11 @@ bool kira_initialize(int argc, char** argv,
 
     if (config && force_nogrape) {
         kira_config(b, 0);
-        cerr << "GRAPE suppressed" << endl;
+	if (g6_npipes_() <= 48)
+	    cerr << "GRAPE";
+	else
+	    cerr << "GPU";
+        cerr << " use suppressed" << endl;
     }
 
     if (!config)
@@ -1554,11 +1561,24 @@ bool kira_initialize(int argc, char** argv,
     else
 	cerr << "density computation enabled" << endl;
 
-    if (config) {
+    if (config == 1 || (config == 2 && g6_npipes_() <= 48)) {
 	if (use_dma)
 	    cerr << "GRAPE DMA transfers enabled" << endl;
 	else
 	    cerr << "GRAPE DMA transfers suppressed" << endl;
+    }
+
+    // The choice of grape_max_cpu is appropriate for GRAPEs, but
+    // not for GPU/sapporo, where released/reattach causes problems.
+    // Reset it here is if a GPU is detected.
+
+    if (config == 2 && !set_grape_max_cpu) {
+	if (g6_npipes_() > 48) {			// assume GPU
+	    b->get_kira_options()->grape_max_cpu = 3600;
+	    cerr << "set default grape_max_cpu = "
+		 << b->get_kira_options()->grape_max_cpu
+		 << " for GPU" << endl;
+	}
     }
 
     if (enable_smallN)
