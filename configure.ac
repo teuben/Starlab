@@ -46,7 +46,8 @@ CPPFLAGS="$CPPFLAGS -D_SRC_='\"'\`pwd\`/'\"'__FILE__"
 
 #--------------------------------------------------------------------------
 # Checks for programs.
-AC_PROG_CC
+AM_PROG_CC_C_O
+#AC_PROG_CC
 
 AC_ARG_WITH(f77,
     AS_HELP_STRING([--with-f77], use the F77 [[[default=yes]]]),
@@ -205,7 +206,7 @@ as shown in `local/grape.sh.examples'.])
     grape6=no
 
     for gl in $GRAPE_LIBS_; do
-        AC_CHECK_LIB(${gl/-l/}, g6_open_, grape6=yes, grape6=no, -lg6bx -lxhib)
+        AC_CHECK_LIB(${gl/-l/}, g6_open_, grape6=yes, grape6=no)
 	if test "x$grape6" = "xyes"; then break; fi
     done
 
