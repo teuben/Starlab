@@ -1,14 +1,26 @@
-# This shell file defines the GRAPE software interface.
+# This shell file defines the GRAPE/GPU software interface.
 # Please don't change the names of the variables,
 # just replace the values.
 
-# ***** FOR EXAMPLES, SEE grape.sh.examples IN THIS DIRECTORY *****
+# FOR OTHER EXAMPLES, SEE grape.sh.examples IN THIS DIRECTORY.
 
-# Where to find GRAPE libraries:
-GRAPE_LDFLAGS_='-L/usr2/makino/disk3src/harplibs'
+# Where to find GRAPE libraries.  Now generalized to include all
+# additional compile-time flags to link in GRAPE/GPU code,
+# including non-standard directories.  LD_LIBRARY_PATH doesn't
+# seem to work, so specify all information here.
+#
+#GRAPE_LDFLAGS_='-L/usr2/makino/disk3src/harplibs'
+GRAPE_LDFLAGS_='-L/usr/local/cuda/lib -lcuda -lcudart -L/sw/lib -lboost_thread -L/usr/local/sapporo_v1.5'
 
-# GRAPE libraries that must be linked in:
-GRAPE_LIBS_='-lg6lx -lg6lxsim2'
+# GRAPE/GPU libraries that must be linked in.  The libraries must be
+# in a standard location so that configure can find them (searches
+# this library for g6_open_).
+#
+# ToDo: improve the configure syntax to use LD_LIBRARY_PATH.
+#
+#GRAPE_LIBS_='-lg6lx -lg6lxsim2'
+GRAPE_LIBS_='-lsapporo'
 
-# For now, define this as `yes' for the AMD64 boxes only, `no' otherwise.
+# For now, define this as `yes' for AMD64 boxes only, `no' otherwise.
+#
 OLD_READ_NEIGHBOUR_LIST=no
