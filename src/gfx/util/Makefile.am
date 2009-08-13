@@ -22,6 +22,11 @@ bin_PROGRAMS = data make_image
 libgfx_1_la_SOURCES = colormaps.C write_sun.C sun_header.C write_gif.C \
     encode_gif.C write_png.C
 
+# Seems to be needed so some configures (e.g. on MacOS) correctly
+# include the X libraries:
+
+AM_LDFLAGS = $(X_LIBS)
+
 data_LDADD = ../libgfx.la
 make_image_LDADD = ../libgfx.la
 

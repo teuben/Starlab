@@ -41,8 +41,6 @@ endif
 
 libgfx_la_SOURCES =
 
-AM_LDFLAGS = $(X_LIBS)
-
 if !NO_X
     CLIBSX = clibs23
 endif
