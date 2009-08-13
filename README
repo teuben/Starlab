@@ -45,7 +45,7 @@ INSTALLATION BASICS
   to create configure (and other installation files, such as
   "Makefile.in") using the command
 
-	autoreconf
+	autoreconf -i -f
 
   Starlab now makes extensive use of the GNU "autotools," aucoconf,
   autoreconf, automake, and libtool.  Unless you are sure that your

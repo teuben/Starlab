@@ -77,7 +77,7 @@ endif
 if (! -e configure) then
     echo Running autoreconf to build configure
     echo Running autoreconf to build configure				>>& $log
-    autoreconf								>>& $log
+    autoreconf -i -f							>>& $log
 endif
 
 set OK = 0
