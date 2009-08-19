@@ -7,6 +7,10 @@
 // initialized to -1.
 
 #if 0
+cerr << "post: "; PRL(count);
+#endif
+
+#if 0
 if (count > 163000) {
   b->get_kira_diag()->n_check_heartbeat = 1;
   int p = cerr.precision(20); PRC(t); cerr.precision(p); PRL(n_next);

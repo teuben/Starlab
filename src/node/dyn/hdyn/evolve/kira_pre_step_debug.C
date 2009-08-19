@@ -4,6 +4,10 @@
 // of length n_next.
 
 #if 0
+cerr << "pre: "; PRL(count);
+#endif
+
+#if 0
     for (int ii = 0; ii < n_next; ii++) {
       hdyn *n = next_nodes[ii];
       if (n && n->is_valid()) {
