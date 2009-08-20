@@ -21,6 +21,7 @@ GRAPE_LDFLAGS_='-L/usr/local/cuda/lib -lcuda -lcudart -L/sw/lib -lboost_thread -
 #GRAPE_LIBS_='-lg6lx -lg6lxsim2'
 GRAPE_LIBS_='-lsapporo'
 
-# For now, define this as `yes' for AMD64 boxes only, `no' otherwise.
+# For now, define this as `yes' for AMD64 GRAPE boxes only, `no'
+# otherwise.
 #
 OLD_READ_NEIGHBOUR_LIST=no
