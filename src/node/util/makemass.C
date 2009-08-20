@@ -398,7 +398,7 @@ real get_random_stellar_mass(real m_lower, real m_upper,
        case Equal_Mass:
 	   if (m_lower==0) {
 	       cerr << "get_random_stellar_mass:"<<endl;
-	       cerr << "unambiguous choise of Equal_Mass."<<endl;
+	       cerr << "unambiguous choice of Equal_Mass."<<endl;
 	       cerr << "Use -m option to set fixed stellar mass."<<endl;
 	       exit(1);
 	   }
