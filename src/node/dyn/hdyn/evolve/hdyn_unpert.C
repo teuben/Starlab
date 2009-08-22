@@ -2234,6 +2234,13 @@ void hdyn::startup_unperturbed_motion()
     }
 #endif
 
+    // Keep track of the start time for use with application of tidal
+    // corrections in integrate_unperturbed_motion() below.  (If
+    // stories are too expensive, we could introduce a member variable
+    // to accomplish the same task.)  Code added by Steve, 8/09.
+
+    if (kep) putrq(get_dyn_story(), "unpert_startup_time", system_time);
+
     // cerr << "Leaving startup_unperturbed_motion: "; PRL(fully_unperturbed);
 
     // On normal exit, a kepler structure exists, timestep is the last
@@ -3865,7 +3872,24 @@ int hdyn::integrate_unperturbed_motion(bool& reinitialize,
 
 	    // PRC(Ec); PRC(ENERGY_LIMIT_1); PRL(ENERGY_LIMIT_2);
 
-	    if (Ec < ENERGY_LIMIT_1) {
+	    // Don't apply a tidal correction if we haven't just had
+	    // unperturbed motion for a substantial fraction of the
+	    // outer orbit.  Code below is paired with the story data
+	    // written at the end of startup_unperturbed_motion().
+	    // The factor multiplying the period is ~arbitrary.  Added
+	    // by Steve, 8/09.
+
+#define PERIOD_FACTOR 0.3
+
+	    real unpert_startup_time
+		= getrq(get_dyn_story(), "unpert_startup_time");
+	    if (unpert_startup_time > 0)
+		rmq(get_dyn_story(), "unpert_startup_time");
+	    bool correct_tidal = (unpert_startup_time > 0
+				  && system_time - unpert_startup_time
+				  > PERIOD_FACTOR*outer_period);
+
+	    if (correct_tidal && Ec < ENERGY_LIMIT_1) {
 
 		real kT = 1;
 
