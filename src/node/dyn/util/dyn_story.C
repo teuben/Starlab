@@ -303,7 +303,8 @@ real get_initial_jacobi_radius(dyn* b,
 		initial_r_jacobi = r_jacobi_over_r_virial * r_virial;
 
 		if (verbose) {
-		    cerr << "got r_jacobi_over_r_virial = "
+		    cerr << "get_initial_jacobi_radius: "
+			 << "r_jacobi_over_r_virial = "
 			 << r_jacobi_over_r_virial
 			 << " from input snapshot"
 			 << endl;
