@@ -648,9 +648,10 @@ local void check_total_mass(hdyn *b, bool reset = true)
 		 << "*** Root mass disagrees with total mass"
 		 << endl;
 	    real dm = b->get_mass() - total_mass;
-	    PRI(4); PRC(b->get_mass()); PRC(total_mass); PRL(dm);
+	    hdyn *root = b;
+	    PRI(4); PRC(root->get_mass()); PRC(total_mass); PRL(dm);
 	    if (reset) {
-		cerr << "    resetting..." << endl;
+		cerr << "    resetting top-level node mass..." << endl;
 		b->set_mass(total_mass);
 	    }
 	}
@@ -1324,10 +1325,12 @@ bool kira_initialize(int argc, char** argv,
 
     //----------------------------------------------------------------------
 
-    // Check for external fields, including tidal fields.
-    // Note that there are NO command-line options, except for enabling
-    // or disabling internal dynamical friction -- fields can be
-    // specified *only* via the initial snapshot.
+    // Check for external fields, including tidal fields.  This
+    // function reads and sets the tidal (Jacobi) radius and all other
+    // external parameters.  Note that there are NO command-line
+    // options, except for enabling or disabling internal dynamical
+    // friction -- fields can be specified *only* via the initial
+    // snapshot.
 
     check_set_external(b, verbose, fric_int);
 
