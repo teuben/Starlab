@@ -975,7 +975,33 @@ local void get_array(char * sin, unsigned long * x, int n)  // overloaded!
 	    char save = *s2;
 
 	    *s2 = '\0';
-	    x[i++] = atoi(s1);				// <-- only change!
+	    x[i++] = atol(s1);				// <-- only change!
+	    *s2 = save;
+
+	    if (i >= n) break;
+	    s1 = s2;
+	}
+    }
+}
+
+local void get_array(char * sin, unsigned long long * x, int n)  // overloaded!
+{
+    // Copy of get_array, for int instead of real.  Previous comments apply.
+
+    if (n > GET_ARR_BUFSIZ)
+	warning("get_array: truncating input string");
+
+    strncpy(s, sin, GET_ARR_BUFSIZ);
+
+    char *s1 = s, *s2 = s;
+    int i = 0;
+
+    while (*(s2++) > '\0') {
+        if (*(s2-1) > ' ' && *s2 <= ' ') {
+	    char save = *s2;
+
+	    *s2 = '\0';
+	    x[i++] = atoll(s1);				// <-- only change!
 	    *s2 = save;
 
 	    if (i >= n) break;
@@ -1041,6 +1067,34 @@ void getia(story *  a_story, const char * name, int * x, int n, bool verbose)
  *-----------------------------------------------------------------------------
  */
 void getia(story *  a_story, const char * name, unsigned long * x,
+	   int n, bool verbose)
+{
+    if (!a_story || !name) {
+	*x = 0;
+	return;
+    }
+
+    story * story_line;
+
+    if ((story_line = find_qmatch(a_story, name)) == NULL) {
+
+	if (verbose) cerr << "getia: no quantity found with name \""
+	                  << name << "\"" << endl;
+
+	*x = 0;
+	return;
+
+    }
+
+    get_array(get_qstring(story_line), x, n);
+}
+
+/*-----------------------------------------------------------------------------
+ *  getia  --  reads an unsigned long long array of length n from a line in
+ *	       a story
+ *-----------------------------------------------------------------------------
+ */
+void getia(story *  a_story, const char * name, unsigned long long * x,
 	   int n, bool verbose)
 {
     if (!a_story || !name) {
