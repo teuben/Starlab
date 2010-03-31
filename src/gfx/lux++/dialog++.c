@@ -130,7 +130,7 @@ local void set_dialog_item(Window* dialog_win, int i, dialog_entry* d,
 
     size = convert_value(d, temp_buffer);
 
-    /* Initialize the appropriate box (twice, just in case...). */
+    /* Initialize the appropriate box (twice, just in case...???). */
 
     for (j = 0; j < 2; j++) {
 
@@ -366,7 +366,7 @@ void create_button_dialog_entry(char* name, char* value)
     d[n_dialog-1].name = name;
     d[n_dialog-1].type = 0;
     d[n_dialog-1].value = value;
-    d[n_dialog-1].width = 1;
+    d[n_dialog-1].width = 1;		/* size of the box */
 }
 
 void create_int_dialog_entry(char* name, int* value)

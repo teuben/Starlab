@@ -723,21 +723,29 @@ int     *x, *y;
       logymax = log10(current->win.ymax);
     }
 
-    if ( current->win.lnx == 0)
-      *x = (int)(((fx-current->win.xmin)*current->win.xfactor+
-		  current->win.xorg)*current->win.xresizefactor+0.5);
-    else
+#if 0
+    fprintf(stderr, "lux_convert_coord: %d %d %f %f\n",
+	    current->win.lnx, current->win.lny,
+	    current->win.xresizefactor, current->win.yresizefactor);
+#endif
+
+    if ( current->win.lnx == 0) {
+	float ff = ((fx-current->win.xmin)*current->win.xfactor+
+		    current->win.xorg)*current->win.xresizefactor+0.5;
+	*x = (int)ff;
+    } else
       *x = (int)(((log10(fx)-logxmin)*current->win.xfactor+
 		  current->win.xorg)*current->win.xresizefactor+0.5);
-    if ( current->win.lny == 0)
+
+    if ( current->win.lny == 0) {
       *y = (int)((current->win.ysize-(fy-current->win.ymin)*
 		  current->win.yfactor+current->win.yorg)*
 		 current->win.yresizefactor+0.5);
-    else
+    } else
       *y = (int)((current->win.ysize-(log10(fy)-logymin)*
 		  current->win.yfactor+current->win.yorg)*
 		 current->win.yresizefactor+0.5);
-      
+
 }      
 
 lux_reconvert_coord(win,ix,iy,fx,fy)
@@ -1212,7 +1220,7 @@ Window  win;
     current = get_currentwin(win);
 
     lux_convert_coord(win, (current->win.currentdata)->data.f[0],
-		      (current->win.currentdata)->data.f[1],&ix, &iy);
+		      (current->win.currentdata)->data.f[1], &ix, &iy);
 
     string = &((current->win.currentdata)->data.b[3*sizeof(float)]);
 

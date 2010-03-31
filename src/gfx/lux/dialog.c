@@ -102,7 +102,9 @@ unsigned int x, y, width, height;
     mywin->win.user_width  = width;
     mywin->win.user_height = height;
     mywin->win.xresizefactor = 1.0;
+    mywin->win.lnx = 0;
     mywin->win.yresizefactor = 1.0;
+    mywin->win.lny = 0;
 
     mywin->win.fxorg = 0.0;
     mywin->win.fyorg = 0.0;
@@ -164,7 +166,9 @@ char *def_value;                          /* length < 255 */
       mywin->win.old_width   = mywin->win.user_width  = mywin->win.width;
       mywin->win.old_height  = mywin->win.user_height = mywin->win.height;
       mywin->win.xresizefactor = 1.0;
+      mywin->win.lnx = 0;
       mywin->win.yresizefactor = 1.0;
+      mywin->win.lny = 0;
 
       mywin->win.fxorg = 0.0;
       mywin->win.fyorg = 0.0;
@@ -205,10 +209,10 @@ char *def_value;                          /* length < 255 */
 	  char *new;
 	  int i;
 	  new = (char *)malloc(255); 
-	  new[0] = (char)NULL; mywin->win.msg[0] = (char)NULL;
+	  new[0] = (char)0; mywin->win.msg[0] = (char)0;
 	  for(i=0;i<sizeof(float)*3+1;i++) 
 	    new[i] = mywin->win.data->data.b[i];
-	  new[i] = (char)NULL;
+	  new[i] = (char)0;
 	  strcat(&new[i],&(mywin->win.data->data.b[i]));
 	  strcat(mywin->win.msg,&(mywin->win.data->data.b[i]));
 	  free(mywin->win.data->data.b);
@@ -298,7 +302,7 @@ char *value;
 
     old = current = get_currentwin(dialog);
 
-    value[0] = (char)NULL;
+    value[0] = (char)0;
 
     while(current->win.parent != dialog || current->win.serial != num ||
 	  current->win.type != type || current->win.subtype != subtype ) {

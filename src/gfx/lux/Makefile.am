@@ -17,7 +17,7 @@
 ##
 
 noinst_LTLIBRARIES = libgfx-2.la
-bin_PROGRAMS = plot_data simple ximage
+bin_PROGRAMS = plot_data simple ximage demo
 
 libgfx_2_la_SOURCES = win.c draw.c draw1.c color.c dialog.c mcd.c interface.c \
     termio.c utility.c simple.c
@@ -27,3 +27,4 @@ simple_CPPFLAGS = -DTEST
 plot_data_LDADD = ../libgfx.la
 simple_LDADD = ../libgfx.la
 ximage_LDADD = ../libgfx.la
+demo_LDADD = ../libgfx.la
