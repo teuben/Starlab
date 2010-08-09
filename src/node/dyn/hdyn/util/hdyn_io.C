@@ -62,7 +62,7 @@ int hdyn::n_threads				= 0;
 real hdyn::thread_cpu				= 0;
 
 
-void check_sanity_of_timestep(xreal & time, real & timestep)
+void check_sanity_of_timestep(hdyn *b, xreal & time, real & timestep)
 {
     if (timestep > 0) {
 
@@ -70,7 +70,8 @@ void check_sanity_of_timestep(xreal & time, real & timestep)
 
 	if (fmod(time,  timestep) != 0.0) {
 
-	    cerr << " unsynchronized timestep error" << endl;
+	    cerr << endl << "unsynchronized timestep error for "
+		 << b->format_label() << endl;
 
 	    cerr.precision(HIGH_PRECISION);
 	    PRL(time);
@@ -357,7 +358,7 @@ istream & hdyn::scan_dyn_story(istream & s)
 	}
     }
 
-    if (check_timestep)
+    if (check_timestep && !fully_unperturbed)
 	check_sanity_of_timestep(time, timestep);
 
     return s;
