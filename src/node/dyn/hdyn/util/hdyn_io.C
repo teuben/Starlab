@@ -359,7 +359,7 @@ istream & hdyn::scan_dyn_story(istream & s)
     }
 
     if (check_timestep && !fully_unperturbed)
-	check_sanity_of_timestep(time, timestep);
+        check_sanity_of_timestep(this, time, timestep);
 
     return s;
 }
