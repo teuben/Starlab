@@ -126,6 +126,8 @@ void  compute_density(dyn * b,	      // pointer to N-body system or node
 
     dyn* d;
 
+    // Two-in-one code is very hard to debug! (Steve, 8/10)
+
     if (list)
         d = b;
     else
@@ -150,13 +152,13 @@ void  compute_density(dyn * b,	      // pointer to N-body system or node
 	dyn* dd;
 
 	if (list)
-	    dd = list[n_list-1];
+	    dd = list[n_list-1];    // note use below of n_list as a counter!
 	else
 	    dd = b->get_oldest_daughter();	// b is root
 
 	while (dd) {
 
-	    if (d != dd) {
+	    if (list || d != dd) {
 
 		delr_sq = square(something_relative_to_root(d, &dyn::get_pos)
 			      - something_relative_to_root(dd, &dyn::get_pos));
@@ -166,14 +168,13 @@ void  compute_density(dyn * b,	      // pointer to N-body system or node
 		    // Place dd on d's neighbor list.
 
 		    for (q = k-1; q >= 0; q--) {
-			if (delr_sq > neighbor_dist_sq[q]) {
+			if (delr_sq >= neighbor_dist_sq[q]) {
 			    for (r = k; r > q+1; r--) {
 				neighbor_dist_sq[r] = neighbor_dist_sq[r-1];
 				neighbor_mass[r] = neighbor_mass[r-1];
 			    }
 			    neighbor_dist_sq[q+1] = delr_sq;
 			    neighbor_mass[q+1] = dd->get_mass();
-
 			    break;
 			}
 		    }
@@ -183,14 +184,14 @@ void  compute_density(dyn * b,	      // pointer to N-body system or node
 	    // Get next dd.
 
 	    if (list) {
-		if (--n_list < 0)
+		if (--n_list < 1)
 		    dd = NULL;
 		else
-		    dd = list[n_list];
+		    dd = list[n_list-1];
 	    } else
 		dd = dd->get_younger_sister();
 	}
-	    
+ 	    
         real density =  0;
 
 	if (neighbor_dist_sq[k] > 0) {

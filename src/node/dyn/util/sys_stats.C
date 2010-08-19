@@ -998,6 +998,11 @@ local void print_core_parameters(dyn* b, bool allow_n_sq_ops,
     putrq(b->get_dyn_story(), "core_radius", rcore);
     putiq(b->get_dyn_story(), "n_core", ncore);
     putrq(b->get_dyn_story(), "m_core", mcore);
+
+//     for_all_daughters(dyn, b, bb) {
+// 	PRC(bb->format_label());
+// 	PRL(getrq(bb->get_dyn_story(), "density"));
+//     }
 }
 
 // Linear interpolation routine.
