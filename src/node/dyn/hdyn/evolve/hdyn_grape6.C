@@ -2219,7 +2219,7 @@ static int neighbor_list[MAX_NEIGHBORS];
 
 //-------------------------------------------------------------------------
 
-local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
+local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe, int n_pipes)
 
 // Set nn, coll, d_nn_sq and d_coll_sq, for particle b (pipe specified),
 // and compute perturber lists for parent nodes.  Possible returns are:
@@ -2250,6 +2250,14 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 				    &n_neighbors,
 				    neighbor_list);
 #endif
+
+    // **** IMPORTANT NOTE: The GRAPE neighbor list does not contain
+    // **** particle b, but the list returned by sapporo does.  Must
+    // **** take this emulation error into account and remove b from
+    // **** the list before returning, as compute_densities() adds b
+    // **** explicitly.
+
+    int n_extra = (n_pipes > 48);		// = 1 iff we have a GPU
 
     if (status) {
 
@@ -2283,6 +2291,7 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 #else
 #if 00
 	    // Default short diagnostic message:
+
 	    cerr << func << ": node " << b->format_label()
 		 << " time " << b->get_system_time()
 		 << " n_n " << n_neighbors
@@ -2306,7 +2315,7 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
     status = 2;
 
-    if (n_neighbors > 0) {
+    if (n_neighbors > n_extra) {
 
 	// Found at least one neighbor -- find the nearest and
 	// determine the perturber list for a center-of-mass node.
@@ -2385,7 +2394,8 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
 	    // bb is the j-th neighbor of b (list not ordered).
 
-	    if (bb != b) {		// bb = b shouldn't occur...
+	    if (bb != b) {		// bb = b shouldn't occur on GRAPE, but
+					// may occur in sapporo emulation...
 
 		vec diff = b->get_pred_pos() - bb->get_pred_pos();
 		real diff2 = diff * diff;
@@ -2780,7 +2790,7 @@ local INLINE int get_coll_and_perturbers(xreal xtime,
 	    int count_force = 1;
 	    int status;
 
-	    while ((status = get_neighbors_and_adjust_h2(bb, pipe))) {
+	    while ((status = get_neighbors_and_adjust_h2(bb, pipe, n_pipes))) {
 
 //  		if (bb->is_parent()) {
 //  		    PRC(bb->get_time()); PRC(bb->format_label()); PRL(status);
@@ -3626,7 +3636,7 @@ local void check_neighbors(hdyn *b, real rnb_sq, int indent = 0)
 
 
 
-local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe)
+local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe, int n_pipes)
 
 // Determine density for a single particle from the GRAPE neighbor list,
 // or modify the radius of its neighbor sphere.
@@ -3644,6 +3654,8 @@ local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe)
     real sys_t = b->get_real_system_time();
     bool in_debug_range = IN_DEBUG_RANGE(sys_t);
 #endif
+
+    int n_extra = (n_pipes > 48);		// = 1 iff we have a GPU
 
     // First get the list of neighbors for this particle.
 
@@ -3704,9 +3716,18 @@ local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	return 0;
     }
 
+
+//     cerr << func << ": "; PRL(b->format_label());
+//     PRL(n_neighbors);
+//     for (int i = 0; i < n_neighbors; i++) {
+// 	PRC(i); PRC(neighbor_list[i]);
+// 	PRL(node_list[neighbor_list[i]]->format_label());
+//     }
+
+
     // Check that we have enough neighbors to compute the density.
 
-    if (n_neighbors < N_DENS) {
+    if (n_neighbors < N_DENS+n_extra) {
 
 	// Too few neighbors.  Increase the neighbor radius and try again.
 	// Note that there is no message in this case, unless DEBUG is set.
@@ -3726,30 +3747,37 @@ local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 
 #if 0
 	real fac = 1.25;
-	if (n_neighbors < 12) fac *= 1.25;
-	if (n_neighbors < 8) fac *= 1.6;
-	if (n_neighbors < 4) fac *= 1.6;
-	if (n_neighbors < 2) fac *= 1.6;
+	if (n_neighbors < 12+n_extra) fac *= 1.25;
+	if (n_neighbors < 8+n_extra) fac *= 1.6;
+	if (n_neighbors < 4+n_extra) fac *= 1.6;
+	if (n_neighbors < 2+n_extra) fac *= 1.6;
 #endif
 
-	real fac = Starlab::min(2.0, pow((N_DENS+3.0)/(1.0+n_neighbors), 1.5));
+	real fac = Starlab::min(2.0, pow((N_DENS+3.0)/(1.0+n_neighbors-n_extra), 1.5));
 	b->set_grape_rnb_sq(fac * b->get_grape_rnb_sq());
 
 	return 1;
     }
 
     // Looks like we have everything we need to determine the density.
-    // Make a list of nodes to send to compute_density().
+    // Make a list of nodes to send to compute_density().  Remember to
+    // strip "neighbor" b if this is a GPU...  (Note that we don't
+    // check that b is on the list...)
 
     dyn **dynlist = new dynptr[n_neighbors];
 
     real d_max = 0;
+    int n_real = 0;
     for (int j = 0; j < n_neighbors; j++) {
 
 	hdyn *bb = node_list[neighbor_list[j]];
-	dynlist[j] = (dyn*)bb;
+	if (bb != b) {
 
-	// bb is the j-th neighbor of b.
+	    // bb is the n_real-th neighbor of b.
+
+	    dynlist[n_real++] = (dyn*)bb;
+	}
+	
 
 #ifdef T_DEBUG
 	if (in_debug_range && T_DEBUG_LEVEL > 0) {
@@ -3768,12 +3796,12 @@ local INLINE int count_neighbors_and_adjust_h2(hdyn * b, int pipe)
 	real grape_rnb = sqrt(b->get_grape_rnb_sq());
 	d_max = sqrt(d_max);
 	cerr << "  " << b->format_label() << ": ";
-	PRC(n_neighbors), PRC(grape_rnb), PRL(d_max);
+	PRC(n_neighbors), PRC(n_real), PRC(grape_rnb), PRL(d_max);
     }
 #endif
 
     compute_density(b, N_DENS, USE_MASS_DENSITY,	// writes to dyn story
-		    dynlist, n_neighbors);
+		    dynlist, n_real);
 
 #ifdef T_DEBUG
     if (in_debug_range && T_DEBUG_LEVEL > 0) {
@@ -3889,7 +3917,7 @@ local INLINE bool old_get_densities(xreal xtime, hdyn *nodes[],
 		//	+1	too few neighbors, neighbor radius has
 		//		already been increased
 
-		while (status = count_neighbors_and_adjust_h2(bb, ip)) {
+		while (status = count_neighbors_and_adjust_h2(bb, ip, n_pipes)) {
 
 		    cerr << func << ": count_neighbors_and_adjust_h2 ";
 		    PRL(status);
@@ -4121,7 +4149,7 @@ local INLINE int get_densities(xreal xtime, hdyn *nodes[],
 		    //		already been increased
 
 		    int status;
-		    if (status = count_neighbors_and_adjust_h2(bb, ip)) {
+		    if (status = count_neighbors_and_adjust_h2(bb, ip, n_pipes)) {
 
 #ifdef T_DEBUG
 			if (in_debug_range) {
