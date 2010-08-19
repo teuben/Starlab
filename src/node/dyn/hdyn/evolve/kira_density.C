@@ -58,6 +58,11 @@ bool kira_calculate_densities(hdyn* b, vec& cod_pos, vec& cod_vel)
 	     << "  cod " << cpu2 - cpu1
 	     << endl;
 
+//	for_all_daughters(hdyn, b, bb) {
+//	    real dens = getrq(bb->get_dyn_story(), "density");
+//	    PRC(bb->format_label()); PRL(dens);
+//	}
+
     } else {
 
 	// Skip (too expensive if no GRAPE is available...).
