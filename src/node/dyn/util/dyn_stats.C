@@ -374,7 +374,8 @@ void compute_core_parameters(dyn* b, int k,
 	compute_density(b, k);		// (N^2 ops on the front end...)
     }
 
-    // Compute max (not mean) density center, if necessary.
+    // **** Compute max (not mean) density center, if necessary.       ****
+    // **** NOTE that this defines the center used for stripping, etc. ****
 
     if (!twiddles(getrq(b->get_dyn_story(), "density_center_time"),
 		  b->get_system_time(), TTOL)
