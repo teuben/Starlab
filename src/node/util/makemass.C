@@ -581,6 +581,9 @@ void makemass(node* b, mass_function mf,
 		}
 	}
 	cerr << "makemass: "; PRC(n_heavy); PRL(n_target);
+
+	m_sum = 0;
+	for_all_daughters(node, b, bi) m_sum += bi->get_mass();
     }
 
     b->set_mass(m_sum);
