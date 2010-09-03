@@ -1358,7 +1358,7 @@ void sys_stats(dyn* b,
 
     real vrms = sqrt(3*nd*kT/b->get_mass());
 
-//  Hmmm.  Better print out (top-level) r_max and v_max, too.
+    //  Hmmm.  Better print out (top-level) r_max and v_max, too.
 
     real r_max = 0, v_max = 0;
     for_all_daughters(dyn, b, bb) {

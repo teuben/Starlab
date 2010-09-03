@@ -309,10 +309,8 @@ void reset_lagr_cutoff_mass(dyn *b,
 	cutoff_mass_low = 0;
     else {
 	while (i < m.size() && m[i] == m[nf]) i++;
-	if (i < m.size())
-	    cutoff_mass_low = m[i];
-	else
-	    cutoff_mass_low = VERY_LARGE_NUMBER;
+	if (i == m.size()) i = nf;	// looks like nf was in the top block.
+	cutoff_mass_low = m[i];
     }
 
     // Upper limit (same procedure, for now):
@@ -322,6 +320,7 @@ void reset_lagr_cutoff_mass(dyn *b,
 	cutoff_mass_high = 0;
     else {
 	while (i < m.size() && m[i] == m[nf]) i++;
+
 	if (i < m.size())
 	    cutoff_mass_high = m[i];
 	else
