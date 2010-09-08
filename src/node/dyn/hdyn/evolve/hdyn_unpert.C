@@ -93,20 +93,14 @@
 // now part of the hdyn::kira_options class (Steve, 6/00).  Defaults
 // are defined in kira_defaults.h.
 //
-//
 // MIN_UNPERT_STEPS:  Minimum number of steps permitted in unperturbed motion.
-//
-//#define MIN_UNPERT_STEPS		5
 //
 // FULL_MERGE_TOLERANCE:  Limit on perturbation squared (independent of
 // gamma2, as of 1/14/02) at which we permit merging of an entire binary
 // orbit.  Used once, in function is_unperturbed_and_approaching().
 //
-//#define FULL_MERGE_TOLERANCE		1e-8
-//#define RELAX_FACTOR			10	// relaxed factor to continue
-//
-// Allowing unperturbed motion at a greater value of gamma than is
-// used in determining neighbors is reasonable since dominant
+// RELAX_FACTOR allows unperturbed motion at a greater value of gamma
+// than is used in determining neighbors is reasonable since dominant
 // perturbative terms are expected to be periodic, and so are
 // ineffective over a full orbit period.
 //
@@ -118,13 +112,9 @@
 // merging of at least part of an orbit.  Used once, in function
 // is_unperturbed_and_approaching().
 //
-//#define PARTIAL_MERGE_FACTOR		1e-2
-//
 // FULL_MERGE_TOL_FOR_CLOSE_BINARY:  Absolute limit on perturbation_squared
 // (INDEPENDENT of gamma2, note) at which an unperturbed binary is regarded
 // as "close."  Used once, in function is_close_pair().
-//
-//#define FULL_MERGE_TOL_FOR_CLOSE_BINARY	1e-4
 //
 // The following parameters are used in is_stable() for assessing
 // multiple stability.
@@ -133,16 +123,12 @@
 // as of 1/14/01) at which we permit merging of an inner binary orbit.
 // Defines "weakly perturbed outer orbit."
 //
-//#define MULTIPLE_MERGE_TOLERANCE		1e-8	// was 1.e-10
-//
 // UNCONDITIONAL_STABLE_FAC:  Simplest approach is to regard a multiple as
 // stable if
 //
 //	outer periastron / inner semi-major axis > UNCONDITIONAL_STABLE_FAC
 //
-// for (both) inner binaries.
-//
-//#define UNCONDITIONAL_STABLE_FAC		5	// was 9
+// for (both) inner binaries.  See refinement below.
 //
 // Aarseth and Mardling's criterion is a little more elaborate than a simple
 // distance ratio:
@@ -155,8 +141,7 @@
 //
 // An empirical inclination factor should also be included in either case.
 //
-//#define USE_AARSETH_CRITERION		false
-//#define AARSETH_STABLE_FAC		2.8
+// Note that the new Mardling criterion has no adjustable parameters!
 //
 // PARTIAL_STABLE_FAC:  Allow inner binary to be unperturbed for part of
 // the outer orbit (questionable!) if
@@ -797,7 +782,6 @@ bool hdyn::is_weakly_perturbed(int& status)
 
 	    status = 3;
 	    return false;
-
 	}
     }
 
@@ -916,6 +900,363 @@ bool hdyn::is_weakly_perturbed(int& status)
 }
 
 
+
+#if 1
+
+// New code, added by Steve, 8/09, corrects the older stability
+// criteria and also implements the Mardling (2008) criterion (done
+// in a separate file to handle Fortran-77 issues).
+
+local bool aarseth_stable(hdyn *b, hdyn *sister, kepler& outerkep,
+			  real peri_fac, real cos_i, kira_options *options)
+{
+    // The Mardling and Aarseth (1999) stability criterion is
+    //
+    //    outer_peri/inner_semi > AARSETH_STABLE_FAC
+    //				* [ (1 + q_outer)
+    //				    * (1 + e_outer)
+    //				    / sqrt(1 - e_outer) ] ^(2/5).
+    //
+    // Note that this criterion omits an inclination factor that
+    // effectively reduces the critical outer periastron by about 30%
+    // for retrograde orbits relative to prograde orbits.  Aarseth
+    // (2003) recommends an additional factor linear in the
+    // inclination to correct this.
+
+    real e_outer = outerkep.get_eccentricity();
+    real q_outer = sister->get_mass()/b->get_mass();
+
+#define AARSETH_RATIO (23.0/3)			// (basically the same as the
+						//  Harrington ratio below)
+
+    return (peri_fac * pow((1+q_outer)*(1+e_outer)/sqrt(1-e_outer), -0.4)
+	      > options->aarseth_stable_fac
+		 * (AARSETH_RATIO+cos_i) / (AARSETH_RATIO+1));
+}
+
+local bool harrington_stable(hdyn *b, hdyn *sister, kepler& outerkep,
+			     real peri_fac, real cos_i, kira_options *options)
+{
+    // Use a simple distance criterion, with an extra mass term that
+    // goes to 1 for equal-mass systems.  The Harrington (1972)
+    // criterion ranges from outer_peri/inner_semi ~ 3.5 for planar
+    // prograde orbits (cos_i = 1) to ~2.75 for planar retrograde
+    // (cos_i = -1).  The overall factor can be adjusted, but the
+    // inclination variation preserves this ratio.
+
+#define HARRINGTON_RATIO (25.0/3)
+
+    return (peri_fac * pow(0.5*b->get_mass()/sister->get_mass(), 1./3)
+	      > options->unconditional_stable_fac
+		 * (HARRINGTON_RATIO+cos_i) / (HARRINGTON_RATIO+1));
+}
+
+local bool check_stable_triple(hdyn *b, hdyn *sister,
+			       kepler& outerkep,
+			       real inner_semi)			// b
+{
+    // Check the stability of the triple consisting of binary b and
+    // its sister, described by kepler structure outerkep.  In
+    // application of the stability criterion, sister is always
+    // regarded as a point mass.  Stability options are (1) distance,
+    // (2) [old] Aarseth, (3) Mardling [now default].  (Currently we
+    // select one option -- possibly we could do all three for
+    // comparison...  Steve, 8/09.)
+
+    kira_options *options = b->get_kira_options();
+    bool stable = false;
+
+    if (options->use_mardling_criterion) {
+
+	// The (still being fine-tuned) criterion is implemented in
+	// Mardling's Fortran-77 function.  Call that function
+	// directly here -- don't hard-code the Fortran in C++ yet...
+	//
+	// No adjustible parameters!
+
+	int status = mardling_stable(b, sister, outerkep);
+
+	if (status < 0) {
+
+	    // No F77, apparently, and hence no Mardling criterion.
+
+	    warning(
+		"check_stable_triple: no Mardling criterion, using Aarseth");
+
+	    options->use_mardling_criterion = false;
+	    options->use_aarseth_criterion = true;
+
+	} else
+
+	    stable = status;
+    }
+
+    if (!options->use_mardling_criterion) {
+
+	// We need the binary inclination in these cases.  Determine
+	// the normal vector of the inner orbit (component b).
+
+	real cos_i = 0;				// 1 <==> coplanar prograde
+	hdyn *od = b->get_oldest_daughter();
+	if (!od) return true;			// shouldn't happen
+
+	real dx2 = square(od->get_pos());
+	real dv2 = square(od->get_vel());
+
+	if (dx2 > 0 && dv2 > 0) {
+	    vec n_inner = od->get_pos() ^ od->get_vel() / sqrt(dx2 * dv2);
+	    cos_i = n_inner * outerkep.get_normal_unit_vector();
+	}
+
+	real outer_peri = outerkep.get_periastron();
+	if (options->use_aarseth_criterion)
+	    stable = aarseth_stable(b, sister, outerkep,
+				    outer_peri/inner_semi, cos_i, options);
+	else
+	    stable = harrington_stable(b, sister, outerkep,
+				       outer_peri/inner_semi, cos_i, options);
+    }
+
+    return stable;
+}
+
+local bool check_stable_multiple(hdyn *b, hdyn *sister,
+				 kepler& outerkep,
+				 real inner_semi1,		// b
+				 real inner_semi2)		// sister
+{
+    // On entry, b and sister are components of a binary, described by
+    // kepler structure outerkep, and at least one of them is itself a
+    // binary.  Check stability criterion (a) (see is_stable below)
+    // for this multiple, applying the criterion separately to both
+    // inner binaries, as appropriate.
+
+    bool stable1 = true, stable2 = true;
+
+    if (b->is_parent())
+	stable1 = check_stable_triple(b, sister, outerkep, inner_semi1);
+    if (sister->is_parent())
+	stable2 = check_stable_triple(sister, b, outerkep, inner_semi2);
+
+    return (stable1 && stable2);
+}
+
+#define NEAR_MULTIPLE_FAC	1.2
+
+// is_stable:  Return true iff this is a stable system.
+//
+//	       New (recursive) function written by Steve, 8/98.
+//
+// Note: Apocenter reflection is suspect... (Steve, 4/99)
+
+bool hdyn::is_stable(int& status,
+		     bool top_level)	// default = true
+{
+    if (diag->unpert_function_id) {
+	cerr << ">> check is_stable for "
+	     << format_label() << endl;
+    }
+
+    status = 0;
+
+    if (!is_low_level_node()) {
+	status = 1;
+	return false;
+    }
+
+    // 'This' is a component of a binary, possibly a multiple.
+    // Return true iff the binary defined by this and its binary
+    // sister is stable.
+    //
+    // Unperturbed criteria for this to be a stable system:
+    //
+    // (a) the interior motion is stable, meaning that the ratio of
+    //     the semimajor axis of each inner binary to the pericenter
+    //	   of the outer binary is less than some critical value.
+    //
+    // (b) each component is stable: a single star, a binary, or a
+    //	   stable multiple.
+
+    hdyn* sister = get_binary_sister();
+    if (!sister) {
+	status = 2;
+	return false;
+    }
+
+    // Binaries are stable:
+
+    if (is_leaf() && sister->is_leaf()) {
+	status = 3;
+	return true;
+    }
+
+    // Set up a kepler structure describing the outer orbit.
+    // Use existing kep if the outer orbit is already unperturbed.
+
+    kepler outerkep;
+
+    if (kep == NULL) {
+	outerkep.set_time(time);
+	outerkep.set_total_mass(parent->get_mass());
+	outerkep.set_rel_pos(pos - sister->pos);
+	outerkep.set_rel_vel(vel - sister->vel);
+	outerkep.initialize_from_pos_and_vel();
+    } else
+	outerkep = *kep;
+
+    // Used below for diagnostics.
+
+    real outer_peri = outerkep.get_periastron();
+    real inner_semi1 = get_semi(this);
+    real inner_semi2 = get_semi(sister);
+    real inner_semi_sum = inner_semi1 + inner_semi2;
+
+    if (inner_semi_sum < 0) {
+	status = 4;
+	return false;			// unbound inner orbit
+    } else if (inner_semi_sum == 0) {
+	status = 5;
+	return true;			// binary is stable -- shouldn't happen
+    }					// (already tested above)
+
+    //-----------------------------------------------------------------
+    //
+    // This and sister are components of a binary, and at least one of
+    // them is itself a binary.  Apply the distance/Aarseth/Mardling
+    // triple stability criteria to this multiple; apply twice if both
+    // components are binaries.  Return value = true means that this
+    // can be considered stable.
+
+    bool stable_a = check_stable_multiple(this, sister, outerkep,
+					  inner_semi1, inner_semi2);
+
+    //-----------------------------------------------------------------
+
+    if (stable_a) {
+
+	// Unconditionally stable multiple.  Note that the perturbations
+	// on the inner binaries are never checked explicitly.
+
+	if (top_level)
+	    multiple_type = FULL_MULTIPLE;
+
+    } else {
+
+	// Not fully stable.  Check for partial unperturbed motion.
+	// NOTE: the validity of this procedure is questionable at best.
+
+	if (top_level && options->partial_stable_fac*inner_semi_sum
+					< outerkep.get_separation()) {
+
+	    // Conditionally stable multiple (part of outer orbit only).
+	    // (One of the few explicit xreal casts added by Steve, 5/00.)
+
+	    real peri_time = (xreal)outerkep.pred_advance_to_periastron()
+				- time;
+
+	    if (peri_time > 0.8 * outerkep.get_period()) {   // 0.8 ~arbitrary
+
+		// (Note that the above requirement actually means
+		//  that the outer orbit is separating...)
+
+		if (top_level)
+		    multiple_type = APOCENTER_REFLECTION;
+
+		stable_a = true;
+
+	    } else {
+
+		if (top_level && diag->report_impending_multiple_status)
+		    cerr << "Outer orbit " << parent->format_label()
+			 << " is partially unperturbed but not compact...\n";
+	    }
+	}
+    }
+
+    // Check criterion (b).
+
+    bool stable_b = stable_a;
+
+    if (stable_b) {
+
+	int status_1;
+	if (is_parent())
+	    stable_b &= get_oldest_daughter()->is_stable(status_1, false);
+
+	int status_2;
+	if (sister->is_parent())
+	    stable_b &= sister->get_oldest_daughter()
+			      ->is_stable(status_2, false);
+
+	status = 100 + 10*status_1 + status_2;
+    }
+
+    // Diagnostic output:
+
+    if (top_level) {
+
+	if (diag->report_impending_multiple_status
+	    && !stable_a
+	    && (options->unconditional_stable_fac*inner_semi_sum // non-Aarseth
+			< NEAR_MULTIPLE_FAC*outer_peri		 // only
+		|| options->partial_stable_fac*inner_semi_sum
+			< NEAR_MULTIPLE_FAC*outerkep.get_separation())) {
+
+	    // Getting close to the stable multiple criterion...
+
+	    print_found_multiple(this, false, outerkep,
+				 inner_semi1, inner_semi2,
+				 mass, sister->mass);
+	}
+
+	if (stable_b && diag->report_multiple) {
+
+	    if (diag->multiple_report_level > 0) {
+
+		if (multiple_type == FULL_MULTIPLE)
+		    print_found_multiple(this, true, outerkep,
+					 inner_semi1, inner_semi2,
+					 mass, sister->mass);
+		else if (multiple_type == APOCENTER_REFLECTION) {
+
+		    int p = cerr.precision(HIGH_PRECISION);
+		    cerr << "\nfound partially stable multiple "
+			 << parent->format_label()
+			 << " at time " << time << endl;
+		    cerr.precision(p);
+
+		    hdyn* pnode = find_perturber_node();
+		    if (!pnode)
+			cerr << "pnode is NULL" << endl;
+		    else {
+			PRC(pnode->format_label());
+			PRL(pnode->n_perturbers);
+		    }
+
+		    cerr << "outer period = " << outerkep.get_period() << endl;
+		    cerr << "inner period = ";
+		    if (inner_semi1 > 0)
+			cerr << get_period(mass, inner_semi1) << "  ";
+		    if (inner_semi2 > 0)
+			cerr << get_period(sister->mass, inner_semi2);
+		    cerr << endl;
+		}
+	    }
+	}
+
+	if (stable_a && !stable_b && diag->report_multiple) {
+	    cerr << "\nmultiple " << parent->format_label()
+		 << " stable, components not, at time " << time
+		 << endl;
+	}
+    }
+
+    return stable_b;
+}
+
+#else
+
+// *** Old code, superceded by Steve on 8/09. ***
 
 #define NEAR_MULTIPLE_FAC	1.2
 
@@ -1205,6 +1546,8 @@ bool hdyn::is_stable(int& status,
 
     return stable_b;
 }
+
+#endif
 
 
 

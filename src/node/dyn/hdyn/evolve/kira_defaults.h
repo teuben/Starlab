@@ -35,11 +35,15 @@
 #define DEFAULT_PARTIAL_MERGE_FACTOR		0.01
 #define DEFAULT_FULL_MERGE_TOL_FOR_CLOSE_BINARY	1.e-6	// decreased /3/06
 #define DEFAULT_MULTIPLE_MERGE_TOLERANCE	1.e-8	// new 1/14/02
-#define DEFAULT_UNCONDITIONAL_STABLE_FAC	5.0	// conservative
+#define DEFAULT_UNCONDITIONAL_STABLE_FAC	3.25	// Harrington ~3.5 (pro)
+							// ~2.75 (retro)
 #define DEFAULT_PARTIAL_STABLE_FAC		30.0
 
 #define DEFAULT_USE_AARSETH_CRITERION		true
 #define DEFAULT_AARSETH_STABLE_FAC		2.8	//don't change!
+
+#define DEFAULT_USE_MARDLING_CRITERION		true	// takes precedence
+							// over Aarseth
 
 #define DEFAULT_CLOSE_CRITERION			2	// force
 
