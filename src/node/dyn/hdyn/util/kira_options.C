@@ -39,6 +39,8 @@ kira_options::kira_options() {
     use_aarseth_criterion =	DEFAULT_USE_AARSETH_CRITERION;
     aarseth_stable_fac	=	DEFAULT_AARSETH_STABLE_FAC;
 
+    use_mardling_criterion =	DEFAULT_USE_MARDLING_CRITERION;
+
     close_criterion	=	DEFAULT_CLOSE_CRITERION;
 
     allow_keplstep	=	DEFAULT_ALLOW_KEPLSTEP;
