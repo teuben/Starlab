@@ -444,6 +444,9 @@ void detach_node_from_general_tree(node *n)
 
     if (elder_sister) elder_sister->set_younger_sister(younger_sister);
     if (younger_sister)	younger_sister->set_elder_sister(elder_sister);
+
+    n->set_elder_sister(NULL);
+    n->set_younger_sister(NULL);
 }
 
 // remove_node_with_one_daughter
