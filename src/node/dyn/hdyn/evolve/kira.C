@@ -1584,19 +1584,26 @@ local void evolve_system(hdyn * b,		// hdyn array
 
 	    for (int ii = 0; ii < n_next; ii++)
 		if (next_nodes[ii] && next_nodes[ii]->is_valid()) {
+
 		    PRC(ii); PRL(next_nodes[ii]->format_label());
 		    PRI(9); PRL(next_nodes[ii]->get_timestep());
 		    hdyn *top = next_nodes[ii]->get_top_level_node();
 		    PRL(top->format_label());
+
 		    cerr << "binary properties: " << endl;
+		    bool binary = false;
 		    for_all_nodes(hdyn, top, bi) {
 			hdyn *od = bi->get_oldest_daughter();
 			if (od) {
+			    binary = true;
 			    print_binary_from_dyn_pair(od,
 					   od->get_younger_sister());
 			    cerr << endl;
 			}
 		    }
+
+		    if (!binary)
+			cerr << "    (no binaries found)" << endl;
 
 		    cerr << endl << "pp3 output:" << endl;
 		    pp3(top);
