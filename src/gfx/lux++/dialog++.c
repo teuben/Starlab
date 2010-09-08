@@ -130,6 +130,11 @@ local void set_dialog_item(Window* dialog_win, int i, dialog_entry* d,
 
     size = convert_value(d, temp_buffer);
 
+#if 0
+    fprintf(stderr, "setting %s, type = %d, value = %s\n",
+	    d->name, d->type, temp_buffer);
+#endif
+
     /* Initialize the appropriate box (twice, just in case...???). */
 
     for (j = 0; j < 2; j++) {
@@ -188,7 +193,7 @@ void initialize_dialog(Window* dialog_win,
     lux_string_dimensions("0", &lchar, &h);
     l2 = lchar;
     if (max_box > 0) l2 *= max_box;
-    l2 += lchar;			/* Take box itself into account */
+    l2 += lchar;			/* take box itself into account */
 
     xgap = 10;
     xmid = 15;

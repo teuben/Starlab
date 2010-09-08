@@ -135,8 +135,6 @@ char *def_value;                          /* length < 255 */
     register lux_wins *diawin;
     static   int       status = 0;
 
-
-
     switch(type) {
       
     case TEXT_WINDOW:
@@ -200,10 +198,11 @@ char *def_value;                          /* length < 255 */
 		      mywin->win.width, 0);
 	  }
 	  mywin->win.msg[1] = mywin->win.msg[0] = def_value[0]; 
-	                                  /* Save the old one */
+	                                  /* save the old one */
 	}	  
       }
       else if (type == INPUT_WINDOW) {
+
 	lux_draw_string(mywin->win.window, 2.0, 4.0, 0.0, def_value, -1);
 	{
 	  char *new;
