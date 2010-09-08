@@ -744,6 +744,11 @@ local void evolve_system(hdyn * b,		// hdyn array
 
     real t_MPI_check = tt + 0.25 * randinter(0, dt_log);
 
+    // Avoid huge output on time step error.
+
+    real time_step_error_time = -1;
+    int count_time_step_error = 0;
+
     //----------------------------------------------------------------------
     // Frequencies of "other" (episodic) output.  Idea is that we will
     // have data blocks of width dt_alt2, sampled at intervals dt_alt1,
@@ -1597,9 +1602,15 @@ local void evolve_system(hdyn * b,		// hdyn array
 		    pp3(top);
 		}
 
-	    // Don't quit!
-	    //
-	    // err_exit("zero effective time step");
+	    if (b->get_system_time() > time_step_error_time)
+		count_time_step_error = 0;
+	    else
+		count_time_step_error++;
+
+	    if (count_time_step_error > 5)		// arbitrary
+		err_exit("zero effective time step");
+
+	    time_step_error_time = b->get_system_time();
 	}
 
 	// Integrate_list handles tree changes -- allows one per step.
