@@ -25,7 +25,7 @@ bin_PROGRAMS = compute_com compute_mcom compute_density compute_max_cod \
     add_tidal set_ignore_internal add_daughter_node getsnap print_time \
     radial_density radial_numdensity radial_vdisp radial_profile makemass \
     makesecondary merge_snaps print_radii hop test_util \
-    add_story_quantity rm_story_quantity
+    add_story_quantity rm_story_quantity strip_outliers
 
 # this is for stpcpy(3) on the Pentium machines in Tokyo
 libdyn_1_la_CPPFLAGS = -D_GNU_SOURCE
@@ -87,6 +87,7 @@ hop_CPPFLAGS = -DTOOLBOX
 test_util_CPPFLAGS = -DTOOLBOX
 add_story_quantity_CPPFLAGS = -DTOOLBOX
 rm_story_quantity_CPPFLAGS = -DTOOLBOX
+strip_outliers_CPPFLAGS = -DTOOLBOX
 
 compute_com_LDADD = ../libdyn.la
 compute_mcom_LDADD = ../libdyn.la
@@ -137,6 +138,7 @@ hop_LDADD = ../libdyn.la
 test_util_LDADD = ../libdyn.la
 add_story_quantity_LDADD = ../libdyn.la
 rm_story_quantity_LDADD = ../libdyn.la
+strip_outliers_LDADD = ../libdyn.la
 
 compute_com_SOURCES = compute_com.C
 compute_mcom_SOURCES = compute_mcom.C
@@ -187,6 +189,7 @@ hop_SOURCES = hop.C
 test_util_SOURCES = test_util.C
 add_story_quantity_SOURCES = add_story_quantity.C
 rm_story_quantity_SOURCES = rm_story_quantity.C
+strip_outliers_SOURCES = strip_outliers.C
 
 BUILT_SOURCES = dyn_parser.h 
 AM_YFLAGS = -d
