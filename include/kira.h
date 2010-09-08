@@ -162,6 +162,7 @@ class kira_options {
 	real unconditional_stable_fac;
 	bool use_aarseth_criterion;
 	real aarseth_stable_fac;
+	bool use_mardling_criterion;
 	real partial_stable_fac;
 
 	// Used in hdyn_tree.C:

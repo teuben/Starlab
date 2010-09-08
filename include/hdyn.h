@@ -989,6 +989,7 @@ void set_allow_multiples(hdyn *b, bool value = true);
 void toggle_unperturbed(hdyn *b, int level);
 void print_unperturbed_options(hdyn *b);
 void enable_isolated_multiples(bool value = true);
+int mardling_stable(hdyn *b, hdyn *sister, kepler& outerkep);
 
 // ----- In kira.C: -----
 
