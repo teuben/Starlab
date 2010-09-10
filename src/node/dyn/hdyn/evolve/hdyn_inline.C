@@ -132,12 +132,16 @@ local inline void update_nn_coll(hdyn *this_node, int id,
 // factor) perturbation_radius^3.
 //
 // Also, in these cases, pert_factor_sq is really gamma2^{-1/3} = gamma^{-2/3}.
-// All we really need is 1/gamma!  FIX THIS SOON!!
+// All we really need is 1/gamma!  FIX THIS SOMEDAY!!
 //
 //*** Distance criterion is fine for perturbers of mass comparable to or
 //*** less than the masses of the binary components.
 //*** Hybrid criterion uses a fixed perturber radius, but then also includes
 //*** more distant massive stars.
+//
+// Use the same criterion for softened systems (relevant when eps <<
+// d_min), even though the details are a bit suspect...  (Note that
+// the node combination criterion does include eps.)
 
 // binary_scale:  compute an appropriate "size" for a binary.
 
