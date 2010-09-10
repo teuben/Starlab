@@ -7,6 +7,29 @@
 // initialized to -1.
 
 #if 0
+if (t > 10.412) {
+    cerr << endl << "post: "; PRC(t); PRL(n_next);
+    for (int ii = 0; ii < n_next; ii++) {
+	hdyn *n = next_nodes[ii];
+	if (n && n->is_valid() && !n->get_kepler()) {
+	    PRC(n->format_label()); PRL(n->get_timestep());
+	    PRL(n->get_old_acc());
+	    PRL(n->get_acc());
+	}
+    }
+    hdyn *nn = (hdyn*)node_with_name("135", b);
+    if (nn) {
+	PRC(nn->format_label()); PRL(nn->get_timestep());
+    }
+    nn = (hdyn*)node_with_name("238", b);
+    if (nn) {
+	PRC(nn->format_label()); PRL(nn->get_timestep());
+    }
+    if (t > 10.42) exit(0);
+}
+#endif
+
+#if 0
 cerr << "post: "; PRL(count);
 #endif
 
