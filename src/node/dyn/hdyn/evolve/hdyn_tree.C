@@ -170,7 +170,8 @@ local bool too_close(hdyn * bi, hdyn * bj, real limit_sq,
     // Binary criterion modified 7/98 by SLWM and SPZ to depend on
     // acceleration; modified again by SLWM and JM to include potential.
     // The criteria below are chosen to reduce to the simple distance
-    // expressions when all masses are equal.
+    // expressions when all masses are equal.  Incorporation of eps2
+    // effectively suppresses binaries when eps > d_min.
 
     bool close;
     real mass_factor = 1;		// default (DISTANCE criterion:
@@ -198,12 +199,12 @@ local bool too_close(hdyn * bi, hdyn * bj, real limit_sq,
 
     }
 
-    close = (gap_sq < mass_factor * limit_sq);
+    close = (gap_sq + bi->get_eps2() < mass_factor * limit_sq);
 
 #if 1
 
     // EXPERIMENTAL: Probably shouldn't keep/accept strongly perturbed
-    // binaries.  Note that, if we apply this test, MUST make
+    // binaries.  Note that, if we apply this test, we MUST make
     // acceptance (too close) stronger than rejection (too big).
 
     real pert2 = 0;
@@ -214,50 +215,38 @@ local bool too_close(hdyn * bi, hdyn * bj, real limit_sq,
 	// is too strong a condition, as a perturbation will be
 	// computed even if the list is not valid.  Better simply to
 	// look for a non-negative perturbation.  (Steve, 8/07)  Note
-        // also bug in the earlier code: bi should be bi->get_parent().
+	// also a bug in the commented code: bi should be
+	// bi->get_parent().
 
 //	if (bi->get_valid_perturbers() && bi->get_n_perturbers() > 0)
 	if (bi->get_perturbation_squared() >= 0)
 	    pert2 = bi->get_perturbation_squared();
 
-//	cerr << "check_big: " << bi->format_label() << " ";
-//	cerr << bj->format_label() << " ";
-//	PRL(pert2);
-
     } else if (close) {
 
 	// bi and bj are close and not binary sisters.  Compute a
 	// perturbation from their accelerations.  Write ai = aij +
-	// aip, aj = aji + ajp and solve for aip, ajp.
+	// aip, aj = aji + ajp, solve for aip and ajp, then compute
+	// the perturbation as in hdyn_ev.C.  Note that, for a binary
+	// component, ai = aij + mj*(aip-ajp)/(mi+mj), mi*ai+mj*aj =
+	// 0, and perturbation = |mj*(aip-ajp)/(mi+mj)|/|aij|
 
 	real mi = bi->get_mass(), mj = bj->get_mass();
 	vec ai = hdyn_something_relative_to_root(bi, &hdyn::get_acc);
 	vec aj = hdyn_something_relative_to_root(bj, &hdyn::get_acc);
 	real r2eps = gap_sq + bi->get_eps2();
-	vec fij = -mi*mj*sep/(r2eps*sqrt(r2eps));
-	vec aip = ai - fij/mi;
-	vec ajp = aj + fij/mj;
-	fij *= (mi+mj)/(mi*mj);
-	pert2 = square(aip-ajp)/square(fij);
+	vec aij = -mj*sep/(r2eps*sqrt(r2eps));
+	vec aji = -mi*aij/mj;
+	vec aip = ai - aij;
+	vec ajp = aj - aji;
 
-// 	cerr << "close: " << bi->format_label() << " ";
-// 	cerr << bj->format_label() << " ";
-// 	PRL(pert2);
-// 	PRL(sep);
-// 	PRC(gap_sq); PRL(r2eps);
-// 	PRL(ai);
-// 	PRL(aj);
-// 	PRL(fij/mi);
-// 	PRL(aip);
-// 	PRL(ajp);
-
+	pert2 = square(mj*(aip-ajp)/(mi+mj))/square(aij);
 	pert2 *= 1.2;			// harder to combine than to split
     }
 
     close &= (pert2 < 0.1);		// choice of 0.1 here is ~arbitrary
 
 #endif
-
 
     if (close && print && bi->get_kira_diag()->tree
 		       && bi->get_kira_diag()->tree_level > 0) {
@@ -291,14 +280,6 @@ local bool too_big(hdyn * bi, real limit_sq)
 
     bool big = !too_close(od, od->get_younger_sister(), limit_sq,
 			  true, false);
-
-
-//    if (bi->get_system_time() > 11.868 && bi->get_system_time() < 11.870
-// 	&& od->name_is("371") && od->get_perturbation_squared() > 0.05) {
-// 	cerr << bi->format_label() << " forced too big" << endl;
-// 	return true;
-//     }
-
 
     // Don't allow a slow binary to be split, but schedule the slow
     // motion to be stopped at next apocenter.
@@ -393,19 +374,20 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
     // may not be a leaf, but A.  Failure to do this can lead to runaway
     // time steps (--> 0) when a close encounter goes undetected.
     //
-    // Additional note (Steve, 6/14/00).  Unfortunately, it is possible
-    // that the internal motion never gets the chance to trigger the
-    // exchange, as the parent node time step may run away first.
-    // Specific example:  A is a receding unbound pair and B happens to
-    // pass close to A's center of mass.  We flag this by checking for
-    // (a) a strongly perturbed binary with nn lying between its components
-    // (i.e. the cause), or (b) disparate center of mass and component
-    // time steps in a strongly perturbed binary (the effect).  (See the
-    // use of "check_binary_params" below.)  We then synchronize the
-    // daughter nodes and reduce their time steps in order to guarantee
-    // that they will be on the integration list next time around, and
-    // identify the configuration at the component level by including
-    // an explicit check (**) on the perturbation within this function.
+    // Additional note (Steve, 6/14/00).  It is possible that the
+    // internal motion never gets the chance to trigger the exchange,
+    // as the parent node time step may run away first.  Specific
+    // example: A is a receding unbound pair and B happens to pass
+    // close to A's center of mass.  We flag this by checking for (a)
+    // a strongly perturbed binary with nn lying between its
+    // components (i.e. the cause), or (b) disparate center of mass
+    // and component time steps in a strongly perturbed binary (the
+    // effect).  (See the use of "check_binary_params" below.)  We
+    // then synchronize the daughter nodes and reduce their time steps
+    // in order to guarantee that they will be on the integration list
+    // next time around, and identify the configuration at the
+    // component level by including an explicit check (**) on the
+    // perturbation within this function.
 
     if (nn->get_parent() == parent)	// already sisters, so no change needed
 	return NULL;			// (* - see note above)
@@ -442,21 +424,12 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 	nn_too_close = (perturbation_squared > 1
 			&& distance_to_sister_squared() > d_nn_sq);
 
-
-
-// PRC(format_label()); PRL(perturbation_squared);
-// PRC(distance_to_sister_squared()); PRL(d_nn_sq);
-// PRL(nn_too_close);
-
-
-
 	if (nn_too_close && diag->tree && diag->tree_level > 1) {
 	    cerr << "in new_sister_node for " << format_label()
 		 << " at time " << system_time << ":" << endl;
 	    cerr << "    candidate new sister for strongly perturbed binary is "
 		 << nn->format_label() << endl;
 	}
-
     }
 
     if (nn_too_close) {
@@ -480,17 +453,6 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 	// occur -- see hdyn_ev), but do the search generally, anyway.
 
 	hdyn *snn = new_sister->get_nn();
-
-
-
-// Retain all these debugging lines for now (Steve, 9/04).
-
-// PRL(1);
-// PRL(format_label());
-// PRL(new_sister->format_label());
-// if (snn) PRL(snn->format_label());
-
-
 
 	if (snn && snn->is_valid() && !snn->is_leaf()) {
 
@@ -533,29 +495,12 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 	// is this (or part of this), then we are done.  Otherwise, move
 	// up the tree until new_sister->nn is part of or contains this.
 
-
-// PRL(2);
-// if (snn) PRL(snn->format_label());
-
-
-
 	if (snn && snn->is_valid() && common_ancestor(snn, this) != this) {
 
 	    hdyn* ns = new_sister;
 
 	    do {
 		new_sister = new_sister->get_parent();
-
-
-// PRL(3);
-// PRL(new_sister->format_label());
-// PRL(new_sister->get_nn());
-// if (new_sister->get_nn()) {
-//     PRL(new_sister->get_nn()->format_label());
-//     if (common_ancestor(new_sister->get_nn(), this))
-// 	PRL(common_ancestor(new_sister->get_nn(), this)->format_label());
-// }
-
 
 	    } while(new_sister != root
 		    && new_sister->get_nn() != NULL
@@ -568,20 +513,6 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 	    // (Last line above added by Steve 9/04.  The logic here
 	    //  is getting out of hand...)
 
-
-
-// PRL(4);
-// PRL(this);
-// PRL(new_sister);
-// PRL(root);
-// PRL(new_sister->get_nn());
-// PRL(new_sister->parent);
-// PRL(new_sister->get_parent());
-// PRL(parent);
-// PRL(common_ancestor(new_sister, this));
-
-
-
 	    if (new_sister == root
 		|| new_sister->get_nn() == NULL
 		|| !new_sister->get_nn()->is_valid()
@@ -590,20 +521,8 @@ hdyn* hdyn::new_sister_node(bool & top_level_combine)
 		|| common_ancestor(new_sister, this)== new_sister
 		) {
 
-
-
-// PRL(5);
-// pp3(get_top_level_node());
-// if (pp3count++ > 100) exit(0);
-// PRL(pp3count);
-
-
-return NULL;
-}
-
-
-// cerr << "OK" << endl;
-
+		return NULL;
+	    }
 
 	    if (diag->tree && diag->tree_level > 0) {
 		cerr << "new_sister_node:  ascended tree from "
@@ -612,19 +531,9 @@ return NULL;
 	    }
 	}
 
-
-
-// PRL(new_sister->format_label());
-
-
-
 	hdyn * ancestor = common_ancestor(this, new_sister);
 
 	if (ancestor->is_root()) {
-
-
-// cerr << "top" << endl;
-
 
 	    top_level_combine = TRUE;
 	    return new_sister;
@@ -640,10 +549,6 @@ return NULL;
 		}
 	    }
 
-
-// cerr << "check 2" << endl;
-
-
 	    if (new_sister->kep == NULL) {
 		if (diag->tree && diag->tree_level > 0) {
 		    cerr << "new sister node for "; pretty_print_node(cerr);
@@ -651,19 +556,9 @@ return NULL;
 		    cerr << ") is " ; new_sister->pretty_print_node(cerr);
 		    PRI(2); PRL(top_level_combine);
 		}
-
-
-// cerr << "OK 2" << endl;
-
-
 		return new_sister;
 	    }
 	}
-
-
-// cerr << "oops -- missed!" << endl;
-
-
     }
     return NULL;
 }
@@ -769,13 +664,7 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     // Make sure bi and bj are up to date.
 
-//    cerr << 1 << ": ";
-//    print_recalculated_energies(bi->get_root());
-
     predict_loworder_all(bi->get_root(), bi->get_system_time());
-
-//    cerr << 2 << ": ";
-//    print_recalculated_energies(bi->get_root());
 
     // print_recalculated_energies(bi->get_root());
     // pp3((bi->get_root()), cerr);
@@ -785,9 +674,6 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 
     bi->synchronize_node();
     bj->synchronize_node();
-
-//    cerr << 3 << ": ";
-//    print_recalculated_energies(bi->get_root());
 
     if (full_dump) {
 
@@ -830,9 +716,6 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
     hdyn *par = bj->get_parent();
 //    pp3(par);
 
-//    cerr << 4 << ": ";
-//    print_recalculated_energies(bi->get_root());
-
     // Copy any slow_perturbed lists to the new top-level node, and
     // delete the low-level lists.
 
@@ -861,23 +744,32 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
 	bb->set_perturbation_squared(-1);
     }
 
-    // Parent step was set equal to the minimum daughter step in function
-    // create_binary_from_toplevel_nodes().  Reduce it here to make it
-    // less than the daughter steps, but consistent with the current time,
-    // so that the parent perturber list will be computed before the
-    // internal motion is advanced.
+    // Parent step was set equal to the minimum daughter step in
+    // function create_binary_from_toplevel_nodes(). Old code reduced
+    // it here to make it less than the daughter steps, but consistent
+    // with the current time, so that the parent perturber list will
+    // be computed before the internal motion is advanced.  May not be
+    // necessary, since kira integrates top-level nodes before
+    // components.
     //
     // Note that this almost certainly starts the CM off with a step
     // far shorter than necessary.  Assume that it is OK to let the
     // timestep algorithm double the step back to the proper value
-    // over the next 10 or so time steps.  (Doesn't seem to do any
-    // harm...)
+    // over the next 10 or so time steps.
     //
-    // An alternative is to compute the perturber lists etc. explicitly,
-    // but we can't do this here, as the GRAPE doesn't yet know about
-    // the CM.  Could do it from the top-level in kira.  (Steve, 3/03)
+    // An alternative would be to compute the perturber lists
+    // etc. explicitly, but we can't do this here, as the GRAPE
+    // doesn't yet know about the CM.  Could do it from the top-level
+    // in kira.  (Steve, 3/03)
+    //
+    // A bad side effect of halving here is that if the pair is
+    // immediately split up again, the effect is to reduce all time
+    // steps by a factor of two.  This can cause zero-length steps,
+    // but should only occur if comething is wrong with the
+    // combine/split logic...
 
-    halve_timestep(par);
+
+    // halve_timestep(par);	// *** commented out by Steve 9/8/10 ***
 
     real dt_par = par->get_timestep();
     // PRL(dt_par);
@@ -940,9 +832,6 @@ void combine_top_level_nodes(hdyn * bj, hdyn * bi,
     }
 
     bi->get_kira_counters()->top_level_combine++;
-
-//    cerr << 5 << ": ";
-//    print_recalculated_energies(bi->get_root());
 }
 
 void split_top_level_node(hdyn * bi,
@@ -1006,7 +895,7 @@ void split_top_level_node(hdyn * bi,
 
 	// Info on perturbers:
 
-	cerr << "                      ";
+	cerr << "                     ";
 	hdyn *pnode = bi->get_oldest_daughter()->find_perturber_node();
 	if (pnode && pnode->is_valid()) {
 	    cerr << "pnode = " << pnode->format_label();
