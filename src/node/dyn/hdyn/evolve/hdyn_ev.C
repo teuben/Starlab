@@ -93,20 +93,14 @@
 //		rij^2 - (d_i + d_2)^2
 //
 
-// MEMO from JM (23 Dec 1995):
-//
-// Changes over the last few days:
-//
-// calculate_partial_acc_and_jerk(_on_leaf) has changed
-// interface (and algorithm!!!).  It used to take two
-// node pointers, top and mask.  Top was assumed to be
-// the ancestor of the mask, and mask the ancestor of this.
-// It calculated the force from all leaves under top except
-// for those under mask.
-//
-// Now it takes three arguments, top, common and mask.  Common
-// must be the common ancestor of top and mask (common = top is OK)
-// and the routine calculates the force from the subtree under top.
+// calculate_partial_acc_and_jerk(_on_leaf) has changed interface (and
+// algorithm!!!).  It used to take two node pointers, top and mask.
+// Top was assumed to be the ancestor of the mask, and mask the
+// ancestor of this.  It calculated the force from all leaves under
+// top except for those under mask.  Now it takes three arguments,
+// top, common and mask.  Common must be the common ancestor of top
+// and mask (common = top is OK) and the routine calculates the force
+// from the subtree under top.
 //
 // This change was necessary to implement perturbation correction.
 
@@ -207,7 +201,7 @@ void update_binary_sister(hdyn * bi)
     // unperturbed binary component to have jerk = Infinity if it
     // has never taken a perturbed step, and this can lead to overflow
     // here.  Check for this explicitly.  (Not entirely clear how the
-    // infinity arises...  May be due to GRAPE-4 overflow.)
+    // infinity arises...  May be due to GRAPE overflow.)
 
     real j0 = bi->get_jerk()[0];
 
@@ -2117,6 +2111,7 @@ int hdyn::flat_calculate_acc_and_jerk(hdyn * b,    	// root node
 
 	    vec d_pos = bi->pred_pos - pred_pos;
 	    vec d_vel = bi->pred_vel - pred_vel;
+
 	    accumulate_acc_and_jerk(bi,				// (inlined)
 				    d_pos, d_vel,
 				    eps2, acc, jerk, pot, distance_squared);
@@ -2478,7 +2473,8 @@ void hdyn::tree_walk_for_partial_acc_and_jerk_on_leaf(hdyn *b,
 // calculate_partial_acc_and_jerk_on_leaf:  Calculate the force on `this' from
 //      all particles under `top', excluding everything under node mask.
 //      This routine first calculates the position of `top' relative to `this',
-//      then calls tree_walk_for_partial_acc_and_jerk_on_leaf.
+//      then calls tree_walk_for_partial_acc_and_jerk_on_leaf.  Common is
+//      the common ancestor of top and mask.
 //-----------------------------------------------------------------------------
 
 void hdyn::calculate_partial_acc_and_jerk_on_leaf(hdyn * top,
@@ -2548,8 +2544,9 @@ void hdyn::calculate_partial_acc_and_jerk_on_leaf(hdyn * top,
 //-----------------------------------------------------------------------------
 // calculate_partial_acc_and_jerk:  Calculate the force on `this' from
 //	all particles under `top', excluding everything under node mask.
-//      This routine recursively calls itself and calculates the weighted
-//      average of all forces on its daughters.  For a leaf, it calls
+//      Common is the common ancestor of top and mask.  This routine
+//      recursively calls itself and calculates the weighted average
+//      of all forces on its daughters.  For a leaf, it calls
 //      calculate_partial_acc_and_jerk_on_leaf.  The recursion is OK in
 //      this case because it is used only to descend within nodes, not to
 //      traverse the entire system.
@@ -2696,10 +2693,9 @@ void hdyn::calculate_partial_acc_and_jerk(hdyn * top,
 
 	    // Perturbation_squared does *not* contain the slowdown factor.
 
-	    real r2 = square(od->pos - yd->pos);
+	    real r2 = square(od->pos - yd->pos) + eps2;
 	    od->perturbation_squared =
-			square(a_save - a_daughter)
-			        * square(r2/mass);
+			square(a_save - a_daughter) * square(r2/mass);
  	}
     }
 }
@@ -2888,6 +2884,8 @@ void hdyn::create_low_level_perturber_lists(bool only_if_null) // default = true
 // calculate_partial_acc_and_jerk.
 //-----------------------------------------------------------------------------
 
+#include <vector>
+
 void hdyn::calculate_acc_and_jerk_on_low_level_node()
 {
 #ifdef KIRA_DEBUG
@@ -2933,7 +2931,6 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
     // remaining perturbations.
 
     hdyn* top_level = get_top_level_node();
-
     hdyn* pnode = find_perturber_node();    // returns first valid node found
 
     if (ALLOW_LOW_LEVEL_PERTURBERS && pnode && pnode != get_parent()) {
@@ -3090,30 +3087,100 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	// should expand this function to get nn and coll properly...
 	// Note that this call violates the convention that all calls
 	// that might use GRAPE be switched in kira_ev.C.
-       
+
 	grape6_calculate_perturbation(get_parent(),
 				      apert1, apert2, jpert1, jpert2);
 
+	// The GRAPE does the calculation for top-level nodes in
+	// the point-mass approximation.  Must correct for binary
+	// perturbers, much as in the top_level_epilogue.
+
+	// Make a list of top-level nodes that must be corrected.
+	// Work from the perturber list if available, or else just
+	// list all top-level centers of mass.
+
+	vector<hdynptr> plist;
+
+	if (pnode) {
+	    if (pnode->n_perturbers > 0)
+		for (int k = 0; k < pnode->n_perturbers; k++) {
+		    hdyn *pk = pnode->perturber_list[k];
+		    if (pk->is_low_level_node()) {
+			hdyn *ptop = pk->get_top_level_node();
+			if (ptop != top_level) {
+			    bool add = true;
+			    for (int kk = 0; kk < plist.size(); kk++)
+				if (ptop == plist[kk]) add = false;
+			    if (add) plist.push_back(ptop);
+			}
+		    }
+		}
+	} else
+	    for_all_daughters(hdyn, get_root(), bb)
+		if (bb->is_parent() && bb != top_level)
+		    plist.push_back(bb);
+
+	vec dapert1 = 0, dapert2 = 0, djpert1 = 0, djpert2 = 0;
+	for (int k = 0; k < plist.size(); k++) {
+
+	    // Correct by removing the CM force and adding in the
+	    // components.  Note that we currently don't do
+	    // anything special for slow binaries.  (See function
+	    // apply_correction() in this file.)
+
+	    hdyn *ptop = plist[k];
+
+	    vec a_c, a_p, j_c, j_p;
+	    real p_c, p_p, dum_d_sq;
+	    hdyn *dum_nn;
+
+	    calculate_partial_acc_and_jerk(ptop, root, top_level,
+					   a_c, j_c, p_c,
+					   dum_d_sq, dum_nn,
+					   USE_POINT_MASS,
+					   NULL,	// no perturbers
+					   this);
+	    calculate_partial_acc_and_jerk(ptop, root, top_level,
+					   a_p, j_p, p_p,
+					   dum_d_sq, dum_nn,
+					   !USE_POINT_MASS,
+					   NULL,
+					   this);
+	    dapert1 += a_p - a_c;
+	    djpert1 += j_p - j_c;
+
+	    sister->
+		calculate_partial_acc_and_jerk(ptop, root, top_level,
+					       a_c, j_c, p_c,
+					       dum_d_sq, dum_nn,
+					       USE_POINT_MASS,
+					       NULL,
+					       sister);
+	    sister->
+		calculate_partial_acc_and_jerk(ptop, root, top_level,
+					       a_p, j_p, p_p,
+					       dum_d_sq, dum_nn,
+					       !USE_POINT_MASS,
+					       NULL,
+					       sister);
+	    dapert2 += a_p - a_c;
+	    djpert2 += j_p - j_c;
+	}
+
+	apert1 += dapert1;
+	jpert1 += djpert1;
+	apert2 += dapert2;
+	jpert2 += djpert2;
+
+	plist.erase(plist.begin(), plist.end());
 
 	if (get_parent() != top_level) {
 
 	    int p = cerr.precision(HIGH_PRECISION);
-
-	    //cerr << endl
-	    //	 <<  "computing perturbation on "
-	    //	 << get_parent()->format_label()
-	    //	 << " using GRAPE; np = " << np << endl << flush;
-	    // cerr << "this = " << format_label() << ", ";
-	    // cerr << "sister = " << sister->format_label() << ", ";
-	    // PRL(system_time);
-
-	    // Shortened version:
-
 	    cerr << endl
 	    	 <<  "GRAPE perturbation on "
 	    	 << get_parent()->format_label()
 	    	 << " at t = " << system_time << endl << flush;
-
 	    cerr.precision(p);
 
 #if 0
@@ -3232,9 +3299,6 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	    PRL(apert2 - apert1);
 	    PRL(apert2_test - apert1_test);
 
-
-
-
 	    hdyn *aunt = get_parent()->get_binary_sister();
 
 	    if (aunt) {
@@ -3320,6 +3384,7 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	p_2b = 0;
 	d_pos = sister->pred_pos - pred_pos;
 	d_vel = sister->pred_vel - pred_vel;
+
 	accumulate_acc_and_jerk(sister, d_pos, d_vel, eps2,
 				a_2b, j_2b, p_2b, d_min_sister);
 	p_nn_sister = sister;
@@ -3393,7 +3458,7 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
 	real m2 = get_binary_sister()->mass;
 	vec sep = pred_pos * (1 + mass/m2);
-	real r2 = sep*sep;
+	real r2 = sep*sep+eps2;
 	vec a2 = -m2*sep / (r2*sqrt(r2));
 	PRL(a2);
 
@@ -3922,17 +3987,6 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	// itself a slow binary.  However, the procedure followed in
 	// correct_and_update() should properly treat the dominant
 	// term due to the internal motion of this node.
-
-
-// 	if (time >= xreal(2296, 3651856000000000000)) {
-// 	    cerr << endl << "in top_level_node_epilogue_force_calculation"
-// 		 << endl;
-// 	    int p = cerr.precision(HIGH_PRECISION);
-// 	    PRL(format_label());
-// 	    pp3(get_top_level_node());
-// 	    cerr << endl;
-//	    cerr.precision(p);
-// 	}
 
 
 	if (!od->slow) {
