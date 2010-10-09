@@ -50,7 +50,7 @@ void hdyn::initialize_slow()
 {
     // Slow motion will be already set up for elder binary sister.
 
-    for_all_nodes(hdyn, this, b)
+    for_all_nodes(hdyn, this, b) {
         if (b->is_low_level_node()
 	    && !b->get_elder_sister()
 	    && b->get_slow()) {
@@ -58,6 +58,7 @@ void hdyn::initialize_slow()
 	    // Elder sister contains all relevant data.  Parameters
 	    // for the younger sister simply follow those for b.
 
-	    get_younger_sister()->slow = slow;
-      }
+	    b->get_younger_sister()->slow = slow;
+	}
+    }
 }
