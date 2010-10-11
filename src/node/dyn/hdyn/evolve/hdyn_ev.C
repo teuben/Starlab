@@ -4004,11 +4004,13 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	    od->slow->set_acc_p(a_p - a_cm);
 	    od->slow->set_jerk_p(j_p - j_cm);
 
-	    // The new perturber list is valid and intact.  Update
-	    // the slow_perturbed lists of the top_level_nodes of all
-	    // perturbers.
+	    // The new perturber list is valid and intact.  Update the
+	    // slow_perturbed lists of the top_level_nodes of all
+	    // perturbers.  Use nlist here, which is n_perturbers if
+	    // perturbers are valid, and n_perturbers_low if low_level
+	    // perturbers are valid (ony two ways we can get here).
 
-	    for (int j = 0; j < n_perturbers; j++) {
+	    for (int j = 0; j < nlist; j++) {
 		hdyn *pert_top = perturber_list[j]->get_top_level_node();
 #if 0
 		cerr << "adding " << format_label();
