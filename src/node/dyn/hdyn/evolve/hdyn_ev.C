@@ -4232,12 +4232,15 @@ local inline void apply_correction(hdyn * bj, hdyn * bi)
 	slow_perturbed *s = bi->find_slow_perturbed(bj);
 	if (!s) {
 
-	    // Shouldn't happen...
+	    // This shouldn't happen in normal operation, but may if
+	    // we are starting up a new system including a slow binary
+	    // -- the slow lists aren't saved and will have to be
+	    // rebuilt on the fly.
 
 	    cerr << "apply_correction: adding " << bj->format_label();
 	    cerr << " to slow_perturbed list of " << bi->format_label()
 		 << endl;
-	    bj->print_perturber_list(cerr);
+	    // bj->print_perturber_list(cerr);
 
 	    s = bi->add_slow_perturbed(bj, kd->slow_perturbed);
 	}
