@@ -4289,12 +4289,8 @@ local inline void apply_correction(hdyn * bj, hdyn * bi)
 	    cerr << "apply_correction: adding " << bj->format_label();
 	    cerr << " to slow_perturbed list of " << bi->format_label()
 		 << endl;
-<<<<<<< hdyn_ev.C
 	    // bj->print_perturber_list(cerr);
 #endif
-=======
-	    // bj->print_perturber_list(cerr);
->>>>>>> 1.75
 
 	    s = bi->add_slow_perturbed(bj, kd->slow_perturbed);
 	    n_added++;
