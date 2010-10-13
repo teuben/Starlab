@@ -58,7 +58,14 @@ void hdyn::initialize_slow()
 	    // Elder sister contains all relevant data.  Parameters
 	    // for the younger sister simply follow those for b.
 
-	    b->get_younger_sister()->slow = slow;
+	    hdyn *s = b->get_younger_sister();
+	    if (s && get_total_energy(b, s) < 0)
+		s->slow = slow;
+	    else {
+		cerr << "*** ignoring slow binary data for unbound pair "
+		     << b->get_parent()->format_label() << " ***" << endl;
+		b->delete_slow();
+	    }
 	}
     }
 }

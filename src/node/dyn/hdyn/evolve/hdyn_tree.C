@@ -282,14 +282,26 @@ local bool too_big(hdyn * bi, real limit_sq)
 			  true, false);
 
     // Don't allow a slow binary to be split, but schedule the slow
-    // motion to be stopped at next apocenter.
+    // motion to be stopped at next apocenter.  Note (Steve, 10/10)
+    // that it is apparently possible (but rare) for a slow binary to
+    // switch from being bound to unbound -- in that case we will
+    // never reach apocenter and we should simply terminate the slow
+    // motion now.
 
     if (big && od->get_slow()) {
-	if (!od->get_slow()->get_stop()) {
+
+        od->get_slow()->set_stop();
+
+	real E = get_total_energy(od, od->get_younger_sister());
+	if (E < 0 && E*E > -0.25*pow(bi->get_mbar(),4)/limit_sq)
 	    cerr << "too_big: scheduling end of slow motion for "
-		 << bi->format_label() << " at time " << bi->get_system_time()
-		 << endl;
-	    od->get_slow()->set_stop();
+		 << bi->format_label() << " at time "
+		 << bi->get_system_time() << endl;
+	else {
+	    cerr << "too_big: terminating slow motion for "
+		 << bi->format_label() << " at time "
+		 << bi->get_system_time() << endl;
+	    od->extend_or_end_slow_motion();
 	}
 	return false;
     }

@@ -1238,6 +1238,15 @@ local inline void get_derivs(vec& acc, vec& jerk,
 {
     bt2 = -3 * (old_acc - acc) - dt * (2 * old_jerk + jerk);
     at3 =  2 * (old_acc - acc) + dt * (old_jerk + jerk);
+#if 0
+    cerr << "get_derivs: "; PRL(dt);
+    cerr << "get_derivs: "; PRL(old_acc);
+    cerr << "get_derivs: "; PRL(acc);
+    cerr << "get_derivs: "; PRL(old_jerk);
+    cerr << "get_derivs: "; PRL(jerk);
+    cerr << "get_derivs: "; PRL(bt2);
+    cerr << "get_derivs: "; PRL(at3);
+#endif
 }
 
 local inline void update_derivs_from_perturbed(vec& acc_p,
@@ -1259,6 +1268,7 @@ local inline void update_derivs_from_perturbed(vec& acc_p,
     // if (CM_ONLY) return;
 
     vec bt2_p, at3_p;
+    //    cerr << "calling get_derivs (perturbed)" << endl;
     get_derivs(acc_p, jerk_p, old_acc_p, old_jerk_p,
 	       kdt, bt2_p, at3_p);
 
@@ -1304,8 +1314,13 @@ local inline void correct_slow(slow_binary *s, real dt,
     // For now, simply work with copies and copy back changes as
     // necessary.
 
+
     vec acc_p = s->get_acc_p();
     vec jerk_p = s->get_jerk_p();
+
+    // cerr << "correct_slow: "; PRC(s); PRL(kap);
+    // PRL(acc_p);
+    // PRL(jerk_p);
 
     // Scale acc_p and jerk_p first because the old_ versions are
     // already scaled.
@@ -1405,6 +1420,12 @@ bool hdyn::correct_and_update()
 					// 2: ys, 3: both)
     hdyn *sb = NULL;
 
+
+
+    // cerr << endl;  PRC(this); PRC(od); PRC(slow); PRC(is_top_level); PRL(sp);
+
+
+
     if (is_top_level) {
 
 	if (od && od->slow) {			// slow binary CM
@@ -1418,6 +1439,7 @@ bool hdyn::correct_and_update()
 	    while (s) {				// correct for all perturbees
 		old_acc -= s->get_old_acc_p();
 		old_jerk -= s->get_old_jerk_p();
+		// PRC(s); PRL(old_acc);
 		s = s->get_next();
 	    }
 	}
@@ -1518,6 +1540,7 @@ bool hdyn::correct_and_update()
     }
 
     vec bt2, at3;
+    //    cerr << "calling get_derivs" << endl;
     get_derivs(acc, jerk, old_acc, old_jerk, dt, bt2, at3);
 
     // Reminder:	bt2  =  a''  dt^2 / 2		(a' = j)
@@ -1614,6 +1637,16 @@ bool hdyn::correct_and_update()
 		    s->set_acc_p(acc_p);
 		    s->set_jerk_p(jerk_p);
 
+
+
+#if 0
+		    cerr << "correct: "; PRC(corr); PRC(s); PRL(kap);
+		    PRL(acc_p);
+		    PRL(jerk_p);
+#endif
+
+
+
 		    if (corr) {
 
 			// Apply the correction if the old_ quantities are set.
@@ -1662,7 +1695,6 @@ bool hdyn::correct_and_update()
 		    cerr.precision(p);
 
 		    PRC(bj); PRL(bj->format_label());
-		    PRL(od);
 		    if (od) PRL(od->get_slow());
 
 		    cleanup = true;
@@ -1686,15 +1718,15 @@ bool hdyn::correct_and_update()
     vec new_vel = pred_vel + (0.25 * at3 + ONE3 * bt2) * dt;
 
 
-//    if (name_is("11") && system_time > 1.48 && system_time < 1.484377) {
-//  	PRL(pred_pos);
-//  	PRL(pred_vel);
-//  	PRL(at3);
-//  	PRL(bt2);
-//  	PRL(dt);
-//  	PRL(new_pos);
-//  	PRL(new_vel);
-//    }
+    if (name_is("11") && system_time > 1.48 && system_time < 1.484377) {
+  	PRL(pred_pos);
+  	PRL(pred_vel);
+  	PRL(at3);
+  	PRL(bt2);
+  	PRL(dt);
+  	PRL(new_pos);
+  	PRL(new_vel);
+    }
 
     if (has_grape4()) {					// GRAPE-4 only
 
@@ -2422,6 +2454,8 @@ void hdyn::tree_walk_for_partial_acc_and_jerk_on_leaf(hdyn *b,
 	if (b != this) {
 	    real d2;
 
+	    // PRC(format_label()); PRL(b->format_label());
+	    // PRL(offset_pos);
 	    accumulate_acc_and_jerk(b, offset_pos, offset_vel,	// (inlined)
 				    eps2, a, j, p, d2);
 
@@ -2533,6 +2567,7 @@ void hdyn::calculate_partial_acc_and_jerk_on_leaf(hdyn * top,
 	d_pos += b->get_pred_pos();
 	d_vel += b->get_pred_vel();
     }
+
 
     tree_walk_for_partial_acc_and_jerk_on_leaf(top, mask, d_pos, d_vel,
 					       a, j, p,
@@ -2963,6 +2998,7 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 //       }
 //     }
 
+
     hdyn *top = pnode;
     int np = -1;
 
@@ -3366,6 +3402,7 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	//      << " using front end; np = " << np << endl << flush;
      }
 
+
     // Relative acceleration and jerk due to other (sister) component:
 
     vec a_2b, j_2b;
@@ -3434,6 +3471,7 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 
     set_acc_and_jerk_and_pot(a_2b, j_2b, p_2b);
 
+
 #ifdef T_DEBUG
     if (IN_DEBUG_RANGE(system_time) && T_DEBUG_LEVEL > 0 && name_is("23")) {
 	cerr << "DEBUG: calculate_acc_and_jerk_on_low_level_node" << endl;
@@ -3462,7 +3500,7 @@ void hdyn::calculate_acc_and_jerk_on_low_level_node()
 	vec a2 = -m2*sep / (r2*sqrt(r2));
 	PRL(a2);
 
-	PRL(pscale * (apert1 - apert2) * get_kappa());
+	// PRL(pscale * (apert1 - apert2) * get_kappa());
     }
 #endif
 
@@ -4010,16 +4048,24 @@ void hdyn::top_level_node_epilogue_force_calculation()
 	    // perturbers are valid, and n_perturbers_low if low_level
 	    // perturbers are valid (ony two ways we can get here).
 
+	    int n_added = 0;
 	    for (int j = 0; j < nlist; j++) {
 		hdyn *pert_top = perturber_list[j]->get_top_level_node();
 #if 0
 		cerr << "adding " << format_label();
 		cerr << " to slow_perturbed list of "
 		     << pert_top->format_label()
+		     << " at time " << system_time
 		     << endl;
 #endif
 		pert_top->add_slow_perturbed(this, diag->slow_perturbed);
+		n_added++;
 	    }
+	    if (n_added > 0)
+	      cerr << "top_level_node_epilogue_force_calculation:" << endl
+		   << "    added " << format_label() << " to " << n_added
+		   << " slow_perturbed lists at time " << system_time
+		   << endl;
 	}
 
 	pot += p_p;
@@ -4171,6 +4217,8 @@ void hdyn::calculate_acc_and_jerk(bool exact)
 //		     whose interaction with bj has not been correctly
 //		     calculated.  Include the missing (tidal) terms here.
 
+int n_added = 0;		// communicate with check_and_apply_correction
+
 local inline void apply_correction(hdyn * bj, hdyn * bi)
 {
     vec a_c = 0, j_c = 0;
@@ -4237,17 +4285,33 @@ local inline void apply_correction(hdyn * bj, hdyn * bi)
 	    // -- the slow lists aren't saved and will have to be
 	    // rebuilt on the fly.
 
+#if 0
 	    cerr << "apply_correction: adding " << bj->format_label();
 	    cerr << " to slow_perturbed list of " << bi->format_label()
 		 << endl;
+<<<<<<< hdyn_ev.C
 	    // bj->print_perturber_list(cerr);
+#endif
+=======
+	    // bj->print_perturber_list(cerr);
+>>>>>>> 1.75
 
 	    s = bi->add_slow_perturbed(bj, kd->slow_perturbed);
+	    n_added++;
 	}
 
 	if (s) {
 	    s->set_acc_p(a_p - a_c);
 	    s->set_jerk_p(j_p - j_c);
+#if 0
+	    cerr << "apply_correction: ";
+	    PRC(bi->format_label()); PRL(bj->format_label());
+	    PRL(a_p);
+	    PRL(a_c);
+	    PRL(s->get_acc_p());
+	    PRL(s->get_jerk_p());
+	    pp3(bj);
+#endif
 	}
 
 	// Failure (!s) shouldn't occur here, but if it does, the default
@@ -4465,6 +4529,8 @@ void correct_acc_and_jerk(hdyn * root,		// OLD!
 
 	    // bj is a perturbed top-level CM node.
 
+	    n_added = 0;				// global!
+
 	    if (bj->get_valid_perturbers()) {
 
 		// Look in bj's perturber list for something to correct.
@@ -4522,6 +4588,14 @@ void correct_acc_and_jerk(hdyn * root,		// OLD!
 		    }
 		}
 	    }
+
+	    if (n_added > 0)
+	      cerr << "correct_acc_and_jerk(0):" << endl
+		   << "added " << bj->format_label()
+		   << " to " << n_added << " slow_perturbed lists"
+		   << "    at time " << bj->get_system_time()
+		   << endl;
+
 	}
     }
 }
@@ -4654,6 +4728,9 @@ void correct_acc_and_jerk(hdyn** next_nodes,	// NEW
 	    && !bj->get_oldest_daughter()	// could be partially
 	    	  ->get_kepler()) {		//     unperturbed motion
 
+
+	    n_added = 0;			// global!
+
 	    if (bj->get_valid_perturbers()) {
 
 		// Look in bj's perturber list for something to correct.
@@ -4698,6 +4775,13 @@ void correct_acc_and_jerk(hdyn** next_nodes,	// NEW
 			check_and_apply_correction(bj, next_nodes[i]);
 
 	    }
+
+	    if (n_added > 0)
+	      cerr << "correct_acc_and_jerk(1):" << endl
+		   << "added " << bj->format_label()
+		   << " to " << n_added << " slow_perturbed lists"
+		   << "    at time " << bj->get_system_time()
+		   << endl;
 	}
     }
 }

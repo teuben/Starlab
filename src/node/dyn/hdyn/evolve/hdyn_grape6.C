@@ -648,6 +648,21 @@ local INLINE int force_by_grape(xreal xtime,
 				  ipos, ivel, &eps2, ih2,
 				  iacc, ijerk, ipot, inn);
 
+
+#if 0
+    PRC(xtime); PRL(ni);
+    for (int i = 0; i < ni; i++) {
+      PRI(4); PRC(i); PRC(iindex[i]);
+      PRL(nodes[i]->format_label());
+      PRI(4); PRL(ipos[i]);
+      PRI(4); PRL(ivel[i]);
+      PRI(4); PRL(iacc[i]);
+      PRI(4); PRL(ijerk[i]);
+      PRI(4); PRC(pot_only); PRC(ipot[i]); PRL(inn[i]);
+    }
+#endif
+
+
 //if (xtime > 0) {
 //    for (int iii = 0; iii < ni; iii++) {
 //	if (streq(nodes[iii]->format_label(), "1001")) {
@@ -2517,6 +2532,7 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe, int n_pipes)
 						b->format_label(), 255);
 				    }
 
+				    compress_count++;
 				    if (compress_count%10 == 0) {
 				        cerr << endl << func
 					     << "(): compressing"
@@ -2532,7 +2548,6 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe, int n_pipes)
 					cerr << "  (" << compress_count
 					     << ")" << endl;
 				    }
-				    compress_count++;
 #endif
 
 				    int count = 0;
@@ -3433,12 +3448,21 @@ int grape6_calculate_perturbation(hdyn *parent,
 	    p = p->get_parent();
 	}
 
+#if 0
+	PRL(bi->format_label());
+	PRL(ipos[ni]);
+	PRL(ivel[ni]);
+	PRL(iacc[ni]);
+	PRL(ijerk[ni]);
+#endif
+
 	ipot[ni] = bi->get_pot();
 	ih2[ni] = 0;
 
-#if 0
-	// Alternative, maybe simpler, approach.
-	// Choose quantities appropriate to the nearest neighbor.
+#if 1
+	// Important that iacc and ijerk be properly set, for scaling
+	// purposes.  Instead of using old_ quantities, choose
+	// quantities appropriate to the nearest neighbor.
 
 	hdyn *sis = bi->get_younger_sister();
 	if (!sis) sis = bi->get_elder_sister();
@@ -3492,6 +3516,7 @@ int grape6_calculate_perturbation(hdyn *parent,
     apert2 = iacc[1];
     jpert1 = ijerk[0];
     jpert2 = ijerk[1];
+
 
 #if 0
 

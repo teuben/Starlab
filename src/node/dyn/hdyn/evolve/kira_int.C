@@ -687,6 +687,13 @@ int integrate_list(hdyn * b,				// root node
 
 	if (bi && bi->is_valid()) {
 
+
+#if 0
+	    PRC(0); PRL(bi->format_label());
+	    PRL(bi->get_acc());
+#endif
+
+
 	    bi->clear_on_integration_list();  // cleanup: see note in kira_ev.C
 
 #ifdef CPU_COUNTERS
@@ -711,6 +718,13 @@ int integrate_list(hdyn * b,				// root node
 			cerr << "DEBUG: integrate_list " << 4 << endl << flush;
 		    }
 #endif
+
+
+#if 0
+		      PRC(1); PRL(bi->format_label());
+		      PRL(bi->get_acc());
+#endif
+
 
 		    // A problem has occurred during the step, presumably
 		    // because of a hardware error on the GRAPE.
@@ -785,6 +799,15 @@ int integrate_list(hdyn * b,				// root node
 			}
 		    }
 		}
+
+
+#if 0
+		else {
+		    PRC(2); PRL(bi->format_label());
+		    PRL(bi->get_acc());
+		}
+#endif
+
 
 		bi->init_pred();
 		bi->store_old_force();

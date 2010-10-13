@@ -473,7 +473,8 @@ void hdyn::extend_or_end_slow_motion(real P)	// convenient to pass P (!)
 
 	    hdyn *pnode = find_perturber_node();
 
-	    if (pnode && pnode->get_valid_perturbers())
+	    if (pnode && pnode->get_valid_perturbers()) {
+
 		for (int j = 0; j < pnode->n_perturbers; j++) {
 		    hdyn *pert_top = pnode->perturber_list[j]
 					  ->get_top_level_node();
@@ -487,6 +488,14 @@ void hdyn::extend_or_end_slow_motion(real P)	// convenient to pass P (!)
 							diag->slow_perturbed);
 		    }
 		}
+
+	    } else {
+
+		// No perturbers: must check all top-level nodes...
+
+	      for_all_daughters(hdyn, get_root(), bp)
+		  bp->remove_slow_perturbed(par, diag->slow_perturbed);
+	    }
 	}
 
 	delete_slow();
@@ -500,7 +509,8 @@ void clear_perturbers_slow_perturbed(hdyn * b)
 
     hdyn *pnode = b->find_perturber_node();
 
-    if (pnode && pnode->get_valid_perturbers())
+    if (pnode && pnode->get_valid_perturbers()) {
+
 	for (int j = 0; j < pnode->get_n_perturbers(); j++) {
 	    hdyn * pert_top = pnode->get_perturber_list()[j]
 			           ->get_top_level_node();
@@ -513,6 +523,14 @@ void clear_perturbers_slow_perturbed(hdyn * b)
 	    pert_top->remove_slow_perturbed(b, b->get_kira_diag()
 						->slow_perturbed);
 	}
+
+    } else {
+
+	// No perturbers: must check all top-level nodes...
+
+	for_all_daughters(hdyn, b->get_root(), bp)
+	    bp->remove_slow_perturbed(b, b->get_kira_diag()->slow_perturbed);
+    }
 }
 
 void list_slow_perturbed(hdyn *b)
