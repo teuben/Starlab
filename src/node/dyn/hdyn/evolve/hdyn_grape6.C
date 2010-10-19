@@ -2266,11 +2266,11 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe, int n_pipes)
 				    neighbor_list);
 #endif
 
-    // **** IMPORTANT NOTE: The GRAPE neighbor list does not contain
-    // **** particle b, but the list returned by sapporo does.  Must
-    // **** take this emulation error into account and remove b from
-    // **** the list before returning, as compute_densities() adds b
-    // **** explicitly.
+    // **** NOTE: The GRAPE neighbor list does not contain particle b,
+    // **** but the list returned by sapporo 1.5 and earlier does.  We
+    // **** correct this emulation error by removing b from the list
+    // **** before returning, as function compute_densities() will add
+    // **** b explicitly to the list.
 
     int n_extra = (n_pipes > 48);		// = 1 iff we have a GPU
 
@@ -2379,8 +2379,8 @@ local INLINE int get_neighbors_and_adjust_h2(hdyn * b, int pipe, int n_pipes)
 	static int compress_count = 0;
 	static char compress_id[256];
 
-	// Hmmm.  This loop has grown far too big.  Should move out to
-	// a separate function soon...
+	// This loop has grown far too big.  Should move it out to a
+	// separate function...
 
 	for (int j = 0; j < n_neighbors; j++) {
 
