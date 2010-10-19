@@ -8,21 +8,21 @@
  //                                                       //            _\|/_
 //=======================================================//              /|\
 
-//// Compute densities of top-level nodes.
-//// Densities are saved in node dyn stories. The program only actually
-//// does the computation if a GRAPE is attached.
+//// Compute densities of top-level nodes.  Densities are saved in
+//// node dyn stories. The program only actually does the computation
+//// if a GRAPE is attached.
 ////
 //// Usage: get_densities
 ////
 //// Options:
+////		  -0	suppress GRAPE/GPU use [false]
 ////		  -i    output individual bound specifications [false]
 ////		  -v    verbose [false]
-////              -c    transpose the cluster to CM frame [yes]
+////		  -c    transpose the cluster to the CM frame [yes]
 ////
 //// Written by Steve McMillan.
 ////
 //// Report bugs to starlab@sns.ias.edu.
-
 
 //  Steve McMillan, June 2004
 
@@ -50,15 +50,15 @@ main(int argc, char ** argv)
 
     extern char *poptarg;
     int c;
-    const char *param_string = "ci0";
+    const char *param_string = "ci0v";
 
     bool force_nogrape = false;
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1) {
 	switch (c) {
-	    case '0':	force_nogrape = true;
-			break;
+	    case '0': force_nogrape = true;
+		      break;
 	    case 'i': individual = !individual;
 	              break;
 	    case 'c': cm_flag = !cm_flag;
@@ -84,6 +84,12 @@ main(int argc, char ** argv)
         cerr << "GRAPE suppressed" << endl;
     }
 
+    // Need to set these quantities because the initial guesses of
+    // neighbor sphere size depends on them.
+
+    b->set_d_min_sq(1./pow(b->n_daughters(), 2));	// do better?
+    b->set_d_min_fac(1.);
+
     vec cod_pos, cod_vel;
     kira_calculate_densities(b, cod_pos, cod_vel);
     PRL(cod_pos);
@@ -94,7 +100,7 @@ main(int argc, char ** argv)
     if (individual) {
 
       if (cm_flag) {
-	for_all_nodes(hdyn, b, bi) {
+	for_all_daughters(hdyn, b, bi) {
 	  bi->inc_pos(-cod_pos);
 	  bi->inc_vel(-cod_vel);
 	}
