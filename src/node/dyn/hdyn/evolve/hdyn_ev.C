@@ -1718,7 +1718,7 @@ bool hdyn::correct_and_update()
     vec new_vel = pred_vel + (0.25 * at3 + ONE3 * bt2) * dt;
 
 
-    if (name_is("11") && system_time > 1.48 && system_time < 1.484377) {
+    if (0 && name_is("11") && system_time > 1.48 && system_time < 1.484377) {
   	PRL(pred_pos);
   	PRL(pred_vel);
   	PRL(at3);
