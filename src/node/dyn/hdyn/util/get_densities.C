@@ -87,7 +87,7 @@ main(int argc, char ** argv)
     // Need to set these quantities because the initial guesses of
     // neighbor sphere size depends on them.
 
-    b->set_d_min_sq(1./pow(b->n_daughters(), 2));	// do better?
+    b->set_d_min_sq(pow(1./b->n_daughters(), 2));	// do better?
     b->set_d_min_fac(1.);
 
     vec cod_pos, cod_vel;
