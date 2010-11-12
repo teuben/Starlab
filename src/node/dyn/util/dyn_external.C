@@ -130,7 +130,7 @@ local inline real tidal_pot(dyn *b,
     real dpot = 0;
     for_all_daughters(dyn, b, bb) {
 	real x = bb->get_pos()[0] - cen[0];
-	real z = bb->get_pos()[2] - cen[0];
+	real z = bb->get_pos()[2] - cen[2];
 	real dp = 0.5*(a1*x*x + a3*z*z);
 	dpot += bb->get_mass() * dp;
 	if (pot_func) pot_func(bb, dp);
