@@ -33,7 +33,7 @@
 # smaller and hence increases the size of the box, but leaves less
 # room for labels.
 
-tmargin = 1
+tmargin = 2
 bmargin = 2
 lmargin = 8
 rmargin = 3
@@ -157,6 +157,7 @@ while i < narg:			# loop through the argument list
 
     elif arg == '-P':
 	post = 1 - post
+        square = 1 - square
 
     elif arg == '-s':
 	i += 1

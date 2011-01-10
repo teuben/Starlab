@@ -32,7 +32,7 @@
 # smaller and hence increases the size of the box, but leaves less
 # room for labels.
 
-set tmargin = 1
+set tmargin = 2
 set bmargin = 2
 set lmargin = 8
 set rmargin = 3
@@ -147,6 +147,7 @@ while ($i < $#argv)
 	@ l = 1 - $l
     else if (x$arg == x-P) then
 	@ post = 1 - $post
+	@ square = 1 - $square
     else if (x$arg == x-s) then
 	@ i++
 	set script = "$argv[$i]"
