@@ -927,6 +927,8 @@ bool kira_initialize(int argc, char** argv,
 			comment = poptarg;
 			break;
 	    case 'C':	b->get_kira_options()->grape_max_cpu = atof(poptarg);
+			if (b->get_kira_options()->grape_max_cpu <= 0)
+				b->get_kira_options()->grape_max_cpu = 1.e10;
 			set_grape_max_cpu = true;
 			break;
 	    case 'd':	dt_log = atof(poptarg);
@@ -1571,13 +1573,14 @@ bool kira_initialize(int argc, char** argv,
 	    cerr << "GRAPE DMA transfers suppressed" << endl;
     }
 
-    // The choice of grape_max_cpu is appropriate for GRAPEs, but
-    // not for GPU/sapporo, where released/reattach causes problems.
-    // Reset it here is if a GPU is detected.
+    // The choice of grape_max_cpu is appropriate for GRAPEs, but not
+    // for GPU/sapporo, where released/reattach causes problems.
+    // Reset it here if a GPU is detected.  Assume that we generally
+    // want to run in single-user configuration on a GPU system.
 
     if (config == 2 && !set_grape_max_cpu) {
 	if (g6_npipes_() > 48) {			// assume GPU
-	    b->get_kira_options()->grape_max_cpu = 3600;
+	    b->get_kira_options()->grape_max_cpu = 36000;
 	    cerr << "set default grape_max_cpu = "
 		 << b->get_kira_options()->grape_max_cpu
 		 << " for GPU" << endl;
