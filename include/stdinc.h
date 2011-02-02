@@ -401,6 +401,7 @@ real gausrand(real, real);
 
 void cpu_init();
 real cpu_time();
+real real_time();
 
 void starlab_wait(int iwait);
 

@@ -28,6 +28,8 @@
   static real initial_cpu = 0;
 #endif
 
+#include <time.h>
+
 //-----------------------------------------------------------------------------
 //  cpu_init: initialize the CPU timer.
 //-----------------------------------------------------------------------------
@@ -64,6 +66,17 @@ real cpu_time()
 #else
     return 0;
 #endif
+}
+
+//-----------------------------------------------------------------------------
+//  real_time: return total time (in seconds) since the epoch.
+//            Resolution is low -- currently only 1 s.
+//-----------------------------------------------------------------------------
+
+real real_time()
+{
+    time_t tloc;
+    return (real)time(&tloc);
 }
 
 // STARLAB_WAIT:	Wait a specified number of microseconds.

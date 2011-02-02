@@ -139,7 +139,10 @@ local void reattach_grape(real time, const char *id, kira_options *ko)
     cerr << "attaching GRAPE at time "
 	 << time << endl << flush;
 
+    real cpu0 = cpu_time(), real0 = real_time();
     g6_open_(&cluster_id);
+    cerr << "g6_open: CPU time = " << cpu_time()-cpu0
+	 << ", real time = " << real_time()-real0 << endl << flush;
     if (ko) ko->grape_last_cpu = cpu_time();
     grape_is_open = true;
 
