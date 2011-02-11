@@ -39,18 +39,19 @@ local bool remove_escapers(hdyn* b,		// root node
 {
     bool correct_dynamics = false;
     real rmax2 = rmax*rmax;
-    int n_esc = 0;
 
+    int n_esc = 0;
     for_all_daughters(hdyn, b, bi)
-	if (square(bi->get_pos()- center_pos) > rmax2)
-	    n_esc++;
+	if (square(bi->get_pos() - center_pos) > rmax2) n_esc++;
 
     if (n_esc <= 0) {
 	cerr << endl << "  No escapers" << endl;
 	return false;
     }
 
-    cerr << endl << n_esc << " escaper(s):\n";
+    cerr << endl << n_esc << " escaper";
+    if (n_esc > 1) cerr << "s";
+    cerr << ":" << endl << flush;
 
     hdyn** esc_list = new hdynptr[n_esc];
 
@@ -58,11 +59,21 @@ local bool remove_escapers(hdyn* b,		// root node
     calculate_energies_with_external(b, epot0, ekin0, etot0);
 
     n_esc = 0;
-    for_all_daughters(hdyn, b, bj) {
+
+    // Use an explicit loop in this case, rather than
+    // for_all_daughters(), as we may detach node bj, which will
+    // remove its sister pointers...
+
+    // for_all_daughters(hdyn, b, bj) {
+
+    hdyn *bj = b->get_oldest_daughter();
+    while (bj) {
+
+	hdyn *nextbj = bj->get_younger_sister();
 
 	// Escape criterion (note that we do NOT check E > 0):
 	
-	if (square(bj->get_pos()- center_pos) > rmax2) {
+	if (square(bj->get_pos() - center_pos) > rmax2) {
 
 	    // Print out hierarchical information on the escaper.
 
@@ -99,14 +110,10 @@ local bool remove_escapers(hdyn* b,		// root node
 //		bj->get_starbase()->print_star_story(cerr);
 //	    }
 
-	    bool newl = true;
 	    for_all_daughters(hdyn, b, bb) {
 		if (bb->get_nn() == bj) {
-		    if (newl) {
-			cerr << endl;
-			newl = false;
-		    }
-		    cerr << "    reset NB for " << bb->format_label()<<endl;
+		    cerr << "    reset NN for " << bb->format_label()
+			 << ",  d_nn = " << sqrt(bj->get_d_nn_sq()) << endl;
 		    bb->set_nn(NULL);
 		}
 	    }
@@ -118,10 +125,13 @@ local bool remove_escapers(hdyn* b,		// root node
 
 	    esc_list[n_esc++] = bj;
 	    detach_node_from_general_tree(bj);
-
-	    b->inc_mass(-bj->get_mass());	// Not done by detach_node...
+	    b->inc_mass(-bj->get_mass());	// not done by detach_node...
 	}
+
+	bj = nextbj;
     }
+
+    // Looks like the escapers are not deleted...
 
     // Note from Steve (7/01):  Used to reset the CM because of the
     // chance we might compute escapers relative to the origin of
