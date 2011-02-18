@@ -42,7 +42,7 @@ void correct_step(sdyn * b,          // n-body system pointer
     }
 }
 
-typedef  real  (*tfp)(sdyn *, real);
+typedef  real (*tfp)(sdyn *, real);
 
 void step(sdyn * b,        // sdyn array                   
 	  real & t,        // time                         
@@ -108,13 +108,13 @@ void initialize(sdyn * b,        // sdyn array
     for_all_daughters(sdyn, b, bb) bb->store_new_into_old();
 }
 
-real  constant_timestep(sdyn * b, real eta)
+real constant_timestep(sdyn * b, real eta)
 {
-    if (b == NULL) eta = 0; // To keep the HP compiler happy.
+    if (b == NULL) eta = 0;
     return  eta;
 }
 
-real  dynamic_timestep(sdyn * b, real eta)
+real dynamic_timestep(sdyn * b, real eta)
 {
     real global_min_encounter_time_sq = VERY_LARGE_NUMBER;
     real global_min_free_fall_time_sq = VERY_LARGE_NUMBER;
@@ -458,41 +458,41 @@ main(int argc, char **argv)
 {
     sdyn* b;             // pointer to the nbody system
     int   n_iter = 1;	 // number of iterations (0: explicit; >=1: implicit)
-    real  n_max = -1;    // if > 0: maximum number of integration steps
+    real n_max = -1;    // if > 0: maximum number of integration steps
     
-    real  delta_t = 10;  // time span of the integration
-    real  eta = 0.02;    // time step parameter (for fixed time step,
+    real delta_t = 10;  // time span of the integration
+    real eta = 0.02;    // time step parameter (for fixed time step,
                          //   equal to the time step size; for variable
                          //   time step, a multiplication factor)
-    real  dt_out = VERY_LARGE_NUMBER;
+    real dt_out = VERY_LARGE_NUMBER;
                          // output time interval
-    real  dt_snap = VERY_LARGE_NUMBER;
+    real dt_snap = VERY_LARGE_NUMBER;
                          // snap output interval
     real snap_cube_size = 10;
 
-    real  cpu_time_check = 3600;
+    real cpu_time_check = 3600;
 
-    real  eps = 0.0;     // softening length 	       	   
+    real eps = 0.0;     // softening length 	       	   
     const char  *timestep_name = "dynamic_timestep";
 
-    bool  a_flag = FALSE;
-    bool  d_flag = FALSE;
-    bool  D_flag = FALSE;
-    bool  e_flag = FALSE;
-    bool  f_flag = FALSE;
-    bool  n_flag = FALSE;
-    bool  q_flag = FALSE;
-    bool  r_flag = FALSE;
-    bool  s_flag = TRUE;    // symmetric timestep ?
-    bool  t_flag = FALSE;
-    bool  x_flag = TRUE;    // if true: termination at the exact time of
+    bool a_flag = FALSE;
+    bool d_flag = FALSE;
+    bool D_flag = FALSE;
+    bool e_flag = FALSE;
+    bool f_flag = FALSE;
+    bool n_flag = FALSE;
+    bool q_flag = FALSE;
+    bool r_flag = FALSE;
+    bool s_flag = TRUE;    // symmetric timestep ?
+    bool t_flag = FALSE;
+    bool x_flag = TRUE;    // if true: termination at the exact time of
                             //          of the final output, by
                             //          adjustment of the last time step;
                             // if false: no adjustment of the last time step,
                             //           as a consequence the time of final
                             //           output might be slightly later than
                             //           the time specified.
-    bool  z_flag = FALSE;     // to specify termination after n_max steps
+    bool z_flag = FALSE;     // to specify termination after n_max steps
 
     check_help();
 
