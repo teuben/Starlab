@@ -19,29 +19,28 @@
 
 #ifndef TOOLBOX
 
-void predict_step(sdyn * b,          // n-body system pointer
-		  real dt)         // timestep
-    {
+void predict_step(sdyn * b,		// n-body system pointer
+		  real dt)		// timestep
+{
     if(b->get_oldest_daughter() !=NULL)
         for_all_daughters(sdyn, b, bb)
 	    predict_step(bb,dt);
     else
         b->taylor_pred_new_pos_and_vel(dt);
-    }
+}
 
 void correct_step(sdyn * b,          // n-body system pointer
 		  real new_dt,       // new timestep
 		  real prev_new_dt)  // previous new timestep
-    {
+{
     if(b->get_oldest_daughter() !=NULL)
         for_all_daughters(sdyn, b, bb)
 	    correct_step(bb, new_dt, prev_new_dt);
-    else
-	{
+    else {
 	b->correct_new_acc_and_jerk(new_dt, prev_new_dt);
         b->correct_new_pos_and_vel(new_dt);
-	}
     }
+}
 
 typedef  real  (*tfp)(sdyn *, real);
 
@@ -116,49 +115,47 @@ real  constant_timestep(sdyn * b, real eta)
 }
 
 real  dynamic_timestep(sdyn * b, real eta)
-    {
+{
     real global_min_encounter_time_sq = VERY_LARGE_NUMBER;
     real global_min_free_fall_time_sq = VERY_LARGE_NUMBER;
 
-    for_all_daughters(sdyn, b, bb)
-	{
+    for_all_daughters(sdyn, b, bb) {
 	global_min_encounter_time_sq =
-	    Starlab::min(global_min_encounter_time_sq, bb->get_min_encounter_time_sq());
+	    Starlab::min(global_min_encounter_time_sq, 
+			 bb->get_min_encounter_time_sq());
 	global_min_free_fall_time_sq =
-	    Starlab::min(global_min_free_fall_time_sq, bb->get_min_free_fall_time_sq());
-	}
-
-    return  eta *
-	sqrt(Starlab::min(global_min_encounter_time_sq, global_min_free_fall_time_sq));
+	    Starlab::min(global_min_free_fall_time_sq,
+			 bb->get_min_free_fall_time_sq());
     }
 
+    return  eta * sqrt(Starlab::min(global_min_encounter_time_sq,
+				    global_min_free_fall_time_sq));
+}
+
 tfp timestep_function_ptr(const char * timestep_name)
-    {
+{
     if (streq(timestep_name, "constant_timestep"))
 	return constant_timestep;
     else if (streq(timestep_name, "dynamic_timestep"))
 	return dynamic_timestep;
-    else
-	{
+    else {
 	cerr << "timestep_function_ptr: no timestep function implemented"
 	     << " with name `" << timestep_name << "'" << endl;
 	exit(1);
-	}
-    return NULL; // To keep HP g++ happy!
     }
+    return NULL; // To keep HP g++ happy!
+}
 
 real calculate_energy(sdyn * b, real & ekin, real & epot)
-    {
+{
     ekin = epot = 0;
-    for_all_daughters(sdyn, b, bb)
-	{
+    for_all_daughters(sdyn, b, bb) {
 	epot += bb->get_mass() * bb->get_pot();
 	ekin += 0.5 * bb->get_mass() * (bb->get_vel() * bb->get_vel());
-	}
-    epot *= 0.5;
-
-    return ekin + epot;
     }
+    epot *= 0.5;
+    return ekin + epot;
+}
 
 real calculate_energy_from_scratch(sdyn * b, real & ekin, real & epot)
 {
@@ -177,36 +174,33 @@ real calculate_energy_from_scratch(sdyn * b, real & ekin, real & epot)
     return ekin + epot;
 }
 
-void  start_up(sdyn * b, real & n_steps)
-    {
-    if(b->get_oldest_daughter() !=NULL)
-	{
+void start_up(sdyn * b, real & n_steps)
+{
+    if(b->get_oldest_daughter() !=NULL) {
 	n_steps = b->get_n_steps();
 	if (n_steps == 0)
 	    b->prepare_root();
 
 	for_all_daughters(sdyn, b, bb)
 	    start_up(bb, n_steps);
-	}
-    else
-	{
+    } else {
 	if (n_steps == 0)
 	    b->prepare_branch();
-	}
     }
+}
 
-void  clean_up(sdyn * b, real n)
-    {
+void clean_up(sdyn * b, real n)
+{
     b->set_n_steps(n);
-    }
+}
 
 // system_in_cube: return TRUE if most of the (top-level) nodes in the
 //                 system are contained within the specified cube.
 
 #define MOST 0.75
 
-local bool system_in_cube(sdyn* b, real cube_size) {
-
+local bool system_in_cube(sdyn* b, real cube_size)
+{
     int n = 0;
     for_all_daughters(sdyn, b, bi) n++;
 
@@ -234,10 +228,11 @@ local void copy_node_partial(sdyn*b, sdyn* c)
 }
 
 local sdyn* copy_flat_tree(sdyn* b)
-// Make a partial copy of the flat tree with b as root, and return a
-// pointer to it.  Intention is for use with xstarplot, so only 
-// copy pointers, index, mass, time, pos, and vel.
 {
+    // Make a partial copy of the flat tree with b as root, and return
+    // a pointer to it.  Intention is for use with xstarplot, so only
+    // copy pointers, index, mass, time, pos, and vel.
+
     sdyn* root = new sdyn;
 
     root->set_parent(NULL);
@@ -277,8 +272,8 @@ local void delete_node(sdyn* b)
 
 // pp: Recursively pretty-print a node:
 
-void pp(sdyn* b, ostream & s, int level = 0) {
-
+void pp(sdyn* b, ostream & s, int level = 0)
+{
     s.precision(4);
 
     for (int i = 0; i < 2*level; i++) s << " ";
@@ -290,7 +285,6 @@ void pp(sdyn* b, ostream & s, int level = 0) {
 
     for_all_daughters(sdyn, b, daughter) pp(daughter, s, level + 1);	
 }
-
 
 #define N_STEP_CHECK 1000 // Interval for checking CPU time
 
@@ -311,12 +305,12 @@ bool low_n_evolve(sdyn * b,       // sdyn array
 		  real dt_print,  // external print interval
 		  sdyn_print_fp   // pointer to external print function
 		       print)
-    {
+{
 
     bool terminate = false;
 
     real t = b->get_time();
-    real tr = t + (real)b->get_time_offset();  //b->.. is xreal!
+    real tr = t + (real)b->get_time_offset();  // b->.. is xreal
                                             // total real time in N-body units
 
     real t_end = t + delta_t;      // final time, at the end of the integration
@@ -339,37 +333,34 @@ bool low_n_evolve(sdyn * b,       // sdyn array
     real ekin, epot;
     calculate_energy(b, ekin, epot);
 
-    if (t_out <= t_end && n_steps == 0)
-	{
-	  cerr << "Time = " << t << " " << tr << "  n_steps = " << n_steps
-	    << "  Etot = " << ekin + epot << endl;
-	}
+    if (t_out <= t_end && n_steps == 0)	{
+	cerr << "Time = " << t << " " << tr << "  n_steps = " << n_steps
+	     << "  Etot = " << ekin + epot << endl;
+    }
 
-    if (b->get_n_steps() == 0)             // should be better interfaced
-	{                                  // with start_up ; to be done
+    if (b->get_n_steps() == 0)  {	// should be better interfaced
+					// with start_up
 	b->set_e_tot_init(ekin + epot);
 	b->clear_de_tot_abs_max();
-	}
+    }
 
     int end_flag = 0;
     int coll_flag = 0;
-    while (t < t_end && !end_flag)
-	{
+    while (t < t_end && !end_flag) {
         real max_dt = t_end - t;
         real dt = the_tfp(b, eta);
 
         end_flag = 0;
-        if (dt > max_dt && x_flag)
-	    {
+        if (dt > max_dt && x_flag) {
 	    end_flag = 1;
 	    dt = max_dt;
-	    }
+	}
 
         step(b, t, eps, eta, dt, max_dt, end_flag, coll_flag, 
 	     the_tfp, n_iter,
 	     x_flag, s_flag, 
 	     min_min_ssd);
-	b->set_time(t);                  // should be prettified some time soon
+	b->set_time(t);
 	for_all_daughters(sdyn, b, bi)
 	    bi->set_time(t);
 
@@ -377,28 +368,26 @@ bool low_n_evolve(sdyn * b,       // sdyn array
 	count_steps++;
 
 	if(coll_flag>=1) {
-	  //cerr << "Collision has occured: " << coll_flag << endl;
-	  terminate = false;
-	  return terminate;
+	    //cerr << "Collision has occured: " << coll_flag << endl;
+	    terminate = false;
+	    return terminate;
 	}
 
 //      Check for (trivial) output to cerr...
 
-	if (t >= t_out && n_steps==0)
-	    {
+	if (t >= t_out && n_steps==0) {
 	    calculate_energy(b, ekin, epot);
 	    cerr << "Time = " << t << " " << tr << "  n_steps = " << n_steps
 		 << "  Etot = " << ekin + epot << endl;
 	    t_out += dt_out;
-	    }
+	}
 
 //      ...and (not-so-trivial) output handled elsewhere.
 
-	if (t >= t_print && print != NULL) 
-	    {
+	if (t >= t_print && print != NULL) {
 	    (*print)(b);
 	    t_print += dt_print;
-	    }
+	}
 
 //      Output a snapshot to cout at the scheduled time.
 
@@ -408,7 +397,7 @@ bool low_n_evolve(sdyn * b,       // sdyn array
 	if (t >= t_snap && system_in_cube(b, snap_cube_size)) {
 
 	    // Looks like we can't just make a tree and flatten it
-	    // again before continuing--better to work with a copy.
+	    // again before continuing -- better to work with a copy.
 
 /*	    sdyn *c = copy_flat_tree(b);
 
@@ -434,11 +423,11 @@ bool low_n_evolve(sdyn * b,       // sdyn array
 
 	    // added (SPZ: 12 Oct 2000)
 	    if (b->get_n_steps() > MAX_N_STEPS) {
-	      //return;
-	      cerr << "Terminate after " << b->get_n_steps() 
-		   << " steps" << endl;
-	      terminate = true;
-	      }
+		//return;
+		cerr << "Terminate after " << b->get_n_steps() 
+		     << " steps" << endl;
+		terminate = true;
+	    }
 
 	    if (cpu_time() - cpu_save > abs(cpu_time_check)) {
 		cpu_save = cpu_time();
@@ -455,16 +444,13 @@ bool low_n_evolve(sdyn * b,       // sdyn array
 		     << endl << flush;
 
 		if (cpu_time_check < 0) return terminate;
-
-		}
 	    }
 	}
- 
-   clean_up(b, n_steps);       // too late for snapshot?
-
-    return terminate;
-
     }
+ 
+    clean_up(b, n_steps);       // too late for snapshot?
+    return terminate;
+}
 
 #else
 
@@ -474,7 +460,7 @@ main(int argc, char **argv)
     int   n_iter = 1;	 // number of iterations (0: explicit; >=1: implicit)
     real  n_max = -1;    // if > 0: maximum number of integration steps
     
-    real  delta_t = 10;   // time span of the integration
+    real  delta_t = 10;  // time span of the integration
     real  eta = 0.02;    // time step parameter (for fixed time step,
                          //   equal to the time step size; for variable
                          //   time step, a multiplication factor)
@@ -516,8 +502,8 @@ main(int argc, char **argv)
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
-	switch(c)
-	    {
+	switch(c) {
+
 	    case 'A': a_flag = TRUE;
 		      eta = atof(poptarg);
 		      break;
@@ -554,7 +540,7 @@ main(int argc, char **argv)
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 	              get_help();
-	    }            
+	}            
 
     if (!q_flag) {
 
