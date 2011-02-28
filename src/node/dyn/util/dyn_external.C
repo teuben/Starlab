@@ -56,7 +56,7 @@
 // Tidal field (quadrupole):
 //-------------------------------------------------------------------------
 
-#define USE_CORIOLIS		// comment out to suppres the Coriolis terms
+#define USE_CORIOLIS		// comment out to suppress Coriolis terms
 
 local inline void add_tidal(dyn *b,
 			    vec pos,

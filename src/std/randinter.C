@@ -72,13 +72,15 @@ static int n_rand = 0;
 //                  2.0 seconds of the current call (the UNIX clock is used,
 //                  which returns the time in seconds).
 //                  The return value is the actual value of the seed (either
-//                  the specified non-zero value, or the clock time).
+//                  the specified non-zero value, or the clock time+PID).
 
-int  srandinter(int seed, int iter) {
+int srandinter(int seed, int iter)
+{
+    // If no positive seed is provided, produce a random value, based
+    // on the system clock (resolution 1 second) and the current
+    // process ID.
 
-    if (seed == 0)               // no particular positive seed provided?
-	seed = (int) time(NULL); // then give a random value,
-				 // different every second.
+    if (seed == 0) seed = (int) (time(NULL) + 1000*getpid());
 
     initial_seed = abs(seed);
     n_rand = 0;
@@ -87,7 +89,7 @@ int  srandinter(int seed, int iter) {
 
     for (int i = 0; i < iter; i++) randinter(0,1);
 
-    return initial_seed;   // to enable the user to verify the actual value of
+    return initial_seed;   // to enable the user to verify the value of
                            // the initialization for randx.
 }
 
@@ -317,15 +319,7 @@ real ran2(int& idum)
 real randinter(real a, real b) {
 
     n_rand++;
-
-//  Old Starlab:
-//
-//    return a + (b-a)*randunit();
-
-//  New Starlab:
-//
     return a + (b-a)*ran2(randx);
-
 }
 
 // gausrand: Return a random number distributed according to a Gaussian
