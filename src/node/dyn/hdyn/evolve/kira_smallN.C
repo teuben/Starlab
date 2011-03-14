@@ -328,11 +328,10 @@ local inline void advance_components_to_time(hdyn *bi, real t)	  // unperturbed
 
 	    k->transform_to_time(t);
 
-	    real fac = od->get_mass()/bi->get_mass();
+	    hdyn *yd = od->get_younger_sister();
+	    real fac = yd->get_mass()/bi->get_mass();	// od -> yd (Steve 3/11)
 	    od->set_pred_pos(-fac*k->get_rel_pos());
 	    od->set_pred_vel(-fac*k->get_rel_vel());
-
-	    hdyn *yd = od->get_younger_sister();
 	    yd->set_pred_pos((1-fac)*k->get_rel_pos());
 	    yd->set_pred_vel((1-fac)*k->get_rel_vel());
 	}
