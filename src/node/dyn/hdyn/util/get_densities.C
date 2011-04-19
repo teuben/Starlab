@@ -45,7 +45,7 @@ main(int argc, char ** argv)
     check_help();
 
     bool verbose = false;
-    bool individual = true;
+    bool individual = false;
     bool cm_flag = true;
 
     extern char *poptarg;
@@ -87,43 +87,62 @@ main(int argc, char ** argv)
     // Need to set these quantities because the initial guesses of
     // neighbor sphere size depends on them.
 
-    b->set_d_min_sq(pow(1./b->n_daughters(), 2));	// do better?
+    b->set_d_min_sq(pow(1./b->n_daughters(), 2));	// can we do better?
     b->set_d_min_fac(1.);
+
+    // Compute densities and a density center.  Don't use the center
+    // yet, because of historical ambiguity in its definition.
+    // Compute verious centers explicitly.
 
     vec cod_pos, cod_vel;
     kira_calculate_densities(b, cod_pos, cod_vel);
-    PRL(cod_pos);
-    PRL(cod_vel);
-    //cod_pos = b->get_pos();
-    //cod_vel = b->get_vel();
+
+    // Print out the mean and max densty centers, and the modified
+    // center of mass for comparison.
+
+    vec mean_cod_pos, mean_cod_vel;
+    compute_mean_cod(b, mean_cod_pos, mean_cod_vel);
+    PRL(mean_cod_pos);
+    PRL(mean_cod_vel);
+
+    vec max_cod_pos, max_cod_vel;
+    compute_max_cod(b, max_cod_pos, max_cod_vel);
+    PRL(max_cod_pos);
+    PRL(max_cod_vel);
+
+    vec mcom_pos, mcom_vel;
+    compute_mcom(b, cod_pos, cod_vel);
+    PRL(mcom_pos);
+    PRL(mcom_vel);
 
     if (individual) {
 
-      if (cm_flag) {
-	for_all_daughters(hdyn, b, bi) {
-	  bi->inc_pos(-cod_pos);
-	  bi->inc_vel(-cod_vel);
+	if (cm_flag) {
+	    for_all_daughters(hdyn, b, bi) {
+		bi->inc_pos(-cod_pos);
+		bi->inc_vel(-cod_vel);
+	    }
 	}
-      }
 
-      set_cod_pot(b, cod_pos);
+	set_cod_pot(b, cod_pos);
 
-      int bound;
-      for_all_daughters(hdyn, b, bi) {
-	bound = 0;
-	if (0.5*square(bi->get_vel()-cod_vel) + bi->get_pot() - cod_pot < 0) 
-	  bound = 1;
+	int bound;
+	for_all_daughters(hdyn, b, bi) {
+	    bound = 0;
+	    if (0.5*square(bi->get_vel()-cod_vel)
+			+ bi->get_pot() - cod_pot < 0) 
+		bound = 1;
 	      
-	cerr << bound << " " 
-	     << bi->get_index() << " "
-	     << bi->get_mass() << " "
-	     << bi->get_pos() << " "
-	     << bi->get_vel() << endl;
-      }
+	    cerr << bound << " " 
+		 << bi->get_index() << " "
+		 << bi->get_mass() << " "
+		 << bi->get_pos() << " "
+		 << bi->get_vel() << endl;
+	}
     }
 
-    if(verbose)
-      put_node(b);
+    if (verbose)
+	put_node(b);
 }
 
 #endif
