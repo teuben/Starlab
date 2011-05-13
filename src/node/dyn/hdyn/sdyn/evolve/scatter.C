@@ -170,8 +170,7 @@ void scatter(sdyn* b, real eta,
 	    break;
 	}
     
-	int coll_flag = 2;
-	de_merge += merge_collisions(b, coll_flag);
+	de_merge += merge_collisions(b);
     
 	make_tree(b, DYNAMICS, STABILITY, K_MAX, false);
 	//    make_tree(b, !DYNAMICS, STABILITY, K_MAX, true);
@@ -304,8 +303,7 @@ void scatter(sdyn* b, scatter_input input,
 	    break;
 	}
       
-	int coll_flag = 2;
-	de_merge += merge_collisions(b, coll_flag);
+	de_merge += merge_collisions(b);
 	   
 	make_tree(b, DYNAMICS, STABILITY, K_MAX, false);
 	   
@@ -450,7 +448,8 @@ main(int argc, char **argv)
 
   scatter_input input;
   const char* default_init  
-      = "-M 0.879 -rm 3 -v 0.0071 -t -r1 0.0508 -r2 0.0348 -e 0 -q 0.567 -p -a 1 -q 1 -r1 0.0394 -r2 0.0394";        // Iota Ori Problem 
+    = "-M 1 -rm 3 -v 1 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
+    //iota-Ori initial conditions: "-M 0.879 -rm 3 -v 0.0071 -t -r1 0.0508 -r2 0.0348 -e 0 -q 0.567 -p -a 1 -q 1 -r1 0.0394 -r2 0.0394";        // Iota Ori Problem 
   
   // identical binary collision
   //const char* default_init  

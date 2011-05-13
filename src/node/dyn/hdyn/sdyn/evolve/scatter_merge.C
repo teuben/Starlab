@@ -90,13 +90,18 @@ void merge(sdyn * bi, sdyn * bj) {
 
     // Note: any stories attached to the particles are lost.
 
+    if (!bi->is_leaf() || !bj->is_leaf())  {
+      cerr << "in merge: At least one of us is not a leaf!";
+      exit(-1);
+    }
+
     sdyn * bn = new sdyn();
 
 #if 0
 cerr.precision(6);
 cerr << "entering merge(" << bi->get_index() << ", " << bj->get_index()
      << ") at dist = " << abs(bi->get_pos()-bj->get_pos()) 
-     << " with r1 = "<<bi->get_radius() << " r2 = " << bi->get_radius() << endl
+     << " with r1 = "<<bi->get_radius() << " r2 = " << bj->get_radius() << endl
      << " with v1 = " << bi->get_vel() << "\n"
      << "  and v2 = " << bj->get_vel() << endl
      << "         at t = " << b->get_time() << endl;
@@ -119,44 +124,72 @@ cerr << "entering merge(" << bi->get_index() << ", " << bj->get_index()
 
 // merge_collisions: recursively merge any stars in contact.
 
-real merge_collisions(sdyn * b, int ci)
+real merge_collisions(sdyn * b)
 {
 
   real de = 0;
+
     int coll = 1;
     while (coll) {
 
+      if (b->n_leaves()<=2) {
+	cerr << "Only two stars left in scatter_merge()"<<endl;
+	cerr << "return from scatter_merge with de=0"<<endl;
+	return de;
+      }
+
 	coll = 0;
-	for_all_daughters(sdyn, b, bi)
+	// For 3-body interactions using
+	// for_all_daughters(sdyn, b, bi)
+	// is correct, but for >3 body interactions one has to be more 
+	// careful and use:
+	for_all_leaves(sdyn, b, bi)
 	    {
 	    if (coll) break;
 	    for (sdyn * bj = bi->get_younger_sister(); bj != NULL; 
 		 bj = bj->get_younger_sister()) {
 
-	            //condition for a collision
-		if ( abs(bi->get_pos() - bj->get_pos())
-		      < (bi->get_radius() + bj->get_radius()) ) {
+	      // Instead of 
+	      //   if ( abs(bi->get_pos() - bj->get_pos())
+	      // in scatter3 we better check the position relative to parent:
+	      if (abs(something_relative_to_root(bi, &sdyn::get_pos)-something_relative_to_root(bj, &sdyn::get_pos))
+		  < (bi->get_radius() + bj->get_radius()) ) {
 
+#if 0
 		  cerr << "In merge_collisions: a collision occured" << endl;
+		  PRL(b->get_name());
 		  PRC(bi->get_name());PRL(bj->get_name());
+		  PRC(abs(bi->get_pos() - bj->get_pos()));
+		  PRC(abs(something_relative_to_root(bi, &sdyn::get_pos)-something_relative_to_root(bj, &sdyn::get_pos)));
+		  PRC(something_relative_to_root(bi, &sdyn::get_pos));PRL(bi->get_pos());
+		  PRC(something_relative_to_root(bj, &sdyn::get_pos));PRL(bj->get_pos());
+		  PRC(bi->get_radius());PRC(bj->get_radius());
+		  PRL(bi->get_radius()+bj->get_radius());
+		  PRC(bi->get_name());PRL(bj->get_name());
+		  PRC(bi->n_leaves());PRL(bi->is_leaf());
+		  PRC(bj->n_leaves());PRL(bj->is_leaf());
+		  put_node(b);
+#endif
 	      
-		  //cerr << "Prior to b->flatten_node in merge_collisions" << endl;
+		  cerr << "Prior to b->flatten_node in merge_collisions" << endl;
 		  b->flatten_node();
 		  real kin, pot;
 		  real etot_init = calculate_energy_from_scratch(b, kin, pot);
-		  ///cerr << "Prior to make_tree in merge_collisions" << endl;
+		  cerr << "Prior to make_tree in merge_collisions" << endl;
 		  make_tree(b, 1, 1, 2, false);
+		  cerr << "After make tree, but before merge"<<endl<<flush;
 
 		  merge(bi, bj);
-		  //	  cerr << "Post merge in merge_collisions" << endl;
+		  cerr << "Post merge in merge_collisions" << endl;
 		  b->flatten_node();
-		  //	  cerr << "Post b-flatte_node in merge_collisions" << endl;
+		  cerr << "Post b-flatte_node in merge_collisions" << endl;
 		  real etot_final = calculate_energy_from_scratch(b, kin, pot);
 		  make_tree(b, 1, 1, 2, false);
 		  real merger_de = etot_final - etot_init;
 		  de = merger_de;
 
 		  coll = 1;
+		  cerr << "Break out with detected collision."<<endl;
 		  break;
 		}
 	    }

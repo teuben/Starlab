@@ -13,7 +13,6 @@
 //
 // Globally visible functions:
 //
-//	merge_collisions
 //	extend_or_end_scatter
 
 #include "scatter.h"

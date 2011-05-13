@@ -287,7 +287,7 @@ bool  low_n_evolve(sdyn*, real, real, real, real, real, real,
 		   real dt = VERY_LARGE_NUMBER,
 		   sdyn_print_fp p = NULL);
 
-real merge_collisions(sdyn * b, int ci);
+real merge_collisions(sdyn * b);
 void merge(sdyn * bi, sdyn * bj);
 bool tree_is_unbound(sdyn* root, real ttf, int debug);
 #endif

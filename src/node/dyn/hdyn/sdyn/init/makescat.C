@@ -269,7 +269,7 @@ local void split_particle(sdyn* current, real ecc, real sma, int planar,
     if (ecc < 0 || ecc >= 1) {
 
       // factor 2 for MIN_PERI_FACTOR see sdyn/util/make_tree.C
-      real peri_min = 2*Starlab::max(d1->get_radius(), d2->get_radius());
+      real peri_min = 2.*Starlab::max(d1->get_radius(), d2->get_radius());
       real e_max = 1 - peri_min/sma;
 
       if(e_max<0) 
