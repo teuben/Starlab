@@ -9,7 +9,7 @@
 //=======================================================//              /|\ ~
 
 
-// grape6_stubs.C: GRAPE-6 stubs, based on the real GRAPE-6 library.
+// grape6_stubs.C: GRAPE-6 stubs, based on the original GRAPE-6 library.
 //		   Strategy: Void functions have null bodies;
 //		   int functions return 0.
 //
@@ -20,8 +20,6 @@ void g6_set_tunit_(int *new_tunit) {};
 void g6_set_xunit_(int *new_xunit) {};
 
 int  g6_open_(int *cluster_id) {return 0;};
-int  g6_open_special(int ngpu, int *list, int Nmax) {return 0;};
-int  g6_open_special2(int ngpu, int *list, int Nmax) {return 0;};
 int  g6_close_(int *cluster_id) {return 0;};
 
 int  g6_reset_(int *cluster_id) {return 0;};

@@ -18,7 +18,7 @@
 
 pkglib_LTLIBRARIES = libstubs.la
 
-libstubs_la_SOURCES = grape4_stubs.c grape6_stubs.c
+libstubs_la_SOURCES = grape4_stubs.c grape6_stubs.c sapporo_stubs.c
 
 .PHONY: libs
 libs: libstubs.la
