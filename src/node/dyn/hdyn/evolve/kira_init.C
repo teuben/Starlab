@@ -701,8 +701,8 @@ local void parse_gpu(char *sin)
 	first = ++last;
 	if (stop) break;
     }
-    PRL(ngpu);
-    for (int i = 0; i < ngpu; i++) PRL(gpulist[i]);
+    // PRL(ngpu);
+    // for (int i = 0; i < ngpu; i++) PRL(gpulist[i]);
     grape6_set_gpu_list(ngpu, gpulist);
 }
 

@@ -116,7 +116,11 @@ void grape6_set_gpu_list(int ng, int glist[])
     if (gpulist) delete [] gpulist;
     ngpu = ng;
     gpulist = new int[ngpu];
-    for (int i = 0; i < ngpu; i++) gpulist[i] = glist[i];
+    // PRL(ngpu);
+    for (int i = 0; i < ngpu; i++) {
+	gpulist[i] = glist[i];
+	// PRC(i); PRL(gpulist[i]);
+    }
 }
 
 
