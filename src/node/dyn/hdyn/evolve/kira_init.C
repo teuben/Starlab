@@ -681,6 +681,31 @@ local void check_flag_black_holes(hdyn *b)
 	     << n_bh_story << " black holes from stories" << endl;
 }
 
+local void parse_gpu(char *sin)
+{
+    // Expect a comma-separated list of integers, with no spaces.
+    // Don't do any syntax or bounds checking, for now!
+
+    char s[1024];
+    int ngpu = 0, gpulist[256];
+
+    strncpy(s, sin, 1024);
+    s[1023] = '\0';
+
+    char *first = s, *last = s;
+    while (true) {
+	while (*last != ',' && *last != '\0') last++;
+	bool stop = (*last == '\0');
+	*last = '\0';
+	if (first < last) gpulist[ngpu++] = atoi(first);
+	first = ++last;
+	if (stop) break;
+    }
+    PRL(ngpu);
+    for (int i = 0; i < ngpu; i++) PRL(gpulist[i]);
+    grape6_set_gpu_list(ngpu, gpulist);
+}
+
 
 
 // Local explicit declarations:
@@ -803,7 +828,7 @@ bool kira_initialize(int argc, char** argv,
     extern char *poptarg, *poparr[];	// multiple arguments are allowed
 					// as of 8/99 (Steve)
     int c;
-    const char *param_string = "*:0123a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:q:Qr:R:s:St:T:u.UvVW:xX:y:z:Z:";
+    const char *param_string = "*:0123a:Ab.Bc:C:d:D:e:E:f.F.g:G:h:iI:k:K:l:L:m:M:n:N:oO:P:q:Qr:R:s:St:T:u.UvVW:xX:y:z:Z:";
 
     // Optional (POSITIVE!) arguments are allowed as of 8/99 (Steve).
 
@@ -1041,6 +1066,8 @@ bool kira_initialize(int argc, char** argv,
 	    		break;
 	    case 'O':	save_snap_at_log = true;
 	    		strcpy(snap_save_file, poptarg);
+	    		break;
+	    case 'P':	parse_gpu(poptarg);
 	    		break;
             case 'q':	q_vir = atof(poptarg);
 			break;

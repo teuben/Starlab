@@ -107,6 +107,18 @@ static bool grape_is_open = false;
 static bool grape_first_attach = true;
 static bool grape_was_used_to_calculate_potential = false;
 
+// List of GPUs to use, and accessor function.
+
+static int ngpu = 0, *gpulist = NULL;
+
+void grape6_set_gpu_list(int ng, int glist[])
+{
+    if (gpulist) delete [] gpulist;
+    ngpu = ng;
+    gpulist = new int[ngpu];
+    for (int i = 0; i < ngpu; i++) gpulist[i] = glist[i];
+}
+
 
 
 //  **************************************************************************
@@ -140,7 +152,18 @@ local void reattach_grape(real time, const char *id, kira_options *ko)
 	 << time << endl << flush;
 
     real cpu0 = cpu_time(), real0 = real_time();
-    g6_open_(&cluster_id);
+
+
+
+    ///// *** test code for sapporo16b ***
+
+    if (ngpu <= 0)
+	g6_open_(&cluster_id);			// old code, with config file
+    else
+	g6_open_special(ngpu, gpulist);		// new code
+
+
+
     cerr << "g6_open: delta CPU time = " << cpu_time()-cpu0
 	 << ", delta real time = " << real_time()-real0 << endl << flush;
     if (ko) ko->grape_last_cpu = cpu_time();
@@ -390,7 +413,17 @@ local void reset_grape(hdyn *b)					// root node
     g6_reset_fofpga_(&cluster_id);
 
     g6_close_(&cluster_id);
-    g6_open_(&cluster_id);
+
+
+
+    ///// *** test code for sapporo16b ***
+
+    if (ngpu <= 0)
+	g6_open_(&cluster_id);			// old code, with config file
+    else
+	g6_open_special(ngpu, gpulist);		// new code
+
+
 
     cerr << endl << "*** Reset GRAPE-6 at time "
 	 << b->get_real_system_time() << endl;

@@ -21,6 +21,15 @@ extern "C" void g6_set_xunit_(int *new_xunit);
 extern "C" int  g6_open_(int *cluster_id);
 extern "C" int  g6_close_(int *cluster_id);
 
+
+// **************** For use with sapporo16_steve ***************
+
+extern "C" int g6_open_special(int ngpu, int *list);
+extern "C" int g6_open_special2(int ngpu, int *list, int nmax);
+
+// *************************************************************
+
+
 extern "C" int  g6_reset_(int *cluster_id);
 extern "C" int  g6_reset_fofpga_(int *cluster_id);
 

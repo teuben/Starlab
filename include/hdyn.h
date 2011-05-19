@@ -946,6 +946,7 @@ bool grape4_calculate_densities(hdyn *root,
 				real h2_crit = 4);
 bool grape6_calculate_densities(hdyn *root,
 				real h2_crit = 4);
+void grape6_set_gpu_list(int ngpu, int gpulist[]);
 
 // ----- In util/hdyn_io.C: -----
 

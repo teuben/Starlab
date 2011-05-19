@@ -86,6 +86,7 @@
 ////              -o    prevent kira from overriding some settings (BGSu)
 ////                    based on input snapshot data [allow]
 ////              -O    save (and overwrite) extra snapshot at each output [no]
+////              -P    list (a,b,c) GPUs to use (bypass config file)      [no]
 ////              -q    specify initial virial ratio [0.5]
 ////              -r    specify initial virial radius (may not be
 ////                    specified in the input snap) [no]
