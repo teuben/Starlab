@@ -684,6 +684,12 @@ void single_scatter_init(scatter_profile & prof,
 
 // single_scatter: Perform a scattering experiment with the specified init.
 
+// Horrible kludge to allow the user to control when the scattering
+// experiment ends.
+
+static real decc_crit = 1.e-2;	// OK unless we really want wide flybys
+void set_decc_crit(real decc) {decc_crit = decc;}
+
 int single_scatter(initial_state3 & init,
 		   intermediate_state3 & inter,
 		   final_state3 & final,
@@ -697,19 +703,22 @@ int single_scatter(initial_state3 & init,
     scatter3(init, inter, final, cpu_time_check,
 	     VERY_LARGE_NUMBER, dt_snap, snap_cube_size);
 
-    // Return a "hit" if the result was
+    // Return a "hit" (meaning "interesting") if the result was
     //
-    //		(1) not a flyby (preservation non_resonance)
+    //		(1) not a flyby (preservation non_resonance) with a
+    //		    small change in the eccentricity,
     //		(2) not an error, stopped, or unknown_final.
     //
     // Modify this return statement to change the definition of a "hit".
-    // Probably should take into account the size of the perturbation?
+    // Control the eccentricity threshold with set_decc_crit().
 
     return (final.descriptor == error
 	    || final.descriptor == stopped
 	    || final.descriptor == unknown_final
 	    || (final.descriptor == preservation
-		&& inter.descriptor == non_resonance) ? 0 : 1);
+		&& inter.descriptor == non_resonance
+		&& abs(final.ecc-init.ecc) < decc_crit)
+	    ? 0 : 1);
 }
 
 // single_scatter_stats: Accumulate information on scattering outcomes.

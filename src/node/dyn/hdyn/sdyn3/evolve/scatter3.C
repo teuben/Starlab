@@ -51,6 +51,7 @@
 ////            -S    specify separation at which to stop [none]
 ////            -U    specify maximum initial outer separation [none]
 ////            -v    specify incomer velocity at infinity [0 ==> Etot = 0]
+////            -V    specify incomer velocity at infinity [absolute units]
 ////            -X    specify all radii (primary, secondary, incomer) [0 0 0]
 ////            -x    specify primary radius [0]
 ////            -y    specify secondary radius [0]
