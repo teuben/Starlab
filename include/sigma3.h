@@ -178,6 +178,8 @@ void single_scatter_init(scatter_profile & prof,
 			 int scatter_summary,
 			 real dt_snap, real snap_cube_size);
 
+void set_decc_crit(real decc);
+
 int single_scatter(initial_state3 & init,
 		   intermediate_state3 & inter,
 		   final_state3 & final,
