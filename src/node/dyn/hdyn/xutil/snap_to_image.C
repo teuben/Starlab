@@ -4,6 +4,7 @@
 //// Options:
 ////           -1           combine all frames in a simgle image          [yes]
 ////           -a           produce a series of frames for animation       [no]
+////           -b           add to a border to center the frame		   [no]
 //   OLD       -c           compress the image file(s) using gzip          [no]
 ////           -c variable  specify the variable setting point color,
 ////                        followed by the limits to use in determining
@@ -254,6 +255,8 @@ local void make_local_small_n_colormap(unsigned char* red,
 
     if (ncolor == 3) {		// RGB
 
+	cout << "making 3-body colormap" << endl;
+
 	for (int i = 1; i <= 28; i++) {
 	    red[170+i] = 255;
 	    green[170+i] = blue[170+i] = 0;
@@ -358,6 +361,7 @@ local void add_point(unsigned char *a, int nx, int ny,
 	    // Use 3 color levels, in addition to black.
 
 	    real c = color;			// convenient to use real here
+	    // PRC(1); PRL(c);
 
 	    if ((ii == 0 && jj == 0) || dx2 <= r2a)
 		; 				// "color 1" -- do nothing
@@ -367,6 +371,8 @@ local void add_point(unsigned char *a, int nx, int ny,
 		c -= 0.67;			// "color 3" (index - 170)
 	    else
 		c = 0;				// black
+
+	    // PRC(2); PRL(c);
 
 	    if (c > 0.0039) {			// 0.0039 = 1/256
 
@@ -703,6 +709,8 @@ main(int argc, char** argv)
     real ybot = -L;
     real ytop = L;
 
+    bool border = false;	// optionally add border to center frame
+
     bool HRD = false;
 
     bool xlim_set = false;
@@ -760,7 +768,7 @@ main(int argc, char** argv)
     extern char *poptarg, *poparr[];
     int c;
     const char *param_string = 
-      "1ac:::C:dD:f:F:gGi:Hl:L:X:x:Y:y:n:N:o:O:p:P:qr:::Rs:.S:tT:z";
+      "1abc:::C:dD:f:F:gGi:Hl:L:X:x:Y:y:n:N:o:O:p:P:qr:::Rs:.S:tT:z";
 
     char c0;
     real temp0, temp1;
@@ -771,6 +779,8 @@ main(int argc, char** argv)
 	    case '1':	combine = true;
 			break;
 	    case 'a':	combine = false;
+			break;
+	    case 'b':	border = true;
 			break;
 //	    case 'c':	compress = true;
 //			break;
@@ -1186,7 +1196,7 @@ main(int argc, char** argv)
 
 		    if (origin == 1) compute_com(b, xoffset, voffset);
 
-		    if (total == count) {
+		    if (border && total == count) {
 
 			// Try to center the first frame.
 
@@ -1239,6 +1249,7 @@ main(int argc, char** argv)
 
 		    cmin = 1;
 		    cmax = ncolor;
+		    color_scale = 1.0 / (cmax-cmin);
 
 		} else if (colorvar > 0) {
 
@@ -1258,6 +1269,8 @@ main(int argc, char** argv)
 		    cerr << "color (log " << color[colorvar] << ") limits: ";
 		    PRC(cmin); PRL(cmax);
 		}
+
+		PRC(cmin); PRL(cmax);
 
 		// Set radius scaling.
 
@@ -1346,12 +1359,15 @@ main(int argc, char** argv)
 
 		    float color = 1;	// default = top end of the colormap
 
+		    // PRL(bb->get_index());
 		    if (index_all >= 0)
 			color = color_all;
 		    else if (colorvar > 0) {
 			real x = get_color_data(bb, colorvar);
+			// PRC(x); PRC(cmin); PRL(color_scale);
 			color = (x-cmin)*color_scale;
 		    }
+		    // PRL(color);
 
 		    if (color < 0) color = 0;
 		    if (color > 1) color = 1;
@@ -1471,8 +1487,9 @@ main(int argc, char** argv)
 //		Works on linux and MacOS.
 
 		sprintf(command,
-	    "/bin/ls %s %s.*%s | xargs gifsicle --loopcount=%d -d %d -o %s%s",
- 	       rev, output_file_id, ext1, loop, delay, output_file_id, ext2);
+	    "/bin/ls %s %s.*%s | xargs gifsicle --loopcount=0 -d %d -o %s%s",
+ 	       rev, output_file_id, ext1, delay, output_file_id, ext2);
+		cout << command << endl;
 	    }
 
 	    cerr << endl

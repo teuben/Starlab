@@ -1786,8 +1786,8 @@ main(int argc, char** argv)
 	    case 'p': point_mode = atoi(poptarg);	// point scale mode [0]
 		      break;
 	    case 'P': rel_point_size = atof(poptarg);   // point scale factor
-		      if (rel_point_size < 0.5)
-			  rel_point_size = 0.5;
+//		      if (rel_point_size < 0.5)
+//			  rel_point_size = 0.5;
 		      break;
 	    case 'r': r_flag = FALSE;		// black background [yes]
 		      break;
