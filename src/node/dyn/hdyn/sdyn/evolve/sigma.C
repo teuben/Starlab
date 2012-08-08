@@ -3,31 +3,31 @@
 ////          sections of interest given the overall parameters of the
 ////          binary-single star interaction.
 ////
-////          Units: G = 1, binary mass = 1, binary semi-major axis = 1.
-////
+////          Units: G = 1, target mass = 1, target semi-major axis = 1.
 ////
 //// Options:   -A    specify accuracy parameter [0.02]
 ////            -c    specify CPU time check, in hours [1]
 ////            -C    specify snap cube size [10]
 ////            -d    specify maximum trial density [1]
 ////            -D    specify snap output interval [none]
-////            -e    specify initial binary eccentricity [thermal]
+//            -e    specify initial binary eccentricity [thermal]
 ////            -g    specify tidal tolerance [1.e-6]
-////            -I    output intermediate cross sections [true]
+////            -i    provide default init string (makescat style) [none]
+//            -I    output intermediate cross sections [true]
 ////            -m    specify secondary mass (binary mass = 1) [0.5]
 ////            -M    specify incomer mass [0.5]
 ////            -N    specify random number count [0]
-////            -o    specify outer orbit orientation [random]
-////            -p    print raw counts [false]
-////            -q    minimal output [false]
-////            -Q    intermediate amount of output [false]
+//            -o    specify outer orbit orientation [random]
+//            -p    print raw counts [false]
+//            -q    minimal output [false]
+//            -Q    intermediate amount of output [false]
 ////            -s    specify random seed [taken from system clock]
 ////            -t    specify time span of integration [infty]
 ////            -v    specify incomer velocity at infinity [0 ==> Etot = 0]
 ////            -V    maximize output [false]
-////            -x    specify primary radius [0]
-////            -y    specify secondary radius [0]
-////            -z    specify incomer radius [0]
+//            -x    specify primary radius [0]
+//            -y    specify secondary radius [0]
+//            -z    specify incomer radius [0]
 
 // Starlab application:  get_sigma.
 
@@ -42,17 +42,15 @@ main(int argc, char **argv) {
   // identical binary collision
   //  char* default_init  
   //       = "-M 1 -v 1 -rm 3 -t -r1 0 -r2 0 -q 1 -p -a 1 -q 1 -r1 0 -r2 0";
-  char *default_init; 
   //  default_init 
   //    = "-M 0.66 -rm 3 -v 0.0358 -t -q 0.43 -r1 0.0322 -r2 0.0217 -p -a 5.1190 -q 0.84 -r1 0.0278 -r2 0.0172";
-
    // = "M 0.92 -rm 3 -v 0.031631 -t -q 0.56 -r1 0.0638 -r2 0.0383 -p -a 9.2571 -q 1.0 -r1 0.0446 -r2 0.0510";
 
-
+  char *default_init = NULL; // "-v 1 -t -p"; 
 
   //  strcpy(&input.init_string[0], default_init);
 
-  //    check_help();
+  check_help();
   
   real  delta_t = VERY_LARGE_NUMBER;       // time span of the integration
   real  dt_out = VERY_LARGE_NUMBER;       // time output interval
@@ -125,10 +123,11 @@ main(int argc, char **argv) {
       //		      get_help();
     }
 
+    if (!default_init) err_exit("No default init string");
+    //PRL(default_init);
     strcpy(&input.init_string[0], default_init);
     
     execute_sigma_experiment(input);
-    
 }
 
 #endif

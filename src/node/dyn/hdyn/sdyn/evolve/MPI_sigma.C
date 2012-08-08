@@ -55,7 +55,7 @@ void initialize_MPI(int &myid, int &nproc) {
 }
 
 void finalize_MPI() {
-  // do nothin
+  // do nothing
 }
 
 #endif

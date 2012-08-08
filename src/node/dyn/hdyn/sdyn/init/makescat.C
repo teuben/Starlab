@@ -65,9 +65,11 @@
 ////
 //// Example:
 ////
-//// mkscat -M 2 -r 1 -v 2 -t -e 0.5 -p12 -q .3 -e 0.1 -a 0.4 -p12 -a .01 ...
-////        ^^^^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
-////       top-level orbit    parameters for (t1, t2) binary   split p, p1...
+//// makescat -M 2 -r 1 -v 2 -t -e 0.5 -p12 -q .3 -e 0.1 -a 0.4 -p12 -a .01 ...
+////          ^^^^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+////         top-level orbit    parameters for (t1, t2) binary   split p, p1...
+
+// Note that the library function is still called mkscat internally...
 
 #include "scatter.h"
 
@@ -542,7 +544,7 @@ sdyn* mkscat(int argc, char **argv) {
 		      break;
 	    case 's': break;
 
-            default:  cerr << "usage: mkscat [-d] [-s #]"
+            default:  cerr << "usage: makescat [-d] [-s #]"
 		           << " [-M #] [-r #] [-rm #] [-v #] [-R #] [-S #]"
 		           << " [ -t/p... [-a #] [-e #] [-q #] [-P[+/-]"
 			   << " [-r1 #] [-r2 #] ] [-t/p... ...]"

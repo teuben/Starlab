@@ -837,6 +837,8 @@ void get_sigma(sigma_input &init, MPI_Datatype inputtype,
 
   int random_seed = srandinter(init.seed, init.n_rand);
 
+  //PRL(init.init_string);
+
   // initialize scatter_hist
   sdyn *b = mkscat(init.init_string, init);
   make_tree(b, !DYNAMICS, STABILITY, K_MAX, init.debug);

@@ -431,6 +431,7 @@ void master_process(scatter_input &input, MPI_Datatype inputtype,
     input.seed = random_seed;
     //#endif
   
+    PRL(input.init_string);
   sdyn *b = mkscat(input.init_string);
   scatter_hist *hi = initialize_scatter_hist(b);
   delete b;
