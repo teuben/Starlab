@@ -137,7 +137,7 @@ local void initialize_root(sdyn* root, real v_inf,
     v_inf *= sqrt(0.5*m_total);
     // Exactly one of rho_sq_max and peri should be < 0.
 
-    if (rho_sq_max*peri > 0) err_exit("Inconsistent initial conditions.");
+    if (rho_sq_max*peri > 0) err_exit("Inconsistent initial conditions");
     
     real rho_max = -1;
     if(rho_sq_max>0)

@@ -65,9 +65,13 @@ local void initialize_root(sdyn* root, real v_inf,
     // Establish the orbital elements of the scattering:
 
     v_inf *= sqrt(0.5*m_total);
-    // Exactly one of rho_sq_max and peri should be < 0.
 
-    if (rho_sq_max*peri > 0) err_exit("Inconsistent initial conditions.");
+    // From Steve, August 2012: Exactly one of rho_sq_max and peri
+    // should be < 0 in makescat.  Maybe we don't need to check here
+    // for makesigm?  This causes an error exit if no "-r" is set in
+    // the init string...
+
+    // if (rho_sq_max*peri > 0) err_exit("Inconsistent initial conditions");
 
     if(rho_sq_min<0)
       rho_sq_min = 0;
