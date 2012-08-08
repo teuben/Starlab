@@ -7,7 +7,7 @@
 ////               -d    specify log output interval [none]
 ////               -D    specify snapshot output interval [none]
 ////               -g    specify tidal tolerance [1.E-6]
-////               -i    specify mkscat-style string to initialize
+////               -i    specify makescat-style string to initialize
 ////                        the integration ["-M 1 -v 2 -t -p"]
 ////               -n    specify the number of scattering experiments [1]
 ////               -p    read initial state from cin [false]
