@@ -393,7 +393,8 @@ main(int argc, char ** argv)
 
 	ostringstream s;
 
-	pp3(b->get_oldest_daughter(), s);
+	//pp3(b->get_oldest_daughter(), s);
+	pp3(b, s);
 	cerr << s.str();
 
 	delete b;

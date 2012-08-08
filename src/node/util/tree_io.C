@@ -220,7 +220,8 @@ void node::pretty_print_tree(ostream & s,		// default = cerr
 
     pretty_print_node(s);
 
-    if (mass != 1) s << "        m = " << mass;
+    //if (mass != 1)
+	s << "        m = " << mass;
     s << endl;
 
     if (is_parent())
