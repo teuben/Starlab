@@ -14,14 +14,16 @@
 //// Usage: add_daughter_node [OPTIONS] < input > output
 ////
 //// Options:     
-////		  -c     add a comment to snapshot [false]
+////              -c     add a comment to snapshot [false]
 ////              -e     echo tree structure [false]
 ////              -i     specify index of node to add to [root]
 ////              -j     specify index for new node [none]
 ////              -m     specify node mass [1]
 ////              -s     specify random seed [take from system clock]
 ////              -r     specify node radial position (angle random) [0]
+////              -R     specify node 3-d position [0,0,0]
 ////              -v     specify node speed (direction random) [0]
+////              -V     specify node 3-d velocity [0,0,0]
 ////
 //// Written by Piet Hut and Steve McMillan.
 ////
@@ -29,6 +31,7 @@
 
 //   version 1:  Dec 1994   (node version) Piet Hut
 //   version 2:  Jun 2002   (dyn version)  Steve McMillan
+//   version 3:  NOC 2012   (dyn version)  Steve McMillan
 
 #include "dyn.h"
 
@@ -42,24 +45,27 @@
 
 main(int argc, char ** argv)
 {
-    bool  c_flag = false;
-    bool  e_flag = false;     // echo flag: if true, echo tree structure
-    bool  i_flag = false;
-    bool  j_flag = false;
-    bool  s_flag = false;
+    bool c_flag = false;
+    bool e_flag = false;     // echo flag: if true, echo tree structure
+    bool i_flag = false;
+    bool j_flag = false;
+    bool s_flag = false;
+    bool R_flag = false;
+    bool V_flag = false;
 
     int  i, j;
     int input_seed = 0;
     real m = 1;               // default mass: unity
     real r = 0;
     real v = 0;
+    real xx, xy, xz, vx, vy, vz;
     char  *comment;
 
     check_help();
 
-    extern char *poptarg;
+    extern char *poptarg, *poparr[];
     int  c;
-    const char *param_string = "c:ei:j:m:r:s:v:";
+    const char *param_string = "c:ei:j:m:r:R:::s:v:V:::";
 
     while ((c = pgetopt(argc, argv, param_string,
 		    "$Revision$", _SRC_)) != -1)
@@ -79,10 +85,20 @@ main(int argc, char ** argv)
 		      break;
 	    case 'r': r = atof(poptarg);
 		      break;
+	    case 'R': xx = atof(poparr[0]);
+		      xy = atof(poparr[1]);
+		      xz = atof(poparr[2]);
+		      R_flag = true;
+		      break;
 	    case 's': s_flag = true;
 		      input_seed = atoi(poptarg);
 		      break;
 	    case 'v': v = atof(poptarg);
+		      break;
+	    case 'V': vx = atof(poparr[0]);
+		      vy = atof(poparr[1]);
+		      vz = atof(poparr[2]);
+		      V_flag = true;
 		      break;
             case '?': params_to_usage(cerr, argv[0], param_string);
 		      get_help();
@@ -118,18 +134,28 @@ main(int argc, char ** argv)
     if (p == NULL)
 	err_exit("add_daughter_node: no such parent");
 
-    real costheta = randinter(-1, 1);
-    real sintheta = sqrt(1-costheta*costheta);
-    if (randinter(-1,1) > 0) sintheta = -sintheta;
-    real phi = randinter(0, 2*M_PI);
-    vec pos = r*vec(sintheta*cos(phi), sintheta*sin(phi), costheta);
+    vec pos = 0;
+    if (R_flag)
+	pos = vec(xx,xy,xz);
+    else {
+	real costheta = randinter(-1, 1);
+	real sintheta = sqrt(1-costheta*costheta);
+	if (randinter(-1,1) > 0) sintheta = -sintheta;
+	real phi = randinter(0, 2*M_PI);
+	pos = r*vec(sintheta*cos(phi), sintheta*sin(phi), costheta);
+    }
     PRL(pos);
-    
-    costheta = randinter(-1, 1);
-    sintheta = sqrt(1-costheta*costheta);
-    if (randinter(-1,1) > 0) sintheta = -sintheta;
-    phi = randinter(0, 2*M_PI);
-    vec vel = v*vec(sintheta*cos(phi), sintheta*sin(phi), costheta);
+
+    vec vel = 0;
+    if (V_flag)
+	vel = vec(vx,vy,vz);
+    else {
+	real costheta = randinter(-1, 1);
+	real sintheta = sqrt(1-costheta*costheta);
+	if (randinter(-1,1) > 0) sintheta = -sintheta;
+	real phi = randinter(0, 2*M_PI);
+	vel = v*vec(sintheta*cos(phi), sintheta*sin(phi), costheta);
+    }
 
     n = new dyn();
     n->set_mass(m);
@@ -156,6 +182,14 @@ main(int argc, char ** argv)
 	cerr << " to node " << p->format_label() << endl;
     
     if (e_flag) root->pretty_print_tree(cerr);
+
+    // Believe and correct initial_mass if system_time = 0.
+
+    if ((real)root->get_system_time() == 0
+	&& find_qmatch(root->get_log_story(), "initial_mass")) {
+	real mass = getrq(root->get_log_story(), "initial_mass") + m;
+	putrq(root->get_log_story(), "initial_mass", mass, HIGH_PRECISION);
+    }
 
     put_dyn(root);
     rmtree(root);
