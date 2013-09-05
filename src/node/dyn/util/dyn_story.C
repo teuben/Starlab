@@ -628,13 +628,13 @@ void set_tidal_params(dyn* b,
 	//	A =  (1/2) (Vc/R - dVc/dR)
 	//	B = -(1/2) (Vc/R + dVc/dR)
 	//
-	// ==>	omega = Vc/R = A - B,  dVc/dR = A + B
+	// ==>	omega = Vc/R = A - B,  -dVc/dR = A + B
 	//
 	// so	alpha1 = -2 omega (omega - dVc/dR)
-	//	       = -2 omega^2 (1 - (A + B)/(A - B))
-	//	       =  4 omega^2 B / (A - B)
+	//	       = -2 omega^2 (1 + (A + B)/(A - B))
+	//	       = -4 omega^2 A / (A - B)
 
-	omega = sqrt(0.25 * alpha1 * (OORT_A/OORT_B - 1));
+	omega = sqrt(-0.25 * alpha1 * (1 - OORT_B/OORT_A));
 
     } else if (tidal_field_type == 4) {
 
