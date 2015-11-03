@@ -44,6 +44,7 @@
 //// Report bugs to starlab@sns.ias.edu.
 
 #include <time.h>
+#include <unistd.h>
 #include "stdinc.h"
 
 #ifndef TOOLBOX
