@@ -33,7 +33,7 @@
 	    YY_FATAL_ERROR("input in flex scanner failed");
 
 	extern unsigned long lineno;
-	extern struct { char* s; size_t n; } story_line;
+	extern struct story_line { char* s; size_t n; } story_line;
 
 %option noyywrap
 
