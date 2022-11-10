@@ -12,6 +12,9 @@ mytime:	routines.c mytime.c
 	$(CC) -c -O routines.c -g3
 	$(CC) -O0 mytime.c routines.o -lm -o mytime -g
 
+sqrt:	sqrt.c
+	$(CC) sqrt.c -o sqrt -lm
+
 exelist:
 	@echo $(EXECUTABLES)
 
