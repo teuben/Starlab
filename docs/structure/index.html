@@ -1,0 +1,452 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+
+<!-- *************************************************** -->
+<!-- * BEWARE!  Netscape composer mangles "pre" input! * -->
+<!-- *************************************************** -->
+
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.07 [en] (X11; I; Linux 2.0.36 i586) [Netscape]">
+   <TITLE>Starlab Structure</TITLE>
+</HEAD>
+<BODY>
+
+<a href=../index.html>Back to Starlab home</a>
+
+<H1>
+Starlab Structure</H1>
+
+<UL>
+
+<LI><B>The Starlab directory structure</B></LI>
+
+<p>To some extent, Starlab's directory hierarchy (illustrated below)
+mirrors the package's internal class structure.  The highlighted
+entries in the diagram also describe the essentials of the data
+structure within the package.
+
+<IMG SRC="dir_struc1t.gif" ALIGN=right>
+
+<!-- make image active, pointing to class specifications -->
+
+<p>All header files are contained in the <tt>inc</tt> directory;
+all source files are contained in <tt>src</tt>.
+
+<p>The <tt>std</tt> directory contains material common to all parts of
+Starlab -- vector arithmetic, random numbers, the "story" mechanism,
+and so on.
+
+<p>Programs relating to the dynamical classes (<TT>node</TT>,
+<TT>dyn</TT>, <TT>hdyn</TT>, etc.), and the stellar classes
+(<TT>star</TT>, <TT>single_star</TT>, and <TT>double_star</TT>) are
+contained in the directories of the same names (except that the last
+two are abbreviated to <tt>sstar</tt> and <tt>dstar</tt>).  The
+content of the various classes is discussed further below.
+
+<p>The <tt>init</tt> directories contain code relating to the creation
+of individual instances or systems.
+
+<p>The <tt>util</tt> directories contain code relating to the
+manipulation and/or analysis of N-body systems.
+
+<p>The <tt>kepler</tt> directory contains all code relating to the
+computation of two-body Keplerian motion.
+
+<p>The <tt>evolve</tt> directories contain code relating to time
+evolution of individual stars or N-body systems.
+
+<p>The <tt>starclass</tt> directories contain material relating
+to the different star and binary types defined within Starlab.
+
+<p>The <tt>io</tt> directories contain code relating to input and
+output of stellar and binary data.
+
+<br><br>The <tt>stardyn</tt> directories are interfaces between the
+stellar evolution and stellar dynamical branches of Starlab
+(<tt>sstar/stardyn</tt> is associated with <tt>dyn</tt>,
+<tt>dstar/stardyn</tt> with <tt>hdyn</tt>).
+
+<p><LI><B>Tree structure: the <TT>node</TT> class</B></LI>
+<P>Particles in Starlab are represented as nodes with a general
+tree structure implemented as a multiply linked list. The
+<TT>node</TT> class defines logical (as opposed to physical)
+relationships between nodes. A <TT>node</TT> is defined as follows
+(see Starlab header file <TT>inc/node.h</TT><FONT FACE="Times New
+Roman,Times"> for details; only part of the data structure is shown
+here</FONT><TT>)</TT>:
+
+<pre>
+    class node { 
+
+        static node* root;  // Global address of the root node.
+
+	long int node_flag; // Indicator of valid node (for internal
+                            // bookkeeping purposes only)
+
+        int index;          // Nodes can be numbered, 
+        char * name;        // or they can receive individual names. 
+
+        real mass; 
+
+        node * oldest_daughter;    // Define the node's place in 
+        node * elder_sister;       // the tree. 
+        node * younger_sister; 
+
+        story * log_story;  // Log story is a generalized scratchpad. 
+        story * dyn_story;  // The dyn story is a placeholder for 
+                            // dynamical information not recognized by 
+                            // a program -- this allows the information 
+                            // to be preserved and passed down a pipe. 
+
+        hydrobase * hbase;  // hydrobase is the class underlying all 
+                            // classes that handle hydrodynamics. 
+
+        starbase * sbase;   // starbase is the class underlying all 
+                            // classes that handle stellar evolution. 
+    }
+</pre>
+
+<a name=tree>
+<FONT FACE="Times New Roman,Times">Starlab places no restrictions are
+on the tree structure; however, application programs such as
+</FONT><TT><A HREF="../kira">kira</A></TT><FONT FACE="Times New
+Roman,Times"> maintain a simple binary tree (0 or 2 daughters) below
+the top level:</FONT>
+
+<center><img src=tree_struc.gif></center>
+
+<p>Parent pointers are drawn in blue, oldest daughter pointers in
+green, elder sisters in brown, younger sisters in purple.
+
+<P><FONT FACE="Times New Roman,Times">The story mechanism is described
+in the </FONT><TT><A HREF="../internals">internals</A></TT><FONT
+FACE="Times New Roman,Times"> section.</FONT> <BR>
+
+<br><LI><B>Basic dynamics: the <TT>dyn</tt> class</B></LI>
+
+<P>The <TT>dyn</TT> class is derived from the <TT>node</TT>
+class. Additional data (see Starlab header file
+<TT>inc/dyn.h</TT><FONT FACE="Times New Roman,Times"> for a complete
+description) are:</FONT>
+
+<PRE>
+    class dyn : public node { 
+
+        static real system_time; 
+
+        static bool use_sstar;  // Single star evolution if true. 
+
+        vector pos;             // Position (3-D Cartesian vector). 
+        vector vel;             // Velocity: (d/dt) pos. 
+        vector acc;             // Acceleration: (d/dt) vel. 
+
+        kepler * kep;           // Pointer to a kepler orbit object. 
+    }
+</PRE>
+
+Note that mass is a property of a node, while time, pos, vel, and acc
+are properties of dyns. Most utilities that create or analyze N-body
+systems are written to work with <tt>dyn</tt> structures.  (A
+<TT>vector</TT> is a 3-dimensional real array; <TT>real</TT> is a
+synonym for <TT>double</TT>.)  <BR>
+
+<br><LI><B>Stellar dynamics: the <TT>hdyn</TT> class</B></LI>
+
+<P>The connection between <TT>dyn</TT> and <TT>hdyn</TT> is provided
+by an intermediate <TT>_dyn_</TT> class, which is also the base class
+for <TT>sdyn3</TT> and <TT>sdyn</TT>. The <TT>hdyn</TT> class is
+derived from the <TT>_dyn_</TT> class.  The most important additional
+data (see Starlab header files <TT>inc/_dyn_.h</TT> and
+<TT>inc/hdyn.h</TT> for full details) are:
+
+<PRE>
+    class _dyn_ : public dyn { 
+
+        real time;              // Individual particle time 
+        real timestep;          // and time step. 
+
+        real pot;               // Potential. 
+        vector jerk;            // (d/dt) acc 
+
+        vector pred_pos;        // Predicted variables for use in the 
+        vector pred_vel;        // standard predictor-corrector scheme. 
+        real t_pred;            // Time of prediction. 
+
+        real radius;            // Effective (or actual) radius. 
+    }
+</PRE>
+
+Note that individual time steps and radii, and algorithm-specific
+variables are introduced at this stage.
+
+<BR>The <TT>hdyn</TT> structure is specific to the <TT>kira</TT>
+integrator (see the <TT><A HREF="../kira">kira</A></TT> section for
+further explanation):</FONT>
+
+<PRE>
+    class hdyn : public _dyn_ { 
+
+        //-----------------------------------------------------------------
+        // Global variables: 
+
+        // Tidal field:
+
+	static int  tidal_type;	// none, point-mass, halo, disk
+
+	static real alpha1;	// tidal field is conventionally taken
+	static real alpha3;	// to be (-alpha1*x, 0, -alpha3*z)
+
+        static real omega;	// system angular speed
+
+	// Binary evolution:
+
+        static bool use_dstar;  // binary evolution if true
+
+	// Stellar encounters and mergers:
+
+        static real stellar_encounter_criterion_sq;
+        static real stellar_merger_criterion_sq;
+        static real stellar_capture_criterion_sq;
+
+	// Run-time integration parameters:
+
+	static real eta;	// time step parameter
+	static real eps;	// softening length
+
+        static real d_min_sq;	// scale term governing tree adjustment
+	static real lag_factor;	// squared hysteresis factor
+        static real mbar;	// mass scale
+
+        static real gamma2;	// squared threshhold for unperturbed motoin
+        static real gamma23;	// gamma^{-2/3}
+
+	static real initial_step_limit;	// limit on first time step
+	static real step_limit;		// limit on all time steps
+
+	// Escaper removal:
+
+	static real scaled_stripping_radius; // stripping radius for unit mass
+
+        //-----------------------------------------------------------------
+
+        // Variables for unperturbed motion: 
+
+        real perturbation_squared;   // Relative perturbation squared. 
+        real unperturbed_timestep;   // Time step for unpert. motion. 
+        bool fully_unperturbed;      // True if orbit is fully 
+                                     // unperturbed. 
+
+        // Perturber information: 
+
+        int n_perturbers;            // Number of perturbers. 
+        hdyn** perturber_list;       // Pointer to perturber array. 
+        bool valid_perturbers;       // True if any particle is 
+                                     // within the perturbation 
+                                     // radius and the perturber 
+                                     // list has not overflowed. 
+
+        // Other neighbor information: 
+
+        hdyn* nn;                    // Pointer to nearest neighbor. 
+        real d_nn_sq;                // Distance squared to nn. 
+
+        hdyn* coll;                  // Pointer to neighbor whose 
+                                     // surface is closest to this node. 
+        real d_coll_sq;              // Distance squared to coll. 
+
+        // HARP-3 variables: 
+
+        int harp3_index;             // HARP-3 address of this particle. 
+        real harp3_rnb_sq;           // HARP-3 neighbor sphere radius. 
+    }
+</pre>
+
+Numerous <tt>kira</tt> run-time integration parameters are included as
+global (static) data in this class.
+
+<p><LI><B>Connecting the classes: <TT>starbase</TT> and <tt>star</tt></b></LI>
+
+<p>The <tt>starbase</tt> class (see <tt>inc/starbase.h</tt>) serves as
+a "connector" between the dynamics and the stellar evolution
+programs. (The <tt>hydrobase</tt> class, not discussed here but
+defined for future use,provides similar functionality for
+hydrodynamical applications.)  Its main purpose is to trick C++ into
+letting us include a pointer to a "star" object in the <tt>node</tt>
+class without the necessity of loading all the stellar evolution
+libraries when they are not needed! The structure is deliberately
+simple:
+
+<pre>
+    class starbase {
+
+        node  * the_node;                  // pointer to associated node
+	story * star_story;                // pointer to star story
+        						
+        static real m_conv_star_to_dyn;    // mass conversion factor
+        static real r_conv_star_to_dyn;    // length conversion factor
+        static real t_conv_star_to_dyn;    // time conversion factor
+
+        static bool use_hdyn;              // true iff binary evolution
+                                           // is enabled
+    }
+</pre>
+
+Note that this is <em>not</em> a derived class -- it serves as the
+base class for non-dynamical stellar evolution calculations.
+
+<p>The <tt>star</tt> class (see <tt>inc/star/star.h</tt>) is derived
+from <tt>starbase</tt>.  It contains no data and is the formal base
+class for all stellar and binary evolution classes.  It is distinct
+from <tt>starbase</tt> to avoid the linking problems mentioned
+earlier, allowing the dynamical and stellar evolutionary halves of the
+package to function (and be exported) independently if desired.  It
+serves as a convenient placeholder for a number of utility member
+functions and virtual functions used by the derived
+<tt>single_star</tt> and <tt>double_star</tt> classes:
+
+<pre>
+    class star : public starbase {
+
+        // No private or protected data...
+
+        public:
+        .
+        .
+        .
+    }
+</pre>
+
+<LI><B>Stellar evolution: the <TT>single_star</TT> class</B></LI>
+
+<p>The <tt>single_star</tt> class (see <tt>inc/star/single_star.h</tt>
+for a complete listing) contains the essential data defining the
+evolutionary state of a star in our description of stellar evolution.
+The more important member data are:
+
+<pre>
+    class single_star : public star {
+
+        int identity;
+        stellar_type star_type;                     // main sequence,
+                                                    // red giant, etc.
+        star_type_spec spec_type[no_of_spec_type];  // spectral type
+
+        real current_time;
+        real relative_age;
+        real last_update_age;
+        real next_update_age;
+
+	real relative_mass;
+        real envelope_mass;         
+        real core_mass;         
+
+        real radius;
+        real core_radius;
+	real effective_radius;
+
+        real luminosity;
+    }
+</pre>
+
+The stages through which a star evolves are represented by classes
+derived from <tt>single_star</tt>, e.g.
+
+<pre>
+    class main_sequence : public single_star {
+  
+        real main_sequence_core_mass();
+	real main_sequence_core_radius();
+	void adjust_donor_age(const real mdot);
+    }
+  
+    class horizontal_branch : public single_star {
+
+        // No private or protected data...
+  
+        public :
+        .
+        .
+        .
+    }
+
+    class white_dwarf : public single_star {
+
+        // No private or protected data...
+  
+        public :
+        .
+        .
+        .
+}
+</pre>
+
+and so on.<br><br>
+
+<LI><B>Binary evolution: the <TT>double_star</TT> class</B></LI>
+
+<p>The <tt>double_star</tt> class (see <tt>inc/star/double_star.h</tt>
+for a complete listing) contains essential data defining the
+evolutionary state of a binary system. The more important member data
+are:
+
+<pre>
+    class double_star : public star {
+
+        real semi;
+        real eccentricity;
+
+        binary_type bin_type;
+
+        int identity;
+        real binary_age;
+        real minimal_timestep;
+
+        int donor_identity;
+        stellar_type donor_type;
+        real donor_timescale;
+	mass_transfer_type current_mass_transfer_type;
+    }
+</pre>
+
+Just as <tt>single_star</tt> objects are associated with "leaf"
+particles in the dynamical tree, <tt>double_star</tt> objects are
+associated with parent (center-or-mass) nodes of binary
+systems.<br><br>
+
+<LI><B>Scattering configurations: the <TT>sdyn3</TT> and <TT>sdyn</TT>
+classes</B></LI>
+
+<p>The scattering classes <TT>sdyn3</TT> and <TT>sdyn</TT> are used,
+respectively, in the 3-body and general N-body scattering
+packages. Like <tt>hdyn</tt>, they are derived from <tt>_dyn_</tt>.
+Unlike <tt>hdyn</tt>, the scattering software has no stellar evolution
+interface.
+
+<p><tt>sdyn3</tt> (see <tt>inc/sdyn3.h</tt>) is defined as follows:
+
+<pre>
+    class  sdyn3 : public _dyn_ {
+
+        sdyn3 * nn;          // pointer to nearest neighbor
+        real d_nn_sq;        // distance squared to nearest neighbor
+	int  nn_label;       // identity of current nearest neighbor
+
+	real energy_dissipation;   // dissipation associated with this
+				   // star due to its merger history
+    }
+</pre>
+
+Mergers are handled in a rudimentary fashion, with a simple "effective
+radius" criterion. Individual time steps are not used, but time
+reversibility is enforced by means of a symmetrization technique
+described by Hut et al. (ApJL, xxx, xxx).
+
+<p>The <tt>sdyn</tt> class (<tt>inc/sdyn.h</tt>) is essentially
+similar, although it differs in detail due to algorithmic and
+practical differences between the two packages.
+
+</UL>
+
+</BODY>
+</HTML>
