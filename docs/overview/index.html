@@ -1,0 +1,230 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+
+<!-- *************************************************** --!>
+<!-- * BEWARE!  Netscape composer mangles "pre" input! * --!>
+<!-- *************************************************** --!>
+
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.07 [en] (X11; I; Linux 2.0.36 i586) [Netscape]">
+   <TITLE>Starlab Overview</TITLE>
+</HEAD>
+<BODY>
+
+<a href=../index.html>Back to Starlab home</a>
+
+<H1>
+Overview of Starlab</H1>
+
+<UL>
+<LI>
+<B>What is Starlab?</B></LI>
+
+<p>Starlab is a collection of modular software tools designed to
+simulate the evolution of stars and stellar systems, and analyze the
+resulting data.  Starlab consists of a library of loosely coupled
+programs, sharing a common flexible data structure, which can be
+combined in arbitrarily complex ways to study the dynamics and
+evolution of binary and multiple star systems, star clusters and
+galactic nuclei.
+
+<P>The software is designed to be highly modular, allowing individual
+tools to be combined in arbitrarily complex ways. Individual Starlab
+modules may be linked in the ``traditional'' way, as function calls to
+C++ (the language in which most of the package is written), C, or
+FORTRAN routines, or at a much higher level--as individual programs
+connected by UNIX pipes.  The former linkage is more efficient, and
+allows finer control of the package's capabilities; however, the
+latter provides a quick and compact way of running test simulations
+and managing production runs.  The combination affords great
+flexibility to Starlab, allowing it to be used by both the novice and
+the expert programmer with equal ease. For example, in the command
+sequence
+
+<pre>
+    makeplummer -n 1000 -i | makemass -l 0.5 -u 10 -F Scalo \
+                           | add_star -R 1                  \
+                           | scale -s                       \
+                           | kira -S -t 100 -D 1            \
+                           | lagrad -t                      \
+                           | xhrdplot                       \
+                           > save_snap.dat         
+</pre>
+
+("\" is the UNIX continuation character)<p>
+
+<CENTER><TABLE WIDTH="80%" NOSAVE >
+
+<TR VALIGN=TOP NOSAVE>
+<TD><TT>makeplummer</TT></TD>
+<TD>creates a standard Plummer model of 1000 particles, numbering the
+stars sequentially for future reference</TD>
+</TR>
+
+<TR VALIGN=TOP NOSAVE>
+<TD><TT>makemass</TT></TD>
+<TD VALIGN=TOP NOSAVE>sets stellar masses between 0.5 and 10 units,
+according to the Scalo mass distribution (default would be a Salpeter
+power-law)</TD>
+</TR>
+
+<TR VALIGN=TOP NOSAVE>
+<TD NOSAVE><TT>add_star</TT></TD>
+<TD VALIGN=TOP NOSAVE>attaches stellar properties to each particle,
+interpreting input msses in solar units and adopting a length unit of
+1 pc</TD>
+</TR>
+
+<TR VALIGN=TOP NOSAVE>
+<TD><TT>scale</TT></TD>
+<TD>scales masses, positions and velocities to standard dynamical
+units, and forces te center of mass of the system to be at rest at the
+origin of coordinates</TD>
+</TR>
+
+<TR VALIGN=TOP NOSAVE>
+<TD><TT>kira</TT></TD>
+<TD>integrates the system forward in time for 100 dynamical times,
+with stellar evolution turned on, printing out a snapshot every time
+unit</TD>
+</TR>
+
+<TR VALIGN=TOP NOSAVE>
+<TD><TT>lagrad</TT></TD>
+<TD>computes and prints out the 10-percentile radii of the system for
+each input snapshot (i.e. 100 times)</TD>
+</TR>
+
+<TR VALIGN=TOP NOSAVE>
+<TD><TT>xhrdplot</TT></TD>
+<TD>plots an H-R diagram for the system for each input snapshot</TD>
+</TR>
+
+</TABLE></CENTER>
+
+<p>Finally, all snapshots are saved in the file <tt>save_snap.dat</tt>.
+</UL>
+
+For a current list of all tools automatically built as part of the
+current Starlab distribution, click <a href=../tools/auto>here</a>.
+
+<ul>
+<LI>
+<B>Target audience</B></LI>
+
+<p>Starlab is intended for use by researchers in stellar dynamics who
+wish to compute the evolution of dense stellar systems, but who may
+not necessarily be experts in either N-body dynamics or in the details
+of stellar or binary evolution. Starlab's modular software and data
+structures are designed to allow experts in different field to combine
+their knowledge without first having to become intimately
+familiar with all aspects of the problem at hand.
+
+<p>In the example given above, <TT>makeplummer</TT> sets positions and
+velocities only, <TT>makemass</TT> modifies masses (knowing nothing of
+the other dynamical variables), <TT>addstar</TT> adds stellar
+properties to each particle (with no reference to or knowledge of
+dynamics), <TT>scale</TT> scales the dynamics without reference to
+physical stellar quantities, <TT>kira</TT> combines dynamical and
+stellar information, <TT>lagrad</TT> knows nothing of stellar
+evolution, and <TT>xhrplot</TT> knows nothing of dynamics. In
+principle, the dynamics routines could have been written by a
+programmer with no knowledge of stellar physics, while the
+stellar-evolution programs require no detailed knowledge of dynamics.
+The means by which this separation is accomplished is discussed in the
+"<A HREF="../internals">internals</A> " section.</UL>
+
+<UL>
+<LI>
+<B>History</B></LI>
+
+<p>To some extent, Starlab is modeled on <A
+HREF="http://bima.astro.umd.edu:80/nemo/">NEMO</A>, a stellar dynamics
+software environment developed during the 1980s at the Institute for
+Advanced Study, in large part by Josh Barnes, with input from Peter
+Teuben and Piet Hut (and subsequently maintained and extended by Peter
+Teuben). Starlab differs from NEMO mainly in its use of UNIX pipes,
+rather than temporary files, its use of tree structures rather than
+arrays to represent N-body systems, and its guarantee of data
+conservation--data which are not understood by a given module are
+simply passed on to the next rather than filtered out and lost.
+
+<P>The development history of Starlab is as follows
+<BR><BR>
+<UL>
+
+<LI> 1.0, the original version, June 1993</LI>
+
+<LI> 1.1, bug fixes and enhancements to 1.0, March 1994</LI>
+
+<LI> 2.0, January 1995</LI>
+
+<LI> 2.1, first version of kira, mid-1995</LI>
+
+<LI> 3.0, initial implementation of stellar and binary evolution, mid-1997</LI>
+
+<LI> 4.0, major internal reorganization and algorithm development</LI>
+
+</UL>
+
+<BR>Substantial internal rearrangements took place between versions
+1.1 and 2.0, between versions 2.1 and 3.0, 3.2 and 3.3, and at
+4.0. The latest version of the package may be obtained <a
+href=../download>here</a>.
+
+<BR><BR>
+<LI>
+<B>Subpackages</B></LI>
+
+<p>Utility programs in Starlab may be divided into four basic classes:
+<BR><BR>
+<UL>
+
+<LI> programs which create N-body snapshots</LI>
+
+<LI> programs which apply some transformation to N-body snapshots</LI>
+
+<LI> programs which perform time integration of N-body systems and
+their constituent stars</LI>
+
+<LI> programs which analyze N-body snapshots</LI>
+
+</UL>
+
+<BR>All are described in more detail elsewhere in this document (see
+"<A HREF="../structure">basic starlab structure </A>"). The major
+subpackages are
+<BR><BR>
+<CENTER><TABLE WIDTH="80%" NOSAVE >
+
+<TR ALIGN=LEFT VALIGN=BASELINE NOSAVE>
+<TD NOSAVE><TT>kepler</TT></TD>
+<TD>Tools for handling two-body orbital motion</TD>
+</TR>
+
+<TR><TD><TT>dyn</TT></TD>
+<TD>Tools for creating and analyzing N-body systems</TD>
+</TR>
+
+<TR><TD><TT>sdyn3</TT></TD>
+<TD>Three-body scattering</TD>
+</TR>
+
+<TR NOSAVE><TD><TT>sdyn</TT></TD>
+<TD NOSAVE>General small-N scattering</TD>
+</TR>
+
+<TR NOSAVE><TD NOSAVE><TT>kira</TT></TD>
+<TD>Large-scale N-body simulations</TD>
+</TR>
+
+<TR><TD><TT>seba</TT></TD>
+<TD>Stellar and binary evolution</TD>
+</TR>
+
+</TABLE></CENTER>
+</UL>
+
+</BODY>
+</HTML>
