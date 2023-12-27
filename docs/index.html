@@ -1,2 +1,156 @@
-these are the (not yet filled in) github pages
-We should preserve from <A HREF=http://www.sns.ias.edu/~starlab>IAS pages</A>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <TITLE>Welcome to Starlab</TITLE>
+</HEAD>
+<BODY>
+
+<!--
+<a href="starlab_logo_2.jpg"><IMG SRC="tiny_starlab_logo_2.jpg"
+align=right></a>
+-->
+
+<H1>
+Starlab: A Software Environment for Collisional Stellar Dynamics</H1>
+
+<H2>Piet Hut (IAS), Steve McMillan (Drexel U.), Jun Makino (U. Tokyo),
+Simon Portegies Zwart (U. of Amsterdam)</H2>
+
+<HR>
+
+<br><CENTER><P><IMG SRC="starlab_movie_half.gif" valign=top></CENTER>
+
+<CENTER><H2>Welcome to Starlab</H2></CENTER>
+
+<BR>Starlab is a software package for simulating the evolution of
+dense stellar systems and analyzing the resultant data. It is a
+collection of loosely coupled programs (``tools'') linked at the level
+of the UNIX operating system. The tools share a common data structure
+and can be combined in arbitrarily complex ways to study the dynamics
+of star clusters and galactic nuclei.
+
+<P>Starlab features the following basic modules:
+<UL>
+
+<LI> Three- and four-body automated scattering packages, constructed
+around a time-symmetrized Hermite integration scheme.</LI>
+
+<LI> A collection of initialization and analysis routines for use with
+general N-body systems.</LI>
+
+<LI> A general Kepler package for manipulation of two-body
+orbits.</LI>
+
+<LI> N-body integrators incorporating both 2nd-order leapfrog and
+4th-order Hermite integration algorithms.</LI>
+
+<LI> <TT>Kira</TT>, a general N-body integrator incorporating
+recursive coordinate transformations, allowing uniform treatment of
+hierarchical systems of arbitrary complexity within a general N-body
+framework (versions 2.1 and above).</LI>
+
+<LI> <TT>SeBa</TT>, a stellar and binary evolution package, allowing
+to follow in time the evolution of any star or binary from arbitrary
+start conditions. The package is fully implemented within kira in a
+comprehensive and transparent fashion (versions 3.0 and above).</LI>
+
+</UL> A novel aspect of Starlab is its very flexible external data
+representation, which guarantees that tools can be combined in
+arbitrary ways, without loss of data or internally-generated
+comments. Thus, two tools connected by UNIX pipes may operate on
+different portions of the same data set, even though neither
+understands the data structures, or even the physical variables, used
+by the other.  Unknown data are simply passed through unchanged to the
+next tool in the chain.
+
+<P>This document briefly outlines the basic components of Starlab,
+describes how to obtain and install the software, and provides
+information on the use and internal organization of the major parts of
+the package.
+
+<p>Starlab presentation by Steve McMillan at MODEST-5c: <a
+href=MODEST-5c/modest-5c.pdf>PDF version</a>, <a
+href=MODEST-5c/modest-5c.sxi>OpenOffice version</a>, <a
+href=MODEST-5c/img0.html>HTML version</a>.
+
+<br><br>
+
+<center>
+<table border cellpadding=12>
+
+<tr>
+
+<td><B><FONT SIZE=+1><A HREF="overview/">Overview of Starlab</A>
+</FONT></B>
+
+<td><B><FONT SIZE=+1><A HREF="tools">Starlab Tools</A></FONT></B>
+
+<td><B><FONT SIZE=+1><A HREF="examples">Examples</A></FONT></B>
+
+<tr>
+
+<td><B><FONT SIZE=+1><A HREF="kira">The <tt>Kira</tt> integrator</A>
+</FONT></B>
+
+<td><B><FONT SIZE=+1><A HREF="seba">The <tt>SeBa</tt> stellar
+evolution module</A></FONT></B>
+
+<td><B><FONT SIZE=+1><A HREF="grape">GRAPE Interface</A>
+</FONT></B>
+
+<tr>
+
+<td><B><FONT SIZE=+1><A HREF="making_your_own">Creating Your Own
+Tools</A></FONT></B>
+
+<td><B><FONT SIZE=+1><A HREF="structure">Basic Starlab Structure</A>
+</FONT></B>
+
+<td><B><FONT SIZE=+1><A HREF="libraries">Starlab Library Functions</A>
+</FONT></B>
+
+<tr>
+
+<td><B><FONT SIZE=+1><A HREF="internals">Starlab Internals</A>
+</FONT></B>
+
+<td><B><FONT SIZE=+1><A HREF="policies">Policies</A></FONT></B>
+
+<td><B><FONT SIZE=+1><A HREF="contrib">Developers and Contributors</A>
+</FONT></B>
+
+<tr>
+
+<td><B><FONT SIZE=+1><A HREF="research">Research</A></FONT></B>
+
+<td><B><FONT SIZE=+1><A HREF="animations">Images and Animations</A> </FONT></B>
+
+<td><B><FONT SIZE=+1><A HREF="events">Events</A></FONT></B>
+
+<tr>
+
+<td><B><FONT SIZE=+1><A HREF="install">Download and Install Starlab</A>
+</FONT></B>
+
+<td><B><FONT SIZE=+1><A HREF="download">Starlab Versions</A></FONT></B>
+
+<td><B><FONT SIZE=+1><A HREF=http://manybody.org>Go to
+<tt>manybody.org</tt></A></FONT></B>
+
+</table>
+</center>
+
+<br><br><center>
+<a href=amnh.html><img src=Grape5a.JPG></a>
+</center>
+
+<br><HR>
+<center>
+Please send any comments or suggestions to
+<a href=mailto:starlab@sns.ias.edu><I>starlab (at) sns.ias.edu</I></a>
+</center>
+<HR>
+
+</BODY>
+</HTML>
