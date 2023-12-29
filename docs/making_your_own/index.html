@@ -1,0 +1,194 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <TITLE>Starlab/making your own</TITLE>
+</HEAD>
+<BODY>
+
+<a href="../index.html">Back to Starlab home</a>
+
+<H1>Creating your own Starlab tools</H1>
+
+It is straightforward to create your own standalone tools for use
+within the Starlab environment.  In order to take full advantage of
+existing Starlab modules and the standard data structure, we recommend
+that you program in C++.  However, it is also possible to work in C or
+even FORTRAN (using existing tools such as <tt>readp</tt> and
+<tt>dumbp</tt> to translate the data into usable format).
+
+<p>Numerous programming aids and conventions have become established
+during the development of Starlab.  While we do not impose any
+particular style, we describe here a general format which we have
+found useful.  As an example, <a href="example.C">here</a> is a simple
+program (based on and equivalent to the Starlab <tt>to_com</tt> tool)
+that reads in a <tt>dyn</tt> snapshot from <tt>stdin</tt> (by
+inheritance, it also will work with <tt>_dyn_</tt>, <tt>hdyn</tt>,
+etc. data), shifts to the center-of-mass frame, and writes the result
+to <tt>stdout</tt>.  For simplicity, we assume a flat
+(i.e. single-level) tree.  An annotated version (see the "//--"
+comments) of the program follows:
+
+<pre>
+//// Sample Starlab tool:  Bring all positions and velocities
+////                       to the center-of-mass frame.
+////
+//// Options:     -c    add a comment to the output snapshot [false]
+
+                                                  //-- initial "////" lines
+                                                  //-- serve as documentation
+                                                  //-- for the program
+
+#include "dyn.h"                                  //-- tool will operate
+                                                  //-- on dyn data
+
+local void shift_to_com(dyn *b)                   //-- local is a Starlab
+                                                  //-- synonym for static
+{
+    // Compute the center of mass.
+
+    real total_mass = 0;                          //-- "real" is double
+
+    vec com_pos  = 0;                             //-- "vec" is an array
+    vec com_vel  = 0;                             //-- of 3 reals, with all
+                                                  //-- arithmetic operations
+                                                  //-- properly defined
+
+    for_all_daughters(dyn, b, d) {                //-- Starlab macro to
+                                                  //-- loop over all dyn
+                                                  //-- daughters d of base
+                                                  //-- node b; also have:
+                                                  //--    for_all_nodes
+                                                  //--    for_all_leaves
+
+        total_mass += d->get_mass();              //-- real member function
+                                                  //-- get_mass() accesses
+                                                  //-- dyn mass
+
+        com_pos    += d->get_mass()               //-- similarly for vector
+                           * d->get_pos();        //-- member functions
+        com_vel    += d->get_mass()               //-- get_pos() and get_vel()
+                           * d->get_vel();
+
+    }   
+
+    com_pos /= total_mass;
+    com_vel /= total_mass;
+
+    // Shift all positions and velocities.
+
+    for_all_daughters(dyn, b, d) {
+        d->inc_pos(-com_pos);                     //-- equivalently, could use
+        d->inc_vel(-com_vel);                     //--
+    }                                             //-- d->set_pos(d->get_pos()
+                                                  //--             - com_pos);
+                                                  //--
+                                                  //-- etc.
+
+    // Add an entry to the root log story.        //-- conventional to
+                                                  //-- document such changes
+
+    char tmp[128];
+    sprintf(tmp, "  modified system center of mass at time %f",
+            b->get_system_time());
+
+    b->log_comment(tmp);                          //-- places the string in
+                                                  //-- the log story of the
+                                                  //-- system root node
+
+    putvq(b->get_log_story(),                     //-- places a line of the
+          "old_com_pos", com_pos);                //-- form
+                                                  //--
+                                                  //--   old_com_pos  =  x y z
+                                                  //--
+                                                  //-- in the root log story
+}
+
+main(int argc, char *argv[])
+{
+    check_help();                                 //-- if "--help" appears on
+                                                  //-- the command line, print
+                                                  //-- verbatim any line in
+                                                  //-- this file beginning
+                                                  //-- with "////"
+
+    // Parse the command line.
+
+    extern char *poptarg;
+    int c;
+    char* param_string = "c:";                    //-- list of legal command-
+                                                  //-- line arguments; a colon
+                                                  //-- (":") indicates that a
+                                                  //-- value must be supplied
+                                                  //-- on the command line
+
+    bool c_flag = false;
+    char *comment;
+
+    while ((c = pgetopt(argc, argv, param_string)) != -1)
+        switch(c) {
+
+            case 'c': c_flag = TRUE;              //-- poptarg points to the
+                      comment = poptarg;          //-- relevant item on the
+                      break;                      //-- argument list
+
+            case '?': params_to_usage(cerr, argv[0], param_string);
+                      get_help();
+                      exit(1);
+        }            
+
+    dyn *b;                                       //-- pointer to the root node
+
+    while (b = get_dyn(cin)) {                    //-- read the next input
+                                                  //-- snapshot from stdin
+
+        if (c_flag) b->log_comment(comment);      //-- conventional to
+        b->log_history(argc, argv);               //-- document program use
+
+        shift_to_com(b);                          //-- do the work!
+
+        put_dyn(b, cout);                         //-- write snapshot to stdout
+
+        rmtree(b);                                //-- recursively delete the
+                                                  //-- tree structure
+    }
+}
+</pre>
+
+(This example has quite a few extra bells and whistles.  A minimal
+``stripped-down'' version is given <a href="basic.C">here</a>.)
+
+<a name=compile>
+
+<br><br>
+<h2>Compilation</h2>
+<p>In order to build your own Starlab tool, you will need to link it
+with the Starlab header files and libraries.  As of version 4.0, the
+simplest way to do this is to use make with the following lines in
+your Makefile:
+
+<pre>
+CXXFLAGS = -I$(STARLAB_INSTALL_PATH)/include/starlab -DHAVE_CONFIG_H
+LDLIBS   = -L$(STARLAB_INSTALL_PATH)/lib/starlab \
+                -lhdyn -l_dyn_ -ldyn -lsstar -lnode -lstd -lm
+</pre>
+
+Then, to build <tt>program</tt> from <tt>program.C</tt> or
+<tt>program.cc</tt>, just say
+
+<pre>
+        make  program
+</pre>
+
+and the rest is automatic.  You may have to experiment with the
+libraries depending on your application.  Some of those listed above
+may not be necessary -- for example, you won't need the <tt>star</tt>
+libraries for pure dynamics, you won't need <tt>-lhdyn</tt> for
+<tt>dyn</tt> applications, etc.
+
+<br><br><br><br><br><br><br><br><br><br>
+
+</BODY>
+</HTML>
+
+
