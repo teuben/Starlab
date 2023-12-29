@@ -1,0 +1,329 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.07 [en] (X11; I; Linux 2.0.36 i586) [Netscape]">
+   <TITLE>Starlab Internals</TITLE>
+</HEAD>
+<BODY>
+
+<a href="index.html">Back to Starlab home</a>
+
+<H1>Starlab Internals</H1>
+
+<h2>Starlab stories</h2>
+
+The ``story'' data structure is an integral part of Starlab.  A story
+is simply an unstructured piece of text, of arbitrary length, which
+may be associated with any Starlab node.  Internally, stories are
+implemented as linked lists of character strings organized into lines
+and chapters, making it easy to extend and/or edit their contents.
+However, from the programmer's point of view, they are most usefully
+thought of as generalized ``scratchpads'', in which lines of text or
+pieces of data specific to a particular node can be stored and
+retrieved via library functions.
+
+<p>Conventionally, Starlab <tt>nodes</tt> contain two stories
+(actually, story pointers): the ``log'' story, in which specific
+events or points of interest in the history of a node may be noted,
+and the ``dyn'' story, intended to store dynamical variables that are
+not part of any of the standard classes (see ``<a
+href="structure">structure</a>'').  For any node, the member
+functions <tt>get_log_story()</tt> and <tt>get_dyn_story()</tt> return
+pointers to the two stories. (The pointers may be NULL if no story
+data exist.)  In addition, the <tt>starbase</tt> class includes a
+``star'' story pointer (accessed by starbase member function
+<tt>get_star_story</tt>) and the <tt>hydrobase</tt> class includes a
+``hydro'' story (<tt>get_hydro_story</tt>).
+
+<p>A line of text may be appended to the log story via the member
+function <tt>log_comment()</tt>.  A typical use might be
+
+<pre>
+        b->log_comment("Close encounter with black hole #7 at time 10 Myr");
+</pre>
+
+The intent is that the log story forms a sequential record of key
+events in a node's history.  A specific piece of data may be written
+to a story in the form of a ``<tt>keyword = value</tt>'' line by use
+of the ``put'' functions:
+
+<pre>
+        putiq(story *,  char *, int)           // write an int
+        putulq(story *, char *, unsigned long) // write an unsigned long
+        putrq(story *,  char *, real)          // write a real
+        putra(story *,  char *, real *, int)   // write a real array
+        putsq(story *,  char *, char *)        // write a character string
+        putvq(story *,  char *, vector)        // write a vector
+</pre>
+
+For example, the function call
+
+<pre>
+        putiq(b->get_dyn_story(), "N_orbits", 2);
+</pre>
+
+writes the line 
+
+<pre>
+        N_orbits  =  2
+</pre>
+
+to node <tt>b</tt>'s dyn story.  The data may subsequently be accessed
+via the corresponding ``get'' functions:
+
+<pre>
+        int            getiq(story *, char *)
+        unsigned long  getulq(story *, char *)
+        real           getrq(story *, char *)
+        void           getra(story *, char *, real *, int)
+        char *         getsq(story *, char *)
+        vector         getvq(story *, char *)
+</pre>
+
+e.g.
+
+<pre>
+        if (getiq(b->get_dyn_story(), "N_orbits") > 0) ...
+</pre>
+
+Unlike the <tt>log_comment()</tt> function, a second call to
+<tt>putiq()</tt> will overwrite the data if it exists, and create a
+new story line otherwise.  If we need to check if a line already
+exists, we can use the <tt>find_qmatch()</tt> function:
+
+<pre>
+        if (find_qmatch(b->get_dyn_story(), "N"))
+
+            // an "N = " line already exists
+
+        else
+
+            // no "N = " line in the story
+</pre>
+
+Stories thus provide a highly flexible (if rather inefficient) means
+of getting data from one part of a program to another, without the
+need to create a specific route for it to take (e.g. parameters in a
+sequence of function calls, or extern data, or FORTRAN common blocks).
+In typical use, a function may write some (real) data to the dyn story
+of node <tt>b</tt> using
+
+<pre>
+        putrq(b->get_dyn_story(), "an_interesting_number", value);
+</pre>
+
+Later (or in another program), the data can be retrieved by
+
+<pre>
+        result = getrq(b->get_dyn_story(), "an_interesting_number");
+</pre>
+
+The value of such a general mechanism in a complex programming
+environment should be obvious.  Many Starlab tools rely on this
+approach.
+
+<p>It is possible to write either type of story line to any type of
+story (a more general tool to append a string to any story is
+<tt>add_story_line(story*,</tt> <tt>char*)</tt>).  However, as a
+matter of style, we prefer not to write unstructured text to the dyn,
+star, or hydro stories, and to limit the use of the ``<tt>keyword =
+value</tt>'' format in log stories to the root node only (where it is
+heavily used in passing initial and run-time information from one
+program to another -- see for example the output of any of the
+``<tt>make...</tt>'' tools that create N-body systems).
+
+<p>Once written, stories remain part of a node's ``permanent record''
+until they are explicitly deleted or the node is destroyed (in which
+case the story data may yet live on in the story of the parent or root
+node).  When the system is written out using <tt>put_node()</tt>, all
+stories are saved as plain text along with the ``hard-coded'' class
+data; similarly, stories are read in and reconstructed when the
+<tt>get_node()</tt> is used.  In this way, the stories survive as data
+moves from one program to another, or from one segment of a long
+simulation to the next.
+
+<h2><a name=data_representation>Internal and external data
+representations</h2> 
+
+Internally, Starlab data consists of ``standard'' class variables, for
+which memory is explicitly allocated, and free-format stories of
+variable length, which may themselves contain additional variables in
+text form.  By contrast, Starlab's external data representation treats
+<em>all</em> data as stories, i.e. all data written by
+<tt>put_node()</tt> are in ``<tt>keyword = value</tt>'' text form.  On
+input, <tt>get_node()</tt> interprets and sets known class variables
+from the story line; everything else remains in story form.
+
+<p>Externally, a node is represented as simple (more or less)
+human-readable text.  For example, part of the output of an N-body
+calculation might look like:
+
+<pre>
+        (Particle
+          i = 4
+          N = 1
+        (Log
+        Close encounter with black hole #7 at time 10 Myr
+        )Log
+        (Dynamics
+          N_orbits  =  2
+          an_interesting_number  =  42
+          m  =  0.5
+          r  =  -0.1  0.2   0.5
+          v  =  0.3  -0.4  -0.3
+        )Dynamics
+        (Hydro
+        )Hydro
+        (Star
+          Type   =  main_sequence
+          T_cur  =  0
+          M_rel  =  1
+          M_env  =  0.99
+          M_core =  0.01
+          T_eff  =  6000
+          L_eff  =  1
+        )Star
+        )Particle
+</pre>
+
+This snapshot fragment represents a single node, delimited by the
+matching ``<tt>(Particle</tt>'' and ``<tt>)Particle</tt>'' lines.
+Following the opening <tt>(Particle</tt> come lines containing
+<tt>node</tt> class information: the particle's index <tt>i</tt> and
+the total number of particles <tt>N</tt> ``contained'' within this
+node -- 1 for a ``leaf,'' 2 for a binary center-of-mass node, and so
+on.  The remainder of the data is divided into four stories:
+
+<center><table width="80%">
+
+<tr valign=top><td><b>Log</b></td>
+<td valign=top><tt>(Log &nbsp; ... &nbsp; )Log</tt><br>
+
+Contains precisely the log story of the node, line for line
+
+</td></tr>
+
+<tr valign=top><td><b>Dynamics</b>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+<td valign=top><tt>(Dynamics &nbsp;  ...  &nbsp; )Dynamics</tt><br>
+
+Contains the dyn story of the node (if any) and the values of all true
+class variables associated with the dynamics: mass (<tt>m</tt>),
+position (<tt>r</tt>), velocity (<tt>v</tt>), etc., in ``<tt>keyword =
+value</tt>'' form.  (Mass is actually part of the <tt>node</tt> class,
+but it seems more natural not to separate it from the <tt>dyn</tt>
+variables here.)  On input, <tt>m</tt>, <tt>r</tt>, <tt>v</tt>,
+etc. are interpreted and stored in the appropriate class location;
+everything else is saved in the dyn story.
+
+</td></tr>
+
+<tr valign=top><td><b>Hydro</b></td>
+<td valign=top><tt>(Hydro &nbsp; ... &nbsp; )Hydro</tt><br>
+
+Contains the hydro story and any <tt>hydrobase</tt> class data for the
+node (in this case, no hydro part exists).  As with the Dynamics
+story, any data corresponding to a hydrobase class member is
+interpreted and stored appropriately; the remainder becomes the node's
+hydro story.
+
+</td></tr>
+
+<tr valign=top><td><b>Star</b></td>
+<td valign=top><tt>(Star &nbsp; ... &nbsp; )Star</tt><br>
+
+Contains the star story and any <tt>starbase</tt> class data for the
+node.  As with the Hydro story, any data corresponding to a
+<tt>starbase</tt>, <tt>single_star</tt>, or <tt>double_star</tt> class
+member is interpreted and stored; the remainder becomes the node's
+star story.
+
+</td></tr>
+
+</table></center>
+
+<p>The internal tree structure is expressed by nesting the external
+node representations.  Thus, if a second <tt>(Particle</tt> line is
+found before the delimiting <tt>)Particle</tt> for the current node,
+then the new particle is taken to be the daughter of the first, and so
+on, recursively.  In this way the entire Starlab tree structure is
+faithfully preserved.  For example,
+
+<pre>
+        (Particle        <--------.
+          N = 1                   |
+        (Log                      |
+        )Log                      |
+        (Dynamics                 |
+          m  =  1                 |
+        )Dynamics                 |
+        )Particle        <--------'
+        (Particle        <--------.
+          N = 1                   |
+        (Log                      |
+        )Log                      |
+        (Dynamics                 |
+          m  =  1                 |
+        )Dynamics                 |
+        )Particle        <--------'
+        (Particle        <--------.
+          N = 1                   |
+        (Log                      |
+        )Log                      |
+        (Dynamics                 |
+          m  =  1                 |
+        )Dynamics                 |
+        )Particle        <--------'
+</pre>
+
+represents three sister nodes at the same level, while
+
+<pre>
+        (Particle        <----------------.
+          N = 2                           |
+        (Log                              |
+        )Log                              |
+        (Dynamics                         |
+          m  =  1                         |
+        )Dynamics                         |
+        (Particle        <--------.       |
+          N = 1                   |       |
+        (Log                      |       |
+        )Log                      |       |
+        (Dynamics                 |       |
+          m  =  0.5               |       |
+        )Dynamics                 |       |
+        )Particle        <--------'       |
+        (Particle        <--------.       |
+          N = 1                   |       |
+        (Log                      |       |
+        )Log                      |       |
+        (Dynamics                 |       |
+          m  =  0.5               |       |
+        )Dynamics                 |       |
+        )Particle        <--------'       |
+        )Particle        <----------------'
+</pre>
+
+represents a parent and two daughters (arrows added for clarity).
+
+<p>Finally, the ASCII representation of Starlab data is quite
+inefficient in terms of space, although we have not yet found disk
+usage to be a limiting factor in our simulations.  However, should it
+be necessary, on some systems (for example, Linux, but unfortunately
+not on the DEC UNIX systems that host GRAPEs) it is possible to
+compress and uncompress the data automatically using gzip and gunzip,
+without having to type these commands explicitly into the command
+line.  The requirement is that the non-standard include file
+"pfstream.h" be available.  Use of automatic compression is controlled
+by the following environment variables, set in local/cshrc.starlab:
+
+<pre>
+#	STARLAB_HAS_GZIP		Define if gzip is available AND if
+#					pfstream.h exists; else set to null
+#	STARLAB_USE_GZIP		(RUNTIME) Use compressed I/O if set
+</pre>
+
+See ``<a href="install">installation</a>'' for more details.
+
+</ul>
