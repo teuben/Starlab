@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.07 [en] (X11; I; Linux 2.0.36 i586) [Netscape]">
+   <TITLE>Starlab/seba</TITLE>
+</HEAD>
+<BODY>
+
+<a href="index.html">Back to Starlab home</a>
+
+<H1>
+The <TT>SeBa</TT> stellar and binary evolution module
+<FONT size=+1 color=red>
+<br>(page under development)
+</FONT></H1>
+<B>SeBa Algorithms</B>
+<UL>
+<LI>
+Evolution of single stars</LI>
+
+The stellar and binary evolution package <TT>SeBa</TT> is fully
+integrated into the <TT>kira</TT> integrator, although it can also be
+used as a stand-alone module for non-dynamical applications.
+
+
+<LI>
+Synchronous evolution of two stars</LI>
+
+Stars are evolved via the time dependent mass-radius relations for
+solar metallicities given by <A
+HREF=http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=1989ApJ...347..998E>Eggleton
+et al. (1989)</A> with corrections by <A
+HREF=http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=1990ApJ...354..387E>Eggleton
+et al. 1990</A> and <A
+HREF=http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=1996MNRAS.281..257T>Tout
+et al. 1997</A>)
+
+These equations give the radius of a star as a function of time and
+the star's initial mass (on the zero-age main-sequence).
+Neither the mass of the stellar core nor the rate of mass loss via a
+stellar wind are specified in this prescription.  However, both
+quantities are important, both to binary evolution and to cluster
+dynamics.  We include them using the prescriptions of <A
+HREF=http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=1996A%26A...309..179P>
+Portegies Zwart & Verbunt (1996)</A>.
+
+In the code the following stellar types are identified:
+
+<UL>
+<LI><TT>proto star</TT> (<B>0</B>) Non hydrogen burning stars on the
+				    Hyashi track
+<LI><TT>planet</TT> (<B>1</B>) Various types, such as gas giants, etc.; also
+                    includes moons.
+</LI>
+<LI><TT>brown dwarf</TT> (<B>2</B>)  Star with mass below the hydrogen-burning limit.
+</LI>
+<LI><TT>main sequence</TT> (<B>3</B>)  Core hydrogen burning star.
+</LI>
+<LI><TT>Hypergiant</TT> (<B>4</B>)  Massive (m>25Msun) post main
+	sequence star with enormous mass-loss rate in a stage of
+	evolution prior to becoming a Wolf-Rayet star.
+</LI>
+<LI><TT>Hertzsprung gap</TT> (<B>5</B>)  Rapid evolution from the 
+	Terminal-age main sequence to the point when the
+	hydrogen-depleted core exceeds the Schonberg-Chandrasekhar
+	limit.
+</LI>
+<LI><TT>sub giant</TT> (<B>6</B>)  Hydrogen shell burning star.
+</LI>
+<LI><TT>horizontal branch</TT> (<B>7</B>)  Helium core burning star.
+</LI>
+<LI><TT>supergiant</TT> (<B>8</B>)  Double shell burning star.
+</LI>
+<LI><TT>helium star</TT> (<B>9-11</B>)  Helium core of a stripped giant, the
+                        result of mass transfer in a binary.
+                        Subdivided into carbon core (<B>9</B>), helium
+			dwarf (<B>10</B>) and helium giant
+			(<B>11</B>).  
+
+<LI><TT>white dwarf</TT> (<B>12-14</B>) Subdivided into
+			carbon dwarf (<B>12</B>) , helium dwarf
+			(<B>13</B>) and oxygen dwarf (<B>13</B>).  
+</LI>
+<LI><TT>Thorne-Zytkow</TT> (<B>15</B>)  Shell burning hydrogen
+			envelope with neutron star core.
+</LI>
+<LI><TT>neutron star</TT> (<B>16-18</B>) 
+		Subdivided into  X-ray pulsar (<B>16</B>), radio
+		pulsar (<B>17</B>) and inert neutron (<B>18</B>) 
+	        star (m<2Msun).
+</LI>
+<LI><TT>black hole</TT> (<B>19</B>)  Star with radius smaller than the event
+                        horizon. The result of evolution of massive
+                        (m>25Msun) star or collapsed neutron
+                        star.
+</LI>
+<LI><TT>disintegrated</TT> (<B>20</B>)  Result of Carbon detonation to
+                        Type Ia supernova.
+</LI>
+</UL>
+
+<LI>
+Evolution of clusters of stars</LI>
+
+<LI>
+Inerface with Kira</LI>
+<BR>
+Due to the interaction between stellar evolution and stellar dynamics,
+it is difficult to solve for the evolution of both systems in a
+completely self-consistent way.  The trajectories of stars are
+computed using a block timestep scheme, as described earlier.  Stellar
+and binary evolution is updated at fixed intervals (every 1/64 of a
+crossing time, typically a few thousand years).  Any feedback between
+the two systems may thus experience a delay of at most one timestep.
+Internal evolution time steps may differ for each star and binary, and
+depend on binary period, perturbations due to neighbors, and the
+evolutionary state of the star.  Time steps in this treatment vary
+from several milliseconds up to (at most) a million years.
+
+<BR>
+<BR>
+
+After each 1/64 of a crossing time, all stars and binaries are
+checked to determine if evolutionary updates are required.  Single
+stars are updated every 1/100 of an evolution timestep or when the
+mass of the star has changed by more than 1% since the last update.
+A stellar evolution timestep is the time taken for the star to evolve
+from the start of one evolutionary stage to the next.
+
+<BR>
+<BR>
+
+After each stellar evolution step the dynamics is notified of changes
+in stellar radii, but changes in mass are, for reasons of efficiency,
+not passed back immediately (mass changes generally entail recomputing
+the accelerations of all stars in the system).  Instead, the
+``dynamical'' masses are modified only when the mass of any star has
+changed by more than 1%, or if the orbital parameters, semi-major
+axis, eccentricity, total mass or mass ratio of any binary has changed
+by more than 0.1%.
+
+</UL>
+
+</BODY>
+</HTML>
